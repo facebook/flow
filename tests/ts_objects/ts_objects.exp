@@ -140,7 +140,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- function_to_object.ts:15:1
 
-Cannot cast `f` to object type because function type [1] is incompatible with object type [2]. [incompatible-type]
+Cannot cast `f` to object type because `() => void` [1] is incompatible with `{x: number}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 

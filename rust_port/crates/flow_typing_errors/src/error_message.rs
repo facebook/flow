@@ -1822,24 +1822,6 @@ pub struct EObjectComputedPropertyPotentialOverwriteData<
     pub overwritten_locs: Vec<L>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub struct EIncompatibleWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub use_op: VirtualUseOp<L>,
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
-    pub explanation: Option<Explanation<L>>,
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EIncompatibleTypesWithUseOpData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
@@ -2829,8 +2811,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ),
 
     EInvalidLHSInAssignment(L),
-
-    EIncompatibleWithUseOp(Box<EIncompatibleWithUseOpData<L>>),
 
     EIncompatibleTypesWithUseOp(Box<EIncompatibleTypesWithUseOpData<L>>),
 
@@ -4159,18 +4139,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op: map_use_op(use_op),
                 }))
             }
-
-            EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                explanation,
-            }) => EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                use_op: map_use_op(use_op),
-                reason_lower: map_reason(reason_lower),
-                reason_upper: map_reason(reason_upper),
-                explanation: explanation.map(|e| map_loc_of_explanation(&|l: &L| f(l.dupe()), e)),
-            })),
 
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
@@ -5785,18 +5753,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 explanation: map_explanation(explanation),
             })),
 
-            EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                explanation,
-            }) => EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                use_op: map_use_op(&f, use_op),
-                reason_lower,
-                reason_upper,
-                explanation,
-            })),
-
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
                 reason_lower,
@@ -5964,9 +5920,6 @@ where
         ErrorMessage::EIncompatibleWithExact(_, use_op, _) => util(use_op),
         ErrorMessage::EFunctionIncompatibleWithIndexer(_, use_op) => util(use_op),
         ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { use_op, .. }) => util(use_op),
-        ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData { use_op, .. }) => {
-            util(use_op)
-        }
         ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
             use_op,
             ..
@@ -6450,7 +6403,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData { .. })
             | Self::EFunctionCallExtraArg { .. }
             | Self::ENotAReactComponent { .. }
-            | Self::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData { .. })
             | Self::EIncompatibleTypesWithUseOp(..)
             | Self::EInvariantSubtypingWithUseOp(..)
             | Self::EEnumError(EnumErrorKind::EnumIncompatible(box EnumIncompatibleData {
@@ -7374,21 +7326,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotAssignToInvalidLHS)
             }
 
-            ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                reason_lower,
-                reason_upper,
-                use_op,
-                explanation,
-            }) => IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
-                reason_lower,
-                reason_upper,
-                use_op,
-                explanation,
-            })),
-
             ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 lower_loc,
                 lower_def_loc,
+                upper_loc,
                 upper_def_loc,
                 lower_desc,
                 upper_desc,
@@ -7409,19 +7350,43 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         example,
                     }))
                 }
-                None => UseOp(Box::new(UseOpData {
-                    loc: lower_loc.dupe(),
-                    message: Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
-                        MessageIncompatibleGeneralWithPrintedTypesData {
-                            lower_loc: lower_def_loc,
-                            upper_loc: upper_def_loc,
-                            lower_desc: expect_type_desc(lower_desc),
-                            upper_desc: expect_type_desc(upper_desc),
-                        },
-                    )),
-                    use_op,
-                    explanation,
-                })),
+                None => {
+                    let lower_desc = expect_type_desc(lower_desc);
+                    let upper_desc = expect_type_desc(upper_desc);
+                    if let (Err(lower_desc), Err(upper_desc)) = (&lower_desc, &upper_desc)
+                        && (lower_desc.is_explanatory() || upper_desc.is_explanatory())
+                    {
+                        return IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
+                            reason_lower: VirtualReason::new_with(
+                                lower_desc.clone(),
+                                lower_loc,
+                                Some(lower_def_loc),
+                                None,
+                            ),
+                            reason_upper: VirtualReason::new_with(
+                                upper_desc.clone(),
+                                upper_loc,
+                                Some(upper_def_loc),
+                                None,
+                            ),
+                            use_op,
+                            explanation,
+                        }));
+                    }
+                    UseOp(Box::new(UseOpData {
+                        loc: lower_loc,
+                        message: Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
+                            MessageIncompatibleGeneralWithPrintedTypesData {
+                                lower_loc: lower_def_loc,
+                                upper_loc: upper_def_loc,
+                                lower_desc,
+                                upper_desc,
+                            },
+                        )),
+                        use_op,
+                        explanation,
+                    }))
+                }
             },
 
             ErrorMessage::EUnsupportedSetProto(_) => {
@@ -9877,9 +9842,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(
                 box EnumIncompatibleData { use_op, .. },
             ))
-            | ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                use_op, ..
-            })
             | ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
                 ..

@@ -62,7 +62,6 @@ use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInexactMayOverwriteIndexerData;
@@ -2968,19 +2967,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EInvalidLHSInAssignment(loc) => {
             format!("EInvalidLHSInAssignment ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-            reason_lower,
-            reason_upper,
-            use_op,
-            explanation: _,
-        }) => {
-            format!(
-                "EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {{ reason_lower = {}; reason_upper = {}; use_op = {} }}))",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
-                string_of_use_op(use_op)
-            )
         }
         ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
             lower_loc,

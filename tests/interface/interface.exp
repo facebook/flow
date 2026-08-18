@@ -39,7 +39,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:11:1
 
-Cannot cast `f` to interface type because function [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot cast `f` to interface type because `() => void` [1] is incompatible with `interface {xxx: boolean}` [2].
+[incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -58,7 +59,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:21:1
 
-Cannot cast `build` to interface type because function [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot cast `build` to interface type because `() => S` [1] is incompatible with `interface {foo: boolean}` [2].
+[incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -88,7 +90,7 @@ Multiple indexers are not supported. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:40:3
 
-Cannot get `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. [incompatible-type]
+Cannot get `x['xxx']` because `"xxx"` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:40:3
    40|   x['xxx']; // ERROR
@@ -110,7 +112,7 @@ Cannot assign `1` to `x['a']` because property `a` is not writable. [cannot-writ
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:46:3
 
-Cannot get `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. [incompatible-type]
+Cannot get `x['xxx']` because `"xxx"` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:46:3
    46|   x['xxx']; // ERROR
@@ -132,7 +134,7 @@ Cannot get `x['a']` because an index signature declaring the expected key / valu
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:52:3
 
-Cannot assign `1` to `x['xxx']` because string `xxx` [1] is incompatible with `Keys` [2]. [incompatible-type]
+Cannot assign `1` to `x['xxx']` because `"xxx"` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
    indexer.js:52:3
    52|   x['xxx'] = 1; // ERROR

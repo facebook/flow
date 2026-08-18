@@ -1408,7 +1408,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `number` [1] is incompatible with `Foo` [2].
- - Or function [3] is incompatible with object type [4].
+ - Or `(foo: number) => void` [3] is incompatible with `{writeonly current: Foo | null, ...}` [4].
     - Functions without statics are not compatible with objects.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1498,7 +1498,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `number` [1] is incompatible with `FooExact` [2].
- - Or function [3] is incompatible with object type [4].
+ - Or `(foo: number) => void` [3] is incompatible with `{writeonly current: FooExact | null, ...}` [4].
     - Functions without statics are not compatible with objects.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1524,7 +1524,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `FooExact` [1] is incompatible with `null` [2].
- - Or function [3] is incompatible with object type [4].
+ - Or `(foo: FooExact) => void` [3] is incompatible with `{writeonly current: FooExact | null, ...}` [4].
     - Functions without statics are not compatible with objects.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

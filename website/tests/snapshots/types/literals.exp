@@ -19,8 +19,8 @@ Found 1 error
 === block 2 ===
 Error ---------------------------------------------------------------------------- -:13:10
 
-Cannot call `getColor` with `"error"` bound to `name` because string literal `error` [1] is incompatible with union
-type [2]. [incompatible-type]
+Cannot call `getColor` with `"error"` bound to `name` because `"error"` [1] is incompatible with
+`"success" | "warning" | "danger"` [2]. [incompatible-type]
 
    -:13:10
    13| getColor("error");   // Error!

@@ -835,8 +835,7 @@ Found 2 errors
 === block 49 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast `'south'` to `Direction` because string literal `south` [1] is incompatible with `Direction` [2].
-[incompatible-type]
+Cannot cast `'south'` to `Direction` because `"south"` [1] is incompatible with `Direction` [2]. [incompatible-type]
 
    -:5:1
    5| 'south' as Direction; // ERROR

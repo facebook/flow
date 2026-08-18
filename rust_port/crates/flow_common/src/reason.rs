@@ -848,10 +848,11 @@ impl<L: Dupe> VirtualReasonDesc<L> {
             | RTupleOutOfBoundsAccess(_)
             | RTupleUnknownElementFromInexact
             | RUnknownUnspecifiedProperty(_)
-            | RReactElement {
-                from_component_syntax: true,
-                ..
-            } => true,
+            | RReactElement { .. }
+            | RRendersNothing
+            | RRenderType(_)
+            | RRenderMaybeType(_)
+            | RRenderStarType(_) => true,
             RTypeApp(inner) | RTypeAppImplicit(inner) => inner.is_explanatory(),
             _ => false,
         }

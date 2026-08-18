@@ -664,7 +664,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:56:3
 
-Cannot create `Fun` element because in property `children`: `{...}` [1] is incompatible with `Fn` [2].
+Cannot create `Fun` element because in property `children`: React element [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:56:3
@@ -1060,8 +1060,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- fun.js:149:3
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either `{...}` [1] is incompatible with `Fn` [2].
- - Or `{...}` [1] is incompatible with `Array<Fn>` [3].
+ - Either React element [1] is incompatible with `Fn` [2].
+ - Or React element [1] is incompatible with `Array<Fn>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1187,7 +1187,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
- - Or `{...}` [4] is incompatible with `boolean` [5].
+ - Or React element [4] is incompatible with `boolean` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1215,7 +1215,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
- - Or in array element: `{...}` [4] is incompatible with `boolean` [5].
+ - Or in array element: React element [4] is incompatible with `boolean` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1246,7 +1246,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
  - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
- - Or in array element: `{...}` [4] is incompatible with `boolean` [5].
+ - Or in array element: React element [4] is incompatible with `boolean` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1461,7 +1461,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:26:7
 
-Cannot create `Text` element because in property `children`: `{...}` [1] is incompatible with `string` [2].
+Cannot create `Text` element because in property `children`: React element [1] is incompatible with `string` [2].
 [incompatible-type]
 
    text.js:26:7
@@ -1536,8 +1536,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:48:14
 
-Cannot create `TextLiteral` element because in property `children`: JSX text [1] is incompatible with union type [2].
-[incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: `"buz"` [1] is incompatible with
+`"foo" | "bar"` [2]. [incompatible-type]
 
    text.js:48:14
    48| <TextLiteral>buz</TextLiteral>; // Error: `buz` is not allowed.
@@ -1551,8 +1551,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:49:15
 
-Cannot create `TextLiteral` element because in property `children`: string literal `buz` [1] is incompatible with union
-type [2]. [incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: `"buz"` [1] is incompatible with
+`"foo" | "bar"` [2]. [incompatible-type]
 
    text.js:49:15
    49| <TextLiteral>{'buz'}</TextLiteral>; // Error: `buz` is not allowed.
@@ -1566,8 +1566,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:50:14
 
-Cannot create `TextLiteral` element because in property `children`: JSX text [1] is incompatible with union type [2].
-[incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: `"foo  "` [1] is incompatible with
+`"foo" | "bar"` [2]. [incompatible-type]
 
    text.js:50:14
    50| <TextLiteral>foo  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1581,8 +1581,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:51:14
 
-Cannot create `TextLiteral` element because in property `children`: JSX text [1] is incompatible with union type [2].
-[incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: `"  foo"` [1] is incompatible with
+`"foo" | "bar"` [2]. [incompatible-type]
 
    text.js:51:14
    51| <TextLiteral>  foo</TextLiteral>; // Error: Spaces are not trimmed.

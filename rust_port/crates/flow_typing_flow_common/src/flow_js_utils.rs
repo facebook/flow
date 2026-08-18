@@ -30,7 +30,6 @@ use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EInvalidBinaryArithData;
 use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
@@ -2086,9 +2085,9 @@ pub fn string_key(value: FlowSmolStr, reason: &Reason) -> Type {
 pub fn quick_error_fun_as_obj<'cx>(
     cx: &Context<'cx>,
     use_op: &UseOp,
-    reason: &Reason,
+    lower: &Type,
     statics: &Type,
-    reason_o: &Reason,
+    upper: &Type,
     props: &flow_typing_type::type_::properties::PropertiesMap,
 ) -> Result<bool, FlowJsException> {
     use flow_typing_errors::error_message::ErrorMessage;
@@ -2123,16 +2122,17 @@ pub fn quick_error_fun_as_obj<'cx>(
             if props_not_found.is_empty() {
                 Ok(false)
             } else if statics_own_props.is_empty() && !props.is_empty() {
-                let error_message =
-                    ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                        reason_lower: reason.dupe(),
-                        reason_upper: reason_o.dupe(),
-                        use_op: use_op.dupe(),
-                        explanation: Some(Explanation::ExplanationFunctionsWithStaticsToObject),
-                    }));
+                let error_message = incompatible_types_error(
+                    lower,
+                    upper,
+                    use_op.dupe(),
+                    Some(Explanation::ExplanationFunctionsWithStaticsToObject),
+                );
                 add_output(cx, error_message)?;
                 Ok(true)
             } else {
+                let reason = flow_typing_type::type_util::reason_of_t(lower);
+                let reason_o = flow_typing_type::type_util::reason_of_t(upper);
                 for x in props_not_found.keys() {
                     let err = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                         EPropNotFoundInSubtypingData {

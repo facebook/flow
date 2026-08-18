@@ -21,7 +21,6 @@ use flow_common::reason::Reason;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
@@ -629,12 +628,7 @@ pub mod operators {
                                 discriminant: switch_discriminant_loc.dupe(),
                             }),
                         )));
-                        ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                            reason_lower: reason_of_t(l).dupe(),
-                            reason_upper: reason_of_t(r).dupe(),
-                            use_op,
-                            explanation: None,
-                        }))
+                        flow_js_utils::incompatible_types_error(l, r, use_op, None)
                     }
                     EnclosingContext::NoContext
                     | EnclosingContext::IndexContext

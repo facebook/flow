@@ -88,7 +88,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:19:1
 
-Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `'xxx'` to key set because `"xxx"` [1] is incompatible with `"x" | "y"` [2]. [incompatible-type]
 
    interface.js:19:1
    19| 'xxx' as keyof WithDict; // ERROR
@@ -116,7 +116,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:26:1
 
-Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `'xxx'` to key set because `"xxx"` [1] is incompatible with `"x" | "y"` [2]. [incompatible-type]
 
    interface.js:26:1
    26| 'xxx' as keyof WithBoth; // ERROR

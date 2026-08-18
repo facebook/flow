@@ -2761,8 +2761,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Set` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
-    - in property `@@iterator` > the return value > type argument `Yield` [3]: string literal `C` [4] is incompatible
-      with union type [5]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: `"C"` [4] is incompatible with
+      `"A" | "B"` [5]
 
    local.js:658:20
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
@@ -2879,8 +2879,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:85:37
 
-Cannot assign `object(...)` to `example3` because in type argument `V` [1] > property `format`: string literal `C` [2]
-is incompatible with union type [3]. [incompatible-type]
+Cannot assign `object(...)` to `example3` because in type argument `V` [1] > property `format`: `"C"` [2] is
+incompatible with `"A" | "B"` [3]. [incompatible-type]
 
    nested_generic_calls.js:85:37
                                            v---------------------------------

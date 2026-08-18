@@ -60,8 +60,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:34:1
 
-Cannot cast `"big_2"` to `Big` because string literal `big_2` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `"big_2"` to `Big` because `"big_2"` [1] is incompatible with `Big` [2]. [incompatible-type]
 
    basic.js:34:1
    34| "big_2" as Big; // ERROR
@@ -210,8 +209,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:87:1
 
-Cannot cast `'b'` to `EmptyInterp` because string literal `b` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'b'` to `EmptyInterp` because `"b"` [1] is incompatible with `EmptyInterp` [2]. [incompatible-type]
 
    basic.js:87:1
    87| 'b' as EmptyInterp; // ERROR
@@ -240,8 +238,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:104:1
 
-Cannot cast `'quxChanged'` to `E1` because string literal `quxChanged` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'quxChanged'` to `E1` because `"quxChanged"` [1] is incompatible with `E1` [2]. [incompatible-type]
 
    basic.js:104:1
    104| 'quxChanged' as E1; // ERROR
@@ -255,8 +252,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:105:1
 
-Cannot cast `'foo'` to `E1` because string literal `foo` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'foo'` to `E1` because `"foo"` [1] is incompatible with `E1` [2]. [incompatible-type]
 
    basic.js:105:1
    105| 'foo' as E1; // ERROR
@@ -285,8 +281,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:121:1
 
-Cannot cast `"value_3"` to `Num` because string literal `value_3` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `"value_3"` to `Num` because `"value_3"` [1] is incompatible with `Num` [2]. [incompatible-type]
 
    basic.js:121:1
    121| "value_3" as Num; // ERROR
@@ -300,8 +295,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:127:1
 
-Cannot cast `'3,0'` to `Coord` because string literal `3,0` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'3,0'` to `Coord` because `"3,0"` [1] is incompatible with `Coord` [2]. [incompatible-type]
 
    basic.js:127:1
    127| '3,0' as Coord; // ERROR
@@ -330,8 +324,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:150:1
 
-Cannot cast `'acg'` to `Adjacent3` because string literal `acg` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'acg'` to `Adjacent3` because `"acg"` [1] is incompatible with `Adjacent3` [2]. [incompatible-type]
 
    basic.js:150:1
    150| 'acg' as Adjacent3; // ERROR
@@ -345,8 +338,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:158:1
 
-Cannot cast `'a-c-e-i'` to `Deep3` because string literal `a-c-e-i` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'a-c-e-i'` to `Deep3` because `"a-c-e-i"` [1] is incompatible with `Deep3` [2]. [incompatible-type]
 
    basic.js:158:1
    158| 'a-c-e-i' as Deep3; // ERROR
@@ -390,8 +382,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:174:1
 
-Cannot cast `'cx_end'` to `Deep` because string literal `cx_end` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'cx_end'` to `Deep` because `"cx_end"` [1] is incompatible with `Deep` [2]. [incompatible-type]
 
    basic.js:174:1
    174| 'cx_end' as Deep; // ERROR
@@ -420,8 +411,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:192:1
 
-Cannot cast `'item_c_1'` to `MixedInterp` because string literal `item_c_1` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'item_c_1'` to `MixedInterp` because `"item_c_1"` [1] is incompatible with `MixedInterp` [2].
+[incompatible-type]
 
    basic.js:192:1
    192| 'item_c_1' as MixedInterp; // ERROR
@@ -435,8 +426,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:193:1
 
-Cannot cast `'item_a_3'` to `MixedInterp` because string literal `item_a_3` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'item_a_3'` to `MixedInterp` because `"item_a_3"` [1] is incompatible with `MixedInterp` [2].
+[incompatible-type]
 
    basic.js:193:1
    193| 'item_a_3' as MixedInterp; // ERROR
@@ -765,8 +756,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:289:1
 
-Cannot cast `'y'` to `MixedNullable` because string literal `y` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'y'` to `MixedNullable` because `"y"` [1] is incompatible with `MixedNullable` [2]. [incompatible-type]
 
    basic.js:289:1
    289| 'y' as MixedNullable; // ERROR
@@ -795,8 +785,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:386:1
 
-Cannot cast `'https://ex...'` to `LongQuasi` because string literal `https://example.com/api/v1/comments` [1] is
-incompatible with template literal type [2]. [incompatible-type]
+Cannot cast `'https://ex...'` to `LongQuasi` because `"https://example.com/api/v1/comments"` [1] is incompatible with
+`LongQuasi` [2]. [incompatible-type]
 
    basic.js:386:1
    386| 'https://example.com/api/v1/comments' as LongQuasi; // ERROR
@@ -810,8 +800,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:387:1
 
-Cannot cast `'http://exa...'` to `LongQuasi` because string literal `http://example.com/api/v1/users` [1] is
-incompatible with template literal type [2]. [incompatible-type]
+Cannot cast `'http://exa...'` to `LongQuasi` because `"http://example.com/api/v1/users"` [1] is incompatible with
+`LongQuasi` [2]. [incompatible-type]
 
    basic.js:387:1
    387| 'http://example.com/api/v1/users' as LongQuasi; // ERROR
@@ -844,7 +834,9 @@ Cannot cast `'1'` to `Spacing` because: [incompatible-type]
  - Either string literal `1` [1] is incompatible with string literal `0` [2].
  - Or string literal `1` [1] is incompatible with template literal type [3].
  - Or string literal `1` [1] is incompatible with template literal type [4].
- - Or string literal `1` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:409:1
    409| '1' as Spacing; // ERROR: no unit
@@ -860,9 +852,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:410:1
@@ -871,7 +860,9 @@ Cannot cast `'px'` to `Spacing` because: [incompatible-type]
  - Either string literal `px` [1] is incompatible with string literal `0` [2].
  - Or string literal `px` [1] is incompatible with template literal type [3].
  - Or string literal `px` [1] is incompatible with template literal type [4].
- - Or string literal `px` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:410:1
    410| 'px' as Spacing; // ERROR: no number
@@ -887,9 +878,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:411:1
@@ -898,7 +886,9 @@ Cannot cast `'12em'` to `Spacing` because: [incompatible-type]
  - Either string literal `12em` [1] is incompatible with string literal `0` [2].
  - Or string literal `12em` [1] is incompatible with template literal type [3].
  - Or string literal `12em` [1] is incompatible with template literal type [4].
- - Or string literal `12em` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:411:1
    411| '12em' as Spacing; // ERROR: wrong unit
@@ -914,9 +904,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:412:1
@@ -925,7 +912,9 @@ Cannot cast `'s0'` to `Spacing` because: [incompatible-type]
  - Either string literal `s0` [1] is incompatible with string literal `0` [2].
  - Or string literal `s0` [1] is incompatible with template literal type [3].
  - Or string literal `s0` [1] is incompatible with template literal type [4].
- - Or string literal `s0` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:412:1
    412| 's0' as Spacing; // ERROR: 0 not in 1..20
@@ -941,9 +930,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:413:1
@@ -952,7 +938,9 @@ Cannot cast `'s21'` to `Spacing` because: [incompatible-type]
  - Either string literal `s21` [1] is incompatible with string literal `0` [2].
  - Or string literal `s21` [1] is incompatible with template literal type [3].
  - Or string literal `s21` [1] is incompatible with template literal type [4].
- - Or string literal `s21` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:413:1
    413| 's21' as Spacing; // ERROR: out of range
@@ -968,9 +956,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:414:1
@@ -979,7 +964,9 @@ Cannot cast `'red'` to `Spacing` because: [incompatible-type]
  - Either string literal `red` [1] is incompatible with string literal `0` [2].
  - Or string literal `red` [1] is incompatible with template literal type [3].
  - Or string literal `red` [1] is incompatible with template literal type [4].
- - Or string literal `red` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:414:1
    414| 'red' as Spacing; // ERROR: unrelated string
@@ -995,9 +982,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:425:1
@@ -1029,15 +1013,15 @@ Cannot cast `'0 0 0 0 0'` to `SpacingShorthand` because: [incompatible-type]
  - Either string literal `0 0 0 0` [1] is incompatible with string literal `0` [2].
  - Or string literal `0 0 0 0` [1] is incompatible with template literal type [3].
  - Or string literal `0 0 0 0` [1] is incompatible with template literal type [4].
- - Or string literal `0 0 0 0` [1] is incompatible with template literal type [5].
  - Or string literal `0 0 0` [1] is incompatible with string literal `0` [2].
  - Or string literal `0 0 0` [1] is incompatible with template literal type [3].
  - Or string literal `0 0 0` [1] is incompatible with template literal type [4].
- - Or string literal `0 0 0` [1] is incompatible with template literal type [5].
  - Or string literal `0 0` [1] is incompatible with string literal `0` [2].
  - Or string literal `0 0` [1] is incompatible with template literal type [3].
  - Or string literal `0 0` [1] is incompatible with template literal type [4].
- - Or string literal `0 0` [1] is incompatible with template literal type [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:426:1
    426| '0 0 0 0 0' as SpacingShorthand; // ERROR: 5-tuple not allowed
@@ -1053,9 +1037,6 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:427:1
@@ -1087,9 +1068,11 @@ Cannot cast `'foo bar'` to `SpacingShorthand` because: [incompatible-type]
  - Either string literal `foo` [1] is incompatible with string literal `0` [2].
  - Or string literal `foo` [1] is incompatible with template literal type [3].
  - Or string literal `foo` [1] is incompatible with template literal type [4].
- - Or string literal `foo` [1] is incompatible with template literal type [5].
+ - Or string literal `foo bar` [1] is incompatible with template literal type [5].
  - Or string literal `foo bar` [1] is incompatible with template literal type [6].
- - Or string literal `foo bar` [1] is incompatible with template literal type [7].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:428:1
    428| 'foo bar' as SpacingShorthand; // ERROR: invalid Spacing values
@@ -1105,15 +1088,12 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    basic.js:418:7
    418|     | `${Spacing} ${Spacing} ${Spacing}`
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    basic.js:419:7
    419|     | `${Spacing} ${Spacing} ${Spacing} ${Spacing}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:429:1
@@ -1122,9 +1102,11 @@ Cannot cast `'s21 0'` to `SpacingShorthand` because: [incompatible-type]
  - Either string literal `s21` [1] is incompatible with string literal `0` [2].
  - Or string literal `s21` [1] is incompatible with template literal type [3].
  - Or string literal `s21` [1] is incompatible with template literal type [4].
- - Or string literal `s21` [1] is incompatible with template literal type [5].
+ - Or string literal `s21 0` [1] is incompatible with template literal type [5].
  - Or string literal `s21 0` [1] is incompatible with template literal type [6].
- - Or string literal `s21 0` [1] is incompatible with template literal type [7].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
 
    basic.js:429:1
    429| 's21 0' as SpacingShorthand; // ERROR: invalid Spacing on the left
@@ -1140,15 +1122,12 @@ References:
    basic.js:400:7
    400|     | `${number}rem`
               ^^^^^^^^^^^^^^ [4]
-   basic.js:401:7
-   401|     | `s${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    basic.js:418:7
    418|     | `${Spacing} ${Spacing} ${Spacing}`
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    basic.js:419:7
    419|     | `${Spacing} ${Spacing} ${Spacing} ${Spacing}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [7]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error -------------------------------------------------------------------------------------------------- basic.js:434:19

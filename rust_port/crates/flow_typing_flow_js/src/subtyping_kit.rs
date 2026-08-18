@@ -28,7 +28,6 @@ use flow_typing_errors::error_message::EExpectedNumberLitData;
 use flow_typing_errors::error_message::EExpectedStringLitData;
 use flow_typing_errors::error_message::EHookIncompatibleData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EMethodUnbindingData;
@@ -2563,12 +2562,7 @@ pub fn union_to_union<'cx>(
             );
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower,
-                    reason_upper,
-                    use_op,
-                    explanation,
-                })),
+                flow_js_utils::incompatible_types_error(l, u, use_op, explanation),
             )?;
         }
     }
@@ -3888,15 +3882,11 @@ pub fn rec_sub_t<'cx>(
                                                 if !enums.iter().all(|e| *e == elt) {
                                                     flow_js_utils::add_output(
                                                         cx,
-                                                        ErrorMessage::EIncompatibleWithUseOp(
-                                                            Box::new(EIncompatibleWithUseOpData {
-                                                                reason_lower:
-                                                                    type_util::reason_of_t(l).dupe(),
-                                                                reason_upper:
-                                                                    type_util::reason_of_t(u).dupe(),
-                                                                use_op: use_op.dupe(),
-                                                                explanation: None,
-                                                            }),
+                                                        flow_js_utils::incompatible_types_error(
+                                                            l,
+                                                            u,
+                                                            use_op.dupe(),
+                                                            None,
                                                         ),
                                                     )?;
                                                 }
@@ -3984,14 +3974,12 @@ pub fn rec_sub_t<'cx>(
                         if !enums.contains(&UnionEnum::Str(x.dupe())) {
                             flow_js_utils::add_output(
                                 cx,
-                                ErrorMessage::EIncompatibleWithUseOp(Box::new(
-                                    EIncompatibleWithUseOpData {
-                                        reason_lower: reason_l.dupe(),
-                                        reason_upper: reason_u.dupe(),
-                                        use_op: use_op.dupe(),
-                                        explanation: None,
-                                    },
-                                )),
+                                flow_js_utils::incompatible_types_error(
+                                    l,
+                                    u,
+                                    use_op.dupe(),
+                                    None,
+                                ),
                             )?;
                         }
                         true
@@ -5766,16 +5754,16 @@ pub fn rec_sub_t<'cx>(
         // the union type contains both a function type and a object type as
         // members, clearly intending for function types to match the former
         // instead of the latter.
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(reason_o, ud))
+        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
             if let (DefTInner::FunT(statics, _), DefTInner::ObjT(obj)) =
                 (ld.deref(), ud.deref()) =>
         {
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
                 &use_op,
-                reason,
+                l,
                 statics,
-                reason_o,
+                u,
                 &cx.find_props(obj.props_tmap.dupe()),
             )? {
                 FlowJs::rec_flow_t(cx, trace, use_op, statics, u)?;
@@ -5783,7 +5771,7 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
         // TODO: similar concern as above
-        (TypeInner::DefT(reason, ld), TypeInner::DefT(reason_inst, ud))
+        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
             if let (DefTInner::FunT(statics, _), DefTInner::InstanceT(inst_t)) =
                 (ld.deref(), ud.deref())
                 && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
@@ -5793,9 +5781,9 @@ pub fn rec_sub_t<'cx>(
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
                 &use_op,
-                reason,
+                l,
                 statics,
-                reason_inst,
+                u,
                 &filtered,
             )? {
                 FlowJs::rec_flow_t(cx, trace, use_op, statics, u)?;

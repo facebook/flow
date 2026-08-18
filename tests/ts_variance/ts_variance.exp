@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------- extends_implements.ts:36:8
 
-Cannot extend `Parent` [1] with `Child` because in property `tag`: string literal `c` [2] is incompatible with union
-type [3]. [incompatible-type]
+Cannot extend `Parent` [1] with `Child` because in property `tag`: `"c"` [2] is incompatible with `"a" | "b"` [3].
+[incompatible-type]
 
    extends_implements.ts:36:8
    36|   tag: "c"; // ERROR: "c" is not assignable to "a" | "b"

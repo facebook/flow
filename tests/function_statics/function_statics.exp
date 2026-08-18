@@ -65,7 +65,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrow.js:33:43
 
-Cannot assign function to `f` because function [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign function to `f` because `() => 1` [1] is incompatible with `{a: string, ...}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -256,7 +256,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:41:43
 
-Cannot assign function to `f` because function [1] is incompatible with object type [2]. [incompatible-type]
+Cannot assign function to `f` because `() => 1` [1] is incompatible with `{a: string, ...}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -300,8 +300,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:33:1
 
-Cannot cast `add` to `InexactCallableObj` because function [1] is incompatible with `InexactCallableObj` [2].
-[incompatible-type]
+Cannot cast `add` to `InexactCallableObj` because `(x: number, y: number) => number` [1] is incompatible with
+`InexactCallableObj` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -356,7 +356,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:36:1
 
-Cannot cast `add` to `I` because function [1] is incompatible with `I` [2]. [incompatible-type]
+Cannot cast `add` to `I` because `(x: number, y: number) => number` [1] is incompatible with `I` [2].
+[incompatible-type]
 
 Functions without statics are not compatible with objects.
 

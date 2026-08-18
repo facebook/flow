@@ -25,7 +25,7 @@ No errors!
 === block 9 ===
 Error ---------------------------------------------------------------------------- -:6:5
 
-Cannot cast `value` to union type because string [1] is incompatible with union type [2]. [incompatible-type]
+Cannot cast `value` to union type because `""` [1] is incompatible with `null | void` [2]. [incompatible-type]
 
    -:6:5
    6|     value as null | void; // Error! Could still be the empty string ""

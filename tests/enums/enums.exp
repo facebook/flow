@@ -2590,7 +2590,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:122:10
 
-Invalid check of case test against switch discriminant [1] because undefined [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `void` [2] is incompatible with `E` [3].
 [incompatible-type]
 
    exhaustive-check.js:122:10
@@ -2611,7 +2611,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:123:10
 
-Invalid check of case test against switch discriminant [1] because undefined [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `void` [2] is incompatible with `E` [3].
 [incompatible-type]
 
    exhaustive-check.js:123:10
@@ -2632,7 +2632,28 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:129:10
 
-Invalid check of case test against switch discriminant [1] because null or undefined [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `null` [2] is incompatible with `E` [3].
+[incompatible-type]
+
+   exhaustive-check.js:129:10
+   129|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:128:11
+   128|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:127:16
+   127| function f2(x: ?E) {
+                       ^^ [2]
+   exhaustive-check.js:3:6
+     3| enum E {
+             ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:129:10
+
+Invalid check of case test against switch discriminant [1] because `void` [2] is incompatible with `E` [3].
 [incompatible-type]
 
    exhaustive-check.js:129:10
@@ -2653,7 +2674,28 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:130:10
 
-Invalid check of case test against switch discriminant [1] because null or undefined [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `null` [2] is incompatible with `E` [3].
+[incompatible-type]
+
+   exhaustive-check.js:130:10
+   130|     case E.B: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:128:11
+   128|   switch (x)  {
+                  ^ [1]
+   exhaustive-check.js:127:16
+   127| function f2(x: ?E) {
+                       ^^ [2]
+   exhaustive-check.js:3:6
+     3| enum E {
+             ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:130:10
+
+Invalid check of case test against switch discriminant [1] because `void` [2] is incompatible with `E` [3].
 [incompatible-type]
 
    exhaustive-check.js:130:10
@@ -2689,7 +2731,28 @@ References:
 
 Error --------------------------------------------------------------------------------------- exhaustive-check.js:136:10
 
-Invalid check of case test against switch discriminant [1] because null or undefined [2] is incompatible with `E` [3].
+Invalid check of case test against switch discriminant [1] because `null` [2] is incompatible with `E` [3].
+[incompatible-type]
+
+   exhaustive-check.js:136:10
+   136|     case E.A: break; // Error
+                 ^^^
+
+References:
+   exhaustive-check.js:135:11
+   135|   switch (x)  { // Error
+                  ^ [1]
+   exhaustive-check.js:134:16
+   134| function f3(x: ?E) {
+                       ^^ [2]
+   exhaustive-check.js:3:6
+     3| enum E {
+             ^ [3]
+
+
+Error --------------------------------------------------------------------------------------- exhaustive-check.js:136:10
+
+Invalid check of case test against switch discriminant [1] because `void` [2] is incompatible with `E` [3].
 [incompatible-type]
 
    exhaustive-check.js:136:10
@@ -5045,4 +5108,4 @@ References:
 
 
 
-Found 297 errors
+Found 300 errors

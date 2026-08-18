@@ -813,7 +813,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:39:3
 
-Cannot cast `<MyComponent />` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `<MyComponent />` to empty because React element [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:39:3
    39| ((<MyComponent /> as empty) as T).p as empty;
@@ -844,7 +844,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:40:3
 
-Cannot cast `<>...</>` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `<>...</>` to empty because React element [1] is incompatible with `empty` [2]. [incompatible-type]
 
    expression.js:40:3
    40| ((<>foo</> as empty) as T).p as empty;

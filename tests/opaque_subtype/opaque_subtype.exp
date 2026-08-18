@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- both_bounds.js:6:1
 
-Cannot cast `'baz'` to `Kind` because string literal `baz` [1] is incompatible with `Kind` [2]. [incompatible-type]
+Cannot cast `'baz'` to `Kind` because `"baz"` [1] is incompatible with `"foo" | "bar"` [2]. [incompatible-type]
 
    both_bounds.js:6:1
    6| 'baz' as Kind; // error

@@ -144,7 +144,6 @@ use crate::error_message::EExpectedNumberLitData;
 use crate::error_message::EExpectedStringLitData;
 use crate::error_message::EIncompatiblePropData;
 use crate::error_message::EIncompatibleTypesWithUseOpData;
-use crate::error_message::EIncompatibleWithUseOpData;
 use crate::error_message::EPropNotFoundInLookupData;
 use crate::error_message::EnumIncompatibleData;
 use crate::error_message::IncompatibleEnumData;
@@ -381,11 +380,6 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
                     branches,
                     ..
                 }) if branches.is_empty() => Some((rl, ru)),
-                FlowErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                    reason_lower: rl,
-                    reason_upper: ru,
-                    ..
-                }) => Some((rl, ru)),
                 FlowErrorMessage::EIncompatibleWithExact((rl, ru), _, _) => Some((rl, ru)),
                 _ => None,
             };
@@ -675,24 +669,6 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                             reason_lower: reason_lower_new,
                             reason_upper: reason_upper_new,
                             use_op: use_op_new,
-                        },
-                    )))
-            }
-            FlowErrorMessage::EIncompatibleWithUseOp(box EIncompatibleWithUseOpData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                explanation,
-            }) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EIncompatibleWithUseOp(Box::new(
-                        EIncompatibleWithUseOpData {
-                            use_op: use_op_new,
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
-                            explanation: explanation.clone(),
                         },
                     )))
             }

@@ -10,10 +10,11 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_aloc::ALoc;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_flow_common::flow_js_utils;
@@ -35,6 +36,7 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualUseOp;
 use flow_typing_type::type_::type_collector;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
 
@@ -54,6 +56,30 @@ fn frame_renders_compat(use_op: UseOp) -> UseOp {
     )
 }
 
+fn incompatible_renders_error(
+    reasonl: &Reason,
+    reasonu: &Reason,
+    use_op: UseOp,
+) -> ErrorMessage<ALoc> {
+    ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
+        lower_loc: reasonl.loc().dupe(),
+        lower_def_loc: reasonl
+            .annot_loc()
+            .unwrap_or_else(|| reasonl.def_loc())
+            .dupe(),
+        upper_loc: reasonu.loc().dupe(),
+        upper_def_loc: reasonu
+            .annot_loc()
+            .unwrap_or_else(|| reasonu.def_loc())
+            .dupe(),
+        lower_desc: TypeOrTypeDescT::TypeDesc(Err(reasonl.desc.clone())),
+        upper_desc: TypeOrTypeDescT::TypeDesc(Err(reasonu.desc.clone())),
+        use_op,
+        explanation: None,
+        example: None,
+    }))
+}
+
 pub fn rec_renders_to_renders<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -71,12 +97,7 @@ pub fn rec_renders_to_renders<'cx>(
             } else {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                        reason_lower: reasonl.dupe(),
-                        reason_upper: reasonu.dupe(),
-                        use_op: frame_renders_compat(use_op),
-                        explanation: None,
-                    })),
+                    incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
                 )
             }
         }
@@ -94,12 +115,7 @@ pub fn rec_renders_to_renders<'cx>(
             )? {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                        reason_lower: reasonl.dupe(),
-                        reason_upper: reasonu.dupe(),
-                        use_op: frame_renders_compat(use_op),
-                        explanation: None,
-                    })),
+                    incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
                 )
             } else {
                 Ok(())
@@ -111,12 +127,7 @@ pub fn rec_renders_to_renders<'cx>(
         )
         | (_, CanonicalRendersForm::IntrinsicRenders(_)) => flow_js_utils::add_output(
             cx,
-            ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                reason_lower: reasonl.dupe(),
-                reason_upper: reasonu.dupe(),
-                use_op: frame_renders_compat(use_op),
-                explanation: None,
-            })),
+            incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
         ),
         (
             CanonicalRendersForm::NominalRenders {
@@ -210,12 +221,7 @@ pub fn rec_renders_to_renders<'cx>(
             CanonicalRendersForm::NominalRenders { .. },
         ) => flow_js_utils::add_output(
             cx,
-            ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                reason_lower: reasonl.dupe(),
-                reason_upper: reasonu.dupe(),
-                use_op: frame_renders_compat(use_op),
-                explanation: None,
-            })),
+            incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
         ),
         (
             CanonicalRendersForm::StructuralRenders {
@@ -459,12 +465,7 @@ fn try_promote_render_type_from_react_element_type<'cx>(
     if has_failed {
         flow_js_utils::add_output(
             cx,
-            ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                reason_lower: elem_reason.dupe(),
-                reason_upper: renders_r.dupe(),
-                use_op: use_op.dupe(),
-                explanation: None,
-            })),
+            incompatible_renders_error(elem_reason, renders_r, use_op.dupe()),
         )?;
     }
     for promoted_l in promoted_ts {
@@ -613,12 +614,11 @@ pub fn non_renders_to_renders<'cx>(
     }
     flow_js_utils::add_output(
         cx,
-        ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-            reason_lower: type_util::reason_of_t(l).dupe(),
-            reason_upper: renders_r.dupe(),
-            use_op: frame_renders_compat(use_op),
-            explanation: None,
-        })),
+        incompatible_renders_error(
+            type_util::reason_of_t(l),
+            renders_r,
+            frame_renders_compat(use_op),
+        ),
     )
 }
 

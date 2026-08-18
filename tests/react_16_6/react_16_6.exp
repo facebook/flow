@@ -79,7 +79,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
 
 Cannot call `React.lazy` with function bound to `component` because in the return value > type argument `R` [1]:
-function [2] is incompatible with object type [3]. [incompatible-type]
+`(x: Props) => React.Node` [2] is incompatible with `{readonly default: component(...any) renders any, ...}` [3].
+[incompatible-type]
 
 Functions without statics are not compatible with objects.
 

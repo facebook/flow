@@ -1178,7 +1178,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:6:1
 
-Cannot cast `a` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a` to empty because React element [1] is incompatible with `empty` [2]. [incompatible-type]
 
    jsx.js:6:1
    6| a as empty; // error

@@ -99,8 +99,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: object type [2] is
-incompatible with function type [3]. [incompatible-type]
+Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter:
+`{y_: string, ...}` [2] is incompatible with `(State, Props) => ?Readonly<Partial<State>>` [3]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 

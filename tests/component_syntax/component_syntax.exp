@@ -2667,7 +2667,7 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either in the first parameter: component Reffed [1] is incompatible with `null` [2].
- - Or function type [3] is incompatible with object type [4].
+ - Or `(typeof Reffed) => unknown` [3] is incompatible with `{writeonly current: any | null, ...}` [4].
     - Functions without statics are not compatible with objects.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

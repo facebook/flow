@@ -301,7 +301,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.ts:19:20
 
-Cannot assign `"nope"` to `s3` because string literal `nope` [1] is incompatible with `Status` [2]. [incompatible-type]
+Cannot assign `"nope"` to `s3` because `"nope"` [1] is incompatible with `"paused" | "active"` [2]. [incompatible-type]
 
    string.ts:19:20
    19| const s3: Status = "nope"; // ERROR

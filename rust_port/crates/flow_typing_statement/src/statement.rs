@@ -56,7 +56,7 @@ use flow_typing_errors::error_message::ECallTypeArityData;
 use flow_typing_errors::error_message::EComponentThisReferenceData;
 use flow_typing_errors::error_message::EDuplicateClassMemberData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
-use flow_typing_errors::error_message::EIncompatibleWithUseOpData;
+use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EInvalidReactCreateElementData;
 use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwriteData;
 use flow_typing_errors::error_message::ETSSyntaxData;
@@ -101,6 +101,7 @@ use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::type_collector::TypeCollector;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::*;
 use flow_typing_type::type_util::*;
 use flow_typing_utils::abnormal::AbnormalControlFlow;
@@ -14019,12 +14020,19 @@ fn static_method_call_object<'a>(
             );
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EIncompatibleWithUseOp(Box::new(EIncompatibleWithUseOpData {
-                    reason_lower: reason.dupe(),
-                    reason_upper: reason.dupe(),
-                    use_op,
-                    explanation: None,
-                })),
+                ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
+                    EIncompatibleTypesWithUseOpData {
+                        lower_loc: reason.loc().dupe(),
+                        lower_def_loc: reason.def_loc().dupe(),
+                        upper_loc: reason.loc().dupe(),
+                        upper_def_loc: reason.def_loc().dupe(),
+                        lower_desc: TypeOrTypeDescT::TypeDesc(Err(reason.desc(true).clone())),
+                        upper_desc: TypeOrTypeDescT::TypeDesc(Err(reason.desc(true).clone())),
+                        use_op,
+                        explanation: None,
+                        example: None,
+                    },
+                )),
             );
             let t = any_t::error(reason);
             (

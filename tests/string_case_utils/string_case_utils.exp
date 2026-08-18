@@ -44,7 +44,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- capitalize.js:34:1
 
-Cannot cast `'foo'` to `C6` because string literal `foo` [1] is incompatible with `C6` [2]. [incompatible-type]
+Cannot cast `'foo'` to `C6` because `"foo"` [1] is incompatible with `C6` [2]. [incompatible-type]
 
    capitalize.js:34:1
    34| 'foo' as C6; // ERROR
@@ -202,7 +202,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:27:1
 
-Cannot cast `'BAZ'` to `IA2` because string literal `BAZ` [1] is incompatible with `Uppercase` [2]. [incompatible-type]
+Cannot cast `'BAZ'` to `IA2` because `"BAZ"` [1] is incompatible with `"BAR" | "FOO"` [2]. [incompatible-type]
 
    concretization.js:27:1
    27| 'BAZ' as IA2; // ERROR
@@ -456,7 +456,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:28:1
 
-Cannot cast `'BAR'` to `L5` because string literal `BAR` [1] is incompatible with `L5` [2]. [incompatible-type]
+Cannot cast `'BAR'` to `L5` because `"BAR"` [1] is incompatible with `L5` [2]. [incompatible-type]
 
    lowercase.js:28:1
    28| 'BAR' as L5; // ERROR
@@ -644,7 +644,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:40:1
 
-Cannot cast `'FOO'` to `U6` because string literal `FOO` [1] is incompatible with `U6` [2]. [incompatible-type]
+Cannot cast `'FOO'` to `U6` because `"FOO"` [1] is incompatible with `U6` [2]. [incompatible-type]
 
    uncapitalize.js:40:1
    40| 'FOO' as U6; // ERROR
@@ -801,7 +801,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:29:1
 
-Cannot cast `'foo'` to `U5` because string literal `foo` [1] is incompatible with `U5` [2]. [incompatible-type]
+Cannot cast `'foo'` to `U5` because `"foo"` [1] is incompatible with `U5` [2]. [incompatible-type]
 
    uppercase.js:29:1
    29| 'foo' as U5; // ERROR
@@ -815,7 +815,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:30:1
 
-Cannot cast `'baz'` to `U5` because string literal `baz` [1] is incompatible with `U5` [2]. [incompatible-type]
+Cannot cast `'baz'` to `U5` because `"baz"` [1] is incompatible with `U5` [2]. [incompatible-type]
 
    uppercase.js:30:1
    30| 'baz' as U5; // ERROR
@@ -905,7 +905,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:85:1
 
-Cannot cast `'V3'` to `U12` because string literal `V3` [1] is incompatible with `U12` [2]. [incompatible-type]
+Cannot cast `'V3'` to `U12` because `"V3"` [1] is incompatible with `U12` [2]. [incompatible-type]
 
    uppercase.js:85:1
    85| 'V3' as U12; // ERROR

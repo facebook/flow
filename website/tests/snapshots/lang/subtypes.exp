@@ -10,7 +10,7 @@ No errors!
 === block 4 ===
 Error ------------------------------------------------------------------------------ -:10:3
 
-Cannot call `f` with `fiveOrSix` bound to `param` because union type [1] is incompatible with union type [2].
+Cannot call `f` with `fiveOrSix` bound to `param` because `5 | 6` [1] is incompatible with `1 | 2 | 3 | 4 | 5` [2].
 [incompatible-type]
 
 Type union type [1] includes members `6` that are not included in type union type [2].
@@ -71,7 +71,7 @@ Found 1 error
 === block 7 ===
 Error ------------------------------------------------------------------------------- -:8:1
 
-Cannot cast `f1` to `FuncType` because in the return value: union type [1] is incompatible with union type [2].
+Cannot cast `f1` to `FuncType` because in the return value: `"A" | "B" | "C"` [1] is incompatible with `"A" | "B"` [2].
 [incompatible-type]
 
 Type union type [1] includes members `C` that are not included in type union type [2].
