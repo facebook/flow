@@ -1512,6 +1512,7 @@ pub(crate) mod recheck {
             error_collator::update_local_collated_errors(
                 &loc_of_aloc,
                 &get_ast,
+                &FileKey::is_lib_file,
                 &options.root,
                 &options.file_options,
                 options.node_modules_errors,
@@ -2176,6 +2177,7 @@ pub(crate) fn recheck_impl(
             error_collator::update_collated_errors(
                 &loc_of_aloc,
                 &get_ast,
+                &FileKey::is_lib_file,
                 options,
                 env.checked_files(),
                 &all_suppressions,
@@ -2861,6 +2863,7 @@ fn init_with_initial_state(
         error_collator::update_local_collated_errors(
             &loc_of_aloc,
             &get_ast,
+            &FileKey::is_lib_file,
             &options.root,
             &options.file_options,
             options.node_modules_errors,
@@ -3360,6 +3363,7 @@ pub fn init_from_scratch(
             error_collator::update_local_collated_errors(
                 &loc_of_aloc,
                 &get_ast,
+                &FileKey::is_lib_file,
                 &options.root,
                 &options.file_options,
                 options.node_modules_errors,
@@ -4037,6 +4041,7 @@ pub fn check_files_for_init(
             error_collator::update_collated_overlay_errors(
                 &loc_of_aloc,
                 &get_ast,
+                &FileKey::is_lib_file,
                 options,
                 &to_merge,
                 &merge_result.suppressions,

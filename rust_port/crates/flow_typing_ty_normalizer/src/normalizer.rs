@@ -489,7 +489,7 @@ fn symbol_from_loc<'cx>(
     let current_source = env.genv.cx.file();
     let sym_provenance = match symbol_source {
         Some(def_file) if current_source == def_file => Provenance::Local,
-        Some(def_file) if env.genv.cx.is_lib_file_key(def_file) => {
+        Some(def_file) if env.genv.cx.is_global_libdef(def_file) => {
             Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
                 imported_as: env.imported_names()?.get(&sym_def_loc).cloned(),
             })

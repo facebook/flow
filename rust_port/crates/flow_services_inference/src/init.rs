@@ -38,7 +38,7 @@ use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
 use flow_typing_context::ResolvedRequire;
-use flow_typing_context::metadata_of_options;
+use flow_typing_context::mk_context_metadata;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::flow_error::FlowError;
@@ -108,10 +108,11 @@ fn load_lib_files(
             MasterContext::NonEmptyMasterContext {
                 ref builtin_leader_file_key,
                 ref all_unordered_libs,
+                ref global_libdefs,
                 ref unscoped_builtins,
                 ref scoped_builtins,
             } => {
-                let mut metadata = metadata_of_options(options);
+                let mut metadata = mk_context_metadata(options, global_libdefs.dupe());
                 metadata.overridable.checked = false;
                 let cx = Context::make(
                     ccx.dupe(),

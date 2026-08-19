@@ -788,7 +788,9 @@ fn refactor_match_coded_like_switch(
     if cx.enable_pattern_matching()
         && (include_quick_fixes(only) || include_rewrite_refactors(only))
         && cx.errors().exists(|error| {
-            let intermediate = make_intermediate_error(loc_of_aloc, false, error);
+            let intermediate = make_intermediate_error(loc_of_aloc, false, error, |file| {
+                cx.is_global_libdef(file)
+            });
             Loc::contains(&intermediate.loc, &loc)
         })
     {
@@ -2496,8 +2498,12 @@ fn code_actions_of_errors(
             let quick_fix_actions: Vec<CodeActionOrCommand> = if include_quick_fixes {
                 let lazy_error_loc = {
                     let loc_of_aloc_ref = &loc_of_aloc;
-                    let intermediate =
-                        make_intermediate_error(|aloc: &ALoc| loc_of_aloc_ref(aloc), false, &error);
+                    let intermediate = make_intermediate_error(
+                        |aloc: &ALoc| loc_of_aloc_ref(aloc),
+                        false,
+                        &error,
+                        |file| cx.is_global_libdef(file),
+                    );
                     intermediate.loc
                 };
                 let transforms = ast_transforms_of_error(
@@ -3145,8 +3151,13 @@ pub fn autofix_errors_cli(
                 .fold((vec![], vec![]), |(mut safe, mut best_effort), error| {
                     let lazy_error_loc = {
                         let loc_of_aloc_ref = &loc_of_aloc;
-                        make_intermediate_error(|aloc: &ALoc| loc_of_aloc_ref(aloc), false, &error)
-                            .loc
+                        make_intermediate_error(
+                            |aloc: &ALoc| loc_of_aloc_ref(aloc),
+                            false,
+                            &error,
+                            |file| cx.is_global_libdef(file),
+                        )
+                        .loc
                     };
                     let mapped_error =
                         FlowError::map_loc_of_error(|aloc: ALoc| loc_of_aloc(&aloc), error);

@@ -1009,14 +1009,16 @@ where
 ///
 /// Returns IntermediateError with the same location type as input (ALoc).
 /// The loc_of_aloc function is only used for computing the primary loc and for error cases.
-pub fn make_intermediate_error<L, F>(
+pub fn make_intermediate_error<L, F, G>(
     loc_of_aloc: F,
     speculation: bool,
     error: &FlowError<L>,
+    is_lib: G,
 ) -> IntermediateError<L>
 where
     L: Dupe + PartialEq + Eq + PartialOrd + Ord + Clone + std::fmt::Debug,
     F: Fn(&L) -> Loc + Clone,
+    G: Fn(&FileKey) -> bool + Clone,
 {
     // In friendly error messages, we always want to point to a value as the primary location.
     // Normally, values are in the lower bound, but in contravariant positions this flips.
@@ -3249,8 +3251,12 @@ where
                     .map(|msg| {
                         let score = score_of_msg(&msg);
                         let branch_error = error_of_msg(source_file.dupe(), msg);
-                        let intermediate =
-                            make_intermediate_error(loc_of_aloc.clone(), true, &branch_error);
+                        let intermediate = make_intermediate_error(
+                            loc_of_aloc.clone(),
+                            true,
+                            &branch_error,
+                            is_lib.clone(),
+                        );
                         (score, intermediate)
                     })
                     .collect();
@@ -3802,7 +3808,8 @@ where
                 )),
             );
             let example_error = error_of_msg(source_file.dupe(), *example);
-            let example = make_intermediate_error(loc_of_aloc.clone(), true, &example_error);
+            let example =
+                make_intermediate_error(loc_of_aloc.clone(), true, &example_error, is_lib.clone());
             outer.message = match outer.message {
                 ErrorMessage::SingletonMessage {
                     message,
@@ -4092,7 +4099,7 @@ where
     };
 
     intermediate_error.misplaced_source_file = match intermediate_error.loc.source.as_ref() {
-        Some(file) if !speculation && !source_file.is_lib_file() && file != source_file => {
+        Some(file) if !speculation && !is_lib(source_file) && file != source_file => {
             Some(source_file.dupe())
         }
         _ => None,
@@ -10600,18 +10607,21 @@ where
 
 /// Convert a set of FlowErrors to printable errors.
 #[allow(dead_code)]
-pub fn make_errors_printable<F, G>(
+pub fn make_errors_printable<F, G, H>(
     loc_of_aloc: F,
     get_ast: G,
     strip_root: Option<&std::path::Path>,
     errors: ErrorSet,
+    is_lib: H,
 ) -> ConcreteLocPrintableErrorSet
 where
     F: Fn(&ALoc) -> Loc + Clone,
     G: Fn(&FileKey) -> Option<Arc<flow_parser::ast::Program<Loc, Loc>>> + Clone,
+    H: Fn(&FileKey) -> bool + Clone,
 {
     errors.fold(ConcreteLocPrintableErrorSet::empty(), |mut acc, err| {
-        let intermediate = make_intermediate_error(loc_of_aloc.clone(), false, &err);
+        let intermediate =
+            make_intermediate_error(loc_of_aloc.clone(), false, &err, is_lib.clone());
         let printable = to_printable_error(
             loc_of_aloc.clone(),
             get_ast.clone(),

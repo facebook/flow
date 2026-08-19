@@ -982,11 +982,6 @@ impl Reason {
             .unwrap_or(false)
     }
 
-    /// Check if reason is blamable (not from lib and not none)
-    pub fn is_blamable(&self) -> bool {
-        self.loc != ALoc::none() && !self.is_lib()
-    }
-
     /// Check if reason is for Promise from lib
     pub fn is_promise(&self) -> bool {
         self.is_lib()

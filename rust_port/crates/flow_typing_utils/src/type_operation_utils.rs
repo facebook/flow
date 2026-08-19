@@ -28,7 +28,6 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::MatchErrorKind;
-use flow_typing_errors::flow_error;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js;
@@ -346,8 +345,10 @@ pub mod operators {
                 (_, TypeInner::AnyT(_, _)) => Ok(()),
                 _ if flow_js_utils::is_date(l) && flow_js_utils::is_date(r) => Ok(()),
                 _ => {
-                    let (r1, r2) =
-                        flow_error::ordered_reasons((reason_of_t(l).dupe(), reason_of_t(r).dupe()));
+                    let (r1, r2) = flow_js_utils::ordered_reasons(
+                        cx,
+                        (reason_of_t(l).dupe(), reason_of_t(r).dupe()),
+                    );
                     flow_js_utils::add_output(
                         cx,
                         ErrorMessage::EComparison(Box::new(EComparisonData {
@@ -366,7 +367,7 @@ pub mod operators {
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
             &|r1, r2| {
-                flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
+                flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                     .0
                     .loc()
                     .dupe()
@@ -393,8 +394,8 @@ pub mod operators {
     }
 
     pub fn check_eq<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) -> Result<(), JobError> {
-        fn get_no_match_error_loc(r1: &Reason, r2: &Reason) -> ALoc {
-            flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
+        fn get_no_match_error_loc(cx: &Context<'_>, r1: &Reason, r2: &Reason) -> ALoc {
+            flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                 .0
                 .loc()
                 .dupe()
@@ -516,7 +517,7 @@ pub mod operators {
                         None,
                         None,
                         None,
-                        get_no_match_error_loc(r1, reason_of_t(t2)),
+                        get_no_match_error_loc(cx, r1, reason_of_t(t2)),
                         cases,
                     )
                 }
@@ -538,7 +539,7 @@ pub mod operators {
                         None,
                         None,
                         None,
-                        get_no_match_error_loc(reason_of_t(t1), r2),
+                        get_no_match_error_loc(cx, reason_of_t(t1), r2),
                         cases,
                     )
                 }
@@ -568,10 +569,10 @@ pub mod operators {
                     if equatable(t1, t2) {
                         Ok(())
                     } else {
-                        let reasons = flow_error::ordered_reasons((
-                            reason_of_t(t1).dupe(),
-                            reason_of_t(t2).dupe(),
-                        ));
+                        let reasons = flow_js_utils::ordered_reasons(
+                            cx,
+                            (reason_of_t(t1).dupe(), reason_of_t(t2).dupe()),
+                        );
                         flow_js_utils::add_output(
                             cx,
                             ErrorMessage::ENonStrictEqualityComparison(Box::new((
@@ -593,8 +594,8 @@ pub mod operators {
         cx: &Context<'cx>,
         pair: (&Type, &Type),
     ) -> Result<(), JobError> {
-        fn get_no_match_error_loc(r1: &Reason, r2: &Reason) -> ALoc {
-            flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
+        fn get_no_match_error_loc(cx: &Context<'_>, r1: &Reason, r2: &Reason) -> ALoc {
+            flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                 .0
                 .loc()
                 .dupe()
@@ -611,7 +612,8 @@ pub mod operators {
             }
         }
 
-        fn strict_equatable_error(
+        fn strict_equatable_error<'cx>(
+            cx: &Context<'cx>,
             encl_ctx: &EnclosingContext,
             l: &Type,
             r: &Type,
@@ -638,10 +640,10 @@ pub mod operators {
                     | EnclosingContext::LiteralTestContext
                     | EnclosingContext::MatchPattern
                     | EnclosingContext::StrictComparison => {
-                        let (r1, r2) = flow_error::ordered_reasons((
-                            reason_of_t(l).dupe(),
-                            reason_of_t(r).dupe(),
-                        ));
+                        let (r1, r2) = flow_js_utils::ordered_reasons(
+                            cx,
+                            (reason_of_t(l).dupe(), reason_of_t(r).dupe()),
+                        );
                         ErrorMessage::EComparison(Box::new(EComparisonData {
                             r1,
                             r2,
@@ -782,7 +784,7 @@ pub mod operators {
                         None,
                         None,
                         None,
-                        get_no_match_error_loc(r1, reason_of_t(t2)),
+                        get_no_match_error_loc(cx, r1, reason_of_t(t2)),
                         cases,
                     )
                 }
@@ -806,7 +808,7 @@ pub mod operators {
                         None,
                         None,
                         None,
-                        get_no_match_error_loc(reason_of_t(t1), r2),
+                        get_no_match_error_loc(cx, reason_of_t(t1), r2),
                         cases,
                     )
                 }
@@ -814,7 +816,7 @@ pub mod operators {
                     let t1_needs_concretization = eq_needs_concretization(t1);
                     let t2_needs_concretization = eq_needs_concretization(t2);
                     if !t1_needs_concretization && !t2_needs_concretization {
-                        match strict_equatable_error(encl_ctx, t1, t2) {
+                        match strict_equatable_error(cx, encl_ctx, t1, t2) {
                             Some(error) => {
                                 flow_js_utils::add_output(cx, error)?;
                                 Ok(())
@@ -2489,7 +2491,7 @@ pub mod type_assertions {
             None,
             &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
             &|r1, r2| {
-                flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
+                flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                     .0
                     .loc()
                     .dupe()

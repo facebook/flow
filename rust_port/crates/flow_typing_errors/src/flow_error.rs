@@ -15,6 +15,7 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::ord_set::Iter as OrdSetIter;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
+use flow_parser::loc_sig::LocSig;
 
 use super::error_message::ErrorMessage;
 use super::error_message::TypeOrTypeDesc;
@@ -97,9 +98,15 @@ where
 
 // Decide reason order based on UB's flavor and blamability.
 // If the order is unchanged, maintain reference equality.
-pub fn ordered_reasons(reasons: (Reason, Reason)) -> (Reason, Reason) {
+pub fn ordered_reasons(
+    reasons: (Reason, Reason),
+    is_lib: impl Fn(&FileKey) -> bool,
+) -> (Reason, Reason) {
+    let is_blamable = |reason: &Reason| {
+        *reason.loc() != ALoc::none() && !reason.loc().source().is_some_and(&is_lib)
+    };
     let (rl, ru) = reasons;
-    if ru.is_blamable() && !rl.is_blamable() {
+    if is_blamable(&ru) && !is_blamable(&rl) {
         (ru, rl)
     } else {
         (rl, ru)

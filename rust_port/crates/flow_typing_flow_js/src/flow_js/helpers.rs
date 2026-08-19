@@ -2147,7 +2147,7 @@ pub(super) fn flow<'cx>(
             };
             let reasons = match upper.deref() {
                 UseTInner::UseT(_, _) => (ru, rl),
-                _ => flow_error::ordered_reasons((rl, ru)),
+                _ => flow_js_utils::ordered_reasons(cx, (rl, ru)),
             };
             flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reasons.0.loc().dupe()))
         }
@@ -2231,8 +2231,10 @@ pub(super) fn unify<'cx>(
     match unify_opt(cx, None, use_op, unify_cause, Some(true), t1, t2) {
         Ok(()) => Ok(()),
         Err(FlowJsException::LimitExceeded) => {
-            let reasons =
-                flow_error::ordered_reasons((reason_of_t(t1).dupe(), reason_of_t(t2).dupe()));
+            let reasons = flow_js_utils::ordered_reasons(
+                cx,
+                (reason_of_t(t1).dupe(), reason_of_t(t2).dupe()),
+            );
             flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reasons.0.loc().dupe()))
         }
         Err(e) => Err(e),

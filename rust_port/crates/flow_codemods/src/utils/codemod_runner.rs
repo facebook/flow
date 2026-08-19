@@ -564,7 +564,8 @@ where
             master_cx,
             flow_services_references::find_refs_types::empty_request(),
         );
-        let metadata = flow_typing_context::metadata_of_options(options);
+        let metadata =
+            flow_typing_context::mk_context_metadata(options, master_cx.global_libdefs());
         (check, cache, metadata)
     };
 
@@ -1124,7 +1125,8 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         flow_hh_logger::info!("Storing pre-checking results Done");
         flow_hh_logger::info!("Checking+Codemodding {} files", _roots.len());
         let options = C::check_options(_options.clone());
-        let metadata = flow_typing_context::metadata_of_options(&options);
+        let metadata =
+            flow_typing_context::mk_context_metadata(&options, _env.master_cx.global_libdefs());
         let visit_fn: &(
              dyn Fn(
             &Options,

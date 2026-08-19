@@ -174,6 +174,7 @@ pub struct FrozenMetadata {
     pub facebook_fbt: Option<FlowSmolStr>,
     pub facebook_module_interop: bool,
     pub file_options: Arc<FileOptions>,
+    pub global_libdefs: Arc<BTreeSet<FileKey>>,
     pub hook_compatibility: bool,
     pub hook_compatibility_excludes: Arc<[Regex]>,
     pub hook_compatibility_includes: Arc<[Regex]>,
@@ -233,6 +234,7 @@ impl Default for FrozenMetadata {
             facebook_fbt: None,
             facebook_module_interop: false,
             file_options: Arc::new(FileOptions::default()),
+            global_libdefs: Arc::new(BTreeSet::new()),
             hook_compatibility: false,
             hook_compatibility_excludes: Arc::from([]),
             hook_compatibility_includes: Arc::from([]),
@@ -352,9 +354,27 @@ pub enum MasterContext {
     NonEmptyMasterContext {
         builtin_leader_file_key: FileKey,
         all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
+        global_libdefs: Arc<BTreeSet<FileKey>>,
         unscoped_builtins: BuiltinsGroup,
         scoped_builtins: Vec<(FlowProjects, BuiltinsGroup)>,
     },
+}
+
+impl MasterContext {
+    pub fn global_libdefs(&self) -> Arc<BTreeSet<FileKey>> {
+        match self {
+            Self::EmptyMasterContext => Arc::new(BTreeSet::new()),
+            Self::NonEmptyMasterContext { global_libdefs, .. } => global_libdefs.dupe(),
+        }
+    }
+
+    pub fn is_global_libdef(&self, file: &FileKey) -> bool {
+        file.is_lib_file()
+            || match self {
+                Self::EmptyMasterContext => false,
+                Self::NonEmptyMasterContext { global_libdefs, .. } => global_libdefs.contains(file),
+            }
+    }
 }
 
 pub struct ComponentT<'cx> {
@@ -592,7 +612,7 @@ pub struct Context<'cx>(Rc<ContextInner<'cx>>);
 pub type ResolveRequire<'cx> =
     Rc<dyn Fn(&Context<'cx>, &FlowImportSpecifier) -> ResolvedRequire<'cx> + 'cx>;
 
-pub fn metadata_of_options(options: &Options) -> Metadata {
+pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileKey>>) -> Metadata {
     Metadata {
         overridable: OverridableMetadata {
             checked: options.all,
@@ -639,6 +659,7 @@ pub fn metadata_of_options(options: &Options) -> Metadata {
             facebook_fbt: options.facebook_fbt.dupe(),
             facebook_module_interop: options.facebook_module_interop,
             file_options: options.file_options.dupe(),
+            global_libdefs,
             ignore_non_literal_requires: options.ignore_non_literal_requires,
             max_workers: options.max_workers,
             missing_module_generators: options.missing_module_generators.dupe(),
@@ -999,30 +1020,31 @@ impl<'cx> Context<'cx> {
         self.0.budget
     }
 
-    pub fn is_lib_file(&self) -> bool {
-        self.is_lib_file_key(&self.0.file)
-    }
-
-    pub fn is_lib_file_key(&self, file: &FileKey) -> bool {
+    pub fn is_global_libdef(&self, file: &FileKey) -> bool {
         files::is_lib_file(&self.0.all_unordered_libs, file)
+            || self.0.metadata.frozen.global_libdefs.contains(file)
     }
 
     pub fn is_lib_reason(&self, reason: &Reason) -> bool {
         reason
             .loc()
             .source()
-            .is_some_and(|file| self.is_lib_file_key(file))
+            .is_some_and(|file| self.is_global_libdef(file))
     }
 
     pub fn is_lib_reason_def(&self, reason: &Reason) -> bool {
         reason
             .def_loc()
             .source()
-            .is_some_and(|file| self.is_lib_file_key(file))
+            .is_some_and(|file| self.is_global_libdef(file))
+    }
+
+    pub fn is_global_lib_context(&self) -> bool {
+        self.is_global_libdef(&self.0.file)
     }
 
     pub fn under_declaration_context(&self) -> bool {
-        self.is_lib_file()
+        self.is_global_lib_context()
             || self.0.file.check_suffix(".flow")
             || flow_parser::file_key::has_dts_ext(self.0.file.as_str())
             || self.in_declare_module()
@@ -1071,7 +1093,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn component_syntax(&self) -> bool {
-        self.0.metadata.frozen.component_syntax || self.is_lib_file()
+        self.0.metadata.frozen.component_syntax || self.is_global_lib_context()
     }
 
     pub fn async_component_syntax(&self) -> bool {
@@ -1124,7 +1146,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_utility_type_deprecated(&self, t: &str) -> bool {
-        if self.is_lib_file() {
+        if self.is_global_lib_context() {
             return false;
         }
         match self.0.metadata.frozen.deprecated_utilities.get(t) {
@@ -1288,10 +1310,12 @@ impl<'cx> Context<'cx> {
     pub fn is_verbose(&self) -> bool {
         match &self.0.metadata.frozen.verbose {
             None => false,
-            Some(v) if v.focused_files.is_none() => v.enabled_during_flowlib || !self.is_lib_file(),
+            Some(v) if v.focused_files.is_none() => {
+                v.enabled_during_flowlib || !self.is_global_lib_context()
+            }
             Some(v) => {
                 let file = &self.0.file;
-                if self.is_lib_file() {
+                if self.is_global_lib_context() {
                     v.enabled_during_flowlib
                 } else {
                     v.focused_files.as_ref().is_some_and(|files| {
@@ -1396,7 +1420,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_colon_extends_deprecated(&self) -> bool {
-        if self.is_lib_file() {
+        if self.is_global_lib_context() {
             return false;
         }
         let filename = self.0.file.to_absolute();
@@ -1412,7 +1436,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn tslib_syntax(&self) -> bool {
-        self.0.metadata.frozen.tslib_syntax || self.is_lib_file()
+        self.0.metadata.frozen.tslib_syntax || self.is_global_lib_context()
     }
 
     pub fn typescript_library_definition_support(&self) -> bool {

@@ -37,6 +37,7 @@ use flow_lint_settings::strict_mode_settings::StrictModeSettings;
 use flow_parser::ast;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
+use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 use flow_type_sig::compact_table;
@@ -1880,7 +1881,7 @@ pub fn post_merge_checks<'cx>(
 ) -> Result<(), JobError> {
     force_lazy_tvars(cx);
     check_react_rules_fn(cx, tast)?;
-    if !cx.is_lib_file() {
+    if !cx.is_global_lib_context() {
         check_multiplatform_conformance(cx, ast, tast)?;
     }
     check_polarity_fn(cx)?;
@@ -2128,6 +2129,12 @@ pub fn merge_lib_files(
         Arc<ast::Program<Loc, Loc>>,
     )],
 ) -> (flow_error::ErrorSet, MasterContext) {
+    let global_libdefs: Arc<BTreeSet<FileKey>> = Arc::new(
+        ordered_asts_with_scoped_projects
+            .iter()
+            .filter_map(|(_, _, ast)| ast.loc.source.dupe())
+            .collect(),
+    );
     let builtin_leader_file_key = ordered_asts_with_scoped_projects
         .first()
         .and_then(|(_, _, ast)| ast.loc.source.dupe());
@@ -2201,6 +2208,7 @@ pub fn merge_lib_files(
                 MasterContext::NonEmptyMasterContext {
                     builtin_leader_file_key,
                     all_unordered_libs,
+                    global_libdefs,
                     unscoped_builtins,
                     scoped_builtins: scoped_list,
                 },
@@ -2218,6 +2226,7 @@ pub fn mk_builtins<'cx>(
         MasterContext::NonEmptyMasterContext {
             builtin_leader_file_key,
             all_unordered_libs,
+            global_libdefs: _,
             unscoped_builtins,
             scoped_builtins,
         } => {

@@ -206,6 +206,7 @@ fn errors_of_file_artifacts(
         &unsuppressable_error_codes,
         &loc_of_aloc,
         &get_ast,
+        |file| cx.is_global_libdef(file),
         &errors,
         &mut unused,
     );
@@ -218,6 +219,7 @@ fn errors_of_file_artifacts(
         &unsuppressable_error_codes,
         &loc_of_aloc,
         &get_ast,
+        |file| cx.is_global_libdef(file),
         &warnings,
         &mut unused2,
     );
@@ -259,6 +261,7 @@ pub fn printable_errors_of_file_artifacts_result(
                 get_ast,
                 Some(root.as_path()),
                 errors.clone(),
+                FileKey::is_lib_file,
             );
             (errors, ConcreteLocPrintableErrorSet::empty())
         }

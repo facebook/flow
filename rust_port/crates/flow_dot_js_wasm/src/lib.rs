@@ -313,7 +313,7 @@ fn prepare_file(
             parsed,
             cx: Context::make(
                 Rc::new(flow_typing_context::make_ccx()),
-                flow_typing_context::metadata_of_options(&options),
+                flow_typing_context::mk_context_metadata(&options, Arc::default()),
                 file_key.dupe(),
                 Arc::default(),
                 Rc::new(LazyCell::new(Box::new({
@@ -325,7 +325,7 @@ fn prepare_file(
                 Rc::new(|_| flow_typing_builtins::Builtins::empty()),
                 CheckBudget::new(None),
             ),
-            metadata: flow_typing_context::metadata_of_options(&options),
+            metadata: flow_typing_context::mk_context_metadata(&options, Arc::default()),
             lint_severities: LintSettings::<Severity>::empty_severities(),
         });
     }
@@ -333,7 +333,7 @@ fn prepare_file(
     let metadata = flow_typing_context::docblock_overrides(
         &parsed.docblock,
         &file_key,
-        flow_typing_context::metadata_of_options(&options),
+        flow_typing_context::mk_context_metadata(&options, Arc::default()),
     );
     let lint_severities =
         merge::get_lint_severities(&metadata, &options.strict_mode, options.lint_severities);
@@ -413,6 +413,7 @@ fn printable_errors(parsed: &ParsedFile, errors: ErrorSet) -> ConcreteLocPrintab
         },
         Some(Path::new("")),
         errors,
+        FileKey::is_lib_file,
     )
 }
 
@@ -471,6 +472,7 @@ fn filtered_errors(
         &unsuppressable_error_codes,
         loc_of_aloc,
         &get_ast,
+        FileKey::is_lib_file,
         &errors,
         &mut unused,
     );
@@ -483,6 +485,7 @@ fn filtered_errors(
         &unsuppressable_error_codes,
         loc_of_aloc,
         &get_ast,
+        FileKey::is_lib_file,
         &warnings,
         &mut unused,
     );

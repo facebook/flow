@@ -270,7 +270,7 @@ fn recorded_declare_namespace_member_opt<'cx>(
                     .map(|(_, t)| t)
             };
             // Installed lib namespaces are already fully merged.
-            if cx.is_lib_file() {
+            if cx.is_global_lib_context() {
                 if let Some(namespace_t) = builtin_namespace() {
                     vec![namespace_t]
                 } else if cx
@@ -315,7 +315,7 @@ fn recorded_declare_namespace_member_opt<'cx>(
                     })
                     .collect()
             };
-            if cx.is_lib_file() {
+            if cx.is_global_lib_context() {
                 member_lookup()
             } else {
                 let namespace_types = resolved_loc_env_writes(cx, &child.locs);

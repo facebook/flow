@@ -1577,6 +1577,12 @@ pub fn add_output_generic<'src, 'dst>(
     }
 }
 
+/// Decide reason order based on UB's flavor and blamability, asking the checker which files are
+/// global libdefs.
+pub fn ordered_reasons(cx: &Context<'_>, reasons: (Reason, Reason)) -> (Reason, Reason) {
+    flow_typing_errors::flow_error::ordered_reasons(reasons, |file| cx.is_global_libdef(file))
+}
+
 pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
     add_output_generic(cx, cx, msg).map_err(FlowJsException::Speculative)
 }
@@ -1603,7 +1609,6 @@ pub fn exact_obj_error<'cx>(
     l: &Type,
 ) -> Result<(), FlowJsException> {
     use flow_typing_errors::error_message::ErrorMessage;
-    use flow_typing_errors::flow_error::ordered_reasons;
     use flow_typing_errors::intermediate_error_types::ExactnessErrorKind;
     use flow_typing_type::type_::ObjKind;
     use flow_typing_type::type_util::reason_of_t;
@@ -1612,7 +1617,7 @@ pub fn exact_obj_error<'cx>(
         ObjKind::Indexed { .. } => ExactnessErrorKind::UnexpectedIndexer,
         _ => ExactnessErrorKind::UnexpectedInexact,
     };
-    let reasons = ordered_reasons((reason_of_t(l).dupe(), exact_reason));
+    let reasons = ordered_reasons(cx, (reason_of_t(l).dupe(), exact_reason));
     add_output(
         cx,
         ErrorMessage::EIncompatibleWithExact(reasons, use_op, error_kind),

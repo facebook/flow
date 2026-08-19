@@ -47,7 +47,6 @@ use flow_typing_errors::error_message::EnumIncompatibleData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InternalError;
-use flow_typing_errors::flow_error::ordered_reasons;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -3239,7 +3238,7 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::update_lit_type_from_annot(cx, l);
             } else {
                 // TODO: ordered_reasons should not be necessary
-                let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+                let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
@@ -3256,7 +3255,7 @@ pub fn rec_sub_t<'cx>(
                 && matches!(ud.deref(), DefTInner::SingletonStrT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
-            let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+            let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
@@ -3279,7 +3278,7 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::update_lit_type_from_annot(cx, l);
             } else {
                 // TODO: ordered_reasons should not be necessary
-                let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+                let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
@@ -3296,7 +3295,7 @@ pub fn rec_sub_t<'cx>(
                 && matches!(ud.deref(), DefTInner::SingletonNumT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
-            let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+            let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
@@ -3317,7 +3316,7 @@ pub fn rec_sub_t<'cx>(
         {
             if expected != actual {
                 // TODO: ordered_reasons should not be necessary
-                let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+                let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
@@ -3334,7 +3333,7 @@ pub fn rec_sub_t<'cx>(
                 && matches!(ud.deref(), DefTInner::SingletonBoolT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
-            let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+            let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
@@ -3354,7 +3353,7 @@ pub fn rec_sub_t<'cx>(
         {
             if expected.0 != actual.0 {
                 // TODO: ordered_reasons should not be necessary
-                let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+                let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
                 flow_js_utils::add_output(
                     cx,
                     ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
@@ -3371,7 +3370,7 @@ pub fn rec_sub_t<'cx>(
                 && matches!(ud.deref(), DefTInner::SingletonBigIntT { .. }) =>
         {
             // TODO: ordered_reasons should not be necessary
-            let (rl, ru) = ordered_reasons((rl.dupe(), ru.dupe()));
+            let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
@@ -4987,7 +4986,7 @@ pub fn rec_sub_t<'cx>(
                     .join(obj.strictness_kind)
                     .is_typescript_loose() =>
         {
-            let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
+            let reasons = flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::EIncompatibleWithExact(
@@ -5770,7 +5769,7 @@ pub fn rec_sub_t<'cx>(
                     .is_typescript_loose()
                     || obj.flags.obj_kind != ObjKind::Exact) =>
         {
-            let reasons = ordered_reasons((lreason.dupe(), ureason.dupe()));
+            let reasons = flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
             match &obj.flags.obj_kind {
                 ObjKind::Exact => {
                     flow_js_utils::add_output(

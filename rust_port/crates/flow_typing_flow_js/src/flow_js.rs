@@ -42,7 +42,6 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::UpperKind;
-use flow_typing_errors::flow_error;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_errors::intermediate_error_types::ExplanationWithLazyParts;
 use flow_typing_flow_common::flow_cache;

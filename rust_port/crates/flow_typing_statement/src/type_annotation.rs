@@ -366,7 +366,7 @@ fn mk_eval_id<'a>(cx: &Context<'a>, loc: ALoc) -> type_::eval::Id {
 }
 
 fn add_unclear_type_error_if_not_lib_file<'a>(cx: &Context<'a>, loc: ALoc) {
-    if !cx.is_lib_file() {
+    if !cx.is_global_lib_context() {
         flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EUnclearType(loc));
     }
 }
@@ -399,7 +399,7 @@ pub fn polarity<'a>(
             loc,
             kind: ast::VarianceKind::Plus,
             ..
-        }) if !cx.is_lib_file() => {
+        }) if !cx.is_global_lib_context() => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
@@ -412,7 +412,7 @@ pub fn polarity<'a>(
             loc,
             kind: ast::VarianceKind::Minus,
             ..
-        }) if !cx.is_lib_file() => {
+        }) if !cx.is_global_lib_context() => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
@@ -2105,7 +2105,7 @@ fn convert_inner<'a>(
                     // `type Uppercase<S> = intrinsic`). Flow intercepts such aliases at
                     // their use sites, so this body is never consulted; we accept the name
                     // in library definitions and model it as `empty`.
-                    "intrinsic" if cx.is_lib_file() => {
+                    "intrinsic" if cx.is_global_lib_context() => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 0, || {
                             Ok(reconstruct_ast(empty_t::at(loc.dupe()), None, None))
                         })?
@@ -2336,7 +2336,7 @@ fn convert_inner<'a>(
                     ),
                     // Omit<T, K> removes keys K from T.
                     "$Omit" => {
-                        if !cx.is_lib_file() {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EInternalType(
@@ -2437,7 +2437,7 @@ fn convert_inner<'a>(
                     }
                     // $ReactDeepReadOnly<T>
                     "$ReactDeepReadOnly" => {
-                        if !cx.is_lib_file() {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EInternalType(
@@ -2736,7 +2736,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "$EnumValue" => {
-                        if !cx.is_lib_file() {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EInternalType(
@@ -2770,7 +2770,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "$Enum" => {
-                        if !cx.is_lib_file() {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EInternalType(
@@ -2816,7 +2816,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "React$ElementConfig" => {
-                        if !cx.is_lib_file() {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EInternalType(
@@ -2926,7 +2926,7 @@ fn convert_inner<'a>(
                         })?
                     }
                     "React$Node" => {
-                        if !cx.is_lib_file() {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EInternalType(
@@ -9307,8 +9307,12 @@ pub fn mk_declare_class_sig<'a>(
         ))
     }
 
-    fn is_object_builtin_libdef(is_lib_file: bool, name: &str) -> bool {
-        is_lib_file && name == "Object"
+    fn is_object_builtin_libdef(cx: &Context<'_>, loc: &ALoc, name: &str) -> bool {
+        name == "Object"
+            && match loc.source() {
+                None => false,
+                Some(source) => cx.is_global_libdef(source),
+            }
     }
 
     let reason_c = reason.dupe();
@@ -9493,7 +9497,7 @@ pub fn mk_declare_class_sig<'a>(
         let super_kind = {
             let extends_kind = match extends {
                 None => func_class_sig_types::class::Extends::Implicit {
-                    null: is_object_builtin_libdef(cx.is_lib_file(), &id_name.name),
+                    null: is_object_builtin_libdef(cx, id_loc, &id_name.name),
                 },
                 Some(e) => func_class_sig_types::class::Extends::Explicit(e),
             };

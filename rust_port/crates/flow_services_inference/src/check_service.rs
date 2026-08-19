@@ -52,7 +52,7 @@ use flow_typing_context::Metadata;
 use flow_typing_context::ResolvedRequire;
 use flow_typing_context::docblock_overrides;
 use flow_typing_context::make_ccx;
-use flow_typing_context::metadata_of_options;
+use flow_typing_context::mk_context_metadata;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
@@ -163,7 +163,7 @@ pub fn mk_check_file(
     master_cx: &MasterContext,
     cache: Rc<RefCell<CheckCache<'static>>>,
 ) -> CheckFileAndCompEnv {
-    let base_metadata = metadata_of_options(&options);
+    let base_metadata = mk_context_metadata(&options, master_cx.global_libdefs());
 
     let mk_builtins_fn = mk_builtins(&base_metadata, master_cx);
 

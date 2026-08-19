@@ -70,7 +70,8 @@ fn add_suppression_warnings(
         if !checked.mem_dependency(&source_file) {
             let msg = ErrorMessage::EUnusedSuppression(loc.dupe());
             let flow_error = error_of_msg(source_file.dupe(), msg);
-            let intermediate = make_intermediate_error(Loc::dupe, false, &flow_error);
+            let intermediate =
+                make_intermediate_error(Loc::dupe, false, &flow_error, FileKey::is_lib_file);
             let err = to_printable_error(
                 Loc::dupe,
                 |_: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { None },
@@ -114,7 +115,8 @@ fn collate_duplicate_providers<'a, I>(
                     conflict,
                 }));
             let flow_error = error_of_msg(duplicate.dupe(), msg);
-            let intermediate = make_intermediate_error(Loc::dupe, false, &flow_error);
+            let intermediate =
+                make_intermediate_error(Loc::dupe, false, &flow_error, FileKey::is_lib_file);
             let err = to_printable_error(
                 Loc::dupe,
                 |_: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { None },
@@ -126,9 +128,10 @@ fn collate_duplicate_providers<'a, I>(
     }
 }
 
-pub fn update_local_collated_errors<F, G>(
+pub fn update_local_collated_errors<F, G, H>(
     loc_of_aloc: &F,
     get_ast: &G,
+    is_lib: &H,
     root: &Path,
     file_options: &flow_common::files::FileOptions,
     node_modules_errors: bool,
@@ -139,6 +142,7 @@ pub fn update_local_collated_errors<F, G>(
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    H: Fn(&FileKey) -> bool + Clone,
 {
     for (filename, file_errs) in errors {
         let file_options = Some(file_options);
@@ -152,6 +156,7 @@ pub fn update_local_collated_errors<F, G>(
             unsuppressable_error_codes,
             loc_of_aloc,
             get_ast,
+            is_lib,
             file_errs,
             &mut unused,
         );
@@ -168,9 +173,10 @@ pub fn update_local_collated_errors<F, G>(
 // Finally, we compute unused suppression warnings over the set of suppressions
 // that we found during checking (not all_suppressions).
 #[allow(clippy::too_many_arguments)]
-fn acc_fun<F, G, ErrorBase, SuppressedBase>(
+fn acc_fun<F, G, H, ErrorBase, SuppressedBase>(
     loc_of_aloc: &F,
     get_ast: &G,
+    is_lib: &H,
     options: &Options,
     all_suppressions: &ErrorSuppressions,
     unsuppressable_error_codes: &BTreeSet<FlowSmolStr>,
@@ -186,6 +192,7 @@ fn acc_fun<F, G, ErrorBase, SuppressedBase>(
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    H: Fn(&FileKey) -> bool + Clone,
     ErrorBase: OverlayMapBase<FileKey, ConcreteLocPrintableErrorSet>,
     SuppressedBase: OverlayMapBase<FileKey, Vec<(IntermediateError<ALoc>, BTreeSet<Loc>)>>,
 {
@@ -198,6 +205,7 @@ fn acc_fun<F, G, ErrorBase, SuppressedBase>(
         unsuppressable_error_codes,
         loc_of_aloc,
         get_ast,
+        is_lib,
         file_errs,
         unused,
     );
@@ -206,9 +214,19 @@ fn acc_fun<F, G, ErrorBase, SuppressedBase>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeErrors, Warnings>(
+fn update_collated_errors_impl<
+    'a,
+    F,
+    G,
+    H,
+    LocalErrors,
+    DuplicateProviders,
+    MergeErrors,
+    Warnings,
+>(
     loc_of_aloc: &F,
     get_ast: &G,
+    is_lib: &H,
     options: &Options,
     checked_files: &CheckedSet,
     all_suppressions: &ErrorSuppressions,
@@ -221,6 +239,7 @@ fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeE
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    H: Fn(&FileKey) -> bool + Clone,
     LocalErrors: IntoIterator<Item = (&'a FileKey, &'a ErrorSet)>,
     DuplicateProviders: IntoIterator<Item = (&'a FlowSmolStr, &'a (FileKey, vec1::Vec1<FileKey>))>,
     MergeErrors: IntoIterator<Item = (&'a FileKey, &'a ErrorSet)>,
@@ -243,6 +262,7 @@ fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeE
         acc_fun(
             loc_of_aloc,
             get_ast,
+            is_lib,
             options,
             all_suppressions,
             &unsuppressable_error_codes,
@@ -258,6 +278,7 @@ fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeE
         acc_fun(
             loc_of_aloc,
             get_ast,
+            is_lib,
             options,
             all_suppressions,
             &unsuppressable_error_codes,
@@ -274,6 +295,7 @@ fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeE
         acc_fun(
             loc_of_aloc,
             get_ast,
+            is_lib,
             options,
             all_suppressions,
             &unsuppressable_error_codes,
@@ -301,9 +323,10 @@ fn update_collated_errors_impl<'a, F, G, LocalErrors, DuplicateProviders, MergeE
     }
 }
 
-pub fn update_collated_errors<F, G>(
+pub fn update_collated_errors<F, G, H>(
     loc_of_aloc: &F,
     get_ast: &G,
+    is_lib: &H,
     options: &Options,
     checked_files: &CheckedSet,
     all_suppressions: &ErrorSuppressions,
@@ -312,6 +335,7 @@ pub fn update_collated_errors<F, G>(
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    H: Fn(&FileKey) -> bool + Clone,
 {
     let Errors {
         local_errors,
@@ -323,6 +347,7 @@ pub fn update_collated_errors<F, G>(
     update_collated_errors_impl(
         loc_of_aloc,
         get_ast,
+        is_lib,
         options,
         checked_files,
         all_suppressions,
@@ -335,9 +360,10 @@ pub fn update_collated_errors<F, G>(
     );
 }
 
-pub fn update_collated_overlay_errors<F, G>(
+pub fn update_collated_overlay_errors<F, G, H>(
     loc_of_aloc: &F,
     get_ast: &G,
+    is_lib: &H,
     options: &Options,
     checked_files: &CheckedSet,
     all_suppressions: &ErrorSuppressions,
@@ -346,6 +372,7 @@ pub fn update_collated_overlay_errors<F, G>(
 ) where
     F: Fn(&ALoc) -> Loc,
     G: Fn(&FileKey) -> Option<Arc<Program<Loc, Loc>>>,
+    H: Fn(&FileKey) -> bool + Clone,
 {
     let OverlayErrors {
         local_errors,
@@ -358,6 +385,7 @@ pub fn update_collated_overlay_errors<F, G>(
     update_collated_errors_impl(
         loc_of_aloc,
         get_ast,
+        is_lib,
         options,
         checked_files,
         all_suppressions,

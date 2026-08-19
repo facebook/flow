@@ -831,6 +831,7 @@ mod fix_errors_command {
                             |aloc: &flow_aloc::ALoc| loc_of_aloc(aloc),
                             false,
                             &error,
+                            |file| cx.is_global_libdef(file),
                         )
                         .loc;
                     let error_message =

@@ -93,7 +93,7 @@ pub mod signature_verification {
             prevent_munge,
             vec![],
             file,
-            cctx.cx.is_lib_file(),
+            cctx.cx.is_global_lib_context(),
         );
         let strict = docblock.is_strict();
         let platform_availability_set = flow_common::platform_set::available_platforms(

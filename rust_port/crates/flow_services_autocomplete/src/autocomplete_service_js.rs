@@ -2841,7 +2841,10 @@ fn applicable_error_codes(
     let strip_root = Some(cx.root());
     let mut error_codes = Vec::new();
     for err in cx.errors().iter() {
-        let intermediate = intermediate_error::make_intermediate_error(loc_of_aloc, false, err);
+        let intermediate =
+            intermediate_error::make_intermediate_error(loc_of_aloc, false, err, |file| {
+                cx.is_global_libdef(file)
+            });
         let printable = intermediate_error::to_printable_error(
             loc_of_aloc,
             |_file_key: &FileKey| None,

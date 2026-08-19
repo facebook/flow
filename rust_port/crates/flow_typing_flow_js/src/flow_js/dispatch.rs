@@ -367,7 +367,7 @@ pub(super) fn __flow<'cx>(
                 let rl = reason_of_t(&tc_l).dupe();
                 let reasons = match tc_u.deref() {
                     UseTInner::UseT(_, _) => (ru, rl),
-                    _ => flow_error::ordered_reasons((rl, ru)),
+                    _ => flow_js_utils::ordered_reasons(cx, (rl, ru)),
                 };
                 flow_js_utils::add_output_non_speculating(
                     cx,

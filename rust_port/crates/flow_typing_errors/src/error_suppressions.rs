@@ -396,7 +396,7 @@ impl ErrorSuppressions {
     }
 
     // Filter out suppressed errors. also track which suppressions are used.
-    pub fn filter_suppressed_errors<F, G>(
+    pub fn filter_suppressed_errors<F, G, H>(
         &self,
         root: &Path,
         file_options: Option<&flow_common::files::FileOptions>,
@@ -404,6 +404,7 @@ impl ErrorSuppressions {
         unsuppressable_codes: &BTreeSet<FlowSmolStr>,
         loc_of_aloc: F,
         get_ast: G,
+        is_lib: H,
         errors: &ErrorSet,
         unused: &mut Self,
     ) -> (
@@ -413,12 +414,14 @@ impl ErrorSuppressions {
     where
         F: Fn(&ALoc) -> Loc,
         G: Fn(&FileKey) -> Option<Arc<ast::Program<Loc, Loc>>>,
+        H: Fn(&FileKey) -> bool + Clone,
     {
         errors.iter().fold(
             (ConcreteLocPrintableErrorSet::new(), Vec::new()),
             |acc, error| {
                 let (mut errors, mut suppressed) = acc;
-                let intermediate_error = make_intermediate_error(&loc_of_aloc, false, error);
+                let intermediate_error =
+                    make_intermediate_error(&loc_of_aloc, false, error, is_lib.clone());
 
                 match Self::check(
                     root,
