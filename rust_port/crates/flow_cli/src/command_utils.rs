@@ -1129,7 +1129,7 @@ pub(crate) fn file_options(
 
     let mut module_file_exts = flowconfig.options.module_file_exts.clone();
     if flowconfig.options.typescript_library_definition_support {
-        for ext in [".d.cts", ".d.mts", ".d.ts"] {
+        for ext in flow_parser::file_key::DTS_EXTENSIONS {
             if !module_file_exts.contains(&ext.into()) {
                 module_file_exts.insert(0, ext.into());
             }
@@ -2360,7 +2360,7 @@ pub(super) fn make_options(
     ));
 
     if typescript_library_definition_support {
-        for ext in [".d.cts", ".d.mts", ".d.ts"] {
+        for ext in flow_parser::file_key::DTS_EXTENSIONS {
             if !module_file_exts.contains(&ext.into()) {
                 module_file_exts.insert(0, ext.into());
             }
