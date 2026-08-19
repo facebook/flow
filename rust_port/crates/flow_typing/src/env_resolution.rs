@@ -70,6 +70,7 @@ use flow_typing_loc_env::loc_env::PredFuncLazy;
 use flow_typing_loc_env::match_pattern_ir;
 use flow_typing_statement::statement;
 use flow_typing_statement::type_annotation;
+use flow_typing_statement::type_annotation::BindsSingleValue;
 use flow_typing_type::type_;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrayATData;
@@ -216,15 +217,20 @@ fn make_hooklike<'cx>(cx: &Context<'cx>, t: Type) -> Type {
     }
 }
 
+/// `binds_single_value` says whether the annotation is the type of a position
+/// that binds exactly one value. A variable declaration does, and is the only
+/// statement position that may spell out a `unique symbol`.
 fn resolve_annotation<'cx>(
     cx: &Context<'cx>,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     react_deep_read_only: Option<(ALoc, name_def_types::DroAnnot)>,
     anno: &ast::types::Annotation<ALoc, ALoc>,
+    binds_single_value: BindsSingleValue,
 ) -> Result<Type, JobError> {
     let cache = cx.node_cache();
     let tparams_map = mk_tparams_map(cx, tparams_map);
-    let (t, anno_typed) = type_annotation::mk_type_available_annotation(cx, tparams_map, anno)?;
+    let (t, anno_typed) =
+        type_annotation::mk_type_available_annotation(cx, tparams_map, anno, binds_single_value)?;
     let t = match react_deep_read_only {
         Some((param_loc, kind)) => {
             let enabled = match kind {
@@ -297,12 +303,20 @@ fn synthesizable_expression<'cx>(
             let (t, _lit) = statement::module_ref_literal(cx, loc.dupe(), inner)?;
             t
         }
-        ExpressionInner::AsExpression { inner, .. } => {
-            resolve_annotation(cx, &FlowOrdMap::default(), None, &inner.annot)?
-        }
-        ExpressionInner::TypeCast { inner, .. } => {
-            resolve_annotation(cx, &FlowOrdMap::default(), None, &inner.annot)?
-        }
+        ExpressionInner::AsExpression { inner, .. } => resolve_annotation(
+            cx,
+            &FlowOrdMap::default(),
+            None,
+            &inner.annot,
+            BindsSingleValue::No,
+        )?,
+        ExpressionInner::TypeCast { inner, .. } => resolve_annotation(
+            cx,
+            &FlowOrdMap::default(),
+            None,
+            &inner.annot,
+            BindsSingleValue::No,
+        )?,
         ExpressionInner::Member { loc, inner }
             if let ast::expression::member::Property::PropertyIdentifier(id) = &inner.property =>
         {
@@ -521,7 +535,7 @@ fn resolve_hint<'cx>(
     ) -> Result<Type, JobError> {
         Ok(match hint_node {
             HintNode::AnnotationHint(tparams_map, anno) => {
-                resolve_annotation(cx, &tparams_map, None, &anno)?
+                resolve_annotation(cx, &tparams_map, None, &anno, BindsSingleValue::No)?
             }
             HintNode::ValueHint(encl_ctx, exp) => {
                 check_expr_error_to_job_error(cx.run_in_empty_speculation_state(|| {
@@ -1128,7 +1142,13 @@ fn resolve_declared_function<'cx>(
                 _ => ast::function::Effect::Arbitrary,
             };
             let t = replace_function_statics(
-                resolve_annotation(cx, &FlowOrdMap::default(), None, &declaration.annot)?,
+                resolve_annotation(
+                    cx,
+                    &FlowOrdMap::default(),
+                    None,
+                    &declaration.annot,
+                    BindsSingleValue::No,
+                )?,
                 &statics_t,
             );
             Ok(match declaration.id.as_ref() {
@@ -1265,6 +1285,16 @@ fn resolve_binding<'cx>(
                 &ast::types::Annotation {
                     loc: annot.0.dupe(),
                     annotation: annot.1.dupe(),
+                },
+                // A function parameter carries a `param_loc`, and one annotation
+                // is shared by every call, so it may never spell out a `unique
+                // symbol`. Everything else here names a binding and is
+                // converted permissively: the def side cannot tell a variable
+                // statement from a destructuring pattern or a loop head, so the
+                // statement that owns the declaration reports on those.
+                match param_loc {
+                    Some(_) => BindsSingleValue::No,
+                    None => BindsSingleValue::Yes(None),
                 },
             )?;
             if let Some(param_loc) = param_loc {
@@ -2760,6 +2790,7 @@ fn resolve_generator_next<'cx>(
                     loc: gen_info.return_annot.0.dupe(),
                     annotation: gen_info.return_annot.1.dupe(),
                 },
+                BindsSingleValue::No,
             )?;
             cache.set_annotation(anno);
             let return_t = t;

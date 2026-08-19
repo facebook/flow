@@ -9343,6 +9343,73 @@ where
                         friendly::Message(vec![text("Unexpected prototype after call property.")])
                     }
                     IllegalName => friendly::Message(vec![text("Illegal name.")]),
+                    UniqueSymbolNotConst => friendly::Message(vec![
+                        text("A variable whose type is "),
+                        code("unique symbol"),
+                        text(" must be "),
+                        code("const"),
+                        text(
+                            ". A binding that can be reassigned would let a different symbol \
+                             take the place of the one this annotation names.",
+                        ),
+                    ]),
+                    UniqueSymbolNotReadOnly => friendly::Message(vec![
+                        text("A property whose type is "),
+                        code("unique symbol"),
+                        text(" must be "),
+                        code("readonly"),
+                        text(
+                            ". A property that can be written would let a different symbol take \
+                             the place of the one this annotation names.",
+                        ),
+                    ]),
+                    UniqueSymbolNotStaticReadOnly => friendly::Message(vec![
+                        text("A class property whose type is "),
+                        code("unique symbol"),
+                        text(" must be both "),
+                        code("static"),
+                        text(" and "),
+                        code("readonly"),
+                        text(
+                            ". An instance property declares one member per instance, and a \
+                             property that can be written would let a different symbol take \
+                             the place of the one this annotation names.",
+                        ),
+                    ]),
+                    UniqueSymbolLoopBinding => friendly::Message(vec![
+                        text("A loop binding whose type is "),
+                        code("unique symbol"),
+                        text(
+                            " takes a different value on each iteration, so it cannot name one \
+                             symbol. Use ",
+                        ),
+                        code("symbol"),
+                        text(" instead, or "),
+                        code("typeof"),
+                        text(" a binding declared with "),
+                        code("unique symbol"),
+                        text("."),
+                    ]),
+                    UniqueSymbolPosition => friendly::Message(vec![
+                        code("unique symbol"),
+                        text(" is only allowed as the type of a "),
+                        code("const"),
+                        text(" variable, of a "),
+                        code("readonly"),
+                        text(" property, or of a "),
+                        code("static readonly"),
+                        text(
+                            " class field. Anywhere else one annotation would stand for every \
+                             value written against it, so distinct symbols would be treated as \
+                             the same property. Use ",
+                        ),
+                        code("symbol"),
+                        text(" instead, or "),
+                        code("typeof"),
+                        text(" a binding declared with "),
+                        code("unique symbol"),
+                        text("."),
+                    ]),
                     ImportDynamicArgument => friendly::Message(vec![
                         text("The parameter passed to "),
                         code("import"),

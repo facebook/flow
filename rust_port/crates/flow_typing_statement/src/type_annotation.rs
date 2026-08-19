@@ -553,12 +553,31 @@ pub fn error_on_unsupported_variance_annotation<'a>(
     }
 }
 
+/// Whether an annotation is the type of a position that binds exactly one
+/// value. That is the only kind of position where a bare `unique symbol` may be
+/// written: the annotation *is* the identity of one symbol, so anywhere one
+/// annotation can be shared by several values it would make distinct runtime
+/// symbols compare equal.
+#[derive(Debug, Clone, Dupe, PartialEq, Eq)]
+pub enum BindsSingleValue {
+    /// Carries the name the value is bound to, when the position has one, so a
+    /// `unique symbol` renders as `[name]` rather than a generic `[symbol]`.
+    /// Only pass a name where this is the sole conversion of the annotation,
+    /// since two conversions that disagree would render the one symbol two ways.
+    Yes(Option<FlowSmolStr>),
+    No,
+}
+
 #[derive(Clone)]
 struct ConvertEnv {
     tparams_map: FlowOrdMap<SubstName, Type>,
     infer_tparams_map: Rc<ALocMap<(ast::types::TypeParam<ALoc, (ALoc, Type)>, Type)>>,
     in_no_infer: bool,
     in_renders_arg: bool,
+    /// Whether the annotation this env was built to convert binds exactly one
+    /// value. Taken by `mk_type_available_annotation_inner`, so it describes
+    /// that one annotation and never the types nested inside it.
+    binds_single_value: BindsSingleValue,
 }
 
 impl ConvertEnv {
@@ -567,13 +586,22 @@ impl ConvertEnv {
         in_no_infer: Option<bool>,
         in_renders_arg: Option<bool>,
         tparams_map: FlowOrdMap<SubstName, Type>,
+        binds_single_value: BindsSingleValue,
     ) -> Self {
         Self {
             tparams_map,
             infer_tparams_map: Rc::new(infer_tparams_map.unwrap_or_default()),
             in_no_infer: in_no_infer.unwrap_or(false),
             in_renders_arg: in_renders_arg.unwrap_or(false),
+            binds_single_value,
         }
+    }
+
+    /// Read [`ConvertEnv::binds_single_value`], leaving [`BindsSingleValue::No`]
+    /// behind. A whole annotation may stand for one symbol, but the types
+    /// nested inside it may not, and they are converted with the same env.
+    fn take_binds_single_value(&mut self) -> BindsSingleValue {
+        std::mem::replace(&mut self.binds_single_value, BindsSingleValue::No)
     }
 }
 
@@ -873,14 +901,19 @@ fn convert_unique_symbol<'a>(
     }
 }
 
-/// Convert a property or field value type, naming a bare `unique symbol` value
-/// after the property so it renders as `[name]` instead of a generic `[symbol]`.
-/// Any other value type is converted normally.
-fn convert_named_value<'a>(
+/// Convert a type in a position that binds exactly one value, where a bare
+/// `unique symbol` is therefore allowed. `convert_inner` rejects it everywhere
+/// else, so every legal position routes through here. `name_hint` is the
+/// binding or property the symbol is declared on, when there is one, so it
+/// renders as `[name]` rather than a generic `[symbol]`. Any other type is
+/// converted normally, which also means a *nested* `unique symbol` (say
+/// `Array<unique symbol>`) is still rejected: only the whole annotation
+/// standing for one symbol is meaningful.
+fn convert_single_binding_value<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
     value: &ast::types::Type<ALoc, ALoc>,
-    name: &FlowSmolStr,
+    name_hint: Option<&FlowSmolStr>,
 ) -> Result<ast::types::Type<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     use std::ops::Deref;
 
@@ -890,10 +923,129 @@ fn convert_named_value<'a>(
             value,
             loc,
             comments,
-            Some(name.dupe()),
+            name_hint.map(Dupe::dupe),
         ))
     } else {
         convert_inner(cx, env, value)
+    }
+}
+
+/// The location of a bare `unique symbol` annotation, the spelling that names
+/// one specific symbol. A nested occurrence is rejected outright by
+/// `convert_inner`, so only a whole annotation is reported on here.
+fn bare_unique_symbol_loc(t: &ast::types::Type<ALoc, ALoc>) -> Option<&ALoc> {
+    use std::ops::Deref;
+
+    match t.deref() {
+        ast::types::TypeInner::UniqueSymbol { loc, .. } => Some(loc),
+        _ => None,
+    }
+}
+
+/// Report a bare `unique symbol` written where the annotation cannot stand for
+/// one symbol. Reports nothing when `unique symbol` is not enabled at all, since
+/// the annotation is then rejected outright by [`convert_unique_symbol`] and
+/// saying where it may appear would only point at another error.
+fn report_unique_symbol<'a>(
+    cx: &Context<'a>,
+    value: &ast::types::Type<ALoc, ALoc>,
+    kind: intermediate_error_types::UnsupportedSyntax,
+) {
+    if !cx.tslib_syntax() {
+        return;
+    }
+    if let Some(loc) = bare_unique_symbol_loc(value) {
+        flow_js_utils::add_output_non_speculating(
+            cx,
+            ErrorMessage::EUnsupportedSyntax(Box::new((loc.dupe(), kind))),
+        );
+    }
+}
+
+/// Report a bare `unique symbol` on a property that can be written. The
+/// annotation names one symbol, so a writable slot would let a different one
+/// take its place. TypeScript requires the same (`TS1330`). The test is on
+/// polarity rather than the `readonly` keyword, so a covariant property counts
+/// however it is spelled.
+fn check_unique_symbol_read_only<'a>(
+    cx: &Context<'a>,
+    value: &ast::types::Type<ALoc, ALoc>,
+    polarity: Polarity,
+) {
+    if polarity == Polarity::Positive {
+        return;
+    }
+    report_unique_symbol(
+        cx,
+        value,
+        intermediate_error_types::UnsupportedSyntax::UniqueSymbolNotReadOnly,
+    );
+}
+
+/// Report a bare `unique symbol` on a class field that is not both `static` and
+/// read-only. A static field is one value on the one class object, but an
+/// instance field is one per instance, so a single annotation there would be
+/// shared by every instance. TypeScript requires the same (`TS1331`).
+pub(crate) fn check_unique_symbol_class_field<'a>(
+    cx: &Context<'a>,
+    value: &ast::types::Type<ALoc, ALoc>,
+    static_: bool,
+    polarity: Polarity,
+) {
+    if static_ && polarity == Polarity::Positive {
+        return;
+    }
+    report_unique_symbol(
+        cx,
+        value,
+        intermediate_error_types::UnsupportedSyntax::UniqueSymbolNotStaticReadOnly,
+    );
+}
+
+/// Report a bare `unique symbol` on a member of an interface, object type, or
+/// `declare class` body, under whichever rule that body imposes.
+fn check_unique_symbol_member<'a>(
+    cx: &Context<'a>,
+    value: &ast::types::Type<ALoc, ALoc>,
+    obj_kind: &intermediate_error_types::ObjKind,
+    static_: bool,
+    polarity: Polarity,
+) {
+    if *obj_kind == intermediate_error_types::ObjKind::DeclareClass {
+        check_unique_symbol_class_field(cx, value, static_, polarity);
+    } else {
+        check_unique_symbol_read_only(cx, value, polarity);
+    }
+}
+
+/// Report a bare `unique symbol` on a binding that can be reassigned. See
+/// [`check_unique_symbol_read_only`]. TypeScript requires the same (`TS1332`).
+pub(crate) fn check_unique_symbol_const<'a>(
+    cx: &Context<'a>,
+    value: &ast::types::Type<ALoc, ALoc>,
+) {
+    report_unique_symbol(
+        cx,
+        value,
+        intermediate_error_types::UnsupportedSyntax::UniqueSymbolNotConst,
+    );
+}
+
+/// Report a bare `unique symbol` on a `for`...`in`/`for`...`of` binding, which
+/// takes a different value on each iteration however it is declared. TypeScript
+/// requires the same (`TS1334`).
+pub(crate) fn check_unique_symbol_loop_binding<'a>(
+    cx: &Context<'a>,
+    id: &ast::pattern::Pattern<ALoc, ALoc>,
+) {
+    if let ast::pattern::Pattern::Identifier { inner, .. } = id
+        && let ast::types::AnnotationOrHint::Available(annot) = &inner.annot
+    {
+        report_unique_symbol(
+            cx,
+            &annot.annotation,
+            intermediate_error_types::UnsupportedSyntax::UniqueSymbolLoopBinding,
+        );
     }
 }
 
@@ -1037,6 +1189,22 @@ fn convert_inner<'a>(
                 comments: comments.clone(),
             })
         }
+        // A `unique symbol` annotation is the identity of one symbol, so it is
+        // only meaningful where it stands for exactly one value. In any other
+        // position a single annotation would be shared by every value written
+        // against it, which would make distinct runtime symbols compare equal.
+        // The positions that do bind one value call `convert_unique_symbol`
+        // directly. Where the syntax is not enabled at all, that call is still
+        // the one to make: it reports the feature rather than the position.
+        TypeInner::UniqueSymbol { loc, .. } if cx.tslib_syntax() => error_type(
+            cx,
+            loc.dupe(),
+            ErrorMessage::EUnsupportedSyntax(Box::new((
+                loc.dupe(),
+                intermediate_error_types::UnsupportedSyntax::UniqueSymbolPosition,
+            ))),
+            t,
+        ),
         TypeInner::UniqueSymbol { loc, comments } => {
             convert_unique_symbol(cx, t, loc, comments, None)
         }
@@ -3692,7 +3860,7 @@ pub fn convert_opt<'a>(
     (Option<Type>, Option<ast::types::Type<ALoc, (ALoc, Type)>>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map.dupe());
+    let mut env = ConvertEnv::new(None, None, None, tparams_map.dupe(), BindsSingleValue::No);
     let tast_opt = match ast_opt {
         Some(ast) => Some(convert_inner(cx, &mut env, ast)?),
         None => None,
@@ -4424,7 +4592,12 @@ fn convert_object<'a>(
                     ast::types::object::NormalProperty<ALoc, (ALoc, Type)>,
                     flow_utils_concurrency::job_error::JobError,
                 > {
-                    let value_ast = convert_named_value(cx, env, value, &name)?;
+                    check_unique_symbol_read_only(
+                        cx,
+                        value,
+                        typed_ast_utils::polarity(variance.as_ref()),
+                    );
+                    let value_ast = convert_single_binding_value(cx, env, value, Some(&name))?;
                     let t = value_ast.loc().1.dupe();
                     let make_prop_ast = |t: Type| {
                         let key_ast = match key {
@@ -4621,7 +4794,21 @@ fn convert_object<'a>(
                             resolve_computed_key_name(cx, &comp.expression)?;
                         match resolved_name {
                             Some(name) => {
-                                let value_ast = convert_inner(cx, env, value)?;
+                                // A computed key names one property just as a
+                                // written one does, so the same rule applies. A
+                                // symbol key has no name to render the value
+                                // after, hence `as_smol_str_opt`.
+                                check_unique_symbol_read_only(
+                                    cx,
+                                    value,
+                                    typed_ast_utils::polarity(variance.as_ref()),
+                                );
+                                let value_ast = convert_single_binding_value(
+                                    cx,
+                                    env,
+                                    value,
+                                    name.as_smol_str_opt(),
+                                )?;
                                 let t = value_ast.loc().1.dupe();
                                 let t = if optional {
                                     type_util::optional(t, None, false)
@@ -4998,7 +5185,27 @@ fn convert_object<'a>(
                     KeyRead::Named(name) => Some(name),
                     KeyRead::IndexSignature => None,
                 };
-                let value_ast = convert_inner(cx, env, &indexer.value)?;
+                // A key that names one property declares one member, so the
+                // same `unique symbol` rule applies to it as to a written key.
+                // An index signature stands for every key it matches, so a
+                // `unique symbol` under one stays rejected. A symbol key has no
+                // name to render the value after, hence `as_smol_str_opt`.
+                let value_ast = match &named {
+                    Some(name) => {
+                        check_unique_symbol_read_only(
+                            cx,
+                            &indexer.value,
+                            typed_ast_utils::polarity(indexer.variance.as_ref()),
+                        );
+                        convert_single_binding_value(
+                            cx,
+                            env,
+                            &indexer.value,
+                            name.as_smol_str_opt(),
+                        )?
+                    }
+                    None => convert_inner(cx, env, &indexer.value)?,
+                };
                 let annot_loc = value_ast.loc().0.dupe();
                 let value_t = value_ast.loc().1.dupe();
                 let value_t = if indexer.optional {
@@ -5944,6 +6151,7 @@ fn mk_type_available_annotation_inner<'a>(
     (Type, ast::types::Annotation<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
+    let binds_single_value = env.take_binds_single_value();
     let node_cache = cx.node_cache();
     let loc = &annotation.loc;
     let annot = &annotation.annotation;
@@ -5956,10 +6164,25 @@ fn mk_type_available_annotation_inner<'a>(
         },
         _ => false,
     };
-    let annot_ast = if is_tparam_generic {
+    let convert_annot = |cx: &Context<'a>, env: &mut ConvertEnv| match &binds_single_value {
+        BindsSingleValue::Yes(name_hint) => {
+            convert_single_binding_value(cx, env, annot, name_hint.as_ref())
+        }
+        BindsSingleValue::No => convert_inner(cx, env, annot),
+    };
+    // `binds_single_value` only changes the result for a bare `unique symbol`,
+    // and the node cache is keyed on the annotation's location alone, so a
+    // cached conversion may have been made for a different position: a variable
+    // declaration's annotation is resolved once for its binding and again here,
+    // and a destructuring pattern shares one annotation with every name it
+    // binds. Convert such an annotation fresh so the position asking for it
+    // decides. The symbol's identity is derived from `loc`, so converting twice
+    // still names the same symbol.
+    let binds_by_position = bare_unique_symbol_loc(annot).is_some();
+    let annot_ast = if is_tparam_generic || binds_by_position {
         // If the type we're converting is in the tparams map, we prefer that over
         // the node cache
-        convert_inner(cx, env, annot)?
+        convert_annot(cx, env)?
     } else {
         match node_cache.get_annotation(loc) {
             Some(cached) => {
@@ -5973,7 +6196,7 @@ fn mk_type_available_annotation_inner<'a>(
                 // node
                 cached.annotation
             }
-            None => convert_inner(cx, env, annot)?,
+            None => convert_annot(cx, env)?,
         }
     };
     let (_, t) = annot_ast.loc();
@@ -6660,16 +6883,26 @@ fn mk_inline_interface_type<'a>(
 /// body, and its typed node, whichever way its key is read. The key is taken
 /// already converted, since a computed key is converted as a value while an
 /// index signature key is converted as a type.
+/// `named` is the one property the key names, or `None` for an index signature,
+/// which stands for every key it matches and so may not carry a bare `unique
+/// symbol`. A symbol key has no name to render the value after, hence
+/// `as_smol_str_opt`.
 fn convert_indexer_value(
     cx: &Context,
     env: &mut ConvertEnv,
     indexer: &ast::types::object::Indexer<ALoc, ALoc>,
     key_ast: ast::types::Type<ALoc, (ALoc, Type)>,
+    named: Option<&Name>,
 ) -> Result<
     (Type, ast::types::object::Indexer<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let value_ast = convert_inner(cx, env, &indexer.value)?;
+    let value_ast = match named {
+        Some(name) => {
+            convert_single_binding_value(cx, env, &indexer.value, name.as_smol_str_opt())?
+        }
+        None => convert_inner(cx, env, &indexer.value)?,
+    };
     let (annot_loc, v) = value_ast.loc();
     let annot_loc = annot_loc.dupe();
     let v = v.dupe();
@@ -6711,7 +6944,8 @@ fn convert_indexer_internal(
     let key_ast = convert_inner(cx, env, &indexer.key)?;
     let (_, k) = key_ast.loc();
     let k = k.dupe();
-    let (v, indexer_ast) = convert_indexer_value(cx, env, indexer, key_ast)?;
+    // Always a dictionary, never one named member.
+    let (v, indexer_ast) = convert_indexer_value(cx, env, indexer, key_ast, None)?;
     let p = polarity(
         cx,
         flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
@@ -7035,7 +7269,19 @@ fn add_interface_properties<'a>(
                     InterfaceKeyForm::IndexSignature => (convert_inner(cx, env, &idx.key)?, None),
                 };
                 let key_t = key_ast.loc().1.dupe();
-                let (value_t, indexer_ast) = convert_indexer_value(cx, env, idx, key_ast)?;
+                // A key that names one member is subject to the same
+                // `unique symbol` rule as a written one.
+                if named.is_some() {
+                    check_unique_symbol_member(
+                        cx,
+                        &idx.value,
+                        &obj_kind,
+                        idx.static_,
+                        typed_ast_utils::polarity(idx.variance.as_ref()),
+                    );
+                }
+                let (value_t, indexer_ast) =
+                    convert_indexer_value(cx, env, idx, key_ast, named.as_ref())?;
                 let prop_polarity = polarity(
                     cx,
                     flow_typing_errors::intermediate_error_types::VarianceSigilParent::Property,
@@ -7503,7 +7749,24 @@ fn add_interface_properties<'a>(
                                             ast::types::object::PropertyValue::Init(Some(
                                                 value,
                                             )) => {
-                                                let value_ast = convert_inner(cx, env, value)?;
+                                                // A computed key names one property just
+                                                // as a written one does, so the same
+                                                // `unique symbol` rule applies. A symbol
+                                                // key has no name to render the value
+                                                // after, hence `as_smol_str_opt`.
+                                                check_unique_symbol_member(
+                                                    cx,
+                                                    value,
+                                                    &obj_kind,
+                                                    np.static_,
+                                                    typed_ast_utils::polarity(np.variance.as_ref()),
+                                                );
+                                                let value_ast = convert_single_binding_value(
+                                                    cx,
+                                                    env,
+                                                    value,
+                                                    name.as_smol_str_opt(),
+                                                )?;
                                                 let (_, t) = value_ast.loc();
                                                 let t = t.dupe();
                                                 let t_with_optional = if np.optional {
@@ -7840,7 +8103,24 @@ fn add_interface_properties<'a>(
                                         prop_asts.push(Property::NormalProperty(error_prop));
                                     }
                                     Some((name, key_loc, rebuild_key)) => {
-                                        let value_ast = convert_named_value(cx, env, value, &name)?;
+                                        // A class field must also be `static` to stand for one
+                                        // symbol, since an instance field declares one member
+                                        // per instance. An interface or object type property
+                                        // need only be read-only, matching TypeScript, which
+                                        // restricts only classes.
+                                        check_unique_symbol_member(
+                                            cx,
+                                            value,
+                                            &obj_kind,
+                                            np.static_,
+                                            typed_ast_utils::polarity(np.variance.as_ref()),
+                                        );
+                                        let value_ast = convert_single_binding_value(
+                                            cx,
+                                            env,
+                                            value,
+                                            Some(&name),
+                                        )?;
                                         let (_, t) = value_ast.loc();
                                         let t = t.dupe();
                                         let t_with_optional = if np.optional {
@@ -8467,7 +8747,7 @@ pub fn mk_interface_sig<'a>(
     let id_loc = &decl.id.loc;
     let id_name = &*decl.id;
     let (ref body_loc, ref body) = decl.body;
-    let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new());
+    let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new(), BindsSingleValue::No);
     let (tparams, tparams_ast) = mk_type_param_declarations_inner(
         cx,
         &mut env,
@@ -8580,7 +8860,7 @@ pub fn mk_declare_component_sig<'a>(
         reason::VirtualReasonDesc::RComponent(name.dupe()),
         loc.dupe(),
     );
-    let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new());
+    let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new(), BindsSingleValue::No);
     let (tparams, tparam_asts) = mk_type_param_declarations_inner(
         cx,
         &mut env,
@@ -9089,7 +9369,7 @@ pub fn mk_declare_class_sig<'a>(
         // Now implement f:
         let id_loc = &decl.id.loc;
         let id_name = &*decl.id;
-        let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new());
+        let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::new(), BindsSingleValue::No);
         let (tparams, tparam_asts) = mk_type_param_declarations_inner(
             cx,
             &mut env,
@@ -9325,7 +9605,7 @@ pub fn convert<'a>(
     tparams_map: FlowOrdMap<SubstName, Type>,
     t: &ast::types::Type<ALoc, ALoc>,
 ) -> Result<ast::types::Type<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     convert_inner(cx, &mut env, t)
 }
 
@@ -9337,7 +9617,7 @@ pub fn convert_list<'a>(
     (Vec<Type>, Vec<ast::types::Type<ALoc, (ALoc, Type)>>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     convert_list_inner(cx, &mut env, asts)
 }
 
@@ -9350,7 +9630,7 @@ pub fn convert_render_type<'a>(
     (Type, ast::types::Renders<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     convert_render_type_inner(cx, &mut env, loc, renders)
 }
 
@@ -9371,7 +9651,7 @@ pub fn convert_type_guard<'a>(
     ),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     convert_type_guard_inner(cx, &mut env, fparams, gloc, kind, id_name, t, comments)
 }
 
@@ -9386,7 +9666,7 @@ pub fn convert_indexer(
     ),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map.dupe());
+    let mut env = ConvertEnv::new(None, None, None, tparams_map.dupe(), BindsSingleValue::No);
     convert_indexer_internal(cx, &mut env, indexer)
 }
 
@@ -9405,7 +9685,7 @@ pub fn convert_return_annotation<'a>(
     ),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     convert_return_annotation_inner(cx, &mut env, meth_kind, params, fparams, return_annot)
 }
 
@@ -9414,7 +9694,13 @@ pub fn mk_empty_interface_type<'a>(
     loc: ALoc,
 ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
     let interface_type = empty_interface_annot(loc);
-    let mut env = ConvertEnv::new(None, None, None, FlowOrdMap::default());
+    let mut env = ConvertEnv::new(
+        None,
+        None,
+        None,
+        FlowOrdMap::default(),
+        BindsSingleValue::No,
+    );
     let result = convert_inner(cx, &mut env, &interface_type)?;
     let (_, t) = result.loc();
     Ok(t.dupe())
@@ -9433,19 +9719,23 @@ pub fn mk_super<'a>(
     ),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     mk_super_inner(cx, &mut env, loc, c, targs)
 }
 
+/// `binds_single_value` says whether the annotation is the type of a position
+/// that binds exactly one value, which a variable declaration and a static
+/// class field do. Only such a position may spell out a `unique symbol`.
 pub fn mk_type_available_annotation<'a>(
     cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     annotation: &ast::types::Annotation<ALoc, ALoc>,
+    binds_single_value: BindsSingleValue,
 ) -> Result<
     (Type, ast::types::Annotation<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, binds_single_value);
     mk_type_available_annotation_inner(cx, &mut env, annotation)
 }
 
@@ -9457,7 +9747,7 @@ pub fn mk_function_type_annotation<'a>(
     (Type, (ALoc, ast::types::Function<ALoc, (ALoc, Type)>)),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     mk_function_type_annotation_inner(cx, &mut env, func)
 }
 
@@ -9471,7 +9761,7 @@ pub fn mk_nominal_type<'a>(
     (Type, Option<ast::types::TypeArgs<ALoc, (ALoc, Type)>>),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     mk_nominal_type_inner(cx, &mut env, reason, c, targs)
 }
 
@@ -9484,7 +9774,7 @@ pub fn mk_type_param<'a>(
     (ast::types::TypeParam<ALoc, (ALoc, Type)>, TypeParam, Type),
     flow_utils_concurrency::job_error::JobError,
 > {
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     mk_type_param_inner(cx, &mut env, kind, type_param)
 }
 
@@ -9502,7 +9792,7 @@ pub fn mk_type_param_declarations<'a>(
     flow_utils_concurrency::job_error::JobError,
 > {
     let tparams_map = tparams_map.unwrap_or_default();
-    let mut env = ConvertEnv::new(None, None, None, tparams_map);
+    let mut env = ConvertEnv::new(None, None, None, tparams_map, BindsSingleValue::No);
     let (type_params, tast) = mk_type_param_declarations_inner(cx, &mut env, kind, tparams)?;
     Ok((type_params, env.tparams_map, tast))
 }

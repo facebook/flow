@@ -30,6 +30,15 @@ const obj3 = {[C.sk]: 3};
 //    ^
 // type-at-pos should print the key as `[sk]`.
 
+// A value-level `class` names its static field the same way, though it reaches
+// the symbol by a different path than the `declare class` above.
+class VC {
+  static readonly vsk: unique symbol;
+}
+const obj4 = {[VC.vsk]: 4};
+//    ^
+// type-at-pos should print the key as `[vsk]`.
+
 // Class field, cross-module: `syms.d.ts` names the static field `dsk` during
 // signature merge.
 const obj5 = {[D.dsk]: 5};

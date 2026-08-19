@@ -261,6 +261,11 @@ pub enum UnsupportedSyntax {
     DeclareClassProperty(DeclareClassPropKind),
     TSLibSyntax(TsLibSyntaxKind),
     ExportTypeSpecifierInExportType,
+    UniqueSymbolPosition,
+    UniqueSymbolNotConst,
+    UniqueSymbolNotReadOnly,
+    UniqueSymbolNotStaticReadOnly,
+    UniqueSymbolLoopBinding,
 }
 
 #[derive(

@@ -118,6 +118,7 @@ type LazyBool<'cx> =
 use crate::class_sig;
 use crate::refinement;
 use crate::type_annotation;
+use crate::type_annotation::BindsSingleValue;
 
 // *************
 // * Utilities *
@@ -2151,6 +2152,25 @@ pub fn statement<'a>(
     }
 }
 
+/// Report a bare `unique symbol` on a binding that is not `const`. Only an
+/// identifier pattern can carry the whole annotation, since a nested occurrence
+/// under a destructuring pattern is already rejected as a position error.
+fn check_unique_symbol_const_binding(
+    cx: &Context<'_>,
+    kind: ast::VariableKind,
+    id: &ast::pattern::Pattern<ALoc, ALoc>,
+) {
+    if kind == ast::VariableKind::Const {
+        return;
+    }
+    let ast::pattern::Pattern::Identifier { inner, .. } = id else {
+        return;
+    };
+    if let ast::types::AnnotationOrHint::Available(annot) = &inner.annot {
+        type_annotation::check_unique_symbol_const(cx, &annot.annotation);
+    }
+}
+
 #[rustfmt::skip]
 fn statement_<'a>(
     cx: &Context<'a>,
@@ -2178,6 +2198,7 @@ fn statement_<'a>(
                         ))),
                     );
                 }
+                check_unique_symbol_const_binding(cx, kind, &decl.id);
                 let (id, init) = variable(cx, kind, None, &decl.id, decl.init.as_ref())?;
                 Ok(statement::variable::Declarator {
                     loc: decl.loc.dupe(),
@@ -2247,6 +2268,7 @@ fn statement_<'a>(
                                             cx,
                                             tparams_map,
                                             annot,
+                                            BindsSingleValue::No,
                                         )?;
                                     (t, ast::types::AnnotationOrHint::Available(ast_annot))
                                 } else {
@@ -2412,8 +2434,12 @@ fn statement_<'a>(
             ast::types::TypeInner::Function { inner, .. } => inner.effect,
             _ => ast::function::Effect::Arbitrary,
         };
-        let (_, annot_ast) =
-            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), annot)?;
+        let (_, annot_ast) = type_annotation::mk_type_available_annotation(
+            cx,
+            FlowOrdMap::new(),
+            annot,
+            BindsSingleValue::No,
+        )?;
         let predicate = predicate.as_ref().map(|p| {
             flow_js::add_output_non_speculating(
                 cx,
@@ -2958,6 +2984,7 @@ fn statement_<'a>(
                     let right_ast = eval_right()?;
                     let vdecl_loc = decl.declarations[0].loc.dupe();
                     let id = &decl.declarations[0].id;
+                    type_annotation::check_unique_symbol_loop_binding(cx, id);
                     let (id_ast, _) = variable(
                         cx,
                         decl.kind,
@@ -3098,6 +3125,7 @@ fn statement_<'a>(
                     let (elem_t, right_ast) = eval_right()?;
                     let vdecl_loc = decl.declarations[0].loc.dupe();
                     let id = &decl.declarations[0].id;
+                    type_annotation::check_unique_symbol_loop_binding(cx, id);
                     let elem_t_clone = elem_t.dupe();
                     let (id_ast, _) = variable(
                         cx,
@@ -3789,8 +3817,12 @@ fn statement_<'a>(
                         )
                     }
                     statement::ExportAssignmentRhs::DeclareFunction(fn_loc, decl) => {
-                        let (_, annot_ast) =
-                            type_annotation::mk_type_available_annotation(cx, FlowOrdMap::new(), &decl.annot)?;
+                        let (_, annot_ast) = type_annotation::mk_type_available_annotation(
+                            cx,
+                            FlowOrdMap::new(),
+                            &decl.annot,
+                            BindsSingleValue::No,
+                        )?;
                         let (_, t) = annot_ast.annotation.loc();
                         let id = decl.id.as_ref().map(|id_name| {
                             ast::Identifier::new(ast::IdentifierInner {
@@ -4657,6 +4689,7 @@ fn declare_variable<'a>(
         let decl_loc = d.loc.dupe();
         let id = &d.id;
         let init = &d.init;
+        check_unique_symbol_const_binding(cx, *kind, id);
         match id {
             ast::pattern::Pattern::Identifier {
                 loc: pat_loc,
@@ -4672,6 +4705,10 @@ fn declare_variable<'a>(
                                 cx,
                                 Default::default(),
                                 annot,
+                                // No name hint: the same annotation is also
+                                // converted when the binding's def is resolved,
+                                // and the two must render the symbol alike.
+                                BindsSingleValue::Yes(None),
                             )?;
                         let typed_id = ast::pattern::Pattern::Identifier {
                             loc: (pat_loc.dupe(), t.dupe()),
@@ -6015,10 +6052,17 @@ fn variable<'a>(
                     )
                 }
                 ast::types::AnnotationOrHint::Available(avail_annot) => {
+                    // An identifier declarator names one value, so it may spell
+                    // out a bare `unique symbol`. A destructuring pattern below
+                    // may not, since the annotation there is shared by every
+                    // name it binds. Whether the *declaration* holds one value
+                    // is the caller's to say: a loop head reuses this and calls
+                    // `check_unique_symbol_loop_binding` for itself.
                     let (t, ast_annot) = type_annotation::mk_type_available_annotation(
                         cx,
                         Default::default(),
                         avail_annot,
+                        BindsSingleValue::Yes(None),
                     )?;
                     (t, ast::types::AnnotationOrHint::Available(ast_annot))
                 }
@@ -6053,6 +6097,7 @@ fn variable<'a>(
                         cx,
                         Default::default(),
                         avail_annot,
+                        BindsSingleValue::No,
                     )?;
                     if let Some((ref init_t, ref init_reason)) = init_opt {
                         let use_op = UseOp::Op(Arc::new(type_::RootUseOp::AssignVar {
@@ -6629,6 +6674,7 @@ fn expression_<'a>(
                 cx,
                 Default::default(),
                 &inner.annot,
+                BindsSingleValue::No,
             )?;
             let e_prime = expression(None, None, None, cx, &inner.expression)?;
             let infer_t = e_prime.loc().1.dupe();
@@ -6655,6 +6701,7 @@ fn expression_<'a>(
                 cx,
                 Default::default(),
                 &inner.annot,
+                BindsSingleValue::No,
             )?;
             let e_prime = expression(None, None, None, cx, &inner.expression)?;
             let infer_t = e_prime.loc().1.dupe();
@@ -6710,6 +6757,7 @@ fn expression_<'a>(
                     cx,
                     Default::default(),
                     &inner.annot,
+                    BindsSingleValue::No,
                 )?;
                 let e_prime = expression(None, None, None, cx, &inner.expression)?;
                 let infer_t = e_prime.loc().1.dupe();
@@ -14791,8 +14839,16 @@ pub fn mk_class_sig<'a>(
     //   Function should only be called after Class_sig.toplevels has been called on a
     //   Class_sig.t containing this field, as that is when the initializer expression
     //   gets checked.
+    // A field binds one value, so its annotation may spell out a bare `unique
+    // symbol`, but only a read-only static field stands for a single symbol:
+    // an instance field is one per instance, and a writable field could be
+    // handed a different symbol. [static_] and [polarity] decide that, and
+    // [name_hint] renders the symbol after the field it is declared on.
     let mk_field = |cx: &Context<'a>,
                     suppress_missing_annot: bool,
+                    static_: bool,
+                    polarity: Polarity,
+                    name_hint: Option<FlowSmolStr>,
                     tparams_map: &FlowOrdMap<SubstName, Type>,
                     reason: Reason,
                     annot: &ast::types::AnnotationOrHint<ALoc, ALoc>,
@@ -14806,6 +14862,10 @@ pub fn mk_class_sig<'a>(
         ),
         CheckExprError,
     > {
+        if let ast::types::AnnotationOrHint::Available(a) = annot {
+            type_annotation::check_unique_symbol_class_field(cx, &a.annotation, static_, polarity);
+        }
+        let binds_single_value = BindsSingleValue::Yes(name_hint);
         let unconditionally_required_annot = |cx: &Context<'a>,
                                               tparams_map: &FlowOrdMap<SubstName, Type>,
                                               reason: &Reason,
@@ -14843,6 +14903,7 @@ pub fn mk_class_sig<'a>(
                             .map(|(k, v)| (k.dupe(), v.dupe()))
                             .collect(),
                         annot,
+                        binds_single_value.dupe(),
                     )?;
                     (t, ast::types::AnnotationOrHint::Available(ast_annot))
                 }
@@ -15043,6 +15104,7 @@ pub fn mk_class_sig<'a>(
                                 .map(|(k, v)| (k.dupe(), v.dupe()))
                                 .collect(),
                             annot,
+                            binds_single_value.dupe(),
                         )?;
                         (t, ast::types::AnnotationOrHint::Available(ast_annot))
                     }
@@ -15239,6 +15301,7 @@ pub fn mk_class_sig<'a>(
                                 cx,
                                 FlowOrdMap::new(),
                                 &as_expr.annot,
+                                BindsSingleValue::No,
                             )?;
                             let t_c = t.dupe();
                             let sub_expr_c = as_expr.expression.clone();
@@ -15282,6 +15345,7 @@ pub fn mk_class_sig<'a>(
                                     cx,
                                     FlowOrdMap::new(),
                                     &cast.annot,
+                                    BindsSingleValue::No,
                                 )?;
                                 let t_c = t.dupe();
                                 let sub_expr_c = cast.expression.clone();
@@ -15375,6 +15439,7 @@ pub fn mk_class_sig<'a>(
                                         cx,
                                         FlowOrdMap::new(),
                                         &cast.annot,
+                                        BindsSingleValue::No,
                                     )?;
                                 match expression(None, None, None, cx, &cast.expression) {
                                     Ok(e_prime) => {
@@ -15686,6 +15751,7 @@ pub fn mk_class_sig<'a>(
                                                             .map(|(k, v)| (k.dupe(), v.dupe()))
                                                             .collect(),
                                                         annot,
+                                                        BindsSingleValue::No,
                                                     )?;
                                                     t
                                                 }
@@ -16814,6 +16880,9 @@ pub fn mk_class_sig<'a>(
                                 let (field, annot_t, annot_ast, get_value) = mk_field(
                                     cx,
                                     suppress_missing_annot,
+                                    static_,
+                                    polarity,
+                                    Some(name.dupe()),
                                     &tparams_map_with_this,
                                     field_reason,
                                     annot,
@@ -17018,6 +17087,11 @@ pub fn mk_class_sig<'a>(
                                 let (field, annot_t, annot_ast, get_value) = mk_field(
                                     cx,
                                     suppress_missing_annot,
+                                    static_,
+                                    polarity,
+                                    // A symbol key has no name to render the
+                                    // field's own symbol after.
+                                    name.as_smol_str_opt().duped(),
                                     &tparams_map_with_this,
                                     field_reason,
                                     annot,
@@ -17149,6 +17223,9 @@ pub fn mk_class_sig<'a>(
                             let (field, annot_t, annot_ast, get_value) = mk_field(
                                 cx,
                                 false,
+                                static_,
+                                polarity,
+                                Some(name.dupe()),
                                 &tparams_map_with_this,
                                 field_reason,
                                 annot,
@@ -17832,6 +17909,11 @@ pub fn mk_class_sig<'a>(
                                         let (_field, annot_t, annot_ast, _get_value) = mk_field(
                                             cx,
                                             false,
+                                            // An abstract member is always on
+                                            // the instance side.
+                                            false,
+                                            polarity,
+                                            Some(name.dupe()),
                                             &tparams_map_with_this,
                                             reason,
                                             annot,
@@ -18217,6 +18299,7 @@ pub fn mk_record_sig<'a>(
                 .map(|(k, v)| (k.dupe(), v.dupe()))
                 .collect(),
             annot,
+            BindsSingleValue::No,
         )?;
         Ok(match default_value {
             None => (
@@ -18275,6 +18358,7 @@ pub fn mk_record_sig<'a>(
                 .map(|(k, v)| (k.dupe(), v.dupe()))
                 .collect(),
             annot,
+            BindsSingleValue::No,
         )?;
         let value_ref: Rc<RefCell<Option<expression::Expression<ALoc, (ALoc, Type)>>>> =
             Rc::new(RefCell::new(None));
@@ -18489,6 +18573,7 @@ pub fn mk_record_sig<'a>(
                                                     .map(|(k, v)| (k.dupe(), v.dupe()))
                                                     .collect(),
                                                 annot,
+                                                BindsSingleValue::No,
                                             )?;
                                         let (key_loc, name) =
                                             flow_parser_utils::record_utils::loc_and_string_of_property_key(key)
@@ -19114,8 +19199,12 @@ pub fn mk_component_sig<'a>(
                 )
             }
             ast::types::AnnotationOrHint::Available(annot) => {
-                let (t, ast_annot) =
-                    type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot)?;
+                let (t, ast_annot) = type_annotation::mk_type_available_annotation(
+                    cx,
+                    tparams_map.dupe(),
+                    annot,
+                    BindsSingleValue::No,
+                )?;
                 (t, ast::types::AnnotationOrHint::Available(ast_annot))
             }
         })
@@ -19530,8 +19619,12 @@ pub fn mk_func_sig<'a>(
                 )
             }
             ast::types::AnnotationOrHint::Available(annot) => {
-                let (t, ast_annot) =
-                    type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot)?;
+                let (t, ast_annot) = type_annotation::mk_type_available_annotation(
+                    cx,
+                    tparams_map.dupe(),
+                    annot,
+                    BindsSingleValue::No,
+                )?;
                 (t, ast::types::AnnotationOrHint::Available(ast_annot))
             }
         })
@@ -19938,8 +20031,12 @@ pub fn mk_func_sig<'a>(
             )
         }
         (ast::function::ReturnAnnot::Available(annot), _) => {
-            let (t, ast_annot) =
-                type_annotation::mk_type_available_annotation(cx, tparams_map.dupe(), annot)?;
+            let (t, ast_annot) = type_annotation::mk_type_available_annotation(
+                cx,
+                tparams_map.dupe(),
+                annot,
+                BindsSingleValue::No,
+            )?;
             (
                 AnnotatedOrInferred::Annotated(t),
                 ast::function::ReturnAnnot::Available(ast_annot),

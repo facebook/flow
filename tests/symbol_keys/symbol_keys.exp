@@ -685,6 +685,331 @@ References:
                         ^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------ position.js:11:19
+
+A variable whose type is `unique symbol` must be `const`. A binding that can be reassigned would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   11| declare let bad1: unique symbol; // ERROR: not `const`
+                         ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:12:19
+
+A variable whose type is `unique symbol` must be `const`. A binding that can be reassigned would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   12| declare var bad2: unique symbol; // ERROR: not `const`
+                         ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:13:11
+
+A variable whose type is `unique symbol` must be `const`. A binding that can be reassigned would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   13| let bad3: unique symbol; // ERROR: not `const`
+                 ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:19:25
+
+A property whose type is `unique symbol` must be `readonly`. A property that can be written would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   19| declare const bad4: {c: unique symbol}; // ERROR: not read-only
+                               ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- position.js:22:6
+
+A property whose type is `unique symbol` must be `readonly`. A property that can be written would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   22|   e: unique symbol; // ERROR: not read-only
+            ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:28:29
+
+A property whose type is `unique symbol` must be `readonly`. A property that can be written would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   28| declare const bad5: {[ok1]: unique symbol}; // ERROR: not read-only
+                                   ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:32:10
+
+A property whose type is `unique symbol` must be `readonly`. A property that can be written would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   32|   [ok1]: unique symbol; // ERROR: not read-only
+                ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:40:31
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   40| declare const bad6: {get g(): unique symbol}; // ERROR
+                                     ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:41:46
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   41| declare const bad7: {readonly [key: string]: unique symbol}; // ERROR
+                                                    ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:50:13
+
+A class property whose type is `unique symbol` must be both `static` and `readonly`. An instance property declares one
+member per instance, and a property that can be written would let a different symbol take the place of the one this
+annotation names. [unsupported-syntax]
+
+   50|   static g: unique symbol; // ERROR: not `static readonly`
+                   ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:51:15
+
+A class property whose type is `unique symbol` must be both `static` and `readonly`. An instance property declares one
+member per instance, and a property that can be written would let a different symbol take the place of the one this
+annotation names. [unsupported-syntax]
+
+   51|   readonly h: unique symbol; // ERROR: not `static readonly`
+                     ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:53:21
+
+A class property whose type is `unique symbol` must be both `static` and `readonly`. An instance property declares one
+member per instance, and a property that can be written would let a different symbol take the place of the one this
+annotation names. [unsupported-syntax]
+
+   53|   readonly [ok2.a]: unique symbol; // ERROR: not `static readonly`
+                           ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:57:13
+
+A class property whose type is `unique symbol` must be both `static` and `readonly`. An instance property declares one
+member per instance, and a property that can be written would let a different symbol take the place of the one this
+annotation names. [unsupported-syntax]
+
+   57|   static j: unique symbol; // ERROR: not `static readonly`
+                   ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:58:15
+
+A class property whose type is `unique symbol` must be both `static` and `readonly`. An instance property declares one
+member per instance, and a property that can be written would let a different symbol take the place of the one this
+annotation names. [unsupported-syntax]
+
+   58|   readonly k: unique symbol; // ERROR: not `static readonly`
+                     ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:64:27
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   64| declare function mkRet(): unique symbol; // ERROR
+                                 ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:68:14
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   68| type Alias = unique symbol; // ERROR
+                    ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:72:26
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   72| declare const arr: Array<unique symbol>; // ERROR
+                                ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:73:19
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   73| declare const un: unique symbol | string; // ERROR
+                         ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:74:33
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   74| declare const nested: {a: Array<unique symbol>}; // ERROR
+                                       ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:76:28
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   76|   static readonly l: Array<unique symbol>; // ERROR: nested even where a bare one is allowed
+                                  ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:81:27
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   81| declare function takes(p: unique symbol): void; // ERROR
+                                 ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- position.js:85:8
+
+Property `m` is missing in `Symbol` [1]. [prop-missing]
+
+   position.js:85:8
+    85| const {m}: unique symbol = null as any; // ERROR
+               ^
+
+References:
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:85:12
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   85| const {m}: unique symbol = null as any; // ERROR
+                  ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- position.js:86:8
+
+Property `0` is missing in `Symbol` [1]. [prop-missing]
+
+   position.js:86:8
+    86| const [n]: unique symbol = null as any; // ERROR
+               ^
+
+References:
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:86:12
+
+`unique symbol` is only allowed as the type of a `const` variable, of a `readonly` property, or of a `static readonly`
+class field. Anywhere else one annotation would stand for every value written against it, so distinct symbols would be
+treated as the same property. Use `symbol` instead, or `typeof` a binding declared with `unique symbol`.
+[unsupported-syntax]
+
+   86| const [n]: unique symbol = null as any; // ERROR
+                  ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:92:15
+
+A loop binding whose type is `unique symbol` takes a different value on each iteration, so it cannot name one symbol.
+Use `symbol` instead, or `typeof` a binding declared with `unique symbol`. [unsupported-syntax]
+
+   92| for (const p: unique symbol of syms) { // ERROR: loop binding, and `symbol` is not it
+                     ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:92:32
+
+Cannot assign `p` to `p` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   position.js:92:32
+   92| for (const p: unique symbol of syms) { // ERROR: loop binding, and `symbol` is not it
+                                      ^^^^
+
+References:
+   position.js:91:27
+   91| declare const syms: Array<symbol>;
+                                 ^^^^^^ [1]
+   position.js:92:15
+   92| for (const p: unique symbol of syms) { // ERROR: loop binding, and `symbol` is not it
+                     ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:95:12
+
+Cannot assign string to `q` because `string` [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   position.js:95:12
+   95| for (const q: unique symbol in {}) { // ERROR: loop binding, and a key is a string
+                  ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   position.js:95:15
+   95| for (const q: unique symbol in {}) { // ERROR: loop binding, and a key is a string
+                     ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ position.js:95:15
+
+A loop binding whose type is `unique symbol` takes a different value on each iteration, so it cannot name one symbol.
+Use `symbol` instead, or `typeof` a binding declared with `unique symbol`. [unsupported-syntax]
+
+   95| for (const q: unique symbol in {}) { // ERROR: loop binding, and a key is a string
+                     ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- position.js:113:32
+
+Cannot get `byProp[OkC.f]` because property `[f]` is missing in object type [1]. [prop-missing]
+
+   position.js:113:32
+   113| const crossed: number = byProp[OkC.f]; // ERROR: a different symbol
+                                       ^^^^^
+
+References:
+   position.js:109:23
+   109| declare const byProp: {[ok2.a]: number};
+                              ^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------ symbol_index_consumer.js:7:22
 
 Cannot assign `k` to `out2` because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -974,4 +1299,4 @@ References:
 
 
 
-Found 62 errors
+Found 92 errors

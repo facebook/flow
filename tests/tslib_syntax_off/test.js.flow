@@ -46,8 +46,12 @@ export {type SomeType}; // ERROR
 // Template literal type
 type TLT = `foo ${string}`; // ERROR
 
-// Unique symbol
+// Unique symbol. Where the annotation stands for one value and where it does
+// not both report the feature, since saying where it may appear would only
+// point at another way to write something this file cannot have at all.
 declare const us: unique symbol; // ERROR
+type UST = unique symbol; // ERROR
+declare let usl: unique symbol; // ERROR
 
 // Typeof import
 type TI = typeof import("foo"); // ERROR

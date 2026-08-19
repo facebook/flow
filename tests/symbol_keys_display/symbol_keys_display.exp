@@ -13,20 +13,25 @@ Flags:
 {[sk]: number}
 display_named.js:29:7,29:10
 
-display_named.js:35:7
+display_named.js:38:7
 Flags:
-{[dsk]: number}
-display_named.js:35:7,35:10
+{[vsk]: number}
+display_named.js:38:7,38:10
 
 display_named.js:44:7
 Flags:
-{[jfk]: number}
+{[dsk]: number}
 display_named.js:44:7,44:10
 
-display_named.js:51:7
+display_named.js:53:7
+Flags:
+{[jfk]: number}
+display_named.js:53:7,53:10
+
+display_named.js:60:7
 Flags:
 {[ifk]: number}
-display_named.js:51:7,51:10
+display_named.js:60:7,60:10
 
 display_union.js:7:3
 Flags:

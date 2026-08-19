@@ -141,271 +141,287 @@ Template literal type is not enabled. [unsupported-syntax]
                   ^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:50:19
+Error ----------------------------------------------------------------------------------------------- test.js.flow:52:19
 
 `unique symbol` type is not enabled. [unsupported-syntax]
 
-   50| declare const us: unique symbol; // ERROR
+   52| declare const us: unique symbol; // ERROR
                          ^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:53:18
+Error ----------------------------------------------------------------------------------------------- test.js.flow:53:12
 
-`typeof import("module")` syntax is not enabled. [unsupported-syntax]
+`unique symbol` type is not enabled. [unsupported-syntax]
 
-   53| type TI = typeof import("foo"); // ERROR
+   53| type UST = unique symbol; // ERROR
+                  ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:54:18
+
+`unique symbol` type is not enabled. [unsupported-syntax]
+
+   54| declare let usl: unique symbol; // ERROR
                         ^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:59:30
+Error ----------------------------------------------------------------------------------------------- test.js.flow:57:18
+
+`typeof import("module")` syntax is not enabled. [unsupported-syntax]
+
+   57| type TI = typeof import("foo"); // ERROR
+                        ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:63:30
 
 `implements` with dotted path is not enabled. [unsupported-syntax]
 
-   59| declare class IDP implements ns.IFace {} // ERROR
+   63| declare class IDP implements ns.IFace {} // ERROR
                                     ^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:63:3
+Error ------------------------------------------------------------------------------------------------ test.js.flow:67:3
 
 Optional class property (`?:`) is not enabled. [unsupported-syntax]
 
-   63|   x?: number; // ERROR
+   67|   x?: number; // ERROR
          ^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:67:14
+Error ----------------------------------------------------------------------------------------------- test.js.flow:71:14
 
 Optional method signature is not enabled. [unsupported-syntax]
 
-   67| type OSM = { f?(): void }; // ERROR
+   71| type OSM = { f?(): void }; // ERROR
                     ^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:70:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:74:16
 
 Anonymous default export function declaration is not enabled. [unsupported-syntax]
 
-   70| export default function (): void; // ERROR
+   74| export default function (): void; // ERROR
                       ^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:73:15
+Error ----------------------------------------------------------------------------------------------- test.js.flow:77:15
 
 Key remapping (`as`) in mapped types is not enabled. [unsupported-syntax]
 
-   73| type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR
+   77| type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:76:11
+Error ----------------------------------------------------------------------------------------------- test.js.flow:80:11
 
 Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is not enabled. [unsupported-syntax]
 
-   76| type CT = new () => string; // ERROR
+   80| type CT = new () => string; // ERROR
                  ^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:77:12
+Error ----------------------------------------------------------------------------------------------- test.js.flow:81:12
 
 Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is not enabled. [unsupported-syntax]
 
-   77| type ACT = abstract new () => string; // ERROR
+   81| type ACT = abstract new () => string; // ERROR
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:80:22
+Error ----------------------------------------------------------------------------------------------- test.js.flow:84:22
 
 Optional unlabeled tuple element is not enabled. [unsupported-syntax]
 
-   80| type OTup = [string, string?]; // ERROR
+   84| type OTup = [string, string?]; // ERROR
                             ^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:83:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:87:16
 
 Optional indexer (`?:`) is not enabled. [unsupported-syntax]
 
-   83| type OptIdx = {[string]?: number}; // ERROR
+   87| type OptIdx = {[string]?: number}; // ERROR
                       ^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:86:1
+Error ------------------------------------------------------------------------------------------------ test.js.flow:90:1
 
 `export as namespace` is not enabled. [unsupported-syntax]
 
-   86| export as namespace Foo; // ERROR
+   90| export as namespace Foo; // ERROR
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:89:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:93:16
 
 `+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
 
-   89| type MR<T> = { -readonly [P in keyof T]: T[P] }; // ERROR
+   93| type MR<T> = { -readonly [P in keyof T]: T[P] }; // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:90:16
+Error ----------------------------------------------------------------------------------------------- test.js.flow:94:16
 
 `+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
 
-   90| type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR
+   94| type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:94:3
+Error ------------------------------------------------------------------------------------------------ test.js.flow:98:3
 
 Private class field (`#private`) is not enabled. [unsupported-syntax]
 
-   94|   #private; // ERROR
+   98|   #private; // ERROR
          ^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:99:1
+Error ----------------------------------------------------------------------------------------------- test.js.flow:103:1
 
 Type arguments for tagged template expression is not enabled. [unsupported-syntax]
 
-   99| tag<string>`hello`; // ERROR
-       ^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- test.js.flow:102:18
-
-`typeof this` syntax is not enabled. [unsupported-syntax]
-
-   102| type TT = typeof this; // ERROR
-                         ^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- test.js.flow:103:19
-
-`typeof this` syntax is not enabled. [unsupported-syntax]
-
-   103| type TTP = typeof this.property; // ERROR
-                          ^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:107:3
-
-Property value initializer in declaration is not enabled. [unsupported-syntax]
-
-   107|   readonly x = 42; // ERROR
-          ^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:112:3
-
-Property value initializer in declaration is not enabled. [unsupported-syntax]
-
-   112|   private readonly x = 42; // ERROR
-          ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:117:3
-
-Index signatures in classes are not supported. [unsupported-syntax]
-
-   117|   [key: string]: any; // ERROR
-          ^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------- test.js.flow:123:25
-
-Cannot use `Mixin(...)` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
-
-   123| class MixinTest extends Mixin(Base) {} // ERROR
-                                ^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- test.js.flow:124:37
-
-Call expression in class `extends` clause is not enabled. [unsupported-syntax]
-
-   124| declare class DeclMixinTest extends Mixin(Base) {} // ERROR
-                                            ^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:128:3
-
-`override` modifier on class members is not enabled. [unsupported-syntax]
-
-   128|   override foo() {} // ERROR
-          ^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:129:3
-
-`override` modifier on class members is not enabled. [unsupported-syntax]
-
-   129|   override bar: string; // ERROR
-          ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:134:3
-
-`override` modifier on class members is not enabled. [unsupported-syntax]
-
-   134|   override foo(): void; // ERROR
-          ^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:135:3
-
-`override` modifier on class members is not enabled. [unsupported-syntax]
-
-   135|   override bar: string; // ERROR
-          ^^^^^^^^^^^^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:139:1
-
-`satisfies` expression is not enabled. [unsupported-syntax]
-
-   139| 1 satisfies number; // ERROR
+   103| tag<string>`hello`; // ERROR
         ^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:142:1
+Error ---------------------------------------------------------------------------------------------- test.js.flow:106:18
+
+`typeof this` syntax is not enabled. [unsupported-syntax]
+
+   106| type TT = typeof this; // ERROR
+                         ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- test.js.flow:107:19
+
+`typeof this` syntax is not enabled. [unsupported-syntax]
+
+   107| type TTP = typeof this.property; // ERROR
+                          ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:111:3
+
+Property value initializer in declaration is not enabled. [unsupported-syntax]
+
+   111|   readonly x = 42; // ERROR
+          ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:116:3
+
+Property value initializer in declaration is not enabled. [unsupported-syntax]
+
+   116|   private readonly x = 42; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:121:3
+
+Index signatures in classes are not supported. [unsupported-syntax]
+
+   121|   [key: string]: any; // ERROR
+          ^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- test.js.flow:127:25
+
+Cannot use `Mixin(...)` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
+
+   127| class MixinTest extends Mixin(Base) {} // ERROR
+                                ^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- test.js.flow:128:37
+
+Call expression in class `extends` clause is not enabled. [unsupported-syntax]
+
+   128| declare class DeclMixinTest extends Mixin(Base) {} // ERROR
+                                            ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:132:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   132|   override foo() {} // ERROR
+          ^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:133:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   133|   override bar: string; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:138:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   138|   override foo(): void; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:139:3
+
+`override` modifier on class members is not enabled. [unsupported-syntax]
+
+   139|   override bar: string; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:143:1
+
+`satisfies` expression is not enabled. [unsupported-syntax]
+
+   143| 1 satisfies number; // ERROR
+        ^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:146:1
 
 Flow does not support `abstract` classes. [unsupported-syntax]
 
         v------------------------------------
-   142| abstract class AbstractFoo { // ERROR
-   143|   abstract getName(): string; // ERROR
-   144|
-   145|   concreteMethod(): void {}
-   146| }
+   146| abstract class AbstractFoo { // ERROR
+   147|   abstract getName(): string; // ERROR
+   148|
+   149|   concreteMethod(): void {}
+   150| }
         ^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:143:3
+Error ----------------------------------------------------------------------------------------------- test.js.flow:147:3
 
 Flow does not support `abstract` methods. [unsupported-syntax]
 
-   143|   abstract getName(): string; // ERROR
+   147|   abstract getName(): string; // ERROR
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:148:1
+Error ----------------------------------------------------------------------------------------------- test.js.flow:152:1
 
 Flow does not support `abstract` classes. [unsupported-syntax]
 
         v--------------------------------------------
-   148| declare abstract class AbstractBar { // ERROR
-   149|   abstract getName(): string; // ERROR
-   150|
-   151|   meth(): void;
-   152| }
+   152| declare abstract class AbstractBar { // ERROR
+   153|   abstract getName(): string; // ERROR
+   154|
+   155|   meth(): void;
+   156| }
         ^
 
 
-Error ----------------------------------------------------------------------------------------------- test.js.flow:149:3
+Error ----------------------------------------------------------------------------------------------- test.js.flow:153:3
 
 Flow does not support `abstract` methods. [unsupported-syntax]
 
-   149|   abstract getName(): string; // ERROR
+   153|   abstract getName(): string; // ERROR
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
-Found 49 errors
+Found 51 errors
