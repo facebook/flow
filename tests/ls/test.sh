@@ -38,6 +38,18 @@ assert_ok "$FLOW" ls --strip-root --root src | sort
 echo ""
 
 echo "================================================================================"
+echo "Root spelling should not change the answer"
+echo "================================================================================"
+
+echo "1. Trailing slash on --root"
+assert_ok "$FLOW" ls --strip-root --root src/ | sort
+echo ""
+
+echo "2. The root passed as its own argument"
+assert_ok "$FLOW" ls --strip-root --root src src | sort
+echo ""
+
+echo "================================================================================"
 echo "--all should all libs, included files, and explicitly ignored files"
 echo "================================================================================"
 assert_ok "$FLOW" ls --strip-root --all --root src | sort

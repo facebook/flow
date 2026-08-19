@@ -36,6 +36,22 @@ flow-typed/implicit_lib.js
 implicitly_included.js
 
 ================================================================================
+Root spelling should not change the answer
+================================================================================
+1. Trailing slash on --root
+../other/explicitly_included.js
+.flowconfig
+explicit_lib.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+2. The root passed as its own argument
+.flowconfig
+explicit_lib.js
+flow-typed/implicit_lib.js
+implicitly_included.js
+
+================================================================================
 --all should all libs, included files, and explicitly ignored files
 ================================================================================
 ../other/explicitly_included.js
