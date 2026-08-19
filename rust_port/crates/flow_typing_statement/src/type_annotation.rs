@@ -3707,7 +3707,7 @@ fn convert_inner<'a>(
                         inline: true,
                         extends: vec![],
                         extends_binding_kinds: vec![],
-                        callable: false,
+                        function_like: false,
                         this_tparam: None,
                         this_t: None,
                     },
@@ -6819,6 +6819,16 @@ fn is_construct_signature(np: &ast::types::object::NormalProperty<ALoc, ALoc>) -
         )
 }
 
+/// Whether the interface's values are functions at runtime — a call property or
+/// a construct signature both make them so. See [InterfaceSuper::function_like].
+fn is_function_like(properties: &[ast::types::object::Property<ALoc, ALoc>]) -> bool {
+    properties.iter().any(|prop| match prop {
+        ast::types::object::Property::CallProperty(cp) => !cp.static_,
+        ast::types::object::Property::NormalProperty(np) => is_construct_signature(np),
+        _ => false,
+    })
+}
+
 /// Lower an inline `interface { ... }` body to its [InstanceT]. Also used for
 /// object types that carry a construct signature: [ObjT] has no slot to hold one
 /// (only [class_types::Class] builds [inst_construct_t]), so those are lowered
@@ -6838,16 +6848,12 @@ fn mk_inline_interface_type<'a>(
 > {
     let id = cx.make_aloc_id(loc);
     let (extends_types, extends_binding_kinds): (Vec<_>, Vec<_>) = extends.into_iter().unzip();
-    let callable = properties.iter().any(|prop| match prop {
-        ast::types::object::Property::CallProperty(cp) => !cp.static_,
-        _ => false,
-    });
     let super_ = func_class_sig_types::class::Super::Interface(
         func_class_sig_types::class::InterfaceSuper {
             inline: true,
             extends: extends_types,
             extends_binding_kinds,
-            callable,
+            function_like: is_function_like(properties),
             this_tparam: None,
             this_t: None,
         },
@@ -8772,16 +8778,12 @@ pub fn mk_interface_sig<'a>(
     );
     let class_name = &id_name.name;
     let id = cx.make_aloc_id(id_loc);
-    let callable = body.properties.iter().any(|prop| match prop {
-        ast::types::object::Property::CallProperty(cp) => !cp.static_,
-        _ => false,
-    });
     let super_ = func_class_sig_types::class::Super::Interface(
         func_class_sig_types::class::InterfaceSuper {
             inline: false,
             extends,
             extends_binding_kinds,
-            callable,
+            function_like: is_function_like(&body.properties),
             this_tparam: Some(this_tparam),
             this_t: Some(this_t.dupe()),
         },

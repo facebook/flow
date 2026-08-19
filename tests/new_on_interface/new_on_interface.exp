@@ -178,6 +178,34 @@ References:
                             ^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- function_members.js:16:6
+
+Cannot get `BarC.nope` because property `nope` is missing in `BarCtor` [1]. [prop-missing]
+
+   function_members.js:16:6
+   16| BarC.nope; // ERROR: not a `Function` member either
+            ^^^^
+
+References:
+   function_members.js:11:21
+   11| declare const BarC: BarCtor;
+                           ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- function_members.js:36:7
+
+Cannot get `plain.name` because property `name` is missing in `Plain` [1]. [prop-missing]
+
+   function_members.js:36:7
+   36| plain.name; // ERROR
+             ^^^^
+
+References:
+   function_members.js:35:22
+   35| declare const plain: Plain;
+                            ^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------- new_on_interface.js:16:7
 
 Cannot call `B` with `"hello"` bound to `x` because `"hello"` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -230,4 +258,4 @@ References:
 
 
 
-Found 15 errors
+Found 17 errors

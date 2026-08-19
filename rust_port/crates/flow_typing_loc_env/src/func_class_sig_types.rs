@@ -261,7 +261,10 @@ pub mod class {
         pub extends: Vec<TypeApp>,
         /// Parallel to [extends]: see comment on [ClassLikeBindingKind].
         pub extends_binding_kinds: Vec<ClassLikeBindingKind>,
-        pub callable: bool,
+        /// The interface has a call property or a construct signature, so its
+        /// values are functions at runtime and `Function.prototype` belongs on
+        /// the supertype list.
+        pub function_like: bool,
         /// Polymorphic [this] for the interface. None for inline interfaces.
         pub this_tparam: Option<TypeParam>,
         pub this_t: Option<Type>,

@@ -3979,7 +3979,7 @@ fn merge_interface<'cx>(
             .iter()
             .map(|t| merge_interface_extends(bind_this, env, cx, file, t))
             .collect();
-        let calls_clone = calls.clone();
+        let function_like = !calls.is_empty() || !constructs.is_empty();
         let reason_for_super = reason.dupe();
         let make_super: Box<dyn FnOnce(Option<Type>) -> Type + 'cx> =
             Box::new(move |this_opt: Option<Type>| {
@@ -3996,7 +3996,7 @@ fn merge_interface<'cx>(
                         },
                     )
                     .collect();
-                if !calls_clone.is_empty() {
+                if function_like {
                     ts.insert(
                         0,
                         Type::new(type_::TypeInner::FunProtoT(super_reason.dupe())),

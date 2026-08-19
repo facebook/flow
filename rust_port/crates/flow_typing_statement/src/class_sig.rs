@@ -1281,9 +1281,7 @@ fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) ->
                     }
                 })
                 .collect();
-            // If the interface definition includes a callable property, add the
-            // function prototype to the super type
-            let extends = if iface.callable {
+            let extends = if iface.function_like {
                 let mut e = extends;
                 e.push(Type::new(TypeInner::FunProtoT(super_reason.dupe())));
                 e
