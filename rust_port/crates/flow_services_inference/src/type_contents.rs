@@ -315,6 +315,27 @@ fn unchecked_dependencies(
     )
 }
 
+fn prioritize_unchecked(unchecked: FlowOrdSet<FileKey>) -> Result<(), CheckedDependenciesCanceled> {
+    if unchecked.is_empty() {
+        return Ok(());
+    }
+    let n = unchecked.len();
+    flow_hh_logger::info!("Canceling command due to {} unchecked dependencies", n);
+    let cap = 10;
+    for (i, f) in unchecked.iter().enumerate() {
+        let i = i + 1;
+        if i <= cap {
+            flow_hh_logger::info!("{}/{}: {}", i, n, f.as_str());
+        } else if flow_hh_logger::level::passes_min_level(flow_hh_logger::Level::Debug) {
+            flow_hh_logger::debug!("{}/{}: {}", i, n, f.as_str());
+        } else if i == cap + 1 {
+            flow_hh_logger::info!("...");
+        }
+    }
+    server_monitor_listener_state::push_dependencies_to_prioritize(unchecked);
+    Err(CheckedDependenciesCanceled)
+}
+
 /// `ensure_checked_dependencies` for a whole set, cancelling once for all of them rather than once
 /// per file. A recheck merges everything the files it is given need, so scheduling the direct
 /// dependencies is enough — the rest of the closure comes with them.
@@ -337,12 +358,7 @@ pub fn ensure_checked_dependencies_of_set<'a>(
         .flatten()
         .collect();
 
-    if unchecked.is_empty() {
-        return Ok(());
-    }
-    flow_hh_logger::info!("Prioritizing {} unchecked dependencies", unchecked.len());
-    server_monitor_listener_state::push_dependencies_to_prioritize(unchecked);
-    Err(CheckedDependenciesCanceled)
+    prioritize_unchecked(unchecked)
 }
 
 // Ensures that dependencies are checked; schedules them to be checked and aborts the
@@ -356,26 +372,7 @@ fn ensure_checked_dependencies(
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
 ) -> Result<(), CheckedDependenciesCanceled> {
-    let unchecked_deps = unchecked_dependencies(options, transaction, file, requires);
-    if !unchecked_deps.is_empty() {
-        let n = unchecked_deps.len();
-        flow_hh_logger::info!("Canceling command due to {} unchecked dependencies", n);
-        let cap = 10;
-        for (i, f) in unchecked_deps.iter().enumerate() {
-            let i = i + 1;
-            if i <= cap {
-                flow_hh_logger::info!("{}/{}: {}", i, n, f.as_str());
-            } else if flow_hh_logger::level::passes_min_level(flow_hh_logger::Level::Debug) {
-                flow_hh_logger::debug!("{}/{}: {}", i, n, f.as_str());
-            } else if i == cap + 1 {
-                flow_hh_logger::info!("...");
-            }
-        }
-        server_monitor_listener_state::push_dependencies_to_prioritize(unchecked_deps);
-        Err(CheckedDependenciesCanceled)
-    } else {
-        Ok(())
-    }
+    prioritize_unchecked(unchecked_dependencies(options, transaction, file, requires))
 }
 
 // file+contents may not agree with file system state
