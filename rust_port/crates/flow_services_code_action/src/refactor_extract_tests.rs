@@ -467,7 +467,7 @@ let a;
 
 ({a, fooo} = newFunction());
 console.log(a + fooo);
-function newFunction(): {| a: number, fooo: number |} {
+function newFunction(): { a: number, fooo: number } {
   const a = 3; // selected
   fooo = a + 2; // selected
   return { a, fooo };
@@ -511,7 +511,7 @@ function newFunction(): number {
             r#"
 let {a, fooo} = newFunction();
 fooo = a + 2;
-function newFunction(): {| a: number, fooo: number |} {
+function newFunction(): { a: number, fooo: number } {
   let fooo = 3; // selected
   const a = 3; // selected
   return { a, fooo };
@@ -936,12 +936,13 @@ function foo<A, B, C: B = B>(c: C) {
     return f_;
   }
 }
-function newFunction<B, C: B = B, D: C, E: D, F: D = E>(
-  c: C,
-  f: F,
-  e: E,
-  d: D,
-): F {
+function newFunction<
+  B,
+  C extends B = B,
+  D extends C,
+  E extends D,
+  F extends D = E,
+>(c: C, f: F, e: E, d: D): F {
   console.log(c); // selected
   const f_ = f; // selected
   const e_ = e; // selected
@@ -976,7 +977,11 @@ function foo<A, B, C: B = B>(c: C) {
     const f_ = newFunction(f, e, d);
     return f_;
   }
-  function newFunction<D: C, E: D, F: D = E>(f: F, e: E, d: D): F {
+  function newFunction<D extends C, E extends D, F extends D = E>(
+    f: F,
+    e: E,
+    d: D,
+  ): F {
     console.log(c); // selected
     const f_ = f; // selected
     const e_ = e; // selected
@@ -1188,7 +1193,7 @@ function newFunction(
   d: number,
   e: number,
   f: number,
-): {| g: number, h: number |} {
+): { g: number, h: number } {
   const g = 3;
   const h = 4;
   console.log(a + b + c + d + e + f + g + h);
@@ -1212,7 +1217,7 @@ function level1() {
           let f = 8;
           const {g, h} = newFunction();
           return f + g + h;
-          function newFunction(): {| g: number, h: number |} {
+          function newFunction(): { g: number, h: number } {
             const g = 3;
             const h = 4;
             console.log(a + b + c + d + e + f + g + h);
@@ -1243,7 +1248,7 @@ function level1() {
           return f + g + h;
         }
       }
-      function newFunction(e: number, f: number): {| g: number, h: number |} {
+      function newFunction(e: number, f: number): { g: number, h: number } {
         const g = 3;
         const h = 4;
         console.log(a + b + c + d + e + f + g + h);
@@ -1277,7 +1282,7 @@ function level1() {
       d: number,
       e: number,
       f: number,
-    ): {| g: number, h: number |} {
+    ): { g: number, h: number } {
       const g = 3;
       const h = 4;
       console.log(a + b + c + d + e + f + g + h);
@@ -1312,7 +1317,7 @@ function level1() {
     d: number,
     e: number,
     f: number,
-  ): {| g: number, h: number |} {
+  ): { g: number, h: number } {
     const g = 3;
     const h = 4;
     console.log(a + b + c + d + e + f + g + h);

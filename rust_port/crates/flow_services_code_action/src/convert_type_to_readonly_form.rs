@@ -64,27 +64,11 @@ struct Mapper {
 }
 
 impl Mapper {
-    fn new(ts_readonly_name: bool, target_loc: Loc) -> Self {
-        let readonly_array_name = FlowSmolStr::new(if ts_readonly_name {
-            "ReadonlyArray"
-        } else {
-            "$ReadOnlyArray"
-        });
-        let readonly_object_name = FlowSmolStr::new(if ts_readonly_name {
-            "Readonly"
-        } else {
-            "$ReadOnly"
-        });
-        let readonly_map_name = FlowSmolStr::new(if ts_readonly_name {
-            "ReadonlyMap"
-        } else {
-            "$ReadOnlyMap"
-        });
-        let readonly_set_name = FlowSmolStr::new(if ts_readonly_name {
-            "ReadonlySet"
-        } else {
-            "$ReadOnlySet"
-        });
+    fn new(target_loc: Loc) -> Self {
+        let readonly_array_name = FlowSmolStr::new_inline("ReadonlyArray");
+        let readonly_object_name = FlowSmolStr::new_inline("Readonly");
+        let readonly_map_name = FlowSmolStr::new_inline("ReadonlyMap");
+        let readonly_set_name = FlowSmolStr::new_inline("ReadonlySet");
         Mapper {
             target_loc,
             readonly_array_name,
@@ -295,11 +279,10 @@ impl AstVisitor<'_, Loc> for Mapper {
 }
 
 pub fn convert(
-    ts_readonly_name: bool,
     ast: &ast::Program<Loc, Loc>,
     loc: Loc,
 ) -> Option<(ast::Program<Loc, Loc>, ConversionKind)> {
-    let mut mapper = Mapper::new(ts_readonly_name, loc);
+    let mut mapper = Mapper::new(loc);
     let ast_ = mapper.map_program(ast);
     match mapper.get_conversion_kind() {
         None => None,

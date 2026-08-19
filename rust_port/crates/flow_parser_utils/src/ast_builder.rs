@@ -100,7 +100,7 @@ pub mod types {
             comments: Option<ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>,
             properties: Vec<at::object::Property<Loc, Loc>>,
         ) -> at::Object<Loc, Loc> {
-            let exact = exact.unwrap_or(true);
+            let exact = exact.unwrap_or(false);
             let inexact = inexact.unwrap_or(false);
             at::Object {
                 exact,
@@ -258,7 +258,7 @@ pub mod types {
     ) -> at::TypeParam<Loc, Loc> {
         let loc = loc.unwrap_or_else(Loc::none);
         let bound = bound.unwrap_or(at::AnnotationOrHint::Missing(Loc::none()));
-        let bound_kind = bound_kind.unwrap_or(at::type_param::BoundKind::Colon);
+        let bound_kind = bound_kind.unwrap_or(at::type_param::BoundKind::Extends);
         at::TypeParam {
             loc,
             name: identifiers::identifier(None, name),

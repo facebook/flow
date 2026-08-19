@@ -1331,12 +1331,12 @@ pub mod type_synthesizer {
                     Polarity::Neutral => None,
                     Polarity::Positive => Some(ast::Variance {
                         loc: Loc::default(),
-                        kind: ast::VarianceKind::Plus,
+                        kind: ast::VarianceKind::Out,
                         comments: None,
                     }),
                     Polarity::Negative => Some(ast::Variance {
                         loc: Loc::default(),
-                        kind: ast::VarianceKind::Minus,
+                        kind: ast::VarianceKind::In,
                         comments: None,
                     }),
                 };

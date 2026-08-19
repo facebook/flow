@@ -274,6 +274,16 @@ impl Serializer {
                     }),
                 })
             }
+            Ty::Utility(crate::ty::Utility::ElementType(object, index)) => {
+                ast::types::Type::new(TypeInner::IndexedAccess {
+                    loc: LOC_NONE,
+                    inner: Arc::new(ast::types::IndexedAccess {
+                        object: self.type_(object),
+                        index: self.type_(index),
+                        comments: None,
+                    }),
+                })
+            }
             Ty::Utility(u) => self.utility(u),
             Ty::IndexedAccess {
                 _object,

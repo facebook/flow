@@ -316,7 +316,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:63:11
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    63| if (is && is.a) { }
@@ -325,7 +325,7 @@ Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to
 
 Error ----------------------------------------------------------------------------------------- simple_sketchies.js:66:5
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    simple_sketchies.js:66:5
@@ -340,7 +340,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- simple_sketchies.js:66:13
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    simple_sketchies.js:66:13

@@ -1098,6 +1098,12 @@ fn utility<L: Dupe>(
             layout::space(),
             type_with_parens(opts, depth, t.as_ref(), size),
         ]),
+        Utility::ElementType(object, index) => layout::fuse(vec![
+            type_with_parens(opts, depth, object.as_ref(), size),
+            LayoutNode::atom("[".to_string()),
+            type_(opts, depth, index.as_ref(), size),
+            LayoutNode::atom("]".to_string()),
+        ]),
         _ => {
             let ctor = string_of_utility_ctor(u);
             let ts = types_of_utility(u);

@@ -2478,7 +2478,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:153:18
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    153| var x11: empty = a11?.a || b11?.a;

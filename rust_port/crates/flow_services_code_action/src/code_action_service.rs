@@ -654,7 +654,7 @@ fn convert_type_to_readonly_form_code_actions(
     loc: Loc,
 ) -> Vec<CodeActionOrCommand> {
     if include_rewrite_refactors(only) {
-        match convert_type_to_readonly_form::convert(true, ast, loc) {
+        match convert_type_to_readonly_form::convert(ast, loc) {
             None => vec![],
             Some((ast_prime, conversion_kind)) => {
                 let diff = flow_ast_differ::program(ast, &ast_prime);
@@ -1056,9 +1056,9 @@ fn autofix_in_upstream_file(
     let src = loc.source.dupe();
     let ast_src = &ast.loc.source;
     let (ast, uri) = if *ast_src != src {
-        match src {
-            None => return None,
-            Some(source_file) => match get_ast_from_heap(&source_file) {
+        {
+            let source_file = src?;
+            match get_ast_from_heap(&source_file) {
                 None => (ast.clone(), uri.clone()),
                 Some(upstream_ast) => {
                     let file_path = source_file.to_path_buf();
@@ -1066,7 +1066,7 @@ fn autofix_in_upstream_file(
                         lsp_helpers::path_to_lsp_uri(file_path.to_string_lossy().as_ref(), "");
                     (upstream_ast, file_uri)
                 }
-            },
+            }
         }
     } else {
         (ast.clone(), uri.clone())
@@ -1167,9 +1167,8 @@ pub fn ast_transforms_of_error(
         let make_readonly_code_action =
             |upper_ty: &flow_common_ty::ty::Ty<ALoc>, upper_loc: Loc| -> Vec<AstTransformOfError> {
                 let transform: AstTransform = Box::new(
-                    |cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
-                        convert_type_to_readonly_form::convert(cx.ts_utility_syntax(), ast, loc)
-                            .map(|(ast, _kind)| ast)
+                    |_cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
+                        convert_type_to_readonly_form::convert(ast, loc).map(|(ast, _kind)| ast)
                     },
                 );
                 let opts = PrinterOptions::default();

@@ -906,7 +906,12 @@ fn dump_use_t_<CX>(
         let mut xs: Vec<String> = Vec::new();
         match &s.flags.obj_kind {
             ObjKind::Indexed(d) => {
-                xs.push(format!("{}[]", d.dict_polarity.sigil()));
+                let variance = match d.dict_polarity {
+                    Polarity::Positive => "readonly ",
+                    Polarity::Negative => "writeonly ",
+                    Polarity::Neutral => "",
+                };
+                xs.push(format!("{}[]", variance));
             }
             ObjKind::Exact | ObjKind::Inexact => {}
         }
@@ -922,10 +927,7 @@ fn dump_use_t_<CX>(
             xs.push(format!("{}{}", k, opt));
         }
         let xs_str = xs.join("; ");
-        match &s.flags.obj_kind {
-            ObjKind::Exact => format!("{{|{}|}}", xs_str),
-            _ => format!("{{{}}}", xs_str),
-        }
+        format!("{{{}}}", xs_str)
     };
 
     let operand_slice = |reason: &Reason,

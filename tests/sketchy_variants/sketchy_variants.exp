@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:5
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    test.js:5:5
@@ -69,7 +69,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:5
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    test.js:9:5
@@ -192,7 +192,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:5
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    test.js:17:5
@@ -243,7 +243,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:5
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    test.js:21:5
@@ -294,7 +294,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:5
 
-Sketchy null check on mixed [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
+Sketchy null check on unknown [1] which is potentially false. Perhaps you meant to check for null or undefined [1]?
 [sketchy-null-mixed]
 
    test.js:31:5

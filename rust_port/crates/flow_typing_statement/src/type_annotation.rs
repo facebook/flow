@@ -2370,49 +2370,26 @@ fn convert_inner<'a>(
                     }
                     // Values<T> replaces $Values<T>
                     "Values" => {
-                        if cx.ts_syntax() || cx.ts_utility_syntax() {
-                            check_type_arg_arity(
-                                cx,
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                            let (ts, targs_ast) =
+                                convert_type_params(cx, env, inner.targs.as_ref())?;
+                            let tp = ts.into_iter().next().unwrap();
+                            let reason = reason::mk_reason(
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline("Values")),
                                 loc.dupe(),
-                                t,
-                                inner.targs.as_ref(),
-                                1,
-                                || {
-                                    let (ts, targs_ast) =
-                                        convert_type_params(cx, env, inner.targs.as_ref())?;
-                                    let tp = ts.into_iter().next().unwrap();
-                                    let reason = reason::mk_reason(
-                                        reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
-                                            "Values",
-                                        )),
-                                        loc.dupe(),
-                                    );
-                                    let result_t =
-                                        FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                                            cx,
-                                            use_op(&reason),
-                                            &reason,
-                                            &tp,
-                                            &type_::Destructor::ValuesType,
-                                            mk_eval_id(cx, loc.dupe()),
-                                        )
-                                        .expect("mk_type_destructor should not fail");
-                                    Ok(reconstruct_ast(result_t, None, targs_ast))
-                                },
-                            )?
-                        } else {
-                            error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind: intermediate_error_types::IncorrectType::Values,
-                                    },
-                                )),
-                                t,
-                            )
-                        }
+                            );
+                            let result_t =
+                                FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+                                    cx,
+                                    use_op(&reason),
+                                    &reason,
+                                    &tp,
+                                    &type_::Destructor::ValuesType,
+                                    mk_eval_id(cx, loc.dupe()),
+                                )
+                                .expect("mk_type_destructor should not fail");
+                            Ok(reconstruct_ast(result_t, None, targs_ast))
+                        })?
                     }
                     "$Exact" => {
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
@@ -2714,159 +2691,71 @@ fn convert_inner<'a>(
                             Ok(reconstruct_ast(tp, None, targs_ast))
                         })?
                     }
-                    // TS Types
                     "Readonly" => {
-                        if cx.ts_syntax() || cx.ts_utility_syntax() {
-                            check_type_arg_arity(
-                                cx,
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                            let (ts, targs_ast) =
+                                convert_type_params(cx, env, inner.targs.as_ref())?;
+                            let tp = ts.into_iter().next().unwrap();
+                            let reason = reason::mk_reason(
+                                reason::VirtualReasonDesc::RReadOnlyType,
                                 loc.dupe(),
-                                t,
-                                inner.targs.as_ref(),
-                                1,
-                                || {
-                                    let (ts, targs_ast) =
-                                        convert_type_params(cx, env, inner.targs.as_ref())?;
-                                    let tp = ts.into_iter().next().unwrap();
-                                    let reason = reason::mk_reason(
-                                        reason::VirtualReasonDesc::RReadOnlyType,
-                                        loc.dupe(),
-                                    );
-                                    let result_t =
-                                        FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                                            cx,
-                                            use_op(&reason),
-                                            &reason,
-                                            &tp,
-                                            &type_::Destructor::ReadOnlyType,
-                                            mk_eval_id(cx, loc.dupe()),
-                                        )
-                                        .expect("mk_type_destructor should not fail");
-                                    Ok(reconstruct_ast(result_t, None, targs_ast))
-                                },
-                            )?
-                        } else {
-                            error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind: intermediate_error_types::IncorrectType::TSReadonly,
-                                    },
-                                )),
-                                t,
-                            )
-                        }
+                            );
+                            let result_t =
+                                FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+                                    cx,
+                                    use_op(&reason),
+                                    &reason,
+                                    &tp,
+                                    &type_::Destructor::ReadOnlyType,
+                                    mk_eval_id(cx, loc.dupe()),
+                                )
+                                .expect("mk_type_destructor should not fail");
+                            Ok(reconstruct_ast(result_t, None, targs_ast))
+                        })?
                     }
                     "ReadonlyArray" => {
-                        if cx.ts_syntax() || cx.ts_utility_syntax() {
-                            check_type_arg_arity(
-                                cx,
-                                loc.dupe(),
-                                t,
-                                inner.targs.as_ref(),
-                                1,
-                                || {
-                                    let (elemts, targs_ast) =
-                                        convert_type_params(cx, env, inner.targs.as_ref())?;
-                                    let elemt = elemts.into_iter().next().unwrap();
-                                    Ok(reconstruct_ast(
-                                        Type::new(type_::TypeInner::DefT(
-                                            reason::mk_annot_reason(
-                                                reason::VirtualReasonDesc::RROArrayType,
-                                                loc.dupe(),
-                                            ),
-                                            type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
-                                                type_::ArrType::ROArrayAT(Box::new((elemt, None))),
-                                            ))),
-                                        )),
-                                        None,
-                                        targs_ast,
-                                    ))
-                                },
-                            )?
-                        } else {
-                            error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind:
-                                            intermediate_error_types::IncorrectType::TSReadonlyArray,
-                                    },
-                                )),
-                                t,
-                            )
-                        }
-                    }
-                    "ReadonlyMap" if !(cx.ts_syntax() || cx.ts_utility_syntax()) => error_type(
-                        cx,
-                        loc.dupe(),
-                        ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                            EIncorrectTypeWithReplacementData {
-                                loc: loc.dupe(),
-                                kind: intermediate_error_types::IncorrectType::TSReadonlyMap,
-                            },
-                        )),
-                        t,
-                    ),
-                    "ReadonlySet" if !(cx.ts_syntax() || cx.ts_utility_syntax()) => error_type(
-                        cx,
-                        loc.dupe(),
-                        ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                            EIncorrectTypeWithReplacementData {
-                                loc: loc.dupe(),
-                                kind: intermediate_error_types::IncorrectType::TSReadonlySet,
-                            },
-                        )),
-                        t,
-                    ),
-                    "NonNullable" => {
-                        if cx.ts_syntax() || cx.ts_utility_syntax() {
-                            check_type_arg_arity(
-                                cx,
-                                loc.dupe(),
-                                t,
-                                inner.targs.as_ref(),
-                                1,
-                                || {
-                                    let (ts, targs_ast) =
-                                        convert_type_params(cx, env, inner.targs.as_ref())?;
-                                    let tp = ts.into_iter().next().unwrap();
-                                    let reason = reason::mk_reason(
-                                        reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
-                                            "NonNullable",
-                                        )),
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                            let (elemts, targs_ast) =
+                                convert_type_params(cx, env, inner.targs.as_ref())?;
+                            let elemt = elemts.into_iter().next().unwrap();
+                            Ok(reconstruct_ast(
+                                Type::new(type_::TypeInner::DefT(
+                                    reason::mk_annot_reason(
+                                        reason::VirtualReasonDesc::RROArrayType,
                                         loc.dupe(),
-                                    );
-                                    let result_t =
-                                        FlowJs::mk_possibly_evaluated_destructor_for_annotations(
-                                            cx,
-                                            use_op(&reason),
-                                            &reason,
-                                            &tp,
-                                            &type_::Destructor::NonMaybeType,
-                                            mk_eval_id(cx, loc.dupe()),
-                                        )
-                                        .expect("mk_type_destructor should not fail");
-                                    Ok(reconstruct_ast(result_t, None, targs_ast))
-                                },
-                            )?
-                        } else {
-                            error_type(
-                                cx,
-                                loc.dupe(),
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind:
-                                            intermediate_error_types::IncorrectType::TSNonNullable,
-                                    },
+                                    ),
+                                    type_::DefT::new(type_::DefTInner::ArrT(Rc::new(
+                                        type_::ArrType::ROArrayAT(Box::new((elemt, None))),
+                                    ))),
                                 )),
-                                t,
-                            )
-                        }
+                                None,
+                                targs_ast,
+                            ))
+                        })?
+                    }
+                    "NonNullable" => {
+                        check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
+                            let (ts, targs_ast) =
+                                convert_type_params(cx, env, inner.targs.as_ref())?;
+                            let tp = ts.into_iter().next().unwrap();
+                            let reason = reason::mk_reason(
+                                reason::VirtualReasonDesc::RType(FlowSmolStr::new_inline(
+                                    "NonNullable",
+                                )),
+                                loc.dupe(),
+                            );
+                            let result_t =
+                                FlowJs::mk_possibly_evaluated_destructor_for_annotations(
+                                    cx,
+                                    use_op(&reason),
+                                    &reason,
+                                    &tp,
+                                    &type_::Destructor::NonMaybeType,
+                                    mk_eval_id(cx, loc.dupe()),
+                                )
+                                .expect("mk_type_destructor should not fail");
+                            Ok(reconstruct_ast(result_t, None, targs_ast))
+                        })?
                     }
                     "React$Node" => {
                         if !cx.is_lib_file() {

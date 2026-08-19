@@ -7601,18 +7601,13 @@ where
                     }
                 }
             }
-            MessageInvalidCatchParameterAnnotation { ts_utility_syntax } => {
-                let type_name = if *ts_utility_syntax {
-                    "unknown"
-                } else {
-                    "mixed"
-                };
+            MessageInvalidCatchParameterAnnotation { .. } => {
                 friendly::Message(vec![
                     text("Invalid catch parameter type annotation. "),
                     text("Annotation must be "),
                     code("any"),
                     text(" or "),
-                    code(type_name),
+                    code("unknown"),
                     text(" if specified."),
                 ])
             }
@@ -8538,7 +8533,7 @@ where
                     SketchyNullKind::Number => ("number", "0"),
                     SketchyNullKind::BigInt => ("bigint", "0n"),
                     SketchyNullKind::String => ("string", "an empty string"),
-                    SketchyNullKind::Mixed => ("mixed", "false"),
+                    SketchyNullKind::Mixed => ("unknown", "false"),
                     SketchyNullKind::EnumBool => ("boolean enum", "false at runtime"),
                     SketchyNullKind::EnumNumber => ("number enum", "0 at runtime"),
                     SketchyNullKind::EnumBigInt => ("bigint enum", "0n at runtime"),

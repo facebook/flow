@@ -205,7 +205,12 @@ impl AstVisitor<'_, Loc> for Mapper {
             {
                 let expression = map_expression_default(self, &inner.expression);
                 let annot = map_type_default(self, &inner.annot.annotation);
-                ast_builder::expressions::typecast(None, inner.comments.clone(), expression, annot)
+                ast_builder::expressions::as_expression(
+                    None,
+                    inner.comments.clone(),
+                    expression,
+                    annot,
+                )
             }
             ExpressionInner::TSSatisfies { loc: _, inner }
                 if self.kind == Kind::SatisfiesExpression
@@ -214,7 +219,12 @@ impl AstVisitor<'_, Loc> for Mapper {
                 let expression = map_expression_default(self, &inner.expression);
                 let mapped_annot = self.map_type_annotation(&inner.annot);
                 let annot = mapped_annot.annotation;
-                ast_builder::expressions::typecast(None, inner.comments.clone(), expression, annot)
+                ast_builder::expressions::as_expression(
+                    None,
+                    inner.comments.clone(),
+                    expression,
+                    annot,
+                )
             }
             _ => {
                 if self.contains.should_map_expression(expr) {

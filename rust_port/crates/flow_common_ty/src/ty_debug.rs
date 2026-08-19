@@ -221,10 +221,18 @@ fn builtin_value<L: Debug>(v: &BuiltinOrSymbol<L>) -> String {
     }
 }
 
-fn dump_polarity(p: Polarity) -> &'static str {
+fn dump_property_polarity(p: Polarity) -> &'static str {
     match p {
-        Polarity::Positive => "+",
-        Polarity::Negative => "-",
+        Polarity::Positive => "readonly ",
+        Polarity::Negative => "writeonly ",
+        Polarity::Neutral => "",
+    }
+}
+
+fn dump_type_param_polarity(p: Polarity) -> &'static str {
+    match p {
+        Polarity::Positive => "out",
+        Polarity::Negative => "in",
         Polarity::Neutral => "",
     }
 }
@@ -267,7 +275,7 @@ fn dump_rest_params<L: Debug + Clone + Dupe>(
 
 fn dump_bound<L: Debug + Clone + Dupe>(depth: i32, bound: Option<&Ty<L>>) -> String {
     match bound {
-        Some(t) => format!(" <: {}", dump_t(depth, t)),
+        Some(t) => format!(" extends {}", dump_t(depth, t)),
         None => String::new(),
     }
 }
@@ -275,7 +283,7 @@ fn dump_bound<L: Debug + Clone + Dupe>(depth: i32, bound: Option<&Ty<L>>) -> Str
 fn dump_type_param<L: Debug + Clone + Dupe>(depth: i32, tp: &TypeParam<L>) -> String {
     format!(
         "TParam({}, {}, {})",
-        dump_polarity(tp.tp_polarity),
+        dump_type_param_polarity(tp.tp_polarity),
         tp.tp_name,
         dump_bound(depth, tp.tp_bound.as_deref())
     )
@@ -336,7 +344,7 @@ fn dump_tuple_element<L: Debug + Clone + Dupe>(
         let opt_str = if optional { "?" } else { "" };
         format!(
             "{}{}{}: {}",
-            dump_polarity(polarity),
+            dump_property_polarity(polarity),
             name_str,
             opt_str,
             dump_t(depth, t)
@@ -366,7 +374,7 @@ fn dump_field<L: Debug + Clone + Dupe>(
     let opt_str = if optional { "?" } else { "" };
     format!(
         "{}{}{}: {}",
-        dump_polarity(polarity),
+        dump_property_polarity(polarity),
         x,
         opt_str,
         dump_t(depth, t)
@@ -419,7 +427,7 @@ fn dump_dict<L: Debug + Clone + Dupe>(depth: i32, d: &Dict<L>) -> String {
     };
     format!(
         "{}[{}{}]: {}",
-        dump_polarity(d.dict_polarity),
+        dump_property_polarity(d.dict_polarity),
         name_str,
         dump_t(depth, &d.dict_key),
         dump_t(depth, &d.dict_value)
@@ -432,8 +440,9 @@ fn dump_spread<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
 
 fn dump_mapped_type_variance(v: MappedTypeVariance) -> String {
     match v {
-        MappedTypeVariance::OverrideVariance(pol) => dump_polarity(pol).to_string(),
-        MappedTypeVariance::RemoveVariance(pol) => format!("-{}", dump_polarity(pol)),
+        MappedTypeVariance::OverrideVariance(pol) => dump_property_polarity(pol).to_string(),
+        MappedTypeVariance::RemoveVariance(Polarity::Positive) => "-readonly ".to_string(),
+        MappedTypeVariance::RemoveVariance(Polarity::Negative | Polarity::Neutral) => String::new(),
         MappedTypeVariance::KeepVariance => String::new(),
     }
 }
@@ -476,7 +485,7 @@ fn dump_obj<L: Debug + Clone + Dupe>(depth: i32, o: &ObjT<L>) -> String {
     let props: Vec<String> = o.obj_props.iter().map(|p| dump_prop(depth, p)).collect();
     let props_str = props.join(", ");
     match &o.obj_kind {
-        ObjKind::ExactObj => format!("{{|{}|}}", props_str),
+        ObjKind::ExactObj => format!("{{{}}}", props_str),
         ObjKind::InexactObj => format!("{{{}, ...}}", props_str),
         ObjKind::IndexedObj(d) => format!("{{{}, {}}}", props_str, dump_dict(depth, d)),
         ObjKind::MappedTypeObj => format!("{{{}}}", props_str),
@@ -485,7 +494,7 @@ fn dump_obj<L: Debug + Clone + Dupe>(depth: i32, o: &ObjT<L>) -> String {
 
 fn dump_arr<L: Debug + Clone + Dupe>(depth: i32, a: &ArrT<L>) -> String {
     let ctor = if a.arr_readonly {
-        "$ReadOnlyArray"
+        "ReadonlyArray"
     } else {
         "Array"
     };
@@ -512,8 +521,23 @@ fn dump_generics<L: Debug + Clone + Dupe>(depth: i32, ts: Option<&[Arc<Ty<L>>]>)
     }
 }
 
+fn utility_ctor<L>(u: &crate::ty::Utility<L>) -> &'static str {
+    match u {
+        crate::ty::Utility::Keys(_) => "keyof",
+        crate::ty::Utility::ElementType(_, _) => "indexed_access",
+        _ => string_of_utility_ctor(u),
+    }
+}
+
 fn dump_utility<L: Debug + Clone + Dupe>(depth: i32, u: &crate::ty::Utility<L>) -> String {
-    let ctor = string_of_utility_ctor(u);
+    match u {
+        crate::ty::Utility::Keys(t) => return format!("keyof {}", dump_t(depth, t)),
+        crate::ty::Utility::ElementType(object, index) => {
+            return format!("{}[{}]", dump_t(depth, object), dump_t(depth, index));
+        }
+        _ => {}
+    }
+    let ctor = utility_ctor(u);
     let ts = types_of_utility(u);
     match ts {
         None => ctor.to_string(),
@@ -1310,7 +1334,7 @@ fn json_of_utility<L: Debug + Clone + Dupe>(
     u: &crate::ty::Utility<L>,
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
-    let ctor = string_of_utility_ctor(u);
+    let ctor = utility_ctor(u);
     let mut result = vec![("kind".to_string(), Json::String(ctor.to_string()))];
     if let Some(ts) = types_of_utility(u) {
         let targs: Vec<Json> = ts
@@ -1785,7 +1809,7 @@ pub fn json_of_elt_raw<L: Debug + Clone + Dupe>(
     if let Elt::Type(t) = elt
         && let Ty::Utility(u) = t.as_ref()
     {
-        let ctor = string_of_utility_ctor(u);
+        let ctor = utility_ctor(u);
         let type_args_value: Option<Json> = types_of_utility(u).map(|ts| {
             Json::Array(
                 ts.iter()
