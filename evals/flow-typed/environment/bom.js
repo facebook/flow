@@ -11,17 +11,17 @@
 /* BOM */
 
 declare class Screen {
-  +availHeight: number;
-  +availWidth: number;
-  +availLeft: number;
-  +availTop: number;
-  +top: number;
-  +left: number;
-  +colorDepth: number;
-  +pixelDepth: number;
-  +width: number;
-  +height: number;
-  +orientation?: {
+  readonly availHeight: number;
+  readonly availWidth: number;
+  readonly availLeft: number;
+  readonly availTop: number;
+  readonly top: number;
+  readonly left: number;
+  readonly colorDepth: number;
+  readonly pixelDepth: number;
+  readonly width: number;
+  readonly height: number;
+  readonly orientation?: {
     lock(): Promise<void>;
     unlock(): void;
     angle: number;
@@ -90,10 +90,10 @@ type Gamepad = {
 
 // deprecated
 type BatteryManager = {
-  +charging: boolean,
-  +chargingTime: number,
-  +dischargingTime: number,
-  +level: number,
+  readonly charging: boolean,
+  readonly chargingTime: number,
+  readonly dischargingTime: number,
+  readonly level: number,
   onchargingchange: ?((event: any) => mixed),
   onchargingtimechange: ?((event: any) => mixed),
   ondischargingtimechange: ?((event: any) => mixed),
@@ -170,7 +170,7 @@ type FileSystemHandlePermissionDescriptor = {|
 
 declare class PermissionStatus extends EventTarget {
   onchange: ?((event: any) => mixed);
-  +state: PermissionState;
+  readonly state: PermissionState;
 }
 
 declare class Permissions {
@@ -201,7 +201,7 @@ type MIDIMessageEvent$Init = Event$Init & {
 
 declare class MIDIMessageEvent extends Event {
   constructor(type: string, eventInitDict: MIDIMessageEvent$Init): void;
-  +data: Uint8Array;
+  readonly data: Uint8Array;
 }
 
 type MIDIConnectionEvent$Init = Event$Init & {
@@ -211,17 +211,17 @@ type MIDIConnectionEvent$Init = Event$Init & {
 
 declare class MIDIConnectionEvent extends Event {
   constructor(type: string, eventInitDict: MIDIConnectionEvent$Init): void;
-  +port: MIDIPort;
+  readonly port: MIDIPort;
 }
 
 declare class MIDIPort extends EventTarget {
-  +id: string;
-  +manufacturer?: string;
-  +name?: string;
-  +type: MIDIPortType;
-  +version?: string;
-  +state: MIDIPortDeviceState;
-  +connection: MIDIPortConnectionState;
+  readonly id: string;
+  readonly manufacturer?: string;
+  readonly name?: string;
+  readonly type: MIDIPortType;
+  readonly version?: string;
+  readonly state: MIDIPortDeviceState;
+  readonly connection: MIDIPortConnectionState;
   onstatechange: ?((ev: MIDIConnectionEvent) => mixed);
   open(): Promise<MIDIPort>;
   close(): Promise<MIDIPort>;
@@ -241,9 +241,9 @@ declare class MIDIInputMap extends $ReadOnlyMap<string, MIDIInput> {}
 declare class MIDIOutputMap extends $ReadOnlyMap<string, MIDIOutput> {}
 
 declare class MIDIAccess extends EventTarget {
-  +inputs: MIDIInputMap;
-  +outputs: MIDIOutputMap;
-  +sysexEnabled: boolean;
+  readonly inputs: MIDIInputMap;
+  readonly outputs: MIDIOutputMap;
+  readonly sysexEnabled: boolean;
   onstatechange: ?((ev: MIDIConnectionEvent) => mixed);
 }
 
@@ -257,8 +257,8 @@ declare class NavigatorID {
 }
 
 declare class NavigatorLanguage {
-    +language: string;
-    +languages: $ReadOnlyArray<string>;
+    readonly language: string;
+    readonly languages: $ReadOnlyArray<string>;
 }
 
 declare class NavigatorContentUtils {
@@ -267,21 +267,21 @@ declare class NavigatorContentUtils {
 }
 
 declare class NavigatorCookies {
-    +cookieEnabled: boolean;
+    readonly cookieEnabled: boolean;
 }
 
 declare class NavigatorPlugins {
-    +plugins: PluginArray;
-    +mimeTypes: MimeTypeArray;
+    readonly plugins: PluginArray;
+    readonly mimeTypes: MimeTypeArray;
     javaEnabled(): boolean;
 }
 
 declare class NavigatorOnLine {
-    +onLine: boolean;
+    readonly onLine: boolean;
 }
 
 declare class NavigatorConcurrentHardware {
-    +hardwareConcurrency: number;
+    readonly hardwareConcurrency: number;
 }
 
 declare class NavigatorStorage {
@@ -301,11 +301,11 @@ type StorageManagerUsageDetails = {[StorageManagerRegisteredEndpoint]: number};
 
 declare class StorageEstimate {
   constructor(usage: number, quota: number, usageDetails?: StorageManagerUsageDetails): void;
-  +usage: number;
-  +quota: number;
+  readonly usage: number;
+  readonly quota: number;
 
   // Not a part of the standard
-  +usageDetails?: StorageManagerUsageDetails;
+  readonly usageDetails?: StorageManagerUsageDetails;
 }
 
 declare class Navigator mixins
@@ -712,38 +712,38 @@ declare class IntersectionObserver {
 }
 
 declare interface ResizeObserverSize {
-  +inlineSize: number;
-  +blockSize: number;
+  readonly inlineSize: number;
+  readonly blockSize: number;
 }
 
 declare interface ResizeObserverEntry {
   /**
    * The Element whose size has changed.
    */
-  +target: Element;
+  readonly target: Element;
   /**
    * Element's content rect when ResizeObserverCallback is invoked.
    *
    * Legacy, may be deprecated in the future.
    */
-  +contentRect: DOMRectReadOnly;
+  readonly contentRect: DOMRectReadOnly;
   /**
    * An array containing the Element's border box size when
    * ResizeObserverCallback is invoked.
    */
-  +borderBoxSize: $ReadOnlyArray<ResizeObserverSize>;
+  readonly borderBoxSize: $ReadOnlyArray<ResizeObserverSize>;
   /**
    * An array containing the Element's content rect size when
    * ResizeObserverCallback is invoked.
    */
-  +contentBoxSize: $ReadOnlyArray<ResizeObserverSize>;
+  readonly contentBoxSize: $ReadOnlyArray<ResizeObserverSize>;
   /**
    * An array containing the Element's content rect size in integral device
    * pixels when ResizeObserverCallback is invoked.
    *
    * Not implemented in Firefox or Safari as of July 2021
    */
-  +devicePixelContentBoxSize?: $ReadOnlyArray<ResizeObserverSize> | void;
+  readonly devicePixelContentBoxSize?: $ReadOnlyArray<ResizeObserverSize> | void;
 }
 
 /**
@@ -889,8 +889,8 @@ declare class XDomainRequest {
     onload: () => mixed;
     onprogress: () => mixed;
     ontimeout: () => mixed;
-    +responseText: string;
-    +contentType: string;
+    readonly responseText: string;
+    readonly contentType: string;
     open(method: "GET" | "POST", url: string): void;
     abort(): void;
     send(data?: string): void;
@@ -1014,9 +1014,9 @@ type AudioProcessingEvent$Init = Event$Init & {
 declare class AudioProcessingEvent extends Event {
   constructor(type: string, eventInitDict: AudioProcessingEvent$Init): void;
 
-  +playbackTime: number;
-  +inputBuffer: AudioBuffer;
-  +outputBuffer: AudioBuffer;
+  readonly playbackTime: number;
+  readonly inputBuffer: AudioBuffer;
+  readonly outputBuffer: AudioBuffer;
 }
 
 type OfflineAudioCompletionEvent$Init = Event$Init & {
@@ -1027,7 +1027,7 @@ type OfflineAudioCompletionEvent$Init = Event$Init & {
 declare class OfflineAudioCompletionEvent extends Event {
   constructor(type: string, eventInitDict: OfflineAudioCompletionEvent$Init): void;
 
-  +renderedBuffer: AudioBuffer;
+  readonly renderedBuffer: AudioBuffer;
 }
 
 declare class BaseAudioContext extends EventTarget {
@@ -1297,10 +1297,10 @@ declare class MediaDevices extends EventTarget {
 }
 
 declare class MediaDeviceInfo {
-  +deviceId: string;
-  +groupId: string;
-  +kind: 'videoinput' | 'audioinput' | 'audiooutput';
-  +label: string;
+  readonly deviceId: string;
+  readonly groupId: string;
+  readonly kind: 'videoinput' | 'audioinput' | 'audiooutput';
+  readonly label: string;
 }
 
 type MediaRecorderOptions = {
@@ -1314,9 +1314,9 @@ type MediaRecorderOptions = {
 
 declare class MediaRecorder extends EventTarget {
   constructor(stream: MediaStream, options?: MediaRecorderOptions): void;
-  +stream: MediaStream;
-  +mimeType: string;
-  +state: 'inactive' | 'recording' | 'paused';
+  readonly stream: MediaStream;
+  readonly mimeType: string;
+  readonly state: 'inactive' | 'recording' | 'paused';
 
   onstart: (ev: any) => mixed;
   onstop: (ev: any) => mixed;
@@ -1325,9 +1325,9 @@ declare class MediaRecorder extends EventTarget {
   onresume: (ev: any) => mixed;
   onerror: (ev: any) => mixed;
 
-  +videoBitsPerSecond: number;
-  +audioBitsPerSecond: number;
-  +audioBitrateMode: 'cbr' | 'vbr';
+  readonly videoBitsPerSecond: number;
+  readonly audioBitsPerSecond: number;
+  readonly audioBitrateMode: 'cbr' | 'vbr';
 
   start(timeslice?: number): void;
   stop(): void;
@@ -1611,7 +1611,7 @@ declare class Request {
     redirect: RedirectType;
     referrer: string;
     referrerPolicy: ReferrerPolicyType;
-    +signal: AbortSignal;
+    readonly signal: AbortSignal;
 
     // Body methods and attributes
     bodyUsed: boolean;
@@ -2027,9 +2027,9 @@ type SpeechSynthesisErrorCode =
   | "not-allowed";
 
 declare class SpeechSynthesis extends EventTarget {
-  +pending: boolean;
-  +speaking: boolean;
-  +paused: boolean;
+  readonly pending: boolean;
+  readonly speaking: boolean;
+  readonly paused: boolean;
 
   onvoiceschanged: ?((ev: Event) => mixed);
 
@@ -2073,7 +2073,7 @@ type SpeechSynthesisEvent$Init = Event$Init & {
 declare class SpeechSynthesisEvent extends Event {
   constructor(type: string, eventInitDict?: SpeechSynthesisEvent$Init): void;
 
-  +utterance: SpeechSynthesisUtterance;
+  readonly utterance: SpeechSynthesisUtterance;
   charIndex: number;
   charLength: number;
   elapsedTime: number;
@@ -2087,15 +2087,15 @@ type SpeechSynthesisErrorEvent$Init = SpeechSynthesisEvent$Init & {
 
 declare class SpeechSynthesisErrorEvent extends SpeechSynthesisEvent {
   constructor(type: string, eventInitDict?: SpeechSynthesisErrorEvent$Init): void;
-  +error: SpeechSynthesisErrorCode;
+  readonly error: SpeechSynthesisErrorCode;
 }
 
 declare class SpeechSynthesisVoice {
-  +voiceURI: string;
-  +name: string;
-  +lang: string;
-  +localService: boolean;
-  +default: boolean;
+  readonly voiceURI: string;
+  readonly name: string;
+  readonly lang: string;
+  readonly localService: boolean;
+  readonly default: boolean;
 }
 
 type SpeechRecognitionErrorCode =
@@ -2115,7 +2115,7 @@ declare class SpeechGrammar {
 }
 
 declare class SpeechGrammarList {
-  +length: number;
+  readonly length: number;
 
   item(index: number): SpeechGrammar;
   addFromURI(src: string, weight?: number): void;
@@ -2123,19 +2123,19 @@ declare class SpeechGrammarList {
 }
 
 declare class SpeechRecognitionAlternative {
-  +transcript: string;
-  +confidence: number;
+  readonly transcript: string;
+  readonly confidence: number;
 }
 
 declare class SpeechRecognitionResult {
-  +isFinal: boolean;
-  +length: number;
+  readonly isFinal: boolean;
+  readonly length: number;
 
   item(index: number): SpeechRecognitionAlternative;
 }
 
 declare class SpeechRecognitionResultList {
-  +length: number;
+  readonly length: number;
 
   item(index: number): SpeechRecognitionResult;
 }
@@ -2151,10 +2151,10 @@ type SpeechRecognitionEvent$Init = Event$Init & {
 declare class SpeechRecognitionEvent extends Event {
   constructor(type: string, eventInitDict?: SpeechRecognitionEvent$Init): void;
 
-  +emma: any;
-  +interpretation: any;
-  +resultIndex: number;
-  +results: SpeechRecognitionResultList;
+  readonly emma: any;
+  readonly interpretation: any;
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
 }
 
 type SpeechRecognitionErrorEvent$Init = SpeechRecognitionEvent$Init & {
@@ -2164,19 +2164,19 @@ type SpeechRecognitionErrorEvent$Init = SpeechRecognitionEvent$Init & {
 
 declare class SpeechRecognitionErrorEvent extends SpeechRecognitionEvent {
   constructor(type: string, eventInitDict?: SpeechRecognitionErrorEvent$Init): void;
-  +error: SpeechRecognitionErrorCode;
-  +message: string;
+  readonly error: SpeechRecognitionErrorCode;
+  readonly message: string;
 }
 
 declare class SpeechRecognition extends EventTarget {
   constructor(): void;
 
-  +grammars: SpeechGrammar[];
-  +lang: string;
-  +continuous: boolean;
-  +interimResults: boolean;
-  +maxAlternatives: number;
-  +serviceURI: string;
+  readonly grammars: SpeechGrammar[];
+  readonly lang: string;
+  readonly continuous: boolean;
+  readonly interimResults: boolean;
+  readonly maxAlternatives: number;
+  readonly serviceURI: string;
 
   onaudiostart: ?((ev: Event) => mixed);
   onaudioend: ?((ev: Event) => mixed);
@@ -2213,7 +2213,7 @@ declare class TrustedScriptURL {
 }
 
 declare class TrustedTypePolicy {
-  +name: string;
+  readonly name: string;
   createHTML(input: string, ...args: Array<mixed>): TrustedHTML;
   createScript(input: string, ...args: Array<mixed>): TrustedScript;
   createScriptURL(input: string, ...args: Array<mixed>): TrustedScriptURL;
@@ -2227,12 +2227,12 @@ declare type TrustedTypePolicyOptions = {|
 
 // window.trustedTypes?: TrustedTypePolicyFactory
 declare class TrustedTypePolicyFactory {
-  +emptyHTML: TrustedHTML;
-  +emptyScript: TrustedScript;
-  +defaultPolicy: ?TrustedTypePolicy;
-  +isHTML: (value: mixed) => value is TrustedHTML;
-  +isScript: (value: mixed) => value is TrustedScript;
-  +isScriptURL: (value: mixed) => value is TrustedScriptURL;
+  readonly emptyHTML: TrustedHTML;
+  readonly emptyScript: TrustedScript;
+  readonly defaultPolicy: ?TrustedTypePolicy;
+  readonly isHTML: (value: mixed) => value is TrustedHTML;
+  readonly isScript: (value: mixed) => value is TrustedScript;
+  readonly isScriptURL: (value: mixed) => value is TrustedScriptURL;
   createPolicy(policyName: string, policyOptions?: TrustedTypePolicyOptions): TrustedTypePolicy;
   getAttributeType(tagName: string, attribute?: string, elementNS?: string, attrNS?: string): null | string;
   getPropertyType(tagName: string, property: string, elementNS?: string): null | string;
@@ -2376,8 +2376,8 @@ declare type FileSystemHandleKind = "file" | "directory";
 
 // https://wicg.github.io/file-system-access/#api-filesystemhandle
 declare class FileSystemHandle {
-  +kind: FileSystemHandleKind;
-  +name: string;
+  readonly kind: FileSystemHandleKind;
+  readonly name: string;
 
   isSameEntry: (other: FileSystemHandle) => Promise<boolean>;
   queryPermission?: (
@@ -2390,7 +2390,7 @@ declare class FileSystemHandle {
 
 // https://fs.spec.whatwg.org/#api-filesystemfilehandle
 declare class FileSystemFileHandle extends FileSystemHandle {
-  +kind: "file";
+  readonly kind: "file";
 
   constructor(name: string): void;
 
@@ -2403,7 +2403,7 @@ declare class FileSystemFileHandle extends FileSystemHandle {
 
 // https://fs.spec.whatwg.org/#api-filesystemdirectoryhandle
 declare class FileSystemDirectoryHandle extends FileSystemHandle {
-  +kind: "directory";
+  readonly kind: "directory";
 
   constructor(name: string): void;
 
@@ -2437,9 +2437,9 @@ declare class FileSystemSyncAccessHandle {
 
 // https://streams.spec.whatwg.org/#default-writer-class
 declare class WritableStreamDefaultWriter {
-  +closed: Promise<void>;
-  +desiredSize: number;
-  +ready: Promise<void>;
+  readonly closed: Promise<void>;
+  readonly desiredSize: number;
+  readonly ready: Promise<void>;
 
   constructor(): void;
 
@@ -2451,7 +2451,7 @@ declare class WritableStreamDefaultWriter {
 
 // https://streams.spec.whatwg.org/#ws-class
 declare class WriteableStream {
-  +locked: boolean;
+  readonly locked: boolean;
 
   constructor(): void;
 

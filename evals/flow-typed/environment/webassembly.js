@@ -46,7 +46,7 @@ declare class WebAssembly$Module {
 declare class WebAssembly$Instance {
   constructor(moduleObject: WebAssembly$Module, importObject?: ImportObject): void;
 
-  +exports: { [exportedFunction: string]: ExportedFunctionExoticObject, ... };
+  readonly exports: { [exportedFunction: string]: ExportedFunctionExoticObject, ... };
 }
 
 type MemoryDescriptor = {
@@ -58,7 +58,7 @@ type MemoryDescriptor = {
 declare class WebAssembly$Memory {
   constructor(memoryDescriptor: MemoryDescriptor): void;
 
-  +buffer: ArrayBuffer;
+  readonly buffer: ArrayBuffer;
 
   grow(delta: number): number;
 }
@@ -73,7 +73,7 @@ type TableDescriptor = {
 declare class WebAssembly$Table {
   constructor(tableDescriptor: TableDescriptor): void;
 
-  +length: number;
+  readonly length: number;
 
   grow(delta: number): number;
   get(index: number): ExportedFunctionExoticObject;

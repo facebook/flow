@@ -130,30 +130,30 @@ declare class DOMMatrix extends DOMMatrixReadOnly {
 }
 
 declare class DOMMatrixReadOnly {
-  +a: number;
-  +b: number;
-  +c: number;
-  +d: number;
-  +e: number;
-  +f: number;
-  +is2D: boolean;
-  +isIdentity: boolean;
-  +m11: number;
-  +m12: number;
-  +m13: number;
-  +m14: number;
-  +m21: number;
-  +m22: number;
-  +m23: number;
-  +m24: number;
-  +m31: number;
-  +m32: number;
-  +m33: number;
-  +m34: number;
-  +m41: number;
-  +m42: number;
-  +m43: number;
-  +m44: number;
+  readonly a: number;
+  readonly b: number;
+  readonly c: number;
+  readonly d: number;
+  readonly e: number;
+  readonly f: number;
+  readonly is2D: boolean;
+  readonly isIdentity: boolean;
+  readonly m11: number;
+  readonly m12: number;
+  readonly m13: number;
+  readonly m14: number;
+  readonly m21: number;
+  readonly m22: number;
+  readonly m23: number;
+  readonly m24: number;
+  readonly m31: number;
+  readonly m32: number;
+  readonly m33: number;
+  readonly m34: number;
+  readonly m41: number;
+  readonly m42: number;
+  readonly m43: number;
+  readonly m44: number;
 
   static fromFloat32Array(array32: Float32Array): DOMMatrixReadOnly;
   static fromFloat64Array(array64: Float64Array): DOMMatrixReadOnly;
@@ -209,10 +209,10 @@ declare class DOMPoint extends DOMPointReadOnly {
 }
 
 declare class DOMPointReadOnly {
-  +w: number;
-  +x: number;
-  +y: number;
-  +z: number;
+  readonly w: number;
+  readonly x: number;
+  readonly y: number;
+  readonly z: number;
 
   static fromPoint(other?: DOMPointInit): DOMPointReadOnly;
 
@@ -222,10 +222,10 @@ declare class DOMPointReadOnly {
 }
 
 declare class DOMQuad {
-  +p1: DOMPoint;
-  +p2: DOMPoint;
-  +p3: DOMPoint;
-  +p4: DOMPoint;
+  readonly p1: DOMPoint;
+  readonly p2: DOMPoint;
+  readonly p3: DOMPoint;
+  readonly p4: DOMPoint;
 
   static fromQuad(other?: DOMQuadInit): DOMQuad;
   static fromRect(other?: DOMRectInit): DOMQuad;
@@ -252,7 +252,7 @@ declare class DOMRect extends DOMRectReadOnly {
 }
 
 declare class DOMRectList {
-  +length: number;
+  readonly length: number;
 
   @@iterator(): Iterator<DOMRect>;
 
@@ -261,14 +261,14 @@ declare class DOMRectList {
 }
 
 declare class DOMRectReadOnly {
-  +bottom: number;
-  +height: number;
-  +left: number;
-  +right: number;
-  +top: number;
-  +width: number;
-  +x: number;
-  +y: number;
+  readonly bottom: number;
+  readonly height: number;
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly width: number;
+  readonly x: number;
+  readonly y: number;
 
   constructor(x?: number, y?: number, width?: number, height?: number): void;
 

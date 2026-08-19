@@ -79,7 +79,7 @@ declare interface IDBDatabase extends EventTarget {
 declare interface IDBTransaction extends EventTarget {
   abort(): void;
   db: IDBDatabase;
-  +durability: IDBTransactionDurability;
+  readonly durability: IDBTransactionDurability;
   error: Error;
   mode: 'readonly'|'readwrite'|'versionchange';
   name: string;

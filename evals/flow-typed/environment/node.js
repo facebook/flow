@@ -1570,7 +1570,7 @@ type http$agentOptions = {
   ...
 }
 
-declare class http$Agent<+SocketT = net$Socket> {
+declare class http$Agent<out SocketT = net$Socket> {
   constructor(options: http$agentOptions): void;
   destroy(): void;
   // $FlowExpectedError[incompatible-variance]
@@ -1605,10 +1605,10 @@ declare class http$IncomingMessage<SocketT = net$Socket> extends stream$Readable
   rawTrailers: Array<string>;
 }
 
-declare class http$ClientRequest<+SocketT = net$Socket> extends stream$Writable {
+declare class http$ClientRequest<out SocketT = net$Socket> extends stream$Writable {
   abort(): void;
   aborted: boolean;
-  +connection: SocketT | null;
+  readonly connection: SocketT | null;
   flushHeaders(): void;
   getHeader(name: string): string;
   removeHeader(name: string): void;
@@ -1616,7 +1616,7 @@ declare class http$ClientRequest<+SocketT = net$Socket> extends stream$Writable 
   setNoDelay(noDelay?: boolean): void;
   setSocketKeepAlive(enable?: boolean, initialDelay?: number): void;
   setTimeout(msecs: number, callback?: Function): void;
-  +socket: SocketT | null;
+  readonly socket: SocketT | null;
 }
 
 declare class http$ServerResponse extends stream$Writable {
@@ -2290,8 +2290,8 @@ declare module "stream" {
   ): stream$Stream;
 
   declare interface StreamPipelineOptions {
-    +signal?: AbortSignal,
-    +end?: boolean
+    readonly signal?: AbortSignal,
+    readonly end?: boolean
   }
 
   declare type StreamPromise = {
@@ -2540,17 +2540,17 @@ declare module "tls" {
 }
 
 type url$urlObject = {
-  +href?: string,
-  +protocol?: string | null,
-  +slashes?: boolean | null,
-  +auth?: string | null,
-  +hostname?: string | null,
-  +port?: string | number | null,
-  +host?: string | null,
-  +pathname?: string | null,
-  +search?: string | null,
-  +query?: Object | null,
-  +hash?: string | null,
+  readonly href?: string,
+  readonly protocol?: string | null,
+  readonly slashes?: boolean | null,
+  readonly auth?: string | null,
+  readonly hostname?: string | null,
+  readonly port?: string | number | null,
+  readonly host?: string | null,
+  readonly pathname?: string | null,
+  readonly search?: string | null,
+  readonly query?: Object | null,
+  readonly hash?: string | null,
   ...
 };
 
@@ -2618,13 +2618,13 @@ declare module "url" {
     host: string;
     hostname: string;
     href: string;
-    +origin: string;
+    readonly origin: string;
     password: string;
     pathname: string;
     port: string;
     protocol: string;
     search: string;
-    +searchParams: URLSearchParams;
+    readonly searchParams: URLSearchParams;
     username: string;
     toString(): string;
     toJSON(): string;
@@ -2641,28 +2641,28 @@ type util$InspectOptions = {
 
 declare type util$ParseArgsOption =
 | {|
-    +type: 'boolean',
-    +multiple?: false,
-    +short?: string,
-    +default?: boolean,
+    readonly type: 'boolean',
+    readonly multiple?: false,
+    readonly short?: string,
+    readonly default?: boolean,
   |}
 | {|
-    +type: 'boolean',
-    +multiple: true,
-    +short?: string,
-    +default?: Array<boolean>,
+    readonly type: 'boolean',
+    readonly multiple: true,
+    readonly short?: string,
+    readonly default?: Array<boolean>,
   |}
 | {|
-    +type: 'string',
-    +multiple?: false,
-    +short?: string,
-    +default?: string,
+    readonly type: 'string',
+    readonly multiple?: false,
+    readonly short?: string,
+    readonly default?: string,
   |}
 | {|
-    +type: 'string',
-    +multiple: true,
-    +short?: string,
-    +default?: Array<string>,
+    readonly type: 'string',
+    readonly multiple: true,
+    readonly short?: string,
+    readonly default?: Array<string>,
   |};
 
 type util$ParseArgsOptionToValue<TOption> =
@@ -2715,7 +2715,7 @@ declare module "util" {
   declare function stripVTControlCharacters(str: string): string;
 
   declare function parseArgs<
-    TOptions: {+[string]: util$ParseArgsOption} = {||},
+    TOptions: {readonly [string]: util$ParseArgsOption} = {||},
   >(config: {|
     args?: Array<string>,
     options?: TOptions,
@@ -2728,7 +2728,7 @@ declare module "util" {
   |};
 
   declare function parseArgs<
-    TOptions: {+[string]: util$ParseArgsOption} = {||},
+    TOptions: {readonly [string]: util$ParseArgsOption} = {||},
   >(config: {|
     args?: Array<string>,
     options?: TOptions,
@@ -3587,8 +3587,8 @@ declare module 'worker_threads' {
   declare var workerData: any;
 
   declare class MessageChannel {
-    +port1: MessagePort;
-    +port2: MessagePort;
+    readonly port1: MessagePort;
+    readonly port2: MessagePort;
   }
 
   declare class MessagePort extends events$EventEmitter {
@@ -3642,10 +3642,10 @@ declare module 'worker_threads' {
   |}
 
   declare class Worker extends events$EventEmitter {
-    +stdin: stream$Writable | null;
-    +stdout: stream$Readable;
-    +stderr: stream$Readable;
-    +threadId: number;
+    readonly stdin: stream$Writable | null;
+    readonly stdout: stream$Readable;
+    readonly stderr: stream$Readable;
+    readonly threadId: number;
 
     constructor(filename: string, options?: WorkerOptions): void;
 

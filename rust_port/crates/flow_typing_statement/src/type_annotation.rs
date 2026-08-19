@@ -399,7 +399,7 @@ pub fn polarity<'a>(
             loc,
             kind: ast::VarianceKind::Plus,
             ..
-        }) if !cx.is_global_lib_context() => {
+        }) => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {
@@ -412,7 +412,7 @@ pub fn polarity<'a>(
             loc,
             kind: ast::VarianceKind::Minus,
             ..
-        }) if !cx.is_global_lib_context() => {
+        }) => {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::EVarianceKeyword(Box::new(EVarianceKeywordData {

@@ -134,11 +134,11 @@ declare class Animation extends EventTarget {
   startTime: number | null;
   currentTime: number | null;
   playbackRate: number;
-  +playState: AnimationPlayState;
-  +replaceState: AnimationReplaceState;
-  +pending: boolean;
-  +ready: Promise<Animation>;
-  +finished: Promise<Animation>;
+  readonly playState: AnimationPlayState;
+  readonly replaceState: AnimationReplaceState;
+  readonly pending: boolean;
+  readonly ready: Promise<Animation>;
+  readonly finished: Promise<Animation>;
   onfinish: ?(ev: AnimationPlaybackEvent) => mixed;
   oncancel: ?(ev: AnimationPlaybackEvent) => mixed;
   onremove: ?(ev: AnimationPlaybackEvent) => mixed;
@@ -163,12 +163,12 @@ declare class AnimationPlaybackEvent extends Event {
     type: string,
     animationEventInitDict?: AnimationPlaybackEvent$Init
   ): void;
-  +currentTime: number | null;
-  +timelineTime: number | null;
+  readonly currentTime: number | null;
+  readonly timelineTime: number | null;
 }
 
 declare class AnimationTimeline {
-  +currentTime: number | null;
+  readonly currentTime: number | null;
 }
 
 declare class DocumentTimeline extends AnimationTimeline {
