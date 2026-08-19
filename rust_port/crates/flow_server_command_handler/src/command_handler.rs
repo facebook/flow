@@ -3494,7 +3494,14 @@ pub fn handle_ephemeral_command_for_standalone(
             handle_llm_context(options, env, transaction, &input)
         }
         #[cfg(fbcode_build)]
-        server_prot::request::Command::FOX(command) => match command {},
+        server_prot::request::Command::FOX(command) => {
+            match flow_facebook_fox_server::handle(command, genv, env, transaction) {
+                flow_facebook_fox_server::FoxOutcome::Done(response) => {
+                    Ok((server_prot::response::Response::FOX(response), None))
+                }
+                flow_facebook_fox_server::FoxOutcome::Canceled => Err(WorkloadCanceled),
+            }
+        }
     }
 }
 
@@ -3821,7 +3828,19 @@ fn get_ephemeral_handler(
             mk_parallelizable(input.wait_for_recheck, options)
         }
         #[cfg(fbcode_build)]
-        server_prot::request::Command::FOX(command) => match *command {},
+        server_prot::request::Command::FOX(command) => {
+            match flow_facebook_fox_server::get_command_handler(command) {
+                flow_facebook_fox_server::FoxCommandHandler::HandleImmediately => {
+                    CommandHandler::HandleImmediately
+                }
+                flow_facebook_fox_server::FoxCommandHandler::HandleParallelizable => {
+                    CommandHandler::HandleParallelizable
+                }
+                flow_facebook_fox_server::FoxCommandHandler::HandleNonparallelizable => {
+                    CommandHandler::HandleNonparallelizable
+                }
+            }
+        }
     }
 }
 

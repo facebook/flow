@@ -55,7 +55,7 @@ pub(crate) enum UnicodeMode {
     Auto,
 }
 
-pub(super) fn run_command(command: &Command, argv: &[String]) {
+pub fn run_command(command: &Command, argv: &[String]) {
     match command_spec::parse_or_show_help(command, argv) {
         Ok(Err(_)) => {
             println!("{}", command.string_of_usage());
@@ -1345,7 +1345,7 @@ pub(crate) fn add_connect_flags_no_lazy(spec: command_spec::Spec) -> command_spe
     add_connect_flags_with_lazy_collector(spec)
 }
 
-pub(crate) fn add_connect_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_connect_flags(spec: command_spec::Spec) -> command_spec::Spec {
     add_connect_flags_with_lazy_collector(add_lazy_flags(spec))
 }
 
@@ -3208,6 +3208,17 @@ fn connect_and_make_request_inner(
             )
         }
     }
+}
+
+/// Make a single ephemeral request to the daemon (starting one if needed), building the connect flags
+/// from `args`. A `pub` wrapper over the `pub(crate)` connect helpers, for callers outside this crate.
+pub fn connect_and_make_ephemeral_request(
+    args: &arg_spec::Values,
+    flowconfig_name: &str,
+    root: &std::path::Path,
+    request: &server_prot::request::Command,
+) -> server_prot::response::Response {
+    connect_and_make_request(flowconfig_name, &get_connect_flags(args), root, request)
 }
 
 pub(crate) fn connect_and_make_request(

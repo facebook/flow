@@ -315,6 +315,36 @@ fn unchecked_dependencies(
     )
 }
 
+/// `ensure_checked_dependencies` for a whole set, cancelling once for all of them rather than once
+/// per file. A recheck merges everything the files it is given need, so scheduling the direct
+/// dependencies is enough — the rest of the closure comes with them.
+pub fn ensure_checked_dependencies_of_set<'a>(
+    options: &Options,
+    transaction: &Transaction,
+    files: impl IntoIterator<Item = &'a FileKey>,
+) -> Result<(), CheckedDependenciesCanceled> {
+    let unchecked: FlowOrdSet<FileKey> = files
+        .into_iter()
+        .filter_map(|file| {
+            let requires = transaction.get_requires(file)?;
+            Some(unchecked_dependencies(
+                options,
+                transaction,
+                file,
+                &requires,
+            ))
+        })
+        .flatten()
+        .collect();
+
+    if unchecked.is_empty() {
+        return Ok(());
+    }
+    flow_hh_logger::info!("Prioritizing {} unchecked dependencies", unchecked.len());
+    server_monitor_listener_state::push_dependencies_to_prioritize(unchecked);
+    Err(CheckedDependenciesCanceled)
+}
+
 // Ensures that dependencies are checked; schedules them to be checked and aborts the
 // command if not.
 //
