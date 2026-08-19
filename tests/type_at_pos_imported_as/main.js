@@ -22,3 +22,10 @@ type __ = [
     CompLocal,
 //  ^
 ];
+
+// An imported name reached through another type: the hover prints the name it was
+// imported as, so that is the name the `defined at` footer has to cite. Citing the
+// name at the definition site instead would point at something the hover never
+// mentions.
+type Nested = {c: CLocal, t: TLocal};
+//   ^

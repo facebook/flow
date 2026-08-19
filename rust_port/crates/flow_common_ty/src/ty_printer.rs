@@ -1417,7 +1417,7 @@ fn type_alias<L: Dupe>(
     t_opt: &Option<Arc<Ty<L>>>,
     size: &mut usize,
 ) -> LayoutNode {
-    let name_str = &name.sym_name;
+    let name_str = &local_name_of_symbol(name);
     let tparams_node = option(
         |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
         tparams,
@@ -1610,21 +1610,21 @@ pub fn string_of_decl_single_line<L: Dupe>(d: &Decl<L>, opts: &PrinterOptions) -
     string_of_elt_single_line(&Elt::Decl(d.clone()), opts)
 }
 
+/// Cites each symbol under the name the type above it was printed with, which for
+/// an imported one is the name it was imported as rather than its name at the
+/// definition site: a reader who is told about `C` cannot find it in a hover that
+/// only ever says `CLocal`.
 pub fn string_of_symbol_set<L: Clone + Ord>(
     syms: &std::collections::BTreeSet<Symbol<L>>,
 ) -> Vec<(String, L)> {
-    let mut elems: Vec<_> = syms.iter().collect();
-    elems.sort_by(|s1, s2| s1.sym_name.cmp(&s2.sym_name));
+    let mut elems: Vec<_> = syms
+        .iter()
+        .map(|sym| (local_name_of_symbol(sym), sym))
+        .collect();
+    elems.sort_by(|(n1, _), (n2, _)| n1.cmp(n2));
     elems
         .into_iter()
-        .map(|sym| {
-            let Symbol {
-                sym_name,
-                sym_def_loc,
-                ..
-            } = sym;
-            (sym_name.to_string(), sym_def_loc.clone())
-        })
+        .map(|(name, sym)| (name.to_string(), sym.sym_def_loc.clone()))
         .collect()
 }
 
