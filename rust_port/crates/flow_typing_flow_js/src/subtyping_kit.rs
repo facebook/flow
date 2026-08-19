@@ -3439,11 +3439,18 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
-            if let DefTInner::UniqueSymbolT(sym) = ld.deref() =>
+            if matches!(ld.deref(), DefTInner::UniqueSymbolT(_) | DefTInner::SymbolT) =>
         {
-            let reason_next = reason_s
-                .dupe()
-                .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::symbol(sym.dupe()))));
+            // A `unique symbol` names one property, so `HasOwnPropT` can find it
+            // by nominal identity. A general `symbol` names none, so it holds
+            // only where an indexer accepts a symbol key.
+            let desc = match ld.deref() {
+                DefTInner::UniqueSymbolT(sym) => {
+                    VirtualReasonDesc::RProperty(Some(Name::symbol(sym.dupe())))
+                }
+                _ => VirtualReasonDesc::RProperty(None),
+            };
+            let reason_next = reason_s.dupe().replace_desc_new(desc);
             // check that o has the symbol key
             let u_use = UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
                 use_op: use_op.dupe(),

@@ -685,6 +685,212 @@ References:
                         ^ [1]
 
 
+Error ------------------------------------------------------------------------------------ symbol_index_consumer.js:7:22
+
+Cannot assign `k` to `out2` because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   symbol_index_consumer.js:7:22
+   7| const out2: string = k; // ERROR: it is `symbol`, not `string`
+                           ^
+
+References:
+   symbol_index_exported.js:4:24
+   4| export type Idx = {[k: symbol]: number};
+                             ^^^^^^ [1]
+   symbol_index_consumer.js:7:13
+   7| const out2: string = k; // ERROR: it is `symbol`, not `string`
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- symbol_index_consumer.js:10:24
+
+Cannot assign `'x'` to `in2` because `"x"` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   symbol_index_consumer.js:10:24
+   10| const in2: keyof Idx = 'x'; // ERROR: a string is not
+                              ^^^ [1]
+
+References:
+   symbol_index_exported.js:4:24
+    4| export type Idx = {[k: symbol]: number};
+                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:11:22
+
+Cannot assign `kg` to `out2` because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   symbol_index_signature.js:11:22
+   11| const out2: string = kg; // ERROR: it is `symbol`, not `string`
+                            ^^
+
+References:
+   symbol_index_signature.js:7:17
+    7| type Idx = {[k: symbol]: number};
+                       ^^^^^^ [1]
+   symbol_index_signature.js:11:13
+   11| const out2: string = kg; // ERROR: it is `symbol`, not `string`
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:15:24
+
+Cannot assign `'x'` to `in3` because `"x"` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   symbol_index_signature.js:15:24
+   15| const in3: keyof Idx = 'x'; // ERROR: a string is not
+                              ^^^ [1]
+
+References:
+   symbol_index_signature.js:7:17
+    7| type Idx = {[k: symbol]: number};
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:20:28
+
+Cannot assign `gen` to `in4` because `symbol` [1] is incompatible with `keyof StrOnly` [2]. [incompatible-type]
+
+   symbol_index_signature.js:20:28
+   20| const in4: keyof StrOnly = gen; // ERROR: no symbol indexer to accept it
+                                  ^^^
+
+References:
+   symbol_index_signature.js:4:20
+    4| declare const gen: symbol;
+                          ^^^^^^ [1]
+   symbol_index_signature.js:20:12
+   20| const in4: keyof StrOnly = gen; // ERROR: no symbol indexer to accept it
+                  ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:23:26
+
+Cannot assign `gen` to `in5` because `symbol` [1] is incompatible with `keyof Named` [2]. [incompatible-type]
+
+   symbol_index_signature.js:23:26
+   23| const in5: keyof Named = gen; // ERROR: `[s]` is one specific key, not every symbol
+                                ^^^
+
+References:
+   symbol_index_signature.js:4:20
+    4| declare const gen: symbol;
+                          ^^^^^^ [1]
+   symbol_index_signature.js:23:12
+   23| const in5: keyof Named = gen; // ERROR: `[s]` is one specific key, not every symbol
+                  ^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:28:27
+
+Cannot assign `gen` to `in7` because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   symbol_index_signature.js:28:27
+   28| const in7: keyof StrIdx = gen; // ERROR: that indexer takes strings
+                                 ^^^ [1]
+
+References:
+   symbol_index_signature.js:27:20
+   27| type StrIdx = {[k: string]: number};
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:31:27
+
+Cannot assign `gen` to `in8` because `symbol` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   symbol_index_signature.js:31:27
+   31| const in8: keyof NumIdx = gen; // ERROR: that indexer takes numbers
+                                 ^^^ [1]
+
+References:
+   symbol_index_signature.js:30:20
+   30| type NumIdx = {[k: number]: number};
+                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:48:24
+
+Cannot assign `ku` to `out4` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   symbol_index_signature.js:48:24
+   48| const out4: typeof s = ku; // ERROR: the key set has both, not just `s`
+                              ^^
+
+References:
+   symbol_index_signature.js:44:33
+   44| type UnionIdx = {[k: typeof s | typeof t]: number};
+                                       ^^^^^^^^ [1]
+   symbol_index_signature.js:48:13
+   48| const out4: typeof s = ku; // ERROR: the key set has both, not just `s`
+                   ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:49:22
+
+Cannot assign `ku` to `out5` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+
+   symbol_index_signature.js:49:22
+   49| const out5: string = ku; // ERROR: they are symbols, not strings
+                            ^^
+
+References:
+   symbol_index_signature.js:44:22
+   44| type UnionIdx = {[k: typeof s | typeof t]: number};
+                            ^^^^^^^^ [1]
+   symbol_index_signature.js:49:13
+   49| const out5: string = ku; // ERROR: they are symbols, not strings
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:49:22
+
+Cannot assign `ku` to `out5` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+
+   symbol_index_signature.js:49:22
+   49| const out5: string = ku; // ERROR: they are symbols, not strings
+                            ^^
+
+References:
+   symbol_index_signature.js:44:33
+   44| type UnionIdx = {[k: typeof s | typeof t]: number};
+                                       ^^^^^^^^ [1]
+   symbol_index_signature.js:49:13
+   49| const out5: string = ku; // ERROR: they are symbols, not strings
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:60:22
+
+Cannot assign `km` to `out7` because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+
+   symbol_index_signature.js:60:22
+   60| const out7: string = km; // ERROR: the symbol half is a key too
+                            ^^
+
+References:
+   symbol_index_signature.js:56:34
+   56| type StrOrSymIdx = {[k: string | typeof s]: number};
+                                        ^^^^^^^^ [1]
+   symbol_index_signature.js:60:13
+   60| const out7: string = km; // ERROR: the symbol half is a key too
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- symbol_index_signature.js:72:29
+
+Cannot get `mapped['x']` because property `x` is missing in mapped type [1]. [prop-missing]
+
+   symbol_index_signature.js:72:29
+   72| const mv2: boolean = mapped['x']; // ERROR: a string is not a key
+                                   ^^^
+
+References:
+   symbol_index_signature.js:69:23
+   69| declare const mapped: Mapped;
+                             ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ typeof_identity.js:10:1
 
 Cannot cast `t` to `typeof s` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
@@ -768,4 +974,4 @@ References:
 
 
 
-Found 49 errors
+Found 62 errors

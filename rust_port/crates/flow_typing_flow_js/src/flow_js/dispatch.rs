@@ -9861,8 +9861,8 @@ fn __flow_impl<'cx>(
         // * The indexer half of a key set   *
         // ***********************************
 
-        // A `unique symbol` indexer key contributes to type-level `keyof` as
-        // that same symbol type, and is left out of runtime key enumeration
+        // A symbol-valued indexer key contributes to type-level `keyof` as that
+        // same symbol type, and is left out of runtime key enumeration
         // (`Object.keys`) entirely, matching JavaScript.
         (
             TypeInner::DefT(_, def_t),
@@ -9871,7 +9871,11 @@ fn __flow_impl<'cx>(
                 include_symbols,
                 ..
             },
-        ) if matches!(def_t.deref(), DefTInner::UniqueSymbolT(_)) => {
+        ) if matches!(
+            def_t.deref(),
+            DefTInner::UniqueSymbolT(_) | DefTInner::SymbolT
+        ) =>
+        {
             if *include_symbols {
                 rec_flow(cx, trace, (l, t_out.as_ref()))?;
             }

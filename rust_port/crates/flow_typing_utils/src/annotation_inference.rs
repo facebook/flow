@@ -2669,10 +2669,13 @@ fn elab_t_concrete<'cx>(
         // ***********************************
         //  The indexer half of a key set
         // ***********************************
-        // A `unique symbol` indexer key contributes to `keyof` as that same
-        // symbol type. Every other key stringifies.
+        // A symbol-valued indexer key contributes to `keyof` as that same symbol
+        // type. Every other key stringifies.
         (TypeInner::DefT(_, def_t), OpInner::AnnotGetKeysDictKeyT(_))
-            if matches!(def_t.deref(), DefTInner::UniqueSymbolT(_)) =>
+            if matches!(
+                def_t.deref(),
+                DefTInner::UniqueSymbolT(_) | DefTInner::SymbolT
+            ) =>
         {
             t
         }
