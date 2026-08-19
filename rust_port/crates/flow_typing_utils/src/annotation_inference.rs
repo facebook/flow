@@ -1642,6 +1642,36 @@ fn elab_t_concrete<'cx>(
             t
         }
         (TypeInner::AnyT(_, _), OpInner::AnnotSpecializeT(_)) => t,
+        // Mirrors the [SpecializeT] rule for a value with a construct
+        // signature: it is class-like, so extending it is allowed and there is
+        // nothing to specialize. Without this a signature-verified file falls
+        // through to [general_error] and every consumer of the class sees
+        // [any].
+        (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT(data))
+            if data.types.is_none() && matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
+        {
+            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                let collector = TypeCollector::create();
+                elab_t(
+                    cx,
+                    dst_cx,
+                    Some(seen.dupe()),
+                    t.dupe(),
+                    Op::new(OpInner::AnnotConcretizeForInspection {
+                        reason: type_util::reason_of_t(t).dupe(),
+                        collector: collector.clone(),
+                    }),
+                );
+                Ok(collector.collect_to_vec())
+            };
+            let construct_ts = flow_js_utils::collect_construct_ts(&concretize, cx, &t)
+                .expect("annotation_inference concretize closure is infallible");
+            if construct_ts.is_empty() {
+                general_error(cx, dst_cx, &t, &op)
+            } else {
+                t
+            }
+        }
         (
             TypeInner::DefT(_, def_t),
             OpInner::AnnotThisSpecializeT {
@@ -1717,6 +1747,36 @@ fn elab_t_concrete<'cx>(
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
             reposition(cx, reason.loc().dupe(), instance.dupe())
+        }
+        // Mirrors the [ThisSpecializeT] rule for a value with a construct
+        // signature: the instance the derived class inherits from is what the
+        // first signature returns, carrying the constructor object's statics
+        // and construct signature.
+        (TypeInner::DefT(_, def_t), OpInner::AnnotThisSpecializeT { reason, .. })
+            if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
+        {
+            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                let collector = TypeCollector::create();
+                elab_t(
+                    cx,
+                    dst_cx,
+                    Some(seen.dupe()),
+                    t.dupe(),
+                    Op::new(OpInner::AnnotConcretizeForInspection {
+                        reason: type_util::reason_of_t(t).dupe(),
+                        collector: collector.clone(),
+                    }),
+                );
+                Ok(collector.collect_to_vec())
+            };
+            let base = flow_js_utils::construct_base_instance(&concretize, cx, &t)
+                .expect("annotation_inference concretize closure is infallible");
+            match base {
+                Some(base) => reposition(cx, reason.loc().dupe(), base),
+                // No signature after all; the specialize step above has already
+                // reported it.
+                None => any_t::error(reason.dupe()),
+            }
         }
         (TypeInner::AnyT(_, _), OpInner::AnnotThisSpecializeT { reason, .. }) => {
             reposition(cx, reason.loc().dupe(), t)

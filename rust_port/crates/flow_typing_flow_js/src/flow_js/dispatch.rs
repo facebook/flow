@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use flow_typing_debug::verbose::print_types_if_verbose;
 use flow_typing_errors::error_message::ECallTypeArityData;
+use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
@@ -4316,6 +4317,46 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::ClassT(_)) => {
             rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
         }
+        // A value with a construct signature is class-like, so it can be
+        // extended. `class_sig` specializes the extends clause eagerly, and
+        // that is the step that used to report the whole thing as "not
+        // inheritable" — an interface has nothing to specialize, so pass it
+        // through the way a non-polymorphic class goes through above. The
+        // instance it contributes to the derived class is worked out by
+        // [ThisSpecializeT] below.
+        (
+            TypeInner::DefT(reason_l, def_t),
+            UseTInner::SpecializeT(box SpecializeTData {
+                use_op,
+                reason: _,
+                reason2: _,
+                targs: None,
+                tvar,
+            }),
+        ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
+            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+            };
+            if flow_js_utils::collect_construct_ts(&concretize, cx, l)?.is_empty() {
+                // Not constructable, so not inheritable either. Report what the
+                // fallthrough would have.
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
+                        lower: (reason_l.dupe(), None),
+                        upper: IncompatibleUpperData {
+                            loc: flow_js_utils::error_message_loc_of_upper(u),
+                            kind: flow_js_utils::error_message_kind_of_upper(u),
+                        },
+                        use_op: Some(use_op.dupe()),
+                    })),
+                )?;
+                let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
+                rec_flow_t(cx, trace, unknown_use(), (&any, tvar))?;
+            } else {
+                rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
+            }
+        }
         (
             TypeInner::AnyT(_, _),
             UseTInner::SpecializeT(box SpecializeTData {
@@ -4389,6 +4430,28 @@ fn __flow_impl<'cx>(
         {
             // TODO: check that this is a subtype of i?
             continue_repos(cx, trace, r, false, i, k)?;
+        }
+        // Extending a value with a construct signature: the instance the
+        // derived class inherits from is what the signature returns.
+        // TypeScript's [resolveBaseTypesOfClass] does the same, and takes the
+        // first signature — `prototype` is deliberately not consulted here,
+        // unlike `instanceof` narrowing.
+        (TypeInner::DefT(reason_l, def_t), UseTInner::ThisSpecializeT(r, _this, k))
+            if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
+        {
+            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+            };
+            match flow_js_utils::construct_base_instance(&concretize, cx, l)? {
+                Some(base) => continue_repos(cx, trace, r, false, &base, k)?,
+                // No signature after all. The eager specialization of the
+                // extends clause has already reported that; carry on with
+                // `any` rather than reporting it twice.
+                None => {
+                    let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
+                    continue_repos(cx, trace, r, false, &any, k)?
+                }
+            }
         }
         (TypeInner::AnyT(_, _), UseTInner::ThisSpecializeT(r, _, k)) => {
             // continue_repos cx trace r l k

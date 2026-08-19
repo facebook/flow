@@ -309,6 +309,134 @@ pub fn collect_construct_ts<'cx>(
     go(concretize, cx, Vec::new(), t)
 }
 
+// What each construct signature returns, overloads flattened out, in the source
+// order [collect_construct_ts] preserves.
+fn construct_return_ts(construct_ts: &[Type]) -> Vec<Type> {
+    construct_ts
+        .iter()
+        .flat_map(|construct_t| match construct_t.deref() {
+            TypeInner::IntersectionT(_, rep) => rep.members_iter().duped().collect::<Vec<_>>(),
+            _ => vec![construct_t.dupe()],
+        })
+        .filter_map(|construct_t| match construct_t.deref() {
+            TypeInner::DefT(_, def_t) if let DefTInner::FunT(_, funtype) = def_t.deref() => {
+                Some(funtype.return_t.dupe())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+// A construct signature as a `constructor` method: same parameters, returning
+// void. The instance `new` produces comes from the [ObjTestT] the constructor
+// call is wrapped in, which hands back the class being constructed only when
+// the constructor itself returns a non-object — exactly how a class's own
+// `constructor(): void` behaves. Leaving the signature's return in place would
+// make `new Derived()` the base's instance instead of the derived one.
+fn void_returning(construct: &Type) -> Type {
+    use flow_typing_type::type_::DefT;
+
+    let rebuild = |t: &Type| match t.deref() {
+        TypeInner::DefT(r, def_t) if let DefTInner::FunT(static_, ft) = def_t.deref() => {
+            let mut void_ft = (**ft).clone();
+            void_ft.return_t = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT)));
+            Type::new(TypeInner::DefT(
+                r.dupe(),
+                DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(void_ft))),
+            ))
+        }
+        _ => t.dupe(),
+    };
+    match construct.deref() {
+        TypeInner::IntersectionT(r, rep) => {
+            let mut voided = rep.members_iter().map(rebuild);
+            match (voided.next(), voided.next()) {
+                (Some(t0), Some(t1)) => Type::new(TypeInner::IntersectionT(
+                    r.dupe(),
+                    inter_rep::make(t0, t1, voided.collect::<Vec<_>>().into()),
+                )),
+                _ => rebuild(construct),
+            }
+        }
+        _ => rebuild(construct),
+    }
+}
+
+// The instance a derived class inherits from when its base is a value with a
+// construct signature: what the first signature returns, but re-pointed at the
+// constructor object for the two things that live on the object rather than on
+// the instance it returns — the statics and the construct signature itself.
+//
+// A class's statics are reached as `Class<instance>` -> `instance.static_`, so
+// the derived class only inherits `Base.of` / `new Base()` if the instance it
+// extends carries them. `node.js.flow`'s `declare class Buffer extends
+// Uint8Array` needs both: `Buffer.from` resolves through `static_`, and
+// `new Buffer()` through [inst_construct_t].
+pub fn construct_base_instance<'cx>(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Result<Option<Type>, FlowJsException> {
+    use flow_typing_type::type_::DefT;
+    use flow_typing_type::type_::InstTypeInner;
+    use flow_typing_type::type_::InstanceTInner;
+    use flow_typing_type::type_::Property;
+    use flow_typing_type::type_::PropertyInner;
+
+    let construct_ts = collect_construct_ts(concretize, cx, t)?;
+    let Some(base) = construct_return_ts(&construct_ts).into_iter().next() else {
+        return Ok(None);
+    };
+    // The return type arrives still wrapped in whatever the signature wrote —
+    // an [AnnotT] over the interface, typically — and only the instance
+    // underneath has the slots to re-point. A return that concretizes to
+    // anything else, or to more than one thing, stands as it is.
+    let concrete = concretize(&base)?;
+    let [concrete] = concrete.as_slice() else {
+        return Ok(Some(base.dupe()));
+    };
+    let TypeInner::DefT(base_reason, def_t) = concrete.deref() else {
+        return Ok(Some(base.dupe()));
+    };
+    let DefTInner::InstanceT(instance) = def_t.deref() else {
+        return Ok(Some(base.dupe()));
+    };
+    let construct = combine_construct_ts(construct_ts);
+    let inst = InstType::new(InstTypeInner {
+        proto_props: match &construct {
+            // `new Derived()` resolves `constructor` as a prototype method —
+            // the slot a class writes its own constructor into — so the
+            // signature has to be reachable there. [inst_construct_t] alone is
+            // not enough: it is only consulted for structural subtyping.
+            Some(construct) => {
+                let mut props = cx.find_props(instance.inst.proto_props.dupe());
+                props.insert(
+                    Name::new(FlowSmolStr::new_inline("constructor")),
+                    Property::new(PropertyInner::Method {
+                        key_loc: None,
+                        type_: void_returning(construct),
+                    }),
+                );
+                cx.generate_property_map(props)
+            }
+            None => instance.inst.proto_props.dupe(),
+        },
+        inst_construct_t: construct.map(|c| cx.make_call_prop(c)),
+        ..(*instance.inst).clone()
+    });
+    Ok(Some(Type::new(TypeInner::DefT(
+        base_reason.dupe(),
+        DefT::new(DefTInner::InstanceT(Rc::new(InstanceT::new(
+            InstanceTInner {
+                inst,
+                static_: t.dupe(),
+                super_: instance.super_.dupe(),
+                implements: instance.implements.dupe(),
+            },
+        )))),
+    ))))
+}
+
 // Combine a list of construct sigs into the canonical overload form: a single
 // funtype if there's only one, an [IntersectionT] of funtypes for two or more.
 // This is the same shape [class_sig.rs] and [type_sig_merge.rs] produce for

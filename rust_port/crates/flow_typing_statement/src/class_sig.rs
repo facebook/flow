@@ -1330,7 +1330,13 @@ fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) ->
                         targs.clone(),
                         Some(annot_loc.dupe()),
                     );
-                    // class B extends A {}; B.__proto__ === A
+                    // class B extends A {}; B.__proto__ === A. This must stay
+                    // eager: `t` mentions the derived class's `this`, and
+                    // substitution does not descend into a tvar, so deferring
+                    // it strands `this` as `empty` for every inherited static.
+                    // A base that is a value with a construct signature instead
+                    // hands its statics over on the instance itself, via
+                    // [construct_base_instance].
                     let static_proto =
                         type_util::class_type(t.dupe(), false, Some(annot_loc.dupe()));
                     (t, static_proto)
