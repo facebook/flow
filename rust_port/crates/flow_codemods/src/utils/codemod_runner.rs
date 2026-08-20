@@ -1252,7 +1252,8 @@ where
             &mut will_be_checked_files,
             Arc::new(env),
         );
-        let (_, _, _, env) = recheck_result.expect("recheck failed");
+        let (_, _, _, prepared) = recheck_result.expect("recheck failed");
+        let env = prepared.commit();
         let transaction = ActiveTransaction::new(_genv.committed_heap.clone());
         log_input_files(&_roots);
         let results = TRC::merge_and_check(

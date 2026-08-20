@@ -56,7 +56,6 @@ pub struct CommittedHeap {
 pub(crate) struct CommittedHeapState {
     pub(crate) data: CommittedHeapData,
     pub(crate) reader_cache: ReaderCache,
-    pub(crate) on_compact: RwLock<Option<Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>>>,
     pub(crate) gc_state: Mutex<GcState>,
     pub(crate) active_transactions: AtomicUsize,
 }
@@ -99,7 +98,6 @@ impl CommittedHeap {
             state: Arc::new(RwLock::new(CommittedHeapState {
                 data: CommittedHeapData::with_capacity(files, haste_modules),
                 reader_cache: ReaderCache::new(),
-                on_compact: RwLock::new(None),
                 gc_state: Mutex::new(GcState::default()),
                 active_transactions: AtomicUsize::new(0),
             })),
@@ -141,7 +139,7 @@ impl CommittedHeap {
         );
     }
 
-    pub fn apply_overlay_draining(&self, overlay: &mut HeapOverlay) {
+    pub(crate) fn apply_overlay_draining(&self, overlay: &mut HeapOverlay) {
         let deltas = overlay.take_commit_deltas();
         self.apply_commit_deltas(deltas);
     }

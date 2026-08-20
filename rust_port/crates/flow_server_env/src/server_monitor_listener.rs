@@ -16,17 +16,23 @@ use crate::monitor_rpc;
 use crate::persistent_connection;
 use crate::server_env::Genv;
 use crate::server_monitor_listener_state;
+use crate::server_orchestrator::ServerOrchestratorHandle;
 
 pub struct CommandHandlerCallbacks {
     pub enqueue_or_handle_ephemeral: fn(
         &Arc<Genv>,
+        &ServerOrchestratorHandle,
         (
             crate::monitor_prot::RequestId,
             crate::server_command_with_context::ServerCommandWithContext,
         ),
     ),
-    pub enqueue_persistent:
-        fn(&Arc<Genv>, crate::lsp_prot::ClientId, crate::lsp_prot::RequestWithMetadata),
+    pub enqueue_persistent: fn(
+        &Arc<Genv>,
+        &ServerOrchestratorHandle,
+        crate::lsp_prot::ClientId,
+        crate::lsp_prot::RequestWithMetadata,
+    ),
 }
 
 // TODO: find a way to gracefully kill the workers. At the moment, if the
@@ -41,15 +47,16 @@ fn kill_workers() {
 
 fn handle_message(
     genv: &Arc<Genv>,
+    orchestrator: &ServerOrchestratorHandle,
     callbacks: &CommandHandlerCallbacks,
     message: MonitorToServerMessage,
 ) {
     match message {
         MonitorToServerMessage::Request(request_id, command) => {
-            (callbacks.enqueue_or_handle_ephemeral)(genv, (request_id, command));
+            (callbacks.enqueue_or_handle_ephemeral)(genv, orchestrator, (request_id, command));
         }
         MonitorToServerMessage::PersistentConnectionRequest(client_id, request) => {
-            (callbacks.enqueue_persistent)(genv, client_id, request);
+            (callbacks.enqueue_persistent)(genv, orchestrator, client_id, request);
         }
         MonitorToServerMessage::NewPersistentConnection(client_id, lsp_init_params) => {
             // Immediately register the new client
@@ -77,17 +84,25 @@ fn handle_message(
             initial,
         } => {
             if initial {
-                server_monitor_listener_state::push_lazy_init(metadata, changed_files);
+                server_monitor_listener_state::push_lazy_init(
+                    orchestrator,
+                    metadata,
+                    changed_files,
+                );
             } else {
                 match metadata {
                     Some(metadata) => {
                         server_monitor_listener_state::push_files_to_recheck_with_metadata(
+                            orchestrator,
                             Some(metadata),
                             changed_files,
                         );
                     }
                     None => {
-                        server_monitor_listener_state::push_files_to_recheck(changed_files);
+                        server_monitor_listener_state::push_files_to_recheck(
+                            orchestrator,
+                            changed_files,
+                        );
                     }
                 }
             }
@@ -110,7 +125,11 @@ fn handle_message(
 
 // This thread keeps reading messages from the monitor process and adding them
 // to a stream. It runs in parallel with the server loop that consumes it.
-pub fn listen_for_messages(genv: &Arc<Genv>, callbacks: &CommandHandlerCallbacks) -> ! {
+pub fn listen_for_messages(
+    genv: &Arc<Genv>,
+    orchestrator: &ServerOrchestratorHandle,
+    callbacks: &CommandHandlerCallbacks,
+) -> ! {
     loop {
         // Read a message from the monitor.
         let message = match monitor_rpc::read() {
@@ -124,6 +143,6 @@ pub fn listen_for_messages(genv: &Arc<Genv>, callbacks: &CommandHandlerCallbacks
                 );
             }
         };
-        handle_message(genv, callbacks, message);
+        handle_message(genv, orchestrator, callbacks, message);
     }
 }

@@ -19,6 +19,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_check_cache::CheckCache;
+use flow_check_cache::CheckContentsCache;
 use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
 use flow_common::files;
@@ -941,16 +942,11 @@ fn mk_check_file(
     (check_file_fn, cache_ref)
 }
 
-thread_local! {
-    static CHECK_CONTENTS_CACHE: Rc<std::cell::RefCell<CheckCache<'static>>> =
-        Rc::new(std::cell::RefCell::new(CheckCache::create(10_000)));
-}
-
-pub fn check_contents_cache() -> Rc<std::cell::RefCell<CheckCache<'static>>> {
-    CHECK_CONTENTS_CACHE.with(|cache| cache.dupe())
-}
-
+// When we check the contents of a file, we create types from the signatures of its dependencies.
+// `cache` holds those, so the next request for a file with the same dependencies does not rebuild
+// them. It is owned by the workload runner and lent to each workload; see `CheckContentsCache`.
 pub fn check_contents_context(
+    cache: &CheckContentsCache,
     transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -999,15 +995,13 @@ pub fn check_contents_context(
         mut make_cx,
         mut check_file,
         compute_env: _,
-    } = CHECK_CONTENTS_CACHE.with(|cache| {
-        check_service::mk_check_file(
-            transaction.dupe(),
-            options.dupe(),
-            all_unordered_libs,
-            master_cx.as_ref(),
-            cache.dupe(),
-        )
-    });
+    } = check_service::mk_check_file(
+        transaction.dupe(),
+        options.dupe(),
+        all_unordered_libs,
+        master_cx.as_ref(),
+        cache.handle(),
+    );
     let cx = make_cx(
         file.dupe(),
         resolved_modules,
@@ -1027,6 +1021,7 @@ pub fn check_contents_context(
 }
 
 pub fn compute_env_of_contents(
+    cache: &CheckContentsCache,
     transaction: Arc<Transaction>,
     options: Arc<Options>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -1077,15 +1072,13 @@ pub fn compute_env_of_contents(
         mut make_cx,
         check_file: _,
         mut compute_env,
-    } = CHECK_CONTENTS_CACHE.with(|cache| {
-        check_service::mk_check_file(
-            transaction.dupe(),
-            options.dupe(),
-            all_unordered_libs,
-            master_cx.as_ref(),
-            cache.dupe(),
-        )
-    });
+    } = check_service::mk_check_file(
+        transaction.dupe(),
+        options.dupe(),
+        all_unordered_libs,
+        master_cx.as_ref(),
+        cache.handle(),
+    );
     let cx = make_cx(
         file.dupe(),
         resolved_modules,

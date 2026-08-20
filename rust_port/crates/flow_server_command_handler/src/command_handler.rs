@@ -15,6 +15,7 @@ use std::sync::LazyLock;
 use std::sync::Mutex;
 
 use dupe::Dupe;
+use flow_check_cache::CheckContentsCache;
 use flow_common::files;
 use flow_common::options::Options;
 use flow_common::sys_utils::normalize_filename_dir_sep;
@@ -43,9 +44,12 @@ use flow_server_env::persistent_connection;
 use flow_server_env::server_command_with_context::ServerCommandWithContext;
 use flow_server_env::server_env;
 use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_orchestrator::ServerOrchestratorHandle;
 use flow_server_env::server_prot;
 use flow_server_env::server_prot::request::Query;
 use flow_server_env::server_prot::request::QueryField;
+use flow_server_env::workload_stream::WorkloadHandler;
+use flow_server_env::workload_stream::WorkloadOutcome;
 use flow_server_utils::file_input::FileInput;
 use flow_services_autocomplete::autocomplete_service_js::ac_completion;
 use flow_services_inference::type_contents::parse_contents;
@@ -151,9 +155,8 @@ use flow_services_get_def::get_def_types::Purpose;
 
 const DOCBLOCK_MAX_TOKENS: usize = 10;
 
-// The Err variant carries `WorkloadCanceled`, which the
-// `run_command_in_parallel`/`run_command_in_serial` functions translate into
-// either a workload deferral or an inline recheck-and-retry.
+// The Err variant carries `WorkloadCanceled`. The command executor retains the original request and
+// retries it after the recheck publishes its new environment.
 pub type EphemeralParallelizableResult =
     Result<(server_prot::response::Response, Option<lsp_prot::Json>), WorkloadCanceled>;
 
@@ -185,12 +188,14 @@ type PersistentParallelizableWorkload = Box<
     dyn FnOnce(
             &server_env::Env,
             &Arc<flow_heap::parsing_heaps::Transaction>,
+            &CheckContentsCache,
         ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
         + Send,
 >;
 type PersistentNonparallelizableWorkload = Box<
     dyn FnOnce(
             &server_env::Env,
+            &CheckContentsCache,
         ) -> Result<(lsp_prot::Response, lsp_prot::Metadata), WorkloadCanceled>
         + Send,
 >;
@@ -201,6 +206,7 @@ pub enum PersistentCommandHandler {
 }
 
 fn type_parse_artifacts_with_cache(
+    cache: &CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -216,6 +222,7 @@ fn type_parse_artifacts_with_cache(
     match type_parse_artifacts_cache {
         None => {
             let result = type_parse_artifacts(
+                cache,
                 options,
                 all_unordered_libs,
                 transaction,
@@ -225,10 +232,10 @@ fn type_parse_artifacts_with_cache(
             );
             (result, None)
         }
-        Some(cache) => {
+        Some(artifacts_cache) => {
             let file_for_result = file.dupe();
             let content_for_result = content.dupe();
-            let (entry, did_hit) = cache.with_cache_sync(
+            let (entry, did_hit) = artifacts_cache.with_cache_sync(
                 |entry| {
                     Arc::ptr_eq(&entry.content, &content)
                         || entry.content.as_ref() == content.as_ref()
@@ -237,6 +244,7 @@ fn type_parse_artifacts_with_cache(
                 || TypeParseArtifactsCacheEntry {
                     content: content_for_result,
                     result: type_parse_artifacts(
+                        cache,
                         options,
                         all_unordered_libs,
                         transaction,
@@ -943,6 +951,7 @@ fn json_of_autocomplete_result(
 }
 
 fn type_parse_artifacts_for_ac_with_cache(
+    cache: &CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     type_parse_artifacts_cache: Option<&AutocompleteArtifactsCache>,
@@ -969,6 +978,7 @@ fn type_parse_artifacts_for_ac_with_cache(
                 parse_errors: _,
             } = parse_artifacts;
             let cx = match flow_services_inference::type_contents::compute_env_of_contents(
+                cache,
                 options,
                 transaction.clone(),
                 all_unordered_libs.dupe(),
@@ -1005,6 +1015,7 @@ fn type_parse_artifacts_for_ac_with_cache(
 }
 
 fn autocomplete_on_parsed(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1051,6 +1062,7 @@ fn autocomplete_on_parsed(
     let parse_result =
         || parse_contents(options, env.all_unordered_libs.dupe(), &contents, filename);
     let (file_artifacts_result, did_hit) = type_parse_artifacts_for_ac_with_cache(
+        cache,
         options,
         env.all_unordered_libs.dupe(),
         type_parse_artifacts_cache.as_ref(),
@@ -1200,6 +1212,7 @@ fn autocomplete_on_parsed(
 }
 
 fn autofix_errors_cli(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1238,6 +1251,7 @@ fn autofix_errors_cli(
         })
     });
     let edits = flow_services_code_action::code_action_service::autofix_errors_cli(
+        cache,
         options,
         env,
         transaction,
@@ -1253,6 +1267,7 @@ fn autofix_errors_cli(
 }
 
 fn autofix_imports_cli(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1264,6 +1279,7 @@ fn autofix_imports_cli(
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
     let module_system_info = mk_module_system_info(options, transaction.clone());
     let edits = flow_services_code_action::code_action_service::autofix_imports_cli(
+        cache,
         options,
         env,
         transaction,
@@ -1276,6 +1292,7 @@ fn autofix_imports_cli(
 }
 
 fn suggest_imports_cli(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1287,6 +1304,7 @@ fn suggest_imports_cli(
     let loc_of_aloc = move |aloc: &flow_aloc::ALoc| transaction_loa.loc_of_aloc(aloc);
     let module_system_info = mk_module_system_info(options, transaction.clone());
     let result = flow_services_code_action::code_action_service::suggest_imports_cli(
+        cache,
         options,
         env,
         transaction,
@@ -1301,6 +1319,7 @@ fn suggest_imports_cli(
 }
 
 fn autocomplete(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1332,6 +1351,7 @@ fn autocomplete(
             let imports_ranked_usage_boost_exact_match_min_length =
                 options.autoimports_ranked_by_usage_boost_exact_match_min_length as usize;
             let (initial_json_props, ac_result) = autocomplete_on_parsed(
+                cache,
                 options,
                 env,
                 transaction,
@@ -1357,6 +1377,7 @@ enum ErrorsOfFileError {
 }
 
 fn errors_of_file(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -1376,6 +1397,7 @@ fn errors_of_file(
                 Err(TypeContentsError::Errors(intermediate_result.1))
             } else {
                 type_parse_artifacts(
+                    cache,
                     &options,
                     env.all_unordered_libs.dupe(),
                     transaction.clone(),
@@ -1400,13 +1422,14 @@ fn errors_of_file(
 }
 
 fn check_file(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     force: bool,
     file_input: &FileInput,
 ) -> Result<server_prot::response::StatusResponse, WorkloadCanceled> {
-    match errors_of_file(options, env, transaction.clone(), force, file_input) {
+    match errors_of_file(cache, options, env, transaction.clone(), force, file_input) {
         Err(ErrorsOfFileError::NotCovered) => {
             Ok(server_prot::response::StatusResponse::NOT_COVERED)
         }
@@ -1640,6 +1663,7 @@ fn documentation_at_loc(
 }
 
 fn infer_type(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -1692,6 +1716,7 @@ fn infer_type(
             let parse_result =
                 || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 &options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
@@ -1789,6 +1814,7 @@ fn infer_type(
 }
 
 fn type_of_name(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -1813,6 +1839,7 @@ fn type_of_name(
             let parse_result =
                 || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 &options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
@@ -1848,6 +1875,7 @@ fn type_of_name(
                         )
                     };
                     Ok(flow_services_type_of_name::type_of_name::type_of_name(
+                        cache,
                         &options,
                         transaction,
                         env,
@@ -1863,6 +1891,7 @@ fn type_of_name(
 }
 
 fn inlay_hint(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -1896,6 +1925,7 @@ fn inlay_hint(
             let parse_result =
                 || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = match type_parse_artifacts_with_cache(
+                cache,
                 &options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
@@ -1988,6 +2018,7 @@ fn inlay_hint(
 }
 
 fn insert_type(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2030,6 +2061,7 @@ fn insert_type(
         &file_key,
     );
     let file_artifacts_result = type_parse_artifacts(
+        cache,
         options,
         env.all_unordered_libs.dupe(),
         transaction,
@@ -2073,6 +2105,7 @@ fn insert_type(
 }
 
 fn autofix_exports(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2118,6 +2151,7 @@ fn autofix_exports(
         &file_key,
     );
     let file_artifacts_result = type_parse_artifacts(
+        cache,
         options,
         env.all_unordered_libs.dupe(),
         transaction,
@@ -2161,6 +2195,7 @@ fn autofix_exports(
 }
 
 fn autofix_missing_local_annot(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2200,6 +2235,7 @@ fn autofix_missing_local_annot(
         &file_key,
     );
     let file_artifacts_result = type_parse_artifacts(
+        cache,
         options,
         env.all_unordered_libs.dupe(),
         transaction,
@@ -2317,6 +2353,7 @@ fn collect_rage(
 }
 
 fn dump_types(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2332,6 +2369,7 @@ fn dump_types(
     let intermediate_result =
         parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
+        cache,
         options,
         env.all_unordered_libs.dupe(),
         transaction,
@@ -2358,6 +2396,7 @@ fn dump_types(
 }
 
 fn coverage(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -2377,6 +2416,7 @@ fn coverage(
     let intermediate_result =
         || parse_contents(&options, env.all_unordered_libs.dupe(), content, file_key);
     let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+        cache,
         &options,
         env.all_unordered_libs.dupe(),
         type_parse_artifacts_cache,
@@ -2585,6 +2625,7 @@ fn find_module(
 }
 
 fn get_def(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     type_parse_artifacts_cache: Option<&TypeParseArtifactsCache>,
@@ -2619,6 +2660,7 @@ fn get_def(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (check_result, did_hit_cache) = match type_parse_artifacts_with_cache(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache,
@@ -2702,10 +2744,17 @@ fn get_def(
 }
 
 fn save_state(
+    cache: &CheckContentsCache,
     genv: &server_env::Genv,
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
+    // Saving walks the whole heap. Drop what we are holding into it first, so the walk is not
+    // competing with a cache full of merged dependency contexts for memory. We are the workload
+    // runner, so the cache is right here.
+    cache.clear();
+    persistent_connection::clear_type_parse_artifacts_caches();
+
     let transaction = ActiveTransaction::new(genv.committed_heap.dupe());
     flow_saved_state::save(
         std::path::Path::new(saved_state_filename),
@@ -2783,6 +2832,7 @@ fn rank_autoimports_by_usage(options: &Options, client_id: lsp_prot::ClientId) -
 }
 
 fn handle_apply_code_action(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2795,6 +2845,7 @@ fn handle_apply_code_action(
         } => {
             let result: Result<_, String> = try_with(|| {
                 autofix_errors_cli(
+                    cache,
                     options,
                     env,
                     transaction.clone(),
@@ -2808,16 +2859,18 @@ fn handle_apply_code_action(
             ))
         }
         server_prot::code_action::T::SourceAddMissingImports => {
-            let result: Result<_, String> =
-                try_with(|| autofix_imports_cli(options, env, transaction.clone(), file_input));
+            let result: Result<_, String> = try_with(|| {
+                autofix_imports_cli(cache, options, env, transaction.clone(), file_input)
+            });
             Ok((
                 server_prot::response::Response::APPLY_CODE_ACTION(result),
                 None,
             ))
         }
         server_prot::code_action::T::SuggestImports => {
-            let result =
-                try_with(|| suggest_imports_cli(options, env, transaction.clone(), file_input));
+            let result = try_with(|| {
+                suggest_imports_cli(cache, options, env, transaction.clone(), file_input)
+            });
             Ok((
                 server_prot::response::Response::SUGGEST_IMPORTS(result),
                 None,
@@ -2827,6 +2880,7 @@ fn handle_apply_code_action(
 }
 
 fn handle_autocomplete(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2838,6 +2892,7 @@ fn handle_autocomplete(
     show_ranking_info: bool,
 ) -> EphemeralParallelizableResult {
     let (result, json_data) = autocomplete(
+        cache,
         options,
         env,
         transaction,
@@ -2857,12 +2912,13 @@ fn handle_autocomplete(
 }
 
 fn handle_autofix_exports(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_exports(options, env, transaction, input)?;
+    let result = autofix_exports(cache, options, env, transaction, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_EXPORTS(result),
         None,
@@ -2870,12 +2926,13 @@ fn handle_autofix_exports(
 }
 
 fn handle_autofix_missing_local_annot(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_missing_local_annot(options, env, transaction, input)?;
+    let result = autofix_missing_local_annot(cache, options, env, transaction, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(result),
         None,
@@ -2883,17 +2940,19 @@ fn handle_autofix_missing_local_annot(
 }
 
 fn handle_check_file(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     force: bool,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let response = check_file(options, env, transaction, force, input)?;
+    let response = check_file(cache, options, env, transaction, force, input)?;
     Ok((server_prot::response::Response::CHECK_FILE(response), None))
 }
 
 fn handle_coverage(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -2906,6 +2965,7 @@ fn handle_coverage(
         Err(IdeFileError::Failed(msg)) => (Err(msg), None),
         Err(IdeFileError::Skipped(reason)) => (Err(reason.clone()), json_of_skipped(&reason)),
         Ok((file_key, file_contents)) => coverage(
+            cache,
             &options,
             env,
             None,
@@ -3040,6 +3100,7 @@ fn handle_query(
 }
 
 fn handle_dump_types(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3048,6 +3109,7 @@ fn handle_dump_types(
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
     let response = dump_types(
+        cache,
         options,
         env,
         transaction,
@@ -3069,6 +3131,7 @@ fn handle_find_module(
 }
 
 fn handle_force_recheck(
+    orchestrator: &ServerOrchestratorHandle,
     files: Vec<String>,
     focus: bool,
     missed_changes: bool,
@@ -3080,14 +3143,22 @@ fn handle_force_recheck(
         changed_mergebase: Some(changed_mergebase),
     };
     if focus {
-        server_monitor_listener_state::push_files_to_force_focused_and_recheck(fileset);
+        server_monitor_listener_state::push_files_to_force_focused_and_recheck(
+            orchestrator,
+            fileset,
+        );
     } else {
-        server_monitor_listener_state::push_files_to_recheck_with_metadata(Some(metadata), fileset);
+        server_monitor_listener_state::push_files_to_recheck_with_metadata(
+            orchestrator,
+            Some(metadata),
+            fileset,
+        );
     }
     (server_prot::response::Response::FORCE_RECHECK, None)
 }
 
 fn handle_get_def(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3095,7 +3166,7 @@ fn handle_get_def(
     line: u32,
     col: u32,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = get_def(options, env, None, transaction, input, line, col)?;
+    let (result, json_data) = get_def(cache, options, env, None, transaction, input, line, col)?;
     Ok((server_prot::response::Response::GET_DEF(result), json_data))
 }
 
@@ -3114,12 +3185,14 @@ fn handle_graph_dep_graph(
 }
 
 fn handle_infer_type(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::infer_type_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = infer_type(options, env, None, transaction.clone(), input, true)?;
+    let (result, json_data) =
+        infer_type(cache, options, env, None, transaction.clone(), input, true)?;
     Ok((
         server_prot::response::Response::INFER_TYPE(result),
         json_data,
@@ -3127,6 +3200,7 @@ fn handle_infer_type(
 }
 
 fn handle_type_of_name(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3136,7 +3210,7 @@ fn handle_type_of_name(
         Vec<server_prot::response::InferTypeOfNameResponse>,
         Option<lsp_prot::Json>,
     ) = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        type_of_name(options, env, None, transaction, input)
+        type_of_name(cache, options, env, None, transaction, input)
     })) {
         Ok(result) => (result?, None),
         Err(_exn) => {
@@ -3157,12 +3231,13 @@ fn handle_type_of_name(
 }
 
 fn handle_inlay_hint(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::inlay_hint_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = inlay_hint(options, env, None, transaction.clone(), input)?;
+    let (result, json_data) = inlay_hint(cache, options, env, None, transaction.clone(), input)?;
     Ok((
         server_prot::response::Response::INLAY_HINT(result),
         json_data,
@@ -3170,6 +3245,7 @@ fn handle_inlay_hint(
 }
 
 fn handle_llm_context(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3196,6 +3272,7 @@ fn handle_llm_context(
             let intermediate_result =
                 parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let file_artifacts_result = type_parse_artifacts(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 transaction.clone(),
@@ -3259,6 +3336,7 @@ fn handle_llm_context(
 }
 
 fn handle_insert_type(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3268,6 +3346,7 @@ fn handle_insert_type(
     location_is_strict: bool,
 ) -> EphemeralParallelizableResult {
     let result = insert_type(
+        cache,
         options,
         env,
         transaction,
@@ -3305,15 +3384,18 @@ fn handle_status(
 }
 
 fn handle_save_state(
+    cache: &CheckContentsCache,
     genv: &server_env::Genv,
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> EphemeralNonparallelizableResult {
-    let result = save_state(genv, env, saved_state_filename);
+    let result = save_state(cache, genv, env, saved_state_filename);
     Ok((server_prot::response::Response::SAVE_STATE(result), None))
 }
 
 pub fn handle_ephemeral_command_for_standalone(
+    orchestrator: &ServerOrchestratorHandle,
+    cache: &CheckContentsCache,
     genv: &server_env::Genv,
     env: &server_env::Env,
     command: server_prot::request::Command,
@@ -3326,7 +3408,7 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             action,
             wait_for_recheck: _,
-        } => handle_apply_code_action(options, env, transaction, &action, &input),
+        } => handle_apply_code_action(cache, options, env, transaction, &action, &input),
         server_prot::request::Command::AUTOCOMPLETE {
             input,
             cursor,
@@ -3336,6 +3418,7 @@ pub fn handle_ephemeral_command_for_standalone(
             imports_ranked_usage,
             show_ranking_info,
         } => handle_autocomplete(
+            cache,
             options,
             env,
             transaction,
@@ -3350,12 +3433,12 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_exports(options, env, transaction, &input),
+        } => handle_autofix_exports(cache, options, env, transaction, &input),
         server_prot::request::Command::AUTOFIX_MISSING_LOCAL_ANNOT {
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_missing_local_annot(options, env, transaction, &input),
+        } => handle_autofix_missing_local_annot(cache, options, env, transaction, &input),
         server_prot::request::Command::CHECK_FILE {
             input,
             verbose: _,
@@ -3365,13 +3448,13 @@ pub fn handle_ephemeral_command_for_standalone(
         } => {
             let mut options = options.clone();
             options.include_warnings = options.include_warnings || include_warnings;
-            handle_check_file(&options, env, transaction, force, &input)
+            handle_check_file(cache, &options, env, transaction, force, &input)
         }
         server_prot::request::Command::COVERAGE {
             input,
             force,
             wait_for_recheck: _,
-        } => handle_coverage(options, env, transaction, &input, force),
+        } => handle_coverage(cache, options, env, transaction, &input, force),
         server_prot::request::Command::BATCH_COVERAGE {
             batch,
             wait_for_recheck: _,
@@ -3390,6 +3473,7 @@ pub fn handle_ephemeral_command_for_standalone(
             for_tool,
             wait_for_recheck: _,
         } => handle_dump_types(
+            cache,
             options,
             env,
             transaction,
@@ -3412,6 +3496,7 @@ pub fn handle_ephemeral_command_for_standalone(
             missed_changes,
             changed_mergebase,
         } => Ok(handle_force_recheck(
+            orchestrator,
             files,
             focus,
             missed_changes,
@@ -3423,6 +3508,7 @@ pub fn handle_ephemeral_command_for_standalone(
             r#char,
             wait_for_recheck: _,
         } => handle_get_def(
+            cache,
             options,
             env,
             transaction,
@@ -3437,13 +3523,13 @@ pub fn handle_ephemeral_command_for_standalone(
             types_only,
         } => handle_graph_dep_graph(env, &root, strip_root, &outfile, types_only),
         server_prot::request::Command::INFER_TYPE(input) => {
-            handle_infer_type(options, env, transaction, &input)
+            handle_infer_type(cache, options, env, transaction, &input)
         }
         server_prot::request::Command::INLAY_HINT(input) => {
-            handle_inlay_hint(options, env, transaction, &input)
+            handle_inlay_hint(cache, options, env, transaction, &input)
         }
         server_prot::request::Command::TYPE_OF_NAME(input) => {
-            handle_type_of_name(options, env, transaction, &input)
+            handle_type_of_name(cache, options, env, transaction, &input)
         }
         server_prot::request::Command::INSERT_TYPE {
             input,
@@ -3453,6 +3539,7 @@ pub fn handle_ephemeral_command_for_standalone(
             wait_for_recheck: _,
             omit_targ_defaults,
         } => handle_insert_type(
+            cache,
             options,
             env,
             transaction,
@@ -3476,7 +3563,7 @@ pub fn handle_ephemeral_command_for_standalone(
                 }
             };
             match filename {
-                Some(filename) => handle_save_state(genv, env, &filename),
+                Some(filename) => handle_save_state(cache, genv, env, &filename),
                 None => Ok((
                     server_prot::response::Response::SAVE_STATE(Err(
                         "Failed to determine saved-state output filename".to_string(),
@@ -3491,7 +3578,7 @@ pub fn handle_ephemeral_command_for_standalone(
             handle_status(&options, env, &transaction)
         }
         server_prot::request::Command::LLM_CONTEXT(input) => {
-            handle_llm_context(options, env, transaction, &input)
+            handle_llm_context(cache, options, env, transaction, &input)
         }
         #[cfg(fbcode_build)]
         server_prot::request::Command::FOX(command) => {
@@ -3506,6 +3593,8 @@ pub fn handle_ephemeral_command_for_standalone(
 }
 
 pub fn handle_ephemeral_command_for_standalone_wrapped(
+    orchestrator: &ServerOrchestratorHandle,
+    cache: &CheckContentsCache,
     genv: &server_env::Genv,
     env: &server_env::Env,
     command: server_prot::request::Command,
@@ -3530,10 +3619,11 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
         cmd_str: cmd_str.clone(),
         start: std::time::Instant::now(),
     };
-    handle_ephemeral_command_for_standalone(genv, env, command)
+    handle_ephemeral_command_for_standalone(orchestrator, cache, genv, env, command)
 }
 
 fn find_code_actions(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3569,6 +3659,7 @@ fn find_code_actions(
                 )
             };
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
@@ -3675,6 +3766,7 @@ fn find_code_actions(
 }
 
 fn add_missing_imports(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -3698,6 +3790,7 @@ fn add_missing_imports(
                 )
             };
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
@@ -4025,51 +4118,16 @@ fn handle_ephemeral_immediately(
 
 fn run_command_in_parallel(
     env: &server_env::Env,
-    name: &str,
     workload: impl FnOnce(&server_env::Env) -> EphemeralParallelizableResult,
-    mk_workload: impl FnOnce() -> flow_server_env::workload_stream::ParallelizableWorkload,
 ) -> EphemeralParallelizableResult {
-    match workload(env) {
-        Ok((response, json_data)) => Ok((response, json_data)),
-        Err(WorkloadCanceled) => {
-            flow_hh_logger::info!(
-                "Command successfully canceled. Requeuing the command for after the next recheck."
-            );
-            server_monitor_listener_state::defer_parallelizable_workload(name, mk_workload());
-            Err(WorkloadCanceled)
-        }
-    }
-}
-
-fn run_command_in_serial(
-    genv: &Arc<server_env::Genv>,
-    mut env: server_env::EnvRef,
-    workload: &mut dyn FnMut(&server_env::Env) -> EphemeralNonparallelizableResult,
-) -> (server_env::EnvRef, EphemeralNonparallelizableResult) {
-    loop {
-        match workload(&env) {
-            Ok((response, json_data)) => return (env, Ok((response, json_data))),
-            Err(WorkloadCanceled) => {
-                flow_hh_logger::info!(
-                    "Command successfully canceled. Running a recheck before restarting the command"
-                );
-                let (_recheck_profiling, new_env) =
-                    flow_server_rechecker::rechecker::recheck_loop(genv, env, &genv.committed_heap);
-                env = new_env;
-                flow_hh_logger::info!("Now restarting the command");
-                continue;
-            }
-        }
-    }
+    workload(env)
 }
 
 fn handle_parallelizable_ephemeral_unsafe(
     env: &server_env::Env,
-    cmd_str: &str,
     workload: impl FnOnce(&server_env::Env) -> EphemeralParallelizableResult,
-    mk_workload: impl FnOnce() -> flow_server_env::workload_stream::ParallelizableWorkload,
 ) -> Result<((), server_prot::response::Response, Option<lsp_prot::Json>), EphemeralHandlerError> {
-    match run_command_in_parallel(env, cmd_str, workload, mk_workload) {
+    match run_command_in_parallel(env, workload) {
         Ok((response, json_data)) => Ok(((), response, json_data)),
         Err(WorkloadCanceled) => Err(EphemeralHandlerError::Canceled),
     }
@@ -4077,6 +4135,7 @@ fn handle_parallelizable_ephemeral_unsafe(
 
 fn handle_parallelizable_ephemeral(
     genv: Arc<server_env::Genv>,
+    orchestrator: ServerOrchestratorHandle,
     request_id: String,
     client_context: lsp_prot::LoggingContext,
     cmd_str: String,
@@ -4085,32 +4144,32 @@ fn handle_parallelizable_ephemeral(
     let parallelizable_workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
         Box::new(|| false);
     let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
-        move |env: &server_env::Env, _transaction: &Arc<flow_heap::parsing_heaps::Transaction>| {
+        move |env: &server_env::Env,
+              _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
+              cache: &CheckContentsCache| {
             let workload_command = command.clone();
             let workload_genv = genv.clone();
-            let mk_workload = || {
-                handle_parallelizable_ephemeral(
-                    genv.clone(),
-                    request_id.clone(),
-                    client_context.clone(),
-                    cmd_str.clone(),
-                    command.clone(),
-                )
-            };
             let result = wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || {
                 handle_parallelizable_ephemeral_unsafe(
                     env,
-                    &cmd_str,
-                    |env| handle_ephemeral_command_for_standalone(&workload_genv, env, workload_command),
-                    mk_workload,
+                    |env| {
+                        handle_ephemeral_command_for_standalone(
+                            &orchestrator,
+                            cache,
+                            &workload_genv,
+                            env,
+                            workload_command,
+                        )
+                    },
                 )
             });
             match result {
-                Ok(()) => {}
-                Err(EphemeralWrapError::SendFailed) => {}
+                Ok(()) | Err(EphemeralWrapError::SendFailed) => WorkloadOutcome::Completed,
                 Err(EphemeralWrapError::Canceled) => {
-                    // It's fine for parallelizable commands to be canceled
-                    // they'll be run again later"
+                    flow_hh_logger::info!(
+                        "Command successfully canceled. Requeuing the same command after recheck."
+                    );
+                    WorkloadOutcome::RetryAfterRecheck
                 }
             }
         },
@@ -4121,53 +4180,50 @@ fn handle_parallelizable_ephemeral(
     }
 }
 
-// Returns the post-recheck `env` alongside the result so that callers (which
-// must hand the env back to the WorkloadStream) can sequence env-flow
-// without relying on side effects.
-fn handle_nonparallelizable_ephemeral_unsafe(
-    genv: &Arc<server_env::Genv>,
-    env: server_env::EnvRef,
-    workload: &mut dyn FnMut(&server_env::Env) -> EphemeralNonparallelizableResult,
-) -> (
-    server_env::EnvRef,
-    Result<((), server_prot::response::Response, Option<lsp_prot::Json>), EphemeralHandlerError>,
-) {
-    let (env, result) = run_command_in_serial(genv, env, workload);
-    let mapped = match result {
-        Ok((response, json_data)) => Ok(((), response, json_data)),
-        Err(WorkloadCanceled) => Err(EphemeralHandlerError::Canceled),
-    };
-    (env, mapped)
-}
-
 fn handle_nonparallelizable_ephemeral(
     genv: Arc<server_env::Genv>,
+    orchestrator: ServerOrchestratorHandle,
     request_id: String,
     client_context: lsp_prot::LoggingContext,
     cmd_str: String,
     command: server_prot::request::Command,
 ) -> flow_server_env::workload_stream::Workload {
     let workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> = Box::new(|| false);
-    let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
-        Box::new(move |env: server_env::EnvRef| {
-            let workload_genv = genv.clone();
-            let mut workload_fn =
-                |inner_env: &server_env::Env| -> EphemeralNonparallelizableResult {
-                    handle_ephemeral_command_for_standalone(
-                        &workload_genv,
-                        inner_env,
-                        command.clone(),
-                    )
-                };
-            let (env, mapped) =
-                handle_nonparallelizable_ephemeral_unsafe(&genv, env, &mut workload_fn);
-            match wrap_ephemeral_handler(&genv, &request_id, &client_context, &cmd_str, || mapped) {
-                Ok(()) => {}
-                Err(EphemeralWrapError::SendFailed) => {}
-                Err(EphemeralWrapError::Canceled) => {}
+    let workload_handler: WorkloadHandler = Box::new(
+        move |env: &server_env::Env,
+              _transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
+              cache: &CheckContentsCache| {
+            let result = handle_ephemeral_command_for_standalone(
+                &orchestrator,
+                cache,
+                &genv,
+                env,
+                command.clone(),
+            );
+            match result {
+                Ok((response, json_data)) => {
+                    let mapped = Ok(((), response, json_data));
+                    match wrap_ephemeral_handler(
+                        &genv,
+                        &request_id,
+                        &client_context,
+                        &cmd_str,
+                        || mapped,
+                    ) {
+                        Ok(()) | Err(EphemeralWrapError::SendFailed) => {}
+                        Err(EphemeralWrapError::Canceled) => {}
+                    }
+                    WorkloadOutcome::Completed
+                }
+                Err(WorkloadCanceled) => {
+                    flow_hh_logger::info!(
+                        "Command successfully canceled. Requeuing the same command after recheck."
+                    );
+                    WorkloadOutcome::RetryAfterRecheck
+                }
             }
-            env
-        });
+        },
+    );
     flow_server_env::workload_stream::Workload {
         workload_should_be_cancelled,
         workload_handler,
@@ -4175,6 +4231,7 @@ fn handle_nonparallelizable_ephemeral(
 }
 
 fn handle_ephemeral_immediate_command(
+    orchestrator: &ServerOrchestratorHandle,
     command: server_prot::request::Command,
 ) -> (server_prot::response::Response, Option<lsp_prot::Json>) {
     match command {
@@ -4183,7 +4240,13 @@ fn handle_ephemeral_immediate_command(
             focus,
             missed_changes,
             changed_mergebase,
-        } => handle_force_recheck(files, focus, missed_changes, changed_mergebase),
+        } => handle_force_recheck(
+            orchestrator,
+            files,
+            focus,
+            missed_changes,
+            changed_mergebase,
+        ),
         _ => unreachable!(
             "unexpected immediate ephemeral command: {}",
             server_prot::request::to_string(&command)
@@ -4193,6 +4256,7 @@ fn handle_ephemeral_immediate_command(
 
 pub fn enqueue_or_handle_ephemeral(
     genv: &Arc<server_env::Genv>,
+    orchestrator: &ServerOrchestratorHandle,
     (request_id, command_with_context): (monitor_prot::RequestId, ServerCommandWithContext),
 ) {
     let ServerCommandWithContext {
@@ -4211,7 +4275,7 @@ pub fn enqueue_or_handle_ephemeral(
                 &request_id,
                 &client_context,
                 &cmd_str,
-                move || handle_ephemeral_immediate_command(command),
+                move || handle_ephemeral_immediate_command(orchestrator, command),
             );
             match _result {
                 Ok(()) | Err(()) => {}
@@ -4221,23 +4285,25 @@ pub fn enqueue_or_handle_ephemeral(
             let queued_client_context = client_context.clone();
             let workload = handle_parallelizable_ephemeral(
                 genv.clone(),
+                orchestrator.clone(),
                 request_id.clone(),
                 queued_client_context,
                 cmd_str.clone(),
                 command,
             );
-            server_monitor_listener_state::push_new_parallelizable_workload(&cmd_str, workload);
+            orchestrator.push_parallelizable_workload(&cmd_str, workload);
         }
         CommandHandler::HandleNonparallelizable => {
             let queued_client_context = client_context.clone();
             let workload = handle_nonparallelizable_ephemeral(
                 genv.clone(),
+                orchestrator.clone(),
                 request_id,
                 queued_client_context,
                 cmd_str.clone(),
                 command,
             );
-            server_monitor_listener_state::push_new_workload(&cmd_str, workload);
+            orchestrator.push_workload(&cmd_str, workload);
         }
     }
 }
@@ -4399,71 +4465,6 @@ fn wrap_persistent_handler<T: Default>(
     let ret = send_persistent_response(client_id, profiling.clone(), result);
     send_command_summary(duration, &lsp_prot::string_of_request(&request));
     Ok(ret)
-}
-
-fn handle_parallelizable_persistent_unsafe(
-    _name: &str,
-) -> ((), lsp_prot::Response, lsp_prot::Metadata) {
-    (
-        (),
-        lsp_prot::Response::LspFromServer(None),
-        lsp_prot::empty_metadata(),
-    )
-}
-
-fn handle_parallelizable_persistent(
-    genv: &'static server_env::Genv,
-    client_id: lsp_prot::ClientId,
-    request: lsp_prot::RequestWithMetadata,
-    workload: PersistentParallelizableWorkload,
-) -> flow_server_env::workload_stream::ParallelizableWorkload {
-    let request_for_cancel = request.0.clone();
-    let parallelizable_workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
-        Box::new(move || cancelled_request_id_opt(&request_for_cancel).is_some());
-    let parallelizable_workload_handler: flow_server_env::workload_stream::ParallelizableWorkloadHandler = Box::new(
-        move |env: &server_env::Env, transaction: &Arc<flow_heap::parsing_heaps::Transaction>| {
-            let _result: Result<(), WorkloadCanceled> =
-                wrap_persistent_handler(&genv.options, client_id, request, (), || {
-                    let (response, metadata) = workload(env, transaction)?;
-                    Ok(((), response, metadata))
-                });
-        },
-    );
-    flow_server_env::workload_stream::ParallelizableWorkload {
-        parallelizable_workload_should_be_cancelled,
-        parallelizable_workload_handler,
-    }
-}
-
-fn handle_nonparallelizable_persistent_unsafe(
-    _genv: &server_env::Genv,
-    _env: server_env::EnvRef,
-) -> server_env::EnvRef {
-    _env
-}
-
-fn handle_nonparallelizable_persistent(
-    genv: &'static server_env::Genv,
-    client_id: lsp_prot::ClientId,
-    request: lsp_prot::RequestWithMetadata,
-    workload: PersistentNonparallelizableWorkload,
-) -> flow_server_env::workload_stream::Workload {
-    let request_for_cancel = request.0.clone();
-    let workload_should_be_cancelled: Box<dyn Fn() -> bool + Send> =
-        Box::new(move || cancelled_request_id_opt(&request_for_cancel).is_some());
-    let workload_handler: flow_server_env::workload_stream::WorkloadHandler =
-        Box::new(move |env: server_env::EnvRef| {
-            let _: Result<(), WorkloadCanceled> =
-                wrap_persistent_handler(&genv.options, client_id, request, (), || {
-                    let (response, metadata) = workload(&env)?;
-                    Ok(((), response, metadata))
-                });
-            env
-        });
-    flow_server_env::workload_stream::Workload {
-        workload_should_be_cancelled,
-        workload_handler,
-    }
 }
 
 fn did_open(env: &server_env::Env, client_id: lsp_prot::ClientId) {
@@ -4694,6 +4695,7 @@ fn handle_persistent_did_change_configuration_notification(
 }
 
 fn handle_persistent_get_def(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -4714,6 +4716,7 @@ fn handle_persistent_get_def(
     let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
     let (result, extra_data) = get_def(
+        cache,
         options,
         env,
         type_parse_artifacts_cache.as_ref(),
@@ -4775,6 +4778,7 @@ fn loc_to_vscode_linked_location_in_markdown(
 }
 
 fn handle_persistent_infer_type(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -4811,6 +4815,7 @@ fn handle_persistent_infer_type(
         no_typed_ast_for_imports: false,
     };
     let (result, extra_data) = infer_type(
+        cache,
         options,
         env,
         type_parse_artifacts_cache.as_ref(),
@@ -4948,6 +4953,7 @@ fn handle_persistent_infer_type(
 }
 
 fn handle_persistent_code_action_request(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -4956,7 +4962,8 @@ fn handle_persistent_code_action_request(
     params: &lsp_types::CodeActionParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (result, extra_data) = find_code_actions(options, env, transaction, client_id, params);
+    let (result, extra_data) =
+        find_code_actions(cache, options, env, transaction, client_id, params);
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok(code_actions) => {
@@ -4969,6 +4976,7 @@ fn handle_persistent_code_action_request(
 }
 
 fn handle_persistent_autocomplete_lsp(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5020,6 +5028,7 @@ fn handle_persistent_autocomplete_lsp(
         })
         .unwrap_or(false);
     let (result, extra_data) = autocomplete(
+        cache,
         options,
         env,
         transaction,
@@ -5096,6 +5105,7 @@ fn handle_persistent_autocomplete_lsp(
 }
 
 fn handle_persistent_signaturehelp_lsp(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5132,6 +5142,7 @@ fn handle_persistent_signaturehelp_lsp(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &path);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
@@ -5307,6 +5318,7 @@ fn handle_persistent_workspace_symbol(
 }
 
 fn get_file_artifacts(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5335,6 +5347,7 @@ fn get_file_artifacts(
                 let intermediate_result =
                     || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
                 let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                    cache,
                     options,
                     env.all_unordered_libs.dupe(),
                     type_parse_artifacts_cache.as_ref(),
@@ -5434,6 +5447,7 @@ fn find_local_references<'cx>(
 }
 
 fn map_local_find_references_results<T>(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5443,6 +5457,7 @@ fn map_local_find_references_results<T>(
     file_input: Option<&FileInput>,
 ) -> (Result<Vec<T>, String>, Option<lsp_prot::Json>) {
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
+        cache,
         options,
         env,
         transaction.clone(),
@@ -5486,6 +5501,8 @@ type RefsToLspResult = Box<
 >;
 
 fn handle_global_find_references(
+    orchestrator: &ServerOrchestratorHandle,
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5498,6 +5515,7 @@ fn handle_global_find_references(
     text_doc_position: &lsp_types::TextDocumentPositionParams,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
+        cache,
         options,
         env,
         transaction.clone(),
@@ -5657,6 +5675,7 @@ fn handle_global_find_references(
                         kind,
                     };
                     server_monitor_listener_state::push_global_find_ref_request(
+                        orchestrator,
                         def_locs,
                         request,
                         client_id,
@@ -5673,6 +5692,8 @@ fn handle_global_find_references(
 }
 
 fn handle_persistent_find_references(
+    orchestrator: &ServerOrchestratorHandle,
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5709,6 +5730,8 @@ fn handle_persistent_find_references(
         },
     );
     handle_global_find_references(
+        orchestrator,
+        cache,
         options,
         env,
         transaction,
@@ -5723,6 +5746,7 @@ fn handle_persistent_find_references(
 }
 
 fn handle_persistent_document_highlight(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5743,6 +5767,7 @@ fn handle_persistent_document_highlight(
             })
         };
     let (result, extra_data) = map_local_find_references_results(
+        cache,
         options,
         env,
         transaction,
@@ -5763,6 +5788,7 @@ fn handle_persistent_document_highlight(
 }
 
 fn handle_persistent_prepare_rename(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5772,8 +5798,15 @@ fn handle_persistent_prepare_rename(
     file_input: Option<&FileInput>,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (file_artifacts_opt, extra_parse_data) =
-        get_file_artifacts(options, env, transaction, client_id, params, file_input);
+    let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
+        cache,
+        options,
+        env,
+        transaction,
+        client_id,
+        params,
+        file_input,
+    );
     match file_artifacts_opt {
         Err(reason) => {
             let metadata = with_data(
@@ -5806,6 +5839,8 @@ fn handle_persistent_prepare_rename(
 }
 
 fn handle_persistent_rename(
+    orchestrator: &ServerOrchestratorHandle,
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5888,6 +5923,8 @@ fn handle_persistent_rename(
         },
     );
     handle_global_find_references(
+        orchestrator,
+        cache,
         options,
         env,
         transaction,
@@ -5902,6 +5939,7 @@ fn handle_persistent_rename(
 }
 
 fn handle_persistent_coverage(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -5948,6 +5986,7 @@ fn handle_persistent_coverage(
             let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
                 .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
             let (result, extra_data) = coverage(
+                cache,
                 options,
                 env,
                 type_parse_artifacts_cache.as_ref(),
@@ -6026,6 +6065,7 @@ fn handle_persistent_coverage(
 }
 
 fn handle_persistent_llm_context(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6064,6 +6104,7 @@ fn handle_persistent_llm_context(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
@@ -6172,6 +6213,7 @@ fn send_workspace_edit(
 }
 
 fn handle_persistent_add_missing_imports_command(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6180,7 +6222,7 @@ fn handle_persistent_add_missing_imports_command(
     text_document: &lsp_types::TextDocumentIdentifier,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let edits = add_missing_imports(options, env, transaction, client_id, text_document);
+    let edits = add_missing_imports(cache, options, env, transaction, client_id, text_document);
     match edits {
         Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
         Ok(ref e) if e.is_empty() => {
@@ -6323,6 +6365,7 @@ fn auto_close_jsx_handler(
 }
 
 fn prepare_document_paste(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6348,6 +6391,7 @@ fn prepare_document_paste(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 type_parse_artifacts_cache.as_ref(),
@@ -6472,6 +6516,7 @@ fn provide_document_paste(
 }
 
 fn handle_persistent_prepare_document_paste(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6481,7 +6526,7 @@ fn handle_persistent_prepare_document_paste(
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (imports, extra_data) =
-        prepare_document_paste(options, env, transaction, client_id, params);
+        prepare_document_paste(cache, options, env, transaction, client_id, params);
     let metadata = with_data(extra_data, metadata);
     let imports_lsp: Vec<lsp::document_paste::ImportItem> = imports
         .into_iter()
@@ -6717,6 +6762,7 @@ fn handle_result_from_client(
 }
 
 fn live_diagnostics_of_uri(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6781,6 +6827,7 @@ fn live_diagnostics_of_uri(
                                         persistent_connection::type_parse_artifacts_cache(&client)
                                     });
                                 type_parse_artifacts_with_cache(
+                                    cache,
                                     options,
                                     env.all_unordered_libs.dupe(),
                                     type_parse_artifacts_cache.as_ref(),
@@ -6886,6 +6933,7 @@ fn live_diagnostics_of_uri(
 }
 
 fn handle_live_errors_request(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6897,15 +6945,16 @@ fn handle_live_errors_request(
         return live_errors_canceled_response(uri, metadata);
     }
 
-    let ret = match live_diagnostics_of_uri(options, env, transaction, client_id, uri, metadata) {
-        (Err((e, _file_input)), metadata) => {
-            (lsp_prot::Response::LiveErrorsResponse(Err(e)), metadata)
-        }
-        (Ok(diagnostics), metadata) => (
-            lsp_prot::Response::LiveErrorsResponse(Ok(diagnostics)),
-            metadata,
-        ),
-    };
+    let ret =
+        match live_diagnostics_of_uri(cache, options, env, transaction, client_id, uri, metadata) {
+            (Err((e, _file_input)), metadata) => {
+                (lsp_prot::Response::LiveErrorsResponse(Err(e)), metadata)
+            }
+            (Ok(diagnostics), metadata) => (
+                lsp_prot::Response::LiveErrorsResponse(Ok(diagnostics)),
+                metadata,
+            ),
+        };
 
     if is_latest_live_errors_metadata(uri, &ret.1) {
         let mut map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
@@ -6918,6 +6967,7 @@ fn handle_live_errors_request(
 }
 
 fn handle_persistent_text_document_diagnostics_lsp(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
@@ -6928,6 +6978,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let uri = &params.text_document.uri;
     let (result, metadata) = live_diagnostics_of_uri(
+        cache,
         options,
         env,
         transaction.clone(),
@@ -6944,7 +6995,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
             LspResult::TextDocumentDiagnosticsResult(live_diagnostics),
         ),
         Err((_failure, file_input)) => {
-            match errors_of_file(options, env, transaction, false, &file_input) {
+            match errors_of_file(cache, options, env, transaction, false, &file_input) {
                 Err(_) => LspMessage::ResponseMessage(
                     id,
                     LspResult::TextDocumentDiagnosticsResult(vec![]),
@@ -6978,10 +7029,10 @@ fn mk_parallelizable_persistent(
 ) -> PersistentCommandHandler {
     let wait_for_recheck = options.wait_for_recheck;
     if wait_for_recheck {
-        PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
+        PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env, cache| {
             let transaction = flow_heap::parsing_heaps::ActiveTransaction::new(env.heap.dupe());
 
-            f(env, &transaction.handle())
+            f(env, &transaction.handle(), cache)
         }))
     } else {
         PersistentCommandHandler::HandleParallelizablePersistent(f)
@@ -6990,6 +7041,7 @@ fn mk_parallelizable_persistent(
 
 fn get_persistent_handler(
     genv: &Arc<server_env::Genv>,
+    orchestrator: &ServerOrchestratorHandle,
     client_id: lsp_prot::ClientId,
     request: &lsp_prot::RequestWithMetadata,
 ) -> PersistentCommandHandler {
@@ -7017,9 +7069,9 @@ fn get_persistent_handler(
     match request_inner {
         lsp_prot::Request::Subscribe => {
             let metadata = metadata.clone();
-            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                Ok(handle_persistent_subscribe(client_id, metadata, env))
-            }))
+            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                move |env, _cache| Ok(handle_persistent_subscribe(client_id, metadata, env)),
+            ))
         }
 
         lsp_prot::Request::LspToServer(LspMessage::NotificationMessage(
@@ -7036,11 +7088,13 @@ fn get_persistent_handler(
             if did_anything_change {
                 enqueue_did_open_files(&files);
                 // This mutates env, so it can't run in parallel
-                PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                    Ok(handle_persistent_did_open_notification(
-                        client_id, metadata, env,
-                    ))
-                }))
+                PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                    move |env, _cache| {
+                        Ok(handle_persistent_did_open_notification(
+                            client_id, metadata, env,
+                        ))
+                    },
+                ))
             } else {
                 PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
                     handle_persistent_did_open_notification_no_op(metadata)
@@ -7080,11 +7134,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             // This mutates env, so it can't run in parallel
             if did_anything_change {
-                PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                    Ok(handle_persistent_did_close_notification(
-                        client_id, metadata, env,
-                    ))
-                }))
+                PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                    move |env, _cache| {
+                        Ok(handle_persistent_did_close_notification(
+                            client_id, metadata, env,
+                        ))
+                    },
+                ))
             } else {
                 PersistentCommandHandler::HandlePersistentImmediately(Box::new(move || {
                     handle_persistent_did_close_notification_no_op(metadata)
@@ -7105,9 +7161,9 @@ fn get_persistent_handler(
                     ));
             }
             let metadata = metadata.clone();
-            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |_env| {
-                Ok(handle_persistent_cancel_notification(id, metadata))
-            }))
+            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                move |_env, _cache| Ok(handle_persistent_cancel_notification(id, metadata)),
+            ))
         }
 
         lsp_prot::Request::LspToServer(LspMessage::NotificationMessage(
@@ -7134,8 +7190,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     handle_persistent_get_def(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7163,8 +7220,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     handle_persistent_infer_type(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7188,8 +7246,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_code_action_request(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7214,8 +7273,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     handle_persistent_autocomplete_lsp(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7243,8 +7303,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_signaturehelp_lsp(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7268,8 +7329,9 @@ fn get_persistent_handler(
             let options_arc = Arc::new(options.clone());
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_text_document_diagnostics_lsp(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7296,8 +7358,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_document_highlight(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7320,18 +7383,23 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let committed_heap = committed_heap.dupe();
-            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                let transaction = ActiveTransaction::new(committed_heap.dupe());
-                Ok(handle_persistent_find_references(
-                    &options_arc,
-                    env,
-                    transaction.handle(),
-                    client_id,
-                    id,
-                    &params,
-                    metadata,
-                ))
-            }))
+            let orchestrator = orchestrator.clone();
+            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                move |env, cache| {
+                    let transaction = ActiveTransaction::new(committed_heap.dupe());
+                    Ok(handle_persistent_find_references(
+                        &orchestrator,
+                        cache,
+                        &options_arc,
+                        env,
+                        transaction.handle(),
+                        client_id,
+                        id,
+                        &params,
+                        metadata,
+                    ))
+                },
+            ))
         }
 
         lsp_prot::Request::LspToServer(LspMessage::RequestMessage(
@@ -7345,8 +7413,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_prepare_rename(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7369,18 +7438,23 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let options_arc = Arc::new(genv.options.clone());
             let committed_heap = committed_heap.dupe();
-            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                let transaction = ActiveTransaction::new(committed_heap.dupe());
-                Ok(handle_persistent_rename(
-                    &options_arc,
-                    env,
-                    transaction.handle(),
-                    client_id,
-                    id,
-                    &params,
-                    metadata,
-                ))
-            }))
+            let orchestrator = orchestrator.clone();
+            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                move |env, cache| {
+                    let transaction = ActiveTransaction::new(committed_heap.dupe());
+                    Ok(handle_persistent_rename(
+                        &orchestrator,
+                        cache,
+                        &options_arc,
+                        env,
+                        transaction.handle(),
+                        client_id,
+                        id,
+                        &params,
+                        metadata,
+                    ))
+                },
+            ))
         }
 
         lsp_prot::Request::LspToServer(LspMessage::RequestMessage(
@@ -7393,7 +7467,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, _transaction| {
+                Box::new(move |env, _transaction, _cache| {
                     Ok(handle_persistent_workspace_symbol(
                         &options_arc,
                         env,
@@ -7417,8 +7491,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     handle_persistent_coverage(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7438,7 +7513,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, _cache| {
                     let root = options_arc.root.display().to_string();
                     let transaction = transaction.dupe();
                     let items = collect_rage(&options_arc, env, transaction.as_ref(), None)
@@ -7459,7 +7534,9 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |_env, _transaction| Ok(handle_persistent_ping(id, metadata))),
+                Box::new(move |_env, _transaction, _cache| {
+                    Ok(handle_persistent_ping(id, metadata))
+                }),
             )
         }
 
@@ -7490,8 +7567,9 @@ fn get_persistent_handler(
                             let options_arc = genv.options.clone();
                             mk_parallelizable_persistent(
                                 options,
-                                Box::new(move |env, transaction| {
+                                Box::new(move |env, transaction, cache| {
                                     Ok(handle_persistent_add_missing_imports_command(
+                                        cache,
                                         &options_arc,
                                         env,
                                         transaction.dupe(),
@@ -7522,7 +7600,7 @@ fn get_persistent_handler(
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
                             PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
-                                move |env| {
+                                move |env, _cache| {
                                     Ok(handle_persistent_organize_imports_command(
                                         &options_arc,
                                         env,
@@ -7555,7 +7633,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, _transaction| {
+                Box::new(move |env, _transaction, _cache| {
                     Ok(handle_persistent_auto_close_jsx(
                         &options_arc,
                         env,
@@ -7578,8 +7656,9 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_prepare_document_paste(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7601,17 +7680,19 @@ fn get_persistent_handler(
             let params = params.clone();
             let options_arc = genv.options.clone();
             let committed_heap = committed_heap.dupe();
-            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env| {
-                let transaction = ActiveTransaction::new(committed_heap.dupe());
-                Ok(handle_persistent_provide_document_paste_edits(
-                    &options_arc,
-                    env,
-                    transaction.handle(),
-                    id,
-                    &params,
-                    metadata,
-                ))
-            }))
+            PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(
+                move |env, _cache| {
+                    let transaction = ActiveTransaction::new(committed_heap.dupe());
+                    Ok(handle_persistent_provide_document_paste_edits(
+                        &options_arc,
+                        env,
+                        transaction.handle(),
+                        id,
+                        &params,
+                        metadata,
+                    ))
+                },
+            ))
         }
 
         lsp_prot::Request::LspToServer(LspMessage::RequestMessage(
@@ -7624,7 +7705,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, _transaction| {
+                Box::new(move |env, _transaction, _cache| {
                     Ok(handle_persistent_linked_editing_range(
                         &options_arc,
                         env,
@@ -7647,7 +7728,7 @@ fn get_persistent_handler(
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, _cache| {
                     Ok(handle_persistent_rename_file_imports(
                         &options_for_closure,
                         env,
@@ -7671,8 +7752,9 @@ fn get_persistent_handler(
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_llm_context(
+                        cache,
                         &options_for_closure,
                         env,
                         transaction.dupe(),
@@ -7721,8 +7803,9 @@ fn get_persistent_handler(
             let options_arc = Arc::new(options.clone());
             mk_parallelizable_persistent(
                 options,
-                Box::new(move |env, transaction| {
+                Box::new(move |env, transaction, cache| {
                     Ok(handle_live_errors_request(
+                        cache,
                         &options_arc,
                         env,
                         transaction.dupe(),
@@ -7802,83 +7885,92 @@ fn handle_persistent_immediately(
 
 pub fn enqueue_persistent(
     genv: &Arc<server_env::Genv>,
+    orchestrator: &ServerOrchestratorHandle,
     client_id: lsp_prot::ClientId,
     request: lsp_prot::RequestWithMetadata,
 ) {
     let name = lsp_prot::string_of_request(&request.0);
-    match get_persistent_handler(genv, client_id, &request) {
+    match get_persistent_handler(genv, orchestrator, client_id, &request) {
         PersistentCommandHandler::HandlePersistentImmediately(workload) => {
             handle_persistent_immediately(genv, client_id, request, workload);
         }
         PersistentCommandHandler::HandleParallelizablePersistent(workload) => {
             let pw = mk_parallelizable_persistent_workload(
                 genv.clone(),
+                orchestrator.clone(),
                 client_id,
                 request,
                 name.clone(),
                 workload,
             );
-            server_monitor_listener_state::push_new_parallelizable_workload(&name, pw);
+            orchestrator.push_parallelizable_workload(&name, pw);
         }
         PersistentCommandHandler::HandleNonparallelizablePersistent(workload) => {
             let w = mk_nonparallelizable_persistent_workload(
                 genv.clone(),
+                orchestrator.clone(),
                 client_id,
                 request,
                 workload,
             );
-            server_monitor_listener_state::push_new_workload(&name, w);
+            orchestrator.push_workload(&name, w);
         }
     }
 }
 
 fn mk_parallelizable_persistent_workload(
     genv: Arc<server_env::Genv>,
+    orchestrator: ServerOrchestratorHandle,
     client_id: lsp_prot::ClientId,
     request: lsp_prot::RequestWithMetadata,
-    name: String,
+    _name: String,
     workload: PersistentParallelizableWorkload,
 ) -> flow_server_env::workload_stream::ParallelizableWorkload {
     let request_for_cancel = request.0.clone();
     let options = genv.options.clone();
     let request_for_handler = request.clone();
     let genv_for_handler = genv.clone();
-    let name_for_handler = name.clone();
+    let orchestrator_for_handler = orchestrator.clone();
+    let mut workload = Some(workload);
     flow_server_env::workload_stream::ParallelizableWorkload {
         parallelizable_workload_should_be_cancelled: Box::new(move || {
             cancelled_request_id_opt(&request_for_cancel).is_some()
         }),
         parallelizable_workload_handler: Box::new(
             move |env: &server_env::Env,
-                  transaction: &Arc<flow_heap::parsing_heaps::Transaction>| {
+                  transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
+                  cache: &CheckContentsCache| {
+                let workload = match workload.take() {
+                    Some(workload) => workload,
+                    None => match get_persistent_handler(
+                        &genv_for_handler,
+                        &orchestrator_for_handler,
+                        client_id,
+                        &request_for_handler,
+                    ) {
+                        PersistentCommandHandler::HandleParallelizablePersistent(workload) => {
+                            workload
+                        }
+                        _ => return WorkloadOutcome::Completed,
+                    },
+                };
                 let result: Result<(), WorkloadCanceled> = wrap_persistent_handler(
                     &options,
                     client_id,
                     request_for_handler.clone(),
                     (),
                     || {
-                        let (response, metadata) = workload(env, transaction)?;
+                        let (response, metadata) = workload(env, transaction, cache)?;
                         Ok(((), response, metadata))
                     },
                 );
-                if let Err(WorkloadCanceled) = result {
-                    flow_hh_logger::info!(
-                        "Command successfully canceled. Requeuing the command for after the next recheck."
-                    );
-                    if let PersistentCommandHandler::HandleParallelizablePersistent(new_workload) =
-                        get_persistent_handler(&genv_for_handler, client_id, &request_for_handler)
-                    {
-                        let recreated = mk_parallelizable_persistent_workload(
-                            genv_for_handler.clone(),
-                            client_id,
-                            request_for_handler.clone(),
-                            name_for_handler.clone(),
-                            new_workload,
+                match result {
+                    Ok(()) => WorkloadOutcome::Completed,
+                    Err(WorkloadCanceled) => {
+                        flow_hh_logger::info!(
+                            "Command successfully canceled. Requeuing the same command after recheck."
                         );
-                        server_monitor_listener_state::defer_parallelizable_workload(
-                            &name_for_handler,
-                            recreated,
-                        );
+                        WorkloadOutcome::RetryAfterRecheck
                     }
                 }
             },
@@ -7888,59 +7980,39 @@ fn mk_parallelizable_persistent_workload(
 
 fn mk_nonparallelizable_persistent_workload(
     genv: Arc<server_env::Genv>,
+    orchestrator: ServerOrchestratorHandle,
     client_id: lsp_prot::ClientId,
     request: lsp_prot::RequestWithMetadata,
     workload: PersistentNonparallelizableWorkload,
 ) -> flow_server_env::workload_stream::Workload {
     let request_for_cancel = request.0.clone();
-    let options = genv.options.clone();
-    let request_for_handler = request.clone();
-    let genv_for_handler = genv.clone();
+    let mut workload = Some(workload);
     flow_server_env::workload_stream::Workload {
         workload_should_be_cancelled: Box::new(move || {
             cancelled_request_id_opt(&request_for_cancel).is_some()
         }),
-        workload_handler: Box::new(move |env: server_env::EnvRef| {
-            let mut env = env;
-            let mut current_workload = Some(workload);
-            loop {
-                let workload = current_workload.take().expect("loop invariant");
-                let result: Result<(), WorkloadCanceled> = wrap_persistent_handler(
-                    &options,
-                    client_id,
-                    request_for_handler.clone(),
-                    (),
-                    || {
-                        let (response, metadata) = workload(&env)?;
-                        Ok(((), response, metadata))
-                    },
-                );
-                match result {
-                    Ok(()) => return env,
-                    Err(WorkloadCanceled) => {
-                        flow_hh_logger::info!(
-                            "Command successfully canceled. Running a recheck before restarting the command"
-                        );
-                        // let%lwt (recheck_profiling, env) = Rechecker.recheck_loop genv env in
-                        let (_recheck_profiling, new_env) =
-                            flow_server_rechecker::rechecker::recheck_loop(
-                                &genv_for_handler,
-                                env,
-                                &genv_for_handler.committed_heap,
-                            );
-                        env = new_env;
-                        flow_hh_logger::info!("Now restarting the command");
-                        match get_persistent_handler(
-                            &genv_for_handler,
-                            client_id,
-                            &request_for_handler,
-                        ) {
-                            PersistentCommandHandler::HandleNonparallelizablePersistent(w) => {
-                                current_workload = Some(w);
-                            }
-                            _ => return env,
-                        }
+        workload_handler: Box::new(move |env, _transaction, cache| {
+            let workload = match workload.take() {
+                Some(workload) => workload,
+                None => match get_persistent_handler(&genv, &orchestrator, client_id, &request) {
+                    PersistentCommandHandler::HandleNonparallelizablePersistent(workload) => {
+                        workload
                     }
+                    _ => return WorkloadOutcome::Completed,
+                },
+            };
+            let result =
+                wrap_persistent_handler(&genv.options, client_id, request.clone(), (), || {
+                    let (response, metadata) = workload(env, cache)?;
+                    Ok(((), response, metadata))
+                });
+            match result {
+                Ok(()) => WorkloadOutcome::Completed,
+                Err(WorkloadCanceled) => {
+                    flow_hh_logger::info!(
+                        "Command successfully canceled. Requeuing the same command after recheck."
+                    );
+                    WorkloadOutcome::RetryAfterRecheck
                 }
             }
         }),

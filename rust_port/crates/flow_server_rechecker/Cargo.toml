@@ -28,4 +28,3 @@ flow_services_references = { path = "../flow_services_references" }
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }
 serde_json = { version = "1.0.151", features = ["alloc", "float_roundtrip", "raw_value", "unbounded_depth"] }
-tokio = { version = "1.53.1", features = ["full", "test-util", "tracing"] }

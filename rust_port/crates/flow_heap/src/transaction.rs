@@ -47,6 +47,8 @@ use crate::resolved_requires::DependencyTarget;
 use crate::resolved_requires::ResolvedModule;
 use crate::resolved_requires::ResolvedRequires;
 
+pub type BeforeCompact<'a> = &'a dyn Fn();
+
 /// A shared handle to the heap snapshot owned by an [`ActiveTransaction`].
 ///
 /// Cloning this handle does not extend the active lifetime. After the `ActiveTransaction` is
@@ -204,13 +206,6 @@ impl CommittedHeap {
         (state.data.files.len() + state.data.haste_modules.len()) as i32
     }
 
-    pub fn set_on_compact(
-        &self,
-        on_compact: Arc<dyn Fn() -> Box<dyn FnOnce() + Send> + Send + Sync>,
-    ) {
-        *self.state.read_recursive().on_compact.write() = Some(on_compact);
-    }
-
     pub fn clear_reader_cache(&self) {
         self.state.read_recursive().reader_cache.clear();
     }
@@ -228,18 +223,11 @@ impl CommittedHeap {
         Transaction::heap_file_table(&state.data)
     }
 
+    // Saving frees nothing, so unlike a compaction it leaves every heap address a cache may be
+    // holding valid. Callers that want their caches emptied around a save do it themselves.
     pub fn save_heap(&self, writer: &mut impl Write) -> io::Result<()> {
         let state = self.state.read_recursive();
-        let finish_compaction = state
-            .on_compact
-            .read()
-            .as_ref()
-            .map(|on_compact| on_compact());
-        Transaction::write_heap(writer, &state.data)?;
-        if let Some(finish_compaction) = finish_compaction {
-            finish_compaction();
-        }
-        Ok(())
+        Transaction::write_heap(writer, &state.data)
     }
 
     pub fn save_heap_with_file_table(
@@ -248,16 +236,7 @@ impl CommittedHeap {
         files: &[FileKey],
     ) -> io::Result<()> {
         let state = self.state.read_recursive();
-        let finish_compaction = state
-            .on_compact
-            .read()
-            .as_ref()
-            .map(|on_compact| on_compact());
-        Transaction::write_heap_with_file_table(writer, &state.data, files)?;
-        if let Some(finish_compaction) = finish_compaction {
-            finish_compaction();
-        }
-        Ok(())
+        Transaction::write_heap_with_file_table(writer, &state.data, files)
     }
 
     pub fn load_heap(&self, reader: &mut impl Read) -> io::Result<()> {
@@ -447,55 +426,53 @@ impl CommittedHeap {
         self: &Arc<Self>,
         free_files: Vec<FileKey>,
         free_haste_modules: Vec<HasteModuleInfo>,
+        before_compact: BeforeCompact<'_>,
     ) {
-        let finish_compaction = self
-            .state
-            .read_recursive()
-            .on_compact
-            .read()
-            .as_ref()
-            .map(|callback| callback());
-        {
-            let mut state = self.state.write();
-            let data = &mut state.data;
-            for file in free_files {
-                let should_remove = data
-                    .files
-                    .get(&file)
-                    .is_some_and(|entry| Self::file_entry_is_free(data, &file, entry));
-                if should_remove {
-                    data.files.remove(&file);
-                    data.file_dependents.remove(&file);
-                }
-            }
-            for info in free_haste_modules {
-                let should_remove = data
-                    .haste_modules
-                    .get(&info)
-                    .is_some_and(|module| Self::haste_module_is_free(data, &info, module));
-                if should_remove {
-                    data.haste_modules.remove(&info);
-                    data.haste_dependents.remove(&info);
-                    data.haste_provider_candidates.remove(&info);
-                }
-            }
-            state.reader_cache.clear();
-            let mut gc_state = state.gc_state.lock();
-            gc_state.free_size = 0;
-            gc_state.new_alloc_size = 0;
-            gc_state.free_files.clear();
-            gc_state.free_haste_modules.clear();
+        if free_files.is_empty() && free_haste_modules.is_empty() {
+            return;
         }
-        if let Some(finish_compaction) = finish_compaction {
-            finish_compaction();
+        before_compact();
+        let mut state = self.state.write();
+        let data = &mut state.data;
+        for file in free_files {
+            let should_remove = data
+                .files
+                .get(&file)
+                .is_some_and(|entry| Self::file_entry_is_free(data, &file, entry));
+            if should_remove {
+                data.files.remove(&file);
+                data.file_dependents.remove(&file);
+            }
         }
+        for info in free_haste_modules {
+            let should_remove = data
+                .haste_modules
+                .get(&info)
+                .is_some_and(|module| Self::haste_module_is_free(data, &info, module));
+            if should_remove {
+                data.haste_modules.remove(&info);
+                data.haste_dependents.remove(&info);
+                data.haste_provider_candidates.remove(&info);
+            }
+        }
+        state.reader_cache.clear();
+        let mut gc_state = state.gc_state.lock();
+        gc_state.free_size = 0;
+        gc_state.new_alloc_size = 0;
+        gc_state.free_files.clear();
+        gc_state.free_haste_modules.clear();
     }
 
-    pub fn collect_slice(self: &Arc<Self>, work: usize) -> bool {
-        self.collect_slice_with_force(false, work)
+    pub fn collect_slice(self: &Arc<Self>, work: usize, before_compact: BeforeCompact<'_>) -> bool {
+        self.collect_slice_with_force(false, work, before_compact)
     }
 
-    fn collect_slice_with_force(self: &Arc<Self>, force: bool, work: usize) -> bool {
+    fn collect_slice_with_force(
+        self: &Arc<Self>,
+        force: bool,
+        work: usize,
+        before_compact: BeforeCompact<'_>,
+    ) -> bool {
         if self
             .state
             .read_recursive()
@@ -542,13 +519,13 @@ impl CommittedHeap {
             (is_idle, files, haste_modules)
         };
         if !compact_files.is_empty() || !compact_haste_modules.is_empty() {
-            self.compact_helper(compact_files, compact_haste_modules);
+            self.compact_helper(compact_files, compact_haste_modules, before_compact);
         }
         is_idle
     }
 
-    pub fn collect_full(self: &Arc<Self>) {
-        while !self.collect_slice_with_force(true, usize::MAX) {}
+    pub fn collect_full(self: &Arc<Self>, before_compact: BeforeCompact<'_>) {
+        while !self.collect_slice_with_force(true, usize::MAX, before_compact) {}
     }
 
     fn finish_cycle(self: &Arc<Self>) {
@@ -570,7 +547,7 @@ impl CommittedHeap {
         }
     }
 
-    pub fn compact(self: &Arc<Self>) {
+    pub fn compact(self: &Arc<Self>, before_compact: BeforeCompact<'_>) {
         assert_eq!(
             self.state
                 .read_recursive()
@@ -594,7 +571,7 @@ impl CommittedHeap {
                 std::mem::take(&mut gc_state.free_haste_modules),
             )
         };
-        self.compact_helper(files, haste_modules);
+        self.compact_helper(files, haste_modules, before_compact);
     }
 }
 
@@ -813,8 +790,7 @@ impl Transaction {
             self.overlay.is_empty(),
             "a released transaction with an overlay cannot be read"
         );
-        let detached = DetachedCommittedState::new(self.heap.read_arc_recursive());
-        CommittedStateAccess::Detached(detached)
+        CommittedStateAccess::Detached(DetachedCommittedState::new(self.heap.read_arc_recursive()))
     }
 
     pub(crate) fn with_committed_state<R>(

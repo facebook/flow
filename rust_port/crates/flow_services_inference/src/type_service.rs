@@ -56,7 +56,6 @@ use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::dependency_info::OverlayDependencyInfo;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
-use flow_server_env::persistent_connection;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_env::EnvRef;
 use flow_server_env::server_env::EnvTransaction;
@@ -97,6 +96,30 @@ use crate::recheck_stats;
 pub enum RecheckError {
     TooSlow,
     Canceled(Vec<FileKey>),
+}
+
+/// A completed recheck whose heap and environment changes have not yet been published.
+#[must_use = "a prepared recheck must be committed by the recheck thread"]
+pub struct PreparedRecheck {
+    env_transaction: EnvTransaction,
+    heap_transaction: ActiveTransaction,
+}
+
+impl PreparedRecheck {
+    pub fn commit(self) -> EnvRef {
+        self.env_transaction
+            .commit_with_transaction(self.heap_transaction)
+    }
+}
+
+fn prepare_recheck(
+    env_transaction: EnvTransaction,
+    heap_transaction: ActiveTransaction,
+) -> PreparedRecheck {
+    PreparedRecheck {
+        env_transaction,
+        heap_transaction,
+    }
 }
 
 fn check_recheck_canceled() -> Result<(), RecheckError> {
@@ -2062,29 +2085,18 @@ pub(crate) mod recheck {
     }
 }
 
-fn clear_caches() {
-    persistent_connection::clear_type_parse_artifacts_caches();
-    merge_service::check_contents_cache().borrow_mut().clear();
-}
-
 fn with_transaction<T>(
     name: &str,
     f: impl FnOnce(&mut side_effect_transaction::Transaction) -> T,
 ) -> T {
-    side_effect_transaction::with_transaction_sync(name, |transaction| {
-        side_effect_transaction::add(transaction, clear_caches, || {});
-        f(transaction)
-    })
+    side_effect_transaction::with_transaction_sync(name, f)
 }
 
 fn with_transaction_result<T, E>(
     name: &str,
     f: impl FnOnce(&mut side_effect_transaction::Transaction) -> Result<T, E>,
 ) -> Result<T, E> {
-    side_effect_transaction::with_transaction_result_sync(name, |transaction| {
-        side_effect_transaction::add(transaction, clear_caches, || {});
-        f(transaction)
-    })
+    side_effect_transaction::with_transaction_result_sync(name, f)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -2108,7 +2120,7 @@ pub(crate) fn recheck_impl(
 > {
     check_recheck_canceled()?;
     let (stats, record_recheck_time, find_ref_results, first_internal_error) =
-        match with_transaction_result("recheck", |side_effects| {
+        match side_effect_transaction::with_transaction_result_sync("recheck", |side_effects| {
             recheck::full(
                 pool,
                 transaction,
@@ -3580,7 +3592,7 @@ pub fn init(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn reinit(
+fn reinit(
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
@@ -3594,7 +3606,7 @@ pub fn reinit(
     Box<dyn FnOnce(&serde_json::Value)>,
     RecheckStats,
     FindRefResults,
-    EnvRef,
+    PreparedRecheck,
 )> {
     let (transaction, saved_state, updates_since_saved_state) =
         match load_saved_state(pool, committed_heap, options) {
@@ -3659,12 +3671,11 @@ pub fn reinit(
         changed_file_count: 0,
         top_cycle: None,
     };
-    let env = EnvTransaction::new(Arc::new(env)).commit_with_transaction(transaction);
-    Some((log_recheck_event, recheck_stats, Ok(vec![]), env))
+    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(env)), transaction);
+    Some((log_recheck_event, recheck_stats, Ok(vec![]), prepared))
 }
 
-#[allow(dead_code)]
-pub fn reinit_full_check(
+fn reinit_full_check(
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
@@ -3677,7 +3688,7 @@ pub fn reinit_full_check(
         Box<dyn FnOnce(&serde_json::Value)>,
         RecheckStats,
         FindRefResults,
-        EnvRef,
+        PreparedRecheck,
     ),
     RecheckError,
 > {
@@ -3685,22 +3696,25 @@ pub fn reinit_full_check(
     transaction.committed_heap().clear_reader_cache();
     flow_hh_logger::info!("Reiniting with a full check.");
     let env = {
-        let (env, _libs_ok) = with_transaction_result("partial-reinit", |_transaction| {
-            Ok::<_, std::convert::Infallible>(init_with_initial_state(
-                pool,
-                &transaction.handle(),
-                options,
-                || env.dependency_info.dupe(),
-                env.errors().duplicate_providers.clone(),
-                None,
-                Some(env.as_ref()),
-                env.files.dupe(),
-                env.unparsed.dupe(),
-                env.package_json_files.dupe(),
-                BTreeSet::new(),
-                env.errors().local_errors.clone(),
-            ))
-        })
+        let (env, _libs_ok) = side_effect_transaction::with_transaction_result_sync(
+            "partial-reinit",
+            |_transaction| {
+                Ok::<_, std::convert::Infallible>(init_with_initial_state(
+                    pool,
+                    &transaction.handle(),
+                    options,
+                    || env.dependency_info.dupe(),
+                    env.errors().duplicate_providers.clone(),
+                    None,
+                    Some(env.as_ref()),
+                    env.files.dupe(),
+                    env.unparsed.dupe(),
+                    env.package_json_files.dupe(),
+                    BTreeSet::new(),
+                    env.errors().local_errors.clone(),
+                ))
+            },
+        )
         .unwrap();
         env
     };
@@ -3727,8 +3741,8 @@ pub fn reinit_full_check(
         changed_file_count: 0,
         top_cycle: None,
     };
-    let env = EnvTransaction::new(Arc::new(env)).commit_with_transaction(transaction);
-    Ok((log_recheck_event, recheck_stats, Ok(vec![]), env))
+    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(env)), transaction);
+    Ok((log_recheck_event, recheck_stats, Ok(vec![]), prepared))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -3749,7 +3763,7 @@ pub fn recheck(
         Box<dyn FnOnce(&serde_json::Value)>,
         RecheckStats,
         FindRefResults,
-        EnvRef,
+        PreparedRecheck,
     ),
     RecheckError,
 > {
@@ -3783,12 +3797,8 @@ pub fn recheck(
                 will_be_checked_files,
                 &mut env_transaction,
             )?;
-            Ok((
-                log_recheck_event,
-                recheck_stats,
-                find_ref_results,
-                env_transaction.commit_with_transaction(heap_transaction),
-            ))
+            let prepared = prepare_recheck(env_transaction, heap_transaction);
+            Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
         }
     } else {
         let reinit_or_restart = |reason: &str,
@@ -3871,12 +3881,10 @@ pub fn recheck(
                 will_be_checked_files,
                 &mut env_transaction,
             ) {
-                Ok((log_recheck_event, recheck_stats, find_ref_results)) => Ok((
-                    log_recheck_event,
-                    recheck_stats,
-                    find_ref_results,
-                    env_transaction.commit_with_transaction(heap_transaction),
-                )),
+                Ok((log_recheck_event, recheck_stats, find_ref_results)) => {
+                    let prepared = prepare_recheck(env_transaction, heap_transaction);
+                    Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
+                }
                 Err(RecheckError::TooSlow) => {
                     drop(heap_transaction);
                     Ok(reinit_or_restart(

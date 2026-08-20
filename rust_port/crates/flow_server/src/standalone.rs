@@ -13,18 +13,17 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Condvar;
 use std::sync::Mutex;
-use std::sync::atomic::AtomicBool;
 use std::sync::atomic::AtomicUsize;
 use std::sync::atomic::Ordering;
 
 use dupe::Dupe;
+use flow_check_cache::CheckContentsCache;
 use flow_common::files;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_heap::heap_state::CommittedHeap;
-use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::file_key::FileKey;
 use flow_server_command_handler::command_handler;
 use flow_server_env::error_collator;
@@ -33,12 +32,17 @@ use flow_server_env::monitor_prot::FileWatcherMetadata;
 use flow_server_env::persistent_connection;
 use flow_server_env::server_env::EnvTransaction;
 use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_orchestrator;
 pub use flow_server_env::server_prot::response::LazyStats;
 use flow_server_env::server_socket_rpc;
 use flow_server_env::server_socket_rpc::SaveStateOut;
 use flow_server_env::server_socket_rpc::ServerRequest;
 use flow_server_env::server_socket_rpc::ServerResponse;
 use flow_server_env::server_status;
+use flow_server_env::workload_stream::ParallelizableWorkload;
+use flow_server_env::workload_stream::Workload;
+use flow_server_env::workload_stream::WorkloadHandler;
+use flow_server_env::workload_stream::WorkloadOutcome;
 use flow_server_files::server_files_js;
 use flow_server_rechecker::rechecker;
 use flow_services_inference::type_service;
@@ -72,7 +76,6 @@ pub fn start(options: Arc<Options>, flowconfig_name: String) {
 
 struct ServerState {
     env: Option<flow_server_env::server_env::EnvRef>,
-    env_generation: u64,
     init_done: bool,
     pending_recheck: bool,
     recheck_in_progress: bool,
@@ -220,7 +223,6 @@ impl FlowServer {
         let state = Arc::new((
             Mutex::new(ServerState {
                 env: None,
-                env_generation: 0,
                 init_done: false,
                 pending_recheck: false,
                 recheck_in_progress: false,
@@ -228,7 +230,8 @@ impl FlowServer {
             }),
             Condvar::new(),
         ));
-        let serial_workloads_allowed = Arc::new(AtomicBool::new(false));
+        let server_orchestrator = server_orchestrator::ServerOrchestrator::new();
+        let orchestrator = server_orchestrator.handle();
 
         let canceled_state = state.clone();
         crate::multi_worker::set_report_canceled_callback(move |total, finished| {
@@ -266,9 +269,9 @@ impl FlowServer {
         let init_pool_workers = self.pool.num_workers();
         let init_lock_path = lock_path.clone();
         let init_socket_path = socket_path.clone();
-        let init_serial_workloads_allowed = serial_workloads_allowed.clone();
 
         let init_pids_path = pids_path.clone();
+        let orchestrator_for_recheck = orchestrator.clone();
 
         std::thread::Builder::new()
             .stack_size(SERVER_THREAD_STACK_SIZE)
@@ -323,6 +326,7 @@ impl FlowServer {
                     );
                     flow_server_env::monitor_rpc::status_update(server_status::Event::FinishingUp);
 
+                    let _orchestrator_owner = server_orchestrator.start(env.dupe());
                     {
                         let (lock, cvar) = &*init_state;
                         let mut server_state = lock.lock().unwrap();
@@ -331,11 +335,8 @@ impl FlowServer {
                             persistent_connection::all_clients(),
                         );
                         server_state.env = Some(env);
-                        server_state.env_generation += 1;
                         server_state.init_done = true;
                         let (status, watcher_status) = current_persistent_status(&server_state);
-                        init_serial_workloads_allowed.store(true, Ordering::Release);
-                        server_monitor_listener_state::wake_workload_waiters();
                         cvar.notify_all();
                         persistent_connection::send_status(
                             status,
@@ -351,8 +352,8 @@ impl FlowServer {
                         &init_state,
                         &init_options,
                         &init_committed_heap,
+                        &orchestrator_for_recheck,
                         init_pool_workers,
-                        &init_serial_workloads_allowed,
                         &init_pids_path,
                         &init_lock_path,
                         &init_socket_path,
@@ -375,22 +376,6 @@ impl FlowServer {
             })
             .expect("failed to spawn init thread");
 
-        let workload_state = state.clone();
-        let workload_options = self.options.dupe();
-        let workload_committed_heap = self.committed_heap.dupe();
-        let workload_serial_workloads_allowed = serial_workloads_allowed.clone();
-        std::thread::Builder::new()
-            .stack_size(SERVER_THREAD_STACK_SIZE)
-            .spawn(move || {
-                process_persistent_workloads(
-                    &workload_state,
-                    &workload_options,
-                    &workload_committed_heap,
-                    &workload_serial_workloads_allowed,
-                );
-            })
-            .expect("failed to spawn persistent workload thread");
-
         let connection_slots = Arc::new(ConnectionSlots::new());
 
         for stream in listener.incoming() {
@@ -411,6 +396,7 @@ impl FlowServer {
                     let pids_path = pids_path.clone();
                     let lock_path = lock_path.clone();
                     let socket_path = socket_path.clone();
+                    let orchestrator = orchestrator.clone();
                     std::thread::Builder::new()
                         .stack_size(CONNECTION_THREAD_STACK_SIZE)
                         .spawn(move || {
@@ -419,6 +405,7 @@ impl FlowServer {
                                 &state,
                                 &options,
                                 &committed_heap,
+                                &orchestrator,
                                 pool_workers,
                                 stream,
                                 &pids_path,
@@ -440,110 +427,61 @@ enum RecheckOutcome {
     Ok,
 }
 
-fn process_persistent_workloads(
-    state: &Arc<(Mutex<ServerState>, Condvar)>,
-    _options: &Arc<Options>,
-    _committed_heap: &Arc<CommittedHeap>,
-    serial_workloads_allowed: &Arc<AtomicBool>,
-) -> ! {
-    loop {
-        server_monitor_listener_state::wait_for_workload();
+enum CommandAttempt<T> {
+    Completed(T),
+    RetryAfterRecheck,
+}
 
-        let (run_serial, run_parallel, pending_recheck) = {
-            let (lock, cvar) = &**state;
-            let server_state = lock.lock().unwrap();
-            let server_state = cvar
-                .wait_while(server_state, |s| {
-                    (!s.init_done || s.env.is_none() || s.should_shutdown)
-                        && !serial_workloads_allowed.load(Ordering::Acquire)
-                })
-                .unwrap();
-            if server_state.should_shutdown {
-                flow_common_exit_status::exit(
-                    flow_common_exit_status::FlowExitStatus::KilledByMonitor,
-                );
-            }
-            (
-                server_state.init_done
-                    && server_state.env.is_some()
-                    && !server_state.pending_recheck
-                    && !server_state.recheck_in_progress,
-                server_state.init_done
-                    && server_state.env.is_some()
-                    && server_state.recheck_in_progress,
-                server_state.pending_recheck && !server_state.recheck_in_progress,
-            )
-        };
-
-        if !run_serial {
-            if pending_recheck || !run_parallel {
-                let (lock, cvar) = &**state;
-                let server_state = lock.lock().unwrap();
-                drop(cvar.wait_while(server_state, |s| {
-                    s.pending_recheck && !s.recheck_in_progress && !s.should_shutdown
-                }));
-                continue;
-            }
-            let handled_parallelizable_workload = {
-                let (lock, _) = &**state;
-                let server_state = lock.lock().unwrap();
-                if let Some(env) = server_state.env.as_ref()
-                    && let Some(workload) =
-                        server_monitor_listener_state::pop_next_parallelizable_workload()
-                {
-                    // Keep the active transaction in the dispatcher scope.
-                    let transaction = ActiveTransaction::new(env.heap.dupe());
-                    (workload.parallelizable_workload_handler)(env, &transaction.handle());
-                    true
-                } else {
-                    false
+fn run_command<T: Send + 'static>(
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
+    name: &str,
+    parallelizable: bool,
+    mut command: impl FnMut(
+        &flow_server_env::server_env::Env,
+        &Arc<flow_heap::parsing_heaps::Transaction>,
+        &CheckContentsCache,
+    ) -> CommandAttempt<T>
+    + Send
+    + 'static,
+) -> T {
+    let (reply, receiver) = std::sync::mpsc::channel();
+    let mut reply = Some(reply);
+    let handler: WorkloadHandler = Box::new(
+        move |env: &flow_server_env::server_env::Env,
+              transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
+              cache: &CheckContentsCache| match command(env, transaction, cache) {
+            CommandAttempt::Completed(result) => {
+                if let Some(reply) = reply.take() {
+                    match reply.send(result) {
+                        Ok(()) => {}
+                        Err(std::sync::mpsc::SendError(_)) => {}
+                    }
                 }
-            };
-            if handled_parallelizable_workload {
-                continue;
+                WorkloadOutcome::Completed
             }
-            server_monitor_listener_state::wait_for_parallelizable_workload_or_stop(
-                serial_workloads_allowed,
-            );
-            continue;
-        }
-
-        let Some(workload) = server_monitor_listener_state::pop_next_workload() else {
-            continue;
-        };
-
-        let env = {
-            let (lock, cvar) = &**state;
-            let server_state = lock.lock().unwrap();
-            let mut server_state = cvar
-                .wait_while(server_state, |s| {
-                    !s.init_done
-                        || s.env.is_none()
-                        || s.pending_recheck
-                        || s.recheck_in_progress
-                        || s.should_shutdown
-                })
-                .unwrap();
-            if server_state.should_shutdown {
-                flow_common_exit_status::exit(
-                    flow_common_exit_status::FlowExitStatus::KilledByMonitor,
-                );
-            }
-            server_state.env.take().unwrap()
-        };
-
-        let env = workload(env);
-        let env = server_monitor_listener_state::update_env(env);
-        let (lock, cvar) = &**state;
-        let mut server_state = lock.lock().unwrap();
-        let env = flow_server_env::server_env::with_connections(
-            env,
-            persistent_connection::all_clients(),
+            CommandAttempt::RetryAfterRecheck => WorkloadOutcome::RetryAfterRecheck,
+        },
+    );
+    if parallelizable {
+        orchestrator.push_parallelizable_workload(
+            name,
+            ParallelizableWorkload {
+                parallelizable_workload_should_be_cancelled: Box::new(|| false),
+                parallelizable_workload_handler: handler,
+            },
         );
-        server_state.env = Some(env);
-        server_state.env_generation += 1;
-        cvar.notify_all();
+    } else {
+        orchestrator.push_workload(
+            name,
+            Workload {
+                workload_should_be_cancelled: Box::new(|| false),
+                workload_handler: handler,
+            },
+        );
     }
+    receiver
+        .recv()
+        .expect("the command executor should complete the command")
 }
 
 /// Stop handle for the recheck cancel monitor thread spawned by
@@ -611,18 +549,17 @@ fn do_rechecks(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Arc<Options>,
     committed_heap: &Arc<CommittedHeap>,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     pool_workers: usize,
 ) -> RecheckOutcome {
-    let pool = ThreadPool::with_thread_count(
+    let pool = Arc::new(ThreadPool::with_thread_count(
         flow_utils_concurrency::thread_pool::ThreadCount::NumThreads(
             std::num::NonZeroUsize::new(pool_workers).expect("pool_workers should be positive"),
         ),
-    );
-    let mut env = {
-        let (lock, _) = &**state;
-        let server_state = lock.lock().unwrap();
-        server_state.env.as_ref().unwrap().dupe()
-    };
+    ));
+    let snapshot = orchestrator.begin_recheck();
+    let mut env = snapshot.env;
+    let mut completed_recheck_epoch = snapshot.completed_recheck_epoch;
 
     loop {
         env = server_monitor_listener_state::update_env(env);
@@ -637,6 +574,7 @@ fn do_rechecks(
             &|| will_be_checked_files.clone(),
         );
         let server_monitor_listener_state::RecheckWorkload {
+            recheck_epoch,
             metadata:
                 FileWatcherMetadata {
                     changed_mergebase,
@@ -650,6 +588,7 @@ fn do_rechecks(
         } = workload;
         let did_change_mergebase = changed_mergebase.unwrap_or(false);
         let workload = server_monitor_listener_state::RecheckWorkload {
+            recheck_epoch,
             files_to_prioritize: files_to_prioritize.dupe(),
             files_to_recheck: files_to_recheck.dupe(),
             files_to_force: files_to_force.dupe(),
@@ -673,14 +612,15 @@ fn do_rechecks(
             && files_to_force.is_empty()
         {
             env = server_monitor_listener_state::update_env(env);
-            let (lock, cvar) = &**state;
-            let mut server_state = lock.lock().unwrap();
             env = flow_server_env::server_env::with_connections(
                 env,
                 persistent_connection::all_clients(),
             );
+            completed_recheck_epoch = completed_recheck_epoch.max(recheck_epoch);
+            orchestrator.finish_recheck(env.dupe(), completed_recheck_epoch);
+            let (lock, cvar) = &**state;
+            let mut server_state = lock.lock().unwrap();
             server_state.env = Some(env);
-            server_state.env_generation += 1;
             cvar.notify_all();
             return RecheckOutcome::Ok;
         }
@@ -727,8 +667,25 @@ fn do_rechecks(
         cancel_monitor.stop();
 
         match recheck_result {
-            Ok((log_recheck_event, recheck_stats, _find_ref_results, new_env)) => {
-                env = new_env;
+            Ok((log_recheck_event, recheck_stats, _find_ref_results, prepared)) => {
+                completed_recheck_epoch = completed_recheck_epoch.max(recheck_epoch);
+                env = orchestrator.commit_recheck(
+                    || {
+                        let env = prepared.commit();
+                        let env = server_monitor_listener_state::update_env(env);
+                        flow_server_env::server_env::with_connections(
+                            env,
+                            persistent_connection::all_clients(),
+                        )
+                    },
+                    completed_recheck_epoch,
+                );
+                let (lock, cvar) = &**state;
+                let mut server_state = lock.lock().unwrap();
+                server_state.env = Some(env.dupe());
+                cvar.notify_all();
+                drop(server_state);
+
                 let lazy_stats = rechecker::get_lazy_stats(options, &env);
                 persistent_connection::send_end_recheck(lazy_stats, &env.connections);
                 persistent_connection::send_status(
@@ -761,17 +718,6 @@ fn do_rechecks(
                         stats: lsp_stats,
                     },
                 );
-                env = server_monitor_listener_state::update_env(env);
-                let (lock, cvar) = &**state;
-                let mut server_state = lock.lock().unwrap();
-                env = flow_server_env::server_env::with_connections(
-                    env,
-                    persistent_connection::all_clients(),
-                );
-                server_state.env = Some(env.dupe());
-                server_state.env_generation += 1;
-                cvar.notify_all();
-                drop(server_state);
                 flow_server_env::monitor_rpc::status_update(server_status::Event::Ready);
             }
             Err(type_service::RecheckError::TooSlow) => {
@@ -781,7 +727,7 @@ fn do_rechecks(
                 eprintln!(
                     "Recheck successfully canceled. Restarting the recheck to include new file changes"
                 );
-                let _done: bool = committed_heap.collect_slice(256000);
+                let _done = orchestrator.collect_heap_slice(committed_heap.dupe(), 256000);
                 server_monitor_listener_state::requeue_workload(workload);
                 if !changed_files.is_empty()
                     && changed_files
@@ -793,25 +739,34 @@ fn do_rechecks(
                         updates.add(None, None, Some(changed_files.into_iter().collect()));
                         updates
                     };
-                    env = type_service::parse_and_update_dependency_info(
-                        &pool,
-                        committed_heap,
-                        options,
-                        &updates,
-                        &find_ref_request.def_info,
-                        CheckedSet::empty(),
-                        EnvTransaction::new(old_env.dupe()),
-                    )
-                    .unwrap_or(old_env);
-                    env = server_monitor_listener_state::update_env(env);
+                    let pool_for_commit = pool.dupe();
+                    let committed_heap_for_commit = committed_heap.dupe();
+                    let options_for_commit = options.dupe();
+                    let def_info_for_commit = find_ref_request.def_info.clone();
+                    let old_env_for_commit = old_env.dupe();
+                    env = orchestrator.commit_recheck(
+                        move || {
+                            let env = type_service::parse_and_update_dependency_info(
+                                &pool_for_commit,
+                                &committed_heap_for_commit,
+                                &options_for_commit,
+                                &updates,
+                                &def_info_for_commit,
+                                CheckedSet::empty(),
+                                EnvTransaction::new(old_env_for_commit.dupe()),
+                            )
+                            .unwrap_or(old_env_for_commit);
+                            let env = server_monitor_listener_state::update_env(env);
+                            flow_server_env::server_env::with_connections(
+                                env,
+                                persistent_connection::all_clients(),
+                            )
+                        },
+                        completed_recheck_epoch,
+                    );
                     let (lock, cvar) = &**state;
                     let mut server_state = lock.lock().unwrap();
-                    env = flow_server_env::server_env::with_connections(
-                        env,
-                        persistent_connection::all_clients(),
-                    );
                     server_state.env = Some(env.dupe());
-                    server_state.env_generation += 1;
                     cvar.notify_all();
                 } else {
                     env = old_env;
@@ -825,8 +780,8 @@ fn process_pending_rechecks(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Arc<Options>,
     committed_heap: &Arc<CommittedHeap>,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     pool_workers: usize,
-    serial_workloads_allowed: &Arc<AtomicBool>,
     pids_path: &str,
     lock_path: &str,
     socket_path: &str,
@@ -842,8 +797,6 @@ fn process_pending_rechecks(
 
             if !server_state.pending_recheck {
                 server_state.recheck_in_progress = false;
-                serial_workloads_allowed.store(true, Ordering::Release);
-                server_monitor_listener_state::wake_workload_waiters();
                 cvar.notify_all();
                 server_state = cvar
                     .wait_while(server_state, |s| !s.pending_recheck && !s.should_shutdown)
@@ -856,8 +809,6 @@ fn process_pending_rechecks(
 
             server_state.pending_recheck = false;
             server_state.recheck_in_progress = true;
-            serial_workloads_allowed.store(false, Ordering::Release);
-            server_monitor_listener_state::wake_workload_waiters();
         }
 
         let outcome = {
@@ -865,7 +816,7 @@ fn process_pending_rechecks(
             let server_state = lock.lock().unwrap();
             if server_state.env.is_some() {
                 drop(server_state);
-                do_rechecks(state, options, committed_heap, pool_workers)
+                do_rechecks(state, options, committed_heap, orchestrator, pool_workers)
             } else {
                 RecheckOutcome::Ok
             }
@@ -955,7 +906,6 @@ fn remove_persistent_client(
             env,
             connections,
         ));
-        server_state.env_generation += 1;
         cvar.notify_all();
     }
 }
@@ -964,6 +914,7 @@ fn handle_persistent_request(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Options,
     committed_heap: &Arc<CommittedHeap>,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     expected_client_id: flow_server_env::lsp_prot::ClientId,
     request: ServerRequest,
 ) -> (ServerResponse, bool) {
@@ -993,7 +944,7 @@ fn handle_persistent_request(
                 workers: None,
                 committed_heap: committed_heap.dupe(),
             });
-            command_handler::enqueue_persistent(&genv, client_id, request);
+            command_handler::enqueue_persistent(&genv, orchestrator, client_id, request);
             (ServerResponse::PersistentAck, false)
         }
         ServerRequest::PersistentPoll { client_id } => {
@@ -1041,6 +992,7 @@ fn handle_connection(
     state: &Arc<(Mutex<ServerState>, Condvar)>,
     options: &Options,
     committed_heap: &Arc<CommittedHeap>,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     _pool_workers: usize,
     mut stream: std::net::TcpStream,
     pids_path: &str,
@@ -1100,7 +1052,6 @@ fn handle_connection(
                 env,
                 connections,
             ));
-            server_state.env_generation += 1;
             cvar.notify_all();
         }
         let (status, watcher_status) = current_persistent_status(&server_state);
@@ -1136,8 +1087,14 @@ fn handle_connection(
                     return;
                 }
             };
-            let (response, should_close) =
-                handle_persistent_request(state, options, committed_heap, client_id, request);
+            let (response, should_close) = handle_persistent_request(
+                state,
+                options,
+                committed_heap,
+                orchestrator,
+                client_id,
+                request,
+            );
             if let Err(e) = server_socket_rpc::send_message(&mut stream, &response) {
                 eprintln!("Error sending response: {}", e);
                 remove_persistent_client(state, client_id);
@@ -1151,76 +1108,58 @@ fn handle_connection(
 
     let response = match request {
         ServerRequest::CliEphemeralCommand { command } => {
-            let genv = flow_server_env::server_env::Genv {
+            let genv = Arc::new(flow_server_env::server_env::Genv {
                 options: Arc::new(options.clone()),
                 workers: None,
                 committed_heap: committed_heap.dupe(),
-            };
+            });
             let command = command.into_server_command();
-            loop {
+            {
                 let (lock, cvar) = &**state;
                 let server_state = lock.lock().unwrap();
-                let wait_for_recheck = matches!(
-                    command_handler::classify_ephemeral_command(&genv, &command),
-                    command_handler::CommandHandler::HandleNonparallelizable
-                );
-                let server_state = cvar
-                    .wait_while(server_state, |s| {
-                        !s.init_done
-                            || s.env.is_none()
-                            || (wait_for_recheck && (s.recheck_in_progress || s.pending_recheck))
-                    })
+                let _server_state = cvar
+                    .wait_while(server_state, |s| !s.init_done || s.env.is_none())
                     .unwrap();
-
-                if let Some(ref env) = server_state.env {
-                    let result = command_handler::handle_ephemeral_command_for_standalone_wrapped(
+            }
+            let parallelizable = !matches!(
+                command_handler::classify_ephemeral_command(&genv, &command),
+                command_handler::CommandHandler::HandleNonparallelizable
+            );
+            let state = state.dupe();
+            let orchestrator_for_command = orchestrator.clone();
+            run_command(
+                orchestrator,
+                "cli ephemeral",
+                parallelizable,
+                move |env, _transaction, cache| {
+                    match command_handler::handle_ephemeral_command_for_standalone_wrapped(
+                        &orchestrator_for_command,
+                        cache,
                         &genv,
                         env,
                         command.clone(),
-                    );
-                    let response = match result {
-                        Err(command_handler::WorkloadCanceled) => {
-                            let current_generation = server_state.env_generation;
-                            drop(server_state);
-                            request_dependency_recheck(state);
-                            let server_state = lock.lock().unwrap();
-                            let _server_state = cvar
-                                .wait_while(server_state, |s| {
-                                    !s.init_done
-                                        || s.env.is_none()
-                                        || s.env_generation == current_generation
-                                })
-                                .unwrap();
-                            continue;
-                        }
-                        Ok((response, _json_data)) => response,
-                    };
-                    if command_handler::standalone_response_needs_checked_dependencies_retry(
-                        &command, &response,
                     ) {
-                        let current_generation = server_state.env_generation;
-                        drop(server_state);
-                        request_dependency_recheck(state);
-                        let server_state = lock.lock().unwrap();
-                        let _server_state = cvar
-                            .wait_while(server_state, |s| {
-                                !s.init_done
-                                    || s.env.is_none()
-                                    || s.env_generation == current_generation
-                            })
-                            .unwrap();
-                        continue;
+                    Err(command_handler::WorkloadCanceled) => {
+                        request_dependency_recheck(&state);
+                        CommandAttempt::RetryAfterRecheck
                     }
-                    break match server_socket_rpc::CliResponse::try_from_server_response(response) {
-                        Ok(response) => ServerResponse::CliEphemeralResponse { response },
-                        Err(message) => ServerResponse::Error { message },
-                    };
-                } else {
-                    break ServerResponse::Error {
-                        message: "Server not initialized".to_string(),
-                    };
+                    Ok((response, _json_data))
+                        if command_handler::standalone_response_needs_checked_dependencies_retry(
+                            &command, &response,
+                        ) =>
+                    {
+                        request_dependency_recheck(&state);
+                        CommandAttempt::RetryAfterRecheck
+                    }
+                    Ok((response, _json_data)) => CommandAttempt::Completed(
+                        match server_socket_rpc::CliResponse::try_from_server_response(response) {
+                            Ok(response) => ServerResponse::CliEphemeralResponse { response },
+                            Err(message) => ServerResponse::Error { message },
+                        },
+                    ),
                 }
-            }
+                },
+            )
         }
         ServerRequest::PersistentConnect { .. }
         | ServerRequest::PersistentRequest { .. }
@@ -1237,33 +1176,27 @@ fn handle_connection(
             json_version,
             offset_kind,
         } => {
-            let (lock, cvar) = &**state;
-            let server_state = lock.lock().unwrap();
-            let server_state = cvar
-                .wait_while(server_state, |s| {
-                    !s.init_done || s.recheck_in_progress || s.pending_recheck
-                })
-                .unwrap();
-
-            if let Some(ref env) = server_state.env {
-                handle_status(
-                    env,
-                    options,
-                    committed_heap,
-                    error_flags.clone().into(),
-                    from,
-                    strip_root,
-                    json,
-                    pretty,
-                    json_version,
-                    offset_kind,
-                    options.lazy_mode,
-                )
-            } else {
-                ServerResponse::Error {
-                    message: "Server not initialized".to_string(),
-                }
-            }
+            let options = options.clone();
+            run_command(
+                orchestrator,
+                "status",
+                false,
+                move |env, transaction, _cache| {
+                    CommandAttempt::Completed(handle_status(
+                        env,
+                        transaction,
+                        &options,
+                        error_flags.clone().into(),
+                        from.clone(),
+                        strip_root,
+                        json,
+                        pretty,
+                        json_version,
+                        offset_kind,
+                        options.lazy_mode,
+                    ))
+                },
+            )
         }
         ServerRequest::ForceRecheck {
             focus,
@@ -1290,9 +1223,13 @@ fn handle_connection(
                 }
 
                 if focus {
-                    server_monitor_listener_state::push_files_to_force_focused_and_recheck(fileset);
+                    server_monitor_listener_state::push_files_to_force_focused_and_recheck(
+                        orchestrator,
+                        fileset,
+                    );
                 } else {
                     server_monitor_listener_state::push_files_to_recheck_with_metadata(
+                        orchestrator,
                         Some(FileWatcherMetadata {
                             missed_changes,
                             changed_mergebase: Some(changed_mergebase),
@@ -1312,21 +1249,25 @@ fn handle_connection(
             return;
         }
         ServerRequest::SaveState { out, from: _from } => {
-            let (lock, cvar) = &**state;
-            let server_state = lock.lock().unwrap();
-            let server_state = cvar
-                .wait_while(server_state, |s| {
-                    !s.init_done || s.recheck_in_progress || s.pending_recheck
-                })
-                .unwrap();
-
-            if let Some(ref env) = server_state.env {
-                handle_save_state(env, options, committed_heap, out)
-            } else {
-                ServerResponse::Error {
-                    message: "Server not initialized".to_string(),
-                }
-            }
+            let options = options.clone();
+            let mut out = Some(out);
+            run_command(
+                orchestrator,
+                "save state",
+                false,
+                move |env, transaction, cache| {
+                    let out = out
+                        .take()
+                        .expect("save state should complete in one attempt");
+                    CommandAttempt::Completed(handle_save_state(
+                        cache,
+                        env,
+                        transaction,
+                        &options,
+                        out,
+                    ))
+                },
+            )
         }
         ServerRequest::CheckContents {
             input,
@@ -1339,23 +1280,19 @@ fn handle_connection(
             pretty,
             json_version,
             offset_kind,
-        } => loop {
-            let (lock, cvar) = &**state;
-            let server_state = lock.lock().unwrap();
-            let server_state = cvar
-                .wait_while(server_state, |s| {
-                    !s.init_done
-                        || s.env.is_none()
-                        || (wait_for_recheck.unwrap_or(options.wait_for_recheck)
-                            && (s.recheck_in_progress || s.pending_recheck))
-                })
-                .unwrap();
-
-            if let Some(ref env) = server_state.env {
-                match handle_check_contents(
+        } => {
+            let parallelizable = !wait_for_recheck.unwrap_or(options.wait_for_recheck);
+            let options = options.clone();
+            let state = state.dupe();
+            run_command(
+                orchestrator,
+                "check contents",
+                parallelizable,
+                move |env, transaction, cache| match handle_check_contents(
+                    cache,
                     env,
-                    options,
-                    committed_heap,
+                    transaction,
+                    &options,
                     input.clone(),
                     verbose.clone().map(flow_common::verbose::Verbose::from),
                     force,
@@ -1366,28 +1303,14 @@ fn handle_connection(
                     json_version,
                     offset_kind,
                 ) {
-                    Ok(response) => break response,
+                    Ok(response) => CommandAttempt::Completed(response),
                     Err(CheckedDependenciesCanceled) => {
-                        let current_generation = server_state.env_generation;
-                        drop(server_state);
-                        request_dependency_recheck(state);
-                        let server_state = lock.lock().unwrap();
-                        let _server_state = cvar
-                            .wait_while(server_state, |s| {
-                                !s.init_done
-                                    || s.env.is_none()
-                                    || s.env_generation == current_generation
-                            })
-                            .unwrap();
-                        continue;
+                        request_dependency_recheck(&state);
+                        CommandAttempt::RetryAfterRecheck
                     }
-                }
-            } else {
-                break ServerResponse::Error {
-                    message: "Server not initialized".to_string(),
-                };
-            }
-        },
+                },
+            )
+        }
         ServerRequest::Shutdown => {
             let response = ServerResponse::ShutdownAck;
             let _ = server_socket_rpc::send_message(&mut stream, &response);
@@ -1418,8 +1341,8 @@ fn handle_connection(
 
 fn handle_status(
     env: &flow_server_env::server_env::Env,
+    transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     options: &Options,
-    committed_heap: &Arc<CommittedHeap>,
     error_flags: cli_output::ErrorFlags,
     from: Option<String>,
     client_strip_root: bool,
@@ -1429,7 +1352,6 @@ fn handle_status(
     offset_kind: flow_parser::offset_utils::OffsetKind,
     lazy_mode: bool,
 ) -> ServerResponse {
-    let transaction = ActiveTransaction::new(committed_heap.dupe());
     let (errors, warnings, suppressed_errors) = if options.include_suppressions {
         error_collator::get(env)
     } else {
@@ -1555,12 +1477,16 @@ fn handle_status(
 }
 
 fn handle_save_state(
+    cache: &CheckContentsCache,
     env: &flow_server_env::server_env::Env,
+    transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     options: &Options,
-    committed_heap: &Arc<CommittedHeap>,
     out: SaveStateOut,
 ) -> ServerResponse {
-    let transaction = ActiveTransaction::new(committed_heap.dupe());
+    // Saving walks the whole heap; drop command-local heap-derived caches first.
+    cache.clear();
+    persistent_connection::clear_type_parse_artifacts_caches();
+
     let path = match out {
         SaveStateOut::File(path) => PathBuf::from(flow_common::files::imaginary_realpath(&path)),
         SaveStateOut::Scm => match flow_saved_state::output_filename(options) {
@@ -1586,7 +1512,7 @@ fn handle_save_state(
             };
         }
     }
-    let result = match flow_saved_state::save(&path, &transaction.handle(), env, options) {
+    let result = match flow_saved_state::save(&path, transaction, env, options) {
         Ok(()) => Ok(format!("Created saved-state file `{}`", path.display())),
         Err(reason) => Err(format!(
             "Failed to create saved-state file `{}`:\n{}",
@@ -1598,9 +1524,10 @@ fn handle_save_state(
 }
 
 fn handle_check_contents(
+    cache: &CheckContentsCache,
     env: &flow_server_env::server_env::Env,
+    transaction: &Arc<flow_heap::parsing_heaps::Transaction>,
     options: &Options,
-    committed_heap: &Arc<CommittedHeap>,
     input: server_socket_rpc::FileInput,
     verbose: Option<flow_common::verbose::Verbose>,
     force: bool,
@@ -1611,7 +1538,6 @@ fn handle_check_contents(
     json_version: Option<flow_common_errors::error_utils::json_output::JsonVersion>,
     offset_kind: flow_parser::offset_utils::OffsetKind,
 ) -> Result<ServerResponse, CheckedDependenciesCanceled> {
-    let transaction = ActiveTransaction::new(committed_heap.dupe());
     let mut options = options.clone();
     options.all = options.all || force;
     options.verbose = verbose.map(Arc::new);
@@ -1672,9 +1598,10 @@ fn handle_check_contents(
         Err(TypeContentsError::Errors(intermediate_result.1))
     } else {
         flow_services_inference::type_contents::type_parse_artifacts(
+            cache,
             &options,
             env.all_unordered_libs.dupe(),
-            transaction.handle(),
+            transaction.dupe(),
             env.master_cx.dupe(),
             file_key.dupe(),
             intermediate_result,
@@ -1687,7 +1614,7 @@ fn handle_check_contents(
         flow_services_inference::type_contents::printable_errors_of_file_artifacts_result(
             &options,
             env,
-            &transaction,
+            transaction,
             &file_key,
             result.as_ref(),
         );

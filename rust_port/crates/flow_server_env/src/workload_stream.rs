@@ -17,20 +17,23 @@
 
 use std::collections::VecDeque;
 use std::sync::Arc;
-use std::sync::Condvar;
 use std::sync::Mutex;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
 use std::time::Instant;
 
-use dupe::Dupe;
-use flow_heap::parsing_heaps::ActiveTransaction;
+use flow_check_cache::CheckContentsCache;
 use flow_heap::parsing_heaps::Transaction;
 
 use crate::server_env::Env;
-use crate::server_env::EnvRef;
 
-pub type WorkloadHandler = Box<dyn FnOnce(EnvRef) -> EnvRef + Send>;
+pub type WorkloadHandler = Box<
+    dyn FnMut(&Env, &Arc<Transaction>, &CheckContentsCache) -> WorkloadOutcome + Send + 'static,
+>;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum WorkloadOutcome {
+    Completed,
+    RetryAfterRecheck,
+}
 
 pub struct Workload {
     pub workload_should_be_cancelled: Box<dyn Fn() -> bool + Send>,
@@ -40,7 +43,7 @@ pub struct Workload {
 /// Parallelizable workloads are handed the transaction to read through rather than
 /// starting their own. The dispatcher keeps the active transaction for the duration of the
 /// workload, so cached transaction handles cannot pin the committed-heap guard past the request.
-pub type ParallelizableWorkloadHandler = Box<dyn FnOnce(&Env, &Arc<Transaction>) + Send>;
+pub type ParallelizableWorkloadHandler = WorkloadHandler;
 
 pub struct ParallelizableWorkload {
     pub parallelizable_workload_should_be_cancelled: Box<dyn Fn() -> bool + Send>,
@@ -62,7 +65,6 @@ struct Inner {
 
 pub struct WorkloadStream {
     inner: Mutex<Inner>,
-    signal: Condvar,
 }
 
 impl WorkloadStream {
@@ -73,7 +75,6 @@ impl WorkloadStream {
                 requeued_parallelizable: Vec::new(),
                 nonparallelizable: VecDeque::new(),
             }),
-            signal: Condvar::new(),
         }
     }
 
@@ -98,7 +99,6 @@ impl WorkloadStream {
             name: name.to_string(),
             workload,
         });
-        self.signal.notify_all();
     }
 
     // Add a parallelizable workload to the stream and wake up anyone waiting
@@ -115,7 +115,6 @@ impl WorkloadStream {
             name: name.to_string(),
             workload,
         });
-        self.signal.notify_all();
     }
 
     // Add a parallelizable workload to the front of the stream and wake up anyone waiting
@@ -132,7 +131,6 @@ impl WorkloadStream {
             name: name.to_string(),
             workload,
         });
-        self.signal.notify_all();
     }
 
     // Cast a parallelizable workload to a nonparallelizable workload.
@@ -140,16 +138,12 @@ impl WorkloadStream {
         let handler = pw.parallelizable_workload_handler;
         Workload {
             workload_should_be_cancelled: pw.parallelizable_workload_should_be_cancelled,
-            workload_handler: Box::new(move |env: EnvRef| {
-                let transaction = ActiveTransaction::new(env.heap.dupe());
-                handler(&env, &transaction.handle());
-                env
-            }),
+            workload_handler: handler,
         }
     }
 
     // Pop the oldest workload
-    pub fn pop(&self) -> Option<WorkloadHandler> {
+    pub fn pop(&self) -> Option<Workload> {
         let mut inner = self.inner.lock().unwrap();
         // Always prefer requeued parallelizable jobs
         if let Some(item) = inner.requeued_parallelizable.pop() {
@@ -158,8 +152,7 @@ impl WorkloadStream {
                 item.name,
                 item.enqueue_time.elapsed().as_secs_f64()
             );
-            let w = Self::workload_of_parallelizable_workload(item.workload);
-            return Some(w.workload_handler);
+            return Some(Self::workload_of_parallelizable_workload(item.workload));
         }
         // Pop from the parallelizable queue unless the nonparallelizable queue has an older entry
         let p_time = inner.parallelizable.front().map(|i| i.enqueue_time);
@@ -176,8 +169,7 @@ impl WorkloadStream {
                     item.name,
                     item.enqueue_time.elapsed().as_secs_f64()
                 );
-                let w = Self::workload_of_parallelizable_workload(item.workload);
-                w.workload_handler
+                Self::workload_of_parallelizable_workload(item.workload)
             })
         } else {
             inner.nonparallelizable.pop_front().map(|item| {
@@ -187,7 +179,7 @@ impl WorkloadStream {
                     item.name,
                     item.enqueue_time.elapsed().as_secs_f64()
                 );
-                item.workload.workload_handler
+                item.workload
             })
         }
     }
@@ -220,50 +212,5 @@ impl WorkloadStream {
         !inner.requeued_parallelizable.is_empty()
             || !inner.parallelizable.is_empty()
             || !inner.nonparallelizable.is_empty()
-    }
-
-    // Wait until there's a workload in the stream
-    pub fn wait_for_workload(&self) {
-        let mut inner = self.inner.lock().unwrap();
-        while inner.requeued_parallelizable.is_empty()
-            && inner.parallelizable.is_empty()
-            && inner.nonparallelizable.is_empty()
-        {
-            inner = self.signal.wait(inner).unwrap();
-        }
-    }
-
-    // Wait until there's a parallelizable workload in the stream
-    pub fn wait_for_parallelizable_workload(&self) {
-        let mut inner = self.inner.lock().unwrap();
-        while inner.requeued_parallelizable.is_empty() && inner.parallelizable.is_empty() {
-            inner = self.signal.wait(inner).unwrap();
-        }
-    }
-
-    // Like `wait_for_parallelizable_workload`, but also returns when `stop` becomes true. Used to
-    // implement the cancellation half of the OCaml `Lwt.pick [wait_for_parallelizable_workload();
-    // wait_for_cancel]` in `Parallelizable_workload_loop`.
-    pub fn wait_for_parallelizable_workload_or_stop(&self, stop: &AtomicBool) {
-        let mut inner = self.inner.lock().unwrap();
-        while !stop.load(Ordering::Acquire)
-            && inner.requeued_parallelizable.is_empty()
-            && inner.parallelizable.is_empty()
-        {
-            inner = self.signal.wait(inner).unwrap();
-        }
-    }
-
-    // Wake up anyone blocked in `wait_for_parallelizable_workload` /
-    // `wait_for_parallelizable_workload_or_stop`. Callers that flip a stop flag should call this
-    // afterwards to ensure the waiter observes the change.
-    //
-    // Takes `inner` before notifying even though it changes nothing under it. `stop` lives outside
-    // this mutex, so without it a waiter can read the flag, find it clear, and park after the
-    // notify has already gone out — and nothing wakes it again.
-    pub fn wake_waiters(&self) {
-        let lock = self.inner.lock().unwrap();
-        self.signal.notify_all();
-        drop(lock);
     }
 }

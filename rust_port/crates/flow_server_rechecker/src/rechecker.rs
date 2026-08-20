@@ -7,10 +7,7 @@
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
-use std::sync::Mutex;
 use std::sync::RwLock;
-use std::sync::atomic::AtomicBool;
-use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use dupe::Dupe;
@@ -26,6 +23,7 @@ use flow_server_env::server_env;
 use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_monitor_listener_state::Priority;
 use flow_server_env::server_monitor_listener_state::Updates;
+use flow_server_env::server_orchestrator;
 use flow_server_env::server_prot;
 use flow_server_env::server_status;
 use flow_services_inference::type_service;
@@ -47,101 +45,6 @@ impl ProfilingFinished {
         self.duration
     }
 }
-mod parallelizable_workload_loop {
-    use std::sync::atomic::AtomicBool;
-    use std::sync::atomic::Ordering;
-
-    use dupe::Dupe;
-    use flow_heap::parsing_heaps::ActiveTransaction;
-    use flow_server_env::server_env;
-    use flow_server_env::server_monitor_listener_state;
-
-    pub(super) fn run(wait_for_cancel: &AtomicBool, env: &server_env::Env) {
-        loop {
-            if wait_for_cancel.load(Ordering::Acquire) {
-                return;
-            }
-            server_monitor_listener_state::wait_for_parallelizable_workload_or_stop(
-                wait_for_cancel,
-            );
-            if wait_for_cancel.load(Ordering::Acquire) {
-                return;
-            }
-            match server_monitor_listener_state::pop_next_parallelizable_workload() {
-                Some(workload) => {
-                    flow_hh_logger::info!("Running a parallel workload");
-                    // The active transaction gives the committed-heap guard back when the
-                    // workload returns. Cached `Arc<Transaction>` handles remain inert.
-                    let transaction = ActiveTransaction::new(env.heap.dupe());
-                    (workload.parallelizable_workload_handler)(env, &transaction.handle());
-                }
-                None => {}
-            }
-        }
-    }
-}
-
-fn start_parallelizable_workloads(
-    _genv: &server_env::Genv,
-    env: server_env::EnvRef,
-) -> ParallelizableWorkloadsStopper {
-    init_tokio_runtime();
-
-    let wait_for_cancel = Arc::new(AtomicBool::new(false));
-    let env_for_loop = env.dupe();
-    let wait_for_cancel_for_loop = wait_for_cancel.dupe();
-    let (loop_started_tx, loop_started_rx) = tokio::sync::oneshot::channel::<()>();
-    let (stopped_tx, stopped_rx) = std::sync::mpsc::channel::<()>();
-    // Detached on purpose: the loop holds an `Arc` snapshot of the pre-recheck
-    // `Env` and drops it here on the blocking pool after signaling it stopped, so
-    // the deep `Env` `Drop` (if this is the last reference) stays off the serve loop.
-    flow_tokio_runtime::spawn_blocking(move || {
-        loop_started_tx
-            .send(())
-            .expect("parallelizable workload loop start signal should be received");
-        parallelizable_workload_loop::run(&wait_for_cancel_for_loop, &env_for_loop);
-        match stopped_tx.send(()) {
-            Ok(()) => {}
-            // stop() is not waiting (e.g. server shutdown); nothing to signal.
-            Err(std::sync::mpsc::SendError(())) => {}
-        }
-        drop(env_for_loop);
-    });
-    flow_tokio_runtime::block_on(loop_started_rx)
-        .expect("parallelizable workload loop should start");
-    ParallelizableWorkloadsStopper {
-        wait_for_cancel,
-        stopped_rx: Arc::new(Mutex::new(Some(stopped_rx))),
-    }
-}
-
-#[derive(Clone, Dupe)]
-pub(crate) struct ParallelizableWorkloadsStopper {
-    wait_for_cancel: Arc<AtomicBool>,
-    stopped_rx: Arc<Mutex<Option<std::sync::mpsc::Receiver<()>>>>,
-}
-
-impl ParallelizableWorkloadsStopper {
-    fn stop(&self) {
-        if !self.wait_for_cancel.swap(true, Ordering::AcqRel) {
-            server_monitor_listener_state::wake_workload_waiters();
-        }
-
-        let stopped_rx = self
-            .stopped_rx
-            .lock()
-            .expect("parallelizable workload stopped-signal lock should not be poisoned")
-            .take();
-        if let Some(stopped_rx) = stopped_rx {
-            match stopped_rx.recv() {
-                Ok(()) => {}
-                // The loop task ended without signaling (panic/shutdown).
-                Err(std::sync::mpsc::RecvError) => {}
-            }
-        }
-    }
-}
-
 pub fn get_lazy_stats(
     options: &Options,
     env: &server_env::Env,
@@ -207,6 +110,7 @@ fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
 
 fn recheck(
     genv: &server_env::Genv,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     env: server_env::EnvRef,
     files_to_force: CheckedSet,
     find_ref_command: &mut Option<server_monitor_listener_state::FindRefCommand>,
@@ -215,6 +119,7 @@ fn recheck(
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
     updates: CheckedSet,
+    recheck_epoch: u64,
 ) -> Result<(ProfilingFinished, server_env::EnvRef), type_service::RecheckError> {
     let options = &genv.options;
     let workers = genv.workers.as_ref().unwrap();
@@ -249,8 +154,8 @@ fn recheck(
         will_be_checked_files,
         env,
     );
-    let (log_recheck_event, recheck_stats, find_ref_results, env) = match recheck_result {
-        Ok((log_event, stats, results, env)) => (log_event, stats, results, env),
+    let (log_recheck_event, recheck_stats, find_ref_results, prepared) = match recheck_result {
+        Ok((log_event, stats, results, prepared)) => (log_event, stats, results, prepared),
         Err(type_service::RecheckError::Canceled(changed_files)) => {
             return Err(type_service::RecheckError::Canceled(changed_files));
         }
@@ -258,6 +163,7 @@ fn recheck(
             unreachable!("TooSlow is handled inside type_service::recheck");
         }
     };
+    let env = orchestrator.commit_recheck(|| prepared.commit(), recheck_epoch);
 
     if let Some(server_monitor_listener_state::FindRefCommand {
         client_id,
@@ -382,11 +288,15 @@ where
 }
 
 pub(crate) enum RecheckOutcome {
-    NothingToDo(server_env::EnvRef),
+    NothingToDo {
+        env: server_env::EnvRef,
+        recheck_epoch: u64,
+    },
     CompletedRecheck {
         profiling: ProfilingFinished,
         env: server_env::EnvRef,
         recheck_count: usize,
+        recheck_epoch: u64,
     },
 }
 
@@ -394,44 +304,30 @@ pub(crate) enum RecheckOutcome {
 // than recursing, so `recheck_single` can drive restarts in a loop (see there).
 enum RecheckAttempt {
     Done(RecheckOutcome),
-    Restart {
-        env: server_env::EnvRef,
-        reused_loop: ParallelizableWorkloadsStopper,
-    },
+    Restart { env: server_env::EnvRef },
 }
 
 pub(crate) fn recheck_single(
     recheck_count: usize,
     genv: &server_env::Genv,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     env: server_env::EnvRef,
     committed_heap: &Arc<CommittedHeap>,
-    // When a recheck is canceled and restarted, the parallelizable-workload loop
-    // from the canceled attempt is handed to the restart instead of being stopped
-    // and started afresh. This keeps hovers/liveErrors served (from the original
-    // pre-recheck `Env` snapshot the loop already holds) throughout the whole
-    // cancel->restart window, rather than starving them while the loop is torn
-    // down and rebuilt.
-    reused_loop: Option<ParallelizableWorkloadsStopper>,
 ) -> RecheckOutcome {
     // Drive canceled-recheck restarts iteratively instead of recursively. Each
-    // attempt that gets canceled returns `Restart` (with a fresh `Env` and the
-    // still-running loop) rather than calling itself again; the canceled
-    // attempt's `Env` snapshot is dropped before the next attempt starts. This
+    // attempt that gets canceled returns `Restart` with a fresh `Env` rather than
+    // calling itself again; the canceled attempt's `Env` snapshot is dropped before
+    // the next attempt starts. This
     // bounds both stack depth and the number of simultaneously live `Env`
     // snapshots to O(1) regardless of how many consecutive cancellations occur.
     let mut recheck_count = recheck_count;
     let mut env = env;
-    let mut reused_loop = reused_loop;
     loop {
-        match recheck_single_attempt(recheck_count, genv, env, committed_heap, reused_loop) {
+        match recheck_single_attempt(recheck_count, genv, orchestrator, env, committed_heap) {
             RecheckAttempt::Done(outcome) => return outcome,
-            RecheckAttempt::Restart {
-                env: next_env,
-                reused_loop: next_reused_loop,
-            } => {
+            RecheckAttempt::Restart { env: next_env } => {
                 recheck_count += 1;
                 env = next_env;
-                reused_loop = Some(next_reused_loop);
             }
         }
     }
@@ -446,9 +342,9 @@ pub(crate) fn recheck_single(
 fn recheck_single_attempt(
     recheck_count: usize,
     genv: &server_env::Genv,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     env: server_env::EnvRef,
     committed_heap: &Arc<CommittedHeap>,
-    reused_loop: Option<ParallelizableWorkloadsStopper>,
 ) -> RecheckAttempt {
     let env = server_monitor_listener_state::update_env(env);
     let options = &genv.options;
@@ -470,6 +366,7 @@ fn recheck_single_attempt(
     let did_change_mergebase = workload.metadata.changed_mergebase.unwrap_or(false);
     let missed_changes = workload.metadata.missed_changes;
     let incompatible_lib_change = workload.incompatible_lib_change;
+    let recheck_epoch = workload.recheck_epoch;
 
     let mut files_to_recheck_set = CheckedSet::empty();
     files_to_recheck_set.add(
@@ -487,12 +384,7 @@ fn recheck_single_attempt(
         && files_to_recheck_set.is_empty()
         && workload.files_to_force.is_empty()
     {
-        // A reused loop is still running off the prior snapshot; stop it before
-        // returning, since this restart has no recheck to keep it alive for.
-        if let Some(reused_loop) = reused_loop {
-            reused_loop.stop();
-        }
-        return RecheckAttempt::Done(RecheckOutcome::NothingToDo(env));
+        return RecheckAttempt::Done(RecheckOutcome::NothingToDo { env, recheck_epoch });
     }
 
     // One pre-recheck `Env` ref, shared by the workload loop, the cancel-path
@@ -518,14 +410,6 @@ fn recheck_single_attempt(
             .dupe()
     };
 
-    // Reuse the loop from the canceled attempt if there is one, so it keeps
-    // serving uninterrupted; otherwise start one off this recheck's snapshot.
-    let stop_parallelizable_workloads = match reused_loop {
-        Some(reused_loop) => reused_loop,
-        None => start_parallelizable_workloads(genv, env_snapshot.dupe()),
-    };
-    let stop_parallelizable_workloads_for_post = stop_parallelizable_workloads.dupe();
-    let stop_parallelizable_workloads_for_recheck = stop_parallelizable_workloads.dupe();
     let env_snapshot_for_post = env_snapshot.dupe();
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
@@ -559,6 +443,7 @@ fn recheck_single_attempt(
             .dupe();
         match recheck(
             genv,
+            orchestrator,
             env,
             workload.files_to_force.dupe(),
             &mut workload.find_ref_command,
@@ -567,20 +452,15 @@ fn recheck_single_attempt(
             missed_changes,
             &mut will_be_checked_files_for_recheck,
             files_to_recheck_set,
+            recheck_epoch,
         ) {
-            Ok((profiling, env)) => {
-                stop_parallelizable_workloads_for_recheck.stop();
-                server_monitor_listener_state::requeue_deferred_parallelizable_workloads();
-
-                Ok(RecheckAttempt::Done(RecheckOutcome::CompletedRecheck {
-                    profiling,
-                    env,
-                    recheck_count,
-                }))
-            }
+            Ok((profiling, env)) => Ok(RecheckAttempt::Done(RecheckOutcome::CompletedRecheck {
+                profiling,
+                env,
+                recheck_count,
+                recheck_epoch,
+            })),
             Err(type_service::RecheckError::Canceled(_changed_files)) => {
-                // Leave the loop running; `post_cancel` hands it to the restart so
-                // serving continues across the cancel.
                 *workload_cell_for_recheck.borrow_mut() = Some(workload);
                 Err(type_service::RecheckError::Canceled(_changed_files))
             }
@@ -594,8 +474,6 @@ fn recheck_single_attempt(
         get_forced_for_cancel,
         priority,
         f,
-        // The loop is kept alive across the cancel (handed to the restart in
-        // `post_cancel`), so there is nothing to stop here.
         || {},
         move || {
             let workload = workload_cell_for_cancel
@@ -605,13 +483,10 @@ fn recheck_single_attempt(
             flow_hh_logger::info!(
                 "Recheck successfully canceled. Restarting the recheck to include new file changes"
             );
-            let _done: bool = committed_heap.collect_slice(256000);
+            let _done = orchestrator.collect_heap_slice(committed_heap.dupe(), 256000);
             server_monitor_listener_state::requeue_workload(workload);
-            // Hand the pre-recheck `Env` ref and the still-running loop back to
-            // the driver loop, which restarts the recheck without recursing.
             RecheckAttempt::Restart {
                 env: env_snapshot_for_post.dupe(),
-                reused_loop: stop_parallelizable_workloads_for_post,
             }
         },
     );
@@ -628,13 +503,16 @@ pub fn recheck_loop(
     genv: &server_env::Genv,
     env: server_env::EnvRef,
     committed_heap: &Arc<CommittedHeap>,
+    completed_recheck_epoch: u64,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
 ) -> (Vec<ProfilingFinished>, server_env::EnvRef) {
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     let mut env = env;
+    let mut completed_recheck_epoch = completed_recheck_epoch;
     loop {
         let should_print_summary = genv.options.profile;
         let recheck_series_start = Instant::now();
-        let recheck_result = recheck_single(1, genv, env, committed_heap, None);
+        let recheck_result = recheck_single(1, genv, orchestrator, env, committed_heap);
         let recheck_series_profiling = ProfilingFinished {
             duration: recheck_series_start.elapsed().as_secs_f64(),
         };
@@ -645,13 +523,16 @@ pub fn recheck_loop(
             );
         }
         match recheck_result {
-            RecheckOutcome::NothingToDo(e) => {
-                return (profiling_list, e);
+            RecheckOutcome::NothingToDo { env, recheck_epoch } => {
+                completed_recheck_epoch = completed_recheck_epoch.max(recheck_epoch);
+                orchestrator.finish_recheck(env.dupe(), completed_recheck_epoch);
+                return (profiling_list, env);
             }
             RecheckOutcome::CompletedRecheck {
                 profiling: recheck_profiling,
                 env: e,
                 recheck_count,
+                recheck_epoch,
             } => {
                 flow_event_logger::recheck_series(
                     recheck_count as i32,
@@ -660,6 +541,7 @@ pub fn recheck_loop(
                     }),
                 );
                 profiling_list.push(recheck_profiling);
+                completed_recheck_epoch = completed_recheck_epoch.max(recheck_epoch);
                 env = e;
             }
         }

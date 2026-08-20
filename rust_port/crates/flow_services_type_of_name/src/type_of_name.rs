@@ -12,6 +12,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_check_cache::CheckContentsCache;
 use flow_common::options::Options;
 use flow_common::reason;
 use flow_common::reason::VirtualReasonDesc;
@@ -569,6 +570,7 @@ fn find_first_match<'a>(
 }
 
 fn resolve_name_from_index(
+    cache: &CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
@@ -642,6 +644,7 @@ fn resolve_name_from_index(
     let parse_result =
         type_contents::parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
     match type_contents::type_parse_artifacts(
+        cache,
         options,
         env.all_unordered_libs.dupe(),
         reader.dupe(),
@@ -666,6 +669,7 @@ fn resolve_name_from_index(
 }
 
 fn type_of_name_from_index(
+    cache: &CheckContentsCache,
     doc_at_loc: &dyn Fn(
         &Transaction,
         &FileArtifacts,
@@ -683,6 +687,7 @@ fn type_of_name_from_index(
     file_key: FileKey,
 ) -> Result<response::infer_type_of_name::T, String> {
     let (actual_name, source, check_result, aloc, type_) = resolve_name_from_index(
+        cache,
         options,
         reader.dupe(),
         env,
@@ -710,6 +715,7 @@ fn type_of_name_from_index(
 }
 
 fn type_of_name_single<'a, 'cx: 'a>(
+    cache: &CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
@@ -746,6 +752,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
                     &type_,
                 ),
                 None => type_of_name_from_index(
+                    cache,
                     doc_at_loc,
                     options,
                     reader,
@@ -784,6 +791,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
                 None => {
                     let (actual_base_name, source, index_check_result, _aloc, type_) =
                         resolve_name_from_index(
+                            cache,
                             options,
                             reader.dupe(),
                             env,
@@ -807,6 +815,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
 }
 
 pub fn type_of_name<'a, 'cx: 'a>(
+    cache: &CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
     env: &flow_server_env::server_env::Env,
@@ -835,6 +844,7 @@ pub fn type_of_name<'a, 'cx: 'a>(
         .iter()
         .map(|target_name| {
             type_of_name_single(
+                cache,
                 options,
                 reader.dupe(),
                 env,

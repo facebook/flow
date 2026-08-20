@@ -14,6 +14,7 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_analysis::scope_api::ScopeInfo;
+use flow_check_cache::CheckContentsCache;
 use flow_common::options::Options;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common_errors::error_codes::ErrorCode;
@@ -3067,6 +3068,7 @@ fn autofix_imports_fn(
 }
 
 fn with_type_checked_file<T>(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3093,6 +3095,7 @@ fn with_type_checked_file<T>(
             ))
         } else {
             type_contents::type_parse_artifacts(
+                cache,
                 options,
                 env.all_unordered_libs.dupe(),
                 transaction,
@@ -3114,6 +3117,7 @@ fn with_type_checked_file<T>(
 }
 
 pub fn autofix_errors_cli(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3134,6 +3138,7 @@ pub fn autofix_errors_cli(
     file_content: &str,
 ) -> Result<Vec<(Loc, String)>, String> {
     with_type_checked_file(
+        cache,
         options,
         env,
         transaction,
@@ -3233,6 +3238,7 @@ pub fn autofix_errors_cli(
 }
 
 pub fn autofix_imports_cli(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3246,6 +3252,7 @@ pub fn autofix_imports_cli(
         .parent()
         .map(|p| p.to_string_lossy().to_string());
     with_type_checked_file(
+        cache,
         options,
         env,
         transaction,
@@ -3270,6 +3277,7 @@ pub fn autofix_imports_cli(
 }
 
 pub fn suggest_imports_cli(
+    cache: &CheckContentsCache,
     options: &Options,
     env: &Env,
     transaction: Arc<Transaction>,
@@ -3284,6 +3292,7 @@ pub fn suggest_imports_cli(
         .parent()
         .map(|p| p.to_string_lossy().to_string());
     with_type_checked_file(
+        cache,
         options,
         env,
         transaction,

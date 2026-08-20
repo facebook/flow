@@ -6,5 +6,7 @@
  */
 
 pub mod check_cache;
+pub mod check_contents_cache;
 
 pub use check_cache::CheckCache;
+pub use check_contents_cache::CheckContentsCache;

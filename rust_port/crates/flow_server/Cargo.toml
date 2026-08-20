@@ -10,6 +10,7 @@ crossbeam = "0.8"
 dupe = "0.9.1"
 flow_aloc = { path = "../flow_aloc" }
 flow_cgroup = { path = "../flow_cgroup" }
+flow_check_cache = { path = "../flow_check_cache" }
 flow_common = { path = "../flow_common" }
 flow_common_errors = { path = "../flow_common_errors" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }

@@ -943,6 +943,10 @@ mod tests {
         Arc::new(CommittedHeap::default())
     }
 
+    // These tests hold no caches pointing into the heap, so there is nothing to drop around a
+    // compaction.
+    fn no_caches_to_drop() {}
+
     /// Stands in for a dispatcher serving one LSP request. The returned `Arc` is what the
     /// request's typed artifacts keep alive in an IDE cache.
     fn serve_one_request(heap: &Arc<CommittedHeap>) -> Arc<Transaction> {
@@ -1233,11 +1237,11 @@ mod tests {
         heap.state.read().gc_state.lock().new_alloc_size = 1;
 
         let transaction = ActiveTransaction::new(heap.dupe());
-        assert!(heap.collect_slice(1));
+        assert!(heap.collect_slice(1, &no_caches_to_drop));
         assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Idle);
         drop(transaction);
 
-        assert!(!heap.collect_slice(1));
+        assert!(!heap.collect_slice(1, &no_caches_to_drop));
         assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Mark);
     }
 
@@ -1252,7 +1256,7 @@ mod tests {
         delete.clear_file(file, None);
         delete.commit(&heap);
 
-        heap.compact();
+        heap.compact(&no_caches_to_drop);
         assert_eq!(heap.heap_size(), 0);
     }
 

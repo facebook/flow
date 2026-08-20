@@ -17,6 +17,7 @@ use flow_common::options::SupportedOs;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_exit_status::FlowExitStatus;
+use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_flowlib;
 use flow_parser::ast::Program;
@@ -26,11 +27,10 @@ use flow_parser::loc::Loc;
 use flow_profiling::profiling_js;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
-use flow_server_env::persistent_connection;
 use flow_server_env::server_env::Env;
-use flow_server_env::server_env::EnvRef;
 use flow_server_env::server_env::Genv;
 use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_orchestrator;
 use flow_server_env::server_status;
 use flow_services_inference::type_service::RecheckError;
 use flow_typing_errors::intermediate_error::to_printable_error;
@@ -261,10 +261,13 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
     }
 }
 
-async fn gc_loop(committed_heap: Arc<flow_heap::heap_state::CommittedHeap>) {
+async fn gc_loop(
+    committed_heap: Arc<flow_heap::heap_state::CommittedHeap>,
+    orchestrator: server_orchestrator::ServerOrchestratorHandle,
+) {
     loop {
         tokio::task::yield_now().await;
-        let done = committed_heap.collect_slice(10000);
+        let done = orchestrator.collect_heap_slice(Arc::clone(&committed_heap), 10000);
         if done {
             break;
         }
@@ -273,8 +276,8 @@ async fn gc_loop(committed_heap: Arc<flow_heap::heap_state::CommittedHeap>) {
 
 fn serve(
     _genv: &Genv,
-    mut _env: EnvRef,
     committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
+    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
 ) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -290,10 +293,11 @@ fn serve(
             .unwrap_or_default()
             .as_secs_f64();
         runtime.block_on(async {
+            let orchestrator_for_gc = orchestrator.clone();
             let idle_thread = async {
                 tokio::join!(
                     idle_logging_loop(Arc::clone(_options), _start_time),
-                    gc_loop(Arc::clone(committed_heap)),
+                    gc_loop(Arc::clone(committed_heap), orchestrator_for_gc),
                 );
             };
             let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| {
@@ -304,7 +308,7 @@ fn serve(
                     updates,
                 )
             };
-            let get_forced = || _env.checked_files.clone();
+            let get_forced = CheckedSet::empty;
             let wait_thread = server_monitor_listener_state::wait_for_anything_async(
                 &process_updates,
                 &get_forced,
@@ -316,52 +320,20 @@ fn serve(
             }
         });
 
-        let (_profiling, new_env) =
-            flow_server_rechecker::rechecker::recheck_loop(_genv, _env, committed_heap);
-        _env = new_env;
-
-        let next_workload = server_monitor_listener_state::pop_next_workload();
-        if let Some(workload) = next_workload {
-            flow_hh_logger::info!("Running a serial workload");
-            _env = workload(_env);
-        }
+        let snapshot = orchestrator.begin_recheck();
+        let (_profiling, _new_env) = flow_server_rechecker::rechecker::recheck_loop(
+            _genv,
+            snapshot.env,
+            committed_heap,
+            snapshot.completed_recheck_epoch,
+            orchestrator,
+        );
         // Flush the logs asynchronously
         flow_tokio_runtime::spawn(async {
             if let Err(err) = flow_event_logger_lwt::flush().await {
                 flow_hh_logger::error!("Failed to flush Flow event logs: {}", err);
             }
         });
-    }
-}
-
-#[allow(dead_code)]
-pub(crate) fn on_compact(
-    committed_heap: Arc<flow_heap::heap_state::CommittedHeap>,
-) -> impl FnOnce() {
-    monitor_rpc::status_update(server_status::Event::GCStart);
-    let old_size = committed_heap.heap_size();
-    let start_t = std::time::Instant::now();
-    flow_services_inference::merge_service::check_contents_cache()
-        .borrow_mut()
-        .clear();
-    persistent_connection::clear_type_parse_artifacts_caches();
-    move || {
-        let new_size = committed_heap.heap_size();
-        let time_taken = start_t.elapsed().as_secs_f64();
-        if old_size != new_size {
-            flow_hh_logger::info!(
-                "Heap GC: {} bytes before; {} bytes after; in {} seconds",
-                old_size,
-                new_size,
-                time_taken
-            );
-            flow_event_logger::sharedmem_gc_ran(
-                "aggressive",
-                old_size as f64,
-                new_size as f64,
-                time_taken,
-            );
-        }
     }
 }
 
@@ -375,10 +347,6 @@ pub fn create_program_init(options: Arc<Options>) -> Genv {
     }
 
     let committed_heap = Arc::new(flow_heap::heap_state::CommittedHeap::new());
-    let committed_heap_for_on_compact = committed_heap.clone();
-    committed_heap.set_on_compact(Arc::new(move || {
-        Box::new(on_compact(committed_heap_for_on_compact.clone()))
-    }));
     server_env_build::make_genv(options, committed_heap)
 }
 
@@ -469,10 +437,14 @@ fn run(
 
     flow_server_rechecker::rechecker::init_tokio_runtime();
 
+    let server_orchestrator = server_orchestrator::ServerOrchestrator::new();
+    let orchestrator = server_orchestrator.handle();
+
     let genv_arc = Arc::new(create_program_init(options.clone()));
     let listener_running = matches!(monitor_rpc::state(), monitor_rpc::StateKind::Initialized);
     if listener_running {
         let genv_for_listener = genv_arc.clone();
+        let orchestrator_for_listener = orchestrator.clone();
         std::thread::spawn(move || {
             let callbacks = flow_server_env::server_monitor_listener::CommandHandlerCallbacks {
                 enqueue_or_handle_ephemeral:
@@ -482,6 +454,7 @@ fn run(
             };
             flow_server_env::server_monitor_listener::listen_for_messages(
                 &genv_for_listener,
+                &orchestrator_for_listener,
                 &callbacks,
             );
         });
@@ -501,6 +474,7 @@ fn run(
         Ok(result) => result,
         Err(error) => exit_on_recheck_error(error),
     };
+    let _orchestrator_owner = server_orchestrator.start(Arc::new(env));
     let init_duration = profiling.get_profiling_duration();
 
     monitor_rpc::send_telemetry(
@@ -529,7 +503,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Took {} seconds to initialize.", t_prime - t);
 
-    serve(&genv_arc, Arc::new(env), &genv_arc.committed_heap);
+    serve(&genv_arc, &genv_arc.committed_heap, &orchestrator);
 }
 
 fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {

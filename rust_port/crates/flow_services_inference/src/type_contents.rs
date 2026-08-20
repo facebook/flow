@@ -12,6 +12,7 @@ use std::time::Instant;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_check_cache::CheckContentsCache;
 use flow_common::files;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -380,6 +381,7 @@ fn ensure_checked_dependencies(
 
 // file+contents may not agree with file system state
 pub fn check_contents(
+    cache: &CheckContentsCache,
     options: &Options,
     transaction: Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -398,6 +400,7 @@ pub fn check_contents(
             return Ok(Err(e));
         }
         Ok(Ok(merge_service::check_contents_context(
+            cache,
             transaction,
             Arc::new(options.clone()),
             all_unordered_libs,
@@ -412,6 +415,7 @@ pub fn check_contents(
 
 // IDE service: enable for_ide flag to ensure declaration files are fully checked
 pub fn compute_env_of_contents(
+    cache: &CheckContentsCache,
     options: &Options,
     transaction: Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -432,6 +436,7 @@ pub fn compute_env_of_contents(
                 return Ok(Err(e));
             }
             Ok(Ok(merge_service::compute_env_of_contents(
+                cache,
                 transaction,
                 Arc::new(options.clone()),
                 all_unordered_libs,
@@ -447,6 +452,7 @@ pub fn compute_env_of_contents(
 
 // We assume that callers have already inspected the parse errors, so we discard them here.
 pub fn type_parse_artifacts(
+    cache: &CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     transaction: Arc<Transaction>,
@@ -470,6 +476,7 @@ pub fn type_parse_artifacts(
                 type_inference_hooks_js::with_for_ide(true, || {
                     obj_to_obj_hook::with_obj_to_obj_hook(true, &loc_of_aloc, || {
                         check_contents(
+                            cache,
                             options,
                             transaction.dupe(),
                             all_unordered_libs,
