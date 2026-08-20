@@ -16,6 +16,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::ast::Program;
+use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
@@ -152,6 +153,7 @@ pub enum MergeHashes {
 #[derive(Debug, Clone, Dupe)]
 pub struct TypedParse {
     pub(crate) file_hash: u64,
+    pub(crate) dts_file_kind: Option<DtsFileKind>,
     pub(crate) ast: Option<CompressedBytes>,
     pub(crate) docblock: Option<CompressedBytes>,
     pub(crate) aloc_table: Option<CompressedBytes>,
@@ -170,6 +172,7 @@ impl TypedParse {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         file_hash: u64,
+        dts_file_kind: Option<DtsFileKind>,
         ast: Option<Arc<Program<Loc, Loc>>>,
         docblock: Option<Arc<Docblock>>,
         aloc_table: Option<Arc<PackedALocTable>>,
@@ -184,6 +187,7 @@ impl TypedParse {
     ) -> Self {
         Self {
             file_hash,
+            dts_file_kind,
             ast: ast.map(|a| Arc::from(flow_heap_serialization::serialize_ast(&a))),
             docblock: docblock.map(|d| Arc::from(flow_heap_serialization::serialize_docblock(&d))),
             aloc_table: aloc_table
@@ -360,6 +364,14 @@ impl Parse {
             Parse::Typed(typed) => typed.file_hash,
             Parse::Untyped(untyped) => untyped.file_hash,
             Parse::Package(pkg) => pkg.file_hash,
+        }
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn dts_file_kind(&self) -> Option<DtsFileKind> {
+        match self {
+            Parse::Typed(typed) => typed.dts_file_kind,
+            Parse::Untyped(_) | Parse::Package(_) => None,
         }
     }
 }

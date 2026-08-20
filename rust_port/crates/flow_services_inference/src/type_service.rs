@@ -2644,6 +2644,7 @@ fn restore_parsed(
     let dirty_modules = transaction.add_parsed(
         file.dupe(),
         hash,
+        None,
         haste_module_info,
         None,
         None,

@@ -615,6 +615,7 @@ impl Transaction {
         &self,
         file: FileKey,
         file_hash: u64,
+        dts_file_kind: Option<flow_parser::dts_file_kind::DtsFileKind>,
         haste_module_info: Option<HasteModuleInfo>,
         ast: Option<Arc<Program<Loc, Loc>>>,
         docblock: Option<Arc<Docblock>>,
@@ -658,6 +659,7 @@ impl Transaction {
 
             let typed_parse = TypedParse::new(
                 file_hash,
+                dts_file_kind,
                 ast,
                 docblock,
                 aloc_table,
@@ -1053,6 +1055,7 @@ mod tests {
                     None,
                     None,
                     None,
+                    None,
                     Arc::new(Exports::empty()),
                     Arc::from(Vec::new()),
                     Arc::new(Imports::empty()),
@@ -1103,6 +1106,7 @@ mod tests {
                 t.add_parsed(
                     file.dupe(),
                     1,
+                    None,
                     None,
                     None,
                     None,

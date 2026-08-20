@@ -665,6 +665,7 @@ enum SerializedParse {
 #[derive(serde::Serialize, serde::Deserialize)]
 struct SerializedTypedParse {
     file_hash: u64,
+    dts_file_kind: Option<flow_parser::dts_file_kind::DtsFileKind>,
     ast: Option<Vec<u8>>,
     docblock: Option<Vec<u8>>,
     aloc_table: Option<Vec<u8>>,
@@ -1512,6 +1513,7 @@ impl Transaction {
         match parse {
             Parse::Typed(typed) => SerializedParse::Typed(SerializedTypedParse {
                 file_hash: typed.file_hash,
+                dts_file_kind: typed.dts_file_kind,
                 ast: None,
                 docblock: None,
                 aloc_table: None,
@@ -1628,6 +1630,7 @@ impl Transaction {
         match serialized {
             SerializedParse::Typed(typed) => Ok(Parse::Typed(TypedParse {
                 file_hash: typed.file_hash,
+                dts_file_kind: typed.dts_file_kind,
                 ast: typed.ast.map(|bytes| Arc::from(bytes.into_boxed_slice())),
                 docblock: typed
                     .docblock

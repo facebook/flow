@@ -28,7 +28,9 @@ use flow_imports_exports::imports::Imports;
 use flow_parser::PERMISSIVE_PARSE_OPTIONS;
 use flow_parser::ParseOptions;
 use flow_parser::ast::Program;
+use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::dts_file_kind::FileSemanticRole;
+use flow_parser::dts_file_kind::dts_file_kind;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
@@ -54,6 +56,7 @@ pub type Next = Box<dyn FnMut() -> Option<Vec<FileKey>> + Send>;
 pub enum ParseResult {
     ParseOk {
         ast: Program<Loc, Loc>,
+        dts_file_kind: Option<DtsFileKind>,
         requires: Vec<FlowImportSpecifier>,
         file_sig: Arc<FileSig>,
         locs: flow_type_sig::compact_table::Table<Loc>,
@@ -303,6 +306,7 @@ pub fn do_parse(
                         parse_errors,
                     }
                 } else {
+                    let dts_file_kind = dts_file_kind(file, &ast);
                     let arena = bumpalo::Bump::new();
                     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
                     let (sig_errors, locs, type_sig) = parse_type_sig(
@@ -336,6 +340,7 @@ pub fn do_parse(
 
                     ParseResult::ParseOk {
                         ast,
+                        dts_file_kind,
                         requires,
                         file_sig,
                         locs,
@@ -505,6 +510,7 @@ fn reducer(
     ) {
         ParseResult::ParseOk {
             ast,
+            dts_file_kind: new_dts_file_kind,
             requires: _,
             file_sig,
             locs,
@@ -527,6 +533,7 @@ fn reducer(
             let dirty_modules = transaction.add_parsed(
                 file_key.dupe(),
                 hash,
+                new_dts_file_kind,
                 haste_module_info,
                 Some(Arc::new(ast)),
                 Some(Arc::new(docblock)),
