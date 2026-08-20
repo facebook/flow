@@ -98,13 +98,18 @@ fn normal_diff(old_text: &str, new_text: &str) -> String {
                 new_index,
                 new_len,
             } => {
-                let lines = &changes.old_slices()[*old_index..old_index + old_len];
-                let count = lines.len();
-                let ends_with_newline = lines.last().is_some_and(|line| line.ends_with('\n'));
-                let added_lines = &changes.new_slices()[*new_index..new_index + new_len];
-                let added_count = added_lines.len();
-                let added_ends_with_newline =
-                    added_lines.last().is_some_and(|line| line.ends_with('\n'));
+                let count = *old_len;
+                let ends_with_newline = *old_len > 0
+                    && changes
+                        .old_slice(old_index + old_len - 1)
+                        .unwrap()
+                        .ends_with('\n');
+                let added_count = *new_len;
+                let added_ends_with_newline = *new_len > 0
+                    && changes
+                        .new_slice(new_index + new_len - 1)
+                        .unwrap()
+                        .ends_with('\n');
                 let old_range = if count == 1 {
                     old_line.to_string()
                 } else {
@@ -116,14 +121,16 @@ fn normal_diff(old_text: &str, new_text: &str) -> String {
                     format!("{new_line},{}", new_line + added_count - 1)
                 };
                 result.push(format!("{old_range}c{new_range}"));
-                for line in lines {
+                for i in *old_index..old_index + old_len {
+                    let line = changes.old_slice(i).unwrap();
                     result.push(format!("< {}", line.strip_suffix('\n').unwrap_or(line)));
                 }
                 if !ends_with_newline {
                     result.push("\\ No newline at end of file".to_owned());
                 }
                 result.push("---".to_owned());
-                for line in added_lines {
+                for i in *new_index..new_index + new_len {
+                    let line = changes.new_slice(i).unwrap();
                     result.push(format!("> {}", line.strip_suffix('\n').unwrap_or(line)));
                 }
                 if !added_ends_with_newline {
@@ -136,16 +143,20 @@ fn normal_diff(old_text: &str, new_text: &str) -> String {
                 old_index, old_len, ..
             } => {
                 // Pure deletion
-                let lines = &changes.old_slices()[*old_index..old_index + old_len];
-                let count = lines.len();
-                let ends_with_newline = lines.last().is_some_and(|line| line.ends_with('\n'));
+                let count = *old_len;
+                let ends_with_newline = *old_len > 0
+                    && changes
+                        .old_slice(old_index + old_len - 1)
+                        .unwrap()
+                        .ends_with('\n');
                 let old_range = if count == 1 {
                     old_line.to_string()
                 } else {
                     format!("{old_line},{}", old_line + count - 1)
                 };
                 result.push(format!("{old_range}d{}", new_line - 1));
-                for line in lines {
+                for i in *old_index..old_index + old_len {
+                    let line = changes.old_slice(i).unwrap();
                     result.push(format!("< {}", line.strip_suffix('\n').unwrap_or(line)));
                 }
                 if !ends_with_newline {
@@ -157,16 +168,20 @@ fn normal_diff(old_text: &str, new_text: &str) -> String {
                 new_index, new_len, ..
             } => {
                 // Pure addition (no preceding removal)
-                let lines = &changes.new_slices()[*new_index..new_index + new_len];
-                let count = lines.len();
-                let ends_with_newline = lines.last().is_some_and(|line| line.ends_with('\n'));
+                let count = *new_len;
+                let ends_with_newline = *new_len > 0
+                    && changes
+                        .new_slice(new_index + new_len - 1)
+                        .unwrap()
+                        .ends_with('\n');
                 let new_range = if count == 1 {
                     new_line.to_string()
                 } else {
                     format!("{new_line},{}", new_line + count - 1)
                 };
                 result.push(format!("{}a{new_range}", old_line - 1));
-                for line in lines {
+                for i in *new_index..new_index + new_len {
+                    let line = changes.new_slice(i).unwrap();
                     result.push(format!("> {}", line.strip_suffix('\n').unwrap_or(line)));
                 }
                 if !ends_with_newline {
