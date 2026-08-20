@@ -78,3 +78,34 @@ function undef_bogus_comparison() {
     return;
   }
 }
+
+declare function pred(x: void): boolean;
+
+// Passing `undefined` to a call refines the `undefined` binding itself.
+function undef_latent_refi_on_undefined(x: ?number) {
+  if (pred(undefined) && x !== null && x !== undefined) {
+    var y = x * 1000;
+  }
+}
+
+function undef_latent_refi_on_undefined_stmt(x: ?number) {
+  pred(undefined);
+  if (x !== null && x !== undefined) {
+    var y = x * 1000;
+  }
+}
+
+function undef_latent_refi_on_undefined_nested(x: ?number) {
+  if (pred(undefined)) {
+    if (x !== null && x !== undefined) {
+      var y = x * 1000;
+    }
+  }
+}
+
+function undef_shadowed(x: ?number) {
+  const undefined = 0;
+  if (x !== null && x !== undefined) {
+    var y = x * 1000; // error
+  }
+}

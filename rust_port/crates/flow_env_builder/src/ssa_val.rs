@@ -219,7 +219,15 @@ where
 }
 
 pub fn is_global_undefined<L: LocSig>(t: &Val<L>) -> bool {
-    matches!(t.write_state.inner(), WriteStateInner::Global(name) if name.as_str() == "undefined")
+    fn loop_<L: LocSig>(state: &WriteStateInner<L>) -> bool {
+        match state {
+            WriteStateInner::Global(name) => name.as_str() == "undefined",
+            WriteStateInner::Refinement { val_t, .. } => loop_(val_t.write_state.inner()),
+            WriteStateInner::PHI(ts) => !ts.is_empty() && ts.iter().all(loop_),
+            _ => false,
+        }
+    }
+    loop_(t.write_state.inner())
 }
 
 pub fn is_global<L: LocSig>(t: &Val<L>) -> bool {
