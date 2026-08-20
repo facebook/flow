@@ -1,0 +1,17 @@
+Error -------------------------------------------------------------------------------------- jsx_child_ordering.js:17:44
+
+Cannot create `Line` element because in property `value`: `unknown` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   jsx_child_ordering.js:17:44
+   17|   const el: React.Node = <Line value={0 as unknown} />; // error
+                                                  ^^^^^^^ [1]
+
+References:
+   jsx_child_ordering.js:26:23
+   26| component Line(value: number) {
+                             ^^^^^^ [2]
+
+
+
+Found 1 error

@@ -168,6 +168,7 @@ pub fn string_of_component<A: Clone, B: Clone>(
 #[derive(Default)]
 struct ToplevelExpressionCollector<'ast> {
     acc: Vec<&'ast ast::expression::Expression<ALoc, ALoc>>,
+    element_names: Vec<&'ast ast::jsx::Identifier<ALoc, ALoc>>,
 }
 
 impl<'ast> AstVisitor<'ast, ALoc> for ToplevelExpressionCollector<'ast> {
@@ -181,6 +182,17 @@ impl<'ast> AstVisitor<'ast, ALoc> for ToplevelExpressionCollector<'ast> {
 
     fn expression(&mut self, expr: &'ast ast::expression::Expression<ALoc, ALoc>) -> Result<(), !> {
         self.acc.push(expr);
+        Ok(())
+    }
+
+    /// A nested element is a child, not an expression, so `expression` above
+    /// never sees its name. The name is still a read, and synthesizing the
+    /// enclosing element synthesizes the child too, so it is collected here.
+    fn jsx_element_name_identifier(
+        &mut self,
+        ident: &'ast ast::jsx::Identifier<ALoc, ALoc>,
+    ) -> Result<(), !> {
+        self.element_names.push(ident);
         Ok(())
     }
 
@@ -1706,9 +1718,29 @@ fn depends<'a, 'cx, Cx: Context, Fl: Flow<Cx = Cx>>(
                     acc: EnvMap<ALoc, Vec1<ALoc>>,
                     collect: impl FnOnce(&mut ToplevelExpressionCollector<'ast>),
                 ) -> EnvMap<ALoc, Vec1<ALoc>> {
-                    let mut collector = ToplevelExpressionCollector { acc: Vec::new() };
+                    let mut collector = ToplevelExpressionCollector::default();
                     collect(&mut collector);
-                    collector.acc.into_iter().fold(acc, |acc, e| {
+                    let ToplevelExpressionCollector {
+                        acc: exprs,
+                        element_names,
+                    } = collector;
+                    let acc = element_names.into_iter().fold(acc, |acc, ident| {
+                        depends_of_node::<Cx, Fl>(
+                            cx,
+                            this_super_dep_loc_map,
+                            env_values,
+                            env_entries,
+                            providers,
+                            declare_namespace_read_paths,
+                            refinement_of_id,
+                            false,
+                            acc,
+                            |visitor| {
+                                let Ok(()) = visitor.jsx_element_name_identifier(ident);
+                            },
+                        )
+                    });
+                    exprs.into_iter().fold(acc, |acc, e| {
                         if flow_env_builder::name_def::expression_is_definitely_synthesizable(
                             autocomplete_hooks,
                             e,
