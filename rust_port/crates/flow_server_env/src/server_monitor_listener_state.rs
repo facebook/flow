@@ -746,19 +746,8 @@ fn wait_for_anything_blocking() {
     }
 }
 
-/// Block until any stream receives something
-pub fn wait_for_anything(
-    _process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
-    _get_forced: &dyn Fn() -> CheckedSet,
-) {
-    wait_for_anything_blocking()
-}
-
-/// Tokio wrapper for `wait_for_anything`.
-pub async fn wait_for_anything_async(
-    _process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
-    _get_forced: &dyn Fn() -> CheckedSet,
-) {
+/// Block until an environment update or recheck is available without blocking the Tokio runtime.
+pub async fn wait_for_anything_async() {
     let (sender, receiver) = tokio::sync::oneshot::channel();
     let waiter = std::thread::Builder::new()
         .name("wait_for_anything".to_string())

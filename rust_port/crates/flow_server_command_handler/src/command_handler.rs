@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#![allow(dead_code)]
-
 use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::str::FromStr as _;
@@ -271,10 +269,6 @@ fn add_cache_hit_data_to_json(
 }
 
 fn try_with<T, F: FnOnce() -> Result<T, String>>(f: F) -> Result<T, String> {
-    f()
-}
-
-fn try_with_lwt<T, F: FnOnce() -> Result<T, String>>(f: F) -> Result<T, String> {
     f()
 }
 
@@ -627,13 +621,6 @@ fn of_file_input(
             }
         }
     }
-}
-
-fn get_haste_module_info(
-    transaction: &flow_heap::parsing_heaps::Transaction,
-    f: &flow_parser::file_key::FileKey,
-) -> Option<flow_common_modulename::HasteModuleInfo> {
-    transaction.get_haste_module_info(f)
 }
 
 fn mk_module_system_info(
@@ -6140,25 +6127,6 @@ fn handle_persistent_llm_context(
         &file_sig_opts,
     );
     let response = LspMessage::ResponseMessage(id, LspResult::LLMContextResult(result));
-    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
-}
-
-fn handle_persistent_rage(
-    genv: &server_env::Genv,
-    id: lsp_prot::LspId,
-    metadata: lsp_prot::Metadata,
-    env: &server_env::Env,
-) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let root = genv.options.root.display().to_string();
-    let transaction = ActiveTransaction::new(genv.committed_heap.dupe());
-    let items = collect_rage(&genv.options, env, &transaction, None)
-        .into_iter()
-        .map(|(title, data)| lsp::rage::RageItem {
-            title: Some(format!("{}:{}", root, title)),
-            data,
-        })
-        .collect();
-    let response = LspMessage::ResponseMessage(id, LspResult::RageResult(items));
     (lsp_prot::Response::LspFromServer(Some(response)), metadata)
 }
 

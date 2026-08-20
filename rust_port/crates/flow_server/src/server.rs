@@ -17,7 +17,6 @@ use flow_common::options::SupportedOs;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_exit_status::FlowExitStatus;
-use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_flowlib;
 use flow_parser::ast::Program;
@@ -300,19 +299,7 @@ fn serve(
                     gc_loop(Arc::clone(committed_heap), orchestrator_for_gc),
                 );
             };
-            let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| {
-                flow_server_rechecker::rechecker::process_updates(
-                    skip_incompatible,
-                    _options,
-                    committed_heap,
-                    updates,
-                )
-            };
-            let get_forced = CheckedSet::empty;
-            let wait_thread = server_monitor_listener_state::wait_for_anything_async(
-                &process_updates,
-                &get_forced,
-            );
+            let wait_thread = server_monitor_listener_state::wait_for_anything_async();
             tokio::select! {
                 biased;
                 _ = wait_thread => {}
