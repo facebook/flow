@@ -6,7 +6,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-fancy-regex = "0.17.0"
+fancy-regex = "0.18.0"
 flow_parser = { path = "../flow_parser" }
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 futures = { version = "0.3.34", features = ["async-await", "compat"] }
