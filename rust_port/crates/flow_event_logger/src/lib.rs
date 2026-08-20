@@ -506,6 +506,17 @@ mod stub {
 
     pub fn reinit(_reason: &str, _profiling: &serde_json::Value) {}
 
+    pub fn global_lib_reinit(
+        _reason: &str,
+        _changed_file_count: usize,
+        _old_global_count: usize,
+        _new_global_count: usize,
+        _inventory_file_count: usize,
+        _deleted_file_count: usize,
+        _profiling: &serde_json::Value,
+    ) {
+    }
+
     pub fn reinit_full_check(_profiling: &serde_json::Value) {}
 
     pub fn murdered_by_oom_killer(_arg: &str) {}
@@ -1184,6 +1195,26 @@ mod fb_facade {
     // SHIM: forwards directly; FB and OSS share identical signature.
     pub fn reinit(reason: &str, profiling: &serde_json::Value) {
         fb::reinit(reason, profiling);
+    }
+
+    pub fn global_lib_reinit(
+        reason: &str,
+        changed_file_count: usize,
+        old_global_count: usize,
+        new_global_count: usize,
+        inventory_file_count: usize,
+        deleted_file_count: usize,
+        profiling: &serde_json::Value,
+    ) {
+        fb::global_lib_reinit(
+            reason,
+            changed_file_count,
+            old_global_count,
+            new_global_count,
+            inventory_file_count,
+            deleted_file_count,
+            profiling,
+        );
     }
 
     // SHIM: forwards directly; FB and OSS share identical signature.
