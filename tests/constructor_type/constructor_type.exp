@@ -249,8 +249,8 @@ a subtype of an interface. [incompatible-type]
                                            ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3174:38
-   3174| type ConstructorParameters<T extends new (...args: ReadonlyArray<empty>) => unknown> =
+   <BUILTINS>/core.js:3316:38
+   3316| type ConstructorParameters<T extends new (...args: ReadonlyArray<empty>) => unknown> =
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -264,8 +264,8 @@ return type is missing in statics of function type [1] but exists in interface t
                                   ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:3178:29
-   3178| type InstanceType<T extends new (...args: ReadonlyArray<empty>) => unknown> =
+   <BUILTINS>/core.js:3320:29
+   3320| type InstanceType<T extends new (...args: ReadonlyArray<empty>) => unknown> =
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

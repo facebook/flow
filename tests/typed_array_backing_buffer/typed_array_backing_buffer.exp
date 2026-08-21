@@ -1,0 +1,59 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:82:1
+
+Cannot cast `arrayBacked.buffer` to `SharedArrayBuffer` because `ArrayBuffer` [1] is incompatible with
+`SharedArrayBuffer` [2]. [incompatible-type]
+
+   test.js:82:1
+   82| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:80:39
+   80| declare const arrayBacked: Uint8Array<ArrayBuffer>;
+                                             ^^^^^^^^^^^ [1]
+   test.js:82:23
+   82| arrayBacked.buffer as SharedArrayBuffer; // ERROR
+                             ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:86:1
+
+Cannot cast `sharedBacked.buffer` to `ArrayBuffer` because `SharedArrayBuffer` [1] is incompatible with
+`ArrayBuffer` [2]. [incompatible-type]
+
+   test.js:86:1
+   86| sharedBacked.buffer as ArrayBuffer; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:84:40
+   84| declare const sharedBacked: Uint8Array<SharedArrayBuffer>;
+                                              ^^^^^^^^^^^^^^^^^ [1]
+   test.js:86:24
+   86| sharedBacked.buffer as ArrayBuffer; // ERROR
+                              ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:98:1
+
+Cannot cast `arrayOnlyView` to `ArrayBufferView` because in type argument `TArrayBuffer` [1]: `ArrayBuffer` [2] is
+incompatible with `SharedArrayBuffer` [3]. [incompatible-type]
+
+   test.js:98:1
+     98| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+         ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:3433:26
+   3433| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+                                  ^^^^^^^^^^^^ [1]
+   test.js:96:46
+     96| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;
+                                                      ^^^^^^^^^^^ [2]
+   test.js:98:34
+     98| arrayOnlyView as ArrayBufferView<SharedArrayBuffer>; // ERROR
+                                          ^^^^^^^^^^^^^^^^^ [3]
+
+
+
+Found 3 errors

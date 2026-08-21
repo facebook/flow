@@ -926,9 +926,9 @@ Cannot call `i16.set(...).copyWithin` because property `copyWithin` is missing i
                             ^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2631:58
-   2631|     set(array: Array<T> | $TypedArray, offset?: number): void;
-                                                                  ^^^^ [1]
+   <BUILTINS>/core.js:2641:49
+   2641|     set(array: $ArrayLike<T>, offset?: number): void;
+                                                         ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- utility-type.js:3:35
