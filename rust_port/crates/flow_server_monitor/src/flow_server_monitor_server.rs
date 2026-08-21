@@ -406,26 +406,46 @@ pub mod server_instance {
             }
             super::Command::WritePersistentRequest { client_id, request } => {
                 super::doomsday::postpone();
-                send_file_watcher_notification(watcher, conn);
-                let msg = monitor_prot::MonitorToServerMessage::PersistentConnectionRequest(
-                    client_id, request,
-                );
-                send_request(msg, conn);
+                // COMMAND_STREAM outlives individual servers, so a command queued
+                // before a teardown can be dequeued by the next one. A client absent
+                // from the map was killed with a previous server.
+                if crate::persistent_connection_map::contains(client_id) {
+                    send_file_watcher_notification(watcher, conn);
+                    let msg = monitor_prot::MonitorToServerMessage::PersistentConnectionRequest(
+                        client_id, request,
+                    );
+                    send_request(msg, conn);
+                } else {
+                    flow_hh_logger::debug!(
+                        "Skipping request from dead persistent connection #{}",
+                        client_id
+                    );
+                }
             }
             super::Command::NotifyNewPersistentConnection {
                 client_id,
                 lsp_init_params,
             } => {
-                let msg = monitor_prot::MonitorToServerMessage::NewPersistentConnection(
-                    client_id,
-                    lsp_init_params,
-                );
-                send_request(msg, conn);
+                if crate::persistent_connection_map::contains(client_id) {
+                    let msg = monitor_prot::MonitorToServerMessage::NewPersistentConnection(
+                        client_id,
+                        lsp_init_params,
+                    );
+                    send_request(msg, conn);
+                } else {
+                    flow_hh_logger::debug!(
+                        "Skipping new-connection notification for dead persistent connection #{}",
+                        client_id
+                    );
+                }
             }
             super::Command::NotifyDeadPersistentConnection { client_id } => {
-                crate::persistent_connection_map::remove(client_id);
-                let msg = monitor_prot::MonitorToServerMessage::DeadPersistentConnection(client_id);
-                send_request(msg, conn);
+                // Only report the death if the birth was reported.
+                if crate::persistent_connection_map::remove(client_id) {
+                    let msg =
+                        monitor_prot::MonitorToServerMessage::DeadPersistentConnection(client_id);
+                    send_request(msg, conn);
+                }
             }
             super::Command::NotifyFileChanges => {
                 send_file_watcher_notification(watcher, conn);
@@ -1160,7 +1180,9 @@ mod keep_alive_loop {
     pub(super) fn killall_persistent_connections(
         exit_type: flow_common_exit_status::FlowExitStatus,
     ) {
-        let clients = crate::persistent_connection_map::get_all_clients();
+        // Drains the map: COMMAND_STREAM outlives individual servers, so a client id
+        // left behind would let persistent commands reach the next server.
+        let clients = crate::persistent_connection_map::take_all();
         for conn in clients {
             let msg = flow_server_env::lsp_prot::MessageFromServer::NotificationFromServer(
                 flow_server_env::lsp_prot::NotificationFromServer::ServerExit(exit_type),

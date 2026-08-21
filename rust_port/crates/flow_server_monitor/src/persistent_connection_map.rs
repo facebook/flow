@@ -31,8 +31,20 @@ pub fn get(client_id: lsp_prot::ClientId) -> Option<Arc<MonitorPersistentConnect
     MAP.lock().unwrap().get(&client_id).duped()
 }
 
-pub fn remove(client_id: lsp_prot::ClientId) {
-    MAP.lock().unwrap().remove(&client_id);
+// Returns whether the client was still registered.
+pub fn remove(client_id: lsp_prot::ClientId) -> bool {
+    MAP.lock().unwrap().remove(&client_id).is_some()
+}
+
+pub fn contains(client_id: lsp_prot::ClientId) -> bool {
+    MAP.lock().unwrap().contains_key(&client_id)
+}
+
+// Atomically empties the map, so no client id survives its connection.
+pub fn take_all() -> Vec<Arc<MonitorPersistentConnection>> {
+    std::mem::take(&mut *MAP.lock().unwrap())
+        .into_values()
+        .collect()
 }
 
 pub fn cardinal() -> usize {

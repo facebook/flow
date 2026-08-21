@@ -196,10 +196,26 @@ fn create_persistent_connection(
     let client_id = create_persistent_id();
     flow_hh_logger::debug!("Creating a persistent connection #{}", client_id);
 
-    Server::notify_new_persistent_connection(client_id, lsp_init_params);
+    // A dup kept solely to shut the socket down on close. The read loop runs inside
+    // `spawn_blocking`, so aborting its handle cannot interrupt a read in progress;
+    // only a shutdown makes that read return. Persistent connections must not outlive
+    // the server they registered with, unlike ephemeral ones. Losing the dup only
+    // costs us that, so don't fail the connection over it.
+    let shutdown_slot = Arc::new(std::sync::Mutex::new(
+        client_stream
+            .try_clone()
+            .inspect_err(|e| {
+                flow_hh_logger::error!("Could not clone socket for persistent shutdown: {}", e);
+            })
+            .ok(),
+    ));
 
     let outer_close = close;
+    let shutdown_slot_for_close = shutdown_slot.clone();
     let close: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+        if let Some(stream) = shutdown_slot_for_close.lock().unwrap().take() {
+            self::close(stream);
+        }
         Server::notify_dead_persistent_connection(client_id);
         outer_close();
     });
@@ -233,9 +249,15 @@ fn create_persistent_connection(
 
     // On exit, do our best to send all pending messages to the waiting client.
     let conn_for_close_on_exit = conn.clone();
+    let shutdown_slot_for_exit = shutdown_slot.clone();
     let close_on_exit = async move {
         let (exit_status, _) = crate::exit_signal::SIGNAL.notified().await;
         tokio::task::spawn_blocking(move || {
+            // The monitor is going away, so nothing needs the read loop interrupted --
+            // and shutting the socket down would discard the notification below before
+            // the client reads it (on Windows, `disconnect` drops unread data).
+            shutdown_slot_for_exit.lock().unwrap().take();
+
             // Notifies the client why the connection is closing. This can be useful to
             // the persistent client to decide if it should autostart a new monitor.
             conn_for_close_on_exit.write(
@@ -251,6 +273,10 @@ fn create_persistent_connection(
 
     // Don't start the connection until we add it to the persistent connection map.
     crate::persistent_connection_map::add(client_id, conn.clone());
+
+    // Must follow the `add` above: the command loop drops persistent commands for ids
+    // it cannot find in the map.
+    Server::notify_new_persistent_connection(client_id, lsp_init_params);
 
     // Lwt.pick returns the first thread to finish and cancels the rest. We approximate
     // that here: `close_on_exit` is an abortable async task (its `.await` on the exit
@@ -599,7 +625,9 @@ impl Handler for MonitorSocketHandler {
             Some(client) => {
                 use flow_server_env::socket_handshake::ClientType;
                 autostop::cancel_countdown();
-                // Disarm the close_stream_slot — we now own the stream.
+                // Disarm the close_stream_slot — we now own the stream. Nothing here
+                // may shut the socket down: ephemeral connections outlive a server
+                // restart, since their requests get requeued to the next server.
                 close_stream_slot.lock().unwrap().take();
                 match client.client_type {
                     ClientType::Ephemeral => {
