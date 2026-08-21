@@ -1,0 +1,5 @@
+[ignore]
+tmp*/**
+
+[options]
+all=true

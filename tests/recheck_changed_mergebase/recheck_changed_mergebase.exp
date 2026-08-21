@@ -1,0 +1,43 @@
+Error -------------------------------------------------------------------------------------------------------- b.js:5:31
+
+Cannot assign `foo.bar()` to `useFoo` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   b.js:5:31
+   5| export const useFoo: string = foo.bar();
+                                    ^^^^^^^^^
+
+References:
+   a.js:4:10
+   4|   bar(): number {
+               ^^^^^^ [1]
+   b.js:5:22
+   5| export const useFoo: string = foo.bar();
+                           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Recheck across a changed mergebase
+Error -------------------------------------------------------------------------------------------------------- b.js:5:31
+
+Cannot assign `foo.bar()` to `useFoo` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   b.js:5:31
+   5| export const useFoo: string = foo.bar();
+                                    ^^^^^^^^^
+
+References:
+   a.js:4:10
+   4|   bar(): number {
+               ^^^^^^ [1]
+   b.js:5:22
+   5| export const useFoo: string = foo.bar();
+                           ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Server log
+no transaction-handle panic
