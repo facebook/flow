@@ -310,16 +310,6 @@ pub fn empty() -> PersistentConnection {
     PersistentConnection(Arc::new(Vec::new()))
 }
 
-pub fn all_clients() -> PersistentConnection {
-    let clients = ACTIVE_CLIENTS
-        .lock()
-        .unwrap()
-        .keys()
-        .copied()
-        .collect::<Vec<_>>();
-    PersistentConnection(Arc::new(clients))
-}
-
 pub fn pop_message(client_id: Prot::ClientId) -> Result<Option<Prot::MessageFromServer>, String> {
     let mut clients = ACTIVE_CLIENTS.lock().unwrap();
     match clients.get_mut(&client_id) {

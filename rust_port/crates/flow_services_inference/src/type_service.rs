@@ -2298,38 +2298,6 @@ pub struct RecheckStats {
     pub top_cycle: Option<(FileKey, usize)>,
 }
 
-#[allow(clippy::too_many_arguments)]
-pub fn parse_and_update_dependency_info(
-    pool: &ThreadPool,
-    committed_heap: &Arc<CommittedHeap>,
-    options: &Arc<Options>,
-    updates: &CheckedSet,
-    def_info: &DefInfo,
-    files_to_force: CheckedSet,
-    mut env: EnvTransaction,
-) -> Result<EnvRef, RecheckError> {
-    let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
-    let result = with_transaction_result("parse and update dependency info", |transaction| {
-        recheck::parse_and_update_dependency_info(
-            pool,
-            &heap_transaction.handle(),
-            options,
-            updates,
-            transaction,
-            def_info,
-            files_to_force,
-            &mut env,
-        )
-    });
-    match result {
-        Ok(()) => Ok(env.commit_with_transaction(heap_transaction)),
-        Err(err) => {
-            heap_transaction.committed_heap().clear_reader_cache();
-            Err(err)
-        }
-    }
-}
-
 pub fn make_next_files(
     root: &Path,
     file_options: Arc<FileOptions>,

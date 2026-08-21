@@ -20,7 +20,6 @@ pub mod startup_initializer;
 pub mod status_stream;
 
 pub use flow_server_monitor::DaemonizeArgs;
-pub use flow_server_monitor::LazyStats;
 pub use flow_server_monitor::StartArgs;
 pub use flow_server_monitor::daemonize;
 pub use flow_server_monitor::start;

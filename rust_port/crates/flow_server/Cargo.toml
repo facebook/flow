@@ -7,10 +7,8 @@ edition = "2024"
 
 [dependencies]
 crossbeam = "0.8"
-dupe = "0.9.1"
 flow_aloc = { path = "../flow_aloc" }
 flow_cgroup = { path = "../flow_cgroup" }
-flow_check_cache = { path = "../flow_check_cache" }
 flow_common = { path = "../flow_common" }
 flow_common_errors = { path = "../flow_common_errors" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
@@ -27,13 +25,11 @@ flow_hh_logger = { path = "../flow_hh_logger" }
 flow_logging_utils = { path = "../flow_logging_utils" }
 flow_parser = { path = "../flow_parser" }
 flow_profiling = { path = "../flow_profiling" }
-flow_saved_state = { path = "../flow_saved_state" }
 flow_server_command_handler = { path = "../flow_server_command_handler" }
 flow_server_env = { path = "../flow_server_env" }
 flow_server_files = { path = "../flow_server_files" }
 flow_server_rechecker = { path = "../flow_server_rechecker" }
 flow_services_inference = { path = "../flow_services_inference" }
-flow_services_inference_types = { path = "../flow_services_inference_types" }
 flow_services_references = { path = "../flow_services_references" }
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 flow_typing_errors = { path = "../flow_typing_errors" }
