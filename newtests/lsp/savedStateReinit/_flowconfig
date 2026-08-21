@@ -1,0 +1,5 @@
+[options]
+lazy_mode=fs
+saved_state.fetcher=local
+saved_state.direct_serialization=true
+saved_state_restart_on_reinit=false
