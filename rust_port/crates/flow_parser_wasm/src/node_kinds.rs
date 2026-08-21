@@ -87,6 +87,18 @@ pub enum PropType {
     Boolean,
     /// `this.deserializeNumber()`
     Number,
+    /// Read a node slot and omit the JS property when it is null.
+    OptionalNode,
+    /// Read a boolean slot and omit the JS property when it is false.
+    TrueBoolean,
+    /// Read a node list and omit the JS property when it is empty.
+    NonEmptyNodeList,
+    /// Read a presence bit followed by a node slot, assigning even when null.
+    MaybeNode,
+    /// Read a presence bit followed by a boolean value.
+    MaybeBoolean,
+    /// `this.deserializeComments()`
+    CommentList,
 }
 
 /// A single node definition: kind ID, ESTree type name, and property schema.
@@ -338,10 +350,8 @@ define_nodes! {
     ExpressionStatement = 1 {
         expression: Node,
         directive: String,
-    } from Statement::Expression { loc, inner } {
-            self.serialize_expression(&inner.expression),
-            self.write_str_opt(inner.directive.as_deref()),
-        },
+    } from Statement::Expression { loc, inner }
+        {=> self.serialize_expression_statement(loc, inner)},
     BlockStatement = 2 {
         body: NodeList,
     } from Statement::Block { loc, inner }
@@ -813,13 +823,8 @@ define_nodes! {
     ImportExpression = 62 {
         source: Node,
         options: Node,
-    } from Expression::Import { loc, inner } {
-            self.serialize_expression(&inner.argument),
-            match &inner.options {
-                Some(opts) => self.serialize_expression(opts),
-                None => self.write_null_node(),
-            },
-        },
+    } from Expression::Import { loc, inner }
+        {=> self.serialize_import_expression(loc, inner)},
     MetaProperty = 63 {
         meta: Node,
         property: Node,
@@ -854,17 +859,13 @@ define_nodes! {
     TypeCastExpression = 67 {
         expression: Node,
         typeAnnotation: Node,
-    } from Expression::TypeCast { loc, inner } {
-            self.serialize_expression(&inner.expression),
-            self.serialize_type_annotation(&inner.annot),
-        },
+    } from Expression::TypeCast { loc, inner }
+        {=> self.serialize_type_cast_expression(loc, inner)},
     AsExpression = 68 {
         expression: Node,
         typeAnnotation: Node,
-    } from Expression::AsExpression { loc, inner } {
-            self.serialize_expression(&inner.expression),
-            self.serialize_type(&inner.annot.annotation),
-        },
+    } from Expression::AsExpression { loc, inner }
+        {=> self.serialize_as_expression(loc, inner)},
     SatisfiesExpression = 69 {
         expression: Node,
         typeAnnotation: Node,
@@ -874,9 +875,8 @@ define_nodes! {
         },
     AsConstExpression = 70 {
         expression: Node,
-    } from Expression::AsConstExpression { loc, inner } {
-            self.serialize_expression(&inner.expression),
-        },
+    } from Expression::AsConstExpression { loc, inner }
+        {=> self.serialize_as_const_expression(loc, inner)},
     NonNullExpression = 71 {
         argument: Node,
         chain: Boolean,
@@ -1788,6 +1788,250 @@ define_nodes! {
     // schema-driven codegen artifacts include it natively.
     ChainExpression = 230 {
         expression: Node,
+    },
+
+    // Babel wire nodes. These are emitted only by the Rust serializer in
+    // Babel mode; the JS side performs mechanical field decoding only.
+    BabelExpressionStatement = 231 as "ExpressionStatement" {
+        expression: Node,
+    },
+    BabelBlockStatement = 232 as "BlockStatement" {
+        body: NodeList,
+        directives: NodeList,
+    },
+    BabelDirective = 233 as "Directive" {
+        value: Node,
+    },
+    BabelDirectiveLiteral = 234 as "DirectiveLiteral" {
+        value: String,
+        rawValue: String,
+        raw: String,
+    } custom { },
+    BabelObjectProperty = 235 as "ObjectProperty" {
+        computed: Boolean,
+        key: Node,
+        value: Node,
+        method: Boolean,
+        shorthand: Boolean,
+    },
+    BabelObjectMethod = 236 as "ObjectMethod" {
+        kind: String,
+        method: Boolean,
+        computed: Boolean,
+        key: Node,
+        id: Node,
+        params: NodeList,
+        body: Node,
+        async: Boolean,
+        generator: Boolean,
+        returnType: OptionalNode,
+        typeParameters: OptionalNode,
+        variance: MaybeNode,
+    },
+    BabelClassMethod = 237 as "ClassMethod" {
+        kind: String,
+        computed: Boolean,
+        static: Boolean,
+        key: Node,
+        id: Node,
+        params: NodeList,
+        body: Node,
+        async: Boolean,
+        generator: Boolean,
+        returnType: OptionalNode,
+        typeParameters: OptionalNode,
+        predicate: OptionalNode,
+    },
+    BabelClassPrivateMethod = 238 as "ClassPrivateMethod" {
+        kind: String,
+        static: Boolean,
+        key: Node,
+        id: Node,
+        params: NodeList,
+        body: Node,
+        async: Boolean,
+        generator: Boolean,
+        returnType: OptionalNode,
+        typeParameters: OptionalNode,
+        predicate: OptionalNode,
+    },
+    BabelClassProperty = 239 as "ClassProperty" {
+        key: Node,
+        value: Node,
+        typeAnnotation: OptionalNode,
+        static: Boolean,
+        variance: Node,
+        declare: TrueBoolean,
+        optional: TrueBoolean,
+        computed: Boolean,
+    },
+    BabelClassPrivateProperty = 240 as "ClassPrivateProperty" {
+        key: Node,
+        value: Node,
+        typeAnnotation: OptionalNode,
+        static: Boolean,
+        variance: Node,
+    },
+    BabelPrivateName = 241 as "PrivateName" {
+        id: Node,
+    },
+    BabelStringLiteral = 242 as "StringLiteral" {} custom { },
+    BabelNumericLiteral = 243 as "NumericLiteral" {} custom { },
+    BabelBigIntLiteral = 244 as "BigIntLiteral" {} custom { },
+    BabelBooleanLiteral = 245 as "BooleanLiteral" {
+        value: Boolean,
+    },
+    BabelNullLiteral = 246 as "NullLiteral" {},
+    BabelRegExpLiteral = 247 as "RegExpLiteral" {} custom { },
+    BabelImport = 248 as "Import" {},
+    BabelTupleTypeAnnotation = 249 as "TupleTypeAnnotation" {
+        types: NodeList,
+    },
+    BabelStringLiteralTypeAnnotation = 250 as "StringLiteralTypeAnnotation" {} custom { },
+    BabelNumberLiteralTypeAnnotation = 251 as "NumberLiteralTypeAnnotation" {} custom { },
+    BabelBigIntLiteralTypeAnnotation = 252 as "BigIntLiteralTypeAnnotation" {} custom { },
+    BabelBooleanLiteralTypeAnnotation = 253 as "BooleanLiteralTypeAnnotation" {
+        value: Boolean,
+    },
+    BabelJSXText = 254 as "JSXText" {} custom { },
+    BabelClassDeclaration = 255 as "ClassDeclaration" {
+        id: Node,
+        typeParameters: OptionalNode,
+        superClass: Node,
+        implements: NonEmptyNodeList,
+        body: Node,
+        superTypeParameters: OptionalNode,
+        decorators: NonEmptyNodeList,
+    },
+    BabelClassExpression = 256 as "ClassExpression" {
+        id: Node,
+        typeParameters: OptionalNode,
+        superClass: Node,
+        implements: NonEmptyNodeList,
+        body: Node,
+        superTypeParameters: OptionalNode,
+        decorators: NonEmptyNodeList,
+    },
+    BabelFunctionDeclaration = 257 as "FunctionDeclaration" {
+        id: Node,
+        params: NodeList,
+        body: Node,
+        typeParameters: OptionalNode,
+        returnType: OptionalNode,
+        generator: Boolean,
+        async: Boolean,
+        predicate: OptionalNode,
+        __componentDeclaration: TrueBoolean,
+        __hookDeclaration: TrueBoolean,
+    },
+    BabelFunctionExpression = 258 as "FunctionExpression" {
+        id: Node,
+        params: NodeList,
+        body: Node,
+        typeParameters: OptionalNode,
+        returnType: OptionalNode,
+        generator: Boolean,
+        async: Boolean,
+        predicate: OptionalNode,
+    },
+    BabelArrowFunctionExpression = 259 as "ArrowFunctionExpression" {
+        params: NodeList,
+        body: Node,
+        typeParameters: OptionalNode,
+        returnType: OptionalNode,
+        async: Boolean,
+        id: Node,
+        predicate: OptionalNode,
+    },
+    BabelMemberExpression = 260 as "MemberExpression" {
+        object: Node,
+        property: Node,
+        computed: Boolean,
+    },
+    BabelArrayExpression = 261 as "ArrayExpression" {
+        elements: NodeList,
+    },
+    BabelRestElement = 262 as "RestElement" {
+        argument: Node,
+        typeAnnotation: MaybeNode,
+    },
+    BabelOpaqueType = 263 as "OpaqueType" {
+        id: Node,
+        typeParameters: Node,
+        impltype: Node,
+        supertype: Node,
+    },
+    BabelDeclareOpaqueType = 264 as "DeclareOpaqueType" {
+        id: Node,
+        typeParameters: Node,
+        impltype: Node,
+        supertype: Node,
+        implicitDeclare: Boolean,
+    },
+    BabelExportAllDeclaration = 265 as "ExportAllDeclaration" {
+        source: Node,
+        exportKind: String,
+    },
+    BabelDeclareVariable = 266 as "DeclareVariable" {
+        id: Node,
+    },
+    BabelIdentifier = 267 as "Identifier" {
+        name: String,
+        typeAnnotation: OptionalNode,
+        optional: TrueBoolean,
+    },
+    BabelObjectPattern = 268 as "ObjectPattern" {
+        properties: NodeList,
+        typeAnnotation: OptionalNode,
+        optional: MaybeBoolean,
+    },
+    BabelArrayPattern = 269 as "ArrayPattern" {
+        elements: NodeList,
+        typeAnnotation: OptionalNode,
+        optional: MaybeBoolean,
+    },
+    BabelCallExpression = 270 as "CallExpression" {
+        callee: Node,
+        typeArguments: OptionalNode,
+        arguments: NodeList,
+        optional: TrueBoolean,
+    },
+    BabelOptionalCallExpression = 271 as "OptionalCallExpression" {
+        callee: Node,
+        typeArguments: OptionalNode,
+        arguments: NodeList,
+        optional: Boolean,
+    },
+    BabelImportDeclaration = 272 as "ImportDeclaration" {
+        specifiers: NodeList,
+        source: Node,
+        importKind: String,
+        attributes: NonEmptyNodeList,
+    },
+    BabelExportNamedDeclaration = 273 as "ExportNamedDeclaration" {
+        declaration: OptionalNode,
+        specifiers: NodeList,
+        source: Node,
+        exportKind: String,
+    },
+    BabelJSXOpeningElement = 274 as "JSXOpeningElement" {
+        name: Node,
+        attributes: NodeList,
+        selfClosing: Boolean,
+    },
+    BabelTypeofTypeAnnotation = 275 as "TypeofTypeAnnotation" {
+        argument: Node,
+    },
+    BabelEnumRuntime = 276 {} custom { },
+    BabelProgram = 277 as "Program" {
+        body: NodeList,
+        directives: NodeList,
+        sourceType: String,
+        interpreter: Node,
+    },
+    BabelFile = 278 as "File" {
+        program: Node,
+        comments: CommentList,
     },
 }
 

@@ -27,9 +27,7 @@ impl<'a> Serializer<'a> {
                 self.write_node_header(NodeKind::EmptyStatement, loc);
             }
             StatementInner::Expression { loc, inner } => {
-                self.write_node_header(NodeKind::ExpressionStatement, loc);
-                self.serialize_expression(&inner.expression);
-                self.write_str_opt(inner.directive.as_deref());
+                self.serialize_expression_statement(loc, inner);
             }
             StatementInner::Block { loc, inner } => {
                 self.serialize_block_statement(loc, inner);
@@ -354,12 +352,7 @@ impl<'a> Serializer<'a> {
                 self.write_bool(inner.delegate);
             }
             ExpressionInner::Import { loc, inner } => {
-                self.write_node_header(NodeKind::ImportExpression, loc);
-                self.serialize_expression(&inner.argument);
-                match &inner.options {
-                    Some(opts) => self.serialize_expression(opts),
-                    None => self.write_null_node(),
-                };
+                self.serialize_import_expression(loc, inner);
             }
             ExpressionInner::MetaProperty { loc, inner } => {
                 self.write_node_header(NodeKind::MetaProperty, loc);
@@ -375,14 +368,10 @@ impl<'a> Serializer<'a> {
                 self.serialize_template_literal(loc, inner);
             }
             ExpressionInner::TypeCast { loc, inner } => {
-                self.write_node_header(NodeKind::TypeCastExpression, loc);
-                self.serialize_expression(&inner.expression);
-                self.serialize_type_annotation(&inner.annot);
+                self.serialize_type_cast_expression(loc, inner);
             }
             ExpressionInner::AsExpression { loc, inner } => {
-                self.write_node_header(NodeKind::AsExpression, loc);
-                self.serialize_expression(&inner.expression);
-                self.serialize_type(&inner.annot.annotation);
+                self.serialize_as_expression(loc, inner);
             }
             ExpressionInner::TSSatisfies { loc, inner } => {
                 self.write_node_header(NodeKind::SatisfiesExpression, loc);
@@ -390,8 +379,7 @@ impl<'a> Serializer<'a> {
                 self.serialize_type(&inner.annot.annotation);
             }
             ExpressionInner::AsConstExpression { loc, inner } => {
-                self.write_node_header(NodeKind::AsConstExpression, loc);
-                self.serialize_expression(&inner.expression);
+                self.serialize_as_const_expression(loc, inner);
             }
             ExpressionInner::Match { loc, inner } => {
                 self.serialize_match_expression(loc, inner);

@@ -20,8 +20,14 @@ use flow_parser::ast::CommentKind;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::parse_error::ParseError;
+use flow_parser::source_location::SourceLocationTable;
 use flow_parser::token::TokenKind;
 
+use crate::babel_adapter::BabelMetadata;
+use crate::babel_adapter::COMPONENT_FUNCTION_FLAG;
+use crate::babel_adapter::COMPONENT_PATTERN_OPTIONAL_FLAG;
+use crate::babel_adapter::COMPONENT_REST_TYPE_ANNOTATION_FLAG;
+use crate::babel_adapter::HOOK_FUNCTION_FLAG;
 use crate::node_kinds::NodeKind;
 use crate::position::PositionInfo;
 use crate::position::PositionResult;
@@ -31,6 +37,8 @@ use crate::position::compute_positions;
 // serialize_expression_dispatch, serialize_type_dispatch) in a
 // separate impl block.
 include!("serializer_dispatch.rs");
+
+const LOCATION_IDENTIFIER_NAME: u32 = 1 << 0;
 
 /// The serialization output buffers.
 pub struct SerializerBuffers {
@@ -46,29 +54,55 @@ pub struct SerializerBuffers {
 /// Serializes a Flow AST into the Hermes-compatible binary format.
 pub struct Serializer<'a> {
     source: &'a str,
+    source_locations: SourceLocationTable<'a>,
+    babel: bool,
+    babel_source_type: i32,
+    babel_metadata: Option<&'a BabelMetadata>,
     buf: Vec<u32>,
     positions: Vec<PositionInfo>,
     string_buffer: Vec<u8>,
     next_loc_id: u32,
 }
 
-fn is_identifier_start(b: u8) -> bool {
-    b == b'$' || b == b'_' || b.is_ascii_alphabetic()
-}
-
-fn is_identifier_continue(b: u8) -> bool {
-    is_identifier_start(b) || b.is_ascii_digit()
-}
-
 impl<'a> Serializer<'a> {
     pub fn new(source: &'a str) -> Self {
         Serializer {
             source,
+            source_locations: SourceLocationTable::new(source),
+            babel: false,
+            babel_source_type: 0,
+            babel_metadata: None,
             buf: Vec::with_capacity(4096),
             positions: Vec::with_capacity(1024),
             string_buffer: Vec::with_capacity(4096),
             next_loc_id: 0,
         }
+    }
+
+    pub fn new_babel(source: &'a str, babel_metadata: &'a BabelMetadata, source_type: i32) -> Self {
+        Serializer {
+            babel: true,
+            babel_source_type: source_type,
+            babel_metadata: Some(babel_metadata),
+            ..Self::new(source)
+        }
+    }
+
+    fn is_babel(&self) -> bool {
+        self.babel
+    }
+
+    fn identifier_kind(&self) -> NodeKind {
+        if self.is_babel() {
+            NodeKind::BabelIdentifier
+        } else {
+            NodeKind::Identifier
+        }
+    }
+
+    fn babel_flags(&self, loc: &Loc) -> u32 {
+        self.babel_metadata
+            .map_or(0, |metadata| metadata.flags_for_loc(loc))
     }
 
     // ---------------------------------------------------------------
@@ -117,6 +151,12 @@ impl<'a> Serializer<'a> {
     }
 
     fn write_string_literal_preserving_value(&mut self, loc: &Loc, value: &str, raw: &str) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelStringLiteral, loc);
+            self.write_str(value);
+            self.write_str(raw);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(3);
         self.write_str(value);
@@ -145,129 +185,34 @@ impl<'a> Serializer<'a> {
         loc_id
     }
 
-    fn write_node_header(&mut self, kind: NodeKind, loc: &Loc) {
-        self.buf.push(kind as u32 + 1); // +1 because 0 = null node
+    fn write_loc_header(&mut self, loc: &Loc, identifier_name: Option<&str>) {
         let loc_id = self.add_loc(loc);
         self.buf.push(loc_id);
-    }
-
-    fn position_at_byte_offset(&self, offset: usize) -> Position {
-        let bytes = self.source.as_bytes();
-        let capped_offset = offset.min(bytes.len());
-        let prefix = &bytes[..capped_offset];
-        let line = prefix.iter().filter(|b| **b == b'\n').count() as i32 + 1;
-        let line_start = prefix
-            .iter()
-            .rposition(|b| *b == b'\n')
-            .map_or(0, |i| i + 1);
-        Position {
-            line,
-            column: (capped_offset - line_start) as i32,
+        if !self.is_babel() {
+            return;
+        }
+        let mut flags = 0;
+        if identifier_name.is_some() {
+            flags |= LOCATION_IDENTIFIER_NAME;
+        }
+        self.buf.push(flags);
+        if let Some(identifier_name) = identifier_name {
+            self.write_str(identifier_name);
         }
     }
 
-    fn byte_offset_at_position(&self, position: Position) -> Option<usize> {
-        if position.line < 1 || position.column < 0 {
-            return None;
-        }
-        let bytes = self.source.as_bytes();
-        let mut offset = 0;
-        for _ in 1..position.line {
-            offset += bytes[offset..].iter().position(|b| *b == b'\n')? + 1;
-        }
-        Some((offset + position.column as usize).min(bytes.len()))
+    fn write_node_header(&mut self, kind: NodeKind, loc: &Loc) {
+        self.buf.push(kind as u32 + 1); // +1 because 0 = null node
+        self.write_loc_header(loc, None);
     }
 
-    fn next_token_loc_after(&self, loc: &Loc) -> Loc {
-        let Some(mut start) = self.byte_offset_at_position(loc.end) else {
-            return loc.clone();
-        };
-        let bytes = self.source.as_bytes();
-        while start < bytes.len() {
-            match bytes[start] {
-                b' ' | b'\t' | b'\n' | b'\r' | 0x0b | 0x0c => start += 1,
-                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'/' => {
-                    start += 2;
-                    while start < bytes.len() && bytes[start] != b'\n' && bytes[start] != b'\r' {
-                        start += 1;
-                    }
-                }
-                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'*' => {
-                    start += 2;
-                    while start + 1 < bytes.len()
-                        && !(bytes[start] == b'*' && bytes[start + 1] == b'/')
-                    {
-                        start += 1;
-                    }
-                    start = (start + 2).min(bytes.len());
-                }
-                _ => break,
-            }
-        }
-        let end = if start + 3 <= bytes.len() && &bytes[start..start + 3] == b"..." {
-            start + 3
-        } else if start + 2 <= bytes.len() && &bytes[start..start + 2] == b"=>" {
-            start + 2
-        } else if start < bytes.len() && is_identifier_start(bytes[start]) {
-            let mut end = start + 1;
-            while end < bytes.len() && is_identifier_continue(bytes[end]) {
-                end += 1;
-            }
-            end
-        } else if start < bytes.len() {
-            start
-                + self.source[start..]
-                    .chars()
-                    .next()
-                    .map_or(1, char::len_utf8)
-        } else {
-            start
-        };
-        Loc {
-            source: loc.source.clone(),
-            start: self.position_at_byte_offset(start),
-            end: self.position_at_byte_offset(end),
-        }
-    }
-
-    fn token_start_offset_at_loc(&self, loc: &Loc) -> Option<usize> {
-        let mut start = self.byte_offset_at_position(loc.start)?;
-        let bytes = self.source.as_bytes();
-        while start < bytes.len() {
-            match bytes[start] {
-                b' ' | b'\t' | b'\n' | b'\r' | 0x0b | 0x0c => start += 1,
-                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'/' => {
-                    start += 2;
-                    while start < bytes.len() && bytes[start] != b'\n' && bytes[start] != b'\r' {
-                        start += 1;
-                    }
-                }
-                b'/' if start + 1 < bytes.len() && bytes[start + 1] == b'*' => {
-                    start += 2;
-                    while start + 1 < bytes.len()
-                        && !(bytes[start] == b'*' && bytes[start + 1] == b'/')
-                    {
-                        start += 1;
-                    }
-                    start = (start + 2).min(bytes.len());
-                }
-                _ => break,
-            }
-        }
-        Some(start)
+    fn write_identifier_node_header(&mut self, loc: &Loc, name: &str) {
+        self.buf.push(self.identifier_kind() as u32 + 1);
+        self.write_loc_header(loc, self.is_babel().then_some(name));
     }
 
     fn loc_starts_with_keyword(&self, loc: &Loc, keyword: &str) -> bool {
-        let Some(start) = self.token_start_offset_at_loc(loc) else {
-            return false;
-        };
-        let bytes = self.source.as_bytes();
-        let keyword_bytes = keyword.as_bytes();
-        let end = start + keyword_bytes.len();
-        if end > bytes.len() || &bytes[start..end] != keyword_bytes {
-            return false;
-        }
-        end == bytes.len() || !is_identifier_continue(bytes[end])
+        self.source_locations.loc_starts_with_keyword(loc, keyword)
     }
 
     fn implicit_declare_from_loc(&self, loc: &Loc) -> bool {
@@ -286,6 +231,12 @@ impl<'a> Serializer<'a> {
     /// Wire format: header, valueKind=3, value(str), literalType="string",
     ///              raw(str), bigint(null), regex(null,null)
     fn write_string_literal(&mut self, loc: &Loc, value: &str, raw: &str) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelStringLiteral, loc);
+            self.write_string_literal_value(value, raw);
+            self.write_str(raw);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(3);
         self.write_string_literal_value(value, raw);
@@ -300,6 +251,12 @@ impl<'a> Serializer<'a> {
     /// Wire format: header, valueKind=2, value(f64), literalType="numeric",
     ///              raw(str), bigint(null), regex(null,null)
     fn write_number_literal(&mut self, loc: &Loc, value: f64, raw: &str) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelNumericLiteral, loc);
+            self.write_number(value);
+            self.write_str(raw);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(2);
         self.write_number(value);
@@ -317,6 +274,12 @@ impl<'a> Serializer<'a> {
     /// Per the ESTree spec, the `bigint` property is the decimal-digit string
     /// of the BigInt value, with no numeric separators (`_`) and no `n` suffix.
     fn write_bigint_literal(&mut self, loc: &Loc, raw: &str) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelBigIntLiteral, loc);
+            self.write_str(&clean_bigint_raw(raw));
+            self.write_str(raw);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(0);
         self.write_str("bigint");
@@ -330,6 +293,10 @@ impl<'a> Serializer<'a> {
     /// Wire format: header, valueKind=0, literalType="null", raw="null",
     ///              bigint(null), regex(null,null)
     fn write_null_literal(&mut self, loc: &Loc) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelNullLiteral, loc);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(0);
         self.write_str("null");
@@ -343,6 +310,11 @@ impl<'a> Serializer<'a> {
     /// Wire format: header, valueKind=1, value(bool), literalType="boolean",
     ///              raw(str), bigint(null), regex(null,null)
     fn write_boolean_literal(&mut self, loc: &Loc, value: bool) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelBooleanLiteral, loc);
+            self.write_bool(value);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(1);
         self.write_bool(value);
@@ -357,6 +329,13 @@ impl<'a> Serializer<'a> {
     /// Wire format: header, valueKind=0, literalType="regexp", raw(str),
     ///              bigint(null), pattern(str), flags(str)
     fn write_regex_literal(&mut self, loc: &Loc, raw: &str, pattern: &str, flags: &str) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelRegExpLiteral, loc);
+            self.write_str(raw);
+            self.write_str(pattern);
+            self.write_str(flags);
+            return;
+        }
         self.write_node_header(NodeKind::Literal, loc);
         self.buf.push(0);
         self.write_str("regexp");
@@ -376,39 +355,97 @@ impl<'a> Serializer<'a> {
         errors: &[(Loc, ParseError)],
         tokens: Option<&[TokenSinkResult]>,
     ) -> SerializerBuffers {
-        // Top-level protocol (matches FlowParserDeserializer.deserialize):
-        // 1. Program locId (u32)
-        // 2. body: NodeList (count + serialized statements)
-        // 3. comments: comment list (count + entries)
-        // 4. interpreter: Node (InterpreterDirective or null)
-        // 5. tokens: token list (count + entries)
-        // 6. errors: error list (count + per-error: locId + message string)
+        let program_loc = if self.is_babel() {
+            self.babel_program_loc(program)
+        } else {
+            program.loc.clone()
+        };
 
-        // Program locId
-        let loc_id = self.add_loc(&program.loc);
-        self.buf.push(loc_id);
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelFile, &program_loc);
+            self.write_node_header(NodeKind::BabelProgram, &program_loc);
+            self.serialize_program_body(program);
+            self.serialize_directives(program);
+            self.write_str(if self.babel_source_type(program) {
+                "module"
+            } else {
+                "script"
+            });
+            self.serialize_interpreter(program);
+            self.serialize_comments(program);
+        } else {
+            let loc_id = self.add_loc(&program_loc);
+            self.buf.push(loc_id);
+            self.serialize_program_body(program);
+            self.serialize_comments(program);
+            self.serialize_interpreter(program);
+            match tokens {
+                Some(tokens) => self.serialize_tokens(tokens),
+                None => self.buf.push(0),
+            }
+            self.serialize_errors(errors);
+        }
 
-        // body: NodeList
-        self.buf.push(program.statements.len() as u32);
-        for stmt in program.statements.iter() {
+        let position_buffer = compute_positions(self.source.as_bytes(), &mut self.positions);
+
+        SerializerBuffers {
+            program_buffer: self.buf,
+            position_buffer,
+            string_buffer: self.string_buffer,
+        }
+    }
+
+    fn serialize_program_body(&mut self, program: &ast::Program<Loc, Loc>) {
+        let directive_count = if self.is_babel() {
+            program
+                .statements
+                .iter()
+                .take_while(|statement| self.directive_parts(statement).is_some())
+                .count()
+        } else {
+            0
+        };
+        self.buf
+            .push((program.statements.len() - directive_count) as u32);
+        for stmt in program.statements.iter().skip(directive_count) {
             self.serialize_statement(stmt);
         }
+    }
 
-        // Comments
+    fn serialize_directives(&mut self, program: &ast::Program<Loc, Loc>) {
+        let directive_count = program
+            .statements
+            .iter()
+            .take_while(|statement| self.directive_parts(statement).is_some())
+            .count();
+        self.buf.push(directive_count as u32);
+        for statement in program.statements.iter().take(directive_count) {
+            self.serialize_directive(statement);
+        }
+    }
+
+    fn serialize_comments(&mut self, program: &ast::Program<Loc, Loc>) {
         self.buf.push(program.all_comments.len() as u32);
         for comment in program.all_comments.iter() {
-            let kind_val: u32 = match comment.kind {
-                CommentKind::Block => 0,
-                CommentKind::Line => 1,
-            };
-            self.buf.push(kind_val);
-            let loc_id = self.add_loc(&comment.loc);
-            self.buf.push(loc_id);
+            if self.is_babel() {
+                self.write_str(match comment.kind {
+                    CommentKind::Block => "CommentBlock",
+                    CommentKind::Line => "CommentLine",
+                });
+                self.write_loc_header(&comment.loc, None);
+            } else {
+                self.buf.push(match comment.kind {
+                    CommentKind::Block => 0,
+                    CommentKind::Line => 1,
+                });
+                let loc_id = self.add_loc(&comment.loc);
+                self.buf.push(loc_id);
+            }
             self.write_str(&comment.text);
         }
+    }
 
-        // Interpreter directive: always emit a node slot so the deserializer
-        // sees a fixed shape; null indicates absence.
+    fn serialize_interpreter(&mut self, program: &ast::Program<Loc, Loc>) {
         match &program.interpreter {
             Some((interp_loc, value)) => {
                 // 213: InterpreterDirective — value(String)
@@ -417,32 +454,21 @@ impl<'a> Serializer<'a> {
             }
             None => self.write_null_node(),
         }
+    }
 
-        // Tokens: when the caller passed `tokens: true` in ParserOptions, the
-        // wasm bridge installs a token sink that captures every lexed token
-        // into a `Vec<TokenSinkResult>` for the duration of the parse, then
-        // hands the buffer here. Emit `[count, [tokenTypeIdx, locId, value]...]`
-        // to match `FlowParserDeserializer.deserializeTokens` (`tokenTypes`
-        // array index → JS string). When tokens is None, emit a count of 0
-        // (the deserializer always reads the slot, even when callers didn't
-        // request tokens — see FlowParserDeserializer.deserialize line 96-102).
-        match tokens {
-            Some(tokens) => {
-                self.buf.push(tokens.len() as u32);
-                for t in tokens.iter() {
-                    self.buf
-                        .push(token_kind_to_estree_type_index(&t.token_kind));
-                    let loc_id = self.add_loc(&t.token_loc);
-                    self.buf.push(loc_id);
-                    let value = t.token_kind.to_value();
-                    self.write_str(&value);
-                }
-            }
-            None => self.buf.push(0),
+    fn serialize_tokens(&mut self, tokens: &[TokenSinkResult]) {
+        self.buf.push(tokens.len() as u32);
+        for token in tokens {
+            self.buf
+                .push(token_kind_to_estree_type_index(&token.token_kind));
+            let loc_id = self.add_loc(&token.token_loc);
+            self.buf.push(loc_id);
+            let value = token.token_kind.to_value();
+            self.write_str(&value);
         }
+    }
 
-        // Errors: count followed by (locId, message) pairs. Surfaced to JS
-        // as `program.errors`.
+    fn serialize_errors(&mut self, errors: &[(Loc, ParseError)]) {
         self.buf.push(errors.len() as u32);
         for (loc, err) in errors.iter() {
             let loc_id = self.add_loc(loc);
@@ -450,15 +476,73 @@ impl<'a> Serializer<'a> {
             let msg = format!("{}", err);
             self.write_str(&msg);
         }
+    }
 
-        // Finalize positions
-        let position_buffer = compute_positions(self.source.as_bytes(), &mut self.positions);
-
-        SerializerBuffers {
-            program_buffer: self.buf,
-            position_buffer,
-            string_buffer: self.string_buffer,
+    fn babel_program_loc(&self, program: &ast::Program<Loc, Loc>) -> Loc {
+        let end = program
+            .all_comments
+            .last()
+            .map_or(program.loc.end, |comment| {
+                if comment.loc.end > program.loc.end {
+                    comment.loc.end
+                } else {
+                    program.loc.end
+                }
+            });
+        Loc {
+            source: program.loc.source.clone(),
+            start: Position { line: 1, column: 0 },
+            end,
         }
+    }
+
+    fn directive_parts<'b>(
+        &self,
+        statement: &'b ast::statement::Statement<Loc, Loc>,
+    ) -> Option<(&'b Loc, &'b str, &'b ast::expression::Expression<Loc, Loc>)> {
+        let ast::statement::StatementInner::Expression { loc, inner } = &**statement else {
+            return None;
+        };
+        Some((loc, inner.directive.as_deref()?, &inner.expression))
+    }
+
+    fn serialize_directive(&mut self, statement: &ast::statement::Statement<Loc, Loc>) {
+        let Some((loc, value, expression)) = self.directive_parts(statement) else {
+            return;
+        };
+        let (value_loc, raw) = match &**expression {
+            ast::expression::ExpressionInner::StringLiteral { loc, inner } => {
+                (loc, inner.raw.as_str())
+            }
+            _ => (loc, ""),
+        };
+        self.write_node_header(NodeKind::BabelDirective, loc);
+        self.write_node_header(NodeKind::BabelDirectiveLiteral, value_loc);
+        self.write_str(value);
+        self.write_str(value);
+        self.write_str(raw);
+    }
+
+    fn babel_source_type(&self, program: &ast::Program<Loc, Loc>) -> bool {
+        if self.babel_source_type == 1 {
+            return false;
+        }
+        if self.babel_source_type == 2 {
+            return true;
+        }
+        program
+            .statements
+            .iter()
+            .any(|statement| match &**statement {
+                ast::statement::StatementInner::ImportDeclaration { inner, .. } => {
+                    matches!(inner.import_kind, ast::statement::ImportKind::ImportValue)
+                }
+                ast::statement::StatementInner::ExportDefaultDeclaration { .. } => true,
+                ast::statement::StatementInner::ExportNamedDeclaration { inner, .. } => {
+                    matches!(inner.export_kind, ast::statement::ExportKind::ExportValue)
+                }
+                _ => false,
+            })
     }
 
     // ---------------------------------------------------------------
@@ -474,26 +558,70 @@ impl<'a> Serializer<'a> {
     // ---------------------------------------------------------------
 
     fn serialize_identifier_node(&mut self, id: &ast::Identifier<Loc, Loc>) {
+        if self.is_babel() && id.name.starts_with("\0flow_enum_runtime_") {
+            self.write_node_header(NodeKind::BabelEnumRuntime, &id.loc);
+            return;
+        }
         // 76: Identifier — name(String), typeAnnotation(Node null), optional(Bool false)
-        self.write_node_header(NodeKind::Identifier, &id.loc);
+        self.write_identifier_node_header(&id.loc, &id.name);
         self.write_str(&id.name);
         self.write_null_node(); // typeAnnotation
         self.write_bool(false); // optional
     }
 
     fn serialize_identifier_node_with_loc(&mut self, id: &ast::Identifier<Loc, Loc>, loc: &Loc) {
-        self.write_node_header(NodeKind::Identifier, loc);
+        self.write_identifier_node_header(loc, &id.name);
         self.write_str(&id.name);
         self.write_null_node();
         self.write_bool(false);
     }
 
     fn serialize_block_statement(&mut self, loc: &Loc, block: &ast::statement::Block<Loc, Loc>) {
-        // 2: BlockStatement — body(NodeList)
-        self.write_node_header(NodeKind::BlockStatement, loc);
-        self.buf.push(block.body.len() as u32);
-        for stmt in block.body.iter() {
+        let directive_count = if self.is_babel() {
+            block
+                .body
+                .iter()
+                .take_while(|statement| self.directive_parts(statement).is_some())
+                .count()
+        } else {
+            0
+        };
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelBlockStatement
+            } else {
+                NodeKind::BlockStatement
+            },
+            loc,
+        );
+        self.buf.push((block.body.len() - directive_count) as u32);
+        for stmt in block.body.iter().skip(directive_count) {
             self.serialize_statement(stmt);
+        }
+        if self.is_babel() {
+            self.buf.push(directive_count as u32);
+            for statement in block.body.iter().take(directive_count) {
+                self.serialize_directive(statement);
+            }
+        }
+    }
+
+    fn serialize_expression_statement(
+        &mut self,
+        loc: &Loc,
+        statement: &ast::statement::Expression<Loc, Loc>,
+    ) {
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelExpressionStatement
+            } else {
+                NodeKind::ExpressionStatement
+            },
+            loc,
+        );
+        self.serialize_expression(&statement.expression);
+        if !self.is_babel() {
+            self.write_str_opt(statement.directive.as_deref());
         }
     }
 
@@ -606,8 +734,12 @@ impl<'a> Serializer<'a> {
                     ast::expression::OptionalMemberKind::AssertNonnull
                 ) =>
             {
-                self.write_node_header(NodeKind::ChainExpression, loc);
-                self.serialize_optional_member_as_member_expression(loc, inner);
+                if self.is_babel() {
+                    self.serialize_babel_optional_member(loc, inner);
+                } else {
+                    self.write_node_header(NodeKind::ChainExpression, loc);
+                    self.serialize_optional_member_as_member_expression(loc, inner);
+                }
             }
             ExpressionInner::OptionalCall { loc, inner }
                 if !matches!(
@@ -615,15 +747,26 @@ impl<'a> Serializer<'a> {
                     ast::expression::OptionalCallKind::AssertNonnull
                 ) =>
             {
-                self.write_node_header(NodeKind::ChainExpression, loc);
-                self.serialize_optional_call_as_call_expression(loc, inner);
+                if self.is_babel() {
+                    self.serialize_babel_optional_call(loc, inner);
+                } else {
+                    self.write_node_header(NodeKind::ChainExpression, loc);
+                    self.serialize_optional_call_as_call_expression(loc, inner);
+                }
             }
             ExpressionInner::OptionalMember { loc, inner } => {
                 // AssertNonnull (`expr!.foo`): emit MemberExpression with
                 // `optional: false` and the object wrapped in NonNullExpression
                 // (chain: true). Not part of the optional-chain rewrite, so no
                 // ChainExpression wrap.
-                self.write_node_header(NodeKind::MemberExpression, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelMemberExpression
+                    } else {
+                        NodeKind::MemberExpression
+                    },
+                    loc,
+                );
                 self.write_node_header(NodeKind::NonNullExpression, loc);
                 self.serialize_expression(&inner.member.object);
                 self.write_bool(true);
@@ -632,11 +775,20 @@ impl<'a> Serializer<'a> {
                     &inner.member.property,
                     ast::expression::member::Property::PropertyExpression(_)
                 ));
-                self.write_bool(false);
+                if !self.is_babel() {
+                    self.write_bool(false);
+                }
             }
             ExpressionInner::OptionalCall { loc, inner } => {
                 // AssertNonnull for calls — same shape as for members.
-                self.write_node_header(NodeKind::CallExpression, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelCallExpression
+                    } else {
+                        NodeKind::CallExpression
+                    },
+                    loc,
+                );
                 self.write_node_header(NodeKind::NonNullExpression, loc);
                 self.serialize_expression(&inner.call.callee);
                 self.write_bool(true);
@@ -694,6 +846,39 @@ impl<'a> Serializer<'a> {
         ));
     }
 
+    fn serialize_babel_optional_member(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::OptionalMember<Loc, Loc>,
+    ) {
+        self.write_node_header(NodeKind::OptionalMemberExpression, loc);
+        self.serialize_expression(&inner.member.object);
+        self.serialize_member_property(&inner.member.property);
+        self.write_bool(matches!(
+            &inner.member.property,
+            ast::expression::member::Property::PropertyExpression(_)
+        ));
+        self.write_bool(matches!(
+            inner.optional,
+            ast::expression::OptionalMemberKind::Optional
+        ));
+    }
+
+    fn serialize_babel_optional_call(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::OptionalCall<Loc, Loc>,
+    ) {
+        self.write_node_header(NodeKind::BabelOptionalCallExpression, loc);
+        self.serialize_expression(&inner.call.callee);
+        self.serialize_call_type_args_opt(&inner.call.targs);
+        self.serialize_arg_list(&inner.call.arguments);
+        self.write_bool(matches!(
+            inner.optional,
+            ast::expression::OptionalCallKind::Optional
+        ));
+    }
+
     /// Serialize an `OptionalCall` AST node as a wire-format `CallExpression`
     /// with the `optional` flag set from the `OptionalCallKind`. Used inside
     /// an optional chain (after the chain root has emitted its
@@ -704,7 +889,14 @@ impl<'a> Serializer<'a> {
         inner: &ast::expression::OptionalCall<Loc, Loc>,
     ) {
         // 57: CallExpression — callee(Node) typeArguments(Node) arguments(NodeList) optional(Bool)
-        self.write_node_header(NodeKind::CallExpression, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelCallExpression
+            } else {
+                NodeKind::CallExpression
+            },
+            loc,
+        );
         self.serialize_optional_chain_child(&inner.call.callee);
         self.serialize_call_type_args_opt(&inner.call.targs);
         self.serialize_arg_list(&inner.call.arguments);
@@ -722,25 +914,133 @@ impl<'a> Serializer<'a> {
         inner: &ast::expression::Member<Loc, Loc>,
     ) {
         // 55: MemberExpression — object(Node) property(Node) computed(Bool) optional(Bool)
-        self.write_node_header(NodeKind::MemberExpression, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelMemberExpression
+            } else {
+                NodeKind::MemberExpression
+            },
+            loc,
+        );
         self.serialize_expression(&inner.object);
         self.serialize_member_property(&inner.property);
         self.write_bool(matches!(
             &inner.property,
             ast::expression::member::Property::PropertyExpression(_)
         ));
-        self.write_bool(false);
+        if !self.is_babel() {
+            self.write_bool(false);
+        }
     }
 
     /// Serialize a plain `Call` AST node as a wire-format `CallExpression`
     /// with `optional: false`.
     fn serialize_call_expression(&mut self, loc: &Loc, inner: &ast::expression::Call<Loc, Loc>) {
         // 57: CallExpression — callee(Node) typeArguments(Node) arguments(NodeList) optional(Bool)
-        self.write_node_header(NodeKind::CallExpression, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelCallExpression
+            } else {
+                NodeKind::CallExpression
+            },
+            loc,
+        );
         self.serialize_expression(&inner.callee);
         self.serialize_call_type_args_opt(&inner.targs);
         self.serialize_arg_list(&inner.arguments);
         self.write_bool(false);
+    }
+
+    fn serialize_type_cast_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::TypeCast<Loc, Loc>,
+    ) {
+        let babel_loc = if self.is_babel() {
+            Loc {
+                source: loc.source.clone(),
+                start: Position {
+                    line: loc.start.line,
+                    column: loc.start.column + 1,
+                },
+                end: Position {
+                    line: loc.end.line,
+                    column: loc.end.column - 1,
+                },
+            }
+        } else {
+            loc.clone()
+        };
+        self.write_node_header(NodeKind::TypeCastExpression, &babel_loc);
+        self.serialize_expression(&inner.expression);
+        self.serialize_type_annotation(&inner.annot);
+    }
+
+    fn serialize_as_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::AsExpression<Loc, Loc>,
+    ) {
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::TypeCastExpression
+            } else {
+                NodeKind::AsExpression
+            },
+            loc,
+        );
+        self.serialize_expression(&inner.expression);
+        if self.is_babel() {
+            self.serialize_type_annotation(&inner.annot);
+        } else {
+            self.serialize_type(&inner.annot.annotation);
+        }
+    }
+
+    fn serialize_as_const_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::AsConstExpression<Loc, Loc>,
+    ) {
+        if self.is_babel() {
+            self.serialize_expression(&inner.expression);
+        } else {
+            self.write_node_header(NodeKind::AsConstExpression, loc);
+            self.serialize_expression(&inner.expression);
+        }
+    }
+
+    fn serialize_import_expression(
+        &mut self,
+        loc: &Loc,
+        inner: &ast::expression::Import<Loc, Loc>,
+    ) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelCallExpression, loc);
+            let import_loc = Loc {
+                source: loc.source.clone(),
+                start: loc.start,
+                end: Position {
+                    line: loc.start.line,
+                    column: loc.start.column + 6,
+                },
+            };
+            self.write_node_header(NodeKind::BabelImport, &import_loc);
+            self.write_null_node();
+            self.buf.push(if inner.options.is_some() { 2 } else { 1 });
+            self.serialize_expression(&inner.argument);
+            if let Some(options) = &inner.options {
+                self.serialize_expression(options);
+            }
+            self.write_bool(false);
+        } else {
+            self.write_node_header(NodeKind::ImportExpression, loc);
+            self.serialize_expression(&inner.argument);
+            match &inner.options {
+                Some(options) => self.serialize_expression(options),
+                None => self.write_null_node(),
+            }
+        }
     }
 
     // ---------------------------------------------------------------
@@ -755,6 +1055,50 @@ impl<'a> Serializer<'a> {
         // `m(): this`.
         use ast::types::TypeInner;
         use ast::types::generic;
+        if self.is_babel() {
+            match &**ty {
+                TypeInner::StringLiteral { loc, literal } => {
+                    self.write_node_header(NodeKind::BabelStringLiteralTypeAnnotation, loc);
+                    self.write_string_literal_value(&literal.value, &literal.raw);
+                    self.write_str(&literal.raw);
+                    return;
+                }
+                TypeInner::NumberLiteral { loc, literal } => {
+                    self.write_node_header(NodeKind::BabelNumberLiteralTypeAnnotation, loc);
+                    self.write_number(literal.value);
+                    self.write_str(&literal.raw);
+                    return;
+                }
+                TypeInner::BigIntLiteral { loc, literal } => {
+                    self.write_node_header(NodeKind::BabelBigIntLiteralTypeAnnotation, loc);
+                    self.write_str(&clean_bigint_raw(&literal.raw));
+                    self.write_str(&literal.raw);
+                    return;
+                }
+                TypeInner::BooleanLiteral { loc, literal } => {
+                    self.write_node_header(NodeKind::BabelBooleanLiteralTypeAnnotation, loc);
+                    self.write_bool(literal.value);
+                    return;
+                }
+                TypeInner::Typeof { loc, inner } => {
+                    self.serialize_babel_typeof(loc, inner);
+                    return;
+                }
+                TypeInner::Unknown { loc, .. } => {
+                    self.serialize_babel_keyword_generic(loc, "unknown");
+                    return;
+                }
+                TypeInner::Never { loc, .. } => {
+                    self.serialize_babel_keyword_generic(loc, "never");
+                    return;
+                }
+                TypeInner::Undefined { loc, .. } => {
+                    self.serialize_babel_keyword_generic(loc, "undefined");
+                    return;
+                }
+                _ => {}
+            }
+        }
         if let TypeInner::Generic { loc, inner } = &**ty
             && inner.targs.is_none()
             && let generic::Identifier::Unqualified(id) = &inner.id
@@ -764,6 +1108,15 @@ impl<'a> Serializer<'a> {
             return;
         }
         self.serialize_type_dispatch(ty);
+    }
+
+    fn serialize_babel_keyword_generic(&mut self, loc: &Loc, name: &str) {
+        self.write_node_header(NodeKind::GenericTypeAnnotation, loc);
+        self.write_identifier_node_header(loc, name);
+        self.write_str(name);
+        self.write_null_node();
+        self.write_bool(false);
+        self.write_null_node();
     }
 
     fn serialize_type_annotation(&mut self, annot: &ast::types::Annotation<Loc, Loc>) {
@@ -780,6 +1133,14 @@ impl<'a> Serializer<'a> {
             ast::types::AnnotationOrHint::Missing(_) => {
                 self.write_null_node();
             }
+        }
+    }
+
+    fn serialize_babel_pattern_optional(&mut self, loc: &Loc) {
+        let present = self.babel_flags(loc) & COMPONENT_PATTERN_OPTIONAL_FLAG != 0;
+        self.write_bool(present);
+        if present {
+            self.write_bool(false);
         }
     }
 
@@ -867,27 +1228,47 @@ impl<'a> Serializer<'a> {
         match pat {
             ast::pattern::Pattern::Object { loc, inner } => {
                 // 78: ObjectPattern — properties(NodeList) typeAnnotation(Node)
-                self.write_node_header(NodeKind::ObjectPattern, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelObjectPattern
+                    } else {
+                        NodeKind::ObjectPattern
+                    },
+                    loc,
+                );
                 self.buf.push(inner.properties.len() as u32);
                 for prop in inner.properties.iter() {
                     self.serialize_pattern_object_property(prop);
                 }
                 self.serialize_annotation_or_hint(&inner.annot);
+                if self.is_babel() {
+                    self.serialize_babel_pattern_optional(loc);
+                }
             }
             ast::pattern::Pattern::Array { loc, inner } => {
                 // 79: ArrayPattern — elements(NodeList) typeAnnotation(Node)
-                self.write_node_header(NodeKind::ArrayPattern, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelArrayPattern
+                    } else {
+                        NodeKind::ArrayPattern
+                    },
+                    loc,
+                );
                 self.buf.push(inner.elements.len() as u32);
                 for elem in inner.elements.iter() {
                     self.serialize_pattern_array_element(elem);
                 }
                 self.serialize_annotation_or_hint(&inner.annot);
+                if self.is_babel() {
+                    self.serialize_babel_pattern_optional(loc);
+                }
             }
             ast::pattern::Pattern::Identifier { loc, inner } => {
                 // 76: Identifier — name(String) typeAnnotation(Node) optional(Bool)
                 // Use the outer pattern loc (covers name + typeAnnotation),
                 // not the inner name loc.
-                self.write_node_header(NodeKind::Identifier, loc);
+                self.write_identifier_node_header(loc, &inner.name.name);
                 self.write_str(&inner.name.name);
                 self.serialize_annotation_or_hint(&inner.annot);
                 self.write_bool(inner.optional);
@@ -905,7 +1286,17 @@ impl<'a> Serializer<'a> {
         match prop {
             ast::pattern::object::Property::NormalProperty(np) => {
                 // 82: Property — key value kind method shorthand computed
-                self.write_node_header(NodeKind::Property, &np.loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelObjectProperty
+                    } else {
+                        NodeKind::Property
+                    },
+                    &np.loc,
+                );
+                if self.is_babel() {
+                    self.write_bool(is_pattern_key_computed(&np.key));
+                }
                 self.serialize_pattern_object_key(&np.key);
                 match &np.default {
                     Some(def) => {
@@ -922,15 +1313,17 @@ impl<'a> Serializer<'a> {
                         self.serialize_pattern(&np.pattern);
                     }
                 }
-                self.write_str("init");
+                if !self.is_babel() {
+                    self.write_str("init");
+                }
                 self.write_bool(false); // method
                 self.write_bool(np.shorthand);
-                self.write_bool(is_pattern_key_computed(&np.key));
+                if !self.is_babel() {
+                    self.write_bool(is_pattern_key_computed(&np.key));
+                }
             }
             ast::pattern::object::Property::RestElement(rest) => {
-                // 80: RestElement — argument(Node)
-                self.write_node_header(NodeKind::RestElement, &rest.loc);
-                self.serialize_pattern(&rest.argument);
+                self.serialize_rest_element(&rest.loc, &rest.argument);
             }
         }
     }
@@ -969,11 +1362,79 @@ impl<'a> Serializer<'a> {
                 }
             },
             ast::pattern::array::Element::RestElement(rest) => {
-                self.write_node_header(NodeKind::RestElement, &rest.loc);
-                self.serialize_pattern(&rest.argument);
+                self.serialize_rest_element(&rest.loc, &rest.argument);
             }
             ast::pattern::array::Element::Hole(_) => {
                 self.write_null_node();
+            }
+        }
+    }
+
+    fn serialize_rest_element(&mut self, loc: &Loc, argument: &ast::pattern::Pattern<Loc, Loc>) {
+        if !self.is_babel() {
+            self.write_node_header(NodeKind::RestElement, loc);
+            self.serialize_pattern(argument);
+            return;
+        }
+        self.write_node_header(NodeKind::BabelRestElement, loc);
+        match argument {
+            ast::pattern::Pattern::Identifier { loc, inner } => {
+                let argument_loc =
+                    if matches!(inner.annot, ast::types::AnnotationOrHint::Available(_)) {
+                        Loc {
+                            source: loc.source.clone(),
+                            start: loc.start,
+                            end: Position {
+                                line: loc.start.line,
+                                column: loc.start.column + inner.name.name.len() as i32,
+                            },
+                        }
+                    } else {
+                        loc.clone()
+                    };
+                self.write_identifier_node_header(&argument_loc, &inner.name.name);
+                self.write_str(&inner.name.name);
+                self.write_null_node();
+                self.write_bool(inner.optional);
+            }
+            ast::pattern::Pattern::Object { loc, inner } => {
+                self.write_node_header(NodeKind::BabelObjectPattern, loc);
+                self.buf.push(inner.properties.len() as u32);
+                for property in inner.properties.iter() {
+                    self.serialize_pattern_object_property(property);
+                }
+                self.write_null_node();
+                self.serialize_babel_pattern_optional(loc);
+            }
+            ast::pattern::Pattern::Array { loc, inner } => {
+                self.write_node_header(NodeKind::BabelArrayPattern, loc);
+                self.buf.push(inner.elements.len() as u32);
+                for element in inner.elements.iter() {
+                    self.serialize_pattern_array_element(element);
+                }
+                self.write_null_node();
+                self.serialize_babel_pattern_optional(loc);
+            }
+            ast::pattern::Pattern::Expression { inner, .. } => {
+                self.serialize_expression(inner);
+            }
+        }
+        let annotation = match argument {
+            ast::pattern::Pattern::Identifier { inner, .. } => Some(&inner.annot),
+            ast::pattern::Pattern::Object { inner, .. } => Some(&inner.annot),
+            ast::pattern::Pattern::Array { inner, .. } => Some(&inner.annot),
+            ast::pattern::Pattern::Expression { .. } => None,
+        };
+        let has_annotation = annotation.is_some_and(|annotation| {
+            matches!(annotation, ast::types::AnnotationOrHint::Available(_))
+        });
+        let present =
+            has_annotation || self.babel_flags(loc) & COMPONENT_REST_TYPE_ANNOTATION_FLAG != 0;
+        self.write_bool(present);
+        if present {
+            match annotation {
+                Some(annotation) => self.serialize_annotation_or_hint(annotation),
+                None => self.write_null_node(),
             }
         }
     }
@@ -1046,7 +1507,9 @@ impl<'a> Serializer<'a> {
                                 (
                                     ast::match_pattern::object_pattern::Key::Identifier(_),
                                     MatchPattern::BindingPattern { loc, .. },
-                                ) if property.shorthand => Some(self.next_token_loc_after(loc)),
+                                ) if property.shorthand => {
+                                    Some(self.source_locations.next_token_loc_after(loc))
+                                }
                                 _ => None,
                             };
                             self.serialize_match_object_key(
@@ -1083,7 +1546,7 @@ impl<'a> Serializer<'a> {
                             Some((bind_loc, bind)) => {
                                 // 208: MatchBindingPattern — id kind
                                 self.write_node_header(NodeKind::MatchBindingPattern, bind_loc);
-                                let id_loc = self.next_token_loc_after(bind_loc);
+                                let id_loc = self.source_locations.next_token_loc_after(bind_loc);
                                 self.serialize_identifier_node_with_loc(&bind.id, &id_loc);
                                 self.write_str(bind.kind.as_str());
                             }
@@ -1106,7 +1569,7 @@ impl<'a> Serializer<'a> {
                         match &rest.argument {
                             Some((bind_loc, bind)) => {
                                 self.write_node_header(NodeKind::MatchBindingPattern, bind_loc);
-                                let id_loc = self.next_token_loc_after(bind_loc);
+                                let id_loc = self.source_locations.next_token_loc_after(bind_loc);
                                 self.serialize_identifier_node_with_loc(&bind.id, &id_loc);
                                 self.write_str(bind.kind.as_str());
                             }
@@ -1141,7 +1604,9 @@ impl<'a> Serializer<'a> {
                                 (
                                     ast::match_pattern::object_pattern::Key::Identifier(_),
                                     MatchPattern::BindingPattern { loc, .. },
-                                ) if property.shorthand => Some(self.next_token_loc_after(loc)),
+                                ) if property.shorthand => {
+                                    Some(self.source_locations.next_token_loc_after(loc))
+                                }
                                 _ => None,
                             };
                             self.serialize_match_object_key(
@@ -1175,7 +1640,7 @@ impl<'a> Serializer<'a> {
                         match &rest.argument {
                             Some((bind_loc, bind)) => {
                                 self.write_node_header(NodeKind::MatchBindingPattern, bind_loc);
-                                let id_loc = self.next_token_loc_after(bind_loc);
+                                let id_loc = self.source_locations.next_token_loc_after(bind_loc);
                                 self.serialize_identifier_node_with_loc(&bind.id, &id_loc);
                                 self.write_str(bind.kind.as_str());
                             }
@@ -1199,13 +1664,13 @@ impl<'a> Serializer<'a> {
                 self.serialize_match_pattern(&inner.pattern);
                 match &inner.target {
                     ast::match_pattern::as_pattern::Target::Identifier(id) => {
-                        let id_loc = self.next_token_loc_after(&id.loc);
+                        let id_loc = self.source_locations.next_token_loc_after(&id.loc);
                         self.serialize_identifier_node_with_loc(id, &id_loc);
                     }
                     ast::match_pattern::as_pattern::Target::Binding { loc, pattern } => {
                         // 208: MatchBindingPattern — id kind
                         self.write_node_header(NodeKind::MatchBindingPattern, loc);
-                        let id_loc = self.next_token_loc_after(loc);
+                        let id_loc = self.source_locations.next_token_loc_after(loc);
                         self.serialize_identifier_node_with_loc(&pattern.id, &id_loc);
                         self.write_str(pattern.kind.as_str());
                     }
@@ -1222,7 +1687,7 @@ impl<'a> Serializer<'a> {
             MatchPattern::BindingPattern { loc, inner } => {
                 // 208: MatchBindingPattern — id(Node) kind(String)
                 self.write_node_header(NodeKind::MatchBindingPattern, loc);
-                let id_loc = self.next_token_loc_after(loc);
+                let id_loc = self.source_locations.next_token_loc_after(loc);
                 self.serialize_identifier_node_with_loc(&inner.id, &id_loc);
                 self.write_str(inner.kind.as_str());
             }
@@ -1335,6 +1800,51 @@ impl<'a> Serializer<'a> {
     fn serialize_object_property(&mut self, prop: &ast::expression::object::Property<Loc, Loc>) {
         match prop {
             ast::expression::object::Property::NormalProperty(normal) => {
+                if self.is_babel() {
+                    match normal {
+                        ast::expression::object::NormalProperty::Init {
+                            key,
+                            value,
+                            shorthand,
+                            ..
+                        } => {
+                            self.write_node_header(NodeKind::BabelObjectProperty, normal.loc());
+                            self.write_bool(is_key_computed(key));
+                            self.serialize_object_key(key);
+                            self.serialize_expression(value);
+                            self.write_bool(false);
+                            self.write_bool(*shorthand);
+                        }
+                        ast::expression::object::NormalProperty::Method { key, value, .. } => {
+                            self.serialize_babel_object_method(
+                                normal.loc(),
+                                "method",
+                                true,
+                                key,
+                                &value.1,
+                            );
+                        }
+                        ast::expression::object::NormalProperty::Get { key, value, .. } => {
+                            self.serialize_babel_object_method(
+                                normal.loc(),
+                                "get",
+                                false,
+                                key,
+                                &value.1,
+                            );
+                        }
+                        ast::expression::object::NormalProperty::Set { key, value, .. } => {
+                            self.serialize_babel_object_method(
+                                normal.loc(),
+                                "set",
+                                false,
+                                key,
+                                &value.1,
+                            );
+                        }
+                    }
+                    return;
+                }
                 // 82: Property — key value kind method shorthand computed
                 self.write_node_header(NodeKind::Property, normal.loc());
                 match normal {
@@ -1397,6 +1907,33 @@ impl<'a> Serializer<'a> {
         }
     }
 
+    fn serialize_babel_object_method(
+        &mut self,
+        loc: &Loc,
+        kind: &str,
+        method: bool,
+        key: &ast::expression::object::Key<Loc, Loc>,
+        function: &ast::function::Function<Loc, Loc>,
+    ) {
+        self.write_node_header(NodeKind::BabelObjectMethod, loc);
+        self.write_str(kind);
+        self.write_bool(method);
+        self.write_bool(is_key_computed(key));
+        self.serialize_object_key(key);
+        self.write_null_node();
+        self.serialize_function_params(&function.params);
+        self.serialize_function_body(&function.body);
+        self.write_bool(function.async_);
+        self.write_bool(function.generator);
+        self.serialize_return_type(&function.return_);
+        self.serialize_type_params_opt(&function.tparams);
+        let has_variance = kind != "method";
+        self.write_bool(has_variance);
+        if has_variance {
+            self.write_null_node();
+        }
+    }
+
     fn serialize_object_key(&mut self, key: &ast::expression::object::Key<Loc, Loc>) {
         match key {
             ast::expression::object::Key::StringLiteral((loc, lit)) => {
@@ -1421,6 +1958,22 @@ impl<'a> Serializer<'a> {
     }
 
     fn serialize_private_name(&mut self, pn: &ast::PrivateName<Loc>) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelPrivateName, &pn.loc);
+            let id_loc = Loc {
+                source: pn.loc.source.clone(),
+                start: Position {
+                    line: pn.loc.start.line,
+                    column: pn.loc.start.column + 1,
+                },
+                end: pn.loc.end,
+            };
+            self.write_identifier_node_header(&id_loc, &pn.name);
+            self.write_str(&pn.name);
+            self.write_null_node();
+            self.write_bool(false);
+            return;
+        }
         // 77: PrivateIdentifier — name(String) typeAnnotation(Node) optional(Bool)
         self.write_node_header(NodeKind::PrivateIdentifier, &pn.loc);
         self.write_str(&pn.name);
@@ -1462,7 +2015,7 @@ impl<'a> Serializer<'a> {
                             // 117: GenericTypeAnnotation — id(Node) typeParameters(Node)
                             self.write_node_header(NodeKind::GenericTypeAnnotation, &imp.loc);
                             // 76: Identifier — name typeAnnotation optional
-                            self.write_node_header(NodeKind::Identifier, &imp.loc);
+                            self.write_identifier_node_header(&imp.loc, "_");
                             self.write_str("_");
                             self.write_null_node();
                             self.write_bool(false);
@@ -1499,7 +2052,8 @@ impl<'a> Serializer<'a> {
         self.buf.push(tl.quasis.len() as u32);
         for quasi in tl.quasis.iter() {
             // 66: TemplateElement — tail(Bool) cooked(String) raw(String)
-            self.write_node_header(NodeKind::TemplateElement, &quasi.loc);
+            let quasi_loc = self.template_element_loc(&quasi.loc, quasi.tail);
+            self.write_node_header(NodeKind::TemplateElement, &quasi_loc);
             self.write_bool(quasi.tail);
             self.write_template_cooked_value(&quasi.value.raw, &quasi.value.cooked);
             self.write_str(&quasi.value.raw);
@@ -1507,6 +2061,23 @@ impl<'a> Serializer<'a> {
         self.buf.push(tl.expressions.len() as u32);
         for expr in tl.expressions.iter() {
             self.serialize_expression(expr);
+        }
+    }
+
+    fn template_element_loc(&self, loc: &Loc, tail: bool) -> Loc {
+        if !self.is_babel() {
+            return loc.clone();
+        }
+        Loc {
+            source: loc.source.clone(),
+            start: Position {
+                line: loc.start.line,
+                column: loc.start.column + 1,
+            },
+            end: Position {
+                line: loc.end.line,
+                column: loc.end.column - if tail { 1 } else { 2 },
+            },
         }
     }
 
@@ -1520,8 +2091,16 @@ impl<'a> Serializer<'a> {
         func: &ast::function::Function<Loc, Loc>,
         kind: NodeKind,
     ) {
-        // 46/47: FunctionExpression/ArrowFunctionExpression
-        self.write_node_header(kind, loc);
+        let wire_kind = if self.is_babel() {
+            if kind == NodeKind::ArrowFunctionExpression {
+                NodeKind::BabelArrowFunctionExpression
+            } else {
+                NodeKind::BabelFunctionExpression
+            }
+        } else {
+            kind
+        };
+        self.write_node_header(wire_kind, loc);
 
         if kind == NodeKind::ArrowFunctionExpression {
             // ArrowFunctionExpression: params body typeParameters returnType async id predicate expression
@@ -1552,7 +2131,9 @@ impl<'a> Serializer<'a> {
             Some(pred) => self.serialize_predicate(pred),
             None => self.write_null_node(),
         }
-        self.write_bool(matches!(&func.body, ast::function::Body::BodyExpression(_)));
+        if !self.is_babel() {
+            self.write_bool(matches!(&func.body, ast::function::Body::BodyExpression(_)));
+        }
     }
 
     fn serialize_function_decl(
@@ -1563,7 +2144,7 @@ impl<'a> Serializer<'a> {
     ) {
         // Hook functions emit a different node kind (HookDeclaration) with a
         // narrower property set: no generator/predicate/expression.
-        if func.effect_ == ast::function::Effect::Hook {
+        if !self.is_babel() && func.effect_ == ast::function::Effect::Hook {
             // 24: HookDeclaration — id params body returnType typeParameters async
             self.write_node_header(NodeKind::HookDeclaration, loc);
             match &func.id {
@@ -1578,7 +2159,14 @@ impl<'a> Serializer<'a> {
             return;
         }
         // 19: FunctionDeclaration — id params body typeParameters returnType generator async predicate expression
-        self.write_node_header(kind, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelFunctionDeclaration
+            } else {
+                kind
+            },
+            loc,
+        );
         match &func.id {
             Some(id) => self.serialize_identifier_node(id),
             None => self.write_null_node(),
@@ -1593,7 +2181,13 @@ impl<'a> Serializer<'a> {
             Some(pred) => self.serialize_predicate(pred),
             None => self.write_null_node(),
         }
-        self.write_bool(matches!(&func.body, ast::function::Body::BodyExpression(_)));
+        if self.is_babel() {
+            let flags = self.babel_flags(loc);
+            self.write_bool(flags & COMPONENT_FUNCTION_FLAG != 0);
+            self.write_bool(flags & HOOK_FUNCTION_FLAG != 0);
+        } else {
+            self.write_bool(matches!(&func.body, ast::function::Body::BodyExpression(_)));
+        }
     }
 
     fn serialize_function_params(&mut self, params: &ast::function::Params<Loc, Loc>) {
@@ -1605,7 +2199,7 @@ impl<'a> Serializer<'a> {
         // ahead of the regular params.
         if let Some(this) = &params.this_ {
             // 76: Identifier — name(String), typeAnnotation(Node), optional(Bool)
-            self.write_node_header(NodeKind::Identifier, &this.loc);
+            self.write_identifier_node_header(&this.loc, "this");
             self.write_str("this");
             self.serialize_type_annotation(&this.annot);
             self.write_bool(false);
@@ -1614,9 +2208,7 @@ impl<'a> Serializer<'a> {
             self.serialize_function_param(param);
         }
         if let Some(rest) = &params.rest {
-            // 80: RestElement — argument(Node)
-            self.write_node_header(NodeKind::RestElement, &rest.loc);
-            self.serialize_pattern(&rest.argument);
+            self.serialize_rest_element(&rest.loc, &rest.argument);
         }
     }
 
@@ -1711,7 +2303,18 @@ impl<'a> Serializer<'a> {
     fn serialize_class(&mut self, loc: &Loc, class: &ast::class::Class<Loc, Loc>, kind: NodeKind) {
         // 22/84: ClassDeclaration/ClassExpression
         // id typeParameters superClass implements body superTypeArguments decorators
-        self.write_node_header(kind, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                if kind == NodeKind::ClassDeclaration {
+                    NodeKind::BabelClassDeclaration
+                } else {
+                    NodeKind::BabelClassExpression
+                }
+            } else {
+                kind
+            },
+            loc,
+        );
         match &class.id {
             Some(id) => self.serialize_identifier_node(id),
             None => self.write_null_node(),
@@ -1758,6 +2361,33 @@ impl<'a> Serializer<'a> {
     fn serialize_class_body_element(&mut self, elem: &ast::class::BodyElement<Loc, Loc>) {
         match elem {
             ast::class::BodyElement::Method(m) => {
+                if self.is_babel() {
+                    let private = matches!(m.key, ast::expression::object::Key::PrivateName(_));
+                    self.write_node_header(
+                        if private {
+                            NodeKind::BabelClassPrivateMethod
+                        } else {
+                            NodeKind::BabelClassMethod
+                        },
+                        &m.loc,
+                    );
+                    self.write_str(method_kind_str(m.kind));
+                    if !private {
+                        self.write_bool(is_key_computed(&m.key));
+                    }
+                    self.write_bool(m.static_);
+                    self.serialize_object_key(&m.key);
+                    self.write_null_node();
+                    let (_, function) = &m.value;
+                    self.serialize_function_params(&function.params);
+                    self.serialize_function_body(&function.body);
+                    self.write_bool(function.async_);
+                    self.write_bool(function.generator);
+                    self.serialize_return_type(&function.return_);
+                    self.serialize_type_params_opt(&function.tparams);
+                    self.write_null_node();
+                    return;
+                }
                 // 87: MethodDefinition — key value kind static computed decorators
                 //     override tsAccessibility
                 self.write_node_header(NodeKind::MethodDefinition, &m.loc);
@@ -1781,6 +2411,26 @@ impl<'a> Serializer<'a> {
                 );
             }
             ast::class::BodyElement::Property(p) => {
+                if self.is_babel() {
+                    self.write_node_header(NodeKind::BabelClassProperty, &p.loc);
+                    self.serialize_object_key(&p.key);
+                    match &p.value {
+                        ast::class::property::Value::Initialized(expr) => {
+                            self.serialize_expression(expr);
+                        }
+                        _ => self.write_null_node(),
+                    }
+                    self.serialize_annotation_or_hint(&p.annot);
+                    self.write_bool(p.static_);
+                    match &p.variance {
+                        Some(variance) => self.serialize_variance(variance),
+                        None => self.write_null_node(),
+                    }
+                    self.write_bool(matches!(p.value, ast::class::property::Value::Declared));
+                    self.write_bool(p.optional);
+                    self.write_bool(is_key_computed(&p.key));
+                    return;
+                }
                 // 88: PropertyDefinition — key value typeAnnotation computed static variance
                 //     tsAccessibility declare optional override decorators
                 self.write_node_header(NodeKind::PropertyDefinition, &p.loc);
@@ -1817,6 +2467,23 @@ impl<'a> Serializer<'a> {
                 //     tsAccessibility declare optional override decorators
                 let mut private_field_loc = pf.loc.clone();
                 private_field_loc.start = pf.key.loc.start;
+                if self.is_babel() {
+                    self.write_node_header(NodeKind::BabelClassPrivateProperty, &private_field_loc);
+                    self.serialize_private_name(&pf.key);
+                    match &pf.value {
+                        ast::class::property::Value::Initialized(expr) => {
+                            self.serialize_expression(expr);
+                        }
+                        _ => self.write_null_node(),
+                    }
+                    self.serialize_annotation_or_hint(&pf.annot);
+                    self.write_bool(pf.static_);
+                    match &pf.variance {
+                        Some(variance) => self.serialize_variance(variance),
+                        None => self.write_null_node(),
+                    }
+                    return;
+                }
                 self.write_node_header(NodeKind::PropertyDefinition, &private_field_loc);
                 // key: PrivateIdentifier
                 self.serialize_private_name(&pf.key);
@@ -1958,7 +2625,14 @@ impl<'a> Serializer<'a> {
 
     fn serialize_jsx_opening_element(&mut self, opening: &ast::jsx::Opening<Loc, Loc>) {
         // 169: JSXOpeningElement — name attributes selfClosing typeArguments
-        self.write_node_header(NodeKind::JSXOpeningElement, &opening.loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelJSXOpeningElement
+            } else {
+                NodeKind::JSXOpeningElement
+            },
+            &opening.loc,
+        );
         self.serialize_jsx_name(&opening.name);
         self.buf.push(opening.attributes.len() as u32);
         for attr in opening.attributes.iter() {
@@ -1980,7 +2654,9 @@ impl<'a> Serializer<'a> {
             }
         }
         self.write_bool(opening.self_closing);
-        self.serialize_call_type_args_opt(&opening.targs);
+        if !self.is_babel() {
+            self.serialize_call_type_args_opt(&opening.targs);
+        }
     }
 
     fn serialize_jsx_name(&mut self, name: &ast::jsx::Name<Loc, Loc>) {
@@ -2094,7 +2770,14 @@ impl<'a> Serializer<'a> {
             }
             ast::jsx::Child::Text { loc, inner } => {
                 // 178: JSXText — value(String) raw(String)
-                self.write_node_header(NodeKind::JSXText, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelJSXText
+                    } else {
+                        NodeKind::JSXText
+                    },
+                    loc,
+                );
                 self.write_str(&inner.value);
                 self.write_str(&inner.raw);
             }
@@ -2111,7 +2794,14 @@ impl<'a> Serializer<'a> {
         decl: &ast::statement::ImportDeclaration<Loc, Loc>,
     ) {
         // 29: ImportDeclaration — specifiers(NodeList) source(Node) importKind(String) attributes(NodeList)
-        self.write_node_header(NodeKind::ImportDeclaration, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelImportDeclaration
+            } else {
+                NodeKind::ImportDeclaration
+            },
+            loc,
+        );
         // Build specifiers list: default (if any) + specifiers (named or namespace)
         let default_count = if decl.default.is_some() { 1 } else { 0 };
         let spec_count = match &decl.specifiers {
@@ -2241,23 +2931,64 @@ impl<'a> Serializer<'a> {
             Some(ast::statement::export_named_declaration::Specifier::ExportBatchSpecifier(
                 batch,
             )) => {
+                if self.is_babel()
+                    && let Some(exported) = &batch.specifier
+                {
+                    self.write_node_header(NodeKind::BabelExportNamedDeclaration, loc);
+                    self.write_null_node();
+                    self.buf.push(1);
+                    let specifier_loc = Loc {
+                        source: loc.source.clone(),
+                        start: Position {
+                            line: loc.start.line,
+                            column: loc.start.column + 7,
+                        },
+                        end: exported.loc.end,
+                    };
+                    self.write_node_header(NodeKind::ExportNamespaceSpecifier, &specifier_loc);
+                    self.serialize_identifier_node(exported);
+                    match &decl.source {
+                        Some((source_loc, source)) => {
+                            self.write_string_literal(source_loc, &source.value, &source.raw);
+                        }
+                        None => self.write_null_node(),
+                    }
+                    self.write_str(export_kind_str(decl.export_kind));
+                    return;
+                }
                 // 38: ExportAllDeclaration — source(Node) exported(Node) exportKind(String)
-                self.write_node_header(NodeKind::ExportAllDeclaration, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelExportAllDeclaration
+                    } else {
+                        NodeKind::ExportAllDeclaration
+                    },
+                    loc,
+                );
                 match &decl.source {
                     Some((src_loc, src_lit)) => {
                         self.write_string_literal(src_loc, &src_lit.value, &src_lit.raw);
                     }
                     None => self.write_null_node(),
                 }
-                match &batch.specifier {
-                    Some(id) => self.serialize_identifier_node(id),
-                    None => self.write_null_node(),
+                if !self.is_babel() {
+                    match &batch.specifier {
+                        Some(id) => self.serialize_identifier_node(id),
+                        None => self.write_null_node(),
+                    }
                 }
                 self.write_str(export_kind_str(decl.export_kind));
             }
             specifiers => {
                 // 36: ExportNamedDeclaration — declaration specifiers source exportKind
-                self.write_node_header(NodeKind::ExportNamedDeclaration, loc);
+                self.write_node_header(
+                    if self.is_babel() {
+                        NodeKind::BabelExportNamedDeclaration
+                    } else {
+                        NodeKind::ExportNamedDeclaration
+                    },
+                    loc,
+                );
                 match &decl.declaration {
                     Some(stmt) => self.serialize_statement(stmt),
                     None => self.write_null_node(),
@@ -2345,7 +3076,7 @@ impl<'a> Serializer<'a> {
         // 76: Identifier — name(String) typeAnnotation(Node) optional(Bool)
         // The Identifier loc spans the name through its type annotation.
         let id_loc = Loc::between(&id.loc, &annot.loc);
-        self.write_node_header(NodeKind::Identifier, &id_loc);
+        self.write_identifier_node_header(&id_loc, &id.name);
         self.write_str(&id.name);
         self.serialize_type_annotation(annot);
         self.write_bool(false);
@@ -2762,7 +3493,14 @@ impl<'a> Serializer<'a> {
 
     fn serialize_tuple_type(&mut self, loc: &Loc, tuple: &ast::types::Tuple<Loc, Loc>) {
         // 144: TupleTypeAnnotation — elementTypes(NodeList) inexact(Bool)
-        self.write_node_header(NodeKind::TupleTypeAnnotation, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelTupleTypeAnnotation
+            } else {
+                NodeKind::TupleTypeAnnotation
+            },
+            loc,
+        );
         self.buf.push(tuple.elements.len() as u32);
         for elem in tuple.elements.iter() {
             match elem {
@@ -2803,7 +3541,9 @@ impl<'a> Serializer<'a> {
                 }
             }
         }
-        self.write_bool(tuple.inexact);
+        if !self.is_babel() {
+            self.write_bool(tuple.inexact);
+        }
     }
 
     fn serialize_typeof_target(&mut self, target: &ast::types::typeof_::Target<Loc, Loc>) {
@@ -2824,6 +3564,37 @@ impl<'a> Serializer<'a> {
                     &imp.argument.0,
                     &imp.argument.1.value,
                     &imp.argument.1.raw,
+                );
+            }
+        }
+    }
+
+    fn serialize_babel_typeof(&mut self, loc: &Loc, typeof_: &ast::types::Typeof<Loc, Loc>) {
+        self.write_node_header(NodeKind::BabelTypeofTypeAnnotation, loc);
+        self.write_node_header(NodeKind::GenericTypeAnnotation, typeof_.argument.loc());
+        self.serialize_babel_typeof_identifier(&typeof_.argument);
+        self.write_null_node();
+    }
+
+    fn serialize_babel_typeof_identifier(
+        &mut self,
+        target: &ast::types::typeof_::Target<Loc, Loc>,
+    ) {
+        match target {
+            ast::types::typeof_::Target::Unqualified(identifier) => {
+                self.serialize_identifier_node(identifier);
+            }
+            ast::types::typeof_::Target::Qualified(qualified) => {
+                self.write_node_header(NodeKind::QualifiedTypeIdentifier, &qualified.loc);
+                self.serialize_babel_typeof_identifier(&qualified.qualification);
+                self.serialize_identifier_node(&qualified.id);
+            }
+            ast::types::typeof_::Target::Import(import) => {
+                self.write_node_header(NodeKind::ImportType, &import.loc);
+                self.write_string_literal(
+                    &import.argument.0,
+                    &import.argument.1.value,
+                    &import.argument.1.raw,
                 );
             }
         }
@@ -3101,10 +3872,7 @@ impl<'a> Serializer<'a> {
                 use ast::statement::declare_export_declaration::Declaration;
                 match d {
                     Declaration::Variable { loc, declaration } => {
-                        self.write_node_header(NodeKind::DeclareVariable, loc);
-                        self.serialize_variable_declarator_list(&declaration.declarations);
-                        self.write_str(declaration.kind.as_str());
-                        self.write_bool(self.implicit_declare_from_loc(loc));
+                        self.serialize_declare_variable(loc, declaration);
                     }
                     Declaration::Function { loc, declaration } => {
                         // Defer entirely to serialize_declare_function, which
@@ -3241,8 +4009,7 @@ impl<'a> Serializer<'a> {
                 self.serialize_component_declaration_param(param);
             }
             if let Some(rest) = &inner.params.rest {
-                self.write_node_header(NodeKind::RestElement, &rest.loc);
-                self.serialize_pattern(&rest.argument);
+                self.serialize_rest_element(&rest.loc, &rest.argument);
             }
             // rest: always null (rest is in params list above)
             self.write_null_node();
@@ -3254,8 +4021,7 @@ impl<'a> Serializer<'a> {
                 self.serialize_component_declaration_param(param);
             }
             if let Some(rest) = &inner.params.rest {
-                self.write_node_header(NodeKind::RestElement, &rest.loc);
-                self.serialize_pattern(&rest.argument);
+                self.serialize_rest_element(&rest.loc, &rest.argument);
             }
         }
         // rendersType
@@ -3284,7 +4050,14 @@ impl<'a> Serializer<'a> {
 
     fn serialize_opaque_type(&mut self, loc: &Loc, inner: &ast::statement::OpaqueType<Loc, Loc>) {
         // OpaqueType — id typeParameters impltype lowerBound upperBound supertype
-        self.write_node_header(NodeKind::OpaqueType, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelOpaqueType
+            } else {
+                NodeKind::OpaqueType
+            },
+            loc,
+        );
         self.serialize_opaque_type_payload(inner);
     }
 
@@ -3295,13 +4068,15 @@ impl<'a> Serializer<'a> {
             Some(ty) => self.serialize_type(ty),
             None => self.write_null_node(),
         }
-        match &inner.lower_bound {
-            Some(ty) => self.serialize_type(ty),
-            None => self.write_null_node(),
-        }
-        match &inner.upper_bound {
-            Some(ty) => self.serialize_type(ty),
-            None => self.write_null_node(),
+        if !self.is_babel() {
+            match &inner.lower_bound {
+                Some(ty) => self.serialize_type(ty),
+                None => self.write_null_node(),
+            }
+            match &inner.upper_bound {
+                Some(ty) => self.serialize_type(ty),
+                None => self.write_null_node(),
+            }
         }
         match &inner.legacy_upper_bound {
             Some(ty) => self.serialize_type(ty),
@@ -3314,6 +4089,14 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::statement::DeclareVariable<Loc, Loc>,
     ) {
+        if self.is_babel() {
+            self.write_node_header(NodeKind::BabelDeclareVariable, loc);
+            match inner.declarations.first() {
+                Some(declaration) => self.serialize_pattern(&declaration.id),
+                None => self.write_null_node(),
+            }
+            return;
+        }
         // 98: DeclareVariable — declarations(NodeList) kind(String) implicitDeclare(Boolean)
         self.write_node_header(NodeKind::DeclareVariable, loc);
         self.serialize_variable_declarator_list(&inner.declarations);
@@ -3410,8 +4193,7 @@ impl<'a> Serializer<'a> {
             self.serialize_component_declaration_param(param);
         }
         if let Some(rest) = &inner.params.rest {
-            self.write_node_header(NodeKind::RestElement, &rest.loc);
-            self.serialize_pattern(&rest.argument);
+            self.serialize_rest_element(&rest.loc, &rest.argument);
         }
         // rest: always null (rest is in params list above)
         self.write_null_node();
@@ -3492,19 +4274,35 @@ impl<'a> Serializer<'a> {
     ) {
         // DeclareOpaqueType — id typeParameters impltype lowerBound upperBound
         // supertype implicitDeclare(Boolean)
-        self.write_node_header(NodeKind::DeclareOpaqueType, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelDeclareOpaqueType
+            } else {
+                NodeKind::DeclareOpaqueType
+            },
+            loc,
+        );
         self.serialize_opaque_type_payload(inner);
         self.write_bool(self.implicit_declare_from_loc(loc));
     }
 
     fn serialize_array_expression(&mut self, loc: &Loc, inner: &ast::expression::Array<Loc, Loc>) {
         // 44: ArrayExpression — elements(NodeList) trailingComma(Bool)
-        self.write_node_header(NodeKind::ArrayExpression, loc);
+        self.write_node_header(
+            if self.is_babel() {
+                NodeKind::BabelArrayExpression
+            } else {
+                NodeKind::ArrayExpression
+            },
+            loc,
+        );
         self.buf.push(inner.elements.len() as u32);
         for elem in inner.elements.iter() {
             self.serialize_array_element(elem);
         }
-        self.write_bool(inner.trailing_comma);
+        if !self.is_babel() {
+            self.write_bool(inner.trailing_comma);
+        }
     }
 
     fn serialize_object_expression(
@@ -3656,7 +4454,8 @@ impl<'a> Serializer<'a> {
         self.buf.push(inner.quasis.len() as u32);
         for quasi in inner.quasis.iter() {
             // Reuse TemplateElement node kind (66)
-            self.write_node_header(NodeKind::TemplateElement, &quasi.loc);
+            let quasi_loc = self.template_element_loc(&quasi.loc, quasi.tail);
+            self.write_node_header(NodeKind::TemplateElement, &quasi_loc);
             self.write_bool(quasi.tail);
             self.write_template_cooked_value(&quasi.value.raw, &quasi.value.cooked);
             self.write_str(&quasi.value.raw);

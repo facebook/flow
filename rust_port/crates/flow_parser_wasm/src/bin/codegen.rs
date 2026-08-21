@@ -178,70 +178,168 @@ fn deserialize_call(ty: PropType) -> &'static str {
         PropType::String => "this.deserializeString()",
         PropType::Boolean => "this.deserializeBoolean()",
         PropType::Number => "this.deserializeNumber()",
+        PropType::OptionalNode => "this.deserializeNode()",
+        PropType::TrueBoolean => "this.deserializeBoolean()",
+        PropType::NonEmptyNodeList => "this.deserializeNodeList()",
+        PropType::MaybeNode => "this.deserializeNode()",
+        PropType::MaybeBoolean => "this.deserializeBoolean()",
+        PropType::CommentList => "this.deserializeComments()",
     }
+}
+
+fn print_property(indent: &str, prop_name: &str, prop_ty: PropType) {
+    match prop_ty {
+        PropType::OptionalNode => {
+            println!("{indent}{{");
+            println!("{indent}  const value = this.deserializeNode();");
+            println!("{indent}  if (value != null) node['{prop_name}'] = value;");
+            println!("{indent}}}");
+        }
+        PropType::TrueBoolean => {
+            println!("{indent}if (this.deserializeBoolean()) node['{prop_name}'] = true;");
+        }
+        PropType::NonEmptyNodeList => {
+            println!("{indent}{{");
+            println!("{indent}  const value = this.deserializeNodeList();");
+            println!("{indent}  if (value.length > 0) node['{prop_name}'] = value;");
+            println!("{indent}}}");
+        }
+        PropType::MaybeNode => {
+            println!("{indent}if (this.deserializeBoolean()) {{");
+            println!("{indent}  node['{prop_name}'] = this.deserializeNode();");
+            println!("{indent}}}");
+        }
+        PropType::MaybeBoolean => {
+            println!("{indent}if (this.deserializeBoolean()) {{");
+            println!("{indent}  node['{prop_name}'] = this.deserializeBoolean();");
+            println!("{indent}}}");
+        }
+        _ => println!(
+            "{indent}node.{} = {};",
+            js_prop_name(prop_name),
+            deserialize_call(prop_ty)
+        ),
+    }
+}
+
+fn is_conditional_property(prop_ty: PropType) -> bool {
+    matches!(
+        prop_ty,
+        PropType::OptionalNode
+            | PropType::TrueBoolean
+            | PropType::NonEmptyNodeList
+            | PropType::MaybeNode
+            | PropType::MaybeBoolean
+    )
 }
 
 fn print_mechanical_deserializer(def: &NodeDef) {
     println!("  // {}: {}", def.kind_id, def.name);
     println!("  function () {{");
-    println!("    return {{");
+    let has_conditional_properties = def
+        .extra_pre_props
+        .iter()
+        .chain(def.properties.iter())
+        .chain(def.extra_post_props.iter())
+        .any(|(_, prop_ty)| is_conditional_property(*prop_ty));
+    if !has_conditional_properties {
+        println!("    return {{");
+        println!("      type: '{}',", def.estree_type);
+        println!("      loc: this.addEmptyLoc(),");
+        for (prop_name, prop_ty) in def.extra_pre_props {
+            println!(
+                "      {}: {},",
+                js_prop_name(prop_name),
+                deserialize_call(*prop_ty)
+            );
+        }
+        if def.nested_object_props.is_empty() {
+            for (prop_name, prop_ty) in def.properties {
+                println!(
+                    "      {}: {},",
+                    js_prop_name(prop_name),
+                    deserialize_call(*prop_ty)
+                );
+            }
+        } else {
+            for (prop_name, prop_ty) in def.properties {
+                if def.nested_object_props.contains(prop_name) {
+                    continue;
+                }
+                println!(
+                    "      {}: {},",
+                    js_prop_name(prop_name),
+                    deserialize_call(*prop_ty)
+                );
+            }
+            println!("      value: {{");
+            for (prop_name, prop_ty) in def.properties {
+                if !def.nested_object_props.contains(prop_name) {
+                    continue;
+                }
+                println!(
+                    "        {}: {},",
+                    js_prop_name(prop_name),
+                    deserialize_call(*prop_ty)
+                );
+            }
+            println!("      }},");
+        }
+        for (prop_name, prop_ty) in def.extra_post_props {
+            println!(
+                "      {}: {},",
+                js_prop_name(prop_name),
+                deserialize_call(*prop_ty)
+            );
+        }
+        println!("    }};");
+        println!("  }},");
+        return;
+    }
+
+    println!("    const node = {{");
     // The JS `type` field is the ESTree node type. It usually matches the
     // NodeKind name, but can be overridden via `as "EsTreeName"` in the
     // schema for nodes that share an ESTree type (different binary shapes
     // routed to the same ESTree node, e.g. DeclareComponent).
     println!("      type: '{}',", def.estree_type);
     println!("      loc: this.addEmptyLoc(),");
+    println!("    }};");
 
     for (prop_name, prop_ty) in def.extra_pre_props {
-        println!(
-            "      {}: {},",
-            js_prop_name(prop_name),
-            deserialize_call(*prop_ty)
-        );
+        print_property("    ", prop_name, *prop_ty);
     }
 
     if def.nested_object_props.is_empty() {
         for (prop_name, prop_ty) in def.properties {
-            println!(
-                "      {}: {},",
-                js_prop_name(prop_name),
-                deserialize_call(*prop_ty)
-            );
+            print_property("    ", prop_name, *prop_ty);
         }
     } else {
         for (prop_name, prop_ty) in def.properties {
             if def.nested_object_props.contains(prop_name) {
                 continue;
             }
+            print_property("    ", prop_name, *prop_ty);
+        }
+        println!("    node.value = {{");
+        for (prop_name, prop_ty) in def.properties {
+            if !def.nested_object_props.contains(prop_name) {
+                continue;
+            }
             println!(
                 "      {}: {},",
                 js_prop_name(prop_name),
                 deserialize_call(*prop_ty)
             );
         }
-        println!("      value: {{");
-        for (prop_name, prop_ty) in def.properties {
-            if !def.nested_object_props.contains(prop_name) {
-                continue;
-            }
-            println!(
-                "        {}: {},",
-                js_prop_name(prop_name),
-                deserialize_call(*prop_ty)
-            );
-        }
-        println!("      }},");
+        println!("    }};");
     }
 
     for (prop_name, prop_ty) in def.extra_post_props {
-        println!(
-            "      {}: {},",
-            js_prop_name(prop_name),
-            deserialize_call(*prop_ty)
-        );
+        print_property("    ", prop_name, *prop_ty);
     }
 
-    println!("    }};");
+    println!("    return node;");
     println!("  }},");
 }
 
@@ -252,8 +350,84 @@ fn print_custom_deserializer(def: &NodeDef) {
     match def.name {
         "Literal" => print_literal_deserializer(def),
         "BigIntLiteralTypeAnnotation" => print_bigint_literal_type_annotation_deserializer(def),
+        "BabelDirectiveLiteral" => print_babel_string_with_extra_deserializer(def, true),
+        "BabelStringLiteral" => print_babel_string_with_extra_deserializer(def, false),
+        "BabelNumericLiteral" => print_babel_number_with_extra_deserializer(def),
+        "BabelBigIntLiteral" => print_babel_string_with_extra_deserializer(def, false),
+        "BabelRegExpLiteral" => print_babel_regexp_deserializer(def),
+        "BabelStringLiteralTypeAnnotation" => {
+            print_babel_string_with_extra_deserializer(def, false)
+        }
+        "BabelNumberLiteralTypeAnnotation" => print_babel_number_with_extra_deserializer(def),
+        "BabelBigIntLiteralTypeAnnotation" => {
+            print_babel_bigint_type_deserializer(def)
+        }
+        "BabelJSXText" => print_babel_string_with_extra_deserializer(def, false),
+        "BabelEnumRuntime" => print_babel_enum_runtime_deserializer(def),
         other => panic!("custom_emit set for {}, but no handler defined", other),
     }
+}
+
+fn print_babel_string_with_extra_deserializer(def: &NodeDef, separate_raw_value: bool) {
+    println!("  // {}: {}", def.kind_id, def.name);
+    println!("  function () {{");
+    println!("    const loc = this.addEmptyLoc();");
+    println!("    const value = this.deserializeString();");
+    if separate_raw_value {
+        println!("    const rawValue = this.deserializeString();");
+    } else {
+        println!("    const rawValue = value;");
+    }
+    println!("    const raw = this.deserializeString();");
+    println!("    return {{type: '{}', loc, value, extra: {{rawValue, raw}}}};", def.estree_type);
+    println!("  }},");
+}
+
+fn print_babel_number_with_extra_deserializer(def: &NodeDef) {
+    println!("  // {}: {}", def.kind_id, def.name);
+    println!("  function () {{");
+    println!("    const loc = this.addEmptyLoc();");
+    println!("    const value = this.deserializeNumber();");
+    println!("    const raw = this.deserializeString();");
+    println!("    return {{type: '{}', loc, value, extra: {{rawValue: value, raw}}}};", def.estree_type);
+    println!("  }},");
+}
+
+fn print_babel_bigint_type_deserializer(def: &NodeDef) {
+    println!("  // {}: {}", def.kind_id, def.name);
+    println!("  function () {{");
+    println!("    const loc = this.addEmptyLoc();");
+    println!("    const bigint = this.deserializeString();");
+    println!("    const raw = this.deserializeString();");
+    println!("    let value = null;");
+    println!("    if (bigint != null && typeof BigInt === 'function') {{");
+    println!("      try {{");
+    println!("        value = BigInt(bigint);");
+    println!("      }} catch (error) {{");
+    println!("        value = null;");
+    println!("      }}");
+    println!("    }}");
+    println!("    return {{type: '{}', loc, value, extra: {{rawValue: bigint, raw}}}};", def.estree_type);
+    println!("  }},");
+}
+
+fn print_babel_enum_runtime_deserializer(def: &NodeDef) {
+    println!("  // {}: {}", def.kind_id, def.name);
+    println!("  function () {{");
+    println!("    this.addEmptyLoc();");
+    println!("    return this.deserializeEnumRuntime();");
+    println!("  }},");
+}
+
+fn print_babel_regexp_deserializer(def: &NodeDef) {
+    println!("  // {}: {}", def.kind_id, def.name);
+    println!("  function () {{");
+    println!("    const loc = this.addEmptyLoc();");
+    println!("    const raw = this.deserializeString();");
+    println!("    const pattern = this.deserializeString();");
+    println!("    const flags = this.deserializeString();");
+    println!("    return {{type: '{}', loc, extra: {{raw}}, pattern, flags}};", def.estree_type);
+    println!("  }},");
 }
 
 fn print_bigint_literal_type_annotation_deserializer(def: &NodeDef) {
@@ -264,8 +438,8 @@ fn print_bigint_literal_type_annotation_deserializer(def: &NodeDef) {
     // The wire reserves a Node slot for `value` to keep the layout uniform
     // with the other LiteralTypeAnnotation kinds (which carry a literal
     // value); the slot is always a null Node placeholder for BigInt
-    // because `BigInt(...)` cannot be JSON-serialized. Discard it and
-    // construct the host BigInt value from `bigint` below.
+    // because the binary wire only carries primitive scalar slots. Discard it
+    // and construct the host BigInt value from `bigint` below.
     println!("    this.deserializeNode();");
     println!("    const raw = this.deserializeString();");
     println!("    const bigint = this.deserializeString();");
@@ -284,13 +458,7 @@ fn print_bigint_literal_type_annotation_deserializer(def: &NodeDef) {
     println!("        value = null;");
     println!("      }}");
     println!("    }}");
-    println!("    return {{");
-    println!("      type: '{}',", def.estree_type);
-    println!("      loc,");
-    println!("      value,");
-    println!("      raw,");
-    println!("      bigint,");
-    println!("    }};");
+    println!("    return {{type: '{}', loc, value, raw, bigint}};", def.estree_type);
     println!("  }},");
 }
 
@@ -312,8 +480,8 @@ fn print_literal_deserializer(def: &NodeDef) {
     println!("    const regexFlags = this.deserializeString();");
     // Mirror upstream Hermes' HermesToESTreeAdapter.{mapBigIntLiteral,
     // mapRegExpLiteral}: construct the host BigInt / RegExp value here at
-    // deserialization time. The wire can't carry these because BigInt and
-    // RegExp aren't JSON-serializable; doing it inline eliminates any
+    // deserialization time. The binary wire carries their primitive source
+    // fields, and the decoder constructs the JS-host values without a
     // post-deserialization walker. `new RegExp` may throw on invalid
     // flags — swallow with null per upstream Hermes
     // (HermesToESTreeAdapter.mapRegExpLiteral lines 161-166).
@@ -942,13 +1110,15 @@ const KNOWN_TYPES_WITHOUT_INTERFACE: &[&str] = &[
 /// Pure cross-check: returns the list of NodeDef `estree_type` names from
 /// `schema` that have no matching `export interface <name>` /
 /// `export interface <name>\n` / `export type <name> =` declaration in
-/// `upstream` AND are not in `KNOWN_TYPES_WITHOUT_INTERFACE`. Caller decides
-/// whether to hard-fail. Extracted so a unit test can verify the hard-fail
-/// path without invoking `std::process::exit`.
+/// `upstream`, are not Babel-only nodes, AND are not in
+/// `KNOWN_TYPES_WITHOUT_INTERFACE`. Caller decides whether to hard-fail.
+/// Extracted so a unit test can verify the hard-fail path without invoking
+/// `std::process::exit`.
 fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'static str> {
     let mut missing: Vec<&'static str> = Vec::new();
     for def in schema.iter() {
-        if KNOWN_TYPES_WITHOUT_INTERFACE.contains(&def.estree_type)
+        if def.name.starts_with("Babel")
+            || KNOWN_TYPES_WITHOUT_INTERFACE.contains(&def.estree_type)
             || missing.contains(&def.estree_type)
         {
             continue;

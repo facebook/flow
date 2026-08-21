@@ -6,8 +6,12 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
+dupe = "0.9.1"
+flow_data_structure_wrapper = { path = "../flow_data_structure_wrapper" }
 flow_parser = { path = "../flow_parser" }
+flow_parser_utils = { path = "../flow_parser_utils" }
 prettyplease = { version = "0.3.0", features = ["verbatim"] }
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
 syn = { version = "3", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
+thiserror = "2.0.20"

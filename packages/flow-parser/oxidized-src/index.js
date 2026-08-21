@@ -12,7 +12,7 @@
 
 import type {Program as ESTreeProgram} from 'flow-estree';
 import type {ParserOptions} from './ParserOptions';
-import type {BabelFile} from './babel/TransformESTreeToBabel';
+import type {BabelFile} from './babel/BabelAST';
 
 import * as FlowParser from './FlowParser';
 import FlowVisitorKeys from './generated/ESTreeVisitorKeys';
@@ -21,7 +21,6 @@ import * as TransformEnumSyntax from './estree/TransformEnumSyntax';
 import * as TransformMatchSyntax from './estree/TransformMatchSyntax';
 import * as TransformRecordSyntax from './estree/TransformRecordSyntax';
 import * as StripFlowTypesForBabel from './estree/StripFlowTypesForBabel';
-import * as TransformESTreeToBabel from './babel/TransformESTreeToBabel';
 import * as StripFlowTypes from './estree/StripFlowTypes';
 
 const DEFAULTS: {flow: 'detect'} = {
@@ -140,26 +139,7 @@ export function parse(
   // ESTree loc/range. Optional-chain ESTree wrapping is emitted by the WASM
   // serializer, mirroring upstream `HermesToESTreeAdapter.mapChainExpression`.
   // See FlowParser.js.
-  const estreeAST = FlowParser.parse(code, options);
-
-  if (options.babel !== true) {
-    return estreeAST;
-  }
-
-  // `babel: true` overload — reduce the ESTree AST through the same syntax
-  // lowering pipeline upstream uses (Enum/Match/Component/Record syntax,
-  // strip Flow types), then convert ESTree → Babel AST shape.
-  const loweredESTreeAST = [
-    options.transformOptions?.TransformEnumSyntax?.enable
-      ? TransformEnumSyntax.transformProgram
-      : null,
-    TransformMatchSyntax.transformProgram,
-    TransformComponentSyntax.transformProgram,
-    TransformRecordSyntax.transformProgram,
-    StripFlowTypesForBabel.transformProgram,
-  ].reduce((ast, transform) => transform?.(ast, options) ?? ast, estreeAST);
-
-  return TransformESTreeToBabel.transformProgram(loweredESTreeAST, options);
+  return FlowParser.parse(code, options);
 }
 
 export type {ParserOptions} from './ParserOptions';

@@ -42,6 +42,7 @@ mod parser_integration_tests;
 mod pattern_cover;
 mod pattern_parser;
 pub mod polymorphic_ast_mapper;
+pub mod source_location;
 mod statement_parser;
 pub mod token;
 mod type_parser;

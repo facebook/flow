@@ -12,6 +12,7 @@
 //!
 //! # Crate structure
 //!
+//! - [`babel_adapter`] — Babel-mode AST lowering and metadata collection.
 //! - [`node_kinds`] — Schema-driven node definitions (`define_nodes!` macro).
 //!   Single source of truth for node IDs, names, and property schemas.
 //! - [`serializer`] — Binary encoder: Flow AST → `programBuffer` (Vec<u32>).
@@ -19,6 +20,7 @@
 //! - `bin/codegen.rs` — Generates `FlowParserNodeDeserializers.js` from the schema.
 //!   Run via `buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen`.
 
+mod babel_adapter;
 pub mod node_kinds;
 pub mod position;
 pub mod serializer;
@@ -42,6 +44,8 @@ pub struct ParseResult {
     /// computed from the base pointer + offset.
     string_buffer: Vec<u8>,
 }
+
+const BABEL_LOWERING_ERROR_PREFIX: &str = "$FlowBabelLoweringError$";
 
 /// Saturate a possibly-negative line/column (`Loc.none` uses `-1`) to a
 /// nonnegative `u32`. A naive `as u32` cast wraps `-1` to `4294967295`,
@@ -116,6 +120,11 @@ pub extern "C" fn hermesParse(
     source_type: i32,
     enable_types_pragma_detection: i32,
     _enable_types_in_comments: i32,
+    babel: i32,
+    lower_enums: i32,
+    custom_enum_runtime: i32,
+    react_runtime_target: i32,
+    throw_on_parse_errors: i32,
 ) -> *mut ParseResult {
     match source_type {
         0..=2 => {}
@@ -242,21 +251,71 @@ pub extern "C" fn hermesParse(
         string_buffer: Vec::new(),
     });
 
+    let lowered_program = if babel != 0 {
+        let enum_runtime = if custom_enum_runtime != 0 {
+            babel_adapter::EnumRuntime::CustomPlaceholder
+        } else {
+            babel_adapter::EnumRuntime::Default
+        };
+        let react_runtime_target = if react_runtime_target == 19 {
+            babel_adapter::ReactRuntimeTarget::React19
+        } else {
+            babel_adapter::ReactRuntimeTarget::React18
+        };
+        match babel_adapter::lower_program(
+            source_str,
+            &program,
+            &babel_adapter::BabelLoweringOptions {
+                lower_enums: lower_enums != 0,
+                enum_runtime,
+                react_runtime_target,
+            },
+        ) {
+            Ok(program) => Some(program),
+            Err(babel_adapter::BabelLoweringError::Syntax { message, loc }) => {
+                result.error = Some(
+                    CString::new(format!("{BABEL_LOWERING_ERROR_PREFIX}{message}"))
+                        .expect("Babel lowering error messages cannot contain NUL bytes"),
+                );
+                result.error_line = nonneg_u32(loc.start.line);
+                result.error_column = nonneg_u32(loc.start.column);
+                None
+            }
+        }
+    } else {
+        None
+    };
+
     // Always serialize the (possibly partial) program so JS-side consumers
     // see the full `errors` array; only surface the first error via the
     // single-error C ABI for callers that don't read the array.
-    if let Some((loc, err)) = errors.first() {
+    let lowering_failed = babel != 0 && lowered_program.is_none();
+    if !lowering_failed && let Some((loc, err)) = errors.first() {
         result.error = CString::new(format!("{}", err)).ok();
         result.error_line = nonneg_u32(loc.start.line);
         result.error_column = nonneg_u32(loc.start.column);
     }
-    let ser = serializer::Serializer::new(source_str);
+    if babel != 0 && throw_on_parse_errors == 0 && !lowering_failed {
+        result.error = None;
+        result.error_line = 0;
+        result.error_column = 0;
+    }
     let token_slice = if tokens != 0 {
         Some(token_buffer.as_slice())
     } else {
         None
     };
-    let buffers = ser.serialize_program(&program, &errors, token_slice);
+    let buffers = match &lowered_program {
+        Some(lowered) => {
+            serializer::Serializer::new_babel(source_str, &lowered.metadata, source_type)
+                .serialize_program(&lowered.program, &errors, token_slice)
+        }
+        None => serializer::Serializer::new(source_str).serialize_program(
+            &program,
+            &errors,
+            token_slice,
+        ),
+    };
     result.program_buffer = buffers.program_buffer;
     result.position_buffer = buffers.position_buffer;
     result.string_buffer = buffers.string_buffer;
@@ -561,16 +620,38 @@ mod tests {
 
     fn skip_property(buf: &[u32], idx: usize, prop_type: PropType) -> usize {
         match prop_type {
-            PropType::Node => skip_node(buf, idx),
-            PropType::NodeList => {
+            PropType::Node | PropType::OptionalNode => skip_node(buf, idx),
+            PropType::NodeList | PropType::NonEmptyNodeList => {
                 let len = buf[idx] as usize;
                 (0..len).fold(idx + 1, |cursor, _| skip_node(buf, cursor))
             }
             PropType::String => skip_string(buf, idx),
-            PropType::Boolean => idx + 1,
+            PropType::Boolean | PropType::TrueBoolean => idx + 1,
             PropType::Number => {
                 let aligned = if idx.is_multiple_of(2) { idx } else { idx + 1 };
                 aligned + 2
+            }
+            PropType::MaybeNode => {
+                if buf[idx] == 0 {
+                    idx + 1
+                } else {
+                    skip_node(buf, idx + 1)
+                }
+            }
+            PropType::MaybeBoolean => {
+                if buf[idx] == 0 {
+                    idx + 1
+                } else {
+                    idx + 2
+                }
+            }
+            PropType::CommentList => {
+                let len = buf[idx] as usize;
+                (0..len).fold(idx + 1, |cursor, _| {
+                    let cursor = skip_string(buf, cursor);
+                    let cursor = cursor + 2;
+                    skip_string(buf, cursor)
+                })
             }
         }
     }
@@ -887,8 +968,13 @@ mod tests {
             1, // enable_records
             1, // enable_types
             source_type,
-            0, // enable_types_pragma_detection
-            0, // enable_types_in_comments
+            0,  // enable_types_pragma_detection
+            0,  // enable_types_in_comments
+            0,  // babel
+            0,  // lower_enums
+            0,  // custom_enum_runtime
+            18, // react_runtime_target
+            1,  // throw_on_parse_errors
         );
         // `bytes` must outlive the call — ensure rustc cannot drop it
         // before `hermesParse` returns by reading it after.

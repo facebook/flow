@@ -13,7 +13,7 @@
 import type {Program as ESTreeProgram} from 'flow-estree';
 import type {ESNode} from 'flow-estree';
 import type {ParserOptions} from '../oxidized-src/ParserOptions';
-import type {BabelFile} from '../oxidized-src/babel/TransformESTreeToBabel';
+import type {BabelFile} from '../oxidized-src/babel/BabelAST';
 import type {VisitorKeys} from '../oxidized-src/generated/ESTreeVisitorKeys';
 
 import {SimpleTraverser} from '../oxidized-src/traverse/SimpleTraverser';

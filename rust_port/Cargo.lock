@@ -1243,11 +1243,15 @@ dependencies = [
 name = "flow_parser_wasm"
 version = "0.0.0"
 dependencies = [
+ "dupe",
+ "flow_data_structure_wrapper",
  "flow_parser",
+ "flow_parser_utils",
  "prettyplease 0.3.0",
  "proc-macro2",
  "quote",
  "syn 3.0.3",
+ "thiserror 2.0.20",
 ]
 
 [[package]]

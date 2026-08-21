@@ -13,15 +13,26 @@
 import type {HermesSourceLocation, HermesNode, HermesToken} from './HermesAST';
 import type {FlowParserWASM} from './FlowParserWASM';
 import type {ParserOptions} from './ParserOptions';
+import type {BabelFile} from './babel/BabelAST';
 
 import HermesParserDecodeUTF8String from './HermesParserDecodeUTF8String';
 import NODE_DESERIALIZERS from './FlowParserNodeDeserializers';
 
 type FlowComment = {
-  type: 'Block' | 'Line',
+  type: 'Block' | 'Line' | 'CommentBlock' | 'CommentLine',
   loc: HermesSourceLocation,
   value: ?string,
+  start?: number,
+  end?: number,
 };
+
+type ExtendedPosition = {
+  loc: HermesSourceLocation,
+  start: number,
+  end: number,
+};
+
+const LOCATION_IDENTIFIER_NAME = 1 << 0;
 
 export type FlowParserProgram = {
   type: 'Program',
@@ -49,15 +60,15 @@ export default class FlowParserDeserializer {
   readonly positionBufferSize: number;
   readonly stringBufferBase: number;
   readonly locMap: {[number]: HermesSourceLocation};
+  readonly extendedPositions: Array<?ExtendedPosition>;
+  readonly extendedRanges: WeakMap<HermesSourceLocation, ExtendedPosition>;
   readonly HEAPU8: FlowParserWASM['HEAPU8'];
   readonly HEAPU32: FlowParserWASM['HEAPU32'];
   readonly HEAPF64: FlowParserWASM['HEAPF64'];
   readonly options: ParserOptions;
+  extendedLocationHeaders: boolean;
 
-  // Comment types: Flow uses ESTree-standard names
-  // Matches CommentKind enum in ast.rs: Block = 0, Line = 1
   readonly commentTypes: ReadonlyArray<FlowComment['type']> = ['Block', 'Line'];
-
   // Matches TokenType enum (same as Hermes for compatibility)
   readonly tokenTypes: ReadonlyArray<HermesToken['type']> = [
     'Boolean',
@@ -94,12 +105,15 @@ export default class FlowParserDeserializer {
     // null pointer (encoded as `(0,)` with no length word).
     this.stringBufferBase = stringBufferBase;
     this.locMap = {};
+    this.extendedPositions = [];
+    this.extendedRanges = new WeakMap();
 
     this.HEAPU8 = wasmParser.HEAPU8;
     this.HEAPU32 = wasmParser.HEAPU32;
     this.HEAPF64 = wasmParser.HEAPF64;
 
     this.options = options;
+    this.extendedLocationHeaders = false;
   }
 
   /**
@@ -110,33 +124,35 @@ export default class FlowParserDeserializer {
     return num;
   }
 
-  deserialize(): FlowParserProgram {
+  deserialize(): FlowParserProgram | BabelFile {
+    if (this.HEAPU32[this.programBufferIdx] === 0) {
+      return this.deserializeESTreeProgram();
+    }
+    this.extendedLocationHeaders = true;
+    this.prepareExtendedPositions();
+    const root = this.deserializeNode();
+    if (root == null) {
+      throw new Error('Expected serialized parser root');
+    }
+    // $FlowExpectedError[incompatible-type] The root node kind defines the public schema.
+    return root;
+  }
+
+  deserializeESTreeProgram(): FlowParserProgram {
     const program: FlowParserProgram = {
       type: 'Program',
       loc: this.addEmptyLoc(),
       body: this.deserializeNodeList(),
-      comments: this.deserializeComments(),
+      comments: this.deserializeESTreeComments(),
     };
-
-    // Interpreter directive (OCaml `program` estree_translator.ml:118-123).
-    // The serializer writes a Node slot here: an `InterpreterDirective` node
-    // when `#!shebang` is present, otherwise null. Always attach the slot so
-    // the public Program shape carries `interpreter: InterpreterDirective | null`
-    // — matches upstream hermes-parser, which exposes the slot uniformly.
     program.interpreter = this.deserializeNode();
-
     if (this.options.tokens === true) {
       program.tokens = this.deserializeTokens();
     } else {
-      // Tokens slot is always written by the serializer; consume the count
-      // even when callers didn't ask for tokens.
       this.deserializeTokens();
     }
-
     program.errors = this.deserializeErrors();
-
     this.fillLocs();
-
     return program;
   }
 
@@ -219,9 +235,19 @@ export default class FlowParserDeserializer {
     if (nodeType === 0) {
       return null;
     }
-
-    const nodeDeserializer = NODE_DESERIALIZERS[nodeType - 1].bind(this);
-    return nodeDeserializer();
+    const deserializeNode = NODE_DESERIALIZERS[nodeType - 1];
+    if (deserializeNode == null) {
+      throw new Error(
+        `Unknown serialized node kind ${nodeType - 1} at program word ${
+          this.programBufferIdx - 1
+        }`,
+      );
+    }
+    const node = deserializeNode.call(this);
+    if (this.extendedLocationHeaders) {
+      this.addExtendedRange(node);
+    }
+    return node;
   }
 
   /**
@@ -235,8 +261,16 @@ export default class FlowParserDeserializer {
     for (let i = 0; i < size; i++) {
       nodeList.push(this.deserializeNode());
     }
-
     return nodeList;
+  }
+
+  deserializeEnumRuntime(): unknown {
+    const getRuntime =
+      this.options.transformOptions?.TransformEnumSyntax?.getRuntime;
+    if (typeof getRuntime !== 'function') {
+      throw new Error('Expected TransformEnumSyntax.getRuntime callback');
+    }
+    return getRuntime();
   }
 
   /**
@@ -249,16 +283,36 @@ export default class FlowParserDeserializer {
     const comments = [];
 
     for (let i = 0; i < size; i++) {
-      const commentType = this.commentTypes[this.next()];
+      const commentType = this.deserializeString();
+      if (commentType == null) {
+        throw new Error('Expected serialized comment type');
+      }
       const loc = this.addEmptyLoc();
-      const value = this.deserializeString();
-      comments.push({
+      const comment: FlowComment = {
+        // $FlowExpectedError[incompatible-type] Rust emits the closed comment type set.
         type: commentType,
         loc,
-        value,
-      });
+        value: this.deserializeString(),
+      };
+      this.addExtendedRange(comment);
+      comments.push(comment);
     }
 
+    return comments;
+  }
+
+  deserializeESTreeComments(): Array<FlowComment> {
+    const size = this.next();
+    const comments = [];
+    for (let i = 0; i < size; i++) {
+      const commentType = this.commentTypes[this.next()];
+      const comment: FlowComment = {
+        type: commentType,
+        loc: this.addEmptyLoc(),
+        value: this.deserializeString(),
+      };
+      comments.push(comment);
+    }
     return comments;
   }
 
@@ -270,11 +324,12 @@ export default class FlowParserDeserializer {
       const tokenType = this.tokenTypes[this.next()];
       const loc = this.addEmptyLoc();
       const value = this.deserializeString();
-      tokens.push({
+      const token: HermesToken = {
         type: tokenType,
         loc,
         value,
-      });
+      };
+      tokens.push(token);
     }
 
     return tokens;
@@ -286,9 +341,68 @@ export default class FlowParserDeserializer {
    * objects that are filled after the AST has been deserialized.
    */
   addEmptyLoc(): HermesSourceLocation {
+    const locId = this.next();
+    if (this.extendedLocationHeaders) {
+      const flags = this.next();
+      const position = this.extendedPositions[locId];
+      if (position == null) {
+        throw new Error(`Missing serialized extended location ${locId}`);
+      }
+      const loc = position.loc;
+      if (flags & LOCATION_IDENTIFIER_NAME) {
+        const identifierName = this.deserializeString();
+        if (identifierName != null) {
+          // $FlowExpectedError[prop-missing] The extended wire location schema carries this field.
+          loc.identifierName = identifierName;
+        }
+      }
+      this.extendedRanges.set(loc, position);
+      return loc;
+    }
     const loc: HermesSourceLocation = {};
-    this.locMap[this.next()] = loc;
+    this.locMap[locId] = loc;
     return loc;
+  }
+
+  prepareExtendedPositions(): void {
+    let index = this.positionBufferIdx;
+    for (let i = 0; i < this.positionBufferSize; i++) {
+      const locId = this.HEAPU32[index++];
+      const kind = this.HEAPU32[index++];
+      const line = this.HEAPU32[index++];
+      const column = this.HEAPU32[index++];
+      const offset = this.HEAPU32[index++];
+      const position: ExtendedPosition = this.extendedPositions[locId] ?? {
+        loc: {} as HermesSourceLocation,
+        start: 0,
+        end: 0,
+      };
+      if (kind === 0) {
+        position.loc.start = {line, column};
+        position.start = offset;
+      } else {
+        position.loc.end = {line, column};
+        position.end = offset;
+      }
+      this.extendedPositions[locId] = position;
+    }
+  }
+
+  addExtendedRange(owner: {
+    readonly loc: HermesSourceLocation,
+    start?: number,
+    end?: number,
+    ...
+  }): void {
+    if (owner.loc == null) {
+      return;
+    }
+    const position = this.extendedRanges.get(owner.loc);
+    if (position == null) {
+      return;
+    }
+    owner.start = position.start;
+    owner.end = position.end;
   }
 
   /**
@@ -305,6 +419,9 @@ export default class FlowParserDeserializer {
       const offset = this.HEAPU32[this.positionBufferIdx++];
 
       const loc = this.locMap[locId];
+      if (loc == null) {
+        throw new Error(`Missing serialized location ${locId}`);
+      }
       if (kind === 0) {
         loc.start = {
           line,

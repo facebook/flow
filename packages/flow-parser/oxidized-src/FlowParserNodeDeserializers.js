@@ -1479,13 +1479,7 @@ module.exports = [
         value = null;
       }
     }
-    return {
-      type: 'BigIntLiteralTypeAnnotation',
-      loc,
-      value,
-      raw,
-      bigint,
-    };
+    return {type: 'BigIntLiteralTypeAnnotation', loc, value, raw, bigint};
   },
 
   // 134: BooleanLiteralTypeAnnotation
@@ -2479,6 +2473,683 @@ module.exports = [
       type: 'ChainExpression',
       loc: this.addEmptyLoc(),
       expression: this.deserializeNode(),
+    };
+  },
+
+  // 231: BabelExpressionStatement
+  function () {
+    return {
+      type: 'ExpressionStatement',
+      loc: this.addEmptyLoc(),
+      expression: this.deserializeNode(),
+    };
+  },
+
+  // 232: BabelBlockStatement
+  function () {
+    return {
+      type: 'BlockStatement',
+      loc: this.addEmptyLoc(),
+      body: this.deserializeNodeList(),
+      directives: this.deserializeNodeList(),
+    };
+  },
+
+  // 233: BabelDirective
+  function () {
+    return {
+      type: 'Directive',
+      loc: this.addEmptyLoc(),
+      value: this.deserializeNode(),
+    };
+  },
+
+  // 234: BabelDirectiveLiteral
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeString();
+    const rawValue = this.deserializeString();
+    const raw = this.deserializeString();
+    return {type: 'DirectiveLiteral', loc, value, extra: {rawValue, raw}};
+  },
+
+  // 235: BabelObjectProperty
+  function () {
+    return {
+      type: 'ObjectProperty',
+      loc: this.addEmptyLoc(),
+      computed: this.deserializeBoolean(),
+      key: this.deserializeNode(),
+      value: this.deserializeNode(),
+      method: this.deserializeBoolean(),
+      shorthand: this.deserializeBoolean(),
+    };
+  },
+
+  // 236: BabelObjectMethod
+  function () {
+    const node = {
+      type: 'ObjectMethod',
+      loc: this.addEmptyLoc(),
+    };
+    node.kind = this.deserializeString();
+    node.method = this.deserializeBoolean();
+    node.computed = this.deserializeBoolean();
+    node.key = this.deserializeNode();
+    node.id = this.deserializeNode();
+    node.params = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    node.async = this.deserializeBoolean();
+    node.generator = this.deserializeBoolean();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['returnType'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    if (this.deserializeBoolean()) {
+      node['variance'] = this.deserializeNode();
+    }
+    return node;
+  },
+
+  // 237: BabelClassMethod
+  function () {
+    const node = {
+      type: 'ClassMethod',
+      loc: this.addEmptyLoc(),
+    };
+    node.kind = this.deserializeString();
+    node.computed = this.deserializeBoolean();
+    node.static = this.deserializeBoolean();
+    node.key = this.deserializeNode();
+    node.id = this.deserializeNode();
+    node.params = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    node.async = this.deserializeBoolean();
+    node.generator = this.deserializeBoolean();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['returnType'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['predicate'] = value;
+    }
+    return node;
+  },
+
+  // 238: BabelClassPrivateMethod
+  function () {
+    const node = {
+      type: 'ClassPrivateMethod',
+      loc: this.addEmptyLoc(),
+    };
+    node.kind = this.deserializeString();
+    node.static = this.deserializeBoolean();
+    node.key = this.deserializeNode();
+    node.id = this.deserializeNode();
+    node.params = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    node.async = this.deserializeBoolean();
+    node.generator = this.deserializeBoolean();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['returnType'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['predicate'] = value;
+    }
+    return node;
+  },
+
+  // 239: BabelClassProperty
+  function () {
+    const node = {
+      type: 'ClassProperty',
+      loc: this.addEmptyLoc(),
+    };
+    node.key = this.deserializeNode();
+    node.value = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeAnnotation'] = value;
+    }
+    node.static = this.deserializeBoolean();
+    node.variance = this.deserializeNode();
+    if (this.deserializeBoolean()) node['declare'] = true;
+    if (this.deserializeBoolean()) node['optional'] = true;
+    node.computed = this.deserializeBoolean();
+    return node;
+  },
+
+  // 240: BabelClassPrivateProperty
+  function () {
+    const node = {
+      type: 'ClassPrivateProperty',
+      loc: this.addEmptyLoc(),
+    };
+    node.key = this.deserializeNode();
+    node.value = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeAnnotation'] = value;
+    }
+    node.static = this.deserializeBoolean();
+    node.variance = this.deserializeNode();
+    return node;
+  },
+
+  // 241: BabelPrivateName
+  function () {
+    return {
+      type: 'PrivateName',
+      loc: this.addEmptyLoc(),
+      id: this.deserializeNode(),
+    };
+  },
+
+  // 242: BabelStringLiteral
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeString();
+    const rawValue = value;
+    const raw = this.deserializeString();
+    return {type: 'StringLiteral', loc, value, extra: {rawValue, raw}};
+  },
+
+  // 243: BabelNumericLiteral
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeNumber();
+    const raw = this.deserializeString();
+    return {type: 'NumericLiteral', loc, value, extra: {rawValue: value, raw}};
+  },
+
+  // 244: BabelBigIntLiteral
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeString();
+    const rawValue = value;
+    const raw = this.deserializeString();
+    return {type: 'BigIntLiteral', loc, value, extra: {rawValue, raw}};
+  },
+
+  // 245: BabelBooleanLiteral
+  function () {
+    return {
+      type: 'BooleanLiteral',
+      loc: this.addEmptyLoc(),
+      value: this.deserializeBoolean(),
+    };
+  },
+
+  // 246: BabelNullLiteral
+  function () {
+    return {
+      type: 'NullLiteral',
+      loc: this.addEmptyLoc(),
+    };
+  },
+
+  // 247: BabelRegExpLiteral
+  function () {
+    const loc = this.addEmptyLoc();
+    const raw = this.deserializeString();
+    const pattern = this.deserializeString();
+    const flags = this.deserializeString();
+    return {type: 'RegExpLiteral', loc, extra: {raw}, pattern, flags};
+  },
+
+  // 248: BabelImport
+  function () {
+    return {
+      type: 'Import',
+      loc: this.addEmptyLoc(),
+    };
+  },
+
+  // 249: BabelTupleTypeAnnotation
+  function () {
+    return {
+      type: 'TupleTypeAnnotation',
+      loc: this.addEmptyLoc(),
+      types: this.deserializeNodeList(),
+    };
+  },
+
+  // 250: BabelStringLiteralTypeAnnotation
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeString();
+    const rawValue = value;
+    const raw = this.deserializeString();
+    return {type: 'StringLiteralTypeAnnotation', loc, value, extra: {rawValue, raw}};
+  },
+
+  // 251: BabelNumberLiteralTypeAnnotation
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeNumber();
+    const raw = this.deserializeString();
+    return {type: 'NumberLiteralTypeAnnotation', loc, value, extra: {rawValue: value, raw}};
+  },
+
+  // 252: BabelBigIntLiteralTypeAnnotation
+  function () {
+    const loc = this.addEmptyLoc();
+    const bigint = this.deserializeString();
+    const raw = this.deserializeString();
+    let value = null;
+    if (bigint != null && typeof BigInt === 'function') {
+      try {
+        value = BigInt(bigint);
+      } catch (error) {
+        value = null;
+      }
+    }
+    return {type: 'BigIntLiteralTypeAnnotation', loc, value, extra: {rawValue: bigint, raw}};
+  },
+
+  // 253: BabelBooleanLiteralTypeAnnotation
+  function () {
+    return {
+      type: 'BooleanLiteralTypeAnnotation',
+      loc: this.addEmptyLoc(),
+      value: this.deserializeBoolean(),
+    };
+  },
+
+  // 254: BabelJSXText
+  function () {
+    const loc = this.addEmptyLoc();
+    const value = this.deserializeString();
+    const rawValue = value;
+    const raw = this.deserializeString();
+    return {type: 'JSXText', loc, value, extra: {rawValue, raw}};
+  },
+
+  // 255: BabelClassDeclaration
+  function () {
+    const node = {
+      type: 'ClassDeclaration',
+      loc: this.addEmptyLoc(),
+    };
+    node.id = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    node.superClass = this.deserializeNode();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['implements'] = value;
+    }
+    node.body = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['superTypeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['decorators'] = value;
+    }
+    return node;
+  },
+
+  // 256: BabelClassExpression
+  function () {
+    const node = {
+      type: 'ClassExpression',
+      loc: this.addEmptyLoc(),
+    };
+    node.id = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    node.superClass = this.deserializeNode();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['implements'] = value;
+    }
+    node.body = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['superTypeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['decorators'] = value;
+    }
+    return node;
+  },
+
+  // 257: BabelFunctionDeclaration
+  function () {
+    const node = {
+      type: 'FunctionDeclaration',
+      loc: this.addEmptyLoc(),
+    };
+    node.id = this.deserializeNode();
+    node.params = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['returnType'] = value;
+    }
+    node.generator = this.deserializeBoolean();
+    node.async = this.deserializeBoolean();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['predicate'] = value;
+    }
+    if (this.deserializeBoolean()) node['__componentDeclaration'] = true;
+    if (this.deserializeBoolean()) node['__hookDeclaration'] = true;
+    return node;
+  },
+
+  // 258: BabelFunctionExpression
+  function () {
+    const node = {
+      type: 'FunctionExpression',
+      loc: this.addEmptyLoc(),
+    };
+    node.id = this.deserializeNode();
+    node.params = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['returnType'] = value;
+    }
+    node.generator = this.deserializeBoolean();
+    node.async = this.deserializeBoolean();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['predicate'] = value;
+    }
+    return node;
+  },
+
+  // 259: BabelArrowFunctionExpression
+  function () {
+    const node = {
+      type: 'ArrowFunctionExpression',
+      loc: this.addEmptyLoc(),
+    };
+    node.params = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeParameters'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['returnType'] = value;
+    }
+    node.async = this.deserializeBoolean();
+    node.id = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['predicate'] = value;
+    }
+    return node;
+  },
+
+  // 260: BabelMemberExpression
+  function () {
+    return {
+      type: 'MemberExpression',
+      loc: this.addEmptyLoc(),
+      object: this.deserializeNode(),
+      property: this.deserializeNode(),
+      computed: this.deserializeBoolean(),
+    };
+  },
+
+  // 261: BabelArrayExpression
+  function () {
+    return {
+      type: 'ArrayExpression',
+      loc: this.addEmptyLoc(),
+      elements: this.deserializeNodeList(),
+    };
+  },
+
+  // 262: BabelRestElement
+  function () {
+    const node = {
+      type: 'RestElement',
+      loc: this.addEmptyLoc(),
+    };
+    node.argument = this.deserializeNode();
+    if (this.deserializeBoolean()) {
+      node['typeAnnotation'] = this.deserializeNode();
+    }
+    return node;
+  },
+
+  // 263: BabelOpaqueType
+  function () {
+    return {
+      type: 'OpaqueType',
+      loc: this.addEmptyLoc(),
+      id: this.deserializeNode(),
+      typeParameters: this.deserializeNode(),
+      impltype: this.deserializeNode(),
+      supertype: this.deserializeNode(),
+    };
+  },
+
+  // 264: BabelDeclareOpaqueType
+  function () {
+    return {
+      type: 'DeclareOpaqueType',
+      loc: this.addEmptyLoc(),
+      id: this.deserializeNode(),
+      typeParameters: this.deserializeNode(),
+      impltype: this.deserializeNode(),
+      supertype: this.deserializeNode(),
+      implicitDeclare: this.deserializeBoolean(),
+    };
+  },
+
+  // 265: BabelExportAllDeclaration
+  function () {
+    return {
+      type: 'ExportAllDeclaration',
+      loc: this.addEmptyLoc(),
+      source: this.deserializeNode(),
+      exportKind: this.deserializeString(),
+    };
+  },
+
+  // 266: BabelDeclareVariable
+  function () {
+    return {
+      type: 'DeclareVariable',
+      loc: this.addEmptyLoc(),
+      id: this.deserializeNode(),
+    };
+  },
+
+  // 267: BabelIdentifier
+  function () {
+    const node = {
+      type: 'Identifier',
+      loc: this.addEmptyLoc(),
+    };
+    node.name = this.deserializeString();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeAnnotation'] = value;
+    }
+    if (this.deserializeBoolean()) node['optional'] = true;
+    return node;
+  },
+
+  // 268: BabelObjectPattern
+  function () {
+    const node = {
+      type: 'ObjectPattern',
+      loc: this.addEmptyLoc(),
+    };
+    node.properties = this.deserializeNodeList();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeAnnotation'] = value;
+    }
+    if (this.deserializeBoolean()) {
+      node['optional'] = this.deserializeBoolean();
+    }
+    return node;
+  },
+
+  // 269: BabelArrayPattern
+  function () {
+    const node = {
+      type: 'ArrayPattern',
+      loc: this.addEmptyLoc(),
+    };
+    node.elements = this.deserializeNodeList();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeAnnotation'] = value;
+    }
+    if (this.deserializeBoolean()) {
+      node['optional'] = this.deserializeBoolean();
+    }
+    return node;
+  },
+
+  // 270: BabelCallExpression
+  function () {
+    const node = {
+      type: 'CallExpression',
+      loc: this.addEmptyLoc(),
+    };
+    node.callee = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeArguments'] = value;
+    }
+    node.arguments = this.deserializeNodeList();
+    if (this.deserializeBoolean()) node['optional'] = true;
+    return node;
+  },
+
+  // 271: BabelOptionalCallExpression
+  function () {
+    const node = {
+      type: 'OptionalCallExpression',
+      loc: this.addEmptyLoc(),
+    };
+    node.callee = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeArguments'] = value;
+    }
+    node.arguments = this.deserializeNodeList();
+    node.optional = this.deserializeBoolean();
+    return node;
+  },
+
+  // 272: BabelImportDeclaration
+  function () {
+    const node = {
+      type: 'ImportDeclaration',
+      loc: this.addEmptyLoc(),
+    };
+    node.specifiers = this.deserializeNodeList();
+    node.source = this.deserializeNode();
+    node.importKind = this.deserializeString();
+    {
+      const value = this.deserializeNodeList();
+      if (value.length > 0) node['attributes'] = value;
+    }
+    return node;
+  },
+
+  // 273: BabelExportNamedDeclaration
+  function () {
+    const node = {
+      type: 'ExportNamedDeclaration',
+      loc: this.addEmptyLoc(),
+    };
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['declaration'] = value;
+    }
+    node.specifiers = this.deserializeNodeList();
+    node.source = this.deserializeNode();
+    node.exportKind = this.deserializeString();
+    return node;
+  },
+
+  // 274: BabelJSXOpeningElement
+  function () {
+    return {
+      type: 'JSXOpeningElement',
+      loc: this.addEmptyLoc(),
+      name: this.deserializeNode(),
+      attributes: this.deserializeNodeList(),
+      selfClosing: this.deserializeBoolean(),
+    };
+  },
+
+  // 275: BabelTypeofTypeAnnotation
+  function () {
+    return {
+      type: 'TypeofTypeAnnotation',
+      loc: this.addEmptyLoc(),
+      argument: this.deserializeNode(),
+    };
+  },
+
+  // 276: BabelEnumRuntime
+  function () {
+    this.addEmptyLoc();
+    return this.deserializeEnumRuntime();
+  },
+
+  // 277: BabelProgram
+  function () {
+    return {
+      type: 'Program',
+      loc: this.addEmptyLoc(),
+      body: this.deserializeNodeList(),
+      directives: this.deserializeNodeList(),
+      sourceType: this.deserializeString(),
+      interpreter: this.deserializeNode(),
+    };
+  },
+
+  // 278: BabelFile
+  function () {
+    return {
+      type: 'File',
+      loc: this.addEmptyLoc(),
+      program: this.deserializeNode(),
+      comments: this.deserializeComments(),
     };
   },
 ];

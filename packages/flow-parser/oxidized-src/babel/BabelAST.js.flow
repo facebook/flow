@@ -1,0 +1,29 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow strict
+ * @format
+ */
+
+import type {BaseNode, BaseToken, Program} from 'flow-estree';
+
+export interface BabelFile extends BaseNode {
+  readonly type: 'File';
+  readonly program: Program;
+  readonly comments: ReadonlyArray<BabelComment>;
+}
+
+interface BabelCommentBlock extends BaseToken {
+  readonly type: 'CommentBlock';
+  readonly value: string;
+}
+
+interface BabelCommentLine extends BaseToken {
+  readonly type: 'CommentLine';
+  readonly value: string;
+}
+
+type BabelComment = BabelCommentBlock | BabelCommentLine;
