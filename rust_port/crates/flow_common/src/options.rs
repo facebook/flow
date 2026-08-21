@@ -217,6 +217,7 @@ pub struct Options {
     pub export_star_excludes_default: bool,
     pub ts_syntax: bool,
     pub tslib_syntax: bool,
+    pub typescript_global_library_definition_discovery: bool,
     pub typescript_library_definition_support: bool,
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,

@@ -251,6 +251,7 @@ pub mod opts {
         pub ts_syntax: Option<bool>,
         pub ts_utility_syntax: bool,
         pub tslib_syntax: Option<bool>,
+        pub typescript_global_library_definition_discovery: bool,
         pub typescript_library_definition_support: bool,
         pub deprecated_utilities: BTreeMap<String, Vec<String>>,
         pub deprecated_utilities_excludes: Vec<String>,
@@ -422,6 +423,7 @@ pub mod opts {
             ts_syntax: None,
             ts_utility_syntax: true,
             tslib_syntax: None,
+            typescript_global_library_definition_discovery: false,
             typescript_library_definition_support: false,
             deprecated_utilities: default_deprecated_utilities(),
             deprecated_utilities_excludes: Vec::new(),
@@ -2357,6 +2359,19 @@ pub mod opts {
                     config,
                 )
             }),
+            (
+                "experimental.typescript_global_library_definition_discovery",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.typescript_global_library_definition_discovery = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             (
                 "experimental.typescript_library_definition_support",
                 |values, config| {
