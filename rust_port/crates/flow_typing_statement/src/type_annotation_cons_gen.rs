@@ -193,13 +193,13 @@ pub fn mk_instance<'a>(
         match concrete.deref() {
             TypeInner::DefT(_, def_t)
                 if let DefTInner::PolyT(box PolyTData { tparams: ids, .. }) = def_t.deref()
-                    && flow_common::files::has_ts_ext(cx.file())
+                    && !ids.is_empty()
                     && ids.iter().all(|tp| tp.default.is_some()) =>
             {
-                // In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
-                // matching TypeScript behavior where defaults are used. Route through flow engine
-                // so the PolyT + ValueToTypeReferenceT handler in flow_js.ml applies.
-                // Only when all params have defaults; otherwise fall through to EMissingTypeArgs.
+                // Treat missing type args the same as empty type args (Foo = Foo<>) when all
+                // parameters have defaults. Route through the flow engine so the PolyT +
+                // ValueToTypeReferenceT handler applies. Otherwise, fall through to
+                // EMissingTypeArgs.
                 tvar_resolver::mk_tvar_and_fully_resolve_where(
                     cx,
                     instance_reason_clone.dupe(),

@@ -51,6 +51,7 @@ The features below are close enough in syntax and semantics that you can reuse y
 - [`const` type parameters](./types/const-expression.md#const-type-parameters) - `function f<const T>(x: T): T`.
 - [`unknown`](./types/unknown.md) top type.
 - [Generic bounds](./types/generics.md#toc-adding-types-to-generics) with `<T extends Bound>`.
+- [All-defaulted generic type arguments](#toc-generic-default-omission) can be omitted.
 - [Utility types](./types/utilities.md): `Readonly`, `ReadonlyArray`, `ReadonlyMap`, `ReadonlySet`, `Pick`, `Omit`, `Record`, `Partial`, `Required`, `Exclude`, `Extract`, `NonNullable`, `Parameters`, `ReturnType`, `NoInfer`, `Awaited`, `ThisParameterType`, `OmitThisParameter`, `ConstructorParameters`, `InstanceType`, `Uppercase`, `Lowercase`, `Capitalize`, `Uncapitalize`.
 - [Type-only imports and exports](./types/modules.md#toc-importing-and-exporting-types) - `import type` and `export type`.
 - [Function-overload encoding via intersection](./types/intersections.md#toc-intersection-of-function-types) - `((x: number) => string) & ((x: string) => number)` resolves the per-call return type by argument type in both languages.
@@ -60,6 +61,19 @@ Two more syntax forms match TypeScript directly even though the underlying seman
 
 - [Array](#toc-variance-arrays) shorthand `T[]` (in addition to `Array<T>`).
 - [Variance keywords](#toc-variance-keywords): `readonly` on properties and `in` / `out` on type parameters.
+
+### All-defaulted generic type arguments can be omitted {#toc-generic-default-omission}
+
+Like TypeScript, Flow lets you omit a generic type's argument list when every type parameter has a default. The bare `Foo` form applies the defaults just like `Foo<>` does. If any type parameter lacks a default, you still need to supply the required arguments.
+
+```js flow-check
+type Foo<T = string> = {x: T};
+type A = Foo;   // OK - uses the default `T = string`
+type B = Foo<>; // OK - equivalent explicit form
+
+const a: A = {x: "hello"};
+const b: B = a;
+```
 
 ## Shared concepts, different rules {#toc-shared-concepts-different-rules}
 
@@ -71,7 +85,7 @@ In most subsections the syntax is the same but the semantics differ: code that's
 - [Variance](#toc-variance) - `readonly`, `writeonly`, `in`, and `out`
 - [Type spellings](#toc-type-spellings) - `void` vs `undefined`, `?T`, `empty`, `unknown`
 - [Refinement and module-level validation](#toc-validation) - validated type-guard bodies, refinement invalidation, module-boundary annotations
-- [Explicit type controls](#toc-explicit-controls) - `as` casts, error suppressions, and type argument omission
+- [Explicit type controls](#toc-explicit-controls) - `as` casts and error suppressions
 
 :::info Nominal vs. structural typing.
 TypeScript is primarily structural - two types with the same public shape are interchangeable, with narrow nominal carve-outs (`#private` fields, `private`/`protected` modifiers, and `unique symbol`). Flow is structural for plain objects and functions, but deliberately *nominal* for [classes](#toc-classes-nominal), [opaque types](#toc-opaque-types), and [Flow Enums](#toc-flow-enums).
@@ -954,7 +968,7 @@ import type {
 
 ### Explicit type controls {#toc-explicit-controls}
 
-Three places where TypeScript accepts a looser surface spelling and Flow requires the explicit form: `as` casts, error suppressions, and generic-argument lists.
+Two places where TypeScript accepts a looser surface spelling and Flow requires the explicit form: `as` casts and error suppressions.
 
 #### `as` casts are safer in Flow {#toc-as-casts}
 
@@ -990,19 +1004,6 @@ const o: {x: number} = {x: 1};
 // $FlowFixMe[prop-missing] - intentional for demo
 const y = o.nonexistent;
 ```
-
-#### Generic type arguments cannot be omitted {#toc-generic-default-omission}
-
-TypeScript lets you write a generic type unparameterized when every type parameter has a default: `Foo<T = string>` followed by `type A = Foo` resolves `A` to `Foo<string>`. Flow rejects the bare form and requires an explicit type-argument list (or an empty `<>` to fall back on defaults), reporting `[missing-type-arg]` "Cannot use `Foo` without 0-1 type arguments."
-
-```js flow-check
-// Flow:
-type Foo<T = string> = {x: T};
-type A = Foo;   // ERROR: [missing-type-arg]
-type B = Foo<>; // OK    - uses the default `T = string`
-```
-
-The rewrite is mechanical: `Foo` → `Foo<>` for all-defaulted generics, or supply the args explicitly. The rationale for the explicit form is that Flow reserves the bare name `Foo` for the *type constructor itself* (so that operations on the type, such as type-level functions, can take the unapplied form as input), rather than overloading it as shorthand for an applied instantiation.
 
 ## Flow-only concepts with no built-in TypeScript equivalent {#toc-flow-only}
 

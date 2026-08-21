@@ -2395,12 +2395,11 @@ fn __flow_impl<'cx>(
             id,
             strictness_kind: _,
         }) = def_t.deref()
-            && flow_common::files::has_ts_ext(cx.file())
+            && !ids.is_empty()
             && ids.iter().all(|tp| tp.default.is_some()) =>
         {
-            // In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
-            // matching TypeScript behavior where defaults are used.
-            // Only when all params have defaults; otherwise fall through to EMissingTypeArgs.
+            // Treat missing type args the same as empty type args (Foo = Foo<>) when all
+            // parameters have defaults. Otherwise, fall through to EMissingTypeArgs.
             let t = FlowJs::mk_typeapp_of_poly(
                 cx,
                 trace,

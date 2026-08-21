@@ -1038,12 +1038,9 @@ fn elab_t_concrete<'cx>(
                     t_out,
                     id,
                     strictness_kind: _,
-                }) if flow_common::files::has_ts_ext(cx.file())
-                    && ids.iter().all(|tp| tp.default.is_some()) =>
-                {
-                    // In .ts files, treat missing type args the same as empty type args (Foo = Foo<>),
-                    // matching TypeScript behavior where defaults are used.
-                    // Only when all params have defaults; otherwise fall through to EMissingTypeArgs.
+                }) if !ids.is_empty() && ids.iter().all(|tp| tp.default.is_some()) => {
+                    // Treat missing type args the same as empty type args (Foo = Foo<>) when all
+                    // parameters have defaults. Otherwise, fall through to EMissingTypeArgs.
                     let reason_tapp = def_reason.dupe();
                     let t = mk_typeapp_of_poly(
                         cx,

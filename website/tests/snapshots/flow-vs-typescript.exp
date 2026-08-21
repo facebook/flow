@@ -2,6 +2,9 @@
 No errors!
 
 === block 2 ===
+No errors!
+
+=== block 3 ===
 Error ------------------------------------------------------------------------ -:12:28
 
 Cannot assign `raw` to `settings` because property `theme` is extra in object literal [1] but missing in `Settings` [2].
@@ -27,10 +30,10 @@ References:
 
 Found 1 error
 
-=== block 3 ===
+=== block 4 ===
 No errors!
 
-=== block 4 ===
+=== block 5 ===
 Error ------------------------------------------------------------------------ -:15:33
 
 Cannot assign `e` to `baseExact` because property `timestamp` is extra in `LogEntry` [1] but missing in object type [2].
@@ -97,7 +100,7 @@ References:
 
 Found 3 errors
 
-=== block 5 ===
+=== block 6 ===
 Error ------------------------------------------------------------------------ -:20:12
 
 Cannot call `acceptsObj` with `new Foo()` bound to `x` because `Foo` [1] is not a subtype of `Obj` [2]. Class instances
@@ -132,7 +135,7 @@ References:
 
 Found 2 errors
 
-=== block 6 ===
+=== block 7 ===
 Error ------------------------------------------------------------------------- -:4:20
 
 Cannot implement `ObjType` because it is not an interface. [cannot-implement]
@@ -156,7 +159,7 @@ References:
 
 Found 2 errors
 
-=== block 7 ===
+=== block 8 ===
 Error -------------------------------------------------------------------------- -:9:8
 
 Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
@@ -178,10 +181,10 @@ References:
 
 Found 1 error
 
-=== block 8 ===
+=== block 9 ===
 No errors!
 
-=== block 9 ===
+=== block 10 ===
 Error ------------------------------------------------------------------------- -:8:11
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. `Counter` [2] cannot be spread
@@ -200,7 +203,7 @@ References:
 
 Found 1 error
 
-=== block 10 ===
+=== block 11 ===
 Error ------------------------------------------------------------------------ -:10:22
 
 Cannot get `counter.incr` because property `incr` [1] cannot be unbound from the context [2] where it was defined.
@@ -221,7 +224,7 @@ References:
 
 Found 1 error
 
-=== block 11 ===
+=== block 12 ===
 Error ------------------------------------------------------------------------- -:5:29
 
 Cannot reference `this` from within method `incr` [1]. For safety, Flow restricts access to `this` inside object methods
@@ -240,10 +243,10 @@ References:
 
 Found 1 error
 
-=== block 12 ===
+=== block 13 ===
 No errors!
 
-=== block 13 ===
+=== block 14 ===
 Error -------------------------------------------------------------------------- -:8:5
 
 Cannot assign array literal to `fullName` because array literal [1] has an unknown number of elements, so is
@@ -266,7 +269,7 @@ References:
 
 Found 1 error
 
-=== block 14 ===
+=== block 15 ===
 Error ------------------------------------------------------------------------- -:4:10
 
 Cannot use `T` [1] in an input position because `T` [1] is expected to occur only in output positions.
@@ -284,7 +287,7 @@ References:
 
 Found 1 error
 
-=== block 15 ===
+=== block 16 ===
 Error ------------------------------------------------------------------------ -:11:10
 
 Cannot call `markFree` with `item` bound to `p` because in property `price`: `number` [1] is not exactly the same as
@@ -319,10 +322,10 @@ References:
 
 Found 1 error
 
-=== block 16 ===
+=== block 17 ===
 No errors!
 
-=== block 17 ===
+=== block 18 ===
 Error -------------------------------------------------------------------------- -:9:3
 
 Cannot call `f` with `o` bound to `obj` because property `value` is read-only in object type [1] but writable in object
@@ -343,10 +346,10 @@ References:
 
 Found 1 error
 
-=== block 18 ===
+=== block 19 ===
 No errors!
 
-=== block 19 ===
+=== block 20 ===
 Error ------------------------------------------------------------------------- -:9:13
 
 Cannot call `appendError` with `errors` bound to `es` because in array element: `string` [1] is not exactly the same as
@@ -378,10 +381,10 @@ References:
 
 Found 1 error
 
-=== block 20 ===
+=== block 21 ===
 No errors!
 
-=== block 21 ===
+=== block 22 ===
 Error ------------------------------------------------------------------------- -:13:7
 
 Cannot call `widen` with `box` bound to `b` because in type argument `T` [1]: `string` [2] is incompatible with
@@ -405,7 +408,7 @@ References:
 
 Found 1 error
 
-=== block 22 ===
+=== block 23 ===
 Error ------------------------------------------------------------------------ -:19:13
 
 Cannot call `callCompare` with `stringComparator` bound to `c` because: [incompatible-type]
@@ -457,7 +460,7 @@ References:
 
 Found 2 errors
 
-=== block 23 ===
+=== block 24 ===
 Error ------------------------------------------------------------------------- -:6:20
 
 Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
@@ -489,7 +492,7 @@ References:
 
 Found 2 errors
 
-=== block 24 ===
+=== block 25 ===
 Error ------------------------------------------------------------------------- -:3:15
 
 The equivalent of TypeScript's `undefined` type in Flow is `void`. Flow does not have separate `void` and `undefined`
@@ -501,13 +504,13 @@ types. [unsupported-syntax]
 
 Found 1 error
 
-=== block 25 ===
-No errors!
-
 === block 26 ===
 No errors!
 
 === block 27 ===
+No errors!
+
+=== block 28 ===
 Error ------------------------------------------------------------------------- -:5:10
 
 Cannot return `((typeof x) === "object") && (x !== null)` because indexed object [1] is incompatible with exact
@@ -613,7 +616,7 @@ References:
 
 Found 4 errors
 
-=== block 28 ===
+=== block 29 ===
 Error ------------------------------------------------------------------------- -:6:10
 
 Cannot return `x instanceof B` because the negation of the predicate encoded in this expression needs to completely
@@ -632,7 +635,7 @@ References:
 
 Found 1 error
 
-=== block 29 ===
+=== block 30 ===
 Error ------------------------------------------------------------------------ -:17:23
 
 Cannot assign `obj.x` to `a` because `null` [1] is incompatible with `number` [2]. [incompatible-type]
@@ -684,10 +687,10 @@ References:
 
 Found 3 errors
 
-=== block 30 ===
+=== block 31 ===
 No errors!
 
-=== block 31 ===
+=== block 32 ===
 Error ------------------------------------------------------------------------- -:5:11
 
 Cannot cast object literal to object type because property `name` is missing in object literal [1] but exists in object
@@ -705,25 +708,8 @@ References:
 
 Found 1 error
 
-=== block 32 ===
-No errors!
-
 === block 33 ===
-Error ------------------------------------------------------------------------- -:4:10
-
-Cannot use `Foo` [1] without 0-1 type arguments. [missing-type-arg]
-
-   -:4:10
-   4| type A = Foo;   // ERROR: [missing-type-arg]
-               ^^^
-
-References:
-   -:3:9
-   3| type Foo<T = string> = {x: T};
-              ^^^^^^^^^^^^ [1]
-
-
-Found 1 error
+No errors!
 
 === block 34 ===
 No errors!
