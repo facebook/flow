@@ -44,6 +44,21 @@ use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_flow_common::flow_js_utils::add_output_non_speculating;
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) struct OrderedLibInput {
+    pub(crate) scoped_project: Option<String>,
+    pub(crate) file: FileKey,
+}
+
+impl OrderedLibInput {
+    pub(crate) fn configured(scoped_project: Option<String>, path: &str) -> Self {
+        Self {
+            scoped_project,
+            file: flow_common::files::lib_file_key(path),
+        }
+    }
+}
+
 /// process all lib files: parse, infer, and add the symbols they define
 /// to the builtins object.
 ///
@@ -58,7 +73,7 @@ fn load_lib_files(
     options: &Options,
     reader: &Transaction,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-    files: &[(Option<String>, String)],
+    files: &[OrderedLibInput],
 ) -> (
     bool,
     MasterContext,
@@ -71,20 +86,23 @@ fn load_lib_files(
         flow_common::type_strictness::TypeStrictnessKind,
         Arc<ast::Program<Loc, Loc>>,
     )> = Vec::new();
-    for (scoped_dir_opt, file) in files {
-        let lib_file = flow_common::files::lib_file_key(file);
-        match reader.get_ast(&lib_file) {
+    for OrderedLibInput {
+        scoped_project,
+        file,
+    } in files
+    {
+        match reader.get_ast(file) {
             Some(ast) => {
                 ordered_asts.push((
-                    scoped_dir_opt.clone(),
+                    scoped_project.clone(),
                     flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
-                        flow_common::files::has_ts_ext(&lib_file),
+                        flow_common::files::has_ts_ext(file),
                     ),
                     ast,
                 ));
             }
             None => {
-                flow_hh_logger::info!("Failed to find {:?} in parsing heap.", lib_file);
+                flow_hh_logger::info!("Failed to find {:?} in parsing heap.", file);
                 ok = false;
             }
         }
@@ -212,11 +230,11 @@ fn error_set_to_filemap(map: &mut BTreeMap<FileKey, ErrorSet>, err_set: ErrorSet
 /// initialize builtins:
 /// parse and do local inference on library files, and set up master context.
 /// returns list of (lib file, success) pairs.
-pub fn init(
+pub(crate) fn init(
     options: &Options,
     reader: &Transaction,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-    lib_files: Vec<(Option<String>, String)>,
+    lib_files: Vec<OrderedLibInput>,
 ) -> InitResult {
     let ccx = Rc::new(flow_typing_context::make_ccx());
     let (ok, master_cx, cx_opt, exports) =

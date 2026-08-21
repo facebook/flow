@@ -1250,7 +1250,7 @@ fn init_libs(
     options: &Arc<Options>,
     transaction: &Arc<Transaction>,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-    ordered_libs: Vec<(Option<String>, String)>,
+    ordered_libs: Vec<init::OrderedLibInput>,
     local_errors: BTreeMap<FileKey, ErrorSet>,
     warnings: BTreeMap<FileKey, ErrorSet>,
     suppressions: ErrorSuppressions,
@@ -2779,7 +2779,12 @@ fn init_with_initial_state(
         options,
         transaction,
         all_unordered_libs_set.dupe(),
-        ordered_libs.clone(),
+        ordered_libs
+            .iter()
+            .map(|(scoped_project, path)| {
+                init::OrderedLibInput::configured(scoped_project.clone(), path)
+            })
+            .collect(),
         local_errors,
         BTreeMap::new(),
         ErrorSuppressions::empty(),
@@ -3340,7 +3345,12 @@ pub fn init_from_scratch(
             options,
             transaction,
             all_unordered_libs_set.dupe(),
-            ordered_libs.clone(),
+            ordered_libs
+                .iter()
+                .map(|(scoped_project, path)| {
+                    init::OrderedLibInput::configured(scoped_project.clone(), path)
+                })
+                .collect(),
             local_errors,
             warnings,
             ErrorSuppressions::empty(),
