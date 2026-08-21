@@ -18,7 +18,6 @@ use std::sync::atomic::Ordering;
 
 use dupe::Dupe;
 use flow_check_cache::CheckContentsCache;
-use flow_common::files;
 use flow_common::options::Options;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
@@ -1440,26 +1439,9 @@ fn handle_status(
 
     let error_output = String::from_utf8_lossy(&buf).into_owned();
 
-    let (focused_count, checked_libdef_files) =
-        env.checked_files
-            .focused()
-            .iter()
-            .fold((0i32, 0i32), |(total, libs), f| {
-                if files::is_lib_file(&env.all_unordered_libs, f) {
-                    (total + 1, libs + 1)
-                } else {
-                    (total + 1, libs)
-                }
-            });
-    let checked_files = focused_count + env.checked_files.dependents_cardinal() as i32;
-    let (total_files, total_libdef_files) =
-        env.files.iter().fold((0i32, 0i32), |(total, libs), f| {
-            if files::is_lib_file(&env.all_unordered_libs, f) {
-                (total + 1, libs + 1)
-            } else {
-                (total + 1, libs)
-            }
-        });
+    let checked_files =
+        (env.checked_files.focused_cardinal() + env.checked_files.dependents_cardinal()) as i32;
+    let total_files = env.files.len() as i32;
 
     ServerResponse::Status {
         has_errors,
@@ -1469,9 +1451,7 @@ fn handle_status(
         lazy_stats: LazyStats {
             lazy_mode,
             checked_files,
-            checked_libdef_files,
             total_files,
-            total_libdef_files,
         },
     }
 }

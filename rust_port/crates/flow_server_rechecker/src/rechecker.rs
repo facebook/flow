@@ -58,9 +58,7 @@ pub fn get_lazy_stats(
     server_prot::response::LazyStats {
         lazy_mode: options.lazy_mode,
         checked_files,
-        checked_libdef_files: 0,
         total_files,
-        total_libdef_files: 0,
     }
 }
 
