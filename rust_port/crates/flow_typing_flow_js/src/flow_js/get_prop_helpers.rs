@@ -8,6 +8,7 @@
 use flow_common::error_ref::ErrorReference;
 use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
+use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
@@ -70,9 +71,16 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         obj_t: Type,
         method_accessible: bool,
         super_t: Type,
-        args: (Reason, LookupKind, PropRef, UseOp, properties::Set),
+        args: CgLookupArgs,
     ) -> Result<Self::R, FlowJsException> {
-        let (reason_op, lookup_kind, propref, use_op, ids) = args;
+        let CgLookupArgs {
+            reason_op,
+            lookup_kind,
+            indexer_fallback,
+            propref,
+            use_op,
+            ids,
+        } = args;
         Ok(Box::new(move |cx, tout| {
             rec_flow(
                 cx,
@@ -82,6 +90,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason_op,
                         lookup_kind: Box::new(lookup_kind),
+                        indexer_fallback,
                         try_ts_on_failure: Rc::from([]),
                         propref: Box::new(propref),
                         lookup_action: Box::new(LookupAction::ReadProp(Box::new(ReadPropData {
@@ -580,6 +589,7 @@ pub(super) fn write_obj_prop<'cx>(
                             &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
                                 lookup_kind: Box::new(LookupKind::Strict(reason_obj.dupe())),
+                                indexer_fallback: None,
                                 try_ts_on_failure: Rc::from([]),
                                 propref: Box::new(propref.clone()),
                                 lookup_action: Box::new(action),

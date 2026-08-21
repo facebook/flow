@@ -6125,6 +6125,17 @@ pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> 
     }
 }
 
+/// Everything needed to continue a property lookup along the prototype chain, handed to
+/// [`GetPropHelper::cg_lookup`].
+pub struct CgLookupArgs {
+    pub reason_op: Reason,
+    pub lookup_kind: flow_typing_type::type_::LookupKind,
+    pub indexer_fallback: Option<Box<flow_typing_type::type_::IndexerFallbackData>>,
+    pub propref: flow_typing_type::type_::PropRef,
+    pub use_op: UseOp,
+    pub ids: flow_typing_type::type_::properties::Set,
+}
+
 pub trait GetPropHelper {
     type R;
 
@@ -6141,13 +6152,7 @@ pub trait GetPropHelper {
         obj_t: Type,
         method_accessible: bool,
         super_t: Type,
-        args: (
-            Reason,
-            flow_typing_type::type_::LookupKind,
-            flow_typing_type::type_::PropRef,
-            UseOp,
-            flow_typing_type::type_::properties::Set,
-        ),
+        args: CgLookupArgs,
     ) -> Result<Self::R, FlowJsException>;
 
     fn reposition<'cx>(
@@ -6228,6 +6233,7 @@ pub mod get_prop_t_kit {
     use flow_typing_type::type_::DictType;
     use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::GenericTData;
+    use flow_typing_type::type_::IndexerFallbackData;
     use flow_typing_type::type_::InstType;
     use flow_typing_type::type_::LookupKind;
     use flow_typing_type::type_::NonstrictReturningData;
@@ -6251,6 +6257,7 @@ pub mod get_prop_t_kit {
     use flow_typing_type::type_util;
     use flow_typing_type::type_util::reason_of_t;
 
+    use super::CgLookupArgs;
     use super::FlowJsException;
     use super::GetPropHelper;
     use super::add_output;
@@ -6315,6 +6322,34 @@ pub mod get_prop_t_kit {
         }
     }
 
+    /// Whether a named property access can be served by an indexer whose key type is
+    /// `key`. When the engine can run the subtyping test and the key is already resolved,
+    /// ask it; otherwise fall back to flowing the key name into the indexer key, which
+    /// accepts the match and reports any mismatch as an incompatibility instead.
+    fn named_prop_matches_indexer<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
+        trace: &DepthTrace,
+        use_op: &UseOp,
+        name: &Name,
+        reason_op: &Reason,
+        key: &Type,
+    ) -> Result<bool, FlowJsException> {
+        match F::prop_overlaps_with_indexer() {
+            Some(prop_overlaps_with_indexer) if !tvar_visitors::has_unresolved_tvars(cx, key) => {
+                Ok(prop_overlaps_with_indexer(cx, name, reason_op, key)?)
+            }
+            _ => {
+                F::dict_read_check(
+                    cx,
+                    *trace,
+                    use_op,
+                    (&type_of_key_name(cx, name.dupe(), reason_op), key),
+                )?;
+                Ok(true)
+            }
+        }
+    }
+
     pub fn get_instance_prop<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
         trace: &DepthTrace,
@@ -6370,6 +6405,37 @@ pub mod get_prop_t_kit {
             }
             (
                 None,
+                PropRef::Named {
+                    name,
+                    from_indexed_access: false,
+                    ..
+                },
+                Some(DictType {
+                    key,
+                    value,
+                    dict_polarity,
+                    ..
+                }),
+            ) => {
+                // Unlike an object indexer, this does not answer the access here: an
+                // indexer declared on an earlier `extends` branch must not shadow a
+                // property declared on a later one, so the candidate is held back until
+                // the whole chain has been searched. See `IndexerFallbackData`.
+                if !named_prop_matches_indexer::<F>(cx, trace, use_op, name, reason_op, key)? {
+                    return Ok(None);
+                }
+                Ok(Some((
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: None,
+                        key_loc: None,
+                        type_: value.dupe(),
+                        polarity: *dict_polarity,
+                    }))),
+                    PropertySource::IndexerProperty,
+                )))
+            }
+            (
+                None,
                 PropRef::Computed(k),
                 Some(DictType {
                     key,
@@ -6393,6 +6459,62 @@ pub mod get_prop_t_kit {
         }
     }
 
+    /// Like [`get_instance_prop`], but for a lookup that will continue up the prototype
+    /// chain. An indexer that matched a named access must not resolve the access here: an
+    /// inherited declared property takes precedence over it. Such a candidate is returned
+    /// separately, to be carried by the lookup and applied only once the chain is
+    /// exhausted.
+    pub fn get_instance_prop_for_lookup<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
+        trace: &DepthTrace,
+        use_op: &UseOp,
+        ignore_dicts: bool,
+        inst: &InstType,
+        propref: &PropRef,
+        reason_op: &Reason,
+        can_defer: bool,
+        reason_obj: &Reason,
+    ) -> Result<
+        (
+            Option<(Property, PropertySource)>,
+            Option<Box<IndexerFallbackData>>,
+        ),
+        FlowJsException,
+    > {
+        let property =
+            get_instance_prop::<F>(cx, trace, use_op, ignore_dicts, inst, propref, reason_op)?;
+
+        let Some((property, PropertySource::IndexerProperty)) = property else {
+            return Ok((property, None));
+        };
+        let PropRef::Named {
+            from_indexed_access: false,
+            ..
+        } = propref
+        else {
+            return Ok((Some((property, PropertySource::IndexerProperty)), None));
+        };
+        // Actions other than a plain read or write have nowhere to put a deferred
+        // candidate, so the indexer simply does not answer a named access for them.
+        if !can_defer {
+            return Ok((None, None));
+        }
+
+        Ok((
+            None,
+            Some(Box::new(IndexerFallbackData {
+                property,
+                reason_obj: reason_obj.dupe(),
+                // The access is TS-related when either side is: the interface was declared
+                // under TS semantics, or the access itself is written in a TS file.
+                suppress_missing_error: inst
+                    .strictness_kind
+                    .join(cx.type_strictness_kind())
+                    .is_typescript_loose(),
+            })),
+        ))
+    }
+
     pub fn read_instance_prop<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
         trace: &DepthTrace,
@@ -6408,56 +6530,59 @@ pub mod get_prop_t_kit {
         propref: &PropRef,
         reason_op: &Reason,
     ) -> Result<F::R, FlowJsException> {
-        match get_instance_prop::<F>(cx, trace, use_op, true, inst, propref, reason_op)? {
-            Some((p, _target_kind)) => {
-                let p = check_method_unbinding(
-                    cx,
-                    use_op,
-                    method_accessible,
-                    reason_op,
-                    propref,
-                    hint,
-                    p,
-                )?;
-                if let Some(id) = id {
-                    cx.test_prop_hit(id);
-                }
-                perform_read_prop_action::<F>(
-                    cx,
-                    trace,
-                    use_op.dupe(),
-                    propref,
-                    property::property_type(&p),
-                    reason_op,
-                    &inst.inst_react_dro,
-                )
-            }
-            None => {
-                let super_t = match name_of_propref(propref) {
-                    Some(name) if is_munged_prop_name(cx, &name) => {
-                        Type::new(TypeInner::ObjProtoT(reason_of_t(&super_t).dupe()))
-                    }
-                    _ => super_t,
-                };
-                let ids: FlowOrdSet<_> = [inst.own_props.dupe(), inst.proto_props.dupe()]
-                    .into_iter()
-                    .collect();
-                F::cg_lookup(
-                    cx,
-                    *trace,
-                    instance_t.dupe(),
-                    method_accessible,
-                    super_t,
-                    (
-                        reason_op.dupe(),
-                        lookup_kind,
-                        propref.clone(),
-                        use_op.dupe(),
-                        ids,
-                    ),
-                )
-            }
+        let (property, indexer_fallback) = get_instance_prop_for_lookup::<F>(
+            cx,
+            trace,
+            use_op,
+            true,
+            inst,
+            propref,
+            reason_op,
+            true,
+            reason_of_t(instance_t),
+        )?;
+        if let Some(id) = id
+            && (property.is_some() || indexer_fallback.is_some())
+        {
+            cx.test_prop_hit(id);
         }
+        if let Some((p, _target_kind)) = property {
+            let p =
+                check_method_unbinding(cx, use_op, method_accessible, reason_op, propref, hint, p)?;
+            return perform_read_prop_action::<F>(
+                cx,
+                trace,
+                use_op.dupe(),
+                propref,
+                property::property_type(&p),
+                reason_op,
+                &inst.inst_react_dro,
+            );
+        }
+        let super_t = match name_of_propref(propref) {
+            Some(name) if is_munged_prop_name(cx, &name) => {
+                Type::new(TypeInner::ObjProtoT(reason_of_t(&super_t).dupe()))
+            }
+            _ => super_t,
+        };
+        let ids: FlowOrdSet<_> = [inst.own_props.dupe(), inst.proto_props.dupe()]
+            .into_iter()
+            .collect();
+        F::cg_lookup(
+            cx,
+            *trace,
+            instance_t.dupe(),
+            method_accessible,
+            super_t,
+            CgLookupArgs {
+                reason_op: reason_op.dupe(),
+                lookup_kind,
+                indexer_fallback,
+                propref: propref.clone(),
+                use_op: use_op.dupe(),
+                ids,
+            },
+        )
     }
 
     // let on_EnumObjectT cx trace enum_reason ~enum_object_t ~enum_value_t ~enum_info access =
@@ -6624,40 +6749,17 @@ pub mod get_prop_t_kit {
                 }),
             ) if !is_dictionary_exempt(name) => {
                 //   Dictionaries match all property reads
-                match F::prop_overlaps_with_indexer() {
-                    Some(prop_overlaps_with_indexer)
-                        if !tvar_visitors::has_unresolved_tvars(cx, key) =>
-                    {
-                        if prop_overlaps_with_indexer(cx, name, reason_op, key)? {
-                            let type_ = union_void_if_instructed(value.dupe());
-                            Ok(Some((
-                                PropertyType::OrdinaryField {
-                                    type_,
-                                    polarity: *dict_polarity,
-                                },
-                                PropertySource::IndexerProperty,
-                            )))
-                        } else {
-                            Ok(None)
-                        }
-                    }
-                    _ => {
-                        F::dict_read_check(
-                            cx,
-                            *trace,
-                            use_op,
-                            (&type_of_key_name(cx, name.dupe(), reason_op), key),
-                        )?;
-                        let type_ = union_void_if_instructed(value.dupe());
-                        Ok(Some((
-                            PropertyType::OrdinaryField {
-                                type_,
-                                polarity: *dict_polarity,
-                            },
-                            PropertySource::IndexerProperty,
-                        )))
-                    }
+                if !named_prop_matches_indexer::<F>(cx, trace, use_op, name, reason_op, key)? {
+                    return Ok(None);
                 }
+                let type_ = union_void_if_instructed(value.dupe());
+                Ok(Some((
+                    PropertyType::OrdinaryField {
+                        type_,
+                        polarity: *dict_polarity,
+                    },
+                    PropertySource::IndexerProperty,
+                )))
             }
             (
                 PropRef::Computed(k),
@@ -6751,14 +6853,17 @@ pub mod get_prop_t_kit {
                         }
                         _ => LookupKind::Strict(reason_obj.dupe()),
                     };
-                    let x = (
+                    let data = CgLookupArgs {
                         reason_op,
                         lookup_kind,
-                        propref.clone(),
+                        // Objects resolve a named access through their own indexer
+                        // immediately, so there is never anything to defer here.
+                        indexer_fallback: None,
+                        propref: propref.clone(),
                         use_op,
-                        [o.props_tmap.dupe()].into_iter().collect(),
-                    );
-                    F::cg_lookup(cx, *trace, l, true, o.proto_t.dupe(), x)
+                        ids: [o.props_tmap.dupe()].into_iter().collect(),
+                    };
+                    F::cg_lookup(cx, *trace, l, true, o.proto_t.dupe(), data)
                 }
                 PropRef::Computed(elem_t) => match elem_t.deref() {
                     TypeInner::OpenT(_) => {

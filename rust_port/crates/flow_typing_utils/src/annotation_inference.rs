@@ -24,6 +24,7 @@ use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::slice_utils;
 use flow_typing_type::type_;
@@ -402,6 +403,7 @@ fn cg_lookup_<'cx>(
     reason_op: &Reason,
     propref: &type_::PropRef,
     objt: &Type,
+    indexer_fallback: Option<Box<type_::IndexerFallbackData>>,
 ) -> Type {
     elab_t(
         cx,
@@ -413,8 +415,56 @@ fn cg_lookup_<'cx>(
             use_op: use_op.dupe(),
             prop_ref: propref.clone(),
             type_: objt.dupe(),
+            indexer_fallback,
         }))),
     )
+}
+
+/// The annotation-inference counterpart of `flow_js`'s `strict_lookup_failed`: the
+/// prototype chain is exhausted with no declared property. Report that, then recover.
+///
+/// If an indexer matched the access on the way up, no declared property was ever required,
+/// so recovery yields the indexer's value instead of `any` — and for a TS-related access
+/// there is nothing to report at all.
+fn annot_lookup_failed<'cx>(
+    cx: &Context<'cx>,
+    reason_op: &Reason,
+    reason_prop: &Reason,
+    name: &Name,
+    use_op: &UseOp,
+    propref: &type_::PropRef,
+    indexer_fallback: Option<&type_::IndexerFallbackData>,
+) -> Type {
+    use flow_typing_flow_common::flow_js_utils::get_prop_t_kit;
+
+    if !indexer_fallback.is_some_and(|fallback| fallback.suppress_missing_error) {
+        flow_js_utils::add_output_non_speculating(
+            cx,
+            flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(Box::new(
+                EPropNotFoundInLookupData {
+                    prop_loc: reason_prop.loc().dupe(),
+                    reason_obj: reason_op.dupe(),
+                    prop_name: Some(name.dupe()),
+                    use_op: use_op.dupe(),
+                    suggestion: None,
+                },
+            )),
+        );
+    }
+    match indexer_fallback {
+        Some(fallback) => get_prop_t_kit::perform_read_prop_action::<AnnotGetPropHelper>(
+            cx,
+            &dummy_trace(),
+            use_op.dupe(),
+            propref,
+            type_::property::property_type(&fallback.property),
+            reason_op,
+            &None,
+        )
+        // Annotation inference is never speculative
+        .unwrap(),
+        None => type_::any_t::error_of_kind(type_::AnyErrorKind::UnresolvedName, reason_op.dupe()),
+    }
 }
 
 struct AnnotGetPropHelper;
@@ -476,17 +526,23 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         obj_t: Type,
         _method_accessible: bool,
         super_t: Type,
-        args: (
-            Reason,
-            type_::LookupKind,
-            type_::PropRef,
-            UseOp,
-            properties::Set,
-        ),
+        args: CgLookupArgs,
     ) -> Result<Type, FlowJsException> {
-        let (reason_op, _kind, propref, use_op, _ids) = args;
+        let CgLookupArgs {
+            reason_op,
+            indexer_fallback,
+            propref,
+            use_op,
+            ..
+        } = args;
         Ok(cg_lookup_(
-            cx, &use_op, super_t, &reason_op, &propref, &obj_t,
+            cx,
+            &use_op,
+            super_t,
+            &reason_op,
+            &propref,
+            &obj_t,
+            indexer_fallback,
         ))
     }
 
@@ -1892,6 +1948,7 @@ fn elab_t_concrete<'cx>(
                 use_op,
                 prop_ref: propref,
                 type_: objt,
+                indexer_fallback,
             } = data.as_ref();
             use flow_typing_flow_common::flow_js_utils::get_prop_t_kit;
             use flow_typing_type::type_::property;
@@ -1910,18 +1967,21 @@ fn elab_t_concrete<'cx>(
                                 _ => None,
                             };
                             let trace = dummy_trace();
-                            match get_prop_t_kit::get_instance_prop::<AnnotGetPropHelper>(
-                                cx,
-                                &trace,
-                                use_op,
-                                true,
-                                &inst_t.inst,
-                                propref,
-                                reason_op,
-                            )
-                            // Annotation inference is never speculative
-                            .unwrap()
-                            {
+                            let (property, candidate) =
+                                get_prop_t_kit::get_instance_prop_for_lookup::<AnnotGetPropHelper>(
+                                    cx,
+                                    &trace,
+                                    use_op,
+                                    true,
+                                    &inst_t.inst,
+                                    propref,
+                                    reason_op,
+                                    true,
+                                    _lreason,
+                                )
+                                // Annotation inference is never speculative
+                                .unwrap();
+                            match property {
                                 Some((p, _)) => {
                                     get_prop_t_kit::perform_read_prop_action::<AnnotGetPropHelper>(
                                         cx,
@@ -1935,6 +1995,7 @@ fn elab_t_concrete<'cx>(
                                     // Annotation inference is never speculative
                                     .unwrap()
                                 }
+                                // A candidate found closer to the access wins.
                                 None => cg_lookup_(
                                     cx,
                                     use_op,
@@ -1942,6 +2003,7 @@ fn elab_t_concrete<'cx>(
                                     reason_op,
                                     propref,
                                     objt,
+                                    indexer_fallback.clone().or(candidate),
                                 ),
                             }
                         }
@@ -1985,7 +2047,15 @@ fn elab_t_concrete<'cx>(
                             // Annotation inference is never speculative
                             .unwrap()
                         }
-                        None => cg_lookup_(cx, use_op, o.proto_t.dupe(), reason_op, propref, objt),
+                        None => cg_lookup_(
+                            cx,
+                            use_op,
+                            o.proto_t.dupe(),
+                            reason_op,
+                            propref,
+                            objt,
+                            indexer_fallback.clone(),
+                        ),
                     }
                 }
                 // ***************
@@ -2011,19 +2081,15 @@ fn elab_t_concrete<'cx>(
                             ..
                         } = propref =>
                 {
-                    flow_js_utils::add_output_non_speculating(
+                    annot_lookup_failed(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(
-                            Box::new(EPropNotFoundInLookupData {
-                                prop_loc: reason_prop.loc().dupe(),
-                                reason_obj: reason_op.dupe(),
-                                prop_name: Some(name.dupe()),
-                                use_op: use_op.dupe(),
-                                suggestion: None,
-                            }),
-                        ),
-                    );
-                    any_t::error_of_kind(type_::AnyErrorKind::UnresolvedName, reason_op.dupe())
+                        reason_op,
+                        reason_prop,
+                        name,
+                        use_op,
+                        propref,
+                        indexer_fallback.as_deref(),
+                    )
                 }
                 TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_)
                     if let type_::PropRef::Named {
@@ -2032,19 +2098,15 @@ fn elab_t_concrete<'cx>(
                         ..
                     } = propref =>
                 {
-                    flow_js_utils::add_output_non_speculating(
+                    annot_lookup_failed(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(
-                            Box::new(EPropNotFoundInLookupData {
-                                prop_loc: reason_prop.loc().dupe(),
-                                reason_obj: reason_op.dupe(),
-                                prop_name: Some(name.dupe()),
-                                use_op: use_op.dupe(),
-                                suggestion: None,
-                            }),
-                        ),
-                    );
-                    any_t::error_of_kind(type_::AnyErrorKind::UnresolvedName, reason_op.dupe())
+                        reason_op,
+                        reason_prop,
+                        name,
+                        use_op,
+                        propref,
+                        indexer_fallback.as_deref(),
+                    )
                 }
                 _ => elab_t_wildcard_op(cx, dst_cx, seen, t, op),
             }

@@ -1,0 +1,350 @@
+Error --------------------------------------------------------------------------------------- annotation_consumer.js:5:1
+
+Cannot cast `tsRead` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   annotation_consumer.js:5:1
+   5| tsRead as string; // ERROR: the indexer value is a number
+      ^^^^^^
+
+References:
+   annotation_position.js:7:22
+   7| export const tsRead: typeof tsMap.someKey = 1;
+                           ^^^^^^^^^^^^^^^^^^^^ [1]
+   annotation_consumer.js:5:11
+   5| tsRead as string; // ERROR: the indexer value is a number
+                ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- annotation_consumer.js:9:1
+
+Cannot cast `alias` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   annotation_consumer.js:9:1
+   9| alias as string; // ERROR: the indexer value is a number
+      ^^^^^
+
+References:
+   annotation_consumer.js:8:22
+   8| declare const alias: TSAlias;
+                           ^^^^^^^ [1]
+   annotation_consumer.js:9:10
+   9| alias as string; // ERROR: the indexer value is a number
+               ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- annotation_consumer.js:16:1
+
+Cannot cast `flowReadInTs` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   annotation_consumer.js:16:1
+   16| flowReadInTs as string; // ERROR: the indexer value is a number
+       ^^^^^^^^^^^^
+
+References:
+   ts_annotation_position.ts:6:28
+    6| export const flowReadInTs: typeof flowMap.someKey = 1;
+                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   annotation_consumer.js:16:17
+   16| flowReadInTs as string; // ERROR: the indexer value is a number
+                       ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- annotation_consumer.js:19:1
+
+Cannot cast `aliasInTs` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   annotation_consumer.js:19:1
+   19| aliasInTs as string; // ERROR: the indexer value is a number
+       ^^^^^^^^^
+
+References:
+   annotation_consumer.js:18:26
+   18| declare const aliasInTs: FlowAliasInTs;
+                                ^^^^^^^^^^^^^ [1]
+   annotation_consumer.js:19:14
+   19| aliasInTs as string; // ERROR: the indexer value is a number
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- annotation_position.js:15:39
+
+Cannot get `flowMap.someKey` because property `someKey` is missing in `FlowMap` [1]. [prop-missing]
+
+   annotation_position.js:15:39
+   15| export const flowRead: typeof flowMap.someKey = 1; // ERROR: Flow interfaces keep strict named access
+                                             ^^^^^^^
+
+References:
+   annotation_position.js:13:24
+   13| declare const flowMap: FlowMap;
+                              ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:6:1
+
+Cannot cast `tsValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:6:1
+   6| tsValue as string; // ERROR: the indexer value is a number
+      ^^^^^^^
+
+References:
+   typescript.ts:2:19
+   2|   [name: string]: number;
+                        ^^^^^^ [1]
+   consumer.js:6:12
+   6| tsValue as string; // ERROR: the indexer value is a number
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:14:27
+
+Cannot get `flowMap.applicationKey` because property `applicationKey` is missing in `FlowMap` [1]. [prop-missing]
+
+   consumer.js:14:27
+   14| const flowValue = flowMap.applicationKey; // ERROR: Flow interfaces keep strict named access
+                                 ^^^^^^^^^^^^^^
+
+References:
+   consumer.js:13:24
+   13| declare const flowMap: FlowMap;
+                              ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:16:1
+
+Cannot cast `flowValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:16:1
+   16| flowValue as string; // ERROR: the indexer value is a number
+       ^^^^^^^^^
+
+References:
+   consumer.js:10:19
+   10|   [name: string]: number,
+                         ^^^^^^ [1]
+   consumer.js:16:14
+   16| flowValue as string; // ERROR: the indexer value is a number
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:21:14
+
+Cannot get `interfaceMap.namedKey` because property `namedKey` is missing in interface type [1]. [prop-missing]
+
+   consumer.js:21:14
+   21| interfaceMap.namedKey as number; // ERROR: inline Flow interfaces keep strict named access
+                    ^^^^^^^^
+
+References:
+   consumer.js:19:29
+   19| declare const interfaceMap: interface {[key: string]: number};
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:30:43
+
+Cannot get `flowDerivedMap.inheritedKey` because property `inheritedKey` is missing in `FlowDerivedMap` [1].
+[prop-missing]
+
+   consumer.js:30:43
+   30| const inheritedFlowValue = flowDerivedMap.inheritedKey; // ERROR: inherited Flow indexers keep strict named access
+                                                 ^^^^^^^^^^^^
+
+References:
+   consumer.js:29:31
+   29| declare const flowDerivedMap: FlowDerivedMap;
+                                     ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:32:1
+
+Cannot cast `inheritedFlowValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:32:1
+   32| inheritedFlowValue as string; // ERROR: inherited indexer value is a number
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   consumer.js:24:19
+   24|   [name: string]: number,
+                         ^^^^^^ [1]
+   consumer.js:32:23
+   32| inheritedFlowValue as string; // ERROR: inherited indexer value is a number
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:33:16
+
+Cannot assign `1` to `flowDerivedMap.writeKey` because property `writeKey` is missing in `FlowDerivedMap` [1].
+[prop-missing]
+
+   consumer.js:33:16
+   33| flowDerivedMap.writeKey = 1; // ERROR: Flow interfaces keep strict named writes
+                      ^^^^^^^^
+
+References:
+   consumer.js:29:31
+   29| declare const flowDerivedMap: FlowDerivedMap;
+                                     ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:34:16
+
+Cannot assign `'no'` to `flowDerivedMap.badWrite` because property `badWrite` is missing in `FlowDerivedMap` [1].
+[prop-missing]
+
+   consumer.js:34:16
+   34| flowDerivedMap.badWrite = 'no'; // ERROR: missing property and incompatible indexer value
+                      ^^^^^^^^
+
+References:
+   consumer.js:29:31
+   29| declare const flowDerivedMap: FlowDerivedMap;
+                                     ^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:34:27
+
+Cannot assign `'no'` to `flowDerivedMap.badWrite` because `"no"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   consumer.js:34:27
+   34| flowDerivedMap.badWrite = 'no'; // ERROR: missing property and incompatible indexer value
+                                 ^^^^ [1]
+
+References:
+   consumer.js:24:19
+   24|   [name: string]: number,
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:40:1
+
+Cannot cast `flowMap` to `RequiredNamedProperty` because property `requiredKey` is missing in `FlowMap` [1] but exists
+in `RequiredNamedProperty` [2]. [incompatible-type]
+
+   consumer.js:40:1
+   40| flowMap as RequiredNamedProperty; // ERROR: an indexer does not guarantee a required structural property
+       ^^^^^^^
+
+References:
+   consumer.js:13:24
+   13| declare const flowMap: FlowMap;
+                              ^^^^^^^ [1]
+   consumer.js:40:12
+   40| flowMap as RequiredNamedProperty; // ERROR: an indexer does not guarantee a required structural property
+                  ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:57:35
+
+Cannot get `sharedFlowMap.applicationKey` because property `applicationKey` is missing in `FlowMap` [1]. [prop-missing]
+
+   consumer.js:57:35
+   57| const sharedValue = sharedFlowMap.applicationKey; // ERROR: neither end of the access is TypeScript
+                                         ^^^^^^^^^^^^^^
+
+References:
+   flow_declarations.js:7:31
+    7| declare export const flowMap: FlowMap;
+                                     ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- ts_consumer.ts:7:1
+
+Cannot cast `flowValueInTs` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   ts_consumer.ts:7:1
+   7| flowValueInTs as string; // ERROR: the indexer value is a number
+      ^^^^^^^^^^^^^
+
+References:
+   flow_declarations.js:4:19
+   4|   [name: string]: number,
+                        ^^^^^^ [1]
+   ts_consumer.ts:7:18
+   7| flowValueInTs as string; // ERROR: the indexer value is a number
+                       ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- ts_consumer.ts:19:20
+
+Cannot assign `'no'` to `flowMap.badWrite` because `"no"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   ts_consumer.ts:19:20
+   19| flowMap.badWrite = 'no'; // ERROR: writes use the indexer value type
+                          ^^^^ [1]
+
+References:
+   flow_declarations.js:4:19
+    4|   [name: string]: number,
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ typescript.ts:9:1
+
+Cannot cast `internalValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript.ts:9:1
+   9| internalValue as string; // ERROR: the indexer value is a number
+      ^^^^^^^^^^^^^
+
+References:
+   typescript.ts:2:19
+   2|   [name: string]: number;
+                        ^^^^^^ [1]
+   typescript.ts:9:18
+   9| internalValue as string; // ERROR: the indexer value is a number
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typescript.ts:16:13
+
+Cannot get `tsNumberMap.applicationKey` because property `applicationKey` is missing in `TSNumberMap` [1].
+[prop-missing]
+
+   typescript.ts:16:13
+   16| tsNumberMap.applicationKey; // ERROR: a number indexer does not cover a named property
+                   ^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:15:28
+   15| declare const tsNumberMap: TSNumberMap;
+                                  ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- typescript.ts:27:1
+
+Cannot cast `inheritedValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   typescript.ts:27:1
+   27| inheritedValue as string; // ERROR: inherited indexer value is a number
+       ^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:19:19
+   19|   [name: string]: number;
+                         ^^^^^^ [1]
+   typescript.ts:27:19
+   27| inheritedValue as string; // ERROR: inherited indexer value is a number
+                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typescript.ts:29:25
+
+Cannot assign `'no'` to `tsDerivedMap.badWrite` because `"no"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   typescript.ts:29:25
+   29| tsDerivedMap.badWrite = 'no'; // ERROR: writes use the inherited indexer value type
+                               ^^^^ [1]
+
+References:
+   typescript.ts:19:19
+   19|   [name: string]: number;
+                         ^^^^^^ [2]
+
+
+
+Found 22 errors

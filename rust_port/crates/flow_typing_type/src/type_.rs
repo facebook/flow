@@ -1793,6 +1793,11 @@ pub struct ValueToTypeReferenceTData {
 pub struct LookupTData {
     pub reason: Reason,
     pub lookup_kind: Box<LookupKind>,
+    /// An indexer property that already matched this access, held back until the
+    /// prototype chain is exhausted so that an inherited declared property wins over
+    /// the indexer. Travels alongside `lookup_kind`, which keeps describing what should
+    /// happen if nothing at all is found.
+    pub indexer_fallback: Option<Box<IndexerFallbackData>>,
     pub try_ts_on_failure: Rc<[Type]>,
     pub propref: Box<PropRef>,
     pub lookup_action: Box<LookupAction>,
@@ -5083,10 +5088,28 @@ pub struct NonstrictReturningData(
     pub Option<(i32, (Reason, Reason))>,
 );
 
+/// Controls how a property lookup terminates after traversing the prototype chain.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LookupKind {
+    /// Reports a missing-property error using the stored reason if the lookup fails.
     Strict(Reason),
+    /// Does not report a missing-property error. On failure, it may return a default
+    /// type and record a property-test miss.
     NonstrictReturning(Box<NonstrictReturningData>),
+}
+
+/// An indexer property that matched a named access, deferred until the lookup reaches
+/// the end of the prototype chain. See [`LookupTData::indexer_fallback`].
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct IndexerFallbackData {
+    pub property: Property,
+    /// The instance the indexer was declared on, reported as the property's owner.
+    pub reason_obj: Reason,
+    /// TypeScript resolves named access through a string indexer silently, so a
+    /// declared property is genuinely not required whenever either end of the access is
+    /// TypeScript. Pure Flow code still reports the property as missing and only reuses
+    /// the indexer's value type for downstream checking.
+    pub suppress_missing_error: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -9803,6 +9826,10 @@ pub mod aconstraint {
         pub use_op: UseOp,
         pub prop_ref: PropRef,
         pub type_: Type,
+        /// See [`super::LookupTData::indexer_fallback`]. Annotation inference walks the
+        /// prototype chain by recursion rather than through the constraint graph, but the
+        /// candidate still has to reach the end of the chain, so it rides along here too.
+        pub indexer_fallback: Option<Box<super::IndexerFallbackData>>,
     }
 
     #[derive(Clone)]

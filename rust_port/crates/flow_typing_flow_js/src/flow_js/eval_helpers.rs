@@ -91,6 +91,7 @@ pub(super) fn eval_selector<'cx>(
                 Ok(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason.dupe(),
                     lookup_kind: Box::new(lookup_kind),
+                    indexer_fallback: None,
                     try_ts_on_failure: Rc::from([]),
                     propref: Box::new(mk_named_prop(reason.dupe(), false, name.dupe())),
                     lookup_action: Box::new(action),

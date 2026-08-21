@@ -229,6 +229,7 @@ fn get_intrinsic<'cx>(
         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
             reason: reason_op.dupe(),
             lookup_kind: Box::new(LookupKind::Strict(reason_op.dupe())),
+            indexer_fallback: None,
             try_ts_on_failure: vec![].into(),
             propref: Box::new(propref),
             lookup_action: Box::new(LookupAction::LookupPropForTvarPopulation {
@@ -326,6 +327,7 @@ fn lookup_defaults<'cx>(
         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
             reason: reason_op.dupe(),
             lookup_kind: Box::new(lookup_kind),
+            indexer_fallback: None,
             try_ts_on_failure: vec![].into(),
             propref: Box::new(propref),
             lookup_action: Box::new(action),
@@ -1074,6 +1076,7 @@ pub fn run<'cx>(
                 &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason_key,
                     lookup_kind: Box::new(lookup_kind),
+                    indexer_fallback: None,
                     try_ts_on_failure: vec![].into(),
                     propref: Box::new(propref),
                     lookup_action: Box::new(action),

@@ -1608,6 +1608,7 @@ pub(super) fn instance_lookup_kind<'cx>(
                             &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
                                 lookup_kind: Box::new(LookupKind::Strict(reason_instance.dupe())),
+                                indexer_fallback: None,
                                 try_ts_on_failure: Rc::from([]),
                                 propref: Box::new(propref.clone()),
                                 lookup_action: Box::new(lookup_action),

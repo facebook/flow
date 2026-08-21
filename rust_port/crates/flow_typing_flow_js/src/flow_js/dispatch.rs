@@ -40,6 +40,7 @@ use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::GetTypeFromNamespaceTData;
 use flow_typing_type::type_::HasOwnPropTData;
+use flow_typing_type::type_::IndexerFallbackData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MapTypeTData;
 use flow_typing_type::type_::MethodTData;
@@ -144,9 +145,12 @@ fn lookup_targets<'a>(
         .chain(single)
 }
 
-/// A strict lookup reached the root of the prototype chain without finding what
-/// it was looking for: report the missing properties, then recover by resolving
-/// each of them to `any`.
+/// A strict lookup reached the root of the prototype chain without finding a declared
+/// property: report the missing properties, then recover.
+///
+/// If the lookup carried an indexer that matched the access on the way up, no declared
+/// property was ever required to exist, so recovery resolves to the indexer's value
+/// instead of `any` — and for a TS-related access there is nothing to report at all.
 fn strict_lookup_failed<'cx>(
     cx: &Context<'cx>,
     trace: DepthTrace,
@@ -156,31 +160,48 @@ fn strict_lookup_failed<'cx>(
     propref: &PropRef,
     action: &LookupAction,
     ids: Option<&properties::Set>,
+    indexer_fallback: Option<&IndexerFallbackData>,
 ) -> Result<(), FlowJsException> {
-    match action {
-        LookupAction::LookupPropsForSubtyping(box data) => {
-            subtyping_kit::add_output_missing_props_from_lookup(cx, data, ids)?;
+    if !indexer_fallback.is_some_and(|fallback| fallback.suppress_missing_error) {
+        match action {
+            LookupAction::LookupPropsForSubtyping(box data) => {
+                subtyping_kit::add_output_missing_props_from_lookup(cx, data, ids)?;
+            }
+            _ => {
+                let (prop_loc, prop_name) = match propref {
+                    PropRef::Named { reason, name, .. } => (reason.loc().dupe(), Some(name.dupe())),
+                    PropRef::Computed(_) => (reason_op.loc().dupe(), None),
+                };
+                let suggestion = prop_name.as_ref().zip(ids).and_then(|(name, ids)| {
+                    let ids: Vec<_> = ids.iter().duped().collect();
+                    prop_typo_suggestion_for_name(cx, &ids, name)
+                });
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                        prop_loc,
+                        reason_obj: strict_reason.dupe(),
+                        prop_name,
+                        use_op: flow_js_utils::use_op_of_lookup_action(action),
+                        suggestion,
+                    })),
+                )?;
+            }
         }
-        _ => {
-            let (prop_loc, prop_name) = match propref {
-                PropRef::Named { reason, name, .. } => (reason.loc().dupe(), Some(name.dupe())),
-                PropRef::Computed(_) => (reason_op.loc().dupe(), None),
-            };
-            let suggestion = prop_name.as_ref().zip(ids).and_then(|(name, ids)| {
-                let ids: Vec<_> = ids.iter().duped().collect();
-                prop_typo_suggestion_for_name(cx, &ids, name)
-            });
-            flow_js_utils::add_output(
-                cx,
-                ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
-                    prop_loc,
-                    reason_obj: strict_reason.dupe(),
-                    prop_name,
-                    use_op: flow_js_utils::use_op_of_lookup_action(action),
-                    suggestion,
-                })),
-            )?;
-        }
+    }
+    if let Some(fallback) = indexer_fallback {
+        return perform_lookup_action(
+            cx,
+            trace,
+            propref,
+            &property::property_type(&fallback.property),
+            Some(&fallback.property),
+            PropertySource::IndexerProperty,
+            &fallback.reason_obj,
+            reason_op,
+            action,
+            None,
+        );
     }
     let p = PropertyType::OrdinaryField {
         type_: any_t::error_of_kind(AnyErrorKind::UnresolvedName, reason_op.dupe()),
@@ -3352,6 +3373,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action,
@@ -3377,6 +3399,7 @@ fn __flow_impl<'cx>(
                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason.dupe(),
                         lookup_kind: lookup_kind.clone(),
+                        indexer_fallback: indexer_fallback.clone(),
                         try_ts_on_failure: new_try_ts.into(),
                         propref: propref.clone(),
                         lookup_action: lookup_action.clone(),
@@ -5930,6 +5953,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: kind,
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -5941,17 +5965,40 @@ fn __flow_impl<'cx>(
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let use_op = use_op_of_lookup_action(action);
+            // Only a plain read or write continues up the chain carrying a candidate; a
+            // batched subtyping lookup, which is the only action with several proprefs,
+            // has nowhere to put one.
+            let can_defer = matches!(
+                action.as_ref(),
+                LookupAction::ReadProp(_) | LookupAction::WriteProp(_)
+            );
+            let mut indexer_fallback = indexer_fallback.clone();
             let mut missing = vec![];
             for (propref, up) in lookup_targets(propref, action) {
-                match flow_js_utils::get_prop_t_kit::get_instance_prop::<FlowJs>(
-                    cx,
-                    &trace,
-                    &use_op,
-                    *ignore_dicts,
-                    inst,
-                    propref,
-                    reason_op,
-                )? {
+                let (property, candidate) =
+                    flow_js_utils::get_prop_t_kit::get_instance_prop_for_lookup::<FlowJs>(
+                        cx,
+                        &trace,
+                        &use_op,
+                        *ignore_dicts,
+                        inst,
+                        propref,
+                        reason_op,
+                        can_defer,
+                        lreason,
+                    )?;
+                // A candidate found closer to the access wins: it is the one an
+                // inherited declared property would have to beat.
+                indexer_fallback = indexer_fallback.or(candidate);
+                if (property.is_some() || indexer_fallback.is_some())
+                    && let LookupKind::NonstrictReturning(box NonstrictReturningData(
+                        _,
+                        Some((id, _)),
+                    )) = &**kind
+                {
+                    cx.test_prop_hit(*id);
+                }
+                match property {
                     Some((p, target_kind)) => {
                         let p = flow_js_utils::check_method_unbinding(
                             cx,
@@ -5962,13 +6009,6 @@ fn __flow_impl<'cx>(
                             &hint_unavailable(),
                             p,
                         )?;
-                        if let LookupKind::NonstrictReturning(box NonstrictReturningData(
-                            _,
-                            Some((id, _)),
-                        )) = &**kind
-                        {
-                            cx.test_prop_hit(*id);
-                        }
                         let property_type = property::property_type(&p);
                         perform_lookup_action(
                             cx,
@@ -6005,6 +6045,7 @@ fn __flow_impl<'cx>(
                         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_op.dupe(),
                             lookup_kind: kind.clone(),
+                            indexer_fallback,
                             try_ts_on_failure: try_ts_on_failure.clone(),
                             propref: Box::new(propref),
                             lookup_action: Box::new(action),
@@ -6074,6 +6115,7 @@ fn __flow_impl<'cx>(
                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason_op.dupe(),
                         lookup_kind: Box::new(lookup_kind),
+                        indexer_fallback: None,
                         try_ts_on_failure: Rc::from([]),
                         propref: propref.clone(),
                         lookup_action: Box::new(lookup_action),
@@ -6203,7 +6245,7 @@ fn __flow_impl<'cx>(
                 method_accessible,
                 l,
                 &data.propref,
-                lookup_action,
+                lookup_action.clone(),
             )?;
             flow_js_utils::get_prop_t_kit::read_instance_prop::<FlowJs>(
                 cx,
@@ -6274,7 +6316,7 @@ fn __flow_impl<'cx>(
                         method_accessible,
                         l,
                         propref,
-                        lookup_action,
+                        lookup_action.clone(),
                     )?;
                     flow_js_utils::get_prop_t_kit::read_instance_prop::<FlowJs>(
                         cx,
@@ -6512,6 +6554,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind,
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -6570,6 +6613,7 @@ fn __flow_impl<'cx>(
                         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_op.dupe(),
                             lookup_kind: lookup_kind.clone(),
+                            indexer_fallback: indexer_fallback.clone(),
                             try_ts_on_failure: try_ts_on_failure.clone(),
                             propref: Box::new(propref),
                             lookup_action: Box::new(action),
@@ -8954,6 +8998,7 @@ fn __flow_impl<'cx>(
                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason_op.dupe(),
                         lookup_kind: Box::new(lookup_kind),
+                        indexer_fallback: None,
                         try_ts_on_failure: vec![].into(),
                         propref: propref.clone(),
                         lookup_action: Box::new(LookupAction::ReadProp(Box::new(ReadPropData {
@@ -9162,6 +9207,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action,
@@ -9183,6 +9229,7 @@ fn __flow_impl<'cx>(
                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                         reason: reason.dupe(),
                         lookup_kind: lookup_kind.clone(),
+                        indexer_fallback: indexer_fallback.clone(),
                         try_ts_on_failure: rest.into(),
                         propref: propref.clone(),
                         lookup_action: lookup_action.clone(),
@@ -9203,6 +9250,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason,
                 lookup_kind,
+                indexer_fallback,
                 try_ts_on_failure,
                 propref: _,
                 lookup_action: box LookupAction::LookupPropsForSubtyping(box lookup_props_data),
@@ -9234,6 +9282,7 @@ fn __flow_impl<'cx>(
                         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason.dupe(),
                             lookup_kind: lookup_kind.clone(),
+                            indexer_fallback: indexer_fallback.clone(),
                             try_ts_on_failure: Rc::from([]),
                             propref: Box::new(propref.clone()),
                             lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
@@ -9259,6 +9308,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: _,
+                indexer_fallback: _,
                 try_ts_on_failure,
                 propref: box PropRef::Named { name, .. },
                 lookup_action:
@@ -9290,6 +9340,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: _,
+                indexer_fallback: _,
                 try_ts_on_failure,
                 propref: box PropRef::Named { name, .. },
                 lookup_action:
@@ -9350,6 +9401,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -9370,6 +9422,7 @@ fn __flow_impl<'cx>(
                 propref,
                 action,
                 ids.as_ref(),
+                indexer_fallback.as_deref(),
             )?;
         }
 
@@ -9378,6 +9431,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -9395,8 +9449,11 @@ fn __flow_impl<'cx>(
                 propref,
                 action,
                 ids.as_ref(),
+                indexer_fallback.as_deref(),
             )?;
         }
+        // A computed lookup never carries an `indexer_fallback`: an indexer answers a
+        // computed access on the spot, so there is nothing to hold back.
         (
             TypeInner::DefT(reason, def_t),
             UseTInner::LookupT(box LookupTData {
@@ -9408,6 +9465,7 @@ fn __flow_impl<'cx>(
                 method_accessible: _,
                 ids: _,
                 ignore_dicts: _,
+                indexer_fallback: _,
             }),
         ) if matches!(def_t.deref(), DefTInner::NullT)
             && try_ts_on_failure.is_empty()
@@ -9429,6 +9487,7 @@ fn __flow_impl<'cx>(
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
+                indexer_fallback: _,
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -9453,8 +9512,10 @@ fn __flow_impl<'cx>(
         (
             _,
             UseTInner::LookupT(box LookupTData {
+                reason: reason_op,
                 lookup_kind:
                     box LookupKind::NonstrictReturning(box NonstrictReturningData(t_opt, test_opt)),
+                indexer_fallback,
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -9467,52 +9528,69 @@ fn __flow_impl<'cx>(
             _ => false,
         } && try_ts_on_failure.is_empty() =>
         {
-            // don't fire
-            //
-            //  ...unless a default return value is given. Two examples:
-            //
-            //  1. A failure could arise when an unchecked module was looked up and
-            //  not found declared, in which case we consider that module's exports to
-            //  be `any`.
-            //
-            //  2. A failure could arise also when an object property is looked up in
-            //  a condition, in which case we consider the object's property to be
-            //  `mixed`.
-            let use_op = flow_js_utils::use_op_of_lookup_action(action);
-            if let Some((id, reasons)) = test_opt {
-                let suggestion: Option<FlowSmolStr> = match &**propref {
-                    PropRef::Named { name, .. } => ids.as_ref().and_then(|ids| {
-                        let ids_vec: Vec<_> = ids.iter().duped().collect();
-                        prop_typo_suggestion_for_name(cx, &ids_vec, name)
-                    }),
-                    _ => None,
-                };
-                if !matches!(
-                    *cx.typing_mode(),
-                    flow_typing_context::TypingMode::HintEvaluationMode
-                ) {
-                    cx.test_prop_miss(
-                        *id,
-                        name_of_propref(propref),
-                        (reasons.0.dupe(), reasons.1.dupe()),
-                        use_op.dupe(),
-                        suggestion,
-                    );
+            // An indexer matched the access on the way up, so the lookup did not fail and
+            // the not-found default does not apply.
+            if let Some(fallback) = indexer_fallback {
+                perform_lookup_action(
+                    cx,
+                    trace,
+                    propref,
+                    &property::property_type(&fallback.property),
+                    Some(&fallback.property),
+                    PropertySource::IndexerProperty,
+                    &fallback.reason_obj,
+                    reason_op,
+                    action,
+                    None,
+                )?;
+            } else {
+                // don't fire
+                //
+                //  ...unless a default return value is given. Two examples:
+                //
+                //  1. A failure could arise when an unchecked module was looked up and
+                //  not found declared, in which case we consider that module's exports to
+                //  be `any`.
+                //
+                //  2. A failure could arise also when an object property is looked up in
+                //  a condition, in which case we consider the object's property to be
+                //  `mixed`.
+                let use_op = flow_js_utils::use_op_of_lookup_action(action);
+                if let Some((id, reasons)) = test_opt {
+                    let suggestion: Option<FlowSmolStr> = match &**propref {
+                        PropRef::Named { name, .. } => ids.as_ref().and_then(|ids| {
+                            let ids_vec: Vec<_> = ids.iter().duped().collect();
+                            prop_typo_suggestion_for_name(cx, &ids_vec, name)
+                        }),
+                        _ => None,
+                    };
+                    if !matches!(
+                        *cx.typing_mode(),
+                        flow_typing_context::TypingMode::HintEvaluationMode
+                    ) {
+                        cx.test_prop_miss(
+                            *id,
+                            name_of_propref(propref),
+                            (reasons.0.dupe(), reasons.1.dupe()),
+                            use_op.dupe(),
+                            suggestion,
+                        );
+                    }
                 }
-            }
-            match t_opt {
-                Some((not_found, t)) => {
-                    FlowJs::rec_unify(
-                        cx,
-                        trace,
-                        use_op,
-                        UnifyCause::Uncategorized,
-                        Some(true),
-                        t,
-                        not_found,
-                    )?;
+                match t_opt {
+                    Some((not_found, t)) => {
+                        FlowJs::rec_unify(
+                            cx,
+                            trace,
+                            use_op,
+                            UnifyCause::Uncategorized,
+                            Some(true),
+                            t,
+                            not_found,
+                        )?;
+                    }
+                    None => {}
                 }
-                None => {}
             }
         }
         // SuperT only involves non-strict lookups

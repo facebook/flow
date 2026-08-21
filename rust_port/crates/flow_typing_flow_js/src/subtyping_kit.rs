@@ -1825,6 +1825,7 @@ fn flow_obj_to_obj<'cx>(
                                     lookup_kind: Box::new(LookupKind::NonstrictReturning(
                                         Box::new(NonstrictReturningData(None, None)),
                                     )),
+                                    indexer_fallback: None,
                                     try_ts_on_failure: vec![].into(),
                                     propref: Box::new(propref.clone()),
                                     lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
@@ -1861,6 +1862,7 @@ fn flow_obj_to_obj<'cx>(
                                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                         reason: ureason.dupe(),
                                         lookup_kind: Box::new(lookup_kind),
+                                        indexer_fallback: None,
                                         try_ts_on_failure: vec![].into(),
                                         propref: Box::new(propref.clone()),
                                         lookup_action: Box::new(
@@ -5150,6 +5152,7 @@ pub fn rec_sub_t<'cx>(
                                         LookupTData {
                                             reason: ureason.dupe(),
                                             lookup_kind: Box::new(lookup_kind),
+                                            indexer_fallback: None,
                                             try_ts_on_failure: vec![].into(),
                                             propref: Box::new(propref.clone()),
                                             lookup_action: Box::new(
@@ -5192,6 +5195,7 @@ pub fn rec_sub_t<'cx>(
                         use_t: Box::new(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: ureason.dupe(),
                             lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                            indexer_fallback: None,
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref),
                             lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(

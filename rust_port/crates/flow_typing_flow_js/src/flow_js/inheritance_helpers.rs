@@ -312,6 +312,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                             lookup_kind: Box::new(LookupKind::NonstrictReturning(Box::new(
                                 NonstrictReturningData(nonstrict_returning, None),
                             ))),
+                            indexer_fallback: None,
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref.clone()),
                             lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
@@ -351,6 +352,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_struct.dupe(),
                             lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                            indexer_fallback: None,
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref.clone()),
                             lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(
@@ -384,6 +386,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason_struct.dupe(),
                     lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                    indexer_fallback: None,
                     try_ts_on_failure: vec![].into(),
                     propref: Box::new(propref.clone()),
                     lookup_action: Box::new(LookupAction::LookupPropsForSubtyping(Box::new(
@@ -572,6 +575,7 @@ pub(super) fn check_super<'cx>(
                 lookup_kind: Box::new(LookupKind::NonstrictReturning(Box::new(
                     NonstrictReturningData(None, None),
                 ))),
+                indexer_fallback: None,
                 try_ts_on_failure: vec![].into(),
                 propref: Box::new(propref),
                 lookup_action: Box::new(action),
