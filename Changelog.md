@@ -1,3 +1,24 @@
+### 0.329.0
+
+Likely to cause new Flow errors:
+* More subtyping errors will print the types that are incompatible. Some errors might have new locations.
+* A `unique symbol` annotation is now an error unless it is the type of a `const` variable, of a `readonly` object type or interface property, or of a `static readonly` class field.
+* Flow will error on legacy variance syntax in library definition files
+
+New Features:
+* We have released `flow-parser` and `flow-eslint` packages that are drop-in replacement for `hermes-parser` and `hermes-eslint`. [Babel docs](https://flow.org/en/docs/tools/babel/) and [ESLint docs](https://flow.org/en/docs/tools/eslint/) have been updated.
+* Object properties, class fields, methods, and the members of an interface or `declare class` imported from another module, can be keyed by a `unique symbol`.
+
+Notable bug fixes:
+* Prevent a race that can leave server hanging
+* Support TypeScript constructor objects in Flow class positions.
+* `keyof` over a `symbol` index signature is now `symbol` rather than `string`.
+* A class can extend a value with a construct signature.
+* `x !== undefined` no longer stops refining after a call that passes `undefined` as an argument: (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgRgiW8cGgAAI2PjDAt8gAKeQAfmQfOEIj2AEo+cA+SwJEJKFA+VIZHzmQBuAA6UCNXKOAM1MFFJGlehUUAQfIAPnyihA4Gx5dLXe6lUa+Xy4DA+aLBUw8mLEvV4DcPXyAGRxvkkPkAQgAvGm+ZHsNHRorgH7-UnNBV7RJ8nq+QB6KtJxjq3lxaUAA1LCHLzYDyZE+JI2Qd2SzUCj2VGheZRonUBiICKyj70ECRQADJoAMwAJgAHJplyBmUA))
+
+Library Definitions:
+* Well-known symbols on `Symbol` are typed as `unique symbol`, and `Symbol.metadata` is now available.
+
 ### 0.328.0
 
 Breaking changes:
