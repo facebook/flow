@@ -17,8 +17,17 @@ export default async function runCodemods(
   filePaths: $ReadOnlyArray<string>,
   options: CliOptions,
 ): Promise<void> {
-  const results = await Promise.allSettled(
-    filePaths.map(async filePath => {
+  // Files must be transformed sequentially, not concurrently.
+  //
+  // WORKAROUND: hermes-transform is not safe to run in parallel. Prettier
+  // memoizes loaded parser plugins keyed by the parser name, and hermes-
+  // transform's printer wires the AST of the current file up through that
+  // parser. When multiple files are transformed concurrently the plugin cache
+  // is shared, so a file can end up being printed with a different file's AST.
+  // Clearing the require cache below resets that state, but it is only
+  // reliable when each file is processed one at a time. See facebook/flow#9407.
+  for (const filePath of filePaths) {
+    try {
       // WORKAROUND: Clear hermes-transform and prettier from require cache
       // to avoid state persistence bug where transformation results are cached
       // and reused across multiple files. This is a known issue in hermes-transform.
@@ -47,6 +56,9 @@ export default async function runCodemods(
       if (originalContents !== contents) {
         await fs.writeFile(filePath, contents, 'utf8');
       }
-    }),
-  );
+    } catch (error) {
+      // Preserve the previous Promise.allSettled behavior: a failure in one
+      // file should not abort the transformation of the remaining files.
+    }
+  }
 }
