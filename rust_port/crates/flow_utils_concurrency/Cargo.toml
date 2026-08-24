@@ -18,7 +18,7 @@ parking_lot = { version = "0.12.1", features = ["arc_lock", "send_guard"] }
 starlark_map = "0.14.2"
 
 [target.'cfg(any(target_os = "linux", target_os = "freebsd", target_os = "openbsd"))'.dependencies]
-nix = { version = "0.30.1", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
+nix = { version = "0.31.3", features = ["dir", "event", "hostname", "inotify", "ioctl", "mman", "mount", "net", "poll", "ptrace", "reboot", "resource", "sched", "signal", "term", "time", "user", "zerocopy"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 human_bytes = "0.4.3"
