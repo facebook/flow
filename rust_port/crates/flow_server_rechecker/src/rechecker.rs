@@ -118,7 +118,7 @@ fn recheck(
     will_be_checked_files: &mut CheckedSet,
     updates: CheckedSet,
     recheck_epoch: u64,
-) -> Result<(ProfilingFinished, server_env::EnvRef), type_service::RecheckError> {
+) -> Result<ProfilingFinished, type_service::RecheckError> {
     let options = &genv.options;
     let workers = genv.workers.as_ref().unwrap();
 
@@ -199,7 +199,7 @@ fn recheck(
         stats: lsp_stats,
     });
 
-    Ok((profiling, env))
+    Ok(profiling)
 }
 
 // Runs a function which should be canceled if we are notified about any file changes. After the
@@ -287,14 +287,11 @@ where
 
 pub(crate) enum RecheckOutcome {
     NothingToDo {
-        env: server_env::EnvRef,
-        recheck_epoch: u64,
+        completed_recheck_epoch: u64,
     },
     CompletedRecheck {
         profiling: ProfilingFinished,
-        env: server_env::EnvRef,
         recheck_count: usize,
-        recheck_epoch: u64,
     },
 }
 
@@ -302,31 +299,26 @@ pub(crate) enum RecheckOutcome {
 // than recursing, so `recheck_single` can drive restarts in a loop (see there).
 enum RecheckAttempt {
     Done(RecheckOutcome),
-    Restart { env: server_env::EnvRef },
+    Restart,
 }
 
 pub(crate) fn recheck_single(
     recheck_count: usize,
     genv: &server_env::Genv,
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
-    env: server_env::EnvRef,
     committed_heap: &Arc<CommittedHeap>,
 ) -> RecheckOutcome {
     // Drive canceled-recheck restarts iteratively instead of recursively. Each
-    // attempt that gets canceled returns `Restart` with a fresh `Env` rather than
-    // calling itself again; the canceled attempt's `Env` snapshot is dropped before
-    // the next attempt starts. This
+    // attempt that gets canceled returns `Restart` and asks the orchestrator for a
+    // fresh `Env` rather than calling itself again; the canceled attempt's `Env`
+    // snapshot is dropped before the next attempt starts. This
     // bounds both stack depth and the number of simultaneously live `Env`
     // snapshots to O(1) regardless of how many consecutive cancellations occur.
     let mut recheck_count = recheck_count;
-    let mut env = env;
     loop {
-        match recheck_single_attempt(recheck_count, genv, orchestrator, env, committed_heap) {
+        match recheck_single_attempt(recheck_count, genv, orchestrator, committed_heap) {
             RecheckAttempt::Done(outcome) => return outcome,
-            RecheckAttempt::Restart { env: next_env } => {
-                recheck_count += 1;
-                env = next_env;
-            }
+            RecheckAttempt::Restart => recheck_count += 1,
         }
     }
 }
@@ -341,10 +333,14 @@ fn recheck_single_attempt(
     recheck_count: usize,
     genv: &server_env::Genv,
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
-    env: server_env::EnvRef,
     committed_heap: &Arc<CommittedHeap>,
 ) -> RecheckAttempt {
-    let env = server_monitor_listener_state::update_env(env);
+    // Every attempt reads the committed state from its owner rather than carrying an `Env` of its
+    // own, so any update that landed while the previous attempt ran is already applied.
+    let server_orchestrator::RecheckSnapshot {
+        env,
+        completed_recheck_epoch,
+    } = orchestrator.begin_recheck();
     let options = &genv.options;
 
     let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.dupe()));
@@ -382,11 +378,13 @@ fn recheck_single_attempt(
         && files_to_recheck_set.is_empty()
         && workload.files_to_force.is_empty()
     {
-        return RecheckAttempt::Done(RecheckOutcome::NothingToDo { env, recheck_epoch });
+        return RecheckAttempt::Done(RecheckOutcome::NothingToDo {
+            completed_recheck_epoch: completed_recheck_epoch.max(recheck_epoch),
+        });
     }
 
-    // One pre-recheck `Env` ref, shared by the workload loop, the cancel-path
-    // `process_updates`, and the canceled-recheck restart.
+    // One pre-recheck `Env` ref, shared by the workload loop and the cancel-path
+    // `process_updates`.
     let env_snapshot = env.dupe();
 
     let options_for_cancel = options.dupe();
@@ -407,8 +405,6 @@ fn recheck_single_attempt(
             .expect("will_be_checked_files lock should not be poisoned")
             .dupe()
     };
-
-    let env_snapshot_for_post = env_snapshot.dupe();
 
     // The canceled recheck, or a preceding sequence of canceled rechecks where none completed,
     // may have introduced garbage into shared memory. Since we immediately start another
@@ -452,11 +448,9 @@ fn recheck_single_attempt(
             files_to_recheck_set,
             recheck_epoch,
         ) {
-            Ok((profiling, env)) => Ok(RecheckAttempt::Done(RecheckOutcome::CompletedRecheck {
+            Ok(profiling) => Ok(RecheckAttempt::Done(RecheckOutcome::CompletedRecheck {
                 profiling,
-                env,
                 recheck_count,
-                recheck_epoch,
             })),
             Err(type_service::RecheckError::Canceled(_changed_files)) => {
                 *workload_cell_for_recheck.borrow_mut() = Some(workload);
@@ -483,9 +477,7 @@ fn recheck_single_attempt(
             );
             let _done = orchestrator.collect_heap_slice(committed_heap.dupe(), 256000);
             server_monitor_listener_state::requeue_workload(workload);
-            RecheckAttempt::Restart {
-                env: env_snapshot_for_post.dupe(),
-            }
+            RecheckAttempt::Restart
         },
     );
     // Drop this attempt's snapshot on the blocking pool before the driver starts
@@ -499,18 +491,14 @@ fn recheck_single_attempt(
 // rechecks. But something is better than nothing...
 pub fn recheck_loop(
     genv: &server_env::Genv,
-    env: server_env::EnvRef,
     committed_heap: &Arc<CommittedHeap>,
-    completed_recheck_epoch: u64,
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
-) -> (Vec<ProfilingFinished>, server_env::EnvRef) {
+) -> Vec<ProfilingFinished> {
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
-    let mut env = env;
-    let mut completed_recheck_epoch = completed_recheck_epoch;
     loop {
         let should_print_summary = genv.options.profile;
         let recheck_series_start = Instant::now();
-        let recheck_result = recheck_single(1, genv, orchestrator, env, committed_heap);
+        let recheck_result = recheck_single(1, genv, orchestrator, committed_heap);
         let recheck_series_profiling = ProfilingFinished {
             duration: recheck_series_start.elapsed().as_secs_f64(),
         };
@@ -521,16 +509,15 @@ pub fn recheck_loop(
             );
         }
         match recheck_result {
-            RecheckOutcome::NothingToDo { env, recheck_epoch } => {
-                completed_recheck_epoch = completed_recheck_epoch.max(recheck_epoch);
-                orchestrator.finish_recheck(env.dupe(), completed_recheck_epoch);
-                return (profiling_list, env);
+            RecheckOutcome::NothingToDo {
+                completed_recheck_epoch,
+            } => {
+                orchestrator.finish_recheck(completed_recheck_epoch);
+                return profiling_list;
             }
             RecheckOutcome::CompletedRecheck {
                 profiling: recheck_profiling,
-                env: e,
                 recheck_count,
-                recheck_epoch,
             } => {
                 flow_event_logger::recheck_series(
                     recheck_count as i32,
@@ -539,8 +526,6 @@ pub fn recheck_loop(
                     }),
                 );
                 profiling_list.push(recheck_profiling);
-                completed_recheck_epoch = completed_recheck_epoch.max(recheck_epoch);
-                env = e;
             }
         }
     }

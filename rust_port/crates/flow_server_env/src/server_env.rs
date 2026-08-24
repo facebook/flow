@@ -531,7 +531,7 @@ pub fn overlay_coverage(cell: Arc<EnvCell<Coverage>>) -> OverlayCoverage {
     OverlayMap::with_base(EnvCellMapBase::identity(cell))
 }
 
-pub fn with_connections(env: EnvRef, connections: PersistentConnection) -> EnvRef {
+pub(crate) fn with_connections(env: EnvRef, connections: PersistentConnection) -> EnvRef {
     let mut transaction = EnvTransaction::new(env);
     transaction.set_connections(connections);
     transaction.commit()

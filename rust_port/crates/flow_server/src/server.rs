@@ -299,7 +299,7 @@ fn serve(
                     gc_loop(Arc::clone(committed_heap), orchestrator_for_gc),
                 );
             };
-            let wait_thread = server_monitor_listener_state::wait_for_anything_async();
+            let wait_thread = server_monitor_listener_state::wait_for_recheck_async();
             tokio::select! {
                 biased;
                 _ = wait_thread => {}
@@ -307,14 +307,8 @@ fn serve(
             }
         });
 
-        let snapshot = orchestrator.begin_recheck();
-        let (_profiling, _new_env) = flow_server_rechecker::rechecker::recheck_loop(
-            _genv,
-            snapshot.env,
-            committed_heap,
-            snapshot.completed_recheck_epoch,
-            orchestrator,
-        );
+        let _profiling =
+            flow_server_rechecker::rechecker::recheck_loop(_genv, committed_heap, orchestrator);
         // Flush the logs asynchronously
         flow_tokio_runtime::spawn(async {
             if let Err(err) = flow_event_logger_lwt::flush().await {

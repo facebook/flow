@@ -18,14 +18,25 @@ use flow_check_cache::CheckContentsCache;
 use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
 
+use crate::lsp_prot::ClientId;
 use crate::persistent_connection;
 use crate::server_env::EnvRef;
-use crate::server_monitor_listener_state;
+use crate::server_env::with_connections;
 use crate::server_status;
 use crate::workload_stream::ParallelizableWorkload;
 use crate::workload_stream::Workload;
 use crate::workload_stream::WorkloadOutcome;
 use crate::workload_stream::WorkloadStream;
+
+/// A change to the set of persistent clients recorded in the committed `Env`.
+///
+/// The message carries the client id rather than a closure: the work is a bounded edit of the
+/// client list that the executor performs itself, not arbitrary caller-supplied code whose cost it
+/// cannot see.
+enum ConnectionChange {
+    Connected(ClientId),
+    Disconnected(ClientId),
+}
 
 /// The Base-consistent view from which the recheck thread starts one recheck series.
 ///
@@ -56,11 +67,14 @@ enum Control {
         completed_recheck_epoch: u64,
         reply: std::sync::mpsc::Sender<EnvRef>,
     },
-    /// Ends a recheck series by publishing its final `Env` and completed epoch.
+    /// Ends a recheck series by publishing its completed epoch.
     FinishRecheck {
-        env: EnvRef,
         completed_recheck_epoch: u64,
         reply: std::sync::mpsc::Sender<()>,
+    },
+    /// Records a persistent client arriving or leaving, for the executor to fold into `Env`.
+    ConnectionChanged {
+        change: ConnectionChange,
     },
     /// Requests termination of the executor event loop.
     Shutdown,
@@ -232,11 +246,10 @@ impl ServerOrchestratorHandle {
             .expect("the command executor should commit and publish the recheck")
     }
 
-    pub fn finish_recheck(&self, env: EnvRef, completed_recheck_epoch: u64) {
+    pub fn finish_recheck(&self, completed_recheck_epoch: u64) {
         let (reply, receiver) = std::sync::mpsc::channel();
         self.control
             .send(Control::FinishRecheck {
-                env,
                 completed_recheck_epoch,
                 reply,
             })
@@ -244,6 +257,20 @@ impl ServerOrchestratorHandle {
         receiver
             .recv()
             .expect("the command executor should finish the recheck");
+    }
+
+    pub fn client_connected(&self, client_id: ClientId) {
+        self.push_connection_change(ConnectionChange::Connected(client_id));
+    }
+
+    pub fn client_disconnected(&self, client_id: ClientId) {
+        self.push_connection_change(ConnectionChange::Disconnected(client_id));
+    }
+
+    fn push_connection_change(&self, change: ConnectionChange) {
+        self.control
+            .send(Control::ConnectionChanged { change })
+            .expect("the command executor should be running");
     }
 
     pub fn collect_heap_slice(&self, heap: Arc<CommittedHeap>, work: usize) -> bool {
@@ -313,6 +340,21 @@ impl State {
         }
     }
 
+    /// Records a client arriving or leaving straight away, so that `env.connections` is the
+    /// authoritative client list at every point the executor yields.
+    fn apply_connection_change(&mut self, change: ConnectionChange) {
+        let connections = self.env.connections.dupe();
+        let connections = match change {
+            ConnectionChange::Connected(client_id) => {
+                persistent_connection::add_client_to_clients(connections, client_id)
+            }
+            ConnectionChange::Disconnected(client_id) => {
+                persistent_connection::remove_client_from_clients(connections, client_id)
+            }
+        };
+        self.env = with_connections(self.env.dupe(), connections);
+    }
+
     fn handle_control(&mut self, control: Control) {
         match control {
             Control::RecheckPending { recheck_epoch } => {
@@ -324,7 +366,6 @@ impl State {
                 self.recheck_in_progress = true;
             }
             Control::RecheckStarted { reply } => {
-                self.env = server_monitor_listener_state::update_env(self.env.dupe());
                 self.recheck_in_progress = true;
                 let snapshot = RecheckSnapshot {
                     env: self.env.dupe(),
@@ -343,18 +384,21 @@ impl State {
                 );
                 self.cache.clear();
                 persistent_connection::clear_type_parse_artifacts_caches();
-                let env = commit();
-                self.publish_recheck(env.dupe(), completed_recheck_epoch, true);
-                let _result = reply.send(env);
+                // `commit` rebuilds `Env` from the snapshot the recheck was lent, so it carries
+                // that snapshot's client list. Re-impose the executor's, which is the current one.
+                let connections = self.env.connections.dupe();
+                self.env = with_connections(commit(), connections);
+                self.publish_recheck(completed_recheck_epoch, true);
+                let _result = reply.send(self.env.dupe());
             }
             Control::FinishRecheck {
-                env,
                 completed_recheck_epoch,
                 reply,
             } => {
-                self.publish_recheck(env, completed_recheck_epoch, false);
+                self.publish_recheck(completed_recheck_epoch, false);
                 let _result = reply.send(());
             }
+            Control::ConnectionChanged { change } => self.apply_connection_change(change),
             Control::CollectHeapSlice { heap, work, reply } => {
                 let compaction = std::cell::Cell::new(None);
                 let before_compact = || {
@@ -402,12 +446,7 @@ impl State {
         (workload.workload_handler)(&self.env, &transaction.handle(), &self.cache)
     }
 
-    fn publish_recheck(
-        &mut self,
-        env: EnvRef,
-        completed_recheck_epoch: u64,
-        still_rechecking: bool,
-    ) {
+    fn publish_recheck(&mut self, completed_recheck_epoch: u64, still_rechecking: bool) {
         assert!(
             completed_recheck_epoch >= self.completed_recheck_epoch,
             "completed recheck epochs must be monotonic"
@@ -415,7 +454,6 @@ impl State {
         self.latest_pending_recheck_epoch = self
             .latest_pending_recheck_epoch
             .max(completed_recheck_epoch);
-        self.env = env;
         self.completed_recheck_epoch = completed_recheck_epoch;
         self.recheck_in_progress = should_hold_serial_commands(
             still_rechecking,
@@ -460,7 +498,6 @@ impl State {
         let Some(mut workload) = self.workloads.pop() else {
             return false;
         };
-        self.env = server_monitor_listener_state::update_env(self.env.dupe());
         if self.run_workload(&mut workload) == WorkloadOutcome::RetryAfterRecheck {
             self.deferred_serial = Some(workload);
             self.recheck_in_progress = true;

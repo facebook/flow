@@ -22,22 +22,10 @@ use flow_parser::loc::Loc;
 use crate::monitor_prot::FileWatcherMetadata;
 use crate::monitor_prot::empty_file_watcher_metadata;
 use crate::monitor_prot::merge_file_watcher_metadata;
-use crate::server_env::EnvRef;
 use crate::server_orchestrator::ServerOrchestratorHandle;
 
-pub type EnvUpdate = Box<dyn FnOnce(EnvRef) -> EnvRef + Send>;
-
-static ENV_UPDATE_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
-    std::sync::LazyLock::new(crossbeam::channel::unbounded);
 static RECHECK_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
     std::sync::LazyLock::new(crossbeam::channel::unbounded);
-
-static ENV_UPDATE_STREAM: Mutex<Vec<EnvUpdate>> = Mutex::new(Vec::new());
-
-pub fn push_new_env_update(env_update: EnvUpdate) {
-    ENV_UPDATE_STREAM.lock().unwrap().push(env_update);
-    ENV_UPDATE_NOTIFY.0.send(()).unwrap();
-}
 
 // Outstanding cancellation requests are lodged here as soon as they arrive
 // from the monitor (NOT FIFO) as well as being lodged in the normal FIFO
@@ -301,17 +289,6 @@ pub fn push_after_reinit(
     })
 }
 
-pub fn update_env(mut env: EnvRef) -> EnvRef {
-    let updates: Vec<EnvUpdate> = {
-        let mut stream = ENV_UPDATE_STREAM.lock().unwrap();
-        std::mem::take(&mut *stream)
-    };
-    for f in updates {
-        env = f(env);
-    }
-    env
-}
-
 pub struct RecheckWorkload {
     pub recheck_epoch: u64,
     pub files_to_prioritize: FlowOrdSet<FileKey>,
@@ -417,17 +394,6 @@ pub struct WorkloadChanges {
     pub num_files_to_prioritize: usize,
     pub num_files_to_recheck: usize,
     pub num_files_to_force: usize,
-}
-
-fn _summarize_changes(a: &RecheckWorkload, b: &RecheckWorkload) -> WorkloadChanges {
-    let num_files_to_prioritize = b.files_to_prioritize.len() - a.files_to_prioritize.len();
-    let num_files_to_recheck = b.files_to_recheck.len() - a.files_to_recheck.len();
-    let num_files_to_force = b.files_to_force.cardinal() - a.files_to_force.cardinal();
-    WorkloadChanges {
-        num_files_to_prioritize,
-        num_files_to_recheck,
-        num_files_to_force,
-    }
 }
 
 /// Processes the messages currently in the recheck stream and returns whether
@@ -739,26 +705,23 @@ pub fn wait_for_updates_for_recheck(
     }
 }
 
-fn wait_for_anything_blocking() {
-    crossbeam::channel::select! {
-        recv(ENV_UPDATE_NOTIFY.1) -> _ => {}
-        recv(RECHECK_NOTIFY.1) -> _ => {}
-    }
-}
-
-/// Block until an environment update or recheck is available without blocking the Tokio runtime.
-pub async fn wait_for_anything_async() {
+/// Block until a recheck message arrives without blocking the Tokio runtime.
+pub async fn wait_for_recheck_async() {
     let (sender, receiver) = tokio::sync::oneshot::channel();
     let waiter = std::thread::Builder::new()
-        .name("wait_for_anything".to_string())
+        .name("wait_for_recheck".to_string())
         .spawn(move || {
-            wait_for_anything_blocking();
-            let _ = sender.send(());
+            wait_for_recheck();
+            match sender.send(()) {
+                Ok(()) => {}
+                // The serve loop stopped awaiting (e.g. server shutdown).
+                Err(()) => {}
+            }
         })
-        .expect("failed to spawn wait_for_anything thread");
+        .expect("failed to spawn wait_for_recheck thread");
     match receiver.await {
         Ok(()) => {}
-        Err(err) => panic!("wait_for_anything task failed: {}", err),
+        Err(err) => panic!("wait_for_recheck task failed: {}", err),
     }
     if let Err(err) = waiter.join() {
         std::panic::resume_unwind(err);
