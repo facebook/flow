@@ -20,8 +20,11 @@ use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
 use flow_server_env::server_env;
 use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_monitor_listener_state::FindRefCommand;
 use flow_server_env::server_monitor_listener_state::Priority;
+use flow_server_env::server_monitor_listener_state::RecheckQueue;
 use flow_server_env::server_monitor_listener_state::Updates;
+use flow_server_env::server_monitor_listener_state::WorkloadChanges;
 use flow_server_env::server_orchestrator;
 use flow_server_env::server_status;
 use flow_services_inference::type_service;
@@ -78,7 +81,7 @@ fn recheck(
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
     env: server_env::EnvRef,
     files_to_force: CheckedSet,
-    find_ref_command: &mut Option<server_monitor_listener_state::FindRefCommand>,
+    find_ref_command: &mut Option<FindRefCommand>,
     incompatible_lib_change: bool,
     changed_mergebase: Option<bool>,
     missed_changes: bool,
@@ -90,7 +93,7 @@ fn recheck(
     let workers = genv.workers.as_ref().unwrap();
 
     let find_ref_request = match find_ref_command.as_ref() {
-        Some(server_monitor_listener_state::FindRefCommand { request, .. }) => request
+        Some(FindRefCommand { request, .. }) => request
             .downcast_ref::<find_refs_types::Request>()
             .expect("find ref request type should match rechecker")
             .clone(),
@@ -107,6 +110,7 @@ fn recheck(
     }
 
     let recheck_result = type_service::recheck(
+        Some(orchestrator),
         workers,
         &genv.committed_heap,
         options,
@@ -130,7 +134,7 @@ fn recheck(
     };
     orchestrator.commit_recheck(|| prepared.commit(), recheck_epoch);
 
-    if let Some(server_monitor_listener_state::FindRefCommand {
+    if let Some(FindRefCommand {
         client_id,
         references_to_lsp_response,
         ..
@@ -171,6 +175,7 @@ fn recheck(
 // work is canceled, post_cancel is called and its result returned
 fn run_but_cancel_on_file_changes<T, ProcessUpdates, GetForced, F, PreCancel, PostCancel>(
     _options: &Options,
+    recheck_queue: Arc<RecheckQueue>,
     process_updates: ProcessUpdates,
     get_forced: GetForced,
     priority: Priority,
@@ -192,12 +197,13 @@ where
     // pool, off the caller's critical path.
     flow_tokio_runtime::spawn_blocking(move || {
         let cancel_fired = match server_monitor_listener_state::wait_for_updates_for_recheck(
+            &recheck_queue,
             &process_updates,
             &get_forced,
             priority,
             Some(&stop_rx),
         ) {
-            Some(server_monitor_listener_state::WorkloadChanges {
+            Some(WorkloadChanges {
                 num_files_to_prioritize,
                 num_files_to_force,
                 num_files_to_recheck,
@@ -319,7 +325,11 @@ fn recheck_single_attempt(
                 .expect("will_be_checked_files lock should not be poisoned")
                 .dupe()
         };
-        server_monitor_listener_state::get_and_clear_recheck_workload(&process_updates, &get_forced)
+        server_monitor_listener_state::get_and_clear_recheck_workload(
+            orchestrator.recheck(),
+            &process_updates,
+            &get_forced,
+        )
     };
 
     let did_change_mergebase = workload.metadata.changed_mergebase.unwrap_or(false);
@@ -427,6 +437,7 @@ fn recheck_single_attempt(
     let workload_cell_for_cancel = workload_cell.clone();
     let outcome = run_but_cancel_on_file_changes(
         options,
+        orchestrator.recheck().dupe(),
         process_updates_for_cancel,
         get_forced_for_cancel,
         priority,
@@ -441,7 +452,7 @@ fn recheck_single_attempt(
                 "Recheck successfully canceled. Restarting the recheck to include new file changes"
             );
             let _done = orchestrator.collect_heap_slice(committed_heap.dupe(), 256000);
-            server_monitor_listener_state::requeue_workload(workload);
+            server_monitor_listener_state::requeue_workload(orchestrator.recheck(), workload);
             RecheckAttempt::Restart
         },
     );

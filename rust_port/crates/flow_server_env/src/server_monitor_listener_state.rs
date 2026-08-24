@@ -22,10 +22,59 @@ use flow_parser::loc::Loc;
 use crate::monitor_prot::FileWatcherMetadata;
 use crate::monitor_prot::empty_file_watcher_metadata;
 use crate::monitor_prot::merge_file_watcher_metadata;
-use crate::server_orchestrator::ServerOrchestratorHandle;
+use crate::server_orchestrator::Control;
 
-static RECHECK_NOTIFY: std::sync::LazyLock<(Sender<()>, Receiver<()>)> =
-    std::sync::LazyLock::new(crossbeam::channel::unbounded);
+/// The work still owed to the rechecker: pushes that have arrived, and the workload they have
+/// been merged into. Owned by `ServerOrchestrator`, reachable only through its handle.
+///
+/// The locks stay because three threads push here and two block on it, so this cannot live in the
+/// executor's single-threaded `State`.
+pub struct RecheckQueue {
+    stream: Mutex<Vec<RecheckMsg>>,
+    acc: Mutex<Option<RecheckWorkload>>,
+    next_epoch: AtomicU64,
+    /// The highest epoch of a push that holds serial commands. The executor reads this instead of
+    /// keeping a copy of its own.
+    latest_pending_epoch: AtomicU64,
+    notify: (Sender<()>, Receiver<()>),
+    /// Senders for the in-progress recheck-cancel monitors. Each in-progress
+    /// recheck registers a sender here so a new force-recheck or file-watcher
+    /// update arriving DURING the recheck can preempt it. This is the Rust port
+    /// equivalent of OCaml's `Lwt.pick` between the recheck thread and the
+    /// file-watcher listener inside `run_but_cancel_on_file_changes`. Each push to
+    /// the recheck stream notifies every registered sender so the corresponding
+    /// monitor thread can call `worker_cancel::stop_workers()`.
+    push_subscribers: Mutex<Vec<Sender<()>>>,
+    /// Tells the executor that queued work changed. It is parked on its control channel and
+    /// cannot poll.
+    control: Sender<Control>,
+}
+
+impl RecheckQueue {
+    pub(crate) fn new(control: Sender<Control>) -> Self {
+        Self {
+            stream: Mutex::new(Vec::new()),
+            acc: Mutex::new(None),
+            next_epoch: AtomicU64::new(0),
+            latest_pending_epoch: AtomicU64::new(0),
+            notify: crossbeam::channel::unbounded(),
+            push_subscribers: Mutex::new(Vec::new()),
+            control,
+        }
+    }
+
+    /// The highest epoch pushed so far that holds serial commands.
+    pub(crate) fn latest_pending_epoch(&self) -> u64 {
+        self.latest_pending_epoch.load(Ordering::Relaxed)
+    }
+
+    /// A completed recheck can carry an epoch above every serial-command-holding push, because a
+    /// workload merges reprioritisation pushes too.
+    pub(crate) fn raise_pending_epoch(&self, epoch: u64) {
+        self.latest_pending_epoch
+            .fetch_max(epoch, Ordering::Relaxed);
+    }
+}
 
 // Outstanding cancellation requests are lodged here as soon as they arrive
 // from the monitor (NOT FIFO) as well as being lodged in the normal FIFO
@@ -97,25 +146,14 @@ enum RecheckFiles {
     },
 }
 
-static RECHECK_STREAM: Mutex<Vec<RecheckMsg>> = Mutex::new(Vec::new());
-static NEXT_RECHECK_EPOCH: AtomicU64 = AtomicU64::new(0);
-
-/// Senders for the in-progress recheck-cancel monitors. Each in-progress
-/// recheck registers a sender here so a new force-recheck or file-watcher
-/// update arriving DURING the recheck can preempt it. This is the Rust port
-/// equivalent of OCaml's `Lwt.pick` between the recheck thread and the
-/// file-watcher listener inside `run_but_cancel_on_file_changes`. Each push to
-/// the recheck stream notifies every registered sender so the corresponding
-/// monitor thread can call `worker_cancel::stop_workers()`.
-static RECHECK_PUSH_SUBSCRIBERS: Mutex<Vec<Sender<()>>> = Mutex::new(Vec::new());
-
 fn push_recheck_msg_with_metadata(
+    queue: &RecheckQueue,
     metadata: Option<FileWatcherMetadata>,
     files: RecheckFiles,
 ) -> u64 {
     let recheck_epoch = {
-        let mut stream = RECHECK_STREAM.lock().unwrap();
-        let recheck_epoch = NEXT_RECHECK_EPOCH.fetch_add(1, Ordering::Relaxed) + 1;
+        let mut stream = queue.stream.lock().unwrap();
+        let recheck_epoch = queue.next_epoch.fetch_add(1, Ordering::Relaxed) + 1;
         stream.push(RecheckMsg {
             recheck_epoch,
             file_watcher_metadata: metadata,
@@ -123,29 +161,33 @@ fn push_recheck_msg_with_metadata(
         });
         recheck_epoch
     };
-    RECHECK_NOTIFY.0.send(()).unwrap();
-    notify_recheck_push_subscribers();
+    queue.notify.0.send(()).unwrap();
+    notify_recheck_push_subscribers(queue);
     recheck_epoch
 }
 
-fn push_recheck_msg_with_orchestrator(
-    orchestrator: &ServerOrchestratorHandle,
+fn push_recheck_msg_marking_pending(
+    queue: &RecheckQueue,
     metadata: Option<FileWatcherMetadata>,
     files: RecheckFiles,
 ) -> u64 {
     let recheck_epoch = {
-        let mut stream = RECHECK_STREAM.lock().unwrap();
-        let recheck_epoch = NEXT_RECHECK_EPOCH.fetch_add(1, Ordering::Relaxed) + 1;
+        let mut stream = queue.stream.lock().unwrap();
+        let recheck_epoch = queue.next_epoch.fetch_add(1, Ordering::Relaxed) + 1;
         stream.push(RecheckMsg {
             recheck_epoch,
             file_watcher_metadata: metadata,
             files,
         });
-        orchestrator.mark_recheck_pending(recheck_epoch);
+        queue.raise_pending_epoch(recheck_epoch);
+        queue
+            .control
+            .send(Control::RecheckPending)
+            .expect("the command control channel should stay open");
         recheck_epoch
     };
-    RECHECK_NOTIFY.0.send(()).unwrap();
-    notify_recheck_push_subscribers();
+    queue.notify.0.send(()).unwrap();
+    notify_recheck_push_subscribers(queue);
     recheck_epoch
 }
 
@@ -153,8 +195,8 @@ fn push_recheck_msg_with_orchestrator(
 /// a non-blocking send so a slow or dead subscriber cannot stall the pusher.
 /// Disconnected subscribers (whose receiver was dropped without unsubscribing)
 /// are removed in the same pass, keeping the subscriber list bounded.
-fn notify_recheck_push_subscribers() {
-    let mut subscribers = RECHECK_PUSH_SUBSCRIBERS.lock().unwrap();
+fn notify_recheck_push_subscribers(queue: &RecheckQueue) {
+    let mut subscribers = queue.push_subscribers.lock().unwrap();
     subscribers.retain(|sender| match sender.try_send(()) {
         Ok(()) => true,
         Err(crossbeam::channel::TrySendError::Full(())) => true,
@@ -168,49 +210,46 @@ fn notify_recheck_push_subscribers() {
 /// how many). When the receiver is dropped the subscriber is removed lazily
 /// the next time a push happens, so callers do not need an explicit
 /// unsubscribe step.
-pub fn subscribe_recheck_pushes() -> Receiver<()> {
+pub fn subscribe_recheck_pushes(queue: &RecheckQueue) -> Receiver<()> {
     let (tx, rx) = crossbeam::channel::bounded(1);
-    RECHECK_PUSH_SUBSCRIBERS.lock().unwrap().push(tx);
+    queue.push_subscribers.lock().unwrap().push(tx);
     rx
 }
 
-fn push_recheck_msg(files: RecheckFiles) -> u64 {
-    push_recheck_msg_with_metadata(None, files)
+fn push_recheck_msg(queue: &RecheckQueue, files: RecheckFiles) -> u64 {
+    push_recheck_msg_with_metadata(queue, None, files)
 }
 
-pub fn push_files_to_recheck(
-    orchestrator: &ServerOrchestratorHandle,
-    changed_files: BTreeSet<String>,
-) -> u64 {
-    push_recheck_msg_with_orchestrator(
-        orchestrator,
+pub fn push_files_to_recheck(queue: &RecheckQueue, changed_files: BTreeSet<String>) -> u64 {
+    push_recheck_msg_marking_pending(
+        queue,
         None,
         RecheckFiles::ChangedFiles(changed_files, false),
     )
 }
 
 pub fn push_files_to_recheck_with_metadata(
-    orchestrator: &ServerOrchestratorHandle,
+    queue: &RecheckQueue,
     metadata: Option<FileWatcherMetadata>,
     changed_files: BTreeSet<String>,
 ) -> u64 {
-    push_recheck_msg_with_orchestrator(
-        orchestrator,
+    push_recheck_msg_marking_pending(
+        queue,
         metadata,
         RecheckFiles::ChangedFiles(changed_files, false),
     )
 }
 
-pub fn push_files_to_prioritize(changed_files: BTreeSet<String>) -> u64 {
-    push_recheck_msg(RecheckFiles::ChangedFiles(changed_files, true))
+pub fn push_files_to_prioritize(queue: &RecheckQueue, changed_files: BTreeSet<String>) -> u64 {
+    push_recheck_msg(queue, RecheckFiles::ChangedFiles(changed_files, true))
 }
 
 pub fn push_files_to_force_focused_and_recheck(
-    orchestrator: &ServerOrchestratorHandle,
+    queue: &RecheckQueue,
     files: BTreeSet<String>,
 ) -> u64 {
-    push_recheck_msg_with_orchestrator(
-        orchestrator,
+    push_recheck_msg_marking_pending(
+        queue,
         None,
         RecheckFiles::FilesToForceFocusedAndRecheck {
             files,
@@ -220,7 +259,7 @@ pub fn push_files_to_force_focused_and_recheck(
 }
 
 pub fn push_global_find_ref_request<Request, FindRefsFound>(
-    orchestrator: &ServerOrchestratorHandle,
+    queue: &RecheckQueue,
     def_locs: Vec<Loc>,
     request: Request,
     client_id: crate::lsp_prot::ClientId,
@@ -238,8 +277,8 @@ where
             .expect("find ref result type should match request");
         references_to_lsp_response(find_ref_results)
     });
-    push_recheck_msg_with_orchestrator(
-        orchestrator,
+    push_recheck_msg_marking_pending(
+        queue,
         None,
         RecheckFiles::GlobalFindRef {
             def_locs,
@@ -256,12 +295,12 @@ where
 /// Call this immediately after a lazy init, where `files` are the files
 /// changed since mergebase.
 pub fn push_lazy_init(
-    orchestrator: &ServerOrchestratorHandle,
+    queue: &RecheckQueue,
     metadata: Option<FileWatcherMetadata>,
     files: BTreeSet<String>,
 ) -> u64 {
-    push_recheck_msg_with_orchestrator(
-        orchestrator,
+    push_recheck_msg_marking_pending(
+        queue,
         metadata,
         RecheckFiles::FilesToForceFocusedAndRecheck {
             files,
@@ -270,11 +309,15 @@ pub fn push_lazy_init(
     )
 }
 
-pub fn push_dependencies_to_prioritize(dependencies: FlowOrdSet<FileKey>) -> u64 {
-    push_recheck_msg(RecheckFiles::DependenciesToPrioritize(dependencies))
+pub fn push_dependencies_to_prioritize(
+    queue: &RecheckQueue,
+    dependencies: FlowOrdSet<FileKey>,
+) -> u64 {
+    push_recheck_msg(queue, RecheckFiles::DependenciesToPrioritize(dependencies))
 }
 
 pub fn push_after_reinit(
+    queue: &RecheckQueue,
     files_to_prioritize: Option<FlowOrdSet<FileKey>>,
     files_to_recheck: Option<FlowOrdSet<FileKey>>,
     files_to_force: Option<CheckedSet>,
@@ -282,11 +325,14 @@ pub fn push_after_reinit(
     let files_to_prioritize = files_to_prioritize.unwrap_or_default();
     let files_to_recheck = files_to_recheck.unwrap_or_default();
     let files_to_force = files_to_force.unwrap_or_else(CheckedSet::empty);
-    push_recheck_msg(RecheckFiles::FilesToReinit {
-        files_to_prioritize,
-        files_to_recheck,
-        files_to_force,
-    })
+    push_recheck_msg(
+        queue,
+        RecheckFiles::FilesToReinit {
+            files_to_prioritize,
+            files_to_recheck,
+            files_to_force,
+        },
+    )
 }
 
 pub struct RecheckWorkload {
@@ -322,10 +368,8 @@ fn empty_recheck_workload() -> RecheckWorkload {
     }
 }
 
-static RECHECK_ACC: Mutex<Option<RecheckWorkload>> = Mutex::new(None);
-
-fn with_recheck_acc<T>(f: impl FnOnce(&mut RecheckWorkload) -> T) -> T {
-    let mut guard = RECHECK_ACC.lock().unwrap();
+fn with_recheck_acc<T>(queue: &RecheckQueue, f: impl FnOnce(&mut RecheckWorkload) -> T) -> T {
+    let mut guard = queue.acc.lock().unwrap();
     if guard.is_none() {
         *guard = Some(empty_recheck_workload());
     }
@@ -405,16 +449,17 @@ pub struct WorkloadChanges {
 /// `get_forced` returns the currently forced files. If the recheck stream asks
 /// us to focus `foo.js` but it is already focused, then we can ignore it.
 pub fn recheck_fetch(
+    queue: &RecheckQueue,
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
     priority: Priority,
 ) -> bool {
     let msgs: Vec<RecheckMsg> = {
-        let mut stream = RECHECK_STREAM.lock().unwrap();
+        let mut stream = queue.stream.lock().unwrap();
         std::mem::take(&mut *stream)
     };
     let mut changed = false;
-    with_recheck_acc(|workload| {
+    with_recheck_acc(queue, |workload| {
         for msg in msgs {
             let RecheckMsg {
                 recheck_epoch,
@@ -553,7 +598,7 @@ pub fn recheck_fetch(
     changed
 }
 
-pub fn requeue_workload(workload: RecheckWorkload) {
+pub fn requeue_workload(queue: &RecheckQueue, workload: RecheckWorkload) {
     flow_hh_logger::info!(
         "Re-queueing force-check of {} files and recheck of {} files ({} dependencies)",
         workload.files_to_force.cardinal(),
@@ -564,7 +609,7 @@ pub fn requeue_workload(workload: RecheckWorkload) {
             .len(),
         workload.files_to_prioritize.len(),
     );
-    with_recheck_acc(|prev| {
+    with_recheck_acc(queue, |prev| {
         prev.recheck_epoch = prev.recheck_epoch.max(workload.recheck_epoch);
         for f in &workload.files_to_prioritize {
             prev.files_to_prioritize.insert(f.dupe());
@@ -588,11 +633,12 @@ pub fn requeue_workload(workload: RecheckWorkload) {
 }
 
 pub fn get_and_clear_recheck_workload(
+    queue: &RecheckQueue,
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
 ) -> (Priority, RecheckWorkload) {
-    recheck_fetch(process_updates, get_forced, Priority::Normal);
-    let mut guard = RECHECK_ACC.lock().unwrap();
+    recheck_fetch(queue, process_updates, get_forced, Priority::Normal);
+    let mut guard = queue.acc.lock().unwrap();
     let workload = guard.take().unwrap_or_else(empty_recheck_workload);
     let RecheckWorkload {
         recheck_epoch,
@@ -643,12 +689,12 @@ pub fn get_and_clear_recheck_workload(
 }
 
 /// Blocks until a recheck message arrives.
-fn wait_for_recheck() {
-    RECHECK_NOTIFY.1.recv().unwrap();
+fn wait_for_recheck(queue: &RecheckQueue) {
+    queue.notify.1.recv().unwrap();
 }
 
-fn recheck_workload_counts() -> (usize, usize, usize) {
-    with_recheck_acc(|w| {
+fn recheck_workload_counts(queue: &RecheckQueue) -> (usize, usize, usize) {
+    with_recheck_acc(queue, |w| {
         (
             w.files_to_prioritize.len(),
             w.files_to_recheck.len(),
@@ -658,13 +704,14 @@ fn recheck_workload_counts() -> (usize, usize, usize) {
 }
 
 fn fetch_recheck_changes(
+    queue: &RecheckQueue,
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
     priority: Priority,
 ) -> Option<WorkloadChanges> {
-    let before_len = recheck_workload_counts();
-    if recheck_fetch(process_updates, get_forced, priority) {
-        let after_len = recheck_workload_counts();
+    let before_len = recheck_workload_counts(queue);
+    if recheck_fetch(queue, process_updates, get_forced, priority) {
+        let after_len = recheck_workload_counts(queue);
         Some(WorkloadChanges {
             num_files_to_prioritize: after_len.0 - before_len.0,
             num_files_to_recheck: after_len.1 - before_len.1,
@@ -676,14 +723,15 @@ fn fetch_recheck_changes(
 }
 
 pub fn wait_for_updates_for_recheck(
+    queue: &RecheckQueue,
     process_updates: &dyn Fn(bool, &BTreeSet<String>) -> Updates,
     get_forced: &dyn Fn() -> CheckedSet,
     priority: Priority,
     stop: Option<&Receiver<()>>,
 ) -> Option<WorkloadChanges> {
-    let recheck_pushes = stop.map(|_| subscribe_recheck_pushes());
+    let recheck_pushes = stop.map(|_| subscribe_recheck_pushes(queue));
     loop {
-        if let Some(changes) = fetch_recheck_changes(process_updates, get_forced, priority) {
+        if let Some(changes) = fetch_recheck_changes(queue, process_updates, get_forced, priority) {
             return Some(changes);
         }
         match stop {
@@ -700,18 +748,19 @@ pub fn wait_for_updates_for_recheck(
                     recv(stop) -> _ => return None,
                 }
             }
-            None => wait_for_recheck(),
+            None => wait_for_recheck(queue),
         }
     }
 }
 
 /// Block until a recheck message arrives without blocking the Tokio runtime.
-pub async fn wait_for_recheck_async() {
+pub async fn wait_for_recheck_async(queue: &RecheckQueue) {
+    let notified = queue.notify.1.clone();
     let (sender, receiver) = tokio::sync::oneshot::channel();
     let waiter = std::thread::Builder::new()
         .name("wait_for_recheck".to_string())
         .spawn(move || {
-            wait_for_recheck();
+            notified.recv().unwrap();
             match sender.send(()) {
                 Ok(()) => {}
                 // The serve loop stopped awaiting (e.g. server shutdown).

@@ -204,6 +204,7 @@ pub enum PersistentCommandHandler {
 }
 
 fn type_parse_artifacts_with_cache(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -220,6 +221,7 @@ fn type_parse_artifacts_with_cache(
     match type_parse_artifacts_cache {
         None => {
             let result = type_parse_artifacts(
+                orchestrator,
                 cache,
                 options,
                 all_unordered_libs,
@@ -242,6 +244,7 @@ fn type_parse_artifacts_with_cache(
                 || TypeParseArtifactsCacheEntry {
                     content: content_for_result,
                     result: type_parse_artifacts(
+                        orchestrator,
                         cache,
                         options,
                         all_unordered_libs,
@@ -938,6 +941,7 @@ fn json_of_autocomplete_result(
 }
 
 fn type_parse_artifacts_for_ac_with_cache(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -965,6 +969,7 @@ fn type_parse_artifacts_for_ac_with_cache(
                 parse_errors: _,
             } = parse_artifacts;
             let cx = match flow_services_inference::type_contents::compute_env_of_contents(
+                orchestrator,
                 cache,
                 options,
                 transaction.clone(),
@@ -1002,6 +1007,7 @@ fn type_parse_artifacts_for_ac_with_cache(
 }
 
 fn autocomplete_on_parsed(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1049,6 +1055,7 @@ fn autocomplete_on_parsed(
     let parse_result =
         || parse_contents(options, env.all_unordered_libs.dupe(), &contents, filename);
     let (file_artifacts_result, did_hit) = type_parse_artifacts_for_ac_with_cache(
+        orchestrator,
         cache,
         options,
         env.all_unordered_libs.dupe(),
@@ -1306,6 +1313,7 @@ fn suggest_imports_cli(
 }
 
 fn autocomplete(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1338,6 +1346,7 @@ fn autocomplete(
             let imports_ranked_usage_boost_exact_match_min_length =
                 options.autoimports_ranked_by_usage_boost_exact_match_min_length as usize;
             let (initial_json_props, ac_result) = autocomplete_on_parsed(
+                orchestrator,
                 cache,
                 options,
                 env,
@@ -1364,6 +1373,7 @@ enum ErrorsOfFileError {
 }
 
 fn errors_of_file(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1384,6 +1394,7 @@ fn errors_of_file(
                 Err(TypeContentsError::Errors(intermediate_result.1))
             } else {
                 type_parse_artifacts(
+                    orchestrator,
                     cache,
                     &options,
                     env.all_unordered_libs.dupe(),
@@ -1409,6 +1420,7 @@ fn errors_of_file(
 }
 
 fn check_file(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1416,7 +1428,15 @@ fn check_file(
     force: bool,
     file_input: &FileInput,
 ) -> Result<server_prot::response::StatusResponse, WorkloadCanceled> {
-    match errors_of_file(cache, options, env, transaction.clone(), force, file_input) {
+    match errors_of_file(
+        orchestrator,
+        cache,
+        options,
+        env,
+        transaction.clone(),
+        force,
+        file_input,
+    ) {
         Err(ErrorsOfFileError::NotCovered) => {
             Ok(server_prot::response::StatusResponse::NOT_COVERED)
         }
@@ -1650,6 +1670,7 @@ fn documentation_at_loc(
 }
 
 fn infer_type(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1703,6 +1724,7 @@ fn infer_type(
             let parse_result =
                 || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 &options,
                 env.all_unordered_libs.dupe(),
@@ -1801,6 +1823,7 @@ fn infer_type(
 }
 
 fn type_of_name(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1826,6 +1849,7 @@ fn type_of_name(
             let parse_result =
                 || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 &options,
                 env.all_unordered_libs.dupe(),
@@ -1862,6 +1886,7 @@ fn type_of_name(
                         )
                     };
                     Ok(flow_services_type_of_name::type_of_name::type_of_name(
+                        orchestrator,
                         cache,
                         &options,
                         transaction,
@@ -1878,6 +1903,7 @@ fn type_of_name(
 }
 
 fn inlay_hint(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -1912,6 +1938,7 @@ fn inlay_hint(
             let parse_result =
                 || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = match type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 &options,
                 env.all_unordered_libs.dupe(),
@@ -2005,6 +2032,7 @@ fn inlay_hint(
 }
 
 fn insert_type(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2048,6 +2076,7 @@ fn insert_type(
         &file_key,
     );
     let file_artifacts_result = type_parse_artifacts(
+        orchestrator,
         cache,
         options,
         env.all_unordered_libs.dupe(),
@@ -2092,6 +2121,7 @@ fn insert_type(
 }
 
 fn autofix_exports(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2138,6 +2168,7 @@ fn autofix_exports(
         &file_key,
     );
     let file_artifacts_result = type_parse_artifacts(
+        orchestrator,
         cache,
         options,
         env.all_unordered_libs.dupe(),
@@ -2182,6 +2213,7 @@ fn autofix_exports(
 }
 
 fn autofix_missing_local_annot(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2222,6 +2254,7 @@ fn autofix_missing_local_annot(
         &file_key,
     );
     let file_artifacts_result = type_parse_artifacts(
+        orchestrator,
         cache,
         options,
         env.all_unordered_libs.dupe(),
@@ -2340,6 +2373,7 @@ fn collect_rage(
 }
 
 fn dump_types(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2356,6 +2390,7 @@ fn dump_types(
     let intermediate_result =
         parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
+        orchestrator,
         cache,
         options,
         env.all_unordered_libs.dupe(),
@@ -2383,6 +2418,7 @@ fn dump_types(
 }
 
 fn coverage(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2403,6 +2439,7 @@ fn coverage(
     let intermediate_result =
         || parse_contents(&options, env.all_unordered_libs.dupe(), content, file_key);
     let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+        orchestrator,
         cache,
         &options,
         env.all_unordered_libs.dupe(),
@@ -2612,6 +2649,7 @@ fn find_module(
 }
 
 fn get_def(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2647,6 +2685,7 @@ fn get_def(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (check_result, did_hit_cache) = match type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -2867,6 +2906,7 @@ fn handle_apply_code_action(
 }
 
 fn handle_autocomplete(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2879,6 +2919,7 @@ fn handle_autocomplete(
     show_ranking_info: bool,
 ) -> EphemeralParallelizableResult {
     let (result, json_data) = autocomplete(
+        orchestrator,
         cache,
         options,
         env,
@@ -2899,13 +2940,14 @@ fn handle_autocomplete(
 }
 
 fn handle_autofix_exports(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_exports(cache, options, env, transaction, input)?;
+    let result = autofix_exports(orchestrator, cache, options, env, transaction, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_EXPORTS(result),
         None,
@@ -2913,13 +2955,15 @@ fn handle_autofix_exports(
 }
 
 fn handle_autofix_missing_local_annot(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let result = autofix_missing_local_annot(cache, options, env, transaction, input)?;
+    let result =
+        autofix_missing_local_annot(orchestrator, cache, options, env, transaction, input)?;
     Ok((
         server_prot::response::Response::AUTOFIX_MISSING_LOCAL_ANNOT(result),
         None,
@@ -2927,6 +2971,7 @@ fn handle_autofix_missing_local_annot(
 }
 
 fn handle_check_file(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2934,11 +2979,12 @@ fn handle_check_file(
     force: bool,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
-    let response = check_file(cache, options, env, transaction, force, input)?;
+    let response = check_file(orchestrator, cache, options, env, transaction, force, input)?;
     Ok((server_prot::response::Response::CHECK_FILE(response), None))
 }
 
 fn handle_coverage(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -2952,6 +2998,7 @@ fn handle_coverage(
         Err(IdeFileError::Failed(msg)) => (Err(msg), None),
         Err(IdeFileError::Skipped(reason)) => (Err(reason.clone()), json_of_skipped(&reason)),
         Ok((file_key, file_contents)) => coverage(
+            orchestrator,
             cache,
             &options,
             env,
@@ -3087,6 +3134,7 @@ fn handle_query(
 }
 
 fn handle_dump_types(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3096,6 +3144,7 @@ fn handle_dump_types(
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
     let response = dump_types(
+        orchestrator,
         cache,
         options,
         env,
@@ -3131,12 +3180,12 @@ fn handle_force_recheck(
     };
     if focus {
         server_monitor_listener_state::push_files_to_force_focused_and_recheck(
-            orchestrator,
+            orchestrator.recheck(),
             fileset,
         );
     } else {
         server_monitor_listener_state::push_files_to_recheck_with_metadata(
-            orchestrator,
+            orchestrator.recheck(),
             Some(metadata),
             fileset,
         );
@@ -3145,6 +3194,7 @@ fn handle_force_recheck(
 }
 
 fn handle_get_def(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3153,7 +3203,17 @@ fn handle_get_def(
     line: u32,
     col: u32,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = get_def(cache, options, env, None, transaction, input, line, col)?;
+    let (result, json_data) = get_def(
+        orchestrator,
+        cache,
+        options,
+        env,
+        None,
+        transaction,
+        input,
+        line,
+        col,
+    )?;
     Ok((server_prot::response::Response::GET_DEF(result), json_data))
 }
 
@@ -3172,14 +3232,23 @@ fn handle_graph_dep_graph(
 }
 
 fn handle_infer_type(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::infer_type_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) =
-        infer_type(cache, options, env, None, transaction.clone(), input, true)?;
+    let (result, json_data) = infer_type(
+        orchestrator,
+        cache,
+        options,
+        env,
+        None,
+        transaction.clone(),
+        input,
+        true,
+    )?;
     Ok((
         server_prot::response::Response::INFER_TYPE(result),
         json_data,
@@ -3187,6 +3256,7 @@ fn handle_infer_type(
 }
 
 fn handle_type_of_name(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3197,7 +3267,7 @@ fn handle_type_of_name(
         Vec<server_prot::response::InferTypeOfNameResponse>,
         Option<lsp_prot::Json>,
     ) = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        type_of_name(cache, options, env, None, transaction, input)
+        type_of_name(orchestrator, cache, options, env, None, transaction, input)
     })) {
         Ok(result) => (result?, None),
         Err(_exn) => {
@@ -3218,13 +3288,22 @@ fn handle_type_of_name(
 }
 
 fn handle_inlay_hint(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     input: &server_prot::inlay_hint_options::T,
 ) -> EphemeralParallelizableResult {
-    let (result, json_data) = inlay_hint(cache, options, env, None, transaction.clone(), input)?;
+    let (result, json_data) = inlay_hint(
+        orchestrator,
+        cache,
+        options,
+        env,
+        None,
+        transaction.clone(),
+        input,
+    )?;
     Ok((
         server_prot::response::Response::INLAY_HINT(result),
         json_data,
@@ -3232,6 +3311,7 @@ fn handle_inlay_hint(
 }
 
 fn handle_llm_context(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3259,6 +3339,7 @@ fn handle_llm_context(
             let intermediate_result =
                 parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let file_artifacts_result = type_parse_artifacts(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -3323,6 +3404,7 @@ fn handle_llm_context(
 }
 
 fn handle_insert_type(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3333,6 +3415,7 @@ fn handle_insert_type(
     location_is_strict: bool,
 ) -> EphemeralParallelizableResult {
     let result = insert_type(
+        orchestrator,
         cache,
         options,
         env,
@@ -3387,6 +3470,9 @@ pub fn handle_ephemeral_command_for_standalone(
     env: &server_env::Env,
     command: server_prot::request::Command,
 ) -> EphemeralParallelizableResult {
+    // Inner services take `Option` because they also run without a server (CLI, codemods).
+    let server = orchestrator;
+    let orchestrator = Some(server);
     let options = &*genv.options;
     let active_transaction = ActiveTransaction::new(genv.committed_heap.dupe());
     let transaction = active_transaction.handle();
@@ -3405,6 +3491,7 @@ pub fn handle_ephemeral_command_for_standalone(
             imports_ranked_usage,
             show_ranking_info,
         } => handle_autocomplete(
+            orchestrator,
             cache,
             options,
             env,
@@ -3420,12 +3507,19 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_exports(cache, options, env, transaction, &input),
+        } => handle_autofix_exports(orchestrator, cache, options, env, transaction, &input),
         server_prot::request::Command::AUTOFIX_MISSING_LOCAL_ANNOT {
             input,
             verbose: _,
             wait_for_recheck: _,
-        } => handle_autofix_missing_local_annot(cache, options, env, transaction, &input),
+        } => handle_autofix_missing_local_annot(
+            orchestrator,
+            cache,
+            options,
+            env,
+            transaction,
+            &input,
+        ),
         server_prot::request::Command::CHECK_FILE {
             input,
             verbose: _,
@@ -3435,13 +3529,29 @@ pub fn handle_ephemeral_command_for_standalone(
         } => {
             let mut options = options.clone();
             options.include_warnings = options.include_warnings || include_warnings;
-            handle_check_file(cache, &options, env, transaction, force, &input)
+            handle_check_file(
+                orchestrator,
+                cache,
+                &options,
+                env,
+                transaction,
+                force,
+                &input,
+            )
         }
         server_prot::request::Command::COVERAGE {
             input,
             force,
             wait_for_recheck: _,
-        } => handle_coverage(cache, options, env, transaction, &input, force),
+        } => handle_coverage(
+            orchestrator,
+            cache,
+            options,
+            env,
+            transaction,
+            &input,
+            force,
+        ),
         server_prot::request::Command::BATCH_COVERAGE {
             batch,
             wait_for_recheck: _,
@@ -3460,6 +3570,7 @@ pub fn handle_ephemeral_command_for_standalone(
             for_tool,
             wait_for_recheck: _,
         } => handle_dump_types(
+            orchestrator,
             cache,
             options,
             env,
@@ -3483,7 +3594,7 @@ pub fn handle_ephemeral_command_for_standalone(
             missed_changes,
             changed_mergebase,
         } => Ok(handle_force_recheck(
-            orchestrator,
+            server,
             files,
             focus,
             missed_changes,
@@ -3495,6 +3606,7 @@ pub fn handle_ephemeral_command_for_standalone(
             r#char,
             wait_for_recheck: _,
         } => handle_get_def(
+            orchestrator,
             cache,
             options,
             env,
@@ -3510,13 +3622,13 @@ pub fn handle_ephemeral_command_for_standalone(
             types_only,
         } => handle_graph_dep_graph(env, &root, strip_root, &outfile, types_only),
         server_prot::request::Command::INFER_TYPE(input) => {
-            handle_infer_type(cache, options, env, transaction, &input)
+            handle_infer_type(orchestrator, cache, options, env, transaction, &input)
         }
         server_prot::request::Command::INLAY_HINT(input) => {
-            handle_inlay_hint(cache, options, env, transaction, &input)
+            handle_inlay_hint(orchestrator, cache, options, env, transaction, &input)
         }
         server_prot::request::Command::TYPE_OF_NAME(input) => {
-            handle_type_of_name(cache, options, env, transaction, &input)
+            handle_type_of_name(orchestrator, cache, options, env, transaction, &input)
         }
         server_prot::request::Command::INSERT_TYPE {
             input,
@@ -3526,6 +3638,7 @@ pub fn handle_ephemeral_command_for_standalone(
             wait_for_recheck: _,
             omit_targ_defaults,
         } => handle_insert_type(
+            orchestrator,
             cache,
             options,
             env,
@@ -3565,11 +3678,11 @@ pub fn handle_ephemeral_command_for_standalone(
             handle_status(&options, env, &transaction)
         }
         server_prot::request::Command::LLM_CONTEXT(input) => {
-            handle_llm_context(cache, options, env, transaction, &input)
+            handle_llm_context(orchestrator, cache, options, env, transaction, &input)
         }
         #[cfg(fbcode_build)]
         server_prot::request::Command::FOX(command) => {
-            match flow_facebook_fox_server::handle(command, genv, env, transaction) {
+            match flow_facebook_fox_server::handle(orchestrator, command, genv, env, transaction) {
                 flow_facebook_fox_server::FoxOutcome::Done(response) => {
                     Ok((server_prot::response::Response::FOX(response), None))
                 }
@@ -3610,6 +3723,7 @@ pub fn handle_ephemeral_command_for_standalone_wrapped(
 }
 
 fn find_code_actions(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3646,6 +3760,7 @@ fn find_code_actions(
                 )
             };
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -3753,6 +3868,7 @@ fn find_code_actions(
 }
 
 fn add_missing_imports(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -3777,6 +3893,7 @@ fn add_missing_imports(
                 )
             };
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -4682,6 +4799,7 @@ fn handle_persistent_did_change_configuration_notification(
 }
 
 fn handle_persistent_get_def(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -4703,6 +4821,7 @@ fn handle_persistent_get_def(
     let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
         .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
     let (result, extra_data) = get_def(
+        orchestrator,
         cache,
         options,
         env,
@@ -4765,6 +4884,7 @@ fn loc_to_vscode_linked_location_in_markdown(
 }
 
 fn handle_persistent_infer_type(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -4802,6 +4922,7 @@ fn handle_persistent_infer_type(
         no_typed_ast_for_imports: false,
     };
     let (result, extra_data) = infer_type(
+        orchestrator,
         cache,
         options,
         env,
@@ -4940,6 +5061,7 @@ fn handle_persistent_infer_type(
 }
 
 fn handle_persistent_code_action_request(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -4949,8 +5071,15 @@ fn handle_persistent_code_action_request(
     params: &lsp_types::CodeActionParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (result, extra_data) =
-        find_code_actions(cache, options, env, transaction, client_id, params);
+    let (result, extra_data) = find_code_actions(
+        orchestrator,
+        cache,
+        options,
+        env,
+        transaction,
+        client_id,
+        params,
+    );
     let metadata = with_data(extra_data, metadata);
     match result {
         Ok(code_actions) => {
@@ -4963,6 +5092,7 @@ fn handle_persistent_code_action_request(
 }
 
 fn handle_persistent_autocomplete_lsp(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5015,6 +5145,7 @@ fn handle_persistent_autocomplete_lsp(
         })
         .unwrap_or(false);
     let (result, extra_data) = autocomplete(
+        orchestrator,
         cache,
         options,
         env,
@@ -5092,6 +5223,7 @@ fn handle_persistent_autocomplete_lsp(
 }
 
 fn handle_persistent_signaturehelp_lsp(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5129,6 +5261,7 @@ fn handle_persistent_signaturehelp_lsp(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &path);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -5305,6 +5438,7 @@ fn handle_persistent_workspace_symbol(
 }
 
 fn get_file_artifacts(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5334,6 +5468,7 @@ fn get_file_artifacts(
                 let intermediate_result =
                     || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
                 let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
+                    orchestrator,
                     cache,
                     options,
                     env.all_unordered_libs.dupe(),
@@ -5434,6 +5569,7 @@ fn find_local_references<'cx>(
 }
 
 fn map_local_find_references_results<T>(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5444,6 +5580,7 @@ fn map_local_find_references_results<T>(
     file_input: Option<&FileInput>,
 ) -> (Result<Vec<T>, String>, Option<lsp_prot::Json>) {
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
+        orchestrator,
         cache,
         options,
         env,
@@ -5501,7 +5638,11 @@ fn handle_global_find_references(
     refs_to_lsp_result: RefsToLspResult,
     text_doc_position: &lsp_types::TextDocumentPositionParams,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
+    // Inner services take `Option` because they also run without a server (CLI, codemods).
+    let server = orchestrator;
+    let orchestrator = Some(server);
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
+        orchestrator,
         cache,
         options,
         env,
@@ -5662,7 +5803,7 @@ fn handle_global_find_references(
                         kind,
                     };
                     server_monitor_listener_state::push_global_find_ref_request(
-                        orchestrator,
+                        server.recheck(),
                         def_locs,
                         request,
                         client_id,
@@ -5733,6 +5874,7 @@ fn handle_persistent_find_references(
 }
 
 fn handle_persistent_document_highlight(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5754,6 +5896,7 @@ fn handle_persistent_document_highlight(
             })
         };
     let (result, extra_data) = map_local_find_references_results(
+        orchestrator,
         cache,
         options,
         env,
@@ -5775,6 +5918,7 @@ fn handle_persistent_document_highlight(
 }
 
 fn handle_persistent_prepare_rename(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5786,6 +5930,7 @@ fn handle_persistent_prepare_rename(
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let (file_artifacts_opt, extra_parse_data) = get_file_artifacts(
+        orchestrator,
         cache,
         options,
         env,
@@ -5926,6 +6071,7 @@ fn handle_persistent_rename(
 }
 
 fn handle_persistent_coverage(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -5973,6 +6119,7 @@ fn handle_persistent_coverage(
             let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
                 .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
             let (result, extra_data) = coverage(
+                orchestrator,
                 cache,
                 options,
                 env,
@@ -6052,6 +6199,7 @@ fn handle_persistent_coverage(
 }
 
 fn handle_persistent_llm_context(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6091,6 +6239,7 @@ fn handle_persistent_llm_context(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -6181,6 +6330,7 @@ fn send_workspace_edit(
 }
 
 fn handle_persistent_add_missing_imports_command(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6190,7 +6340,15 @@ fn handle_persistent_add_missing_imports_command(
     text_document: &lsp_types::TextDocumentIdentifier,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let edits = add_missing_imports(cache, options, env, transaction, client_id, text_document);
+    let edits = add_missing_imports(
+        orchestrator,
+        cache,
+        options,
+        env,
+        transaction,
+        client_id,
+        text_document,
+    );
     match edits {
         Err(reason) => mk_lsp_error_response(Some(id), reason, None, metadata),
         Ok(ref e) if e.is_empty() => {
@@ -6333,6 +6491,7 @@ fn auto_close_jsx_handler(
 }
 
 fn prepare_document_paste(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6359,6 +6518,7 @@ fn prepare_document_paste(
             let intermediate_result =
                 || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -6484,6 +6644,7 @@ fn provide_document_paste(
 }
 
 fn handle_persistent_prepare_document_paste(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6493,8 +6654,15 @@ fn handle_persistent_prepare_document_paste(
     params: &lsp::document_paste::PrepareParams,
     metadata: lsp_prot::Metadata,
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let (imports, extra_data) =
-        prepare_document_paste(cache, options, env, transaction, client_id, params);
+    let (imports, extra_data) = prepare_document_paste(
+        orchestrator,
+        cache,
+        options,
+        env,
+        transaction,
+        client_id,
+        params,
+    );
     let metadata = with_data(extra_data, metadata);
     let imports_lsp: Vec<lsp::document_paste::ImportItem> = imports
         .into_iter()
@@ -6730,6 +6898,7 @@ fn handle_result_from_client(
 }
 
 fn live_diagnostics_of_uri(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6795,6 +6964,7 @@ fn live_diagnostics_of_uri(
                                         persistent_connection::type_parse_artifacts_cache(&client)
                                     });
                                 type_parse_artifacts_with_cache(
+                                    orchestrator,
                                     cache,
                                     options,
                                     env.all_unordered_libs.dupe(),
@@ -6901,6 +7071,7 @@ fn live_diagnostics_of_uri(
 }
 
 fn handle_live_errors_request(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6913,16 +7084,24 @@ fn handle_live_errors_request(
         return live_errors_canceled_response(uri, metadata);
     }
 
-    let ret =
-        match live_diagnostics_of_uri(cache, options, env, transaction, client_id, uri, metadata) {
-            (Err((e, _file_input)), metadata) => {
-                (lsp_prot::Response::LiveErrorsResponse(Err(e)), metadata)
-            }
-            (Ok(diagnostics), metadata) => (
-                lsp_prot::Response::LiveErrorsResponse(Ok(diagnostics)),
-                metadata,
-            ),
-        };
+    let ret = match live_diagnostics_of_uri(
+        orchestrator,
+        cache,
+        options,
+        env,
+        transaction,
+        client_id,
+        uri,
+        metadata,
+    ) {
+        (Err((e, _file_input)), metadata) => {
+            (lsp_prot::Response::LiveErrorsResponse(Err(e)), metadata)
+        }
+        (Ok(diagnostics), metadata) => (
+            lsp_prot::Response::LiveErrorsResponse(Ok(diagnostics)),
+            metadata,
+        ),
+    };
 
     if is_latest_live_errors_metadata(uri, &ret.1) {
         let mut map = URI_TO_LATEST_METADATA_MAP.lock().unwrap();
@@ -6935,6 +7114,7 @@ fn handle_live_errors_request(
 }
 
 fn handle_persistent_text_document_diagnostics_lsp(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &server_env::Env,
@@ -6946,6 +7126,7 @@ fn handle_persistent_text_document_diagnostics_lsp(
 ) -> (lsp_prot::Response, lsp_prot::Metadata) {
     let uri = &params.text_document.uri;
     let (result, metadata) = live_diagnostics_of_uri(
+        orchestrator,
         cache,
         options,
         env,
@@ -6963,7 +7144,15 @@ fn handle_persistent_text_document_diagnostics_lsp(
             LspResult::TextDocumentDiagnosticsResult(live_diagnostics),
         ),
         Err((_failure, file_input)) => {
-            match errors_of_file(cache, options, env, transaction, false, &file_input) {
+            match errors_of_file(
+                orchestrator,
+                cache,
+                options,
+                env,
+                transaction,
+                false,
+                &file_input,
+            ) {
                 Err(_) => LspMessage::ResponseMessage(
                     id,
                     LspResult::TextDocumentDiagnosticsResult(vec![]),
@@ -7156,10 +7345,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_get_def(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7186,10 +7378,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_infer_type(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7212,10 +7407,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_code_action_request(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7239,10 +7437,13 @@ fn get_persistent_handler(
             let file_input =
                 file_input_of_text_document_position_opt(client_id, &params.text_document_position);
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_autocomplete_lsp(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7269,10 +7470,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_signaturehelp_lsp(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7295,10 +7499,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = Arc::new(options.clone());
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_text_document_diagnostics_lsp(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7324,10 +7531,13 @@ fn get_persistent_handler(
                 &params.text_document_position_params,
             );
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_document_highlight(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7379,10 +7589,13 @@ fn get_persistent_handler(
             let params = params.clone();
             let file_input = file_input_of_text_document_position_opt(client_id, &params);
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_prepare_rename(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7457,10 +7670,13 @@ fn get_persistent_handler(
             let file_input =
                 file_input_of_text_document_identifier_opt(client_id, &params.text_document);
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_coverage(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7533,10 +7749,13 @@ fn get_persistent_handler(
                     match text_document {
                         Some(text_document) => {
                             let options_arc = genv.options.clone();
+                            // The closure outlives this call, so it needs an owned handle.
+                            let orchestrator = orchestrator.clone();
                             mk_parallelizable_persistent(
                                 options,
                                 Box::new(move |env, transaction, cache| {
                                     Ok(handle_persistent_add_missing_imports_command(
+                                        Some(&orchestrator),
                                         cache,
                                         &options_arc,
                                         env,
@@ -7622,10 +7841,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_arc = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_prepare_document_paste(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,
@@ -7718,10 +7940,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             let params = params.clone();
             let options_for_closure = genv.options.clone();
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_llm_context(
+                        Some(&orchestrator),
                         cache,
                         &options_for_closure,
                         env,
@@ -7769,10 +7994,13 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             live_errors_mark_latest_metadata(&uri, &metadata);
             let options_arc = Arc::new(options.clone());
+            // The closure outlives this call, so it needs an owned handle.
+            let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_live_errors_request(
+                        Some(&orchestrator),
                         cache,
                         &options_arc,
                         env,

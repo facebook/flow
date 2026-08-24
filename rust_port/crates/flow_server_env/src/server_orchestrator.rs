@@ -25,6 +25,7 @@ use crate::lsp_prot::ErrorsReason;
 use crate::persistent_connection;
 use crate::server_env::EnvRef;
 use crate::server_env::with_connections;
+use crate::server_monitor_listener_state::RecheckQueue;
 use crate::server_status;
 use crate::workload_stream::ParallelizableWorkload;
 use crate::workload_stream::Workload;
@@ -36,7 +37,7 @@ use crate::workload_stream::WorkloadStream;
 /// The message carries the client id rather than a closure: the work is a bounded edit of the
 /// client list that the executor performs itself, not arbitrary caller-supplied code whose cost it
 /// cannot see.
-enum ConnectionChange {
+pub(crate) enum ConnectionChange {
     Connected(ClientId),
     Disconnected(ClientId),
 }
@@ -54,12 +55,14 @@ pub struct RecheckSnapshot {
 /// The complete cross-thread protocol understood by the command executor.
 ///
 /// Executor state is deliberately not shared behind a mutex. Commands, recheck transitions, and
-/// heap mutation enter through these messages so one event loop establishes their ordering.
-enum Control {
-    /// Records that a recheck with this epoch must complete before serial commands may resume.
-    RecheckPending {
-        recheck_epoch: u64,
-    },
+/// heap mutation enter through these messages so one event loop establishes their ordering. The
+/// `RecheckQueue` is the exception, and is synchronised internally: producers and the cancel
+/// monitor reach it from other threads, and resolving its entries does file I/O that must not run
+/// on the command loop.
+pub(crate) enum Control {
+    /// Wakes the executor after work that holds serial commands was queued. The epoch itself lives
+    /// in the `RecheckQueue`; this only says "re-read it".
+    RecheckPending,
     /// Starts a recheck and returns the executor's current Base-consistent server state.
     RecheckStarted {
         reply: std::sync::mpsc::Sender<RecheckSnapshot>,
@@ -105,6 +108,7 @@ enum Control {
 #[derive(Clone)]
 pub struct ServerOrchestratorHandle {
     control: Sender<Control>,
+    recheck: Arc<RecheckQueue>,
 }
 
 /// The server-startup owner used to wire producers before command execution begins.
@@ -125,6 +129,7 @@ struct CommandExecutor {
     controls: Receiver<Control>,
     workloads: Arc<WorkloadStream>,
     options: Arc<Options>,
+    recheck: Arc<RecheckQueue>,
 }
 
 /// The lifetime owner of a started command executor.
@@ -153,8 +158,10 @@ impl ServerOrchestrator {
     pub fn new(options: Arc<Options>) -> Self {
         let (control, controls) = channel::unbounded();
         let workloads = Arc::new(WorkloadStream::create());
+        let recheck = Arc::new(RecheckQueue::new(control.clone()));
         let handle = ServerOrchestratorHandle {
             control: control.clone(),
+            recheck: recheck.dupe(),
         };
         Self {
             handle,
@@ -163,6 +170,7 @@ impl ServerOrchestrator {
                 controls,
                 workloads,
                 options,
+                recheck,
             },
         }
     }
@@ -222,10 +230,10 @@ impl ServerOrchestratorHandle {
             .expect("the command executor should publish a recheck snapshot")
     }
 
-    pub fn mark_recheck_pending(&self, recheck_epoch: u64) {
-        self.control
-            .send(Control::RecheckPending { recheck_epoch })
-            .expect("the command control channel should stay open");
+    /// The queued recheck work. Producers push here; the executor is told to re-read it by the
+    /// queue itself, so no caller has to remember to announce a push.
+    pub fn recheck(&self) -> &Arc<RecheckQueue> {
+        &self.recheck
     }
 
     pub fn commit_recheck(
@@ -311,7 +319,9 @@ struct State {
     env: EnvRef,
     options: Arc<Options>,
     workloads: Arc<WorkloadStream>,
-    latest_pending_recheck_epoch: u64,
+    /// The queued recheck work. The executor reads the latest pending epoch straight off this
+    /// rather than keeping a copy that pushes have to keep in sync.
+    recheck: Arc<RecheckQueue>,
     completed_recheck_epoch: u64,
     recheck_in_progress: bool,
     deferred_serial: Option<Workload>,
@@ -328,12 +338,17 @@ fn should_hold_serial_commands(
 }
 
 impl State {
-    fn new(env: EnvRef, options: Arc<Options>, workloads: Arc<WorkloadStream>) -> Self {
+    fn new(
+        env: EnvRef,
+        options: Arc<Options>,
+        workloads: Arc<WorkloadStream>,
+        recheck: Arc<RecheckQueue>,
+    ) -> Self {
         Self {
             env,
             options,
             workloads,
-            latest_pending_recheck_epoch: 0,
+            recheck,
             completed_recheck_epoch: 0,
             recheck_in_progress: false,
             deferred_serial: None,
@@ -377,12 +392,7 @@ impl State {
 
     fn handle_control(&mut self, control: Control) {
         match control {
-            Control::RecheckPending { recheck_epoch } => {
-                assert!(
-                    recheck_epoch >= self.latest_pending_recheck_epoch,
-                    "recheck epochs must be monotonic"
-                );
-                self.latest_pending_recheck_epoch = recheck_epoch;
+            Control::RecheckPending => {
                 self.recheck_in_progress = true;
             }
             Control::RecheckStarted { reply } => {
@@ -472,14 +482,15 @@ impl State {
             completed_recheck_epoch >= self.completed_recheck_epoch,
             "completed recheck epochs must be monotonic"
         );
-        self.latest_pending_recheck_epoch = self
-            .latest_pending_recheck_epoch
-            .max(completed_recheck_epoch);
+        // A workload also merges pushes that do not hold serial commands, so its epoch can exceed
+        // every pending one. Raising here keeps the comparison below from treating that as work
+        // still owed.
+        self.recheck.raise_pending_epoch(completed_recheck_epoch);
         self.completed_recheck_epoch = completed_recheck_epoch;
         self.recheck_in_progress = should_hold_serial_commands(
             still_rechecking,
             self.completed_recheck_epoch,
-            self.latest_pending_recheck_epoch,
+            self.recheck.latest_pending_epoch(),
         );
         for workload in self.deferred_parallel.drain(..).rev() {
             self.workloads
@@ -559,7 +570,7 @@ fn run_ready(
 
 impl CommandExecutor {
     fn run(self, env: EnvRef, started: std::sync::mpsc::Sender<()>) {
-        let mut state = State::new(env, self.options, self.workloads);
+        let mut state = State::new(env, self.options, self.workloads, self.recheck);
         let mut pending_heap_slice = None;
         if !run_ready(&mut state, &self.controls, &mut pending_heap_slice) {
             return;

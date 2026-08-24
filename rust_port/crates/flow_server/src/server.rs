@@ -28,7 +28,6 @@ use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_env::Genv;
-use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_orchestrator;
 use flow_server_env::server_status;
 use flow_services_inference::type_service::RecheckError;
@@ -151,6 +150,7 @@ fn exit_on_recheck_error(error: RecheckError) -> ! {
 }
 
 fn init(
+    orchestrator: Option<&server_orchestrator::ServerOrchestratorHandle>,
     profiling: &ProfilingRunning,
     focus_targets: Option<FlowOrdSet<FileKey>>,
     genv: &Genv,
@@ -189,6 +189,7 @@ fn init(
         Arc::clone(&genv.committed_heap),
         || {
             flow_services_inference::type_service::init(
+                orchestrator,
                 options,
                 workers,
                 &genv.committed_heap,
@@ -299,7 +300,10 @@ fn serve(
                     gc_loop(Arc::clone(committed_heap), orchestrator_for_gc),
                 );
             };
-            let wait_thread = server_monitor_listener_state::wait_for_recheck_async();
+            let wait_thread =
+                flow_server_env::server_monitor_listener_state::wait_for_recheck_async(
+                    orchestrator.recheck(),
+                );
             tokio::select! {
                 biased;
                 _ = wait_thread => {}
@@ -449,7 +453,7 @@ fn run(
 
     let should_print_summary = options.profile && !options.quiet;
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
-        init(profiling, None, &genv_arc)
+        init(Some(&orchestrator), profiling, None, &genv_arc)
     });
     let (env, first_internal_error) = match init_result {
         Ok(result) => result,
@@ -633,7 +637,8 @@ where
     let should_print_summary = options.profile && !options.quiet;
 
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
-        let (env, first_internal_error) = init(profiling, focus_targets, &genv)?;
+        // `flow full-check` runs without a server, so there is no recheck queue to schedule into.
+        let (env, first_internal_error) = init(None, profiling, focus_targets, &genv)?;
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
         let lazy_stats = env.lazy_stats(&options);
         let lazy_msg = if lazy_stats.lazy_mode {

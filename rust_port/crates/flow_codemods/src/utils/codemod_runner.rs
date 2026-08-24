@@ -720,6 +720,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
             merge_targets(_env, _options, &(), get_dependent_files, &_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
+                None,
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
@@ -857,6 +858,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             merge_targets(_env, _options, &(), get_dependent_files, &_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
+                None,
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
@@ -941,6 +943,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             merge_targets(_env, _options, &(), get_dependent_files2, &second_run_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
+                None,
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
@@ -1047,6 +1050,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             merge_targets(_env, _options, &(), get_dependent_files, &_roots).await;
         if let Some(pool) = _workers {
             flow_services_inference::type_service::ensure_parsed_or_trigger_recheck(
+                None,
                 pool,
                 &reader,
                 &Arc::new(_options.clone()),
@@ -1240,6 +1244,7 @@ where
         let files_to_force = flow_common_utils::checked_set::CheckedSet::empty();
         let mut will_be_checked_files = flow_common_utils::checked_set::CheckedSet::empty();
         let recheck_result = flow_services_inference::type_service::recheck(
+            None,
             pool,
             &_genv.committed_heap,
             &options_arc,

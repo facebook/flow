@@ -27,7 +27,7 @@ use flow_parsing::parsing_service;
 use flow_parsing::parsing_service::ParseResult;
 use flow_parsing::parsing_service::ParseSkipReason;
 use flow_server_env::server_env::Env;
-use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_orchestrator::ServerOrchestratorHandle;
 use flow_services_inference_types::CheckedDependenciesCanceled;
 use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
@@ -319,7 +319,10 @@ fn unchecked_dependencies(
     )
 }
 
-fn prioritize_unchecked(unchecked: FlowOrdSet<FileKey>) -> Result<(), CheckedDependenciesCanceled> {
+fn prioritize_unchecked(
+    orchestrator: Option<&ServerOrchestratorHandle>,
+    unchecked: FlowOrdSet<FileKey>,
+) -> Result<(), CheckedDependenciesCanceled> {
     if unchecked.is_empty() {
         return Ok(());
     }
@@ -336,7 +339,14 @@ fn prioritize_unchecked(unchecked: FlowOrdSet<FileKey>) -> Result<(), CheckedDep
             flow_hh_logger::info!("...");
         }
     }
-    server_monitor_listener_state::push_dependencies_to_prioritize(unchecked);
+    // `None` outside a server (the fox batch tools): nothing schedules rechecks, so the caller
+    // just learns its dependencies are unchecked.
+    if let Some(orchestrator) = orchestrator {
+        flow_server_env::server_monitor_listener_state::push_dependencies_to_prioritize(
+            orchestrator.recheck(),
+            unchecked,
+        );
+    }
     Err(CheckedDependenciesCanceled)
 }
 
@@ -344,6 +354,7 @@ fn prioritize_unchecked(unchecked: FlowOrdSet<FileKey>) -> Result<(), CheckedDep
 /// per file. A recheck merges everything the files it is given need, so scheduling the direct
 /// dependencies is enough — the rest of the closure comes with them.
 pub fn ensure_checked_dependencies_of_set<'a>(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Options,
     transaction: &Transaction,
     files: impl IntoIterator<Item = &'a FileKey>,
@@ -362,7 +373,7 @@ pub fn ensure_checked_dependencies_of_set<'a>(
         .flatten()
         .collect();
 
-    prioritize_unchecked(unchecked)
+    prioritize_unchecked(orchestrator, unchecked)
 }
 
 // Ensures that dependencies are checked; schedules them to be checked and aborts the
@@ -371,16 +382,21 @@ pub fn ensure_checked_dependencies_of_set<'a>(
 // This is necessary because `check_contents` needs all of the dep type sigs to be
 // available, but since it doesn't use workers it can't go parse everything itself.
 fn ensure_checked_dependencies(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Options,
     transaction: &Transaction,
     file: &FileKey,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
 ) -> Result<(), CheckedDependenciesCanceled> {
-    prioritize_unchecked(unchecked_dependencies(options, transaction, file, requires))
+    prioritize_unchecked(
+        orchestrator,
+        unchecked_dependencies(options, transaction, file, requires),
+    )
 }
 
 // file+contents may not agree with file system state
 pub fn check_contents(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     transaction: Arc<Transaction>,
@@ -396,7 +412,9 @@ pub fn check_contents(
     flow_utils_concurrency::job_error::JobError,
 > {
     with_timer(options, "MergeContents", || {
-        if let Err(e) = ensure_checked_dependencies(options, &transaction, &filename, requires) {
+        if let Err(e) =
+            ensure_checked_dependencies(orchestrator, options, &transaction, &filename, requires)
+        {
             return Ok(Err(e));
         }
         Ok(Ok(merge_service::check_contents_context(
@@ -415,6 +433,7 @@ pub fn check_contents(
 
 // IDE service: enable for_ide flag to ensure declaration files are fully checked
 pub fn compute_env_of_contents(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     transaction: Arc<Transaction>,
@@ -431,8 +450,13 @@ pub fn compute_env_of_contents(
 > {
     type_inference_hooks_js::with_for_ide(true, || {
         with_timer(options, "MergeContents", || {
-            if let Err(e) = ensure_checked_dependencies(options, &transaction, &filename, requires)
-            {
+            if let Err(e) = ensure_checked_dependencies(
+                orchestrator,
+                options,
+                &transaction,
+                &filename,
+                requires,
+            ) {
                 return Ok(Err(e));
             }
             Ok(Ok(merge_service::compute_env_of_contents(
@@ -452,6 +476,7 @@ pub fn compute_env_of_contents(
 
 // We assume that callers have already inspected the parse errors, so we discard them here.
 pub fn type_parse_artifacts(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
@@ -476,6 +501,7 @@ pub fn type_parse_artifacts(
                 type_inference_hooks_js::with_for_ide(true, || {
                     obj_to_obj_hook::with_obj_to_obj_hook(true, &loc_of_aloc, || {
                         check_contents(
+                            orchestrator,
                             cache,
                             options,
                             transaction.dupe(),

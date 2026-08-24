@@ -74,7 +74,7 @@ fn handle_message(
         } => {
             if initial {
                 server_monitor_listener_state::push_lazy_init(
-                    orchestrator,
+                    orchestrator.recheck(),
                     metadata,
                     changed_files,
                 );
@@ -82,14 +82,14 @@ fn handle_message(
                 match metadata {
                     Some(metadata) => {
                         server_monitor_listener_state::push_files_to_recheck_with_metadata(
-                            orchestrator,
+                            orchestrator.recheck(),
                             Some(metadata),
                             changed_files,
                         );
                     }
                     None => {
                         server_monitor_listener_state::push_files_to_recheck(
-                            orchestrator,
+                            orchestrator.recheck(),
                             changed_files,
                         );
                     }

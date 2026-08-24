@@ -39,6 +39,7 @@ use flow_parser_utils_output::replacement_printer;
 use flow_server_env::lsp::loc_to_lsp_range;
 use flow_server_env::lsp_helpers;
 use flow_server_env::server_env::Env;
+use flow_server_env::server_orchestrator::ServerOrchestratorHandle;
 use flow_services_autocomplete::code_action_text_edits::CodeActionTextEdits;
 use flow_services_autocomplete::insert_jsdoc;
 use flow_services_autocomplete::lsp_import_edits;
@@ -3068,6 +3069,7 @@ fn autofix_imports_fn(
 }
 
 fn with_type_checked_file<T>(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     env: &Env,
@@ -3095,6 +3097,7 @@ fn with_type_checked_file<T>(
             ))
         } else {
             type_contents::type_parse_artifacts(
+                orchestrator,
                 cache,
                 options,
                 env.all_unordered_libs.dupe(),
@@ -3138,6 +3141,7 @@ pub fn autofix_errors_cli(
     file_content: &str,
 ) -> Result<Vec<(Loc, String)>, String> {
     with_type_checked_file(
+        None,
         cache,
         options,
         env,
@@ -3252,6 +3256,7 @@ pub fn autofix_imports_cli(
         .parent()
         .map(|p| p.to_string_lossy().to_string());
     with_type_checked_file(
+        None,
         cache,
         options,
         env,
@@ -3292,6 +3297,7 @@ pub fn suggest_imports_cli(
         .parent()
         .map(|p| p.to_string_lossy().to_string());
     with_type_checked_file(
+        None,
         cache,
         options,
         env,

@@ -66,7 +66,7 @@ use flow_server_env::server_env::OverlayErrorMap;
 use flow_server_env::server_env::OverlayErrors;
 use flow_server_env::server_env::env_cell;
 use flow_server_env::server_env::overlay_coverage;
-use flow_server_env::server_monitor_listener_state;
+use flow_server_env::server_orchestrator::ServerOrchestratorHandle;
 use flow_server_env::server_status;
 use flow_server_files::server_files_js;
 use flow_services_export::export_index::ExportIndex;
@@ -1190,14 +1190,24 @@ mod check_files {
 #[derive(Debug)]
 pub(crate) struct UnexpectedFileChanges(Vec<FileKey>);
 
-fn handle_unexpected_file_changes(changed_files: Vec<FileKey>) -> RecheckError {
+fn handle_unexpected_file_changes(
+    orchestrator: Option<&ServerOrchestratorHandle>,
+    changed_files: Vec<FileKey>,
+) -> RecheckError {
     let filename_set: BTreeSet<String> = changed_files.iter().map(FileKey::to_absolute).collect();
     let file_count = filename_set.len();
     flow_hh_logger::info!(
         "Canceling recheck due to {} unexpected file changes",
         file_count
     );
-    server_monitor_listener_state::push_files_to_prioritize(filename_set);
+    // `None` outside a server (codemods, `flow full-check`): there is no recheck loop to schedule
+    // the files for, so cancelling is the whole story.
+    if let Some(orchestrator) = orchestrator {
+        flow_server_env::server_monitor_listener_state::push_files_to_prioritize(
+            orchestrator.recheck(),
+            filename_set,
+        );
+    }
     RecheckError::Canceled(changed_files)
 }
 
@@ -1233,6 +1243,7 @@ fn ensure_parsed(
 }
 
 pub fn ensure_parsed_or_trigger_recheck(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
@@ -1241,7 +1252,7 @@ pub fn ensure_parsed_or_trigger_recheck(
     match ensure_parsed(pool, transaction, options, files) {
         Ok(()) => Ok(()),
         Err(UnexpectedFileChanges(changed_files)) => {
-            Err(handle_unexpected_file_changes(changed_files))
+            Err(handle_unexpected_file_changes(orchestrator, changed_files))
         }
     }
 }
@@ -1432,6 +1443,7 @@ pub(crate) mod recheck {
     }
 
     pub(crate) fn recheck_parse_and_update_dependency_info(
+        orchestrator: Option<&ServerOrchestratorHandle>,
         pool: &ThreadPool,
         transaction: &Arc<Transaction>,
         options: &Arc<Options>,
@@ -1652,7 +1664,9 @@ pub(crate) mod recheck {
         flow_hh_logger::info!("Re-resolving parsed and directly dependent files");
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
         ensure_parsed(pool, transaction, options, dirty_direct_dependents_set).map_err(
-            |UnexpectedFileChanges(changed_files)| handle_unexpected_file_changes(changed_files),
+            |UnexpectedFileChanges(changed_files)| {
+                handle_unexpected_file_changes(orchestrator, changed_files)
+            },
         )?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
         resolve_requires_for_recheck(pool, transaction, options, &parsed_set_for_resolve)?;
@@ -1764,6 +1778,7 @@ pub(crate) mod recheck {
 
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn recheck_merge(
+        orchestrator: Option<&ServerOrchestratorHandle>,
         pool: &ThreadPool,
         transaction: &Arc<Transaction>,
         options: &Arc<Options>,
@@ -1828,7 +1843,13 @@ pub(crate) mod recheck {
                 _ => {}
             }
             check_recheck_canceled()?;
-            ensure_parsed_or_trigger_recheck(pool, transaction, options, to_merge.dupe().all())?;
+            ensure_parsed_or_trigger_recheck(
+                orchestrator,
+                pool,
+                transaction,
+                options,
+                to_merge.dupe().all(),
+            )?;
             check_recheck_canceled()?;
             if dependent_file_count > 0 {
                 flow_hh_logger::info!("recheck {} dependent files:", dependent_file_count);
@@ -2007,6 +2028,7 @@ pub(crate) mod recheck {
 
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn full(
+        orchestrator: Option<&ServerOrchestratorHandle>,
         pool: &ThreadPool,
         transaction: &Arc<Transaction>,
         options: &Arc<Options>,
@@ -2028,6 +2050,7 @@ pub(crate) mod recheck {
     > {
         let def_info = &find_ref_request.def_info;
         let intermediate_values = recheck_parse_and_update_dependency_info(
+            orchestrator,
             pool,
             transaction,
             options,
@@ -2042,6 +2065,7 @@ pub(crate) mod recheck {
             DefInfo::NoDefinition(_) => false,
         };
         recheck_merge(
+            orchestrator,
             pool,
             transaction,
             options,
@@ -2055,6 +2079,7 @@ pub(crate) mod recheck {
     }
 
     pub(crate) fn parse_and_update_dependency_info(
+        orchestrator: Option<&ServerOrchestratorHandle>,
         pool: &ThreadPool,
         transaction: &Arc<Transaction>,
         options: &Arc<Options>,
@@ -2065,6 +2090,7 @@ pub(crate) mod recheck {
         env: &mut EnvTransaction,
     ) -> Result<(), RecheckError> {
         let intermediate_values = recheck_parse_and_update_dependency_info(
+            orchestrator,
             pool,
             transaction,
             options,
@@ -2101,6 +2127,7 @@ fn with_transaction_result<T, E>(
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn recheck_impl(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
@@ -2122,6 +2149,7 @@ pub(crate) fn recheck_impl(
     let (stats, record_recheck_time, find_ref_results, first_internal_error) =
         match side_effect_transaction::with_transaction_result_sync("recheck", |side_effects| {
             recheck::full(
+                orchestrator,
                 pool,
                 transaction,
                 options,
@@ -3151,6 +3179,7 @@ pub fn init_from_saved_state(
 }
 
 pub fn handle_updates_since_saved_state(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     mut transaction: ActiveTransaction,
@@ -3178,6 +3207,7 @@ pub fn handle_updates_since_saved_state(
         let find_ref_request = flow_services_references::find_refs_types::empty_request();
         let mut env_transaction = EnvTransaction::new(Arc::new(env));
         let (_log_recheck_event, _summary_info, _find_ref_results) = recheck_impl(
+            orchestrator,
             pool,
             &transaction.handle(),
             options,
@@ -3202,6 +3232,7 @@ pub fn handle_updates_since_saved_state(
             let mut env_transaction = EnvTransaction::new(env.dupe());
             match with_transaction_result("lazy init update deps", |side_effects| {
                 recheck::parse_and_update_dependency_info(
+                    orchestrator,
                     pool,
                     &transaction.handle(),
                     options,
@@ -3513,6 +3544,7 @@ pub fn load_saved_state(
 }
 
 pub fn init(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
@@ -3531,6 +3563,7 @@ pub fn init(
                 None,
             );
             let (env, transaction) = handle_updates_since_saved_state(
+                orchestrator,
                 pool,
                 committed_heap,
                 transaction,
@@ -3557,13 +3590,20 @@ pub fn init(
         (env, None)
     } else if options.lazy_mode {
         match focus_targets {
-            None => libdef_check_for_lazy_init(options, pool, &transaction.handle(), env)?,
-            Some(focus_targets) => {
-                focus_check_for_init(options, pool, &transaction.handle(), focus_targets, env)?
+            None => {
+                libdef_check_for_lazy_init(orchestrator, options, pool, &transaction.handle(), env)?
             }
+            Some(focus_targets) => focus_check_for_init(
+                orchestrator,
+                options,
+                pool,
+                &transaction.handle(),
+                focus_targets,
+                env,
+            )?,
         }
     } else {
-        full_check_for_init(options, pool, &transaction.handle(), env)?
+        full_check_for_init(orchestrator, options, pool, &transaction.handle(), env)?
     };
 
     let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
@@ -3572,6 +3612,7 @@ pub fn init(
 
 #[allow(clippy::too_many_arguments)]
 fn reinit(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
@@ -3635,11 +3676,14 @@ fn reinit(
     all_updates.union(updates.dupe());
     *will_be_checked_files = all_updates.clone();
     will_be_checked_files.union(files_to_force.dupe());
-    server_monitor_listener_state::push_after_reinit(
-        Some(all_updates.dependencies().dupe()),
-        Some(all_updates.focused().dupe()),
-        Some(files_to_force),
-    );
+    if let Some(orchestrator) = orchestrator {
+        flow_server_env::server_monitor_listener_state::push_after_reinit(
+            orchestrator.recheck(),
+            Some(all_updates.dependencies().dupe()),
+            Some(all_updates.focused().dupe()),
+            Some(files_to_force),
+        );
+    }
 
     let reason = reason.to_string();
     let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(move |profiling| {
@@ -3655,6 +3699,7 @@ fn reinit(
 }
 
 fn reinit_full_check(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
@@ -3706,11 +3751,14 @@ fn reinit_full_check(
     all_checked_set.union(updates.dupe());
     *will_be_checked_files = all_checked_set.dupe();
 
-    server_monitor_listener_state::push_after_reinit(
-        Some(all_checked_set.focused().dupe()),
-        Some(all_checked_set.focused().dupe()),
-        Some(all_checked_set),
-    );
+    if let Some(orchestrator) = orchestrator {
+        flow_server_env::server_monitor_listener_state::push_after_reinit(
+            orchestrator.recheck(),
+            Some(all_checked_set.focused().dupe()),
+            Some(all_checked_set.focused().dupe()),
+            Some(all_checked_set),
+        );
+    }
 
     let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(|profiling| {
         flow_event_logger::reinit_full_check(profiling);
@@ -3726,6 +3774,7 @@ fn reinit_full_check(
 
 #[allow(clippy::too_many_arguments)]
 pub fn recheck(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
@@ -3754,6 +3803,7 @@ pub fn recheck(
         // by adding focused files to [updates] (rechecker.ml).
         if incompatible_lib_change {
             reinit_full_check(
+                orchestrator,
                 pool,
                 committed_heap,
                 options,
@@ -3766,6 +3816,7 @@ pub fn recheck(
             let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
             let (log_recheck_event, recheck_stats, find_ref_results) = recheck_impl(
+                orchestrator,
                 pool,
                 &heap_transaction.handle(),
                 options,
@@ -3790,6 +3841,7 @@ pub fn recheck(
             }
             // allow_fallback is false, so reinit exits on error and always returns Some
             reinit(
+                orchestrator,
                 pool,
                 committed_heap,
                 options,
@@ -3811,6 +3863,7 @@ pub fn recheck(
                 "Libdef changed with mergebase change; trying saved-state reinit first"
             );
             match reinit(
+                orchestrator,
                 pool,
                 committed_heap,
                 options,
@@ -3827,6 +3880,7 @@ pub fn recheck(
                         "Saved-state reinit failed; falling back to reinit_full_check"
                     );
                     reinit_full_check(
+                        orchestrator,
                         pool,
                         committed_heap,
                         options,
@@ -3850,6 +3904,7 @@ pub fn recheck(
             let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
             match recheck_impl(
+                orchestrator,
                 pool,
                 &heap_transaction.handle(),
                 options,
@@ -3882,6 +3937,7 @@ pub fn recheck(
 }
 
 pub fn check_files_for_init(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
@@ -3926,7 +3982,13 @@ pub fn check_files_for_init(
             implementation_dependency_graph,
             sig_dependency_graph,
         );
-        ensure_parsed_or_trigger_recheck(pool, transaction, options, to_merge.dupe().all())?;
+        ensure_parsed_or_trigger_recheck(
+            orchestrator,
+            pool,
+            transaction,
+            options,
+            to_merge.dupe().all(),
+        )?;
         let merge_result = merge(
             pool,
             transaction,
@@ -4075,6 +4137,7 @@ pub fn check_files_for_init(
 }
 
 pub fn libdef_check_for_lazy_init(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
@@ -4085,17 +4148,27 @@ pub fn libdef_check_for_lazy_init(
         .iter()
         .map(|n| files::lib_file_key(n))
         .collect();
-    check_files_for_init(options, pool, transaction, parsed, "lazy init check", env)
+    check_files_for_init(
+        orchestrator,
+        options,
+        pool,
+        transaction,
+        parsed,
+        "lazy init check",
+        env,
+    )
 }
 
 pub fn focus_check_for_init(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     focus_targets: FlowOrdSet<FileKey>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
-    let (env, first_internal_error) = libdef_check_for_lazy_init(options, pool, transaction, env)?;
+    let (env, first_internal_error) =
+        libdef_check_for_lazy_init(orchestrator, options, pool, transaction, env)?;
     let files_to_force = {
         let mut checked_set = CheckedSet::empty();
         checked_set.add(Some(focus_targets), None, None);
@@ -4104,6 +4177,7 @@ pub fn focus_check_for_init(
     let mut will_be_checked_files = files_to_force.dupe();
     let mut env_transaction = EnvTransaction::new(Arc::new(env));
     let (_, _, _) = recheck_impl(
+        orchestrator,
         pool,
         transaction,
         options,
@@ -4118,13 +4192,22 @@ pub fn focus_check_for_init(
 }
 
 pub fn full_check_for_init(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let parsed = env.files.dupe();
-    check_files_for_init(options, pool, transaction, parsed, "full check", env)
+    check_files_for_init(
+        orchestrator,
+        options,
+        pool,
+        transaction,
+        parsed,
+        "full check",
+        env,
+    )
 }
 
 pub fn check_once(
@@ -4150,13 +4233,20 @@ pub fn check_once(
     let env = if libs_ok {
         let (env, _first_internal_error) = if options.lazy_mode {
             match focus_targets {
-                None => libdef_check_for_lazy_init(&options, pool, &transaction.handle(), env),
-                Some(focus_targets) => {
-                    focus_check_for_init(&options, pool, &transaction.handle(), focus_targets, env)
+                None => {
+                    libdef_check_for_lazy_init(None, &options, pool, &transaction.handle(), env)
                 }
+                Some(focus_targets) => focus_check_for_init(
+                    None,
+                    &options,
+                    pool,
+                    &transaction.handle(),
+                    focus_targets,
+                    env,
+                ),
             }
         } else {
-            full_check_for_init(&options, pool, &transaction.handle(), env)
+            full_check_for_init(None, &options, pool, &transaction.handle(), env)
         }
         .expect("Unexpected file changes during full check");
         env

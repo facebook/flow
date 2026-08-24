@@ -32,6 +32,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
+use flow_server_env::server_orchestrator::ServerOrchestratorHandle;
 use flow_server_env::server_prot::response;
 use flow_server_env::server_prot::type_of_name_options;
 use flow_services_autocomplete::find_documentation;
@@ -570,6 +571,7 @@ fn find_first_match<'a>(
 }
 
 fn resolve_name_from_index(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
@@ -644,6 +646,7 @@ fn resolve_name_from_index(
     let parse_result =
         type_contents::parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
     match type_contents::type_parse_artifacts(
+        orchestrator,
         cache,
         options,
         env.all_unordered_libs.dupe(),
@@ -669,6 +672,7 @@ fn resolve_name_from_index(
 }
 
 fn type_of_name_from_index(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     doc_at_loc: &dyn Fn(
         &Transaction,
@@ -687,6 +691,7 @@ fn type_of_name_from_index(
     file_key: FileKey,
 ) -> Result<response::infer_type_of_name::T, String> {
     let (actual_name, source, check_result, aloc, type_) = resolve_name_from_index(
+        orchestrator,
         cache,
         options,
         reader.dupe(),
@@ -715,6 +720,7 @@ fn type_of_name_from_index(
 }
 
 fn type_of_name_single<'a, 'cx: 'a>(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
@@ -752,6 +758,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
                     &type_,
                 ),
                 None => type_of_name_from_index(
+                    orchestrator,
                     cache,
                     doc_at_loc,
                     options,
@@ -791,6 +798,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
                 None => {
                     let (actual_base_name, source, index_check_result, _aloc, type_) =
                         resolve_name_from_index(
+                            orchestrator,
                             cache,
                             options,
                             reader.dupe(),
@@ -815,6 +823,7 @@ fn type_of_name_single<'a, 'cx: 'a>(
 }
 
 pub fn type_of_name<'a, 'cx: 'a>(
+    orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
     options: &Options,
     reader: Arc<Transaction>,
@@ -844,6 +853,7 @@ pub fn type_of_name<'a, 'cx: 'a>(
         .iter()
         .map(|target_name| {
             type_of_name_single(
+                orchestrator,
                 cache,
                 options,
                 reader.dupe(),
