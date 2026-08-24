@@ -694,8 +694,8 @@ pub fn get(
     (errors, warnings, all_suppressed)
 }
 
-/// Returns the collated error set plus the warning map. Keep the read lock
-/// scoped to this function so client sends do not block recheck commits.
+/// Returns the collated error set plus the warning map, with the read lock scoped to this
+/// function so the returned value outlives no guard.
 pub fn get_with_separate_warnings(
     env: &Env,
 ) -> (

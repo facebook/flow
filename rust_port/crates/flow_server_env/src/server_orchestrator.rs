@@ -15,10 +15,13 @@ use crossbeam::channel::Receiver;
 use crossbeam::channel::Sender;
 use dupe::Dupe;
 use flow_check_cache::CheckContentsCache;
+use flow_common::options::Options;
 use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
 
+use crate::error_collator;
 use crate::lsp_prot::ClientId;
+use crate::lsp_prot::ErrorsReason;
 use crate::persistent_connection;
 use crate::server_env::EnvRef;
 use crate::server_env::with_connections;
@@ -61,11 +64,12 @@ enum Control {
     RecheckStarted {
         reply: std::sync::mpsc::Sender<RecheckSnapshot>,
     },
-    /// Commits and publishes a new Base and `Env` on the executor thread.
+    /// Commits and publishes a new Base and `Env` on the executor thread, then tells subscribed
+    /// clients the recheck is over.
     CommitRecheck {
         commit: Box<dyn FnOnce() -> EnvRef + Send>,
         completed_recheck_epoch: u64,
-        reply: std::sync::mpsc::Sender<EnvRef>,
+        reply: std::sync::mpsc::Sender<()>,
     },
     /// Ends a recheck series by publishing its completed epoch.
     FinishRecheck {
@@ -120,6 +124,7 @@ struct CommandExecutor {
     control: Sender<Control>,
     controls: Receiver<Control>,
     workloads: Arc<WorkloadStream>,
+    options: Arc<Options>,
 }
 
 /// The lifetime owner of a started command executor.
@@ -145,7 +150,7 @@ impl Drop for RunningServerOrchestrator {
 }
 
 impl ServerOrchestrator {
-    pub fn new() -> Self {
+    pub fn new(options: Arc<Options>) -> Self {
         let (control, controls) = channel::unbounded();
         let workloads = Arc::new(WorkloadStream::create());
         let handle = ServerOrchestratorHandle {
@@ -157,6 +162,7 @@ impl ServerOrchestrator {
                 control,
                 controls,
                 workloads,
+                options,
             },
         }
     }
@@ -167,12 +173,6 @@ impl ServerOrchestrator {
 
     pub fn start(self, env: EnvRef) -> RunningServerOrchestrator {
         self.executor.start(env)
-    }
-}
-
-impl Default for ServerOrchestrator {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -232,7 +232,7 @@ impl ServerOrchestratorHandle {
         &self,
         commit: impl FnOnce() -> EnvRef + Send + 'static,
         completed_recheck_epoch: u64,
-    ) -> EnvRef {
+    ) {
         let (reply, receiver) = std::sync::mpsc::channel();
         self.control
             .send(Control::CommitRecheck {
@@ -243,7 +243,7 @@ impl ServerOrchestratorHandle {
             .expect("the command executor should be running");
         receiver
             .recv()
-            .expect("the command executor should commit and publish the recheck")
+            .expect("the command executor should commit and publish the recheck");
     }
 
     pub fn finish_recheck(&self, completed_recheck_epoch: u64) {
@@ -309,6 +309,7 @@ impl ServerOrchestratorHandle {
 /// on independent locks, flags, or cache-generation checks.
 struct State {
     env: EnvRef,
+    options: Arc<Options>,
     workloads: Arc<WorkloadStream>,
     latest_pending_recheck_epoch: u64,
     completed_recheck_epoch: u64,
@@ -327,9 +328,10 @@ fn should_hold_serial_commands(
 }
 
 impl State {
-    fn new(env: EnvRef, workloads: Arc<WorkloadStream>) -> Self {
+    fn new(env: EnvRef, options: Arc<Options>, workloads: Arc<WorkloadStream>) -> Self {
         Self {
             env,
+            options,
             workloads,
             latest_pending_recheck_epoch: 0,
             completed_recheck_epoch: 0,
@@ -353,6 +355,24 @@ impl State {
             }
         };
         self.env = with_connections(self.env.dupe(), connections);
+    }
+
+    /// Tells subscribed clients that the recheck is over, reading the `Env` the executor has just
+    /// published rather than lending it out for someone else to read.
+    ///
+    /// We must send "end_recheck" prior to sending errors+warnings so the client knows that this
+    /// set of errors+warnings are the final ones, not incremental.
+    fn publish_recheck_end(&self) {
+        let lazy_stats = self.env.lazy_stats(&self.options);
+        persistent_connection::send_end_recheck(lazy_stats, &self.env.connections);
+
+        persistent_connection::update_clients(
+            &self.env.connections,
+            ErrorsReason::EndOfRecheck,
+            || error_collator::get_with_separate_warnings(&self.env),
+        );
+
+        crate::monitor_rpc::status_update(server_status::Event::FinishingUp);
     }
 
     fn handle_control(&mut self, control: Control) {
@@ -389,7 +409,8 @@ impl State {
                 let connections = self.env.connections.dupe();
                 self.env = with_connections(commit(), connections);
                 self.publish_recheck(completed_recheck_epoch, true);
-                let _result = reply.send(self.env.dupe());
+                self.publish_recheck_end();
+                let _result = reply.send(());
             }
             Control::FinishRecheck {
                 completed_recheck_epoch,
@@ -538,7 +559,7 @@ fn run_ready(
 
 impl CommandExecutor {
     fn run(self, env: EnvRef, started: std::sync::mpsc::Sender<()>) {
-        let mut state = State::new(env, self.workloads);
+        let mut state = State::new(env, self.options, self.workloads);
         let mut pending_heap_slice = None;
         if !run_ready(&mut state, &self.controls, &mut pending_heap_slice) {
             return;

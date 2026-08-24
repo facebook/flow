@@ -418,7 +418,7 @@ fn run(
 
     flow_server_rechecker::rechecker::init_tokio_runtime();
 
-    let server_orchestrator = server_orchestrator::ServerOrchestrator::new();
+    let server_orchestrator = server_orchestrator::ServerOrchestrator::new(options.clone());
     let orchestrator = server_orchestrator.handle();
 
     let genv_arc = Arc::new(create_program_init(options.clone()));
@@ -635,7 +635,7 @@ where
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         let (env, first_internal_error) = init(profiling, focus_targets, &genv)?;
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
-        let lazy_stats = flow_server_rechecker::rechecker::get_lazy_stats(&options, &env);
+        let lazy_stats = env.lazy_stats(&options);
         let lazy_msg = if lazy_stats.lazy_mode {
             Some(format!(
                 "Checked {}/{} files.",

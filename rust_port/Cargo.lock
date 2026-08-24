@@ -1343,7 +1343,6 @@ dependencies = [
 name = "flow_server"
 version = "0.0.0"
 dependencies = [
- "crossbeam",
  "flow_aloc",
  "flow_cgroup",
  "flow_common",
@@ -1367,7 +1366,6 @@ dependencies = [
  "flow_server_files",
  "flow_server_rechecker",
  "flow_services_inference",
- "flow_services_references",
  "flow_tokio_runtime",
  "flow_typing_errors",
  "flow_utils_concurrency",
@@ -1401,7 +1399,6 @@ dependencies = [
  "flow_parsing",
  "flow_saved_state",
  "flow_server_env",
- "flow_server_rechecker",
  "flow_server_utils",
  "flow_services_autocomplete",
  "flow_services_code_action",

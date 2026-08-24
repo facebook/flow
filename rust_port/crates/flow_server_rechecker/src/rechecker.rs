@@ -15,7 +15,6 @@ use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
-use flow_server_env::error_collator;
 use flow_server_env::lsp_prot;
 use flow_server_env::monitor_rpc;
 use flow_server_env::persistent_connection;
@@ -24,7 +23,6 @@ use flow_server_env::server_monitor_listener_state;
 use flow_server_env::server_monitor_listener_state::Priority;
 use flow_server_env::server_monitor_listener_state::Updates;
 use flow_server_env::server_orchestrator;
-use flow_server_env::server_prot;
 use flow_server_env::server_status;
 use flow_services_inference::type_service;
 use flow_services_references::find_refs_types;
@@ -43,22 +41,6 @@ pub struct ProfilingFinished {
 impl ProfilingFinished {
     pub fn get_profiling_duration(&self) -> f64 {
         self.duration
-    }
-}
-pub fn get_lazy_stats(
-    options: &Options,
-    env: &server_env::Env,
-) -> server_prot::response::LazyStats {
-    // Report only focused + dependents as "checked" files. Dependencies are only
-    // merged (signatures computed) but not type-checked, so they shouldn't count
-    // toward the user-visible "checking N files" number.
-    let checked_files =
-        (env.checked_files.focused_cardinal() + env.checked_files.dependents_cardinal()) as i32;
-    let total_files = env.files.len() as i32;
-    server_prot::response::LazyStats {
-        lazy_mode: options.lazy_mode,
-        checked_files,
-        total_files,
     }
 }
 
@@ -85,21 +67,6 @@ pub fn process_updates(
 fn send_start_recheck(env: &server_env::Env) {
     monitor_rpc::status_update(server_status::Event::RecheckStart);
     persistent_connection::send_start_recheck(&env.connections);
-}
-
-// We must send "end_recheck" prior to sending errors+warnings so the client
-// knows that this set of errors+warnings are final ones, not incremental.
-fn send_end_recheck(options: &Options, env: &server_env::Env) {
-    let lazy_stats = get_lazy_stats(options, env);
-    persistent_connection::send_end_recheck(lazy_stats, &env.connections);
-
-    persistent_connection::update_clients(
-        &env.connections,
-        lsp_prot::ErrorsReason::EndOfRecheck,
-        || error_collator::get_with_separate_warnings(env),
-    );
-
-    monitor_rpc::status_update(server_status::Event::FinishingUp);
 }
 
 fn persistent_server_logging_context() -> lsp_prot::LoggingContext {
@@ -161,7 +128,7 @@ fn recheck(
             unreachable!("TooSlow is handled inside type_service::recheck");
         }
     };
-    let env = orchestrator.commit_recheck(|| prepared.commit(), recheck_epoch);
+    orchestrator.commit_recheck(|| prepared.commit(), recheck_epoch);
 
     if let Some(server_monitor_listener_state::FindRefCommand {
         client_id,
@@ -178,8 +145,6 @@ fn recheck(
             persistent_connection::send_response((response, metadata), &client);
         }
     }
-
-    send_end_recheck(options, &env);
 
     let duration = recheck_start.elapsed().as_secs_f64();
     let profiling = ProfilingFinished { duration };

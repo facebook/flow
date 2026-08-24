@@ -6,7 +6,6 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-crossbeam = "0.8"
 flow_aloc = { path = "../flow_aloc" }
 flow_cgroup = { path = "../flow_cgroup" }
 flow_common = { path = "../flow_common" }
@@ -30,7 +29,6 @@ flow_server_env = { path = "../flow_server_env" }
 flow_server_files = { path = "../flow_server_files" }
 flow_server_rechecker = { path = "../flow_server_rechecker" }
 flow_services_inference = { path = "../flow_services_inference" }
-flow_services_references = { path = "../flow_services_references" }
 flow_tokio_runtime = { path = "../flow_tokio_runtime" }
 flow_typing_errors = { path = "../flow_typing_errors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }

@@ -35,6 +35,7 @@ use crate::collated_errors::OverlayCollatedErrors;
 use crate::dependency_info::DependencyInfo;
 use crate::dependency_info::OverlayDependencyInfo;
 use crate::persistent_connection::PersistentConnection;
+use crate::server_prot::response::LazyStats;
 
 // The "static" environment, initialized first and then unchanged.
 
@@ -182,6 +183,19 @@ pub struct Env {
 pub type EnvRef = Arc<Env>;
 
 impl Env {
+    /// Report only focused + dependents as "checked" files. Dependencies are only merged
+    /// (signatures computed) but not type-checked, so they shouldn't count toward the
+    /// user-visible "checking N files" number.
+    pub fn lazy_stats(&self, options: &Options) -> LazyStats {
+        let checked_files = (self.checked_files.focused_cardinal()
+            + self.checked_files.dependents_cardinal()) as i32;
+        LazyStats {
+            lazy_mode: options.lazy_mode,
+            checked_files,
+            total_files: self.files.len() as i32,
+        }
+    }
+
     pub fn dependency_info(&self) -> EnvCellReadGuard<DependencyInfo> {
         self.dependency_info.read_arc()
     }

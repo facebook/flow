@@ -27,7 +27,6 @@ flow_parser_utils_output = { path = "../flow_parser_utils_output" }
 flow_parsing = { path = "../flow_parsing" }
 flow_saved_state = { path = "../flow_saved_state" }
 flow_server_env = { path = "../flow_server_env" }
-flow_server_rechecker = { path = "../flow_server_rechecker" }
 flow_server_utils = { path = "../flow_server_utils" }
 flow_services_autocomplete = { path = "../flow_services_autocomplete" }
 flow_services_code_action = { path = "../flow_services_code_action" }

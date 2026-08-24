@@ -681,7 +681,7 @@ fn get_status(
     server_prot::response::StatusResponse,
     flow_server_env::server_prot::response::LazyStats,
 ) {
-    let lazy_stats = flow_server_rechecker::rechecker::get_lazy_stats(options, env);
+    let lazy_stats = env.lazy_stats(options);
     let status_response = {
         let (errors, warnings, suppressed_errors) = {
             if options.include_suppressions {
