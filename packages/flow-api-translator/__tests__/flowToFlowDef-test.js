@@ -278,10 +278,16 @@ describe('flowToFlowDef', () => {
         `declare export function foo(): void;`,
       );
     });
-    it('without return type', async () => {
+    it('sync without return type', async () => {
       await expectTranslate(
         `export function foo() {}`,
         `declare export function foo(): void;`,
+      );
+    });
+    it('async without return type', async () => {
+      await expectTranslate(
+        `export async function foo() {}`,
+        `declare export function foo(): Promise<void>;`,
       );
     });
     it('with type params', async () => {
@@ -438,6 +444,16 @@ describe('flowToFlowDef', () => {
       );
       await expectTranslate(
         `export class A {
+           foo = async () => {};
+           static foo = async () => {};
+         }`,
+        `declare export class A {
+           foo: () => Promise<void>;
+           static foo: () => Promise<void>;
+         }`,
+      );
+      await expectTranslate(
+        `export class A {
            foo: (val: string) => number = (val: string) => { return 1 };
            static foo: (val: string) => number = (val: string) => { return 1 };
          }`,
@@ -470,6 +486,16 @@ describe('flowToFlowDef', () => {
            foo(): void;
            /** static bar documentation */
            static bar(): void;
+         }`,
+      );
+      await expectTranslate(
+        `export class A {
+           async foo() {}
+           static async bar() {}
+         }`,
+        `declare export class A {
+           foo(): Promise<void>;
+           static bar(): Promise<void>;
          }`,
       );
       await expectTranslate(
@@ -846,6 +872,10 @@ describe('flowToFlowDef', () => {
       });
       it('methods', async () => {
         await expectTranslateExpression(`{foo() {}}`, `{foo(): void}`);
+        await expectTranslateExpression(
+          `{async foo() {}}`,
+          `{foo(): Promise<void>}`,
+        );
         await expectTranslateExpression(`{1() {}}`, `{1(): void}`);
         await expectTranslateExpression(`{'foo'() {}}`, `{foo(): void}`);
         await expectTranslateExpression(`{get foo() {}}`, `{get foo(): void}`);
@@ -908,6 +938,10 @@ describe('flowToFlowDef', () => {
       it('basic', async () => {
         await expectTranslateExpression(`function foo() {}`, `() => void`);
         await expectTranslateExpression(
+          `async function foo() {}`,
+          `() => Promise<void>`,
+        );
+        await expectTranslateExpression(
           `function foo<T>(baz: T, bar: string) {}`,
           `<T>(baz: T, bar: string) => void`,
         );
@@ -916,6 +950,10 @@ describe('flowToFlowDef', () => {
     describe('ArrowFunctionExpression', () => {
       it('basic', async () => {
         await expectTranslateExpression(`() => {}`, `() => void`);
+        await expectTranslateExpression(
+          `async () => {}`,
+          `() => Promise<void>`,
+        );
         await expectTranslateExpression(
           `<T>(baz: T, bar: string) => {}`,
           `<T>(baz: T, bar: string) => void`,

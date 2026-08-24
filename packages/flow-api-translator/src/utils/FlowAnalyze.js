@@ -22,9 +22,19 @@ export function analyzeFunctionReturn(func: AFunction): TypeAnnotation {
     return returnType;
   }
 
-  // We trust Flow has validated this function to only return void
+  const voidType = t.VoidTypeAnnotation();
+
+  // We trust Flow has validated this function to only return void. Async
+  // functions always wrap that return value in a Promise.
   // $FlowFixMe[incompatible-type]
-  return t.TypeAnnotation({typeAnnotation: t.VoidTypeAnnotation()});
+  return t.TypeAnnotation({
+    typeAnnotation: func.async
+      ? t.GenericTypeAnnotation({
+          id: t.Identifier({name: 'Promise'}),
+          typeParameters: t.TypeParameterInstantiation({params: [voidType]}),
+        })
+      : voidType,
+  });
 }
 
 export function analyzeTypeDependencies(
