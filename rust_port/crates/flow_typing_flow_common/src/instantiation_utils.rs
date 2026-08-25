@@ -14,7 +14,6 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::locationless_reason;
 use flow_common::reason::mk_reason;
-use flow_data_structure_wrapper::vector::FlowVector;
 use flow_typing_context::Context;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
@@ -93,10 +92,10 @@ pub mod implicit_type_argument {
 // and is contained in Ai.
 
 pub mod type_app_expansion {
-    use flow_typing_context::type_app_expansion::Bound;
-    use flow_typing_context::type_app_expansion::Entry;
-    use flow_typing_context::type_app_expansion::Root;
-    use flow_typing_context::type_app_expansion::RootSet;
+    use flow_typing_flow_js_env::FlowJsEnv;
+    use flow_typing_flow_js_env::type_app_expansion::Bound;
+    use flow_typing_flow_js_env::type_app_expansion::Root;
+    use flow_typing_flow_js_env::type_app_expansion::RootSet;
 
     use super::*;
 
@@ -154,82 +153,30 @@ pub mod type_app_expansion {
         collector.type_(cx, Polarity::Neutral, RootSet::new(), t)
     }
 
-    // Say that targs are possibly expanding when, given previous targs and
-    // current targs, each previously non-empty targ is contained in the
-    // corresponding current targ.
-    fn possibly_expanding_targs(prev_tss: &[RootSet], tss: &[RootSet]) -> bool {
-        let mut seen_nonempty_prev_ts = false;
-        let mut prev_iter = prev_tss.iter();
-        let mut curr_iter = tss.iter();
-
-        loop {
-            match (prev_iter.next(), curr_iter.next()) {
-                (Some(prev_ts), Some(ts)) => {
-                    // if prev_ts is not a subset of ts, we have found a counterexample
-                    // and we can bail out
-                    if !prev_ts.is_subset(ts) {
-                        return false;
-                    }
-                    // otherwise, we recurse on the remaining targs, updating the bit
-                    seen_nonempty_prev_ts = seen_nonempty_prev_ts || !prev_ts.is_empty();
-                }
-                // we have found no counterexamples, so it comes down to whether we've
-                // seen any non-empty prev_ts
-                (None, None) => return seen_nonempty_prev_ts,
-                // something's wrong around arities, but that's not our problem, so bail out
-                _ => return false,
-            }
-        }
-    }
-
-    // Detect whether pushing would cause a loop. Push only if no loop is
-    // detected, and return whether push happened.
-    pub fn push_unless_loop<'cx>(cx: &Context<'cx>, side: Bound, c: &Type, ts: &[Type]) -> bool {
+    /// Detect whether expanding `c<ts>` would loop. Returns the env to expand
+    /// under, or [`None`] if the expansion limit has been reached.
+    pub fn push_unless_loop<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        side: Bound,
+        c: &Type,
+        ts: &[Type],
+    ) -> Option<FlowJsEnv> {
         let tss: Vec<RootSet> = ts.iter().map(|t| collect_roots(cx, t)).collect();
         let limit = cx.type_expansion_recursion_limit();
-        let mut is_loop = false;
-        {
-            let stack = cx.instantiation_stack();
-            let mut count = 0;
-
-            for Entry(prev_c, prev_tss, prev_side) in stack.iter() {
-                if c == prev_c && possibly_expanding_targs(prev_tss, &tss) && side == *prev_side {
-                    count += 1;
-                    if count >= limit {
-                        is_loop = true;
-                        break;
-                    }
+        match env.push_typeapp_unless_loop(limit, side, c, tss) {
+            None => {
+                if cx.is_verbose() {
+                    eprintln!("encountered the same TypeAppT again for {} times", limit);
                 }
+                None
+            }
+            Some(env) => {
+                if cx.is_verbose() {
+                    eprintln!("typeapp stack entry pushed");
+                }
+                Some(env)
             }
         }
-
-        if is_loop {
-            if cx.is_verbose() {
-                eprintln!("encountered the same TypeAppT again for {} times", limit);
-            }
-            false
-        } else {
-            cx.instantiation_stack_mut()
-                .push(Entry(c.dupe(), tss, side));
-            if cx.is_verbose() {
-                eprintln!("typeapp stack entry pushed");
-            }
-            true
-        }
-    }
-
-    pub fn pop<'cx>(cx: &Context<'cx>) {
-        let mut stack = cx.instantiation_stack_mut();
-        if !stack.is_empty() {
-            stack.pop();
-        }
-    }
-
-    pub fn get<'cx>(cx: &Context<'cx>) -> FlowVector<Entry> {
-        cx.instantiation_stack().dupe()
-    }
-
-    pub fn set<'cx>(cx: &Context<'cx>, new_stack: FlowVector<Entry>) {
-        *cx.instantiation_stack_mut() = new_stack;
     }
 }

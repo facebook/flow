@@ -35,6 +35,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::SpeculativeError;
 use flow_typing_flow_common::obj_type;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::DefT;
@@ -837,10 +838,15 @@ pub fn spread_mk_object<'cx>(
 
 pub fn object_spread<'cx, A>(
     dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
-    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         UseOp,
         &Reason,
         object::ResolveTool,
@@ -850,6 +856,46 @@ pub fn object_spread<'cx, A>(
     options: &object::spread::Target,
     state: object::spread::State,
     cx: &Context<'cx>,
+    use_op: UseOp,
+    reason: &Reason,
+    x: Vec1<object::Slice>,
+) -> Result<A, FlowJsException> {
+    object_spread_with_env::<A>(
+        dict_check,
+        add_output,
+        return_,
+        recurse,
+        options,
+        state,
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        x,
+    )
+}
+
+pub fn object_spread_with_env<'cx, A>(
+    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    recurse: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        UseOp,
+        &Reason,
+        object::ResolveTool,
+        object::Tool,
+        Type,
+    ) -> Result<A, FlowJsException>,
+    options: &object::spread::Target,
+    state: object::spread::State,
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -867,6 +913,7 @@ pub fn object_spread<'cx, A>(
             {
                 add_output(
                     cx,
+                    env,
                     ErrorMessage::EIncompatibleWithExact(
                         (slice.reason.dupe(), reason.dupe()),
                         use_op.dupe(),
@@ -925,6 +972,7 @@ pub fn object_spread<'cx, A>(
             flow_typing_spread_cache::get_error_groups(cache, spread_id);
         add_output(
             cx,
+            env,
             ErrorMessage::EExponentialSpread(Box::new(EExponentialSpreadData {
                 reason: reason.dupe(),
                 reasons_for_operand1,
@@ -953,7 +1001,7 @@ pub fn object_spread<'cx, A>(
                     curr_resolve_idx,
                 };
                 let tool = object::Tool::Spread(Box::new((options.clone(), state)));
-                return recurse(cx, use_op.dupe(), &reason, resolve_tool, tool, t);
+                return recurse(cx, env, use_op.dupe(), &reason, resolve_tool, tool, t);
             }
             object::spread::Operand::Slice(operand_slice) => {
                 acc.push_front(resolved);
@@ -991,7 +1039,7 @@ pub fn object_spread<'cx, A>(
             }
         }
         Err(FlowJsException::Speculative(e)) => {
-            add_output(cx, *e.0)?;
+            add_output(cx, env, *e.0)?;
             any_t::error(reason.dupe())
         }
         Err(other) => return Err(other),
@@ -1069,10 +1117,15 @@ fn check_config2<'cx>(
 }
 
 pub fn check_component_config<'cx, A>(
-    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     pmap: &properties::PropertiesMap,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -1085,6 +1138,7 @@ pub fn check_component_config<'cx, A>(
                 let duplicates = Vec1::try_from_vec(duplicate_props_in_spread).unwrap();
                 add_output(
                     cx,
+                    env,
                     ErrorMessage::EDuplicateComponentProp(Box::new(EDuplicateComponentPropData {
                         spread: xelt.reason.loc().dupe(),
                         duplicates,
@@ -1116,7 +1170,11 @@ pub fn check_component_config<'cx, A>(
 // ***************
 
 pub fn object_rest<'cx, A>(
-    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(
         &Context<'cx>,
         Box<dyn Fn(Polarity) -> UseOp>,
@@ -1125,6 +1183,7 @@ pub fn object_rest<'cx, A>(
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         UseOp,
         &Reason,
         object::ResolveTool,
@@ -1135,6 +1194,51 @@ pub fn object_rest<'cx, A>(
     options: &object::rest::MergeMode,
     state: &object::rest::State,
     cx: &Context<'cx>,
+    use_op: UseOp,
+    reason: &Reason,
+    x: Vec1<object::Slice>,
+) -> Result<A, FlowJsException> {
+    object_rest_with_env::<A>(
+        add_output,
+        return_,
+        recurse,
+        subt_check,
+        options,
+        state,
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        x,
+    )
+}
+
+pub fn object_rest_with_env<'cx, A>(
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(
+        &Context<'cx>,
+        Box<dyn Fn(Polarity) -> UseOp>,
+        object::rest::MergeMode,
+        Type,
+    ) -> Result<A, FlowJsException>,
+    recurse: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        UseOp,
+        &Reason,
+        object::ResolveTool,
+        object::Tool,
+        Type,
+    ) -> Result<A, FlowJsException>,
+    subt_check: &dyn Fn(UseOp, &Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
+    options: &object::rest::MergeMode,
+    state: &object::rest::State,
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -1288,7 +1392,7 @@ pub fn object_rest<'cx, A>(
                                 suggestion: None,
                             },
                         ));
-                        add_output(cx, err)?;
+                        add_output(cx, env, err)?;
                     }
                     None
                 }
@@ -1355,7 +1459,7 @@ pub fn object_rest<'cx, A>(
             let resolve_tool = object::ResolveTool::Resolve(object::Resolve::Next);
             let state = object::rest::State::Done(object::Resolved(x));
             let tool = object::Tool::Rest(Box::new((*options, state)));
-            recurse(cx, use_op, reason, resolve_tool, tool, t.dupe())
+            recurse(cx, env, use_op, reason, resolve_tool, tool, t.dupe())
         }
         object::rest::State::Done(base) => {
             let mut xs: Vec<Type> = Vec::new();
@@ -1395,6 +1499,7 @@ pub fn object_rest<'cx, A>(
 // *********************
 pub fn object_make_exact<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     x: Vec1<object::Slice>,
 ) -> Result<Type, FlowJsException> {
@@ -1411,8 +1516,9 @@ pub fn object_make_exact<'cx>(
      -> Result<Type, FlowJsException> {
         match interface {
             Some(_) => {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EUnsupportedExact(Box::new((reason.dupe(), r.dupe()))),
                 )?;
                 Ok(any_t::error(reason.dupe()))
@@ -1670,6 +1776,7 @@ pub fn object_update_optionality<'cx>(
 // {...(A|B)&C} = {...(A&C)|(B&C)}
 pub fn intersect2<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     object::Slice {
         reason: r1,
@@ -1701,7 +1808,7 @@ pub fn intersect2<'cx>(
     let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
     let dict2 = obj_type::get_dict_opt(&flags2.obj_kind);
     let intersection = |t1: Type, t2: Type| -> Type {
-        if flow_typing_flow_common::concrete_type_eq::eq(cx, &t1, &t2) {
+        if flow_typing_flow_common::concrete_type_eq::eq_with_env(cx, env, &t1, &t2) {
             t1
         } else {
             Type::new(TypeInner::IntersectionT(
@@ -1793,12 +1900,13 @@ pub fn intersect2<'cx>(
 
 pub fn intersect2_with_reason<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     intersection_loc: ALoc,
     x1: &object::Slice,
     x2: &object::Slice,
 ) -> object::Slice {
-    let (props, flags, frozen, generics, reachable_targs) = intersect2(cx, reason, x1, x2);
+    let (props, flags, frozen, generics, reachable_targs) = intersect2(cx, env, reason, x1, x2);
     let reason = flow_common::reason::mk_reason(VirtualReasonDesc::RObjectType, intersection_loc);
     object::Slice {
         reason,
@@ -1814,8 +1922,17 @@ pub fn intersect2_with_reason<'cx>(
 
 pub fn resolved<'cx, A>(
     next: &dyn Fn(&Context<'cx>, UseOp, &object::Tool, &Reason, Vec1<object::Slice>) -> A,
-    recurse: &dyn Fn(&Context<'cx>, UseOp, &Reason, object::ResolveTool, &object::Tool, Type) -> A,
+    recurse: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        UseOp,
+        &Reason,
+        object::ResolveTool,
+        &object::Tool,
+        Type,
+    ) -> A,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -1831,7 +1948,7 @@ pub fn resolved<'cx, A>(
                 Vec1::new(object::Resolved(x)),
                 join,
             ));
-            recurse(cx, use_op, reason, resolve_tool, tool, t)
+            recurse(cx, env, use_op, reason, resolve_tool, tool, t)
         }
         object::Resolve::List(todo, done_rev, join) => {
             match &*todo {
@@ -1853,7 +1970,9 @@ pub fn resolved<'cx, A>(
                             let loc = join.0.dupe();
                             let (first_done, rest_done) = done_rev.split_off_first();
                             merge(
-                                |s1, s2| intersect2_with_reason(cx, reason, loc.dupe(), s1, s2),
+                                |s1, s2| {
+                                    intersect2_with_reason(cx, env, reason, loc.dupe(), s1, s2)
+                                },
                                 x,
                                 (first_done.0, rest_done.into_iter().map(|r| r.0).collect()),
                             )
@@ -1870,7 +1989,7 @@ pub fn resolved<'cx, A>(
                         new_done_rev,
                         join.clone(),
                     ));
-                    recurse(cx, use_op, reason, resolve_tool, tool, t.dupe())
+                    recurse(cx, env, use_op, reason, resolve_tool, tool, t.dupe())
                 }
             }
         }
@@ -1909,7 +2028,11 @@ pub fn interface_slice<'cx>(
 }
 
 pub fn resolve<'cx, A>(
-    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
         &Context<'cx>,
@@ -1920,14 +2043,63 @@ pub fn resolve<'cx, A>(
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         UseOp,
         &Reason,
         object::ResolveTool,
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context<'cx>, &Reason, &Type) -> Result<Type, FlowJsException>,
+    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
     cx: &Context<'cx>,
+    use_op: UseOp,
+    reason: &Reason,
+    resolve_tool: object::Resolve,
+    tool: &object::Tool,
+    t: &Type,
+) -> Result<A, FlowJsException> {
+    resolve_with_env::<A>(
+        add_output,
+        return_,
+        next,
+        recurse,
+        statics,
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        resolve_tool,
+        tool,
+        t,
+    )
+}
+
+fn resolve_with_env<'cx, A>(
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    next: &dyn Fn(
+        &Context<'cx>,
+        UseOp,
+        &object::Tool,
+        &Reason,
+        Vec1<object::Slice>,
+    ) -> Result<A, FlowJsException>,
+    recurse: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        UseOp,
+        &Reason,
+        object::ResolveTool,
+        &object::Tool,
+        Type,
+    ) -> Result<A, FlowJsException>,
+    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -1984,7 +2156,17 @@ pub fn resolve<'cx, A>(
                     t_generic_id,
                     obj.strictness_kind,
                 ));
-                return resolved(next, recurse, cx, use_op, reason, resolve_tool, tool, x);
+                return resolved(
+                    next,
+                    recurse,
+                    cx,
+                    env,
+                    use_op,
+                    reason,
+                    resolve_tool,
+                    tool,
+                    x,
+                );
             }
             // We take the fields from an InstanceT excluding methods (because methods
             // are always on the prototype). We also want to resolve fields from the
@@ -2003,6 +2185,7 @@ pub fn resolve<'cx, A>(
                     (object::Tool::Spread(box (_, _)), InstanceKind::InterfaceKind { .. }) => {
                         add_output(
                             cx,
+                            env,
                             ErrorMessage::ECannotSpreadInterface(Box::new(
                                 ECannotSpreadInterfaceData {
                                     spread_reason: reason.dupe(),
@@ -2013,9 +2196,15 @@ pub fn resolve<'cx, A>(
                         )?;
                         return_(cx, use_op, any_t::error(reason.dupe()))
                     }
-                    (object::Tool::Spread(box (_, _)), InstanceKind::RecordKind { .. }) => {
-                        recurse(cx, use_op, reason, resolve_tool_inner, tool, super_t.dupe())
-                    }
+                    (object::Tool::Spread(box (_, _)), InstanceKind::RecordKind { .. }) => recurse(
+                        cx,
+                        env,
+                        use_op,
+                        reason,
+                        resolve_tool_inner,
+                        tool,
+                        super_t.dupe(),
+                    ),
                     (_, InstanceKind::RecordKind { .. }) => {
                         let reason_op = match tool {
                             object::Tool::MakeExact => reason
@@ -2025,6 +2214,7 @@ pub fn resolve<'cx, A>(
                         };
                         add_output(
                             cx,
+                            env,
                             ErrorMessage::ERecordError(RecordErrorKind::RecordBannedTypeUtil {
                                 reason_op,
                                 reason_record: r.dupe(),
@@ -2032,7 +2222,15 @@ pub fn resolve<'cx, A>(
                         )?;
                         return_(cx, use_op, any_t::error(reason.dupe()))
                     }
-                    _ => recurse(cx, use_op, reason, resolve_tool_inner, tool, super_t.dupe()),
+                    _ => recurse(
+                        cx,
+                        env,
+                        use_op,
+                        reason,
+                        resolve_tool_inner,
+                        tool,
+                        super_t.dupe(),
+                    ),
                 };
             }
             // Statics of a class. TODO: This logic is unfortunately duplicated from the
@@ -2041,11 +2239,12 @@ pub fn resolve<'cx, A>(
             DefTInner::ClassT(i) => {
                 return recurse(
                     cx,
+                    env,
                     use_op,
                     reason,
                     object::ResolveTool::Resolve(resolve_tool.clone()),
                     tool,
-                    statics(cx, r, i)?,
+                    statics(cx, env, r, i)?,
                 );
             }
             // `null` and `void` should pass through Partial, Required, $Exact,
@@ -2078,7 +2277,17 @@ pub fn resolve<'cx, A>(
                     interface: None,
                     reachable_targs: Rc::from([]),
                 });
-                return resolved(next, recurse, cx, use_op, reason, resolve_tool, tool, x);
+                return resolved(
+                    next,
+                    recurse,
+                    cx,
+                    env,
+                    use_op,
+                    reason,
+                    resolve_tool,
+                    tool,
+                    x,
+                );
             }
             // TODO(jmbrown): Investigate if these cases can be used for ReactConfig/ObjecRep/Rest.
             // In principle, we should be able to use it for Rest, but right now
@@ -2102,7 +2311,17 @@ pub fn resolve<'cx, A>(
                     interface: None,
                     reachable_targs: Rc::from([]),
                 });
-                return resolved(next, recurse, cx, use_op, reason, resolve_tool, tool, x);
+                return resolved(
+                    next,
+                    recurse,
+                    cx,
+                    env,
+                    use_op,
+                    reason,
+                    resolve_tool,
+                    tool,
+                    x,
+                );
             }
             // mixed is treated as {[string]: mixed} except in type spread and react config checking, where
             // it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
@@ -2153,7 +2372,17 @@ pub fn resolve<'cx, A>(
                         })
                     }
                 };
-                return resolved(next, recurse, cx, use_op, reason, resolve_tool, tool, x);
+                return resolved(
+                    next,
+                    recurse,
+                    cx,
+                    env,
+                    use_op,
+                    reason,
+                    resolve_tool,
+                    tool,
+                    x,
+                );
             }
             DefTInner::ArrT(arr) => match arr.deref() {
                 ArrType::TupleAT(box TupleATData {
@@ -2324,6 +2553,7 @@ pub fn resolve<'cx, A>(
                 [] => return_(cx, use_op, empty_t::make(union_reason.dupe())),
                 [t_only] => recurse(
                     cx,
+                    env,
                     use_op,
                     reason,
                     object::ResolveTool::Resolve(object::Resolve::Next),
@@ -2336,7 +2566,15 @@ pub fn resolve<'cx, A>(
                         rest_vec1,
                         object::Join(union_loc, object::JoinOp::Or),
                     ));
-                    recurse(cx, use_op, reason, resolve_tool_new, &tool, t_first.dupe())
+                    recurse(
+                        cx,
+                        env,
+                        use_op,
+                        reason,
+                        resolve_tool_new,
+                        &tool,
+                        t_first.dupe(),
+                    )
                 }
             };
         }
@@ -2351,7 +2589,7 @@ pub fn resolve<'cx, A>(
                 object::Join(intersection_loc, object::JoinOp::And),
             ));
 
-            return recurse(cx, use_op, reason, resolve_tool_new, tool, t_first);
+            return recurse(cx, env, use_op, reason, resolve_tool_new, tool, t_first);
         }
         // Propagate any.
         // | AnyT (_, src) -> return cx use_op (AnyT.why src reason)
@@ -2366,6 +2604,7 @@ pub fn resolve<'cx, A>(
         object::Tool::MakeExact => {
             add_output(
                 cx,
+                env,
                 ErrorMessage::EUnsupportedExact(Box::new((
                     reason.dupe(),
                     type_util::reason_of_t(&t).dupe(),
@@ -2375,6 +2614,7 @@ pub fn resolve<'cx, A>(
         _ => {
             add_output(
                 cx,
+                env,
                 ErrorMessage::EInvalidObjectKit(Box::new(EInvalidObjectKitData {
                     reason: type_util::reason_of_t(&t).dupe(),
                     use_op: use_op.clone(),
@@ -2396,6 +2636,7 @@ pub fn super_<'cx, A>(
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         UseOp,
         &Reason,
         object::ResolveTool,
@@ -2403,6 +2644,7 @@ pub fn super_<'cx, A>(
         Type,
     ) -> Result<A, FlowJsException>,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -2430,7 +2672,7 @@ pub fn super_<'cx, A>(
                 flow_typing_generics::spread_empty(),
             );
             let (props, flags, frozen, generics, reachable_targs) =
-                intersect2(cx, reason, &acc, &slice);
+                intersect2(cx, env, reason, &acc, &slice);
             let acc = object::Slice {
                 reason: reason.dupe(),
                 strictness_kind: acc.strictness_kind.join(slice.strictness_kind),
@@ -2442,7 +2684,7 @@ pub fn super_<'cx, A>(
                 reachable_targs,
             };
             let resolve_tool = object::ResolveTool::Super(acc, Rc::new(resolve_tool));
-            recurse(cx, use_op, reason, resolve_tool, tool, super_t.dupe())
+            recurse(cx, env, use_op, reason, resolve_tool, tool, super_t.dupe())
         }
         TypeInner::AnyT(_, src) => {
             return_(cx, use_op, Type::new(TypeInner::AnyT(reason.dupe(), *src)))
@@ -2610,6 +2852,7 @@ pub fn map_object<'cx>(
     poly_prop: &Type,
     mapped_type_flags: &MappedTypeFlags,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     use_op: &UseOp,
     selected_keys: Option<&(Vec<(Name, Reason)>, Vec<Type>)>,
@@ -2664,7 +2907,7 @@ pub fn map_object<'cx>(
                         VirtualReasonDesc::RUniqueSymbol,
                         key_loc.dupe(),
                     );
-                    flow_js_utils::type_of_key_name(cx, key.dupe(), &r)
+                    flow_js_utils::type_of_key_name_with_env(env, key.dupe(), &r)
                 }
                 Name::Str(key_str) => {
                     let key_str = key_str.dupe();
@@ -2980,7 +3223,11 @@ pub fn map_object<'cx>(
 }
 
 pub fn run<'cx, A>(
-    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
     return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
         &Context<'cx>,
@@ -2991,13 +3238,14 @@ pub fn run<'cx, A>(
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         UseOp,
         &Reason,
         object::ResolveTool,
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context<'cx>, &Reason, &Type) -> Result<Type, FlowJsException>,
+    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
     cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
@@ -3005,15 +3253,64 @@ pub fn run<'cx, A>(
     tool: &object::Tool,
     l: &Type,
 ) -> Result<A, FlowJsException> {
+    run_with_env::<A>(
+        add_output,
+        return_,
+        next,
+        recurse,
+        statics,
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        resolve_tool,
+        tool,
+        l,
+    )
+}
+
+pub fn run_with_env<'cx, A>(
+    add_output: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        ErrorMessage<ALoc>,
+    ) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
+    next: &dyn Fn(
+        &Context<'cx>,
+        UseOp,
+        &object::Tool,
+        &Reason,
+        Vec1<object::Slice>,
+    ) -> Result<A, FlowJsException>,
+    recurse: &dyn Fn(
+        &Context<'cx>,
+        &FlowJsEnv,
+        UseOp,
+        &Reason,
+        object::ResolveTool,
+        &object::Tool,
+        Type,
+    ) -> Result<A, FlowJsException>,
+    statics: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Reason, &Type) -> Result<Type, FlowJsException>,
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: &Reason,
+    resolve_tool: object::ResolveTool,
+    tool: &object::Tool,
+    l: &Type,
+) -> Result<A, FlowJsException> {
     match resolve_tool {
-        object::ResolveTool::Resolve(rt) => resolve(
-            add_output, return_, next, recurse, statics, cx, use_op, reason, rt, tool, l,
+        object::ResolveTool::Resolve(rt) => resolve_with_env(
+            add_output, return_, next, recurse, statics, cx, env, use_op, reason, rt, tool, l,
         ),
         object::ResolveTool::Super(acc, rt) => super_(
             return_,
             next,
             recurse,
             cx,
+            env,
             use_op,
             reason,
             (*rt).clone(),

@@ -12,7 +12,6 @@ pub mod flow_cache;
 pub mod flow_js_utils;
 pub mod instantiation_utils;
 pub mod obj_type;
-pub mod speculation;
 pub mod string_case_transform;
 pub mod ts_enum;
 pub mod type_subst;

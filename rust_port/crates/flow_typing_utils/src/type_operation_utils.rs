@@ -33,6 +33,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
@@ -67,9 +68,6 @@ use crate::type_filter;
 pub mod distribute_union_intersection {
     use super::*;
 
-    /// For a type t, run the check defined by check_base.
-    /// This function will break down the unions in t. When it encounters an intersection,
-    /// the check can pass as long as the check can pass on one member of intersection
     pub fn distribute<'cx>(
         cx: &Context<'cx>,
         use_op: Option<UseOp>,
@@ -79,7 +77,34 @@ pub mod distribute_union_intersection {
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
         get_no_match_error_loc: &dyn Fn(&Reason) -> ALoc,
-        check_base: &dyn Fn(&Context<'cx>, &Type) -> Result<(), FlowJsException>,
+        check_base: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Type) -> Result<(), FlowJsException>,
+        t: &Type,
+    ) -> Result<(), FlowJsException> {
+        distribute_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            use_op,
+            break_up_union,
+            get_no_match_error_loc,
+            check_base,
+            t,
+        )
+    }
+
+    /// For a type t, run the check defined by check_base.
+    /// This function will break down the unions in t. When it encounters an intersection,
+    /// the check can pass as long as the check can pass on one member of intersection
+    pub(crate) fn distribute_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: Option<UseOp>,
+        break_up_union: &dyn Fn(
+            &Context<'cx>,
+            &Reason,
+            &Type,
+        ) -> Result<Vec<Type>, FlowJsException>,
+        get_no_match_error_loc: &dyn Fn(&Reason) -> ALoc,
+        check_base: &dyn Fn(&Context<'cx>, &FlowJsEnv, &Type) -> Result<(), FlowJsException>,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         let ts = break_up_union(cx, reason_of_t(t), t)?;
@@ -91,9 +116,10 @@ pub mod distribute_union_intersection {
                         .map(|t| {
                             let t = t.clone();
                             let use_op = use_op.clone();
-                            Box::new(move |cx: &Context<'cx>| {
-                                distribute(
+                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                distribute_with_env(
                                     cx,
+                                    env,
                                     use_op,
                                     break_up_union,
                                     get_no_match_error_loc,
@@ -102,12 +128,18 @@ pub mod distribute_union_intersection {
                                 )
                             })
                                 as Box<
-                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                    dyn FnOnce(
+                                            &Context<'cx>,
+                                            &FlowJsEnv,
+                                        )
+                                            -> Result<(), FlowJsException>
+                                        + '_,
                                 >
                         })
                         .collect();
                     speculation_flow::try_custom(
                         cx,
+                        env,
                         use_op.clone(),
                         None,
                         None,
@@ -116,7 +148,7 @@ pub mod distribute_union_intersection {
                     )?;
                 }
                 _ => {
-                    check_base(cx, ti)?;
+                    check_base(cx, env, ti)?;
                 }
             }
         }
@@ -128,6 +160,7 @@ pub mod distribute_union_intersection {
     /// the check can pass as long as the check can pass on one member of intersection
     pub fn distribute_2<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         use_op: Option<UseOp>,
         break_up_union: &dyn Fn(
             &Context<'cx>,
@@ -135,7 +168,11 @@ pub mod distribute_union_intersection {
             &Type,
         ) -> Result<Vec<Type>, FlowJsException>,
         get_no_match_error_loc: &dyn Fn(&Reason, &Reason) -> ALoc,
-        check_base: &dyn Fn(&Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
+        check_base: &dyn Fn(
+            &Context<'cx>,
+            &FlowJsEnv,
+            (&Type, &Type),
+        ) -> Result<(), FlowJsException>,
         (t1, t2): (&Type, &Type),
     ) -> Result<(), FlowJsException> {
         let t1s = break_up_union(cx, reason_of_t(t1), t1)?;
@@ -155,9 +192,10 @@ pub mod distribute_union_intersection {
                                     let m1 = m1.dupe();
                                     let m2 = m2.dupe();
                                     let use_op = use_op.dupe();
-                                    Box::new(move |cx: &Context<'cx>| {
+                                    Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
                                         distribute_2(
                                             cx,
+                                            env,
                                             use_op,
                                             break_up_union,
                                             get_no_match_error_loc,
@@ -166,7 +204,11 @@ pub mod distribute_union_intersection {
                                         )
                                     })
                                         as Box<
-                                            dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>
+                                            dyn FnOnce(
+                                                    &Context<'cx>,
+                                                    &FlowJsEnv,
+                                                )
+                                                    -> Result<(), FlowJsException>
                                                 + '_,
                                         >
                                 })
@@ -174,6 +216,7 @@ pub mod distribute_union_intersection {
                             .collect();
                         speculation_flow::try_custom(
                             cx,
+                            env,
                             use_op.dupe(),
                             None,
                             None,
@@ -184,16 +227,20 @@ pub mod distribute_union_intersection {
                     (TypeInner::IntersectionT(r1, rep1), _) => {
                         let t2_clone = t2i.dupe();
                         let cases: Vec<
-                            Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_>,
+                            Box<
+                                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                                    + '_,
+                            >,
                         > = rep1
                             .members_iter()
                             .map(|t1| {
                                 let t1 = t1.dupe();
                                 let t2 = t2_clone.dupe();
                                 let use_op = use_op.clone();
-                                Box::new(move |cx: &Context<'cx>| {
+                                Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
                                     distribute_2(
                                         cx,
+                                        env,
                                         use_op,
                                         break_up_union,
                                         get_no_match_error_loc,
@@ -202,13 +249,18 @@ pub mod distribute_union_intersection {
                                     )
                                 })
                                     as Box<
-                                        dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>
+                                        dyn FnOnce(
+                                                &Context<'cx>,
+                                                &FlowJsEnv,
+                                            )
+                                                -> Result<(), FlowJsException>
                                             + '_,
                                     >
                             })
                             .collect();
                         speculation_flow::try_custom(
                             cx,
+                            env,
                             use_op.clone(),
                             None,
                             None,
@@ -224,9 +276,10 @@ pub mod distribute_union_intersection {
                                 let t2 = t2.dupe();
                                 let t1 = t1_clone.dupe();
                                 let use_op = use_op.dupe();
-                                Box::new(move |cx: &Context<'cx>| {
+                                Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
                                     distribute_2(
                                         cx,
+                                        env,
                                         use_op,
                                         break_up_union,
                                         get_no_match_error_loc,
@@ -235,13 +288,18 @@ pub mod distribute_union_intersection {
                                     )
                                 })
                                     as Box<
-                                        dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>
+                                        dyn FnOnce(
+                                                &Context<'cx>,
+                                                &FlowJsEnv,
+                                            )
+                                                -> Result<(), FlowJsException>
                                             + '_,
                                     >
                             })
                             .collect();
                         speculation_flow::try_custom(
                             cx,
+                            env,
                             use_op.clone(),
                             None,
                             None,
@@ -250,7 +308,7 @@ pub mod distribute_union_intersection {
                         )?;
                     }
                     _ => {
-                        check_base(cx, (t1i, t2i))?;
+                        check_base(cx, env, (t1i, t2i))?;
                     }
                 }
             }
@@ -270,6 +328,17 @@ pub mod operators {
         t1: &Type,
         t2: &Type,
     ) -> Result<Type, JobError> {
+        arith_with_env(cx, &FlowJsEnv::entry(), reason, kind, t1, t2)
+    }
+
+    fn arith_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        kind: &ArithKind,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<Type, JobError> {
         let kind = kind.clone();
         let reason = reason.dupe();
         flow_js_utils::flow_js_result_to_job_error(tvar_resolver::mk_tvar_and_fully_resolve_where(
@@ -278,16 +347,25 @@ pub mod operators {
             |cx, tout| {
                 distribute_union_intersection::distribute_2(
                     cx,
+                    env,
                     None,
                     &|cx, reason, t| {
-                        FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t)
+                        FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                            cx, env, reason, t,
+                        )
                     },
                     &|_, _| reason.loc().dupe(),
-                    &|cx, (t1, t2)| {
+                    &|cx, env, (t1, t2)| {
                         // Flow.flow_t cx (Flow_js_utils.flow_arith cx reason t1 t2 kind, tout)
-                        let arith_result =
-                            flow_js_utils::flow_arith(cx, reason.dupe(), t1, t2, kind.clone())?;
-                        flow_js::flow_t(cx, (&arith_result, tout))?;
+                        let arith_result = flow_js_utils::flow_arith(
+                            cx,
+                            env,
+                            reason.dupe(),
+                            t1,
+                            t2,
+                            kind.clone(),
+                        )?;
+                        flow_js::flow_t_with_env(cx, env, (&arith_result, tout))?;
                         Ok(())
                     },
                     (t1, t2),
@@ -297,8 +375,18 @@ pub mod operators {
     }
 
     pub fn check_comparator<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), JobError> {
+        check_comparator_with_env(cx, &FlowJsEnv::entry(), t1, t2)
+    }
+
+    fn check_comparator_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), JobError> {
         fn check_base<'cx>(
             cx: &Context<'cx>,
+            env: &FlowJsEnv,
             (l, r): (&Type, &Type),
         ) -> Result<(), FlowJsException> {
             match (l.deref(), r.deref()) {
@@ -349,8 +437,9 @@ pub mod operators {
                         cx,
                         (reason_of_t(l).dupe(), reason_of_t(r).dupe()),
                     );
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EComparison(Box::new(EComparisonData {
                             r1,
                             r2,
@@ -364,8 +453,11 @@ pub mod operators {
 
         flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute_2(
             cx,
+            env,
             None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
+            &|cx, reason, t| {
+                FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
+            },
             &|r1, r2| {
                 flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                     .0
@@ -394,6 +486,14 @@ pub mod operators {
     }
 
     pub fn check_eq<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) -> Result<(), JobError> {
+        check_eq_with_env(cx, &FlowJsEnv::entry(), pair)
+    }
+
+    fn check_eq_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        pair: (&Type, &Type),
+    ) -> Result<(), JobError> {
         fn get_no_match_error_loc(cx: &Context<'_>, r1: &Reason, r2: &Reason) -> ALoc {
             flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                 .0
@@ -494,7 +594,12 @@ pub mod operators {
             }
         }
 
-        fn distribute<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), FlowJsException> {
+        fn distribute<'cx>(
+            cx: &Context<'cx>,
+            env: &FlowJsEnv,
+            t1: &Type,
+            t2: &Type,
+        ) -> Result<(), FlowJsException> {
             if is_always_allowed_one_side_t(t1) || is_always_allowed_one_side_t(t2) {
                 return Ok(());
             }
@@ -506,14 +611,22 @@ pub mod operators {
                         .map(|t1| {
                             let t1 = t1.dupe();
                             let t2 = t2_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>| distribute(cx, &t1, &t2))
+                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                distribute(cx, env, &t1, &t2)
+                            })
                                 as Box<
-                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                    dyn FnOnce(
+                                            &Context<'cx>,
+                                            &FlowJsEnv,
+                                        )
+                                            -> Result<(), FlowJsException>
+                                        + '_,
                                 >
                         })
                         .collect();
                     speculation_flow::try_custom(
                         cx,
+                        env,
                         None,
                         None,
                         None,
@@ -528,14 +641,22 @@ pub mod operators {
                         .map(|t2| {
                             let t2 = t2.dupe();
                             let t1 = t1_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>| distribute(cx, &t1, &t2))
+                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                distribute(cx, env, &t1, &t2)
+                            })
                                 as Box<
-                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                    dyn FnOnce(
+                                            &Context<'cx>,
+                                            &FlowJsEnv,
+                                        )
+                                            -> Result<(), FlowJsException>
+                                        + '_,
                                 >
                         })
                         .collect();
                     speculation_flow::try_custom(
                         cx,
+                        env,
                         None,
                         None,
                         None,
@@ -544,24 +665,26 @@ pub mod operators {
                     )
                 }
                 _ if eq_needs_concretization(t1) => {
-                    let ts = FlowJs::possible_concrete_types_for_operators_checking(
+                    let ts = FlowJs::possible_concrete_types_for_operators_checking_with_env(
                         cx,
+                        env,
                         reason_of_t(t1),
                         t1,
                     )?;
                     for t1i in &ts {
-                        distribute(cx, t1i, t2)?;
+                        distribute(cx, env, t1i, t2)?;
                     }
                     Ok(())
                 }
                 _ if eq_needs_concretization(t2) => {
-                    let ts = FlowJs::possible_concrete_types_for_operators_checking(
+                    let ts = FlowJs::possible_concrete_types_for_operators_checking_with_env(
                         cx,
+                        env,
                         reason_of_t(t2),
                         t2,
                     )?;
                     for t2i in &ts {
-                        distribute(cx, t1, t2i)?;
+                        distribute(cx, env, t1, t2i)?;
                     }
                     Ok(())
                 }
@@ -573,8 +696,9 @@ pub mod operators {
                             cx,
                             (reason_of_t(t1).dupe(), reason_of_t(t2).dupe()),
                         );
-                        flow_js_utils::add_output(
+                        flow_js_utils::add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ENonStrictEqualityComparison(Box::new((
                                 reasons.0, reasons.1,
                             ))),
@@ -586,12 +710,21 @@ pub mod operators {
         }
 
         let (t1, t2) = pair;
-        flow_js_utils::flow_js_result_to_job_error(distribute(cx, t1, t2))
+        flow_js_utils::flow_js_result_to_job_error(distribute(cx, env, t1, t2))
     }
 
     pub fn check_strict_eq<'cx>(
         encl_ctx: &EnclosingContext,
         cx: &Context<'cx>,
+        pair: (&Type, &Type),
+    ) -> Result<(), JobError> {
+        check_strict_eq_with_env(encl_ctx, cx, &FlowJsEnv::entry(), pair)
+    }
+
+    fn check_strict_eq_with_env<'cx>(
+        encl_ctx: &EnclosingContext,
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         pair: (&Type, &Type),
     ) -> Result<(), JobError> {
         fn get_no_match_error_loc(cx: &Context<'_>, r1: &Reason, r2: &Reason) -> ALoc {
@@ -752,6 +885,7 @@ pub mod operators {
 
         fn distribute_strict<'cx>(
             cx: &Context<'cx>,
+            env: &FlowJsEnv,
             encl_ctx: &EnclosingContext,
             t1: &Type,
             t2: &Type,
@@ -771,16 +905,22 @@ pub mod operators {
                         .map(|t1| {
                             let t1 = t1.dupe();
                             let t2 = t2_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>| {
-                                distribute_strict(cx, encl_ctx, &t1, &t2)
+                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                distribute_strict(cx, env, encl_ctx, &t1, &t2)
                             })
                                 as Box<
-                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                    dyn FnOnce(
+                                            &Context<'cx>,
+                                            &FlowJsEnv,
+                                        )
+                                            -> Result<(), FlowJsException>
+                                        + '_,
                                 >
                         })
                         .collect();
                     speculation_flow::try_custom(
                         cx,
+                        env,
                         None,
                         None,
                         None,
@@ -795,16 +935,22 @@ pub mod operators {
                         .map(|t2| {
                             let t2 = t2.dupe();
                             let t1 = t1_clone.dupe();
-                            Box::new(move |cx: &Context<'cx>| {
-                                distribute_strict(cx, encl_ctx, &t1, &t2)
+                            Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                                distribute_strict(cx, env, encl_ctx, &t1, &t2)
                             })
                                 as Box<
-                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                    dyn FnOnce(
+                                            &Context<'cx>,
+                                            &FlowJsEnv,
+                                        )
+                                            -> Result<(), FlowJsException>
+                                        + '_,
                                 >
                         })
                         .collect();
                     speculation_flow::try_custom(
                         cx,
+                        env,
                         None,
                         None,
                         None,
@@ -818,15 +964,16 @@ pub mod operators {
                     if !t1_needs_concretization && !t2_needs_concretization {
                         match strict_equatable_error(cx, encl_ctx, t1, t2) {
                             Some(error) => {
-                                flow_js_utils::add_output(cx, error)?;
+                                flow_js_utils::add_output_with_env(cx, env, error)?;
                                 Ok(())
                             }
                             None => Ok(()),
                         }
                     } else {
                         let t1s = if t1_needs_concretization {
-                            FlowJs::possible_concrete_types_for_operators_checking(
+                            FlowJs::possible_concrete_types_for_operators_checking_with_env(
                                 cx,
+                                env,
                                 reason_of_t(t1),
                                 t1,
                             )?
@@ -834,8 +981,9 @@ pub mod operators {
                             vec![t1.dupe()]
                         };
                         let t2s = if t2_needs_concretization {
-                            FlowJs::possible_concrete_types_for_operators_checking(
+                            FlowJs::possible_concrete_types_for_operators_checking_with_env(
                                 cx,
+                                env,
                                 reason_of_t(t2),
                                 t2,
                             )?
@@ -849,7 +997,7 @@ pub mod operators {
                         } else {
                             for t1i in &t1s {
                                 for t2i in &t2s {
-                                    distribute_strict(cx, encl_ctx, t1i, t2i)?;
+                                    distribute_strict(cx, env, encl_ctx, t1i, t2i)?;
                                 }
                             }
                             Ok(())
@@ -860,11 +1008,21 @@ pub mod operators {
         }
 
         let (t1, t2) = pair;
-        flow_js_utils::flow_js_result_to_job_error(distribute_strict(cx, encl_ctx, t1, t2))
+        flow_js_utils::flow_js_result_to_job_error(distribute_strict(cx, env, encl_ctx, t1, t2))
     }
 
     pub fn unary_arith<'cx>(
         cx: &Context<'cx>,
+        reason: &Reason,
+        kind: &UnaryArithKind,
+        t: &Type,
+    ) -> Result<Type, JobError> {
+        unary_arith_with_env(cx, &FlowJsEnv::entry(), reason, kind, t)
+    }
+
+    fn unary_arith_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         reason: &Reason,
         kind: &UnaryArithKind,
         t: &Type,
@@ -875,16 +1033,20 @@ pub mod operators {
             cx,
             reason.dupe(),
             |cx, tout| {
-                distribute_union_intersection::distribute(
+                distribute_union_intersection::distribute_with_env(
                     cx,
+                    env,
                     None,
                     &|cx, reason, t| {
-                        FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t)
+                        FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                            cx, env, reason, t,
+                        )
                     },
                     &|r| r.loc().dupe(),
-                    &|cx, t| {
-                        let result = flow_js_utils::flow_unary_arith(cx, t, reason.dupe(), kind)?;
-                        flow_js::flow_t(cx, (&result, tout))?;
+                    &|cx, env, t| {
+                        let result =
+                            flow_js_utils::flow_unary_arith(cx, env, t, reason.dupe(), kind)?;
+                        flow_js::flow_t_with_env(cx, env, (&result, tout))?;
                         Ok(())
                     },
                     t,
@@ -920,20 +1082,35 @@ pub mod operators {
         left: &Type,
         right: &Type,
     ) -> Result<Type, JobError> {
+        logical_and_with_env(cx, &FlowJsEnv::entry(), reason, left, right)
+    }
+
+    fn logical_and_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        left: &Type,
+        right: &Type,
+    ) -> Result<Type, JobError> {
         flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
             cx,
             reason,
             |cx, tout| {
-                let ts =
-                    FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(left), left)?;
+                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                    cx,
+                    env,
+                    reason_of_t(left),
+                    left,
+                )?;
                 for left in &ts {
                     if let TypeInner::DefT(reason, def_t) = left.deref() {
                         if matches!(
                             def_t.deref(),
                             DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
                         ) {
-                            flow_js_utils::add_output(
+                            flow_js_utils::add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::ESketchyNumberLint(
                                     flow_lint_settings::lints::SketchyNumberKind::And,
                                     reason.dupe(),
@@ -948,8 +1125,9 @@ pub mod operators {
                         type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
                         {
                             // falsy
-                            predicate_kit::run_predicate_for_filtering(
+                            predicate_kit::run_predicate_for_filtering_with_env(
                                 cx,
+                                env,
                                 left,
                                 &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
                                     type_::PredicateInner::TruthyP,
@@ -969,11 +1147,12 @@ pub mod operators {
                                             tout.id(),
                                         ))),
                                     ));
-                                    flow_js::flow(cx, (right, &use_t))?;
+                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
                                 }
                                 _ => {
-                                    predicate_kit::run_predicate_for_filtering(
+                                    predicate_kit::run_predicate_for_filtering_with_env(
                                         cx,
+                                        env,
                                         left,
                                         &Predicate::new(type_::PredicateInner::NotP(
                                             Predicate::new(type_::PredicateInner::TruthyP),
@@ -987,7 +1166,7 @@ pub mod operators {
                                             tout.id(),
                                         ))),
                                     ));
-                                    flow_js::flow(cx, (right, &use_t))?;
+                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
                                 }
                             }
                         }
@@ -1004,12 +1183,26 @@ pub mod operators {
         left: &Type,
         right: &Type,
     ) -> Result<Type, JobError> {
+        logical_or_with_env(cx, &FlowJsEnv::entry(), reason, left, right)
+    }
+
+    fn logical_or_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        left: &Type,
+        right: &Type,
+    ) -> Result<Type, JobError> {
         flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
             cx,
             reason,
             |cx, tout| {
-                let ts =
-                    FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(left), left)?;
+                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                    cx,
+                    env,
+                    reason_of_t(left),
+                    left,
+                )?;
                 for left in &ts {
                     // a truthy || b ~> a
                     // a falsy || b ~> b
@@ -1018,8 +1211,9 @@ pub mod operators {
                         type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
                         {
                             // truthy
-                            predicate_kit::run_predicate_for_filtering(
+                            predicate_kit::run_predicate_for_filtering_with_env(
                                 cx,
+                                env,
                                 left,
                                 &Predicate::new(type_::PredicateInner::TruthyP),
                                 tout,
@@ -1037,11 +1231,12 @@ pub mod operators {
                                             tout.id(),
                                         ))),
                                     ));
-                                    flow_js::flow(cx, (right, &use_t))?;
+                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
                                 }
                                 _ => {
-                                    predicate_kit::run_predicate_for_filtering(
+                                    predicate_kit::run_predicate_for_filtering_with_env(
                                         cx,
+                                        env,
                                         left,
                                         &Predicate::new(type_::PredicateInner::TruthyP),
                                         tout,
@@ -1053,7 +1248,7 @@ pub mod operators {
                                             tout.id(),
                                         ))),
                                     ));
-                                    flow_js::flow(cx, (right, &use_t))?;
+                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
                                 }
                             }
                         }
@@ -1070,19 +1265,34 @@ pub mod operators {
         left: &Type,
         right: &Type,
     ) -> Result<Type, JobError> {
+        logical_nullish_coalesce_with_env(cx, &FlowJsEnv::entry(), reason, left, right)
+    }
+
+    fn logical_nullish_coalesce_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        left: &Type,
+        right: &Type,
+    ) -> Result<Type, JobError> {
         flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
             cx,
             reason,
             |cx, tout| {
-                let ts =
-                    FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(left), left)?;
+                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                    cx,
+                    env,
+                    reason_of_t(left),
+                    left,
+                )?;
                 for left in &ts {
                     let maybe_result = type_filter::maybe(cx, left.dupe());
                     match &maybe_result {
                         type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
                         {
-                            predicate_kit::run_predicate_for_filtering(
+                            predicate_kit::run_predicate_for_filtering_with_env(
                                 cx,
+                                env,
                                 left,
                                 &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
                                     type_::PredicateInner::MaybeP,
@@ -1095,8 +1305,9 @@ pub mod operators {
                             if matches!(t.deref(), TypeInner::AnyT(_, _)) =>
                         {
                             // not-nullish
-                            predicate_kit::run_predicate_for_filtering(
+                            predicate_kit::run_predicate_for_filtering_with_env(
                                 cx,
+                                env,
                                 left,
                                 &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
                                     type_::PredicateInner::MaybeP,
@@ -1116,11 +1327,12 @@ pub mod operators {
                                             tout.id(),
                                         ))),
                                     ));
-                                    flow_js::flow(cx, (right, &use_t))?;
+                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
                                 }
                                 _ => {
-                                    predicate_kit::run_predicate_for_filtering(
+                                    predicate_kit::run_predicate_for_filtering_with_env(
                                         cx,
+                                        env,
                                         left,
                                         &Predicate::new(type_::PredicateInner::NotP(
                                             Predicate::new(type_::PredicateInner::MaybeP),
@@ -1134,7 +1346,7 @@ pub mod operators {
                                             tout.id(),
                                         ))),
                                     ));
-                                    flow_js::flow(cx, (right, &use_t))?;
+                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
                                 }
                             }
                         }
@@ -1146,6 +1358,15 @@ pub mod operators {
     }
 
     pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
+        unary_not_with_env(cx, &FlowJsEnv::entry(), reason, t)
+    }
+
+    fn unary_not_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, JobError> {
         fn f(reason: &Reason, t: &Type) -> Type {
             match t.deref() {
                 TypeInner::AnyT(_, src) => type_::any_t::why(*src, reason.dupe()),
@@ -1238,14 +1459,17 @@ pub mod operators {
             cx,
             reason.dupe(),
             |cx, tout| {
-                distribute_union_intersection::distribute(
+                distribute_union_intersection::distribute_with_env(
                     cx,
+                    env,
                     None,
-                    &|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t),
+                    &|cx, r, t| {
+                        FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)
+                    },
                     &|r| r.loc().dupe(),
-                    &|cx, t| {
+                    &|cx, env, t| {
                         let result = f(&reason, t);
-                        flow_js::flow_t(cx, (&result, tout))?;
+                        flow_js::flow_t_with_env(cx, env, (&result, tout))?;
                         Ok(())
                     },
                     t,
@@ -1255,6 +1479,15 @@ pub mod operators {
     }
 
     pub fn non_maybe<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
+        non_maybe_with_env(cx, &FlowJsEnv::entry(), reason, t)
+    }
+
+    fn non_maybe_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, JobError> {
         fn f(t: &Type) -> Type {
             match t.deref() {
                 TypeInner::DefT(r, def_t)
@@ -1285,14 +1518,17 @@ pub mod operators {
             cx,
             reason.dupe(),
             |cx, tout| {
-                distribute_union_intersection::distribute(
+                distribute_union_intersection::distribute_with_env(
                     cx,
+                    env,
                     None,
-                    &|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t),
+                    &|cx, r, t| {
+                        FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)
+                    },
                     &|r| r.loc().dupe(),
-                    &|cx, t| {
+                    &|cx, env, t| {
                         let result = f(t);
-                        flow_js::flow_t(cx, (&result, tout))?;
+                        flow_js::flow_t_with_env(cx, env, (&result, tout))?;
                         Ok(())
                     },
                     t,
@@ -1307,14 +1543,23 @@ pub mod promise {
     use super::*;
 
     pub fn await_<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {
+        await_with_env(cx, &FlowJsEnv::entry(), reason, t)
+    }
+
+    fn await_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, JobError> {
         // await distributes over union: await (Promise<T> | void) = T | void
         let ts = flow_js_utils::flow_js_result_to_job_error(
-            FlowJs::possible_concrete_types_for_inspection(cx, reason, t),
+            FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, t),
         )?;
         let mut results = Vec::with_capacity(ts.len());
         for t in ts.iter() {
             results.push(flow_js_utils::flow_js_result_to_job_error(
-                FlowJs::run_await(cx, type_::unknown_use(), reason, t),
+                FlowJs::run_await(cx, env, type_::unknown_use(), reason, t),
             )?);
         }
         Ok(match results.as_slice() {
@@ -1339,6 +1584,24 @@ pub mod special_cased_functions {
 
     pub fn object_assign<'cx>(
         cx: &Context<'cx>,
+        use_op: &UseOp,
+        reason: &Reason,
+        target_t: &Type,
+        rest_arg_ts: &[CallArg],
+    ) -> Result<Type, JobError> {
+        object_assign_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            use_op,
+            reason,
+            target_t,
+            rest_arg_ts,
+        )
+    }
+
+    fn object_assign_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         use_op: &UseOp,
         reason: &Reason,
         target_t: &Type,
@@ -1413,6 +1676,7 @@ pub mod special_cased_functions {
         // let rec assign_from l use_op reason_op to_obj t kind =
         fn assign_from<'cx>(
             cx: &Context<'cx>,
+            env: &FlowJsEnv,
             reason: &Reason,
             fix_cache: &Rc<RefCell<HashMap<Type, Type>>>,
             l: &Type,
@@ -1427,15 +1691,19 @@ pub mod special_cased_functions {
                 // Special case any. Otherwise this will lead to confusing errors when
                 // any tranforms to an object type.
                 TypeInner::AnyT(_, _) => {
-                    flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t_with_env(cx, env, (to_obj, t))?;
                     Ok(())
                 }
                 _ => {
-                    let ls =
-                        FlowJs::possible_concrete_types_for_object_assign(cx, reason_of_t(l), l)?;
+                    let ls = FlowJs::possible_concrete_types_for_object_assign(
+                        cx,
+                        env,
+                        reason_of_t(l),
+                        l,
+                    )?;
                     for l in &ls {
                         assign_from_after_concretization(
-                            cx, reason, fix_cache, l, use_op, reason_op, to_obj, t, kind,
+                            cx, env, reason, fix_cache, l, use_op, reason_op, to_obj, t, kind,
                         )?;
                     }
                     Ok(())
@@ -1445,6 +1713,7 @@ pub mod special_cased_functions {
 
         fn assign_from_after_concretization<'cx>(
             cx: &Context<'cx>,
+            env: &FlowJsEnv,
             reason: &Reason,
             fix_cache: &Rc<RefCell<HashMap<Type, Type>>>,
             l: &Type,
@@ -1470,15 +1739,15 @@ pub mod special_cased_functions {
                             None => flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tv| {
                                 fix_cache.borrow_mut().insert(member.dupe(), tv.dupe());
                                 assign_from(
-                                    cx, reason, fix_cache, member, use_op, reason_op, to_obj, tv,
-                                    &kind,
+                                    cx, env, reason, fix_cache, member, use_op, reason_op, to_obj,
+                                    tv, &kind,
                                 )
                             })?,
                         };
-                        flow_js::flow_t(cx, (&member_tvar, &tvar))?;
+                        flow_js::flow_t_with_env(cx, env, (&member_tvar, &tvar))?;
                         tvar = member_tvar;
                     }
-                    flow_js::flow_t(cx, (&tvar, t))?;
+                    flow_js::flow_t_with_env(cx, env, (&tvar, t))?;
                     Ok(())
                 }
                 (TypeInner::DefT(lreason, def_t), ObjAssignKind::ObjAssign { .. })
@@ -1511,7 +1780,7 @@ pub mod special_cased_functions {
                                             type_::unknown_use(),
                                             tout.dupe(),
                                         ));
-                                        flow_js::flow(cx, (&prop_t, &use_t))?;
+                                        flow_js::flow_with_env(cx, env, (&prop_t, &use_t))?;
                                         Ok(())
                                     },
                                 )?;
@@ -1524,11 +1793,12 @@ pub mod special_cased_functions {
                                     prop_t,
                                     None,
                                 ));
-                                flow_js::flow(cx, (to_obj, &set_prop_use))?;
+                                flow_js::flow_with_env(cx, env, (to_obj, &set_prop_use))?;
                             }
                             None => {
-                                flow_js_utils::add_output(
+                                flow_js_utils::add_output_with_env(
                                     cx,
+                                    env,
                                     ErrorMessage::EPropNotReadable(Box::new(
                                         EPropNotReadableData {
                                             prop_loc: reason_prop.loc().dupe(),
@@ -1545,11 +1815,11 @@ pub mod special_cased_functions {
                         ObjKind::Indexed(_) => {
                             let any =
                                 type_::any_t::make(type_::AnySource::Untyped, reason_op.dupe());
-                            flow_js::flow_t(cx, (&any, t))?;
+                            flow_js::flow_t_with_env(cx, env, (&any, t))?;
                             Ok(())
                         }
                         ObjKind::Exact | ObjKind::Inexact => {
-                            flow_js::flow_t(cx, (to_obj, t))?;
+                            flow_js::flow_t_with_env(cx, env, (to_obj, t))?;
                             Ok(())
                         }
                     }
@@ -1581,11 +1851,12 @@ pub mod special_cased_functions {
                                     prop_t,
                                     None,
                                 ));
-                                flow_js::flow(cx, (to_obj, &set_prop_use))?;
+                                flow_js::flow_with_env(cx, env, (to_obj, &set_prop_use))?;
                             }
                             None => {
-                                flow_js_utils::add_output(
+                                flow_js_utils::add_output_with_env(
                                     cx,
+                                    env,
                                     ErrorMessage::EPropNotReadable(Box::new(
                                         EPropNotReadableData {
                                             prop_loc: lreason.loc().dupe(),
@@ -1597,27 +1868,27 @@ pub mod special_cased_functions {
                             }
                         }
                     }
-                    flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t_with_env(cx, env, (to_obj, t))?;
                     Ok(())
                 }
                 (TypeInner::AnyT(_, src), ObjAssignKind::ObjAssign { .. }) => {
                     let any = type_::any_t::make(*src, reason.dupe());
-                    flow_js::flow_t(cx, (&any, t))?;
+                    flow_js::flow_t_with_env(cx, env, (&any, t))?;
                     Ok(())
                 }
                 (TypeInner::AnyT(_, _), _) => {
-                    flow_js::flow_t(cx, (l, t))?;
+                    flow_js::flow_t_with_env(cx, env, (l, t))?;
                     Ok(())
                 }
                 (TypeInner::ObjProtoT(_), ObjAssignKind::ObjAssign { .. }) => {
-                    flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t_with_env(cx, env, (to_obj, t))?;
                     Ok(())
                 }
                 // Object.assign semantics
                 (TypeInner::DefT(_, def_t), ObjAssignKind::ObjAssign { .. })
                     if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
                 {
-                    flow_js::flow_t(cx, (to_obj, t))?;
+                    flow_js::flow_t_with_env(cx, env, (to_obj, t))?;
                     Ok(())
                 }
                 // {...mixed} is the equivalent of {...{[string]: mixed}}
@@ -1642,7 +1913,7 @@ pub mod special_cased_functions {
                         proto,
                     );
                     assign_from_after_concretization(
-                        cx, reason, fix_cache, &o, use_op, reason_op, to_obj, t, kind,
+                        cx, env, reason, fix_cache, &o, use_op, reason_op, to_obj, t, kind,
                     )
                 }
                 (TypeInner::DefT(reason_arr, def_t), ObjAssignKind::ObjSpreadAssign)
@@ -1664,6 +1935,7 @@ pub mod special_cased_functions {
                             let default_kind = type_::default_obj_assign_kind();
                             assign_from(
                                 cx,
+                                env,
                                 reason,
                                 fix_cache,
                                 elem_t,
@@ -1678,8 +1950,9 @@ pub mod special_cased_functions {
                             // Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z)
                             for (n, elem) in elements.iter().enumerate() {
                                 if !Polarity::compat(elem.polarity, Polarity::Positive) {
-                                    flow_js_utils::add_output(
+                                    flow_js_utils::add_output_with_env(
                                         cx,
+                                        env,
                                         ErrorMessage::ETupleElementNotReadable(Box::new(
                                             ETupleElementNotReadableData {
                                                 use_op: use_op.clone(),
@@ -1694,6 +1967,7 @@ pub mod special_cased_functions {
                                 let default_kind = type_::default_obj_assign_kind();
                                 assign_from(
                                     cx,
+                                    env,
                                     reason,
                                     fix_cache,
                                     &elem.t,
@@ -1718,6 +1992,7 @@ pub mod special_cased_functions {
                             for from in &ts {
                                 assign_from(
                                     cx,
+                                    env,
                                     reason,
                                     fix_cache,
                                     from,
@@ -1733,9 +2008,11 @@ pub mod special_cased_functions {
                     }
                 }
                 (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
-                    let repositioned = flow_js::reposition(cx, reason.loc().dupe(), bound.dupe())?;
+                    let repositioned =
+                        flow_js::reposition_with_env(cx, env, reason.loc().dupe(), bound.dupe())?;
                     assign_from(
                         cx,
+                        env,
                         reason,
                         fix_cache,
                         &repositioned,
@@ -1755,8 +2032,9 @@ pub mod special_cased_functions {
                             flow_typing_errors::error_message::UpperKind::IncompatibleObjAssignFromT
                         }
                     };
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         flow_js_utils::incompatible_type_error(
                             l,
                             IncompatibleUpperData {
@@ -1767,7 +2045,7 @@ pub mod special_cased_functions {
                         ),
                     )?;
                     let any = type_::any_t::error(reason_op.dupe());
-                    flow_js::flow_t(cx, (&any, t))?;
+                    flow_js::flow_t_with_env(cx, env, (&any, t))?;
                     Ok(())
                 }
             }
@@ -1792,7 +2070,7 @@ pub mod special_cased_functions {
                         reason.dupe(),
                         |cx, inner_t| -> Result<(), FlowJsException> {
                             let ls = FlowJs::possible_concrete_types_for_object_assign(
-                                cx, &reason, &result,
+                                cx, env, &reason, &result,
                             )?;
                             for l in &ls {
                                 match l.deref() {
@@ -1806,20 +2084,22 @@ pub mod special_cased_functions {
                                         let kind_clone = kind.clone();
                                         let inner_t_clone = inner_t.dupe();
                                         let outer_reason_clone = reason.dupe();
-                                        let cases: Vec<_> = rep
-                                            .members_iter()
-                                            .map(|to_obj| {
-                                                let to_obj = to_obj.clone();
-                                                let that = that_clone.clone();
-                                                let chain_use_op = chain_use_op_clone.clone();
-                                                let reason = reason_clone.dupe();
-                                                let kind = kind_clone.clone();
-                                                let inner_t = inner_t_clone.dupe();
-                                                let fix_cache = fix_cache.dupe();
-                                                let outer_reason = outer_reason_clone.dupe();
-                                                Box::new(move |cx: &Context<'cx>| {
+                                        let cases: Vec<_> =
+                                            rep.members_iter()
+                                                .map(|to_obj| {
+                                                    let to_obj = to_obj.clone();
+                                                    let that = that_clone.clone();
+                                                    let chain_use_op = chain_use_op_clone.clone();
+                                                    let reason = reason_clone.dupe();
+                                                    let kind = kind_clone.clone();
+                                                    let inner_t = inner_t_clone.dupe();
+                                                    let fix_cache = fix_cache.dupe();
+                                                    let outer_reason = outer_reason_clone.dupe();
+                                                    Box::new(move |cx: &Context<'cx>,
+                                                               env: &FlowJsEnv| {
                                                     assign_from(
                                                         cx,
+                                                        env,
                                                         &outer_reason,
                                                         &fix_cache,
                                                         &that,
@@ -1833,14 +2113,16 @@ pub mod special_cased_functions {
                                                     as Box<
                                                         dyn FnOnce(
                                                                 &Context<'cx>,
+                                                                &FlowJsEnv,
                                                             )
                                                                 -> Result<(), FlowJsException>
                                                             + '_,
                                                     >
-                                            })
-                                            .collect();
+                                                })
+                                                .collect();
                                         speculation_flow::try_custom(
                                             cx,
+                                            env,
                                             Some(chain_use_op.clone()),
                                             None,
                                             None,
@@ -1851,6 +2133,7 @@ pub mod special_cased_functions {
                                     _ => {
                                         assign_from(
                                             cx,
+                                            env,
                                             &reason,
                                             &fix_cache,
                                             &that,
@@ -1867,9 +2150,10 @@ pub mod special_cased_functions {
                         },
                     )?;
                 }
-                let repositioned = flow_js::reposition(cx, reason.loc().dupe(), result)?;
+                let repositioned =
+                    flow_js::reposition_with_env(cx, env, reason.loc().dupe(), result)?;
                 let use_t = UseT::new(UseTInner::UseT(use_op.clone(), tout.dupe()));
-                flow_js::flow(cx, (&repositioned, &use_t))?;
+                flow_js::flow_with_env(cx, env, (&repositioned, &use_t))?;
                 Ok(())
             },
         ))
@@ -1882,18 +2166,38 @@ pub fn perform_type_cast<'cx>(
     l: &Type,
     cast_to_t: &Type,
 ) -> Result<(), FlowJsException> {
+    perform_type_cast_with_env(cx, &FlowJsEnv::entry(), use_op, l, cast_to_t)
+}
+
+fn perform_type_cast_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    l: &Type,
+    cast_to_t: &Type,
+) -> Result<(), FlowJsException> {
     let flow = |source_t: &Type| -> Result<(), FlowJsException> {
-        FlowJs::flow(
+        FlowJs::flow_with_env(
             cx,
+            env,
             source_t,
             &UseT::new(UseTInner::UseT(use_op.dupe(), cast_to_t.dupe())),
         )
     };
-    let resolved_cast_to =
-        FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(cast_to_t), cast_to_t)?;
+    let resolved_cast_to = FlowJs::singleton_concrete_type_for_inspection_with_env(
+        cx,
+        env,
+        reason_of_t(cast_to_t),
+        cast_to_t,
+    )?;
     let should_short_circuit_empty_cast = match resolved_cast_to.deref() {
         TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {
-            let resolved_l = FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(l), l)?;
+            let resolved_l = FlowJs::singleton_concrete_type_for_inspection_with_env(
+                cx,
+                env,
+                reason_of_t(l),
+                l,
+            )?;
             match resolved_l.deref() {
                 TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EnumValueT(_)) => {
                     false
@@ -1901,8 +2205,9 @@ pub fn perform_type_cast<'cx>(
                 TypeInner::UnionT(_, rep) => {
                     let mut all_object_like = true;
                     for member in rep.members_iter() {
-                        let member = FlowJs::singleton_concrete_type_for_inspection(
+                        let member = FlowJs::singleton_concrete_type_for_inspection_with_env(
                             cx,
+                            env,
                             reason_of_t(member),
                             member,
                         )?;
@@ -1921,7 +2226,7 @@ pub fn perform_type_cast<'cx>(
     if should_short_circuit_empty_cast {
         return flow(l);
     }
-    let concrete_l = FlowJs::singleton_concrete_type_for_type_cast(cx, reason_of_t(l), l)?;
+    let concrete_l = FlowJs::singleton_concrete_type_for_type_cast(cx, env, reason_of_t(l), l)?;
     match concrete_l.deref() {
         TypeInner::DefT(reason, def_t) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
             let representation_t = match EnumInfo::deref(enum_info) {
@@ -1953,11 +2258,13 @@ pub fn perform_type_cast<'cx>(
                         Some((enums, Some(_))) if enums.len() > 1 => {
                             let representative = rep.members_iter().next().unwrap().dupe();
                             let cast_succeeds = {
-                                let resolved_repr = FlowJs::singleton_concrete_type_for_inspection(
-                                    cx,
-                                    reason_of_t(&representative),
-                                    &representative,
-                                )?;
+                                let resolved_repr =
+                                    FlowJs::singleton_concrete_type_for_inspection_with_env(
+                                        cx,
+                                        env,
+                                        reason_of_t(&representative),
+                                        &representative,
+                                    )?;
                                 match resolved_repr.deref() {
                                     TypeInner::DefT(_, def_t)
                                         if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
@@ -1980,8 +2287,9 @@ pub fn perform_type_cast<'cx>(
                                             &resolved_cast_to,
                                         )
                                     }
-                                    _ => FlowJs::speculative_subtyping_succeeds(
+                                    _ => FlowJs::speculative_subtyping_succeeds_with_env(
                                         cx,
+                                        env,
                                         &representative,
                                         cast_to_t,
                                     )?,
@@ -1996,7 +2304,13 @@ pub fn perform_type_cast<'cx>(
                                     &representative,
                                     use_op.dupe(),
                                 );
-                                perform_type_cast(cx, use_op, &representative, cast_to_t)?;
+                                perform_type_cast_with_env(
+                                    cx,
+                                    env,
+                                    use_op,
+                                    &representative,
+                                    cast_to_t,
+                                )?;
                                 true
                             }
                         }
@@ -2005,7 +2319,7 @@ pub fn perform_type_cast<'cx>(
                 };
                 if !flowed_single {
                     for member in rep.members_iter() {
-                        perform_type_cast(cx, use_op.dupe(), member, cast_to_t)?;
+                        perform_type_cast_with_env(cx, env, use_op.dupe(), member, cast_to_t)?;
                     }
                 }
                 Ok(())
@@ -2013,7 +2327,12 @@ pub fn perform_type_cast<'cx>(
         }
 
         _ => {
-            let resolved = FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(l), l)?;
+            let resolved = FlowJs::singleton_concrete_type_for_inspection_with_env(
+                cx,
+                env,
+                reason_of_t(l),
+                l,
+            )?;
             match resolved.deref() {
                 TypeInner::DefT(reason, def_t)
                     if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
@@ -2047,65 +2366,108 @@ pub mod type_assertions {
     use super::*;
 
     pub fn assert_binary_in_lhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
-        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
-            cx,
-            None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
-            &|r| r.loc().dupe(),
-            &|cx, t| {
-                match t.deref() {
-                    TypeInner::AnyT(_, _) => Ok(()),
-                    // the left-hand side of a `(x in y)` expression is a string,
-                    // number, or symbol
-                    TypeInner::DefT(_, def_t)
-                        if matches!(
-                            def_t.deref(),
-                            DefTInner::StrGeneralT(_)
-                                | DefTInner::SingletonStrT { .. }
-                                | DefTInner::NumGeneralT(_)
-                                | DefTInner::SingletonNumT { .. }
-                                | DefTInner::SymbolT
-                                | DefTInner::UniqueSymbolT(_)
-                        ) =>
-                    {
-                        Ok(())
+        assert_binary_in_lhs_with_env(cx, &FlowJsEnv::entry(), t)
+    }
+
+    fn assert_binary_in_lhs_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t: &Type,
+    ) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, reason, t| {
+                    FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                        cx, env, reason, t,
+                    )
+                },
+                &|r| r.loc().dupe(),
+                &|cx, env, t| {
+                    match t.deref() {
+                        TypeInner::AnyT(_, _) => Ok(()),
+                        // the left-hand side of a `(x in y)` expression is a string,
+                        // number, or symbol
+                        TypeInner::DefT(_, def_t)
+                            if matches!(
+                                def_t.deref(),
+                                DefTInner::StrGeneralT(_)
+                                    | DefTInner::SingletonStrT { .. }
+                                    | DefTInner::NumGeneralT(_)
+                                    | DefTInner::SingletonNumT { .. }
+                                    | DefTInner::SymbolT
+                                    | DefTInner::UniqueSymbolT(_)
+                            ) =>
+                        {
+                            Ok(())
+                        }
+                        _ => flow_js_utils::add_output_with_env(
+                            cx,
+                            env,
+                            ErrorMessage::EBinaryInLHS(reason_of_t(t).dupe()),
+                        ),
                     }
-                    _ => flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EBinaryInLHS(reason_of_t(t).dupe()),
-                    ),
-                }
-            },
-            t,
-        ))
+                },
+                t,
+            ),
+        )
     }
 
     pub fn assert_binary_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
-        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
-            cx,
-            None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
-            &|r| r.loc().dupe(),
-            &|cx, t| {
-                match t.deref() {
-                    TypeInner::AnyT(_, _) => Ok(()),
-                    // the right-hand side of a `(x in y)` expression must be object-like
-                    TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)) => {
-                        Ok(())
+        assert_binary_in_rhs_with_env(cx, &FlowJsEnv::entry(), t)
+    }
+
+    fn assert_binary_in_rhs_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t: &Type,
+    ) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, reason, t| {
+                    FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                        cx, env, reason, t,
+                    )
+                },
+                &|r| r.loc().dupe(),
+                &|cx, env, t| {
+                    match t.deref() {
+                        TypeInner::AnyT(_, _) => Ok(()),
+                        // the right-hand side of a `(x in y)` expression must be object-like
+                        TypeInner::DefT(_, def_t)
+                            if matches!(def_t.deref(), DefTInner::ArrT(_)) =>
+                        {
+                            Ok(())
+                        }
+                        _ if flow_js_utils::object_like(t) => Ok(()),
+                        _ => flow_js_utils::add_output_with_env(
+                            cx,
+                            env,
+                            ErrorMessage::EBinaryInRHS(reason_of_t(t).dupe()),
+                        ),
                     }
-                    _ if flow_js_utils::object_like(t) => Ok(()),
-                    _ => flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EBinaryInRHS(reason_of_t(t).dupe()),
-                    ),
-                }
-            },
-            t,
-        ))
+                },
+                t,
+            ),
+        )
     }
 
     pub fn assert_export_is_type<'cx>(
         cx: &Context<'cx>,
+        name: &Name,
+        t: &Type,
+    ) -> Result<Type, JobError> {
+        assert_export_is_type_with_env(cx, &FlowJsEnv::entry(), name, t)
+    }
+
+    fn assert_export_is_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         name: &Name,
         t: &Type,
     ) -> Result<Type, JobError> {
@@ -2114,53 +2476,73 @@ pub mod type_assertions {
             cx,
             reason.dupe(),
             |cx, tout| -> Result<(), FlowJsException> {
-                let t = FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, t)?;
-                let t = flow_js_utils::assert_export_is_type_t_kit::on_concrete_type(
+                let t = FlowJs::singleton_concretize_type_for_imports_exports_with_env(
+                    cx, env, &reason, t,
+                )?;
+                let t = flow_js_utils::assert_export_is_type_t_kit::on_concrete_type_with_env(
                     cx,
+                    env,
                     name.dupe(),
                     t,
                 )?;
-                flow_js::flow_t(cx, (&t, tout))?;
+                flow_js::flow_t_with_env(cx, env, (&t, tout))?;
                 Ok(())
             },
         ))
     }
 
     pub fn assert_for_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
-        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
-            cx,
-            None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
-            &|r| r.loc().dupe(),
-            &|cx, t| {
-                match t.deref() {
-                    _ if flow_js_utils::object_like(t) => Ok(()),
-                    TypeInner::AnyT(_, _) => Ok(()),
-                    TypeInner::ObjProtoT(_) => Ok(()),
-                    // null/undefined are allowed
-                    TypeInner::DefT(_, def_t)
-                        if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
-                    {
-                        Ok(())
-                    }
-                    TypeInner::DefT(enum_reason, def_t)
-                        if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
-                    {
-                        flow_js_utils::add_output(
+        assert_for_in_rhs_with_env(cx, &FlowJsEnv::entry(), t)
+    }
+
+    fn assert_for_in_rhs_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t: &Type,
+    ) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, reason, t| {
+                    FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                        cx, env, reason, t,
+                    )
+                },
+                &|r| r.loc().dupe(),
+                &|cx, env, t| {
+                    match t.deref() {
+                        _ if flow_js_utils::object_like(t) => Ok(()),
+                        TypeInner::AnyT(_, _) => Ok(()),
+                        TypeInner::ObjProtoT(_) => Ok(()),
+                        // null/undefined are allowed
+                        TypeInner::DefT(_, def_t)
+                            if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
+                        {
+                            Ok(())
+                        }
+                        TypeInner::DefT(enum_reason, def_t)
+                            if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
+                        {
+                            flow_js_utils::add_output_with_env(
+                                cx,
+                                env,
+                                ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
+                                    enum_reason.dupe(),
+                                )),
+                            )
+                        }
+                        _ => flow_js_utils::add_output_with_env(
                             cx,
-                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
-                                enum_reason.dupe(),
-                            )),
-                        )
+                            env,
+                            ErrorMessage::EForInRHS(reason_of_t(t).dupe()),
+                        ),
                     }
-                    _ => flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EForInRHS(reason_of_t(t).dupe()),
-                    ),
-                }
-            },
-            t,
-        ))
+                },
+                t,
+            ),
+        )
     }
 
     pub fn assert_non_component_like_base<'cx>(
@@ -2169,18 +2551,30 @@ pub mod type_assertions {
         use_reason: &Reason,
         t: &Type,
     ) -> Result<(), JobError> {
+        assert_non_component_like_base_with_env(cx, &FlowJsEnv::entry(), def_loc, use_reason, t)
+    }
+
+    fn assert_non_component_like_base_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        def_loc: ALoc,
+        use_reason: &Reason,
+        t: &Type,
+    ) -> Result<(), JobError> {
         fn check_base<'cx>(
             def_loc: &ALoc,
             use_reason: &Reason,
             cx: &Context<'cx>,
+            env: &FlowJsEnv,
             t: &Type,
         ) -> Result<(), FlowJsException> {
             match t.deref() {
                 TypeInner::DefT(reason_type, def_t)
                     if matches!(def_t.deref(), DefTInner::MixedT(_)) =>
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EReactIntrinsicOverlap(Box::new(
                             EReactIntrinsicOverlapData {
                                 use_loc: use_reason.dupe(),
@@ -2200,8 +2594,9 @@ pub mod type_assertions {
                         _ => false,
                     };
                     if matches {
-                        flow_js_utils::add_output(
+                        flow_js_utils::add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EReactIntrinsicOverlap(Box::new(
                                 EReactIntrinsicOverlapData {
                                     use_loc: use_reason.dupe(),
@@ -2219,52 +2614,86 @@ pub mod type_assertions {
             }
         }
 
-        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
-            cx,
-            None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
-            &|_| use_reason.loc().dupe(),
-            &|cx, t| check_base(&def_loc, use_reason, cx, t),
-            t,
-        ))
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, reason, t| {
+                    FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                        cx, env, reason, t,
+                    )
+                },
+                &|_| use_reason.loc().dupe(),
+                &|cx, env, t| check_base(&def_loc, use_reason, cx, env, t),
+                t,
+            ),
+        )
     }
 
     pub fn assert_instanceof_rhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
-        flow_js_utils::flow_js_result_to_job_error(distribute_union_intersection::distribute(
-            cx,
-            None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
-            &|r| r.loc().dupe(),
-            &|cx, t| {
-                match t.deref() {
-                    // (********************)
-                    // (* `instanceof` RHS *)
-                    // (* right side of an `instanceof` binary expression must be an object *)
-                    // (********************)
-                    _ if flow_js_utils::object_like(t) => Ok(()),
-                    // arrays are objects too, but not in `object_like`
-                    TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)) => {
-                        Ok(())
-                    }
-                    TypeInner::AnyT(_, _) => Ok(()),
-                    _ => flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EInstanceofRHS(reason_of_t(t).dupe()),
-                    ),
-                }
-            },
-            t,
-        ))
+        assert_instanceof_rhs_with_env(cx, &FlowJsEnv::entry(), t)
     }
 
-    pub fn assert_match_instance_pattern_constructor<'cx>(
+    fn assert_instanceof_rhs_with_env<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t: &Type,
+    ) -> Result<(), JobError> {
+        flow_js_utils::flow_js_result_to_job_error(
+            distribute_union_intersection::distribute_with_env(
+                cx,
+                env,
+                None,
+                &|cx, reason, t| {
+                    FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                        cx, env, reason, t,
+                    )
+                },
+                &|r| r.loc().dupe(),
+                &|cx, env, t| {
+                    match t.deref() {
+                        // (********************)
+                        // (* `instanceof` RHS *)
+                        // (* right side of an `instanceof` binary expression must be an object *)
+                        // (********************)
+                        _ if flow_js_utils::object_like(t) => Ok(()),
+                        // arrays are objects too, but not in `object_like`
+                        TypeInner::DefT(_, def_t)
+                            if matches!(def_t.deref(), DefTInner::ArrT(_)) =>
+                        {
+                            Ok(())
+                        }
+                        TypeInner::AnyT(_, _) => Ok(()),
+                        _ => flow_js_utils::add_output_with_env(
+                            cx,
+                            env,
+                            ErrorMessage::EInstanceofRHS(reason_of_t(t).dupe()),
+                        ),
+                    }
+                },
+                t,
+            ),
+        )
+    }
+
+    pub(crate) fn assert_match_instance_pattern_constructor<'cx>(
+        cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<(), JobError> {
+        assert_match_instance_pattern_constructor_with_env(cx, &FlowJsEnv::entry(), t)
+    }
+
+    fn assert_match_instance_pattern_constructor_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         t: &Type,
     ) -> Result<(), JobError> {
         match crate::exhaustive::get_class_info(cx, t) {
             Some(_) => Ok(()),
-            None => flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output(
+            None => flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidInstancePattern(
                     reason_of_t(t).loc().dupe(),
                 )),
@@ -2280,24 +2709,53 @@ pub mod type_assertions {
         t: &Type,
         targs_to_infer: &[Type],
     ) -> Result<(), JobError> {
+        assert_iterable_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            loc,
+            is_async,
+            use_op,
+            t,
+            targs_to_infer,
+        )
+    }
+
+    fn assert_iterable_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        loc: ALoc,
+        is_async: bool,
+        use_op: &UseOp,
+        t: &Type,
+        targs_to_infer: &[Type],
+    ) -> Result<(), JobError> {
         let ts = flow_js_utils::flow_js_result_to_job_error(
-            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t),
+            FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                cx,
+                env,
+                reason_of_t(t),
+                t,
+            ),
         )?;
         for ti in &ts {
             match ti.deref() {
                 TypeInner::DefT(enum_reason, def_t)
                     if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
                 {
-                    flow_js_utils::flow_js_result_to_job_error(flow_js_utils::add_output(
-                        cx,
-                        ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(
-                            enum_reason.to_error_reference(),
-                        )),
-                    ))?;
+                    flow_js_utils::flow_js_result_to_job_error(
+                        flow_js_utils::add_output_with_env(
+                            cx,
+                            env,
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(
+                                enum_reason.to_error_reference(),
+                            )),
+                        ),
+                    )?;
                     let any = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                     for targ in targs_to_infer {
-                        flow_js_utils::flow_js_result_to_job_error(flow_js::unify(
+                        flow_js_utils::flow_js_result_to_job_error(flow_js::unify_with_env(
                             cx,
+                            env,
                             Some(use_op.clone()),
                             &any,
                             targ,
@@ -2311,8 +2769,9 @@ pub mod type_assertions {
                     );
                     for targ in targs_to_infer {
                         let any = type_::any_t::why(src.clone(), reason.dupe());
-                        flow_js_utils::flow_js_result_to_job_error(flow_js::unify(
+                        flow_js_utils::flow_js_result_to_job_error(flow_js::unify_with_env(
                             cx,
+                            env,
                             Some(use_op.clone()),
                             &any,
                             targ,
@@ -2329,8 +2788,9 @@ pub mod type_assertions {
                         );
                         let mut args = vec![ti.dupe()];
                         args.extend(targs_to_infer.iter().map(|t| t.dupe()));
-                        FlowJs::get_builtin_typeapp(
+                        FlowJs::get_builtin_typeapp_with_env(
                             cx,
+                            env,
                             &reason,
                             None,
                             "$IterableOrAsyncIterableInternal",
@@ -2343,8 +2803,9 @@ pub mod type_assertions {
                             ),
                             loc.dupe(),
                         );
-                        FlowJs::get_builtin_typeapp(
+                        FlowJs::get_builtin_typeapp_with_env(
                             cx,
+                            env,
                             &reason,
                             None,
                             "$Iterable",
@@ -2352,7 +2813,11 @@ pub mod type_assertions {
                         )
                     };
                     let use_t = type_::UseT::new(type_::UseTInner::UseT(use_op.clone(), iterable));
-                    flow_js_utils::flow_js_result_to_job_error(flow_js::flow(cx, (ti, &use_t)))?;
+                    flow_js_utils::flow_js_result_to_job_error(flow_js::flow_with_env(
+                        cx,
+                        env,
+                        (ti, &use_t),
+                    ))?;
                 }
             }
         }
@@ -2360,9 +2825,17 @@ pub mod type_assertions {
     }
 
     pub fn non_exhaustive<'cx>(cx: &Context<'cx>, ts: &[Type]) -> Result<bool, JobError> {
+        non_exhaustive_with_env(cx, &FlowJsEnv::entry(), ts)
+    }
+
+    fn non_exhaustive_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        ts: &[Type],
+    ) -> Result<bool, JobError> {
         for t in ts {
             let concrete_types = flow_js_utils::flow_js_result_to_job_error(
-                FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t),
+                FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason_of_t(t), t),
             )?;
             if !concrete_types.is_empty() {
                 return Ok(true);
@@ -2373,6 +2846,7 @@ pub mod type_assertions {
 
     fn assert_operator_receiver_base<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         op_reason: &Reason,
         obj_reason: &Reason,
         obj: &Type,
@@ -2396,8 +2870,9 @@ pub mod type_assertions {
             {
                 if let DefTInner::ObjT(obj_t) = def_t.deref() {
                     if cx.has_prop(obj_t.props_tmap.dupe(), prop_name) {
-                        return flow_js_utils::add_output(
+                        return flow_js_utils::add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EIllegalAssertOperator(Box::new(
                                 EIllegalAssertOperatorData {
                                     op_loc: op_reason.loc().dupe(),
@@ -2413,8 +2888,9 @@ pub mod type_assertions {
                         return Ok(());
                     }
                 }
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op_loc: op_reason.loc().dupe(),
                         obj: obj_reason.dupe(),
@@ -2425,8 +2901,9 @@ pub mod type_assertions {
             (TypeInner::DefT(_, def_t), _) if matches!(def_t.deref(), DefTInner::ObjT(obj_t) if matches!(obj_t.flags.obj_kind, ObjKind::Indexed(_))) => {
                 Ok(())
             }
-            _ => flow_js_utils::add_output(
+            _ => flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op_loc: op_reason.loc().dupe(),
                     obj: obj_reason.dupe(),
@@ -2443,13 +2920,41 @@ pub mod type_assertions {
         t: &Type,
         prop: &str,
     ) {
-        distribute_union_intersection::distribute(
+        check_specialized_assert_operator_property_with_env(
             cx,
+            &FlowJsEnv::entry(),
+            op_reason,
+            obj_reason,
+            t,
+            prop,
+        )
+    }
+
+    fn check_specialized_assert_operator_property_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        op_reason: &Reason,
+        obj_reason: &Reason,
+        t: &Type,
+        prop: &str,
+    ) {
+        distribute_union_intersection::distribute_with_env(
+            cx,
+            env,
             None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
+            &|cx, reason, t| {
+                FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
+            },
             &|r| r.loc().dupe(),
-            &|cx, t| {
-                assert_operator_receiver_base(cx, op_reason, obj_reason, t, Some(Name::new(prop)))
+            &|cx, env, t| {
+                assert_operator_receiver_base(
+                    cx,
+                    env,
+                    op_reason,
+                    obj_reason,
+                    t,
+                    Some(Name::new(prop)),
+                )
             },
             t,
         )
@@ -2463,8 +2968,27 @@ pub mod type_assertions {
         t1: &Type,
         t2: &Type,
     ) {
+        check_specialized_assert_operator_lookup_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            op_reason,
+            obj_reason,
+            t1,
+            t2,
+        )
+    }
+
+    fn check_specialized_assert_operator_lookup_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        op_reason: &Reason,
+        obj_reason: &Reason,
+        t1: &Type,
+        t2: &Type,
+    ) {
         fn check_base<'cx>(
             cx: &Context<'cx>,
+            env: &FlowJsEnv,
             op_reason: &Reason,
             obj_reason: &Reason,
             (obj, prop): (&Type, &Type),
@@ -2474,6 +2998,7 @@ pub mod type_assertions {
                     if let DefTInner::SingletonStrT { value, .. } = def_t.deref() {
                         return assert_operator_receiver_base(
                             cx,
+                            env,
                             op_reason,
                             obj_reason,
                             obj,
@@ -2483,20 +3008,23 @@ pub mod type_assertions {
                 }
                 _ => {}
             }
-            assert_operator_receiver_base(cx, op_reason, obj_reason, obj, None)
+            assert_operator_receiver_base(cx, env, op_reason, obj_reason, obj, None)
         }
 
         distribute_union_intersection::distribute_2(
             cx,
+            env,
             None,
-            &|cx, reason, t| FlowJs::possible_concrete_types_for_operators_checking(cx, reason, t),
+            &|cx, reason, t| {
+                FlowJs::possible_concrete_types_for_operators_checking_with_env(cx, env, reason, t)
+            },
             &|r1, r2| {
                 flow_js_utils::ordered_reasons(cx, (r1.dupe(), r2.dupe()))
                     .0
                     .loc()
                     .dupe()
             },
-            &|cx, (obj, prop)| check_base(cx, op_reason, obj_reason, (obj, prop)),
+            &|cx, env, (obj, prop)| check_base(cx, env, op_reason, obj_reason, (obj, prop)),
             (t1, t2),
         )
         .unwrap()
@@ -2504,6 +3032,14 @@ pub mod type_assertions {
 
     pub fn check_assert_operator_implicitly_nullable<'cx>(
         cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<bool, JobError> {
+        check_assert_operator_implicitly_nullable_with_env(cx, &FlowJsEnv::entry(), t)
+    }
+
+    fn check_assert_operator_implicitly_nullable_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         t: &Type,
     ) -> Result<bool, JobError> {
         fn valid_target(t: &Type) -> bool {
@@ -2524,13 +3060,26 @@ pub mod type_assertions {
         }
 
         let ts = flow_js_utils::flow_js_result_to_job_error(
-            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t),
+            FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                cx,
+                env,
+                reason_of_t(t),
+                t,
+            ),
         )?;
         Ok(ts.iter().any(valid_target))
     }
 
     pub fn check_assert_operator_nullable<'cx>(
         cx: &Context<'cx>,
+        t: &Type,
+    ) -> Result<bool, JobError> {
+        check_assert_operator_nullable_with_env(cx, &FlowJsEnv::entry(), t)
+    }
+
+    fn check_assert_operator_nullable_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         t: &Type,
     ) -> Result<bool, JobError> {
         fn valid_target(t: &Type) -> bool {
@@ -2551,7 +3100,12 @@ pub mod type_assertions {
         }
 
         let ts = flow_js_utils::flow_js_result_to_job_error(
-            FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(t), t),
+            FlowJs::possible_concrete_types_for_operators_checking_with_env(
+                cx,
+                env,
+                reason_of_t(t),
+                t,
+            ),
         )?;
         Ok(ts.iter().any(valid_target))
     }

@@ -9,6 +9,7 @@ use flow_common::error_ref::ErrorReference;
 use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodTData;
@@ -23,12 +24,15 @@ impl flow_js_utils::GetPropHelper for FlowJs {
 
     fn error_type<'cx>(
         _cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         reason: Reason,
     ) -> Result<Self::R, FlowJsException> {
+        let env = env.dupe();
         Ok(Box::new(move |cx, tout| {
             rec_flow_t(
                 cx,
+                &env,
                 trace,
                 unknown_use(),
                 (&any_t::error(reason), &Type::new(TypeInner::OpenT(tout))),
@@ -38,41 +42,53 @@ impl flow_js_utils::GetPropHelper for FlowJs {
 
     fn return_<'cx>(
         _cx: &Context<'cx>,
+        env: &FlowJsEnv,
         use_op: UseOp,
         trace: DepthTrace,
         t: Type,
     ) -> Result<Self::R, FlowJsException> {
+        let env = env.dupe();
         Ok(Box::new(move |cx, tout| {
-            rec_flow_t(cx, trace, use_op, (&t, &Type::new(TypeInner::OpenT(tout))))
+            rec_flow_t(
+                cx,
+                &env,
+                trace,
+                use_op,
+                (&t, &Type::new(TypeInner::OpenT(tout))),
+            )
         }))
     }
 
     fn dict_read_check<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
         pair: (&Type, &Type),
     ) -> Result<(), FlowJsException> {
-        rec_flow_t(cx, trace, use_op.dupe(), pair)
+        rec_flow_t(cx, env, trace, use_op.dupe(), pair)
     }
 
     fn reposition<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::reposition(cx, trace, loc, None, None, t)
+        helpers::reposition(cx, env, trace, loc, None, None, t)
     }
 
     fn cg_lookup<'cx>(
         _cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         obj_t: Type,
         method_accessible: bool,
         super_t: Type,
         args: CgLookupArgs,
     ) -> Result<Self::R, FlowJsException> {
+        let env = env.dupe();
         let CgLookupArgs {
             reason_op,
             lookup_kind,
@@ -84,6 +100,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         Ok(Box::new(move |cx, tout| {
             rec_flow(
                 cx,
+                &env,
                 trace,
                 (
                     &super_t,
@@ -109,6 +126,7 @@ impl flow_js_utils::GetPropHelper for FlowJs {
 
     fn cg_get_prop<'cx>(
         _cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         t: Type,
         args: (
@@ -118,10 +136,13 @@ impl flow_js_utils::GetPropHelper for FlowJs {
             (Reason, flow_common::reason::Name),
         ),
     ) -> Result<Self::R, FlowJsException> {
+        let env = env.dupe();
         let (use_op, access_reason, id, (prop_reason, name)) = args;
+        let env = env.dupe();
         Ok(Box::new(move |cx, tout| {
             rec_flow(
                 cx,
+                &env,
                 trace,
                 (
                     &t,
@@ -144,21 +165,28 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         }))
     }
 
-    fn mk_react_dro<'cx>(cx: &Context<'cx>, use_op: UseOp, dro: &ReactDro, t: Type) -> Type {
+    fn mk_react_dro<'cx>(
+        cx: &Context<'cx>,
+        _env: &FlowJsEnv,
+        use_op: UseOp,
+        dro: &ReactDro,
+        t: Type,
+    ) -> Type {
         mk_react_dro(cx, use_op, dro.clone(), t)
     }
 
     fn prop_overlaps_with_indexer() -> Option<
         for<'b> fn(
             &Context<'b>,
+            &FlowJsEnv,
             &flow_common::reason::Name,
             &Reason,
             &Type,
         ) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     > {
-        Some(|cx, name, reason_name, key| {
-            let name_t = flow_js_utils::type_of_key_name(cx, name.dupe(), reason_name);
-            speculative_subtyping_succeeds_non_speculating(cx, &name_t, key)
+        Some(|cx, env, name, reason_name, key| {
+            let name_t = flow_js_utils::type_of_key_name_with_env(env, name.dupe(), reason_name);
+            speculative_subtyping_succeeds_non_speculating(cx, env, &name_t, key)
         })
     }
 }
@@ -197,6 +225,7 @@ pub(crate) fn prop_typo_suggestion_for_name<'cx>(
 
 pub(super) fn get_private_prop<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     allow_method_access: bool,
     trace: DepthTrace,
     l: &Type,
@@ -210,8 +239,9 @@ pub(super) fn get_private_prop<'cx>(
     tout: &Tvar,
 ) -> Result<(), FlowJsException> {
     match scopes {
-        [] => flow_js_utils::add_output(
+        [] => flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::EPrivateLookupFailed(Box::new((
                 (reason_op.loc().dupe(), reason_c.dupe()),
                 Name::new(prop_name.dupe()),
@@ -222,6 +252,7 @@ pub(super) fn get_private_prop<'cx>(
             if scope.class_binding_id != instance.class_id {
                 get_private_prop(
                     cx,
+                    env,
                     allow_method_access,
                     trace,
                     l,
@@ -245,6 +276,7 @@ pub(super) fn get_private_prop<'cx>(
                     let propref = mk_named_prop(reason_op.dupe(), false, name.dupe());
                     perform_lookup_action(
                         cx,
+                        env,
                         trace,
                         &propref,
                         &p,
@@ -277,8 +309,9 @@ pub(super) fn get_private_prop<'cx>(
                                     if !allow_method_access
                                         && !cx.type_strictness_kind().is_typescript_loose()
                                     {
-                                        flow_js_utils::add_output(
+                                        flow_js_utils::add_output_with_env(
                                             cx,
+                                            env,
                                             ErrorMessage::EMethodUnbinding(Box::new(
                                                 EMethodUnbindingData {
                                                     use_op: use_op.dupe(),
@@ -294,8 +327,9 @@ pub(super) fn get_private_prop<'cx>(
                                 }
                                 do_lookup(property::property_type(p))
                             }
-                            None => flow_js_utils::add_output(
+                            None => flow_js_utils::add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::EPrivateLookupFailed(Box::new((
                                     (reason_op.loc().dupe(), reason_c.dupe()),
                                     name,
@@ -312,6 +346,7 @@ pub(super) fn get_private_prop<'cx>(
 
 pub(super) fn elem_action_on_obj<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     propref: PropRef,
@@ -328,6 +363,7 @@ pub(super) fn elem_action_on_obj<'cx>(
             ..
         }) => rec_flow(
             cx,
+            env,
             trace,
             (
                 obj,
@@ -346,6 +382,7 @@ pub(super) fn elem_action_on_obj<'cx>(
         ElemAction::WriteElem(box WriteElemData { tin, tout, mode }) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     obj,
@@ -361,12 +398,13 @@ pub(super) fn elem_action_on_obj<'cx>(
                 ),
             )?;
             if let Some(t) = tout {
-                rec_flow_t(cx, trace, unknown_use(), (obj, t))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (obj, t))?;
             }
             Ok(())
         }
         ElemAction::CallElem(reason_call, ft) => rec_flow(
             cx,
+            env,
             trace,
             (
                 obj,
@@ -384,6 +422,7 @@ pub(super) fn elem_action_on_obj<'cx>(
 
 pub(super) fn write_computed_obj_prop<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     elem_t: &Type,
@@ -393,6 +432,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
     let reason = reason_of_t(elem_t);
     fn loop_<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
         elem_t: &Type,
@@ -405,8 +445,9 @@ pub(super) fn write_computed_obj_prop<'cx>(
                 if matches!(def_t.deref(), DefTInner::SingletonStrT { .. }) =>
             {
                 let loc = reason.loc().dupe();
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EInternal(Box::new((loc, InternalError::PropRefComputedLiteral))),
                 )?;
                 Ok(())
@@ -414,11 +455,12 @@ pub(super) fn write_computed_obj_prop<'cx>(
             TypeInner::AnyT(_, src) => {
                 let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
                 let any = any_t::why(src, reason.dupe());
-                rec_flow_t(cx, trace, unknown_use(), (tin, &any))
+                rec_flow_t(cx, env, trace, unknown_use(), (tin, &any))
             }
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::StrGeneralT(_)) => {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_name: None,
                         prop_loc: reason.loc().dupe(),
@@ -430,8 +472,9 @@ pub(super) fn write_computed_obj_prop<'cx>(
                 Ok(())
             }
             TypeInner::TemplateLiteralT { .. } => {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_name: None,
                         prop_loc: reason.loc().dupe(),
@@ -443,10 +486,10 @@ pub(super) fn write_computed_obj_prop<'cx>(
                 Ok(())
             }
             TypeInner::GenericT(box GenericTData { bound, .. }) => {
-                loop_(cx, trace, use_op, bound, reason, reason_obj, tin)
+                loop_(cx, env, trace, use_op, bound, reason, reason_obj, tin)
             }
             TypeInner::NominalT { nominal_type, .. } if let Some(upper) = &nominal_type.upper_t => {
-                loop_(cx, trace, use_op, upper, reason, reason_obj, tin)
+                loop_(cx, env, trace, use_op, upper, reason, reason_obj, tin)
             }
             TypeInner::DefT(reason, def_t)
                 if let DefTInner::SingletonNumT {
@@ -458,8 +501,9 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(
                         *value,
                     );
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                         reason.dupe(),
                         None,
@@ -469,8 +513,9 @@ pub(super) fn write_computed_obj_prop<'cx>(
                 Ok(())
             }
             _ => {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EObjectComputedPropertyAssign(Box::new((
                         reason.dupe(),
                         None,
@@ -481,15 +526,16 @@ pub(super) fn write_computed_obj_prop<'cx>(
             }
         }
     }
-    let ts = possible_concrete_types_for_computed_object_keys(cx, reason, elem_t)?;
+    let ts = possible_concrete_types_for_computed_object_keys(cx, env, reason, elem_t)?;
     for t in &ts {
-        loop_(cx, trace, use_op, t, reason, reason_obj, tin)?;
+        loop_(cx, env, trace, use_op, t, reason, reason_obj, tin)?;
     }
     Ok(())
 }
 
 pub(super) fn write_obj_prop<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     mode: &SetMode,
@@ -513,10 +559,11 @@ pub(super) fn write_obj_prop<'cx>(
         mode: mode.clone(),
     }));
     match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
-        cx, &trace, use_op, false, true, o, propref, reason_op,
+        cx, env, &trace, use_op, false, true, o, propref, reason_op,
     )? {
         Some((p, target_kind)) => perform_lookup_action(
             cx,
+            env,
             trace,
             propref,
             &p,
@@ -554,9 +601,9 @@ pub(super) fn write_obj_prop<'cx>(
                         Rc::new(funtype),
                     )),
                 ));
-                rec_flow_t(cx, trace, use_op.dupe(), (tin, &fn_t))?;
+                rec_flow_t(cx, env, trace, use_op.dupe(), (tin, &fn_t))?;
                 if let Some(t) = prop_tout {
-                    rec_flow_t(cx, trace, unknown_use(), (&fn_t, t))?;
+                    rec_flow_t(cx, env, trace, unknown_use(), (&fn_t, t))?;
                 }
                 Ok(())
             }
@@ -566,8 +613,9 @@ pub(super) fn write_obj_prop<'cx>(
                 ..
             } => {
                 if obj_type::is_exact(&o.flags.obj_kind) {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: Some(name.dupe()),
                             prop_loc: reason_prop.loc().dupe(),
@@ -583,6 +631,7 @@ pub(super) fn write_obj_prop<'cx>(
                 } else {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &o.proto_t,
@@ -602,7 +651,7 @@ pub(super) fn write_obj_prop<'cx>(
                 }
             }
             PropRef::Computed(elem_t) => {
-                write_computed_obj_prop(cx, trace, use_op, elem_t, reason_obj, tin)
+                write_computed_obj_prop(cx, env, trace, use_op, elem_t, reason_obj, tin)
             }
         },
     }

@@ -25,8 +25,10 @@ use flow_typing_type::type_util;
 
 use crate::flow_js_utils::FlowJsException;
 
-pub type PossibleConcreteTypesForInspection<'cx> =
-    dyn Fn(&Context<'cx>, &Reason, &Type) -> Result<Vec<Type>, FlowJsException> + 'cx;
+/// Concretization is a `flow_js` operation, so the caller closes over the
+/// [`Context`] and the `flow_js` env it should run under.
+pub type PossibleConcreteTypesForInspection<'a> =
+    dyn Fn(&Reason, &Type) -> Result<Vec<Type>, FlowJsException> + 'a;
 
 pub fn kind_of_name(s: &str) -> Option<StringMappingKind> {
     match s {
@@ -199,13 +201,12 @@ fn can_be_empty_string(t: &Type) -> bool {
 //    stands. On concretization error, fall back to the syntactic check so this
 //    function stays infallible (matches OCaml).
 fn can_be_empty_string_concretized<'cx>(
-    possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'cx>>,
-    cx: &Context<'cx>,
+    possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'_>>,
     t: &Type,
 ) -> bool {
     match possible_concrete_types_for_inspection {
         None => can_be_empty_string(t),
-        Some(f) => match f(cx, type_util::reason_of_t(t), t) {
+        Some(f) => match f(type_util::reason_of_t(t), t) {
             Ok(ts) => ts.iter().any(can_be_empty_string),
             Err(_) => can_be_empty_string(t),
         },
@@ -220,7 +221,7 @@ fn can_be_empty_string_concretized<'cx>(
 //    where opaque shapes (EvalT for indexed/property access, OpenT, AnnotT)
 //    get a chance to reduce to a literal.
 pub fn resolve<'cx>(
-    possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'cx>>,
+    possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'_>>,
     cx: &Context<'cx>,
     kind: StringMappingKind,
     loc: ALoc,
@@ -320,7 +321,6 @@ pub fn resolve<'cx>(
                         (Some((_, rest_quasis)), Some((t0, rest_types)))
                             if can_be_empty_string_concretized(
                                 possible_concrete_types_for_inspection,
-                                cx,
                                 t0,
                             ) =>
                         {

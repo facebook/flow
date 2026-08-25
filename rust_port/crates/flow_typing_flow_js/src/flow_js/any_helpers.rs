@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::GenericTData;
 
 use super::helpers::*;
@@ -137,12 +138,22 @@ pub(super) fn any_prop_to_function(
 
 pub(super) fn invariant_any_propagation_flow<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     any: &Type,
     t: &Type,
 ) -> Result<(), FlowJsException> {
-    rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, any, t)
+    rec_unify(
+        cx,
+        env,
+        trace,
+        use_op,
+        UnifyCause::Uncategorized,
+        None,
+        any,
+        t,
+    )
 }
 
 pub(super) fn any_prop_call_prop<'cx>(
@@ -163,6 +174,7 @@ pub(super) fn any_prop_call_prop<'cx>(
 
 pub(super) fn any_prop_properties<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
@@ -182,7 +194,7 @@ pub(super) fn any_prop_properties<'cx>(
                     Polarity::Positive => covariant_flow(use_op, t),
                     Polarity::Negative => contravariant_flow(use_op, t),
                     Polarity::Neutral => {
-                        invariant_any_propagation_flow(cx, trace, use_op.dupe(), any, t)
+                        invariant_any_propagation_flow(cx, env, trace, use_op.dupe(), any, t)
                     }
                 };
             },
@@ -195,6 +207,7 @@ pub(super) fn any_prop_properties<'cx>(
 
 pub(super) fn any_prop_obj<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
@@ -207,13 +220,13 @@ pub(super) fn any_prop_obj<'cx>(
     // we do it only in implicit instantiation to ensure that we do not get
     // spurious underconstrained errors when objects contain type arguments
     // that get any as a lower bound
-    if cx.in_implicit_instantiation() {
+    if env.in_implicit_instantiation() {
         for (t, p) in obj.reachable_targs.iter() {
             match p {
                 Polarity::Positive => covariant_flow(use_op, t)?,
                 Polarity::Negative => contravariant_flow(use_op, t)?,
                 Polarity::Neutral => {
-                    invariant_any_propagation_flow(cx, trace, use_op.dupe(), any, t)?
+                    invariant_any_propagation_flow(cx, env, trace, use_op.dupe(), any, t)?
                 }
             }
         }
@@ -230,6 +243,7 @@ pub(super) fn any_prop_tvar<'cx>(cx: &Context<'cx>, tvar: i32) -> bool {
 
 pub(super) fn any_prop_to_type_args<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
@@ -241,7 +255,9 @@ pub(super) fn any_prop_to_type_args<'cx>(
         match polarity {
             Polarity::Positive => covariant_flow(use_op, t)?,
             Polarity::Negative => contravariant_flow(use_op, t)?,
-            Polarity::Neutral => invariant_any_propagation_flow(cx, trace, use_op.dupe(), any, t)?,
+            Polarity::Neutral => {
+                invariant_any_propagation_flow(cx, env, trace, use_op.dupe(), any, t)?
+            }
         }
     }
     Ok(())
@@ -258,6 +274,7 @@ pub(super) fn any_prop_to_type_args<'cx>(
 // an issue (for now!)
 pub(super) fn any_prop_inst<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
@@ -292,6 +309,7 @@ pub(super) fn any_prop_inst<'cx>(
 
     any_prop_to_type_args(
         cx,
+        env,
         trace,
         use_op,
         any,
@@ -308,6 +326,7 @@ pub(super) fn any_prop_inst<'cx>(
             }
             any_prop_properties(
                 cx,
+                env,
                 trace,
                 use_op,
                 covariant_flow,
@@ -317,6 +336,7 @@ pub(super) fn any_prop_inst<'cx>(
             )?;
             any_prop_properties(
                 cx,
+                env,
                 trace,
                 use_op,
                 covariant_flow,
@@ -336,22 +356,23 @@ pub(super) fn any_prop_inst<'cx>(
 // separately.
 pub(super) fn any_propagated<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     any: &Type,
     u: &UseT<Context<'cx>>,
 ) -> Result<bool, FlowJsException> {
     let covariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, trace, use_op.dupe(), (any, t))
+        rec_flow_t(cx, env, trace, use_op.dupe(), (any, t))
     };
     let contravariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, trace, use_op.dupe(), (t, any))
+        rec_flow_t(cx, env, trace, use_op.dupe(), (t, any))
     };
 
     match u.deref() {
         UseTInner::ExitRendersT {
             renders_reason: _,
             u: inner_u,
-        } => any_propagated(cx, trace, any, inner_u),
+        } => any_propagated(cx, env, trace, any, inner_u),
         UseTInner::UseT(use_op, t) => match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::ArrT(arr_t) => {
@@ -361,7 +382,7 @@ pub(super) fn any_propagated<'cx>(
                         Ok(true)
                     } else {
                         // Some types just need to be expanded and filled with any types
-                        rec_flow_t(cx, trace, use_op.dupe(), (&expand_any(cx, any, t), t))?;
+                        rec_flow_t(cx, env, trace, use_op.dupe(), (&expand_any(cx, any, t), t))?;
                         Ok(true)
                     }
                 }
@@ -398,6 +419,7 @@ pub(super) fn any_propagated<'cx>(
                 DefTInner::ObjT(obj) => {
                     any_prop_obj(
                         cx,
+                        env,
                         trace,
                         use_op,
                         &covariant_flow,
@@ -410,6 +432,7 @@ pub(super) fn any_propagated<'cx>(
                 DefTInner::InstanceT(instance_t) => {
                     any_prop_inst(
                         cx,
+                        env,
                         trace,
                         use_op,
                         any,
@@ -428,7 +451,7 @@ pub(super) fn any_propagated<'cx>(
             },
             // Some types just need to be expanded and filled with any types
             TypeInner::NominalT { .. } => {
-                rec_flow_t(cx, trace, use_op.dupe(), (&expand_any(cx, any, t), t))?;
+                rec_flow_t(cx, env, trace, use_op.dupe(), (&expand_any(cx, any, t), t))?;
                 Ok(true)
             }
             TypeInner::OpenT(tvar) => Ok(any_prop_tvar(cx, tvar.id() as i32)),
@@ -518,16 +541,17 @@ pub(super) fn any_propagated<'cx>(
 /// all types in contravariant positions when t <: any.
 pub(super) fn any_propagated_use<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
     l: &Type,
 ) -> Result<bool, FlowJsException> {
     let covariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, trace, use_op.dupe(), (t, any))
+        rec_flow_t(cx, env, trace, use_op.dupe(), (t, any))
     };
     let contravariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
-        rec_flow_t(cx, trace, use_op.dupe(), (any, t))
+        rec_flow_t(cx, env, trace, use_op.dupe(), (any, t))
     };
 
     match l.deref() {
@@ -543,7 +567,7 @@ pub(super) fn any_propagated_use<'cx>(
                 Ok(true)
             }
             DefTInner::ArrT(_) => {
-                rec_flow_t(cx, trace, use_op.dupe(), (l, &expand_any(cx, any, l)))?;
+                rec_flow_t(cx, env, trace, use_op.dupe(), (l, &expand_any(cx, any, l)))?;
                 Ok(true)
             }
             DefTInner::ClassT(class_t) => {
@@ -562,6 +586,7 @@ pub(super) fn any_propagated_use<'cx>(
             DefTInner::ObjT(obj) => {
                 any_prop_obj(
                     cx,
+                    env,
                     trace,
                     use_op,
                     &covariant_flow,
@@ -574,6 +599,7 @@ pub(super) fn any_propagated_use<'cx>(
             DefTInner::InstanceT(instance_t) => {
                 any_prop_inst(
                     cx,
+                    env,
                     trace,
                     use_op,
                     any,
@@ -599,7 +625,7 @@ pub(super) fn any_propagated_use<'cx>(
         // Some types just need to be expanded and filled with any types
         TypeInner::NominalT { .. } => {
             // rec_flow_t cx trace ~use_op (t, expand_any cx any t);
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &expand_any(cx, any, l)))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &expand_any(cx, any, l)))?;
             // true
             Ok(true)
         }

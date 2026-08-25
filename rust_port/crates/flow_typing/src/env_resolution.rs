@@ -538,9 +538,7 @@ fn resolve_hint<'cx>(
                 resolve_annotation(cx, &tparams_map, None, &anno, BindsSingleValue::No)?
             }
             HintNode::ValueHint(encl_ctx, exp) => {
-                check_expr_error_to_job_error(cx.run_in_empty_speculation_state(|| {
-                    resolve_write_expression(cx, encl_ctx, &exp)
-                }))?
+                check_expr_error_to_job_error(resolve_write_expression(cx, encl_ctx, &exp))?
             }
             HintNode::ProvidersHint(locs) => {
                 if locs.len() == 1 {

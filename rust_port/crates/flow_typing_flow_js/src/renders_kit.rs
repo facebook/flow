@@ -19,6 +19,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CanonicalRendersForm;
@@ -82,6 +83,7 @@ fn incompatible_renders_error(
 
 pub fn rec_renders_to_renders<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     (reasonl, l): (&Reason, &CanonicalRendersForm),
@@ -95,8 +97,9 @@ pub fn rec_renders_to_renders<'cx>(
             if n1 == n2 {
                 Ok(())
             } else {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
                 )
             }
@@ -110,11 +113,13 @@ pub fn rec_renders_to_renders<'cx>(
         ) => {
             if !FlowJs::speculative_subtyping_succeeds_with_flow_errors(
                 cx,
+                env,
                 &reconstruct_render_type(reasonl, l),
                 t,
             )? {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
                 )
             } else {
@@ -125,8 +130,9 @@ pub fn rec_renders_to_renders<'cx>(
             CanonicalRendersForm::IntrinsicRenders(_),
             CanonicalRendersForm::NominalRenders { .. },
         )
-        | (_, CanonicalRendersForm::IntrinsicRenders(_)) => flow_js_utils::add_output(
+        | (_, CanonicalRendersForm::IntrinsicRenders(_)) => flow_js_utils::add_output_with_env(
             cx,
+            env,
             incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
         ),
         (
@@ -152,10 +158,17 @@ pub fn rec_renders_to_renders<'cx>(
                 Ok(())
             } else {
                 // We reposition the super using l's reason for better error messages
-                let repositioned_super =
-                    FlowJs::reposition_reason(cx, Some(trace), reasonl, Some(true), renders_super)?;
-                FlowJs::rec_flow_t(
+                let repositioned_super = FlowJs::reposition_reason(
                     cx,
+                    env,
+                    Some(trace),
+                    reasonl,
+                    Some(true),
+                    renders_super,
+                )?;
+                FlowJs::rec_flow_t_with_env(
+                    cx,
+                    env,
                     trace,
                     frame_renders_compat(use_op),
                     &repositioned_super,
@@ -180,14 +193,22 @@ pub fn rec_renders_to_renders<'cx>(
         ) => {
             if !FlowJs::speculative_subtyping_succeeds_with_flow_errors(
                 cx,
+                env,
                 &reconstruct_render_type(reasonl, l),
                 t,
             )? {
                 let u_type = reconstruct_render_type(reasonu, u);
-                let repositioned_super =
-                    FlowJs::reposition_reason(cx, Some(trace), reasonl, Some(true), renders_super)?;
-                FlowJs::rec_flow_t(
+                let repositioned_super = FlowJs::reposition_reason(
                     cx,
+                    env,
+                    Some(trace),
+                    reasonl,
+                    Some(true),
+                    renders_super,
+                )?;
+                FlowJs::rec_flow_t_with_env(
+                    cx,
+                    env,
                     trace,
                     frame_renders_compat(use_op),
                     &repositioned_super,
@@ -203,8 +224,9 @@ pub fn rec_renders_to_renders<'cx>(
                 renders_structural_type: t,
             },
         ) => {
-            FlowJs::rec_flow_t(
+            FlowJs::rec_flow_t_with_env(
                 cx,
+                env,
                 trace,
                 frame_renders_compat(use_op),
                 &reconstruct_render_type(reasonl, l),
@@ -219,8 +241,9 @@ pub fn rec_renders_to_renders<'cx>(
             }
             | CanonicalRendersForm::DefaultRenders,
             CanonicalRendersForm::NominalRenders { .. },
-        ) => flow_js_utils::add_output(
+        ) => flow_js_utils::add_output_with_env(
             cx,
+            env,
             incompatible_renders_error(reasonl, reasonu, frame_renders_compat(use_op)),
         ),
         (
@@ -230,8 +253,9 @@ pub fn rec_renders_to_renders<'cx>(
             },
             _,
         ) => {
-            FlowJs::rec_flow_t(
+            FlowJs::rec_flow_t_with_env(
                 cx,
+                env,
                 trace,
                 use_op,
                 renders_structural_type,
@@ -257,10 +281,10 @@ pub fn rec_renders_to_renders<'cx>(
                         .replace_desc(VirtualReasonDesc::RRendersNothing);
                     let null_t =
                         Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
-                    FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &null_t, &u_type)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &null_t, &u_type)?;
                     let void_t =
                         Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::VoidT)));
-                    FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &void_t, &u_type)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &void_t, &u_type)?;
                     let false_t = Type::new(TypeInner::DefT(
                         reason,
                         DefT::new(DefTInner::SingletonBoolT {
@@ -268,13 +292,14 @@ pub fn rec_renders_to_renders<'cx>(
                             from_annot: false,
                         }),
                     ));
-                    FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &false_t, &u_type)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &false_t, &u_type)?;
                 }
                 RendersVariant::RendersMaybe => {}
                 RendersVariant::RendersStar => {}
             }
             rec_renders_to_renders(
                 cx,
+                env,
                 trace,
                 use_op,
                 (
@@ -300,15 +325,17 @@ pub fn rec_renders_to_renders<'cx>(
             match renders_variant {
                 RendersVariant::RendersNormal | RendersVariant::RendersMaybe => {
                     let renders_star = reconstruct_render_type(reasonl, l);
-                    let roa = FlowJs::get_builtin_typeapp(
+                    let roa = FlowJs::get_builtin_typeapp_with_env(
                         cx,
+                        env,
                         reasonl,
                         None,
                         "$ReadOnlyArray",
                         vec![renders_star],
                     );
-                    FlowJs::rec_flow_t(
+                    FlowJs::rec_flow_t_with_env(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         &roa,
@@ -319,6 +346,7 @@ pub fn rec_renders_to_renders<'cx>(
             }
             rec_renders_to_renders(
                 cx,
+                env,
                 trace,
                 use_op,
                 (
@@ -344,6 +372,7 @@ pub fn rec_renders_to_renders<'cx>(
 // let possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq) =
 fn possibly_promoted_render_types_of_react_element_type<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     elem_reason: &Reason,
     opq: &NominalType,
 ) -> Result<(Vec<Type>, bool), FlowJsException> {
@@ -368,10 +397,19 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
 
     let concretize_component_renders_and_check =
         |component_t: &Type| -> Result<(Vec<Type>, bool), FlowJsException> {
-            let extracted =
-                FlowJs::run_render_extractor(cx, unknown_use(), elem_reason, component_t)?;
-            let concrete =
-                FlowJs::possible_concrete_types_for_inspection(cx, elem_reason, &extracted)?;
+            let extracted = FlowJs::run_render_extractor_with_env(
+                cx,
+                env,
+                unknown_use(),
+                elem_reason,
+                component_t,
+            )?;
+            let concrete = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx,
+                env,
+                elem_reason,
+                &extracted,
+            )?;
             Ok(on_concretized_types(concrete))
         };
 
@@ -396,8 +434,9 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
                         elem_reason.dupe(),
                         DefT::new(DefTInner::EmptyT),
                     ));
-                    let renders = FlowJs::get_builtin_react_type(
+                    let renders = FlowJs::get_builtin_react_type_with_env(
                         cx,
+                        env,
                         None,
                         elem_reason,
                         None,
@@ -416,12 +455,14 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
                 };
                 if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
                     cx,
+                    env,
                     component_t,
                     &top_abstract_component,
                 )? {
                     concretize_component_renders_and_check(component_t)
                 } else if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
                     cx,
+                    env,
                     component_t,
                     &Type::new(TypeInner::DefT(
                         elem_reason.dupe(),
@@ -452,6 +493,7 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
 
 fn try_promote_render_type_from_react_element_type<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     elem_reason: &Reason,
@@ -460,19 +502,21 @@ fn try_promote_render_type_from_react_element_type<'cx>(
     upper_renders: &CanonicalRendersForm,
 ) -> Result<(), FlowJsException> {
     let (promoted_ts, has_failed) =
-        possibly_promoted_render_types_of_react_element_type(cx, elem_reason, opq)?;
+        possibly_promoted_render_types_of_react_element_type(cx, env, elem_reason, opq)?;
     let use_op = frame_renders_compat(use_op);
     if has_failed {
-        flow_js_utils::add_output(
+        flow_js_utils::add_output_with_env(
             cx,
+            env,
             incompatible_renders_error(elem_reason, renders_r, use_op.dupe()),
         )?;
     }
     for promoted_l in promoted_ts {
         let repositioned =
-            FlowJs::reposition_reason(cx, Some(trace), elem_reason, Some(true), &promoted_l)?;
-        FlowJs::rec_flow_t(
+            FlowJs::reposition_reason(cx, env, Some(trace), elem_reason, Some(true), &promoted_l)?;
+        FlowJs::rec_flow_t_with_env(
             cx,
+            env,
             trace,
             use_op.dupe(),
             &repositioned,
@@ -487,6 +531,7 @@ fn try_promote_render_type_from_react_element_type<'cx>(
 
 pub fn non_renders_to_renders<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
@@ -529,8 +574,9 @@ pub fn non_renders_to_renders<'cx>(
                     | ArrType::TupleAT(box TupleATData { elem_t: t, .. })
                     | ArrType::ROArrayAT(box (t, _)) => t,
                 };
-                FlowJs::rec_flow_t(
+                FlowJs::rec_flow_t_with_env(
                     cx,
+                    env,
                     trace,
                     use_op,
                     t,
@@ -551,6 +597,7 @@ pub fn non_renders_to_renders<'cx>(
         {
             try_promote_render_type_from_react_element_type(
                 cx,
+                env,
                 trace,
                 use_op,
                 reason_opaque,
@@ -572,9 +619,10 @@ pub fn non_renders_to_renders<'cx>(
         ) if Some(&opq.nominal_id)
             == flow_js_utils::builtin_react_element_nominal_id(cx).as_ref() =>
         {
-            if !FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, l, t)? {
+            if !FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, env, l, t)? {
                 try_promote_render_type_from_react_element_type(
                     cx,
+                    env,
                     trace,
                     use_op,
                     reason_opaque,
@@ -595,25 +643,34 @@ pub fn non_renders_to_renders<'cx>(
                 renders_structural_type: t,
             },
         ) => {
-            FlowJs::rec_flow_t(cx, trace, frame_renders_compat(use_op), l, t)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, frame_renders_compat(use_op), l, t)?;
             return Ok(());
         }
         (_, CanonicalRendersForm::DefaultRenders) => {
-            let react_node = FlowJs::get_builtin_react_type(
+            let react_node = FlowJs::get_builtin_react_type_with_env(
                 cx,
+                env,
                 None,
                 renders_r,
                 Some(true),
                 ExpectedModulePurpose::ReactModuleForReactNodeType,
             )?;
-            FlowJs::rec_flow_t(cx, trace, frame_renders_compat(use_op), l, &react_node)?;
+            FlowJs::rec_flow_t_with_env(
+                cx,
+                env,
+                trace,
+                frame_renders_compat(use_op),
+                l,
+                &react_node,
+            )?;
             return Ok(());
         }
         (TypeInner::AnyT(..), _) => return Ok(()),
         (_, _) => {}
     }
-    flow_js_utils::add_output(
+    flow_js_utils::add_output_with_env(
         cx,
+        env,
         incompatible_renders_error(
             type_util::reason_of_t(l),
             renders_r,
@@ -632,8 +689,9 @@ enum RenderTypeSynthesisState {
     FailedSynthesisState,
 }
 
-pub fn try_synthesize_render_type<'cx>(
+pub(super) fn try_synthesize_render_type_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     drop_renders_any: bool,
     t: &Type,
 ) -> Result<Option<(RendersVariant, Vec<Type>)>, FlowJsException> {
@@ -671,6 +729,7 @@ pub fn try_synthesize_render_type<'cx>(
 
     fn on_concretized_react_node_types<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         ts: Vec<Type>,
         gas: i32,
         drop_renders_any: bool,
@@ -704,6 +763,7 @@ pub fn try_synthesize_render_type<'cx>(
                     let (promoted_ts, has_failed) =
                         possibly_promoted_render_types_of_react_element_type(
                             cx,
+                            env,
                             nominal_elem_reason,
                             opq,
                         )?;
@@ -716,6 +776,7 @@ pub fn try_synthesize_render_type<'cx>(
                         );
                         state = on_concretized_react_node_types(
                             cx,
+                            env,
                             promoted_ts,
                             gas - 1,
                             drop_renders_any,
@@ -736,8 +797,9 @@ pub fn try_synthesize_render_type<'cx>(
                             renders_variant: renders_variant_prime,
                             renders_structural_type,
                         } => {
-                            let concrete = FlowJs::possible_concrete_types_for_inspection(
+                            let concrete = FlowJs::possible_concrete_types_for_inspection_with_env(
                                 cx,
+                                env,
                                 type_util::reason_of_t(renders_structural_type),
                                 renders_structural_type,
                             )?;
@@ -755,6 +817,7 @@ pub fn try_synthesize_render_type<'cx>(
                             };
                             state = on_concretized_react_node_types(
                                 cx,
+                                env,
                                 concrete,
                                 gas - 1,
                                 drop_renders_any,
@@ -791,8 +854,9 @@ pub fn try_synthesize_render_type<'cx>(
                             ArrType::TupleAT(box TupleATData { elem_t, .. }) => elem_t,
                             ArrType::ROArrayAT(box (t, _)) => t,
                         };
-                        let concrete = FlowJs::possible_concrete_types_for_inspection(
+                        let concrete = FlowJs::possible_concrete_types_for_inspection_with_env(
                             cx,
+                            env,
                             type_util::reason_of_t(arr_elem_t),
                             arr_elem_t,
                         )?;
@@ -810,6 +874,7 @@ pub fn try_synthesize_render_type<'cx>(
                         };
                         state = on_concretized_react_node_types(
                             cx,
+                            env,
                             concrete,
                             gas - 1,
                             drop_renders_any,
@@ -835,9 +900,13 @@ pub fn try_synthesize_render_type<'cx>(
         normalized_render_type_collector: type_collector::TypeCollector::create(),
         renders_variant: RendersVariant::RendersNormal,
     };
-    let concrete =
-        FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)?;
-    match on_concretized_react_node_types(cx, concrete, 5, drop_renders_any, state)? {
+    let concrete = FlowJs::possible_concrete_types_for_inspection_with_env(
+        cx,
+        env,
+        type_util::reason_of_t(t),
+        t,
+    )?;
+    match on_concretized_react_node_types(cx, env, concrete, 5, drop_renders_any, state)? {
         RenderTypeSynthesisState::FailedSynthesisState => Ok(None),
         RenderTypeSynthesisState::IntermediateSynthesisState {
             normalized_render_type_collector,
@@ -850,4 +919,12 @@ pub fn try_synthesize_render_type<'cx>(
                 .collect(),
         ))),
     }
+}
+
+pub fn try_synthesize_render_type<'cx>(
+    cx: &Context<'cx>,
+    drop_renders_any: bool,
+    t: &Type,
+) -> Result<Option<(RendersVariant, Vec<Type>)>, FlowJsException> {
+    try_synthesize_render_type_with_env(cx, &FlowJsEnv::entry(), drop_renders_any, t)
 }

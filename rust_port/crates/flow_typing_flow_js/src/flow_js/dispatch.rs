@@ -22,6 +22,7 @@ use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
 use flow_typing_errors::error_message::EnumModificationData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
 use flow_typing_type::type_::CallElemTData;
@@ -153,6 +154,7 @@ fn lookup_targets<'a>(
 /// instead of `any` — and for a TS-related access there is nothing to report at all.
 fn strict_lookup_failed<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     lreason: &Reason,
     reason_op: &Reason,
@@ -165,7 +167,7 @@ fn strict_lookup_failed<'cx>(
     if !indexer_fallback.is_some_and(|fallback| fallback.suppress_missing_error) {
         match action {
             LookupAction::LookupPropsForSubtyping(box data) => {
-                subtyping_kit::add_output_missing_props_from_lookup(cx, data, ids)?;
+                subtyping_kit::add_output_missing_props_from_lookup(cx, env, data, ids)?;
             }
             _ => {
                 let (prop_loc, prop_name) = match propref {
@@ -176,8 +178,9 @@ fn strict_lookup_failed<'cx>(
                     let ids: Vec<_> = ids.iter().duped().collect();
                     prop_typo_suggestion_for_name(cx, &ids, name)
                 });
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_loc,
                         reason_obj: strict_reason.dupe(),
@@ -192,6 +195,7 @@ fn strict_lookup_failed<'cx>(
     if let Some(fallback) = indexer_fallback {
         return perform_lookup_action(
             cx,
+            env,
             trace,
             propref,
             &property::property_type(&fallback.property),
@@ -210,6 +214,7 @@ fn strict_lookup_failed<'cx>(
     for (propref, up) in lookup_targets(propref, action) {
         perform_lookup_action(
             cx,
+            env,
             trace,
             propref,
             &p,
@@ -229,6 +234,7 @@ fn strict_lookup_failed<'cx>(
 /// property that does not exist.
 fn strict_computed_lookup_failed<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     lreason: &Reason,
     reason_op: &Reason,
@@ -240,8 +246,9 @@ fn strict_computed_lookup_failed<'cx>(
     match elem_t.deref() {
         TypeInner::OpenT(_) => {
             let loc = loc_of_t(elem_t);
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EInternal(Box::new((loc.dupe(), InternalError::PropRefComputedOpen))),
             )?;
         }
@@ -249,8 +256,9 @@ fn strict_computed_lookup_failed<'cx>(
             if matches!(inner_def.deref(), DefTInner::SingletonStrT { .. }) =>
         {
             let loc = loc_of_t(elem_t);
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EInternal(Box::new((
                     loc.dupe(),
                     InternalError::PropRefComputedLiteral,
@@ -266,6 +274,7 @@ fn strict_computed_lookup_failed<'cx>(
             for (propref, up) in lookup_targets(propref, action) {
                 perform_lookup_action(
                     cx,
+                    env,
                     trace,
                     propref,
                     &p,
@@ -280,11 +289,12 @@ fn strict_computed_lookup_failed<'cx>(
         }
         _ => match action {
             LookupAction::LookupPropsForSubtyping(box data) => {
-                subtyping_kit::add_output_missing_props_from_lookup(cx, data, None)?;
+                subtyping_kit::add_output_missing_props_from_lookup(cx, env, data, None)?;
             }
             _ => {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_loc: reason_op.loc().dupe(),
                         reason_obj: strict_reason.dupe(),
@@ -340,6 +350,7 @@ fn remaining_lookup(
 /// key type that reaches the object being keyed.
 fn flow_dict_key_to_keys<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     dict_key: &Type,
     reason_op: &Reason,
@@ -348,6 +359,7 @@ fn flow_dict_key_to_keys<'cx>(
 ) -> Result<(), FlowJsException> {
     rec_flow(
         cx,
+        env,
         trace,
         (
             dict_key,
@@ -371,10 +383,11 @@ fn flow_dict_key_to_keys<'cx>(
 /// TailCall continuations and process them in a loop to avoid stack overflow.
 pub(super) fn __flow<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     (l, u): (&Type, &UseT<Context<'cx>>),
     trace: DepthTrace,
 ) -> Result<(), FlowJsException> {
-    let mut tc = __flow_impl(cx, (l, u), trace)?;
+    let mut tc = __flow_impl(cx, env, (l, u), trace)?;
 
     // Process tail calls iteratively instead of recursing
     while let Some(tail_call) = tc {
@@ -382,7 +395,7 @@ pub(super) fn __flow<'cx>(
             TailCall::Flow(l, u, reason) => (l, u, DepthTrace::unit_trace(), Some(reason)),
             TailCall::RecFlow(l, u, t) => (l, u, t, None),
         };
-        match __flow_impl(cx, (&tc_l, &tc_u), tc_trace) {
+        match __flow_impl(cx, env, (&tc_l, &tc_u), tc_trace) {
             Ok(next) => tc = next,
             Err(FlowJsException::LimitExceeded) if let Some(ru) = catch_limit_reason => {
                 // flow() handles LimitExceeded by recording an error and continuing
@@ -405,11 +418,12 @@ pub(super) fn __flow<'cx>(
 
 fn __flow_impl<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     (l, u): (&Type, &UseT<Context<'cx>>),
     trace: DepthTrace,
 ) -> Result<Option<TailCall<'cx>>, FlowJsException> {
     if flow_typing_type::type_util::ground_subtype_use_t(
-        &|t| flow_js_utils::update_lit_type_from_annot(cx, t),
+        &|t| flow_js_utils::update_lit_type_from_annot(cx, env, t),
         l,
         u,
     ) {
@@ -441,7 +455,7 @@ fn __flow_impl<'cx>(
     if match l.deref() {
         TypeInner::AnyT(_, _) => {
             // Either propagate AnyT through the use type, or short-circuit
-            any_propagated(cx, trace, l, u)?
+            any_propagated(cx, env, trace, l, u)?
         }
         TypeInner::GenericT(box GenericTData {
             bound,
@@ -449,7 +463,7 @@ fn __flow_impl<'cx>(
             reason,
             id,
             no_infer,
-        }) => handle_generic(cx, trace, *no_infer, bound, reason, id, name, u)?,
+        }) => handle_generic(cx, env, trace, *no_infer, bound, reason, id, name, u)?,
         _ => false,
     } {
         // Either propagate AnyT through the def type, or short-circuit because l <: any trivially
@@ -457,7 +471,7 @@ fn __flow_impl<'cx>(
     }
     if match u.deref() {
         UseTInner::UseT(use_op, any) if matches!(any.deref(), TypeInner::AnyT(_, _)) => {
-            any_propagated_use(cx, trace, use_op, any, l)?
+            any_propagated_use(cx, env, trace, use_op, any, l)?
         }
         _ => false,
     } {
@@ -492,6 +506,7 @@ fn __flow_impl<'cx>(
             let TypeDestructorTInner(use_op_prime, reason, d) = defer_use_t.deref();
             let result = eval_helpers::mk_type_destructor(
                 cx,
+                env,
                 trace,
                 use_op_prime.dupe(),
                 reason,
@@ -499,7 +514,7 @@ fn __flow_impl<'cx>(
                 d,
                 id.dupe(),
             )?;
-            // rec_flow(cx, trace, (&result, u))
+            // rec_flow(cx, env, trace, (&result, u))
             // Tail call: in OCaml this is the last call in the match arm
             return Ok(Some(TailCall::RecFlow(
                 result,
@@ -517,6 +532,7 @@ fn __flow_impl<'cx>(
             let TypeDestructorTInner(use_op_prime, reason, d) = defer_use_t.deref();
             let result = eval_helpers::mk_type_destructor(
                 cx,
+                env,
                 trace,
                 use_op_prime.dupe(),
                 reason,
@@ -524,7 +540,7 @@ fn __flow_impl<'cx>(
                 d,
                 id.dupe(),
             )?;
-            // rec_flow(cx, trace, (&result, &UseT::new(UseTInner::ReposUseT(...))))
+            // rec_flow(cx, env, trace, (&result, &UseT::new(UseTInner::ReposUseT(...))))
             // Tail call: in OCaml this is the last call in the match arm
             return Ok(Some(TailCall::RecFlow(
                 result,
@@ -563,6 +579,7 @@ fn __flow_impl<'cx>(
                         };
                         add_upper_edges(
                             cx,
+                            env,
                             trace,
                             use_op.dupe(),
                             false,
@@ -571,13 +588,14 @@ fn __flow_impl<'cx>(
                         );
                         add_lower_edges(
                             cx,
+                            env,
                             trace,
                             use_op.dupe(),
                             false,
                             (id1, &bounds1),
                             (id2, &bounds2),
                         );
-                        flows_across(cx, trace, use_op.dupe(), &lower, &upper)?;
+                        flows_across(cx, env, trace, use_op.dupe(), &lower, &upper)?;
                     }
                 }
                 (
@@ -585,31 +603,39 @@ fn __flow_impl<'cx>(
                     constraint::Constraints::Resolved(t2),
                 ) => {
                     let t2_use = flow_use_op(
-                        cx,
+                        env,
                         unknown_use(),
                         UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe())),
                     );
-                    edges_and_flows_to_t(cx, trace, false, (id1, &bounds1), &t2_use)?;
+                    edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &t2_use)?;
                 }
                 (
                     constraint::Constraints::Unresolved(bounds1),
                     constraint::Constraints::FullyResolved(s2),
                 ) => {
                     let t2_use = flow_use_op(
-                        cx,
+                        env,
                         unknown_use(),
                         UseT::new(UseTInner::UseT(
                             use_op.dupe(),
                             cx.force_fully_resolved_tvar(&s2),
                         )),
                     );
-                    edges_and_flows_to_t(cx, trace, false, (id1, &bounds1), &t2_use)?;
+                    edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &t2_use)?;
                 }
                 (
                     constraint::Constraints::Resolved(t1),
                     constraint::Constraints::Unresolved(bounds2),
                 ) => {
-                    edges_and_flows_from_t(cx, trace, use_op.dupe(), false, &t1, (id2, &bounds2))?;
+                    edges_and_flows_from_t(
+                        cx,
+                        env,
+                        trace,
+                        use_op.dupe(),
+                        false,
+                        &t1,
+                        (id2, &bounds2),
+                    )?;
                 }
                 (
                     constraint::Constraints::FullyResolved(s1),
@@ -617,6 +643,7 @@ fn __flow_impl<'cx>(
                 ) => {
                     edges_and_flows_from_t(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         false,
@@ -626,50 +653,60 @@ fn __flow_impl<'cx>(
                 }
                 (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
                     let t2_use = flow_use_op(
-                        cx,
+                        env,
                         unknown_use(),
                         UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe())),
                     );
-                    rec_flow(cx, trace, (&t1, &t2_use))?;
+                    rec_flow(cx, env, trace, (&t1, &t2_use))?;
                 }
                 (
                     constraint::Constraints::Resolved(t1),
                     constraint::Constraints::FullyResolved(s2),
                 ) => {
                     let t2_use = flow_use_op(
-                        cx,
+                        env,
                         unknown_use(),
                         UseT::new(UseTInner::UseT(
                             use_op.dupe(),
                             cx.force_fully_resolved_tvar(&s2),
                         )),
                     );
-                    rec_flow(cx, trace, (&t1, &t2_use))?;
+                    rec_flow(cx, env, trace, (&t1, &t2_use))?;
                 }
                 (
                     constraint::Constraints::FullyResolved(s1),
                     constraint::Constraints::Resolved(t2),
                 ) => {
                     let t2_use = flow_use_op(
-                        cx,
+                        env,
                         unknown_use(),
                         UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe())),
                     );
-                    rec_flow(cx, trace, (&cx.force_fully_resolved_tvar(&s1), &t2_use))?;
+                    rec_flow(
+                        cx,
+                        env,
+                        trace,
+                        (&cx.force_fully_resolved_tvar(&s1), &t2_use),
+                    )?;
                 }
                 (
                     constraint::Constraints::FullyResolved(s1),
                     constraint::Constraints::FullyResolved(s2),
                 ) => {
                     let t2_use = flow_use_op(
-                        cx,
+                        env,
                         unknown_use(),
                         UseT::new(UseTInner::UseT(
                             use_op.dupe(),
                             cx.force_fully_resolved_tvar(&s2),
                         )),
                     );
-                    rec_flow(cx, trace, (&cx.force_fully_resolved_tvar(&s1), &t2_use))?;
+                    rec_flow(
+                        cx,
+                        env,
+                        trace,
+                        (&cx.force_fully_resolved_tvar(&s1), &t2_use),
+                    )?;
                 }
             }
         }
@@ -720,15 +757,15 @@ fn __flow_impl<'cx>(
                 let (id1, constraints1) = cx.find_constraints(tvar.id() as i32);
                 match constraints1 {
                     constraint::Constraints::Unresolved(bounds1) => {
-                        edges_and_flows_to_t(cx, trace, false, (id1, &bounds1), &u)?;
+                        edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &u)?;
                     }
                     constraint::Constraints::Resolved(t1) => {
-                        // rec_flow(cx, trace, (&t1, &u))
+                        // rec_flow(cx, env, trace, (&t1, &u))
                         // Tail call: in OCaml this is the last call in the match arm
                         return Ok(Some(TailCall::RecFlow(t1, u, DepthTrace::rec_trace(trace))));
                     }
                     constraint::Constraints::FullyResolved(s1) => {
-                        // rec_flow(cx, trace, (&cx.force_fully_resolved_tvar(&s1), &u))
+                        // rec_flow(cx, env, trace, (&cx.force_fully_resolved_tvar(&s1), &u))
                         // Tail call: in OCaml this is the last call in the match arm
                         return Ok(Some(TailCall::RecFlow(
                             cx.force_fully_resolved_tvar(&s1),
@@ -746,10 +783,18 @@ fn __flow_impl<'cx>(
             let (id2, constraints2) = cx.find_constraints(tvar.id() as i32);
             match constraints2 {
                 constraint::Constraints::Unresolved(bounds2) => {
-                    edges_and_flows_from_t(cx, trace, use_op.dupe(), false, l, (id2, &bounds2))?;
+                    edges_and_flows_from_t(
+                        cx,
+                        env,
+                        trace,
+                        use_op.dupe(),
+                        false,
+                        l,
+                        (id2, &bounds2),
+                    )?;
                 }
                 constraint::Constraints::Resolved(t2) => {
-                    // rec_flow(cx, trace, (l, &UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()))))
+                    // rec_flow(cx, env, trace, (l, &UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()))))
                     // Tail call: in OCaml this is the last call in the match arm
                     return Ok(Some(TailCall::RecFlow(
                         l.dupe(),
@@ -758,7 +803,7 @@ fn __flow_impl<'cx>(
                     )));
                 }
                 constraint::Constraints::FullyResolved(s2) => {
-                    // rec_flow(cx, trace, (l, &UseT::new(UseTInner::UseT(use_op.dupe(), ...))))
+                    // rec_flow(cx, env, trace, (l, &UseT::new(UseTInner::UseT(use_op.dupe(), ...))))
                     // Tail call: in OCaml this is the last call in the match arm
                     return Ok(Some(TailCall::RecFlow(
                         l.dupe(),
@@ -787,11 +832,12 @@ fn __flow_impl<'cx>(
             let l_repos = match repos {
                 None => l.dupe(),
                 Some((reason, use_desc)) => {
-                    helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?
+                    helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?
                 }
             };
             eval_destructor(
                 cx,
+                env,
                 trace,
                 destructor_use_op.dupe(),
                 reason,
@@ -805,7 +851,7 @@ fn __flow_impl<'cx>(
         // * Subtyping *
         // *************
         (_, UseTInner::UseT(use_op, u_type)) => {
-            subtyping_kit::rec_sub_t(cx, use_op.dupe(), l, u_type, trace)?;
+            subtyping_kit::rec_sub_t(cx, env, use_op.dupe(), l, u_type, trace)?;
         }
         // For l.key !== sentinel when sentinel has a union type, don't split the union. This
         // prevents a drastic blowup of cases which can cause perf problems.
@@ -854,13 +900,13 @@ fn __flow_impl<'cx>(
             collector.add(l.dupe());
         }
         (TypeInner::UnionT(_, urep), UseTInner::ConcretizeT(..)) => {
-            flow_all_in_union(cx, trace, urep, u)?;
+            flow_all_in_union(cx, env, trace, urep, u)?;
         }
         (TypeInner::MaybeT(lreason, t), UseTInner::ConcretizeT(..)) => {
             let lreason = lreason.dupe().replace_desc(VirtualReasonDesc::RNullOrVoid);
-            rec_flow(cx, trace, (&null::make(lreason.dupe()), u))?;
-            rec_flow(cx, trace, (&void::make(lreason), u))?;
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (&null::make(lreason.dupe()), u))?;
+            rec_flow(cx, env, trace, (&void::make(lreason), u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
         (
             TypeInner::OptionalT {
@@ -872,10 +918,11 @@ fn __flow_impl<'cx>(
         ) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (&void::why_with_use_desc(*use_desc, r.dupe()), u),
             )?;
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
         (TypeInner::AnnotT(r, t, use_desc), UseTInner::ConcretizeT(..)) => {
             // TODO: directly derive loc and desc from the reason of tvar
@@ -886,22 +933,30 @@ fn __flow_impl<'cx>(
                 None
             };
             let annot_loc = r.annot_loc().map(|l| l.dupe());
-            let repos_t =
-                helpers::reposition(cx, Some(trace), loc, desc.as_ref(), annot_loc, t.dupe())?;
-            rec_flow(cx, trace, (&repos_t, u))?;
+            let repos_t = helpers::reposition(
+                cx,
+                env,
+                Some(trace),
+                loc,
+                desc.as_ref(),
+                annot_loc,
+                t.dupe(),
+            )?;
+            rec_flow(cx, env, trace, (&repos_t, u))?;
         }
         (TypeInner::DefT(reason, def_t), UseTInner::ConvertEmptyPropsToMixedT(_, tout))
             if matches!(def_t.deref(), DefTInner::EmptyT) =>
         {
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&mixed_t::make(reason.dupe()), tout),
             )?;
         }
         (_, UseTInner::ConvertEmptyPropsToMixedT(_, tout)) => {
-            rec_flow_t(cx, trace, unknown_use(), (l, tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, tout))?;
         }
         // ***************
         // * annotations *
@@ -918,7 +973,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let rep = {
-                let in_implicit = cx.in_implicit_instantiation();
+                let in_implicit = env.in_implicit_instantiation();
                 rep.ident_map(false, |t| annot(in_implicit, *use_desc, t))
             };
             let loc = reason.loc().dupe();
@@ -931,6 +986,7 @@ fn __flow_impl<'cx>(
             };
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l_inner,
@@ -958,9 +1014,10 @@ fn __flow_impl<'cx>(
             } else {
                 r
             };
-            let annoted_u = annot(cx.in_implicit_instantiation(), *use_desc, u_inner);
+            let annoted_u = annot(env.in_implicit_instantiation(), *use_desc, u_inner);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l_inner,
@@ -992,9 +1049,10 @@ fn __flow_impl<'cx>(
             } else {
                 r
             };
-            let annoted_u = annot(cx.in_implicit_instantiation(), *use_desc, u_inner);
+            let annoted_u = annot(env.in_implicit_instantiation(), *use_desc, u_inner);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l_inner,
@@ -1025,7 +1083,7 @@ fn __flow_impl<'cx>(
             && let TypeInner::UnionT(_, rep) = renders_structural_type.deref() =>
         {
             let rep = {
-                let in_implicit = cx.in_implicit_instantiation();
+                let in_implicit = env.in_implicit_instantiation();
                 rep.ident_map(false, |t| annot(in_implicit, *use_desc, t))
             };
             let loc = reason.loc().dupe();
@@ -1038,6 +1096,7 @@ fn __flow_impl<'cx>(
             };
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l_inner,
@@ -1068,7 +1127,7 @@ fn __flow_impl<'cx>(
                 type_: l_inner,
             }),
         ) => {
-            let u_repos = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
+            let u_repos = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
             return Ok(Some(TailCall::RecFlow(
                 l_inner.dupe(),
                 UseT::new(UseTInner::UseT(use_op.dupe(), u_repos)),
@@ -1079,7 +1138,7 @@ fn __flow_impl<'cx>(
         // The source component of an annotation flows out of the annotated
         // site to downstream uses.
         (TypeInner::AnnotT(r, t, use_desc), _) => {
-            let t = helpers::reposition_reason(cx, Some(trace), r, *use_desc, t)?;
+            let t = helpers::reposition_reason(cx, env, Some(trace), r, *use_desc, t)?;
             return Ok(Some(TailCall::RecFlow(
                 t,
                 u.dupe(),
@@ -1117,6 +1176,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 (
@@ -1127,7 +1187,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::MaybeT(_, t), UseTInner::OptionalIndexedAccessT(..))
         | (TypeInner::OptionalT { type_: t, .. }, UseTInner::OptionalIndexedAccessT(..)) => {
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
         (
             TypeInner::UnionT(_, rep),
@@ -1147,6 +1207,7 @@ fn __flow_impl<'cx>(
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1173,6 +1234,7 @@ fn __flow_impl<'cx>(
             let rep = union_rep::make(None, union_rep::UnionKind::UnknownKind, ft0, ft1, fts);
             rec_unify(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 UnifyCause::Uncategorized,
@@ -1219,7 +1281,7 @@ fn __flow_impl<'cx>(
                     })))
                 }
             };
-            rec_flow(cx, trace, (l, &u_new))?;
+            rec_flow(cx, env, trace, (l, &u_new))?;
         }
         // ********************
         // * DRO and hooklike *
@@ -1240,6 +1302,7 @@ fn __flow_impl<'cx>(
                     // rec_flow cx trace (type_, DeepReadOnlyT (tvar, (dro_loc, dro_type)))
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             type_,
@@ -1257,7 +1320,7 @@ fn __flow_impl<'cx>(
                 use_desc: *use_desc,
             });
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (
             TypeInner::OptionalT {
@@ -1274,6 +1337,7 @@ fn __flow_impl<'cx>(
                     // rec_flow cx trace (type_, HooklikeT tvar)
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (type_, &UseT::new(UseTInner::HooklikeT(Box::new(tvar)))),
                     )?;
@@ -1285,7 +1349,7 @@ fn __flow_impl<'cx>(
                 use_desc: *use_desc,
             });
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::MaybeT(rl, t), UseTInner::DeepReadOnlyT(tout, dro)) => {
             let r = tout.reason();
@@ -1295,6 +1359,7 @@ fn __flow_impl<'cx>(
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1308,7 +1373,7 @@ fn __flow_impl<'cx>(
                 })?;
             let new_l = Type::new(TypeInner::MaybeT(rl.dupe(), new_t));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::MaybeT(rl, t), UseTInner::HooklikeT(tout)) => {
             let r = tout.reason();
@@ -1317,6 +1382,7 @@ fn __flow_impl<'cx>(
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (t, &UseT::new(UseTInner::HooklikeT(Box::new(tvar)))),
                     )?;
@@ -1324,7 +1390,7 @@ fn __flow_impl<'cx>(
                 })?;
             let new_l = Type::new(TypeInner::MaybeT(rl.dupe(), new_t));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::UnionT(reason, rep), UseTInner::DeepReadOnlyT(tout, dro)) => {
             let ReactDro(dro_loc, dro_type) = dro;
@@ -1335,7 +1401,7 @@ fn __flow_impl<'cx>(
             }
             if rep.check_enum().is_some() {
                 let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, trace, unknown_use(), (l, &tout_t))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
             } else {
                 let dro_loc = dro_loc.dupe();
                 let dro_type = dro_type.clone();
@@ -1344,6 +1410,7 @@ fn __flow_impl<'cx>(
                         let tout_tvar = open_tvar(&tout);
                         rec_flow(
                             cx,
+                            env,
                             *trace,
                             (
                                 t,
@@ -1360,7 +1427,7 @@ fn __flow_impl<'cx>(
                     reason.dupe(),
                 )?;
                 let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, trace, unknown_use(), (&dro_union, &tout_t))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (&dro_union, &tout_t))?;
             }
         }
         (TypeInner::UnionT(reason, rep), UseTInner::HooklikeT(tout)) => {
@@ -1371,13 +1438,14 @@ fn __flow_impl<'cx>(
             }
             if rep.check_enum().is_some() {
                 let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, trace, unknown_use(), (l, &tout_t))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
             } else {
                 let hook_union = flow_js_utils::map_union(
                     |cx, trace, t, tout| {
                         let tout_tvar = open_tvar(&tout);
                         rec_flow(
                             cx,
+                            env,
                             *trace,
                             (
                                 t,
@@ -1391,7 +1459,7 @@ fn __flow_impl<'cx>(
                     reason.dupe(),
                 )?;
                 let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, trace, unknown_use(), (&hook_union, &tout_t))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (&hook_union, &tout_t))?;
             }
         }
         (TypeInner::IntersectionT(reason, rep), UseTInner::DeepReadOnlyT(tout, dro)) => {
@@ -1403,6 +1471,7 @@ fn __flow_impl<'cx>(
                     let tout_tvar = open_tvar(&tout);
                     rec_flow(
                         cx,
+                        env,
                         *trace,
                         (
                             t,
@@ -1419,7 +1488,7 @@ fn __flow_impl<'cx>(
                 reason.dupe(),
             )?;
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&dro_inter, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&dro_inter, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ObjT(o) = def_t.deref() =>
@@ -1438,7 +1507,7 @@ fn __flow_impl<'cx>(
                 DefT::new(DefTInner::ObjT(Rc::new(new_obj))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
@@ -1466,7 +1535,7 @@ fn __flow_impl<'cx>(
                 ))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
@@ -1488,7 +1557,7 @@ fn __flow_impl<'cx>(
                 ))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, dro))
             if let DefTInner::ArrT(arr) = def_t.deref()
@@ -1503,7 +1572,7 @@ fn __flow_impl<'cx>(
                 )))))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::DeepReadOnlyT(tout, react_dro))
             if let DefTInner::InstanceT(instance) = def_t.deref() =>
@@ -1521,7 +1590,7 @@ fn __flow_impl<'cx>(
                 DefT::new(DefTInner::InstanceT(Rc::new(new_instance))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::HooklikeT(tout))
             if let DefTInner::FunT(s, funtype) = def_t.deref()
@@ -1536,7 +1605,7 @@ fn __flow_impl<'cx>(
                 DefT::new(DefTInner::FunT(s.dupe(), Rc::new(new_funtype))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(rp, def_t), UseTInner::HooklikeT(tout))
             if let DefTInner::PolyT(box PolyTData {
@@ -1569,7 +1638,7 @@ fn __flow_impl<'cx>(
                 }))),
             ));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::HooklikeT(tout))
             if let DefTInner::ObjT(obj) = def_t.deref()
@@ -1642,21 +1711,21 @@ fn __flow_impl<'cx>(
                 _ => l.dupe(),
             };
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&t, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&t, &tout_t))?;
         }
         (
             TypeInner::IntersectionT(_, _) | TypeInner::NominalT { .. },
             UseTInner::DeepReadOnlyT(tout, _) | UseTInner::HooklikeT(tout),
         ) => {
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
         }
         (
             TypeInner::DefT(_, def_t),
             UseTInner::DeepReadOnlyT(tout, _) | UseTInner::HooklikeT(tout),
         ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (l, &tout_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, &tout_t))?;
         }
         (
             TypeInner::DefT(r, def_t),
@@ -1696,8 +1765,9 @@ fn __flow_impl<'cx>(
                     propref: box PropRef::Named { name, .. },
                     method_action: _,
                 }) if matches!(name.as_str_opt(), Some("clear" | "delete" | "set")) => {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -1715,8 +1785,9 @@ fn __flow_impl<'cx>(
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
                         && matches!(name.as_str_opt(), Some("clear" | "delete" | "set")) =>
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: data.reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -1743,8 +1814,14 @@ fn __flow_impl<'cx>(
                         ReactDro(dro_loc.dupe(), dro_type.clone()),
                         val_t.dupe(),
                     );
-                    let ro_map =
-                        get_builtin_typeapp(cx, r, Some(true), "$ReadOnlyMap", vec![key_t, val_t]);
+                    let ro_map = get_builtin_typeapp(
+                        cx,
+                        env,
+                        r,
+                        Some(true),
+                        "$ReadOnlyMap",
+                        vec![key_t, val_t],
+                    );
                     let dro_loc = dro_loc.dupe();
                     let dro_type = dro_type.clone();
                     let new_u = type_util::mod_use_op_of_use_t(
@@ -1759,7 +1836,7 @@ fn __flow_impl<'cx>(
                         },
                         u,
                     );
-                    rec_flow(cx, trace, (&ro_map, &new_u))?;
+                    rec_flow(cx, env, trace, (&ro_map, &new_u))?;
                 }
             }
         }
@@ -1799,8 +1876,9 @@ fn __flow_impl<'cx>(
                     propref: box PropRef::Named { name, .. },
                     method_action: _,
                 }) if matches!(name.as_str_opt(), Some("add" | "clear" | "delete")) => {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -1818,8 +1896,9 @@ fn __flow_impl<'cx>(
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
                         && matches!(name.as_str_opt(), Some("add" | "clear" | "delete")) =>
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: data.reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -1841,7 +1920,7 @@ fn __flow_impl<'cx>(
                         elem_t.dupe(),
                     );
                     let ro_set =
-                        get_builtin_typeapp(cx, r, Some(true), "$ReadOnlySet", vec![elem_t]);
+                        get_builtin_typeapp(cx, env, r, Some(true), "$ReadOnlySet", vec![elem_t]);
                     let dro_loc = dro_loc.dupe();
                     let dro_type = dro_type.clone();
                     let new_u = type_util::mod_use_op_of_use_t(
@@ -1856,7 +1935,7 @@ fn __flow_impl<'cx>(
                         },
                         u,
                     );
-                    rec_flow(cx, trace, (&ro_set, &new_u))?;
+                    rec_flow(cx, env, trace, (&ro_set, &new_u))?;
                 }
             }
         }
@@ -1869,7 +1948,7 @@ fn __flow_impl<'cx>(
             if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
         {
             let empty = empty_t::why(r.dupe());
-            rec_flow_t(cx, trace, use_op.dupe(), (&empty, tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&empty, tout))?;
         }
         (TypeInner::DefT(r, def_t), UseTInner::FilterMaybeT(use_op, tout))
             if matches!(
@@ -1881,16 +1960,16 @@ fn __flow_impl<'cx>(
                 r.dupe(),
                 DefT::new(DefTInner::MixedT(MixedFlavor::MixedNonMaybe)),
             ));
-            rec_flow_t(cx, trace, use_op.dupe(), (&mixed, tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&mixed, tout))?;
         }
         (TypeInner::OptionalT { type_: tout, .. }, UseTInner::FilterMaybeT(_, _))
         | (TypeInner::MaybeT(_, tout), UseTInner::FilterMaybeT(_, _)) => {
-            rec_flow(cx, trace, (tout, u))?;
+            rec_flow(cx, env, trace, (tout, u))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::FilterMaybeT(use_op, tout))
             if matches!(def_t.deref(), DefTInner::EmptyT) =>
         {
-            rec_flow_t(cx, trace, use_op.dupe(), (l, tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, tout))?;
         }
         (
             TypeInner::MaybeT(_, _),
@@ -1908,8 +1987,9 @@ fn __flow_impl<'cx>(
             } else {
                 None
             };
-            let repos = helpers::reposition(cx, Some(trace), loc, desc.as_ref(), None, l.dupe())?;
-            rec_flow(cx, trace, (&repos, inner_u))?;
+            let repos =
+                helpers::reposition(cx, env, Some(trace), loc, desc.as_ref(), None, l.dupe())?;
+            rec_flow(cx, env, trace, (&repos, inner_u))?;
         }
         (
             TypeInner::MaybeT(_, _),
@@ -1922,7 +2002,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             if let Some((tc_l, tc_u, reason)) =
-                resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
+                resolve_union(cx, env, trace, reason, *id, resolved, unresolved, l, upper)?
             {
                 return Ok(Some(TailCall::Flow(tc_l, tc_u, reason)));
             }
@@ -1938,9 +2018,9 @@ fn __flow_impl<'cx>(
         {
             let reason = reason.dupe().replace_desc(VirtualReasonDesc::RNullOrVoid);
             let t = type_util::push_type_alias_reason(&reason, t.dupe());
-            rec_flow(cx, trace, (&null::make(reason.dupe()), u))?;
-            rec_flow(cx, trace, (&void::make(reason), u))?;
-            rec_flow(cx, trace, (&t, u))?;
+            rec_flow(cx, env, trace, (&null::make(reason.dupe()), u))?;
+            rec_flow(cx, env, trace, (&void::make(reason), u))?;
+            rec_flow(cx, env, trace, (&t, u))?;
         }
 
         // ******************
@@ -1952,10 +2032,10 @@ fn __flow_impl<'cx>(
             if matches!(def_t.deref(), DefTInner::VoidT) =>
         {
             let empty = empty_t::why(r.dupe());
-            rec_flow_t(cx, trace, use_op.dupe(), (&empty, tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&empty, tout))?;
         }
         (TypeInner::OptionalT { type_: tout, .. }, UseTInner::FilterOptionalT(_, _)) => {
-            rec_flow(cx, trace, (tout, u))?;
+            rec_flow(cx, env, trace, (tout, u))?;
         }
         (
             TypeInner::OptionalT { .. },
@@ -1967,8 +2047,8 @@ fn __flow_impl<'cx>(
         ) => {
             // Don't split the optional type into its constituent members. Instead,
             // reposition the entire optional type.
-            let repos = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos, inner_u))?;
+            let repos = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos, inner_u))?;
         }
         (
             TypeInner::OptionalT { .. },
@@ -1981,7 +2061,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             if let Some((tc_l, tc_u, reason)) =
-                resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
+                resolve_union(cx, env, trace, reason, *id, resolved, unresolved, l, upper)?
             {
                 return Ok(Some(TailCall::Flow(tc_l, tc_u, reason)));
             }
@@ -2002,8 +2082,8 @@ fn __flow_impl<'cx>(
         } =>
         {
             let void_t = void::why_with_use_desc(*use_desc, r.dupe());
-            rec_flow(cx, trace, (&void_t, u))?;
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (&void_t, u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
         // *********************
         // * type applications *
@@ -2018,8 +2098,9 @@ fn __flow_impl<'cx>(
             _,
         ) => {
             let reason_op = upper_operation_reason_or(u, reason_tapp);
-            FlowJs::instantiate_this_class(
+            FlowJs::instantiate_this_class_with_env(
                 cx,
+                env,
                 trace,
                 &reason_op,
                 reason_tapp,
@@ -2037,8 +2118,8 @@ fn __flow_impl<'cx>(
                 use_t: inner_u,
             },
         ) => {
-            let repos = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos, inner_u))?;
+            let repos = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos, inner_u))?;
         }
         (
             TypeInner::TypeAppT(box TypeAppTData {
@@ -2068,6 +2149,7 @@ fn __flow_impl<'cx>(
         ) => {
             let t = mk_typeapp_instance_annot(
                 cx,
+                env,
                 Some(trace),
                 use_op.dupe(),
                 reason_op,
@@ -2077,7 +2159,7 @@ fn __flow_impl<'cx>(
                 type_,
                 targs.dupe(),
             )?;
-            rec_flow(cx, trace, (&t, u))?;
+            rec_flow(cx, env, trace, (&t, u))?;
         }
         // This is the second step in checking a TypeAppT (c, ts) ~> TypeAppT (c, ts).
         // The first step is in subtyping_kit.rs, and concretizes the c for our
@@ -2101,6 +2183,7 @@ fn __flow_impl<'cx>(
             let c2 = l.dupe();
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     c1,
@@ -2160,6 +2243,7 @@ fn __flow_impl<'cx>(
                 .collect();
             type_app_variance_check(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 r1,
@@ -2202,6 +2286,7 @@ fn __flow_impl<'cx>(
             };
             let t1_inst = mk_typeapp_instance_of_poly(
                 cx,
+                env,
                 trace,
                 op2_eff,
                 r2,
@@ -2215,6 +2300,7 @@ fn __flow_impl<'cx>(
             )?;
             let t2_inst = mk_typeapp_instance_of_poly(
                 cx,
+                env,
                 trace,
                 op1_eff,
                 r1,
@@ -2228,6 +2314,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &t1_inst,
@@ -2247,14 +2334,17 @@ fn __flow_impl<'cx>(
             _,
         ) => {
             let reason_op = upper_operation_reason_or(u, reason_tapp);
-            if instantiation_utils::type_app_expansion::push_unless_loop(
+            if let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
                 cx,
+                env,
                 type_app_expansion::Bound::Lower,
                 type_,
                 targs,
             ) {
+                let env = &env;
                 let t = mk_typeapp_instance_annot(
                     cx,
+                    env,
                     Some(trace),
                     use_op.dupe(),
                     &reason_op,
@@ -2264,8 +2354,7 @@ fn __flow_impl<'cx>(
                     type_,
                     targs.dupe(),
                 )?;
-                rec_flow(cx, trace, (&t, u))?;
-                instantiation_utils::type_app_expansion::pop(cx);
+                rec_flow(cx, env, trace, (&t, u))?;
             }
         }
         // Concretize types for type inspection purpose up to this point. The rest are
@@ -2296,6 +2385,7 @@ fn __flow_impl<'cx>(
                 Some(prop) => {
                     let t = helpers::reposition(
                         cx,
+                        env,
                         Some(trace),
                         reason_op.loc().dupe(),
                         None,
@@ -2303,11 +2393,12 @@ fn __flow_impl<'cx>(
                         prop,
                     )?;
                     let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
-                    rec_flow_t(cx, trace, use_op.dupe(), (&t, &tout_t))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (&t, &tout_t))?;
                 }
                 None => {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &ns.values_type,
@@ -2341,6 +2432,7 @@ fn __flow_impl<'cx>(
         ) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -2378,7 +2470,7 @@ fn __flow_impl<'cx>(
                 tout: data.tout.clone(),
                 hint: data.hint.clone(),
             })));
-            rec_flow(cx, trace, (&ns.values_type, &new_u))?;
+            rec_flow(cx, env, trace, (&ns.values_type, &new_u))?;
         }
         // Preserve a TS enum namespace through inspection-concretization so that
         // ValueToTypeReferenceTransform can turn it into the union of member
@@ -2396,7 +2488,7 @@ fn __flow_impl<'cx>(
         }
         // unwrap namespace type into object type, drop all information about types in the namespace
         (TypeInner::NamespaceT(ns), _) => {
-            rec_flow(cx, trace, (&ns.values_type, u))?;
+            rec_flow(cx, env, trace, (&ns.values_type, u))?;
         }
 
         // ***************************************
@@ -2421,8 +2513,9 @@ fn __flow_impl<'cx>(
         {
             // Treat missing type args the same as empty type args (Foo = Foo<>) when all
             // parameters have defaults. Otherwise, fall through to EMissingTypeArgs.
-            let t = FlowJs::mk_typeapp_of_poly(
+            let t = FlowJs::mk_typeapp_of_poly_with_env(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 reason_op,
@@ -2433,7 +2526,7 @@ fn __flow_impl<'cx>(
                 t_out,
                 Rc::from([]),
             )?;
-            rec_flow(cx, trace, (&t, u))?;
+            rec_flow(cx, env, trace, (&t, u))?;
         }
         (
             _,
@@ -2444,16 +2537,19 @@ fn __flow_impl<'cx>(
                 tout,
             }),
         ) => {
-            let t = flow_js_utils::value_to_type_reference_transform::run_on_concrete_type(
-                cx,
-                use_op.dupe(),
-                reason_op,
-                *type_t_kind,
-                l.dupe(),
-            )?;
+            let t =
+                flow_js_utils::value_to_type_reference_transform::run_on_concrete_type_with_env(
+                    cx,
+                    env,
+                    use_op.dupe(),
+                    reason_op,
+                    *type_t_kind,
+                    l.dupe(),
+                )?;
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             unify_opt(
                 cx,
+                env,
                 Some(trace),
                 use_op.dupe(),
                 UnifyCause::Uncategorized,
@@ -2477,8 +2573,8 @@ fn __flow_impl<'cx>(
                 use_t: inner_u,
             },
         ) => {
-            let repos = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos, inner_u))?;
+            let repos = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos, inner_u))?;
         }
 
         // An opaque indexer key goes to `ToStringT`, like every key that is not
@@ -2489,6 +2585,7 @@ fn __flow_impl<'cx>(
         (TypeInner::NominalT { .. }, UseTInner::GetKeysDictKeyT { reason, t_out, .. }) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -2521,6 +2618,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     t,
@@ -2550,6 +2648,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     t,
@@ -2573,7 +2672,7 @@ fn __flow_impl<'cx>(
                 tool: _,
             }),
         ) if let Some(t) = nominal_type.upper_t.as_ref() => {
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
         // Store the opaque type when doing `ToStringT`, so we can use that
         // rather than just `string` if the supertype is `string`
@@ -2587,6 +2686,7 @@ fn __flow_impl<'cx>(
         ) if let Some(t) = nominal_type.upper_t.as_ref() => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     t,
@@ -2607,7 +2707,7 @@ fn __flow_impl<'cx>(
                 && nominal_id.0.source() == Some(cx.file())
                 && let nominal::UnderlyingT::OpaqueWithLocal { t } = &nominal_type.underlying_t =>
         {
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
         (TypeInner::NominalT { nominal_type, .. }, _)
             if let nominal::Id::UserDefinedOpaqueTypeId(
@@ -2618,14 +2718,14 @@ fn __flow_impl<'cx>(
                     custom_error_loc: _,
                 }) = &nominal_type.underlying_t =>
         {
-            rec_flow(cx, trace, (t, u))?;
+            rec_flow(cx, env, trace, (t, u))?;
         }
 
         // *****************************************************
         // * keys (NOTE: currently we only support string keys *
         // *****************************************************
         (TypeInner::KeysT(_, _), UseTInner::ToStringT { t_out, .. }) => {
-            rec_flow(cx, trace, (l, t_out))?;
+            rec_flow(cx, env, trace, (l, t_out))?;
         }
         // A key set already classifies each member as a property key. Expanding
         // it again repeatedly flattens potentially huge dictionary key sets;
@@ -2638,12 +2738,13 @@ fn __flow_impl<'cx>(
                 ..
             },
         ) => {
-            rec_flow(cx, trace, (l, t_out))?;
+            rec_flow(cx, env, trace, (l, t_out))?;
         }
         (TypeInner::KeysT(reason1, o1), _) => {
             // flow all keys of o1 to u
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     o1,
@@ -2665,8 +2766,8 @@ fn __flow_impl<'cx>(
                 ..
             }),
         ) => {
-            let repos = helpers::reposition_reason(cx, None, reason, false, bound)?;
-            rec_flow(cx, trace, (&repos, u))?;
+            let repos = helpers::reposition_reason(cx, env, None, reason, false, bound)?;
+            rec_flow(cx, env, trace, (&repos, u))?;
         }
         (
             _,
@@ -2710,7 +2811,7 @@ fn __flow_impl<'cx>(
                     }),
                 ) => {
                     let mod_key = type_util::mod_reason_of_t(&|_| reason_op.dupe(), key);
-                    rec_flow_t(cx, trace, use_op.dupe(), (&mod_key, expected_key))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (&mod_key, expected_key))?;
                 }
                 _ => {
                     let names_a_prop = match dropped.deref() {
@@ -2761,7 +2862,7 @@ fn __flow_impl<'cx>(
                         ));
                         flow_js_utils::incompatible_types_error(key, &keys, use_op.dupe(), None)
                     };
-                    flow_js_utils::add_output(cx, err)?;
+                    flow_js_utils::add_output_with_env(cx, env, err)?;
                 }
             }
         }
@@ -2794,7 +2895,7 @@ fn __flow_impl<'cx>(
             } =>
         {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
-                |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
+                |reason, t| helpers::possible_concrete_types_for_inspection(cx, env, reason, t),
                 instance_t,
             )?;
             if prop_ids
@@ -2811,7 +2912,7 @@ fn __flow_impl<'cx>(
                 match dict_key {
                     Some(dict_key) => {
                         let mod_key = type_util::mod_reason_of_t(&|_| reason_op.dupe(), key);
-                        rec_flow_t(cx, trace, use_op.dupe(), (&mod_key, &dict_key))?;
+                        rec_flow_t(cx, env, trace, use_op.dupe(), (&mod_key, &dict_key))?;
                     }
                     None => {
                         let err = ErrorMessage::EPropNotFoundInLookup(Box::new(
@@ -2823,7 +2924,7 @@ fn __flow_impl<'cx>(
                                 suggestion: prop_typo_suggestion_for_name(cx, &prop_ids, &x),
                             },
                         ));
-                        flow_js_utils::add_output(cx, err)?;
+                        flow_js_utils::add_output_with_env(cx, env, err)?;
                     }
                 }
             }
@@ -2864,7 +2965,7 @@ fn __flow_impl<'cx>(
                 ));
                 flow_js_utils::incompatible_types_error(key, &keys, use_op.dupe(), None)
             };
-            flow_js_utils::add_output(cx, err)?;
+            flow_js_utils::add_output_with_env(cx, env, err)?;
         }
         // AnyT has every prop
         (
@@ -2890,15 +2991,15 @@ fn __flow_impl<'cx>(
             // Type-level `keyof` includes symbols, while runtime key
             // enumeration (`Object.keys`) omits them, matching JavaScript.
             let keylist = flow_js_utils::keylist_of_props(
-                cx,
+                env,
                 &cx.find_props(props_tmap.dupe()),
                 reason_op,
                 *include_symbols,
             );
             let union_t = type_util::union_of_ts(reason_op.dupe(), keylist, None);
-            rec_flow(cx, trace, (&union_t, keys))?;
+            rec_flow(cx, env, trace, (&union_t, keys))?;
             if let Some(DictType { key: dict_key, .. }) = dict_t {
-                flow_dict_key_to_keys(cx, trace, dict_key, reason_op, keys, *include_symbols)?;
+                flow_dict_key_to_keys(cx, env, trace, dict_key, reason_op, keys, *include_symbols)?;
             }
         }
         (
@@ -2910,15 +3011,23 @@ fn __flow_impl<'cx>(
             },
         ) if let DefTInner::InstanceT(instance_t) = def_t.deref() => {
             let (prop_ids, dict_keys) = flow_js_utils::key_sources_of_instance_t(
-                |reason, t| possible_concrete_types_for_inspection(cx, reason, t),
+                |reason, t| helpers::possible_concrete_types_for_inspection(cx, env, reason, t),
                 instance_t,
             )?;
             let keylist =
-                flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op, *include_symbols);
+                flow_js_utils::keylist_of_prop_ids(cx, env, &prop_ids, reason_op, *include_symbols);
             let union_t = type_util::union_of_ts(reason_op.dupe(), keylist, None);
-            rec_flow(cx, trace, (&union_t, keys))?;
+            rec_flow(cx, env, trace, (&union_t, keys))?;
             for dict_key in dict_keys {
-                flow_dict_key_to_keys(cx, trace, &dict_key, reason_op, keys, *include_symbols)?;
+                flow_dict_key_to_keys(
+                    cx,
+                    env,
+                    trace,
+                    &dict_key,
+                    reason_op,
+                    keys,
+                    *include_symbols,
+                )?;
             }
         }
         // keyof any -> any: any in any out.
@@ -2931,7 +3040,7 @@ fn __flow_impl<'cx>(
             },
         ) => {
             let any = any_t::why(*src, reason_op.dupe());
-            rec_flow(cx, trace, (&any, keys))?;
+            rec_flow(cx, env, trace, (&any, keys))?;
         }
 
         // In general, typechecking is monotonic in the sense that more constraints
@@ -2950,7 +3059,7 @@ fn __flow_impl<'cx>(
             if let DefTInner::ObjT(o) = def_t.deref() =>
         {
             let values_l = flow_js_utils::get_values_type_of_obj_t(cx, o, reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&values_l, values))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&values_l, values))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetValuesT(reason, values))
             if let DefTInner::InstanceT(instance_t) = def_t.deref() =>
@@ -2962,19 +3071,19 @@ fn __flow_impl<'cx>(
                 inst.inst_dict.as_ref(),
                 reason.dupe(),
             );
-            rec_flow_t(cx, trace, unknown_use(), (&values_l, values))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&values_l, values))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetValuesT(reason, t_out))
             if let DefTInner::ArrT(arr) = def_t.deref() =>
         {
             let elem_t = elemt_of_arrtype(arr);
             let mod_elem = type_util::mod_reason_of_t(&|_| reason.dupe(), &elem_t);
-            rec_flow_t(cx, trace, unknown_use(), (&mod_elem, t_out))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&mod_elem, t_out))?;
         }
         // Any will always be ok
         (TypeInner::AnyT(_, src), UseTInner::GetValuesT(reason, values)) => {
             let any = any_t::why(*src, reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, values))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, values))?;
         }
 
         // ***********************************************
@@ -2993,18 +3102,18 @@ fn __flow_impl<'cx>(
                 && Polarity::compat(*dict_polarity, Polarity::Positive)
                 && cx.find_props(props_tmap.dupe()).is_empty() =>
         {
-            rec_flow(cx, trace, (value, result))?;
+            rec_flow(cx, env, trace, (value, result))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetDictValuesT(reason, result))
             if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::InstanceT(_)) =>
         {
             let mixed = mixed_t::why(reason.dupe());
-            rec_flow(cx, trace, (&mixed, result))?;
+            rec_flow(cx, env, trace, (&mixed, result))?;
         }
         // Any will always be ok
         (TypeInner::AnyT(_, src), UseTInner::GetDictValuesT(reason, result)) => {
             let any = any_t::why(*src, reason.dupe());
-            rec_flow(cx, trace, (&any, result))?;
+            rec_flow(cx, env, trace, (&any, result))?;
         }
 
         // ********************************
@@ -3024,7 +3133,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             if let Some((tc_l, tc_u, reason)) =
-                resolve_union(cx, trace, reason, *id, resolved, unresolved, l, upper)?
+                resolve_union(cx, env, trace, reason, *id, resolved, unresolved, l, upper)?
             {
                 return Ok(Some(TailCall::Flow(tc_l, tc_u, reason)));
             }
@@ -3044,7 +3153,7 @@ fn __flow_impl<'cx>(
                         filter_null_and_void,
                         rep,
                     );
-                    rec_flow_t(cx, trace, use_op.dupe(), (&filtered, tout))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (&filtered, tout))?;
                 }
                 None => {
                     let use_op_clone = use_op.dupe();
@@ -3052,6 +3161,7 @@ fn __flow_impl<'cx>(
                         |cx_inner, trace_inner, t_inner, tout_inner| {
                             rec_flow(
                                 cx_inner,
+                                env,
                                 *trace_inner,
                                 (
                                     t_inner,
@@ -3068,7 +3178,7 @@ fn __flow_impl<'cx>(
                         rep,
                         reason.dupe(),
                     )?;
-                    rec_flow_t(cx, trace, use_op.dupe(), (&non_maybe_union, tout))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (&non_maybe_union, tout))?;
                 }
             }
         }
@@ -3077,7 +3187,7 @@ fn __flow_impl<'cx>(
         {
             flow_js_utils::iter_resolve_union(
                 |cx_inner, trace_inner, (t_inner, u_inner)| {
-                    rec_flow(cx_inner, *trace_inner, (&t_inner, &u_inner))?;
+                    rec_flow(cx_inner, env, *trace_inner, (&t_inner, &u_inner))?;
                     Ok(())
                 },
                 cx,
@@ -3097,8 +3207,8 @@ fn __flow_impl<'cx>(
                 use_t: u_inner,
             },
         ) => {
-            let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos_l, u_inner))?;
+            let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         (
             TypeInner::UnionT(_, _),
@@ -3118,12 +3228,13 @@ fn __flow_impl<'cx>(
                 bound: l.dupe(),
                 no_infer: *no_infer,
             })));
-            continue_(cx, trace, &generic, cont)?;
+            continue_(cx, env, trace, &generic, cont)?;
         }
         (TypeInner::UnionT(_, _), UseTInner::ObjKitT(use_op, reason, resolve_tool, tool, tout)) => {
-            object_kit::run(
+            object_kit::run_with_env(
                 trace,
                 cx,
+                env,
                 use_op.dupe(),
                 reason,
                 resolve_tool,
@@ -3149,7 +3260,7 @@ fn __flow_impl<'cx>(
                     Some(DictType {
                         key, dict_polarity, ..
                     }) => {
-                        flow_typing_flow_common::concrete_type_eq::eq(cx, l, key)
+                        flow_typing_flow_common::concrete_type_eq::eq_with_env(cx, env, l, key)
                             && Polarity::compat(*dict_polarity, Polarity::Positive)
                     }
                     None => false,
@@ -3159,7 +3270,7 @@ fn __flow_impl<'cx>(
             let ObjType { flags, .. } = obj_t.as_ref();
             let dict = obj_type::get_dict_opt(&flags.obj_kind).unwrap();
             let value = &dict.value;
-            let value = helpers::reposition_reason(cx, Some(trace), reason, false, value)?;
+            let value = helpers::reposition_reason(cx, env, Some(trace), reason, false, value)?;
             let value = match &flags.react_dro {
                 Some(dro) => {
                     let frame_use_op = VirtualUseOp::Frame(
@@ -3174,7 +3285,7 @@ fn __flow_impl<'cx>(
                 None => value,
             };
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&value, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&value, &open_tout))?;
         }
         (
             TypeInner::UnionT(_, rep),
@@ -3213,6 +3324,7 @@ fn __flow_impl<'cx>(
                             }));
                             rec_flow(
                                 cx,
+                                env,
                                 trace,
                                 (
                                     t,
@@ -3238,7 +3350,7 @@ fn __flow_impl<'cx>(
                     union_rep::make(None, union_rep::UnionKind::UnknownKind, ft0, ft1, fts);
                 let union_t = Type::new(TypeInner::UnionT(reason, new_rep));
                 let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-                rec_flow_t(cx, trace, unknown_use(), (&union_t, &open_tout))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (&union_t, &open_tout))?;
                 Ok(())
             };
             // Fast path for large Union-of-keys ~> ElemT on an ObjT without a dict.
@@ -3271,7 +3383,7 @@ fn __flow_impl<'cx>(
                             [] => {}
                             [t] => {
                                 let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-                                rec_flow_t(cx, trace, unknown_use(), (t, &open_tout))?;
+                                rec_flow_t(cx, env, trace, unknown_use(), (t, &open_tout))?;
                             }
                             [t0, t1, ts @ ..] => {
                                 let new_rep = union_rep::make(
@@ -3283,7 +3395,7 @@ fn __flow_impl<'cx>(
                                 );
                                 let union_t = Type::new(TypeInner::UnionT(reason, new_rep));
                                 let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-                                rec_flow_t(cx, trace, unknown_use(), (&union_t, &open_tout))?;
+                                rec_flow_t(cx, env, trace, unknown_use(), (&union_t, &open_tout))?;
                             }
                         }
                     } else {
@@ -3324,6 +3436,7 @@ fn __flow_impl<'cx>(
                                 drop(members);
                                 match speculation_kit::try_singleton_throw_on_failure(
                                     cx,
+                                    env,
                                     trace,
                                     representative.dupe(),
                                     u.dupe(),
@@ -3340,7 +3453,7 @@ fn __flow_impl<'cx>(
                                             },
                                             u,
                                         );
-                                        rec_flow(cx, trace, (&representative, &u))?;
+                                        rec_flow(cx, env, trace, (&representative, &u))?;
                                         true
                                     }
                                     Ok(()) => false,
@@ -3353,14 +3466,14 @@ fn __flow_impl<'cx>(
                 }
             };
             if !flowed_single {
-                flow_all_in_union(cx, trace, rep, u)?;
+                flow_all_in_union(cx, env, trace, rep, u)?;
             }
         }
         (_, UseTInner::FilterOptionalT(use_op, u_inner)) => {
-            rec_flow_t(cx, trace, use_op.dupe(), (l, u_inner))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, u_inner))?;
         }
         (_, UseTInner::FilterMaybeT(use_op, u_inner)) => {
-            rec_flow_t(cx, trace, use_op.dupe(), (l, u_inner))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, u_inner))?;
         }
         // special treatment for some operations on intersections: these
         // rules fire for particular UBs whose constraints can (or must)
@@ -3393,6 +3506,7 @@ fn __flow_impl<'cx>(
             new_try_ts.extend(try_ts_on_failure.iter().duped());
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     hd,
@@ -3416,6 +3530,7 @@ fn __flow_impl<'cx>(
         (TypeInner::IntersectionT(_, _), UseTInner::GetPropT(box data)) if data.id.is_some() => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -3445,6 +3560,7 @@ fn __flow_impl<'cx>(
         ) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -3479,6 +3595,7 @@ fn __flow_impl<'cx>(
             new_try_ts.extend(try_ts_on_failure.iter().duped());
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     t,
@@ -3520,7 +3637,7 @@ fn __flow_impl<'cx>(
                     }
                     _ => u.dupe(),
                 };
-                rec_flow(cx, trace, (t, &u_inner))?;
+                rec_flow(cx, env, trace, (t, &u_inner))?;
             }
         }
         // structural subtype multiple inheritance
@@ -3548,7 +3665,7 @@ fn __flow_impl<'cx>(
                     }
                     _ => u.dupe(),
                 };
-                rec_flow(cx, trace, (t, &u_inner))?;
+                rec_flow(cx, env, trace, (t, &u_inner))?;
             }
         }
         // predicates: prevent a predicate upper bound from prematurely decomposing
@@ -3575,16 +3692,17 @@ fn __flow_impl<'cx>(
                 use_t: u_inner,
             },
         ) => {
-            let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos_l, u_inner))?;
+            let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         (
             TypeInner::IntersectionT(_, _),
             UseTInner::ObjKitT(use_op, reason, resolve_tool, tool, tout),
         ) => {
-            object_kit::run(
+            object_kit::run_with_env(
                 trace,
                 cx,
+                env,
                 use_op.dupe(),
                 reason,
                 resolve_tool,
@@ -3611,7 +3729,7 @@ fn __flow_impl<'cx>(
                 bound: l.dupe(),
                 no_infer: *no_infer,
             })));
-            continue_(cx, trace, &generic, cont)?;
+            continue_(cx, env, trace, &generic, cont)?;
         }
         (
             TypeInner::IntersectionT(_, _),
@@ -3622,7 +3740,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::IntersectionT(_, _),
@@ -3650,8 +3768,8 @@ fn __flow_impl<'cx>(
             // speculation job (this is a Flow error) and fall back to the
             // intersection as the type for the callee node. (This happens in
             // Default_resolver.)
-            callee_recorder::add_callee_use(cx, callee_recorder::Kind::SigHelp, l.dupe(), u);
-            speculation_kit::try_intersection(cx, trace, u.dupe(), r.dupe(), rep)?;
+            callee_recorder::add_callee_use(env, callee_recorder::Kind::SigHelp, l.dupe(), u);
+            speculation_kit::try_intersection(cx, env, trace, u.dupe(), r.dupe(), rep)?;
         }
         (
             _,
@@ -3684,6 +3802,7 @@ fn __flow_impl<'cx>(
             rrt_resolved.push_front(ResolvedParam::ResolvedAnySpreadArg(r.dupe(), *src));
             resolve_spread_list_rec(
                 cx,
+                env,
                 Some(trace),
                 use_op.dupe(),
                 reason_op,
@@ -3708,7 +3827,8 @@ fn __flow_impl<'cx>(
                     reason: gen_reason,
                     ..
                 }) => {
-                    let repos = helpers::reposition_reason(cx, None, gen_reason, false, bound)?;
+                    let repos =
+                        helpers::reposition_reason(cx, env, None, gen_reason, false, bound)?;
                     (repos, Some(id.clone()))
                 }
                 _ => (l.dupe(), None),
@@ -3725,8 +3845,9 @@ fn __flow_impl<'cx>(
                             | ArrType::ROArrayAT(box (_, _)),
                         ) => {
                             // Only tuples can be spread into tuple types.
-                            flow_js_utils::add_output(
+                            flow_js_utils::add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
                                         spread_loc: reason_op.loc().dupe(),
@@ -3783,7 +3904,7 @@ fn __flow_impl<'cx>(
                             let iterable_reason = reason.dupe().replace_desc_new(
                                 VirtualReasonDesc::RCustom("Iterable expected for spread".into()),
                             );
-                            get_builtin_typeapp(cx, &iterable_reason, None, "$Iterable", targs)
+                            get_builtin_typeapp(cx, env, &iterable_reason, None, "$Iterable", targs)
                         }
                         ResolveTo::Array => {
                             let arr_reason = reason.dupe().replace_desc_new(
@@ -3797,8 +3918,9 @@ fn __flow_impl<'cx>(
                             ))
                         }
                         ResolveTo::Tuple => {
-                            flow_js_utils::add_output(
+                            flow_js_utils::add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
                                         spread_loc: reason_op.loc().dupe(),
@@ -3809,7 +3931,7 @@ fn __flow_impl<'cx>(
                             any_t::error(reason.dupe())
                         }
                     };
-                    rec_flow_t(cx, trace, unknown_use(), (l, &resolve_to_type))?;
+                    rec_flow_t(cx, env, trace, unknown_use(), (l, &resolve_to_type))?;
                     ArrType::ArrayAT(Box::new(ArrayATData {
                         elem_t,
                         tuple_view: None,
@@ -3870,6 +3992,7 @@ fn __flow_impl<'cx>(
                                     ));
                                     resolve_spread_list_rec(
                                         cx,
+                                        env,
                                         Some(trace),
                                         use_op.dupe(),
                                         reason_op,
@@ -3884,6 +4007,7 @@ fn __flow_impl<'cx>(
                                     // an array.
                                     rec_flow(
                                         cx,
+                                        env,
                                         trace,
                                         (
                                             l,
@@ -3943,6 +4067,7 @@ fn __flow_impl<'cx>(
                                     ));
                                     resolve_spread_list_rec(
                                         cx,
+                                        env,
                                         Some(trace),
                                         use_op.dupe(),
                                         reason_op,
@@ -4004,6 +4129,7 @@ fn __flow_impl<'cx>(
                                     ));
                                     resolve_spread_list_rec(
                                         cx,
+                                        env,
                                         Some(trace),
                                         use_op.dupe(),
                                         reason_op,
@@ -4026,6 +4152,7 @@ fn __flow_impl<'cx>(
                     )));
                     resolve_spread_list_rec(
                         cx,
+                        env,
                         Some(trace),
                         use_op.dupe(),
                         reason_op,
@@ -4044,7 +4171,7 @@ fn __flow_impl<'cx>(
             UseTInner::ConditionalT(box ConditionalTData { use_op, tout, .. }),
         ) if matches!(def_t.deref(), DefTInner::EmptyT) => {
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::DefT(reason_tapp, def_t),
@@ -4056,6 +4183,7 @@ fn __flow_impl<'cx>(
         ) if let DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) = def_t.deref() => {
             let t_ = implicit_instantiation::kit::run_monomorphize(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 reason_op,
@@ -4063,7 +4191,7 @@ fn __flow_impl<'cx>(
                 Vec1::try_from_vec(tparams.to_vec()).unwrap(),
                 t_out,
             )?;
-            rec_flow(cx, trace, (&t_, u))?;
+            rec_flow(cx, env, trace, (&t_, u))?;
         }
         (
             _,
@@ -4100,6 +4228,7 @@ fn __flow_impl<'cx>(
                 .collect();
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -4131,6 +4260,7 @@ fn __flow_impl<'cx>(
         ) => {
             let result = implicit_instantiation::kit::run_conditional(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 reason,
@@ -4141,7 +4271,7 @@ fn __flow_impl<'cx>(
                 false_t,
             )?;
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (&result, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&result, &open_tout))?;
         }
         // singleton lower bounds are equivalent to the corresponding
         // primitive with a literal constraint. These conversions are
@@ -4169,15 +4299,15 @@ fn __flow_impl<'cx>(
                 | DefTInner::SingletonBoolT { .. }
         ) =>
         {
-            let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos_l, u_inner))?;
+            let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         // NullProtoT is necessary as an upper bound, to distinguish between
         // (ObjT _, NullProtoT _) constraints and (ObjT _, DefT (_, NullT)), but as
         // a lower bound, it's the same as DefT (_, NullT)
         (TypeInner::NullProtoT(reason), _) => {
             let null_t = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
-            rec_flow(cx, trace, (&null_t, u))?;
+            rec_flow(cx, env, trace, (&null_t, u))?;
         }
         // ********************
         // * mixin conversion *
@@ -4215,6 +4345,7 @@ fn __flow_impl<'cx>(
             ));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &new_l,
@@ -4268,6 +4399,7 @@ fn __flow_impl<'cx>(
             );
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &poly_t,
@@ -4277,7 +4409,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::AnyT(_, src), UseTInner::MixinT(r, tvar)) => {
             let any = any_t::why(*src, r.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, tvar))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
         }
         // TODO: it is conceivable that other things (e.g. functions) could also be
         // viewed as mixins (e.g. by extracting properties in their prototypes), but
@@ -4312,8 +4444,9 @@ fn __flow_impl<'cx>(
                 .as_ref()
                 .map(|rc| rc.dupe())
                 .unwrap_or_else(|| Rc::from([]));
-            let t_ = FlowJs::mk_typeapp_of_poly(
+            let t_ = FlowJs::mk_typeapp_of_poly_with_env(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 reason_op,
@@ -4324,7 +4457,7 @@ fn __flow_impl<'cx>(
                 t,
                 ts_val,
             )?;
-            rec_flow_t(cx, trace, unknown_use(), (&t_, tvar))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&t_, tvar))?;
         }
         // empty targs specialization of non-polymorphic classes is a no-op
         (
@@ -4337,7 +4470,7 @@ fn __flow_impl<'cx>(
                 tvar,
             }),
         ) if matches!(def_t.deref(), DefTInner::ClassT(_)) => {
-            rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
         }
         // A value with a construct signature is class-like, so it can be
         // extended. `class_sig` specializes the extends clause eagerly, and
@@ -4357,13 +4490,14 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
             };
             if flow_js_utils::collect_construct_ts(&concretize, cx, l)?.is_empty() {
                 // Not constructable, so not inheritable either. Report what the
                 // fallthrough would have.
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
                         lower: (reason_l.dupe(), None),
                         upper: IncompatibleUpperData {
@@ -4374,9 +4508,9 @@ fn __flow_impl<'cx>(
                     })),
                 )?;
                 let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
-                rec_flow_t(cx, trace, unknown_use(), (&any, tvar))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
             } else {
-                rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
             }
         }
         (
@@ -4390,7 +4524,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             // rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
-            rec_flow_t(cx, trace, unknown_use(), (l, tvar))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
         }
         // this-specialize a this-abstracted class by substituting This
         (TypeInner::DefT(_, def_t), UseTInner::ThisSpecializeT(r, this, k))
@@ -4417,7 +4551,7 @@ fn __flow_impl<'cx>(
                 inst_r.dupe(),
                 DefT::new(DefTInner::InstanceT(Rc::new(i))),
             ));
-            continue_repos(cx, trace, r, false, &def_t, k)?;
+            continue_repos(cx, env, trace, r, false, &def_t, k)?;
         }
         // this-specialize a this-abstracted interface
         (
@@ -4444,14 +4578,14 @@ fn __flow_impl<'cx>(
                 inst_r.dupe(),
                 DefT::new(DefTInner::InstanceT(Rc::new(i))),
             ));
-            continue_repos(cx, trace, r, false, &def_t, k)?;
+            continue_repos(cx, env, trace, r, false, &def_t, k)?;
         }
         // this-specialization of non-this-abstracted classes is a no-op
         (TypeInner::DefT(_, def_t), UseTInner::ThisSpecializeT(r, _this, k))
             if let DefTInner::ClassT(i) = def_t.deref() =>
         {
             // TODO: check that this is a subtype of i?
-            continue_repos(cx, trace, r, false, i, k)?;
+            continue_repos(cx, env, trace, r, false, i, k)?;
         }
         // Extending a value with a construct signature: the instance the
         // derived class inherits from is what the signature returns.
@@ -4462,22 +4596,22 @@ fn __flow_impl<'cx>(
             if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
         {
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
             };
             match flow_js_utils::construct_base_instance(&concretize, cx, l)? {
-                Some(base) => continue_repos(cx, trace, r, false, &base, k)?,
+                Some(base) => continue_repos(cx, env, trace, r, false, &base, k)?,
                 // No signature after all. The eager specialization of the
                 // extends clause has already reported that; carry on with
                 // `any` rather than reporting it twice.
                 None => {
                     let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
-                    continue_repos(cx, trace, r, false, &any, k)?
+                    continue_repos(cx, env, trace, r, false, &any, k)?
                 }
             }
         }
         (TypeInner::AnyT(_, _), UseTInner::ThisSpecializeT(r, _, k)) => {
             // continue_repos cx trace r l k
-            continue_repos(cx, trace, r, false, l, k)?;
+            continue_repos(cx, env, trace, r, false, l, k)?;
         }
         //   rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
         (
@@ -4488,8 +4622,8 @@ fn __flow_impl<'cx>(
                 use_t: u_inner,
             },
         ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
-            let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos_l, u_inner))?;
+            let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -4500,8 +4634,8 @@ fn __flow_impl<'cx>(
             },
         ) if matches!(def_t.deref(), DefTInner::ClassT(inner) if matches!(inner.deref(), TypeInner::ThisInstanceT(..))) =>
         {
-            let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
-            rec_flow(cx, trace, (&repos_l, u_inner))?;
+            let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
+            rec_flow(cx, env, trace, (&repos_l, u_inner))?;
         }
         // Special case for `_ instanceof C` where C is polymorphic
         (
@@ -4523,6 +4657,7 @@ fn __flow_impl<'cx>(
         {
             let new_l = instantiate_poly_default_args(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 reason_op,
@@ -4531,7 +4666,7 @@ fn __flow_impl<'cx>(
                 Vec1::try_from_vec(ids.to_vec()).unwrap(),
                 t.dupe(),
             )?;
-            rec_flow(cx, trace, (&new_l, u))?;
+            rec_flow(cx, env, trace, (&new_l, u))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -4593,6 +4728,7 @@ fn __flow_impl<'cx>(
                 .collect();
             let t_ = instantiation_helpers::instantiate_with_targs(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 reason_op,
@@ -4604,7 +4740,7 @@ fn __flow_impl<'cx>(
                 ),
                 targs,
             )?;
-            rec_flow(cx, trace, (&t_, u))?;
+            rec_flow(cx, env, trace, (&t_, u))?;
         }
         // We use the ConcretizeCallee action to simplify types for hint decomposition.
         // After having instantiated polymorphic classes on static calls (case above),
@@ -4620,7 +4756,7 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
 
         // Calls to polymorphic functions may cause non-termination, e.g. when the
@@ -4692,7 +4828,7 @@ fn __flow_impl<'cx>(
                     calltype_c.clone(),
                 )
             };
-            let t_ = instantiate_poly_call_or_new(cx, trace, lparts, uparts, &check)?;
+            let t_ = instantiate_poly_call_or_new(cx, env, trace, lparts, uparts, &check)?;
             let new_calltype = FuncallType {
                 call_targs: None,
                 ..calltype.clone()
@@ -4703,7 +4839,7 @@ fn __flow_impl<'cx>(
                 call_action: Box::new(CallAction::Funcalltype(Box::new(new_calltype))),
                 return_hint: return_hint.clone(),
             })));
-            rec_flow(cx, trace, (&t_, &new_u))?;
+            rec_flow(cx, env, trace, (&t_, &new_u))?;
         }
         (TypeInner::DefT(reason_tapp, def_t), UseTInner::ConstructorT(box ctor_data))
             if let DefTInner::PolyT(box PolyTData {
@@ -4747,7 +4883,7 @@ fn __flow_impl<'cx>(
                     args_c.dupe(),
                 )
             };
-            let t_ = instantiate_poly_call_or_new(cx, trace, lparts, uparts, &check)?;
+            let t_ = instantiate_poly_call_or_new(cx, env, trace, lparts, uparts, &check)?;
             let new_u = UseT::new(UseTInner::ConstructorT(Box::new(ConstructorTData {
                 use_op: ctor_data.use_op.dupe(),
                 reason: ctor_data.reason.dupe(),
@@ -4757,7 +4893,7 @@ fn __flow_impl<'cx>(
                 return_hint: ctor_data.return_hint.clone(),
                 specialized_ctor: ctor_data.specialized_ctor.clone(),
             })));
-            rec_flow(cx, trace, (&t_, &new_u))?;
+            rec_flow(cx, env, trace, (&t_, &new_u))?;
         }
         (
             TypeInner::DefT(reason_tapp, def_t),
@@ -4822,7 +4958,7 @@ fn __flow_impl<'cx>(
                 )
             };
             let (t_, inferred_targs) =
-                instantiate_poly_call_or_new_with_soln(cx, trace, lparts, uparts, &check)?;
+                instantiate_poly_call_or_new_with_soln(cx, env, trace, lparts, uparts, &check)?;
             let new_u = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
                 use_op: use_op.dupe(),
                 reason: reason_op.dupe(),
@@ -4840,7 +4976,7 @@ fn __flow_impl<'cx>(
                     },
                 ))),
             })));
-            rec_flow(cx, trace, (&t_, &new_u))?;
+            rec_flow(cx, env, trace, (&t_, &new_u))?;
         }
         (
             TypeInner::DefT(r, def_t),
@@ -4866,7 +5002,7 @@ fn __flow_impl<'cx>(
                             if matches!(t_out.deref(), TypeInner::DefT(_, inner2) if matches!(inner2.deref(), DefTInner::FunT(_, _)))) =>
                     {
                         let fun_t_repos = type_util::mod_reason_of_t(&|_| r.dupe(), &found);
-                        rec_flow(cx, trace, (&fun_t_repos, u))?;
+                        rec_flow(cx, env, trace, (&fun_t_repos, u))?;
                         true
                     }
                     _ => false,
@@ -4884,6 +5020,7 @@ fn __flow_impl<'cx>(
         {
             let t_ = implicit_instantiation::kit::run_monomorphize(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 reason_op,
@@ -4891,7 +5028,7 @@ fn __flow_impl<'cx>(
                 Vec1::try_from_vec(tparams.to_vec()).unwrap(),
                 t_out,
             )?;
-            rec_flow(cx, trace, (&t_, u))?;
+            rec_flow(cx, env, trace, (&t_, u))?;
         }
 
         // ******************************
@@ -4937,6 +5074,7 @@ fn __flow_impl<'cx>(
                     })));
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &static_,
@@ -4951,6 +5089,7 @@ fn __flow_impl<'cx>(
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &method_type,
                 use_op.dupe(),
@@ -4982,8 +5121,9 @@ fn __flow_impl<'cx>(
                 }) => true,
                 _ => false,
             };
-            let (t_, _) = FlowJs::instantiate_poly(
+            let (t_, _) = FlowJs::instantiate_poly_with_env(
                 cx,
+                env,
                 trace,
                 use_op,
                 &reason_op,
@@ -4995,7 +5135,7 @@ fn __flow_impl<'cx>(
                     t.dupe(),
                 ),
             )?;
-            rec_flow(cx, trace, (&t_, u))?;
+            rec_flow(cx, env, trace, (&t_, u))?;
         }
         // when a this-abstracted class flows to upper bounds, fix the class
         (TypeInner::DefT(class_r, def_t), _)
@@ -5014,7 +5154,7 @@ fn __flow_impl<'cx>(
                 class_r.dupe(),
                 DefT::new(DefTInner::ClassT(fixed)),
             ));
-            rec_flow(cx, trace, (&new_l, u))?;
+            rec_flow(cx, env, trace, (&new_l, u))?;
         }
         (
             TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -5028,7 +5168,7 @@ fn __flow_impl<'cx>(
             let reason = upper_operation_reason_or(u, r);
             let fixed =
                 flow_js_utils::fix_this_instance(cx, reason, r.dupe(), i, *this, subst_name.dupe());
-            rec_flow(cx, trace, (&fixed, u))?;
+            rec_flow(cx, env, trace, (&fixed, u))?;
         }
 
         // *****************************
@@ -5045,14 +5185,15 @@ fn __flow_impl<'cx>(
                         | UseTInner::SetElemT(..)
                 ) =>
         {
-            let statics = FlowJs::get_builtin_type(
+            let statics = FlowJs::get_builtin_type_with_env(
                 cx,
+                env,
                 Some(trace),
                 r,
                 None,
                 "React$AbstractComponentStatics",
             )?;
-            rec_flow(cx, trace, (&statics, u))?;
+            rec_flow(cx, env, trace, (&statics, u))?;
         }
         // Components can never be called
         (
@@ -5064,13 +5205,14 @@ fn __flow_impl<'cx>(
                 ..
             }),
         ) if matches!(def_t.deref(), DefTInner::ReactAbstractComponentT(box _)) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::ECannotCallReactComponent { reason: r.dupe() },
             )?;
             let any_err = any_t::error(reason.dupe());
             let open_tout = Type::new(TypeInner::OpenT(calltype.call_tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (&any_err, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&any_err, &open_tout))?;
         }
 
         // ***********************************************
@@ -5087,7 +5229,7 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(def_t.deref(), DefTInner::FunT(_, _)) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::DefT(reason_fundef, def_t),
@@ -5135,18 +5277,20 @@ fn __flow_impl<'cx>(
             let call_specialized_callee = &calltype.call_specialized_callee;
             rec_flow(
                 cx,
+                env,
                 trace,
                 (o2, &UseT::new(UseTInner::UseT(use_op.dupe(), o1.dupe()))),
             )?;
             callee_recorder::add_callee(
-                cx,
+                env,
                 callee_recorder::Kind::All,
                 l.dupe(),
                 call_specialized_callee.as_ref(),
             );
             if call_targs.is_some() {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_callsite.loc().dupe(),
                         is_new: false,
@@ -5162,6 +5306,7 @@ fn __flow_impl<'cx>(
             if call_strict_arity {
                 multiflow_call(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason_callsite,
@@ -5169,8 +5314,9 @@ fn __flow_impl<'cx>(
                     &modified_funtype,
                 )?;
             } else {
-                FlowJs::multiflow_subtype(
+                FlowJs::multiflow_subtype_with_env(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason_callsite,
@@ -5183,6 +5329,7 @@ fn __flow_impl<'cx>(
             // call itself.
             let repos_t1 = helpers::reposition(
                 cx,
+                env,
                 Some(trace),
                 reason_callsite.loc().dupe(),
                 None,
@@ -5190,7 +5337,7 @@ fn __flow_impl<'cx>(
                 t1.dupe(),
             )?;
             let open_t2 = Type::new(TypeInner::OpenT(t2.dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&repos_t1, &open_t2))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&repos_t1, &open_t2))?;
         }
         (
             TypeInner::AnyT(_, _),
@@ -5201,7 +5348,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::AnyT(reason_fundef, src),
@@ -5218,18 +5365,19 @@ fn __flow_impl<'cx>(
             let call_tout = &calltype.call_tout;
             let call_specialized_callee = &calltype.call_specialized_callee;
             callee_recorder::add_callee(
-                cx,
+                env,
                 callee_recorder::Kind::All,
                 l.dupe(),
                 call_specialized_callee.as_ref(),
             );
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, reason_fundef.dupe());
-            rec_flow_t(cx, trace, use_op.dupe(), (call_this_t, &any))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (call_this_t, &any))?;
             call_args_iter(
                 |t| {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (t, &UseT::new(UseTInner::UseT(use_op.dupe(), any.dupe()))),
                     )?;
@@ -5239,7 +5387,7 @@ fn __flow_impl<'cx>(
             )?;
             let any_op = any_t::why(src, reason_op.dupe());
             let open_tout = Type::new(TypeInner::OpenT(call_tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (&any_op, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&any_op, &open_tout))?;
         }
         (
             _,
@@ -5250,7 +5398,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             // ReactJs.run cx trace ~use_op reason_op l tool
-            react_kit::run(cx, trace, use_op.dupe(), reason_op, l, tool)?;
+            react_kit::run_with_env(cx, env, trace, use_op.dupe(), reason_op, l, tool)?;
         }
 
         // ****************************************
@@ -5282,17 +5430,17 @@ fn __flow_impl<'cx>(
                             use_op: use_op.dupe(),
                             suggestion: None,
                         }));
-                    flow_js_utils::add_output(cx, error_message)?;
+                    flow_js_utils::add_output_with_env(cx, env, error_message)?;
                     any_t::error(reason_op.dupe())
                 }
             };
             let repos_fun_t =
-                helpers::reposition(cx, Some(trace), reason.loc().dupe(), None, None, fun_t)?;
-            rec_flow(cx, trace, (&repos_fun_t, u))?;
+                helpers::reposition(cx, env, Some(trace), reason.loc().dupe(), None, None, fun_t)?;
+            rec_flow(cx, env, trace, (&repos_fun_t, u))?;
         }
         (TypeInner::AnyT(_, src), UseTInner::ObjTestT(reason_op, _, u_inner)) => {
             let any = any_t::why(*src, reason_op.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, u_inner))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, u_inner))?;
         }
         (_, UseTInner::ObjTestT(reason_op, default, u_inner)) => {
             let repos_use = UseT::new(UseTInner::ReposLowerT {
@@ -5301,14 +5449,14 @@ fn __flow_impl<'cx>(
                 use_t: Box::new(UseT::new(UseTInner::UseT(unknown_use(), u_inner.dupe()))),
             });
             if flow_js_utils::object_like(l) {
-                rec_flow(cx, trace, (l, &repos_use))?;
+                rec_flow(cx, env, trace, (l, &repos_use))?;
             } else {
-                rec_flow(cx, trace, (default, &repos_use))?;
+                rec_flow(cx, env, trace, (default, &repos_use))?;
             }
         }
         (TypeInner::AnyT(_, src), UseTInner::ObjTestProtoT(reason_op, u_inner)) => {
             let any = any_t::why(*src, reason_op.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, u_inner))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, u_inner))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::ObjTestProtoT(reason_op, u_inner))
             if matches!(def_t.deref(), DefTInner::NullT) =>
@@ -5316,12 +5464,13 @@ fn __flow_impl<'cx>(
             let null_proto = Type::new(TypeInner::NullProtoT(
                 reason_op.dupe().replace_desc(VirtualReasonDesc::RNull),
             ));
-            rec_flow_t(cx, trace, unknown_use(), (&null_proto, u_inner))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&null_proto, u_inner))?;
         }
         (_, UseTInner::ObjTestProtoT(reason_op, u_inner)) => {
             let proto = if flow_js_utils::object_like(l) {
                 helpers::reposition(
                     cx,
+                    env,
                     Some(trace),
                     reason_op.loc().dupe(),
                     None,
@@ -5329,8 +5478,9 @@ fn __flow_impl<'cx>(
                     l.dupe(),
                 )?
             } else {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EInvalidPrototype(Box::new((
                         reason_op.loc().dupe(),
                         reason_of_t(l).dupe(),
@@ -5342,7 +5492,7 @@ fn __flow_impl<'cx>(
                         .replace_desc(VirtualReasonDesc::RObjectPrototype),
                 ))
             };
-            rec_flow_t(cx, trace, unknown_use(), (&proto, u_inner))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&proto, u_inner))?;
         }
 
         // **************************************************
@@ -5375,7 +5525,16 @@ fn __flow_impl<'cx>(
                     VirtualReasonDesc::RExtends(inner_desc) => inner_desc.as_ref().clone(),
                     other => other,
                 });
-                flow_type_args(cx, trace, use_op.dupe(), reason, &ureason, tmap1, tmap2)?;
+                flow_type_args(
+                    cx,
+                    env,
+                    trace,
+                    use_op.dupe(),
+                    reason,
+                    &ureason,
+                    tmap1,
+                    tmap2,
+                )?;
             } else if type_util::nominal_id_have_same_logical_module(
                 &cx.file_options(),
                 cx.projects_options(),
@@ -5413,6 +5572,7 @@ fn __flow_impl<'cx>(
                     );
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         implements_use_op.clone(),
                         UnifyCause::Uncategorized,
@@ -5446,6 +5606,7 @@ fn __flow_impl<'cx>(
                     let spread2 = spread_of(reason_u, static_super);
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         implements_use_op,
                         UnifyCause::Uncategorized,
@@ -5454,11 +5615,12 @@ fn __flow_impl<'cx>(
                         &spread2,
                     )?;
                     // We need to ensure that the classes have the same nominal hierarchy
-                    rec_flow_t(cx, trace, use_op.dupe(), (super_, super_super))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (super_, super_super))?;
                 }
                 // We need to ensure that the classes have the matching targs
                 flow_type_args(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason,
@@ -5515,11 +5677,11 @@ fn __flow_impl<'cx>(
             // short-circuit — let the constructor call proceed so downstream
             // typing still produces sensible results.
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
             };
             if flow_js_utils::is_class_abstract(&concretize, this)? {
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EAbstractClass(Box::new(
                         flow_typing_errors::error_message::EAbstractClassData {
                             kind: flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractClassInstantiation,
@@ -5530,8 +5692,9 @@ fn __flow_impl<'cx>(
             }
             // early error if type args passed to non-polymorphic class
             if targs.is_some() {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: annot_loc.dupe(),
                         is_new: true,
@@ -5560,6 +5723,7 @@ fn __flow_impl<'cx>(
                     );
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             this,
@@ -5583,6 +5747,7 @@ fn __flow_impl<'cx>(
             // return this
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &ret,
@@ -5598,6 +5763,7 @@ fn __flow_impl<'cx>(
                 |arg_t| {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             arg_t,
@@ -5608,7 +5774,7 @@ fn __flow_impl<'cx>(
                 },
                 &ctor_data.args,
             )?;
-            rec_flow_t(cx, trace, unknown_use(), (&any_op, &ctor_data.tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any_op, &ctor_data.tout))?;
         }
         // Interfaces with a construct signature can be constructed. The
         // sig is the [inst_construct_t] slot plus anything inherited via
@@ -5626,8 +5792,8 @@ fn __flow_impl<'cx>(
             let return_hint = &ctor_data.return_hint;
             let specialized_ctor = &ctor_data.specialized_ctor;
             if inst_abstract {
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EAbstractClass(Box::new(
                         flow_typing_errors::error_message::EAbstractClassData {
                             kind: flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractClassInstantiation,
@@ -5637,7 +5803,7 @@ fn __flow_impl<'cx>(
                 )?;
             }
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
             };
             match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
                 &concretize,
@@ -5663,6 +5829,7 @@ fn __flow_impl<'cx>(
                             };
                             rec_flow(
                                 cx,
+                                env,
                                 trace,
                                 (
                                     &construct_t,
@@ -5679,27 +5846,30 @@ fn __flow_impl<'cx>(
                             Ok::<(), FlowJsException>(())
                         },
                     )?;
-                    rec_flow_t(cx, trace, use_op.dupe(), (&ret, t))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (&ret, t))?;
                 }
                 None => {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EInvalidConstructor(reason_l.dupe()),
                     )?;
                     let any_err = any_t::error(reason_op.dupe());
-                    rec_flow_t(cx, trace, use_op.dupe(), (&any_err, t))?;
+                    rec_flow_t(cx, env, trace, use_op.dupe(), (&any_err, t))?;
                 }
             }
         }
         // Only classes (and `any`) can be constructed.
         (_, UseTInner::ConstructorT(box ctor_data)) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EInvalidConstructor(reason_of_t(l).dupe()),
             )?;
             let any_err = any_t::error(ctor_data.reason.dupe());
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 ctor_data.use_op.dupe(),
                 (&any_err, &ctor_data.tout),
@@ -5719,14 +5889,14 @@ fn __flow_impl<'cx>(
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, type_util::reason_of_propref(propref).dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, prop_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, prop_t))?;
         }
         (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
             if let MethodAction::NoMethodAction(prop_t) = pm_data.method_action.as_ref() =>
         {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.prop_reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, prop_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, prop_t))?;
         }
         (
             TypeInner::AnyT(_, src),
@@ -5749,6 +5919,7 @@ fn __flow_impl<'cx>(
                 |t| {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (t, &UseT::new(UseTInner::UseT(use_op.dupe(), any.dupe()))),
                     )?;
@@ -5757,13 +5928,13 @@ fn __flow_impl<'cx>(
                 &methodcalltype.meth_args_tlist,
             )?;
             callee_recorder::add_callee(
-                cx,
+                env,
                 callee_recorder::Kind::Tast,
                 l.dupe(),
                 specialized_callee.as_ref(),
             );
             let open_tout = Type::new(TypeInner::OpenT(methodcalltype.meth_tout.dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&any, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
         (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
             if let MethodAction::CallM(box CallMData {
@@ -5778,6 +5949,7 @@ fn __flow_impl<'cx>(
                 |t| {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -5789,13 +5961,13 @@ fn __flow_impl<'cx>(
                 &methodcalltype.meth_args_tlist,
             )?;
             callee_recorder::add_callee(
-                cx,
+                env,
                 callee_recorder::Kind::Tast,
                 l.dupe(),
                 specialized_callee.as_ref(),
             );
             let open_tout = Type::new(TypeInner::OpenT(methodcalltype.meth_tout.dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&any, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
         (
             TypeInner::AnyT(_, src),
@@ -5811,6 +5983,7 @@ fn __flow_impl<'cx>(
             let any = any_t::why(src, reason_op.dupe());
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &any,
                 use_op.dupe(),
@@ -5826,6 +5999,7 @@ fn __flow_impl<'cx>(
             let any = any_t::why(src, pm_data.reason.dupe());
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &any,
                 pm_data.use_op.dupe(),
@@ -5845,6 +6019,7 @@ fn __flow_impl<'cx>(
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     static_,
@@ -5860,13 +6035,14 @@ fn __flow_impl<'cx>(
             let reason_op = tout.reason();
             let any = any_t::why(*src, reason_op.dupe());
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&any, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
         (TypeInner::ObjProtoT(_), UseTInner::GetStaticsT(tout)) => {
             let reason_op = tout.reason();
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -5891,6 +6067,7 @@ fn __flow_impl<'cx>(
             let super_ = &inst_t.super_;
             let proto = helpers::reposition(
                 cx,
+                env,
                 Some(trace),
                 reason_op.loc().dupe(),
                 None,
@@ -5898,7 +6075,7 @@ fn __flow_impl<'cx>(
                 super_.dupe(),
             )?;
             let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&proto, &open_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetProtoT(reason_op, t))
             if let DefTInner::ObjT(obj) = def_t.deref() =>
@@ -5906,6 +6083,7 @@ fn __flow_impl<'cx>(
             let proto_t = &obj.proto_t;
             let proto = helpers::reposition(
                 cx,
+                env,
                 Some(trace),
                 reason_op.loc().dupe(),
                 None,
@@ -5913,25 +6091,25 @@ fn __flow_impl<'cx>(
                 proto_t.dupe(),
             )?;
             let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&proto, &open_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
         }
         (TypeInner::ObjProtoT(_), UseTInner::GetProtoT(reason_op, t)) => {
             let proto = null::why(reason_op.dupe());
             let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&proto, &open_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
         }
         (TypeInner::FunProtoT(reason), UseTInner::GetProtoT(reason_op, t)) => {
             let proto = Type::new(TypeInner::ObjProtoT(
                 reason.dupe().reposition(reason_op.loc().dupe()),
             ));
             let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&proto, &open_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
         }
         (TypeInner::AnyT(_, src), UseTInner::GetProtoT(reason_op, t)) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let proto = any_t::why(src, reason_op.dupe());
             let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&proto, &open_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
         }
 
         // ********************
@@ -5939,8 +6117,9 @@ fn __flow_impl<'cx>(
         // ********************
         (TypeInner::AnyT(_, _), UseTInner::SetProtoT(_, _)) => {}
         (_, UseTInner::SetProtoT(reason_op, _)) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EUnsupportedSetProto(reason_op.loc().dupe()),
             )?;
         }
@@ -5978,6 +6157,7 @@ fn __flow_impl<'cx>(
                 let (property, candidate) =
                     flow_js_utils::get_prop_t_kit::get_instance_prop_for_lookup::<FlowJs>(
                         cx,
+                        env,
                         &trace,
                         &use_op,
                         *ignore_dicts,
@@ -6002,6 +6182,7 @@ fn __flow_impl<'cx>(
                     Some((p, target_kind)) => {
                         let p = flow_js_utils::check_method_unbinding(
                             cx,
+                            env,
                             &use_op,
                             *method_accessible,
                             reason_op,
@@ -6012,6 +6193,7 @@ fn __flow_impl<'cx>(
                         let property_type = property::property_type(&p);
                         perform_lookup_action(
                             cx,
+                            env,
                             trace,
                             propref,
                             &property_type,
@@ -6039,6 +6221,7 @@ fn __flow_impl<'cx>(
                 });
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         super_,
@@ -6075,8 +6258,9 @@ fn __flow_impl<'cx>(
                 )))),
                 Arc::new(use_op.dupe()),
             );
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
                     prop_loc: reason_prop.loc().dupe(),
                     prop_name,
@@ -6099,6 +6283,7 @@ fn __flow_impl<'cx>(
             let method_accessible = true;
             let lookup_kind = instance_lookup_kind(
                 cx,
+                env,
                 trace,
                 reason_instance,
                 reason_op,
@@ -6109,6 +6294,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -6130,8 +6316,9 @@ fn __flow_impl<'cx>(
             if matches!(def_t.deref(), DefTInner::InstanceT(_))
                 && spp_data.class_bindings.is_empty() =>
         {
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EPrivateLookupFailed(Box::new((
                     (spp_data.reason.loc().dupe(), reason_c.dupe()),
                     Name::new(spp_data.name.dupe()),
@@ -6149,6 +6336,7 @@ fn __flow_impl<'cx>(
             if scope.class_binding_id != inst.class_id {
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         l,
@@ -6175,8 +6363,9 @@ fn __flow_impl<'cx>(
                 let props = cx.find_props(map);
                 match props.get(&name) {
                     None => {
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EPrivateLookupFailed(Box::new((
                                 (spp_data.reason.loc().dupe(), reason_c.dupe()),
                                 name,
@@ -6196,6 +6385,7 @@ fn __flow_impl<'cx>(
                         let propref = mk_named_prop(spp_data.reason.dupe(), false, name);
                         perform_lookup_action(
                             cx,
+                            env,
                             trace,
                             &propref,
                             &property::property_type(p),
@@ -6221,6 +6411,7 @@ fn __flow_impl<'cx>(
             let t = type_util::class_type(l.dupe(), false, r.annot_loc().map(|a| a.dupe()));
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&t, &Type::new(TypeInner::OpenT((*data.tout).dupe()))),
@@ -6239,6 +6430,7 @@ fn __flow_impl<'cx>(
             }));
             let lookup_kind = instance_lookup_kind(
                 cx,
+                env,
                 trace,
                 reason_instance,
                 &data.reason,
@@ -6249,6 +6441,7 @@ fn __flow_impl<'cx>(
             )?;
             flow_js_utils::get_prop_t_kit::read_instance_prop::<FlowJs>(
                 cx,
+                env,
                 &trace,
                 &data.use_op,
                 l,
@@ -6269,6 +6462,7 @@ fn __flow_impl<'cx>(
             let inst = &inst_t.inst;
             get_private_prop(
                 cx,
+                env,
                 false,
                 trace,
                 l,
@@ -6310,6 +6504,7 @@ fn __flow_impl<'cx>(
                     let method_accessible = true;
                     let lookup_kind = instance_lookup_kind(
                         cx,
+                        env,
                         trace,
                         reason_instance,
                         reason_lookup,
@@ -6320,6 +6515,7 @@ fn __flow_impl<'cx>(
                     )?;
                     flow_js_utils::get_prop_t_kit::read_instance_prop::<FlowJs>(
                         cx,
+                        env,
                         &trace,
                         use_op,
                         l,
@@ -6342,6 +6538,7 @@ fn __flow_impl<'cx>(
             // because we want to point at the call and undefined thing.
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &funt,
                 use_op.dupe(),
@@ -6366,6 +6563,7 @@ fn __flow_impl<'cx>(
             };
             get_private_prop(
                 cx,
+                env,
                 true,
                 trace,
                 &l_for_private,
@@ -6380,6 +6578,7 @@ fn __flow_impl<'cx>(
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &funt,
                 pm_data.use_op.dupe(),
@@ -6428,6 +6627,7 @@ fn __flow_impl<'cx>(
                             xs.iter().map(|s| s.as_str().into()).collect();
                         let rest_obj = flow_js_utils::objt_to_obj_rest(
                             cx,
+                            env,
                             props_tmap.dupe(),
                             Some(reachable_targs.dupe()),
                             obj_kind.clone(),
@@ -6435,7 +6635,7 @@ fn __flow_impl<'cx>(
                             reason_obj,
                             &xs_smol,
                         )?;
-                        rec_flow_t(cx, trace, unknown_use(), (&rest_obj, t))?;
+                        rec_flow_t(cx, env, trace, unknown_use(), (&rest_obj, t))?;
                     }
                     _ => {}
                 }
@@ -6457,6 +6657,7 @@ fn __flow_impl<'cx>(
                 ));
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         super_,
@@ -6473,6 +6674,7 @@ fn __flow_impl<'cx>(
                 xs.iter().map(|s| s.as_str().into()).collect();
             let o = flow_js_utils::objt_to_obj_rest(
                 cx,
+                env,
                 inst.own_props.dupe(),
                 Some(Rc::from([])),
                 ObjKind::Exact,
@@ -6501,6 +6703,7 @@ fn __flow_impl<'cx>(
             let o2 = flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tvar| {
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         &obj_super,
@@ -6517,11 +6720,12 @@ fn __flow_impl<'cx>(
                     ),
                 )
             })?;
-            rec_flow_t(cx, trace, use_op, (&o2, t))?;
+            rec_flow_t(cx, env, trace, use_op, (&o2, t))?;
         }
         (TypeInner::AnyT(_, src), UseTInner::ObjRestT(reason, _, t, _)) => {
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&any_t::why(*src, reason.dupe()), t),
@@ -6538,13 +6742,13 @@ fn __flow_impl<'cx>(
                 None,
                 l.dupe(),
             );
-            rec_flow_t(cx, trace, unknown_use(), (&obj, t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&obj, t))?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::ObjRestT(reason, _, t, _))
             if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
         {
             let o = obj_type::mk(ObjKind::Exact, cx, reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&o, t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&o, t))?;
         }
         // *******************************************
         // * objects may have their fields looked up *
@@ -6567,6 +6771,7 @@ fn __flow_impl<'cx>(
             for (propref, up) in lookup_targets(propref, action) {
                 match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
                     cx,
+                    env,
                     &trace,
                     &unknown_use(),
                     false,
@@ -6585,6 +6790,7 @@ fn __flow_impl<'cx>(
                         }
                         perform_lookup_action(
                             cx,
+                            env,
                             trace,
                             propref,
                             &p,
@@ -6607,6 +6813,7 @@ fn __flow_impl<'cx>(
                 });
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         &o.proto_t,
@@ -6658,6 +6865,7 @@ fn __flow_impl<'cx>(
                     for (propref, up) in lookup_targets(propref, action) {
                         perform_lookup_action(
                             cx,
+                            env,
                             trace,
                             propref,
                             &p,
@@ -6695,8 +6903,9 @@ fn __flow_impl<'cx>(
                 ),
                 None => use_op.dupe(),
             };
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EPropNotWritable(Box::new(EPropNotWritableData {
                     prop_loc: reason_prop.loc().dupe(),
                     prop_name,
@@ -6709,7 +6918,7 @@ fn __flow_impl<'cx>(
             UseTInner::SetPropT(use_op, reason_op, propref, mode, _, tin, prop_t),
         ) if let DefTInner::ObjT(o) = def_t.deref() => {
             write_obj_prop(
-                cx, trace, use_op, mode, o, propref, reason_obj, reason_op, tin, prop_t,
+                cx, env, trace, use_op, mode, o, propref, reason_obj, reason_op, tin, prop_t,
             )?;
         }
 
@@ -6719,6 +6928,7 @@ fn __flow_impl<'cx>(
             if let Some(prop_t) = prop_t {
                 rec_flow_t(
                     cx,
+                    env,
                     trace,
                     unknown_use(),
                     (&any_t::why(src, reason_op.dupe()), prop_t),
@@ -6726,6 +6936,7 @@ fn __flow_impl<'cx>(
             }
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     t,
@@ -6746,6 +6957,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -6764,6 +6976,7 @@ fn __flow_impl<'cx>(
                         flow_typing_tvar::mk_where(cx, data.reason.dupe(), |cx, tvar| {
                             rec_flow_t(
                                 cx,
+                                env,
                                 trace,
                                 data.use_op.dupe(),
                                 (tvar, &Type::new(TypeInner::OpenT((*data.tout).dupe()))),
@@ -6775,6 +6988,7 @@ fn __flow_impl<'cx>(
                 .transpose()?;
             flow_js_utils::get_prop_t_kit::read_obj_prop::<FlowJs>(
                 cx,
+                env,
                 &trace,
                 data.use_op.dupe(),
                 data.from_annot,
@@ -6793,6 +7007,7 @@ fn __flow_impl<'cx>(
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -6805,6 +7020,7 @@ fn __flow_impl<'cx>(
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -6830,6 +7046,7 @@ fn __flow_impl<'cx>(
         {
             add_specialized_callee_method_action(
                 cx,
+                env,
                 trace,
                 &any_t::untyped(reason_call.dupe()),
                 action,
@@ -6851,6 +7068,7 @@ fn __flow_impl<'cx>(
                 |cx, reason_tout, tout| {
                     flow_js_utils::get_prop_t_kit::read_obj_prop::<FlowJs>(
                         cx,
+                        env,
                         &trace,
                         use_op.dupe(),
                         false,
@@ -6866,6 +7084,7 @@ fn __flow_impl<'cx>(
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &t,
                 use_op.dupe(),
@@ -6893,6 +7112,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key_t,
@@ -6904,6 +7124,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -6943,6 +7164,7 @@ fn __flow_impl<'cx>(
             }));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key,
@@ -6973,6 +7195,7 @@ fn __flow_impl<'cx>(
             }));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key,
@@ -7011,6 +7234,7 @@ fn __flow_impl<'cx>(
             }));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key_t,
@@ -7045,6 +7269,7 @@ fn __flow_impl<'cx>(
             }));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key_t,
@@ -7074,6 +7299,7 @@ fn __flow_impl<'cx>(
             let action = ElemAction::CallElem(reason_call.dupe(), action.clone());
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key,
@@ -7099,6 +7325,7 @@ fn __flow_impl<'cx>(
             let action = ElemAction::CallElem(reason_call.dupe(), action.clone());
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     key,
@@ -7137,6 +7364,7 @@ fn __flow_impl<'cx>(
             let (_, _, t, _) = &inst.inst.type_args[0];
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 (t, &Type::new(TypeInner::OpenT(tout.dupe()))),
@@ -7152,8 +7380,8 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ObjT(_) | DefTInner::InstanceT(_))) =>
         {
-            let propref = flow_js_utils::propref_for_elem_t(cx, l);
-            elem_action_on_obj(cx, trace, use_op, propref, obj, reason, action)?;
+            let propref = flow_js_utils::propref_for_elem_t_with_env(cx, env, l);
+            elem_action_on_obj(cx, env, trace, use_op, propref, obj, reason, action)?;
         }
         (
             _,
@@ -7165,7 +7393,17 @@ fn __flow_impl<'cx>(
             }),
         ) if let TypeInner::AnyT(_, src) = obj.deref() => {
             let value = any_t::why(*src, reason.dupe());
-            perform_elem_action(cx, trace, use_op.dupe(), false, reason, obj, &value, action)?;
+            perform_elem_action(
+                cx,
+                env,
+                trace,
+                use_op.dupe(),
+                false,
+                reason,
+                obj,
+                &value,
+                action,
+            )?;
         }
         // It is not safe to write to an unknown index in a tuple. However, any is
         // a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
@@ -7209,8 +7447,9 @@ fn __flow_impl<'cx>(
                         ),
                         _ => use_op.dupe(),
                     };
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EROArrayWrite(reason_op.loc().dupe(), use_op_for_err),
                     )?;
                     None
@@ -7230,6 +7469,7 @@ fn __flow_impl<'cx>(
             };
             perform_elem_action(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 false,
@@ -7270,6 +7510,7 @@ fn __flow_impl<'cx>(
             };
             let (value, is_tuple, use_op_out, react_dro) = flow_js_utils::array_elem_check(
                 cx,
+                env,
                 write_action,
                 never_union_void_on_computed_prop_access,
                 l,
@@ -7282,7 +7523,9 @@ fn __flow_impl<'cx>(
                 Some(dro) if read_action => mk_react_dro(cx, use_op_out.dupe(), dro, value),
                 _ => value,
             };
-            perform_elem_action(cx, trace, use_op_out, is_tuple, reason, obj, &value, action)?;
+            perform_elem_action(
+                cx, env, trace, use_op_out, is_tuple, reason, obj, &value, action,
+            )?;
         }
         // A string-literal key that is not an array index reads a named property
         // off the array's object shape, e.g. `arr['map']` or
@@ -7298,9 +7541,10 @@ fn __flow_impl<'cx>(
                 action,
             }),
         ) if matches!(obj.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ArrT(_)))
-            && let propref @ PropRef::Named { .. } = flow_js_utils::propref_for_elem_t(cx, l) =>
+            && let propref @ PropRef::Named { .. } =
+                flow_js_utils::propref_for_elem_t_with_env(cx, env, l) =>
         {
-            elem_action_on_obj(cx, trace, use_op, propref, obj, reason, action)?;
+            elem_action_on_obj(cx, env, trace, use_op, propref, obj, reason, action)?;
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if matches!(def_t.deref(), DefTInner::ArrT(_))
@@ -7308,6 +7552,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -7334,6 +7579,7 @@ fn __flow_impl<'cx>(
         {
             add_specialized_callee_method_action(
                 cx,
+                env,
                 trace,
                 &any_t::untyped(reason_call.dupe()),
                 action,
@@ -7401,7 +7647,7 @@ fn __flow_impl<'cx>(
                 reason.dupe(),
                 DefT::new(DefTInner::ArrT(Rc::new(arrtype))),
             ));
-            rec_flow_t(cx, trace, unknown_use(), (&a, tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&a, tout))?;
         }
         (
             TypeInner::AnyT(_, src),
@@ -7414,6 +7660,7 @@ fn __flow_impl<'cx>(
         ) => {
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&any_t::why(*src, reason.dupe()), tout),
@@ -7434,6 +7681,7 @@ fn __flow_impl<'cx>(
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&any_t::why(src, reason_op.dupe()), tout),
@@ -7448,8 +7696,8 @@ fn __flow_impl<'cx>(
                 tout,
             }),
         ) if let DefTInner::ObjT(o) = def_t.deref() => {
-            let mirrored = flow_js_utils::obj_key_mirror(cx, o, reason_op);
-            rec_flow_t(cx, trace, unknown_use(), (&mirrored, tout))?;
+            let mirrored = flow_js_utils::obj_key_mirror(cx, env, o, reason_op);
+            rec_flow_t(cx, env, trace, unknown_use(), (&mirrored, tout))?;
         }
 
         // **************
@@ -7481,14 +7729,14 @@ fn __flow_impl<'cx>(
                                     ),
                                 ))))),
                             ));
-                            speculative_subtyping_succeeds(cx, bound, &roarray_bound)?
+                            speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
                         }
                         _ => false,
                     }
                 } =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EUnsupportedSyntax(Box::new((
                     reason_op.loc().dupe(),
                     flow_typing_errors::intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
@@ -7498,6 +7746,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -7533,7 +7782,7 @@ fn __flow_impl<'cx>(
                         None,
                     )))))),
                 ));
-                speculative_subtyping_succeeds(cx, bound, &roarray_bound)?
+                speculative_subtyping_succeeds(cx, env, bound, &roarray_bound)?
             } =>
         {
             let (t_generic_id, t) = {
@@ -7562,6 +7811,7 @@ fn __flow_impl<'cx>(
                 flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_inner| {
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &t,
@@ -7596,7 +7846,7 @@ fn __flow_impl<'cx>(
                 }))),
                 None => t,
             };
-            rec_flow_t(cx, trace, unknown_use(), (&mapped_generic_t, tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&mapped_generic_t, tout))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -7614,7 +7864,7 @@ fn __flow_impl<'cx>(
             let mapped_type_variance = &mapped_type_flags.variance;
             let mapped_type_optionality = &mapped_type_flags.optional;
             let filter_optional_t = |t: Type| -> Result<Type, FlowJsException> {
-                let filter_id = crate::flow_js::filter_optional(cx, reason_op, &t)?;
+                let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason_op, &t)?;
                 Ok(Type::new(TypeInner::OpenT(Tvar::new(
                     reason_op.dupe(),
                     filter_id,
@@ -7674,8 +7924,8 @@ fn __flow_impl<'cx>(
                 mapped_type_variance,
                 flow_typing_type::type_::MappedTypeVariance::KeepVariance
             ) {
-                add_output(
-                    cx,
+                add_output_with_env(
+                    cx, env,
                 ErrorMessage::EInvalidMappedType {
                         loc: reason_op.loc().dupe(),
                         kind: flow_typing_errors::error_message::InvalidMappedTypeErrorKind::VarianceOnArrayInput,
@@ -7774,15 +8024,17 @@ fn __flow_impl<'cx>(
             };
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&t, &Type::new(TypeInner::OpenT(tout_tvar.dupe()))),
             )?;
         }
         (_, UseTInner::ObjKitT(use_op, reason, resolve_tool, tool, tout)) => {
-            object_kit::run(
+            object_kit::run_with_env(
                 trace,
                 cx,
+                env,
                 use_op.dupe(),
                 reason,
                 resolve_tool,
@@ -7803,7 +8055,7 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
             TypeInner::FunProtoBindT(lreason),
@@ -7819,8 +8071,9 @@ fn __flow_impl<'cx>(
             let first_arg = &funtype.call_args_tlist[0];
             let call_args_tlist = funtype.call_args_tlist[1..].to_vec();
             if call_targs.is_some() {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_op.loc().dupe(),
                         is_new: false,
@@ -7829,7 +8082,7 @@ fn __flow_impl<'cx>(
                     })),
                 )?;
             }
-            let call_this_t = extract_non_spread(cx, first_arg)?;
+            let call_this_t = extract_non_spread(cx, env, first_arg)?;
             let new_funtype = FuncallType {
                 call_this_t,
                 call_targs: None,
@@ -7841,6 +8094,7 @@ fn __flow_impl<'cx>(
             };
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     func,
@@ -7867,13 +8121,13 @@ fn __flow_impl<'cx>(
             let call_tout = &calltype.call_tout;
             let call_specialized_callee = &calltype.call_specialized_callee;
             callee_recorder::add_callee(
-                cx,
+                env,
                 callee_recorder::Kind::All,
                 l.dupe(),
                 call_specialized_callee.as_ref(),
             );
             // TODO: closure
-            rec_flow_t(cx, trace, use_op.dupe(), (o2, o1))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (o2, o1))?;
             let resolve_to = SpreadResolve::ResolveSpreadsToMultiflowPartial(Box::new(
                 ResolveSpreadsToMultiflowPartialData(
                     flow_common::reason::mk_id() as i32,
@@ -7884,6 +8138,7 @@ fn __flow_impl<'cx>(
             ));
             resolve_call_list(
                 cx,
+                env,
                 Some(trace),
                 use_op.dupe(),
                 reason,
@@ -7903,7 +8158,7 @@ fn __flow_impl<'cx>(
         {
             let id = obj.call_t.as_ref().unwrap();
             let call_t = cx.find_call(*id);
-            rec_flow(cx, trace, (&call_t, u))?;
+            rec_flow(cx, env, trace, (&call_t, u))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -7917,7 +8172,7 @@ fn __flow_impl<'cx>(
         {
             let id = inst_t.inst.inst_call_t.as_ref().unwrap();
             let call_t = cx.find_call(*id);
-            rec_flow(cx, trace, (&call_t, u))?;
+            rec_flow(cx, env, trace, (&call_t, u))?;
         }
         (
             TypeInner::AnyT(_, src),
@@ -7932,19 +8187,20 @@ fn __flow_impl<'cx>(
             let call_tout = &calltype.call_tout;
             let call_specialized_callee = &calltype.call_specialized_callee;
             callee_recorder::add_callee(
-                cx,
+                env,
                 callee_recorder::Kind::All,
                 l.dupe(),
                 call_specialized_callee.as_ref(),
             );
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, call_this_t))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, call_this_t))?;
             call_args_iter(
                 |param_t| {
                     let any = any_t::why(src, reason.dupe());
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &any,
@@ -7956,7 +8212,7 @@ fn __flow_impl<'cx>(
                 call_args_tlist,
             )?;
             let open_tout = Type::new(TypeInner::OpenT(call_tout.dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, &open_tout))?;
         }
 
         // ***************************************************************
@@ -7985,6 +8241,7 @@ fn __flow_impl<'cx>(
             let strictness_kind = inst.strictness_kind.join(implementor_strictness_kind);
             structural_subtype(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 upper_inst_abstract,
@@ -8001,6 +8258,7 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     super_,
@@ -8035,6 +8293,7 @@ fn __flow_impl<'cx>(
             let proto_props = cx.generate_property_map(properties::PropertiesMap::new());
             structural_subtype(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 false,
@@ -8046,8 +8305,9 @@ fn __flow_impl<'cx>(
         }
         (_, UseTInner::ImplementsT(_, _)) => {
             let reason = reason_of_t(l);
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EUnsupportedImplements(reason.to_error_reference()),
             )?;
         }
@@ -8085,6 +8345,7 @@ fn __flow_impl<'cx>(
             for (x, p) in own.iter() {
                 check_super(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason,
@@ -8099,6 +8360,7 @@ fn __flow_impl<'cx>(
                 if inherited_method(x) {
                     check_super(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         reason,
@@ -8118,6 +8380,7 @@ fn __flow_impl<'cx>(
                 if inherited_method(x) {
                     check_super(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         reason,
@@ -8156,6 +8419,7 @@ fn __flow_impl<'cx>(
             for (x, p) in own.iter() {
                 check_super(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason,
@@ -8170,6 +8434,7 @@ fn __flow_impl<'cx>(
                 if inherited_method(x) {
                     check_super(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         reason,
@@ -8229,7 +8494,7 @@ fn __flow_impl<'cx>(
                 bound: l.dupe(),
                 no_infer: *no_infer,
             })));
-            continue_(cx, trace, &generic, cont)?;
+            continue_(cx, env, trace, &generic, cont)?;
         }
         // Preserve NominalT as consequent, but branch based on the bound
         (
@@ -8251,6 +8516,7 @@ fn __flow_impl<'cx>(
             };
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     t,
@@ -8283,7 +8549,7 @@ fn __flow_impl<'cx>(
                 },
                 u,
             );
-            rec_flow(cx, trace, (t, &u_mod))?;
+            rec_flow(cx, env, trace, (t, &u_mod))?;
         }
         // Concretize types for type operation purpose up to this point. The rest are
         // recorded as lower bound to the target tvar.
@@ -8323,6 +8589,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     static_,
@@ -8343,6 +8610,7 @@ fn __flow_impl<'cx>(
         {
             let instance = helpers::reposition(
                 cx,
+                env,
                 Some(trace),
                 reason.loc().dupe(),
                 None,
@@ -8350,7 +8618,7 @@ fn __flow_impl<'cx>(
                 instance.dupe(),
             )?;
             let open_tout = Type::new(TypeInner::OpenT((*data.tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&instance, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&instance, &open_tout))?;
         }
 
         // *****************
@@ -8376,6 +8644,7 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -8403,6 +8672,7 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -8428,6 +8698,7 @@ fn __flow_impl<'cx>(
             })));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -8453,6 +8724,7 @@ fn __flow_impl<'cx>(
             let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -8477,6 +8749,7 @@ fn __flow_impl<'cx>(
                     let open_statics = Type::new(TypeInner::OpenT(statics.dupe()));
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &open_statics,
@@ -8492,6 +8765,7 @@ fn __flow_impl<'cx>(
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &method_type,
                 use_op.dupe(),
@@ -8508,6 +8782,7 @@ fn __flow_impl<'cx>(
             let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -8515,7 +8790,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
             let open_statics = Type::new(TypeInner::OpenT(statics.dupe()));
-            rec_flow(cx, trace, (&open_statics, u))?;
+            rec_flow(cx, env, trace, (&open_statics, u))?;
         }
         // ************************
         // * classes as functions *
@@ -8546,6 +8821,7 @@ fn __flow_impl<'cx>(
             let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -8553,7 +8829,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
             let open_statics = Type::new(TypeInner::OpenT(statics.dupe()));
-            rec_flow(cx, trace, (&open_statics, u))?;
+            rec_flow(cx, env, trace, (&open_statics, u))?;
         }
         // *********
         // * enums *
@@ -8572,6 +8848,7 @@ fn __flow_impl<'cx>(
         {
             flow_js_utils::get_prop_t_kit::on_enum_object_t::<FlowJs>(
                 cx,
+                env,
                 &trace,
                 enum_reason,
                 l.dupe(),
@@ -8597,6 +8874,7 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -8641,6 +8919,7 @@ fn __flow_impl<'cx>(
                     };
                     let proto = enum_proto(
                         cx,
+                        env,
                         lookup_reason.dupe(),
                         l.dupe(),
                         enum_value_t.dupe(),
@@ -8648,6 +8927,7 @@ fn __flow_impl<'cx>(
                     );
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &proto,
@@ -8668,6 +8948,7 @@ fn __flow_impl<'cx>(
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &t,
                 use_op.dupe(),
@@ -8681,8 +8962,9 @@ fn __flow_impl<'cx>(
             UseTInner::GetElemT(box GetElemTData { key_t, tout, .. }),
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             let reason = reason_of_t(key_t);
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(Box::new(
                     EnumInvalidMemberAccessData {
                         member_name: None,
@@ -8694,14 +8976,15 @@ fn __flow_impl<'cx>(
             )?;
             let any = any_t::error(reason.dupe());
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (&any, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
         (
             TypeInner::DefT(enum_reason, def_t),
             UseTInner::SetPropT(_, op_reason, _, _, _, _, tout),
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
                     EnumModificationData {
                         loc: op_reason.loc().dupe(),
@@ -8711,7 +8994,7 @@ fn __flow_impl<'cx>(
             )?;
             if let Some(tout) = tout {
                 let any = any_t::error(op_reason.dupe());
-                rec_flow_t(cx, trace, unknown_use(), (&any, tout))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
             }
         }
         (
@@ -8725,8 +9008,9 @@ fn __flow_impl<'cx>(
                 tout,
             }),
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
                     EnumModificationData {
                         loc: op_reason.loc().dupe(),
@@ -8736,14 +9020,15 @@ fn __flow_impl<'cx>(
             )?;
             if let Some(tout) = tout {
                 let any = any_t::error(op_reason.dupe());
-                rec_flow_t(cx, trace, unknown_use(), (&any, tout))?;
+                rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
             }
         }
         (TypeInner::DefT(enum_reason, def_t), UseTInner::GetValuesT(op_reason, tout))
             if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
         {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
                     EnumInvalidObjectUtilTypeData {
                         reason: op_reason.to_error_reference(),
@@ -8752,13 +9037,14 @@ fn __flow_impl<'cx>(
                 ))),
             )?;
             let any = any_t::error(op_reason.dupe());
-            rec_flow_t(cx, trace, unknown_use(), (&any, tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
         }
         (TypeInner::DefT(enum_reason, def_t), UseTInner::GetDictValuesT(reason, result))
             if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
         {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(Box::new(
                     EnumInvalidObjectFunctionData {
                         reason: reason.dupe(),
@@ -8767,7 +9053,7 @@ fn __flow_impl<'cx>(
                 ))),
             )?;
             let any = any_t::error(reason.dupe());
-            rec_flow(cx, trace, (&any, result))?;
+            rec_flow(cx, env, trace, (&any, result))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -8787,6 +9073,7 @@ fn __flow_impl<'cx>(
             };
             let enum_value_proto = get_builtin_typeapp(
                 cx,
+                env,
                 lookup_reason,
                 None,
                 "$EnumValueProto",
@@ -8799,6 +9086,7 @@ fn __flow_impl<'cx>(
                     let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             &enum_value_proto,
@@ -8819,6 +9107,7 @@ fn __flow_impl<'cx>(
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &t,
                 use_op.dupe(),
@@ -8859,6 +9148,7 @@ fn __flow_impl<'cx>(
             // surround it.
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -8894,7 +9184,7 @@ fn __flow_impl<'cx>(
                 DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
             ));
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, use_op.dupe(), (&mixed, &open_tout))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&mixed, &open_tout))?;
         }
         (
             _,
@@ -8910,6 +9200,7 @@ fn __flow_impl<'cx>(
         {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -8942,7 +9233,7 @@ fn __flow_impl<'cx>(
             // ensure we only supply lower bounds to tout.
             let lookup_default = flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tvar| {
                 let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, trace, use_op.dupe(), (tvar, &open_tout))?;
+                rec_flow_t(cx, env, trace, use_op.dupe(), (tvar, &open_tout))?;
                 Ok::<(), FlowJsException>(())
             })?;
             let name = name_of_propref(propref);
@@ -8992,6 +9283,7 @@ fn __flow_impl<'cx>(
             };
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -9028,7 +9320,7 @@ fn __flow_impl<'cx>(
                 false_t: tout,
             }),
         ) if matches!(def_t.deref(), DefTInner::EmptyT) => {
-            rec_flow_t(cx, trace, unknown_use(), (else_t, tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (else_t, tout))?;
         }
         // Otherwise continue by Flowing out lower bound to tout.
         (
@@ -9044,7 +9336,7 @@ fn __flow_impl<'cx>(
                 Some(t) => t,
                 None => l,
             };
-            rec_flow_t(cx, trace, unknown_use(), (then_t, tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (then_t, tout))?;
         }
         // *****************
         // * repositioning *
@@ -9062,7 +9354,7 @@ fn __flow_impl<'cx>(
                 use_t: u_inner,
             },
         ) => {
-            let repos_l = helpers::reposition_reason(cx, Some(trace), reason, *use_desc, l)?;
+            let repos_l = helpers::reposition_reason(cx, env, Some(trace), reason, *use_desc, l)?;
             return Ok(Some(TailCall::RecFlow(
                 repos_l,
                 u_inner.as_ref().dupe(),
@@ -9091,11 +9383,11 @@ fn __flow_impl<'cx>(
                 bound: l.dupe(),
                 no_infer: *no_infer,
             })));
-            continue_(cx, trace, &generic, cont)?;
+            continue_(cx, env, trace, &generic, cont)?;
         }
         (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
-            let repos = helpers::reposition_reason(cx, None, reason, false, bound)?;
-            rec_flow(cx, trace, (&repos, u))?;
+            let repos = helpers::reposition_reason(cx, env, None, reason, false, bound)?;
+            rec_flow(cx, env, trace, (&repos, u))?;
         }
         (
             _,
@@ -9133,6 +9425,7 @@ fn __flow_impl<'cx>(
             ));
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &enum_obj,
@@ -9151,6 +9444,7 @@ fn __flow_impl<'cx>(
         ) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (l, &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe()))),
             )?;
@@ -9166,6 +9460,7 @@ fn __flow_impl<'cx>(
         ) if let DefTInner::EnumObjectT { enum_value_t, .. } = def_t.deref() => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     enum_value_t,
@@ -9187,6 +9482,7 @@ fn __flow_impl<'cx>(
         ) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (l, &UseT::new(UseTInner::UseT(use_op.dupe(), tout.dupe()))),
             )?;
@@ -9223,6 +9519,7 @@ fn __flow_impl<'cx>(
             let rest = try_ts_on_failure[1..].to_vec();
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     next,
@@ -9276,6 +9573,7 @@ fn __flow_impl<'cx>(
                 };
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         l,
@@ -9325,6 +9623,7 @@ fn __flow_impl<'cx>(
             // __proto__ is a getter/setter on Object.prototype
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     lookup_l,
@@ -9360,6 +9659,7 @@ fn __flow_impl<'cx>(
             // __proto__ is a getter/setter on Object.prototype
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     lookup_l,
@@ -9380,8 +9680,8 @@ fn __flow_impl<'cx>(
             // model Object.prototype as a ObjProtoT, as an optimization against a
             // possible deluge of shadow properties on Object.prototype, since it
             // is shared by every object.
-            let obj = helpers::get_builtin_type(cx, Some(trace), reason_op, None, "Object")?;
-            rec_flow(cx, trace, (&obj, u))?;
+            let obj = helpers::get_builtin_type(cx, env, Some(trace), reason_op, None, "Object")?;
+            rec_flow(cx, env, trace, (&obj, u))?;
         }
         //   rec_flow cx trace (get_builtin_type cx ~trace reason_op "Function", u)
         (
@@ -9393,8 +9693,8 @@ fn __flow_impl<'cx>(
             }),
         ) if flow_js_utils::is_function_prototype(name) => {
             // TODO: Ditto above comment for Function.prototype
-            let fun = helpers::get_builtin_type(cx, Some(trace), reason_op, None, "Function")?;
-            rec_flow(cx, trace, (&fun, u))?;
+            let fun = helpers::get_builtin_type(cx, env, Some(trace), reason_op, None, "Function")?;
+            rec_flow(cx, env, trace, (&fun, u))?;
         }
         (
             TypeInner::DefT(reason, def_t),
@@ -9415,6 +9715,7 @@ fn __flow_impl<'cx>(
         {
             strict_lookup_failed(
                 cx,
+                env,
                 trace,
                 reason,
                 reason_op,
@@ -9442,6 +9743,7 @@ fn __flow_impl<'cx>(
         ) if try_ts_on_failure.is_empty() && matches!(&**propref, PropRef::Named { .. }) => {
             strict_lookup_failed(
                 cx,
+                env,
                 trace,
                 reason,
                 reason_op,
@@ -9473,6 +9775,7 @@ fn __flow_impl<'cx>(
         {
             strict_computed_lookup_failed(
                 cx,
+                env,
                 trace,
                 reason,
                 reason_op,
@@ -9500,6 +9803,7 @@ fn __flow_impl<'cx>(
         {
             strict_computed_lookup_failed(
                 cx,
+                env,
                 trace,
                 reason,
                 reason_op,
@@ -9533,6 +9837,7 @@ fn __flow_impl<'cx>(
             if let Some(fallback) = indexer_fallback {
                 perform_lookup_action(
                     cx,
+                    env,
                     trace,
                     propref,
                     &property::property_type(&fallback.property),
@@ -9579,8 +9884,9 @@ fn __flow_impl<'cx>(
                 }
                 match t_opt {
                     Some((not_found, t)) => {
-                        FlowJs::rec_unify(
+                        FlowJs::rec_unify_with_env(
                             cx,
+                            env,
                             trace,
                             use_op,
                             UnifyCause::Uncategorized,
@@ -9612,12 +9918,12 @@ fn __flow_impl<'cx>(
         ) => {
             for t in ts.iter() {
                 let any = any_t::why(*src, reason_op.dupe());
-                rec_flow_t(cx, trace, use_op.dupe(), (&any, t))?;
+                rec_flow_t(cx, env, trace, use_op.dupe(), (&any, t))?;
             }
             let any1 = any_t::why(*src, reason_op.dupe());
-            rec_flow_t(cx, trace, use_op.dupe(), (&any1, t1))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&any1, t1))?;
             let any2 = any_t::why(*src, reason_op.dupe());
-            rec_flow_t(cx, trace, use_op.dupe(), (&any2, t2))?;
+            rec_flow_t(cx, env, trace, use_op.dupe(), (&any2, t2))?;
         }
         (TypeInner::DefT(lreason, def_t), UseTInner::ExtendsUseT(..))
             if let DefTInner::ObjT(obj) = def_t.deref() =>
@@ -9625,13 +9931,14 @@ fn __flow_impl<'cx>(
             let proto_t = &obj.proto_t;
             let repositioned = helpers::reposition(
                 cx,
+                env,
                 Some(trace),
                 lreason.loc().dupe(),
                 None,
                 None,
                 proto_t.dupe(),
             )?;
-            rec_flow(cx, trace, (&repositioned, u))?;
+            rec_flow(cx, env, trace, (&repositioned, u))?;
         }
         (TypeInner::DefT(reason, def_t), UseTInner::ExtendsUseT(..))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
@@ -9640,6 +9947,7 @@ fn __flow_impl<'cx>(
             let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     instance,
@@ -9647,7 +9955,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
             let open_statics = Type::new(TypeInner::OpenT(statics));
-            rec_flow(cx, trace, (&open_statics, u))?;
+            rec_flow(cx, env, trace, (&open_statics, u))?;
         }
         (
             root,
@@ -9665,6 +9973,7 @@ fn __flow_impl<'cx>(
             let rest = try_ts[1..].to_vec();
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     next,
@@ -9743,9 +10052,10 @@ fn __flow_impl<'cx>(
             let inst_call_t = inst_t.inst.inst_call_t;
             let inst_construct_t = inst_t.inst.inst_construct_t;
             let inst_dict = &inst_t.inst.inst_dict;
-            let check_structural_interface = |cx: &Context<'cx>| {
+            let check_structural_interface = |cx: &Context<'cx>, env: &FlowJsEnv| {
                 structural_subtype(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     upper_inst_abstract,
@@ -9767,6 +10077,7 @@ fn __flow_impl<'cx>(
                     _ => {
                         rec_flow(
                             cx,
+                            env,
                             trace,
                             (
                                 ext_l,
@@ -9778,12 +10089,13 @@ fn __flow_impl<'cx>(
                 Ok(())
             };
             if strictness_kind.is_typescript_loose()
-                && !speculation::speculating(cx)
+                && !env.speculating()
                 && !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, ext_l)
                 && !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, ext_u)
             {
                 match speculation_kit::try_singleton_custom_with_error(
                     cx,
+                    env,
                     Box::new(check_structural_interface),
                 )? {
                     None => {}
@@ -9796,8 +10108,9 @@ fn __flow_impl<'cx>(
                                 TypeOrTypeDescT::Type(t.dupe())
                             }
                         };
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
                                 EIncompatibleTypesWithUseOpData {
                                     use_op: use_op.dupe(),
@@ -9815,13 +10128,13 @@ fn __flow_impl<'cx>(
                     }
                 }
             } else {
-                check_structural_interface(cx)?;
+                check_structural_interface(cx, env)?;
             }
         }
         // Unwrap deep readonly
         (_, UseTInner::DeepReadOnlyT(tout, _)) | (_, UseTInner::HooklikeT(tout)) => {
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, &open_tout))?;
         }
         // Render Type Misc Uses
         (
@@ -9837,14 +10150,14 @@ fn __flow_impl<'cx>(
                     | CanonicalRendersForm::NominalRenders { .. }
             ) =>
         {
-            let mixed_element = FlowJs::get_builtin_react_type(
-                cx,
+            let mixed_element = FlowJs::get_builtin_react_type_with_env(
+                cx, env,
                 Some(trace),
                 renders_reason,
                 None,
                 flow_typing_errors::intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactMixedElementType,
             )?;
-            rec_flow(cx, trace, (&mixed_element, exit_u))?;
+            rec_flow(cx, env, trace, (&mixed_element, exit_u))?;
         }
         (TypeInner::DefT(renders_reason, def_t), _)
             if let DefTInner::RendersT(renders) = def_t.deref()
@@ -9854,14 +10167,14 @@ fn __flow_impl<'cx>(
                         | CanonicalRendersForm::NominalRenders { .. }
                 ) =>
         {
-            let mixed_element = FlowJs::get_builtin_react_type(
-                cx,
+            let mixed_element = FlowJs::get_builtin_react_type_with_env(
+                cx, env,
                 Some(trace),
                 renders_reason,
                 None,
                 flow_typing_errors::intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactMixedElementType,
             )?;
-            rec_flow(cx, trace, (&mixed_element, u))?;
+            rec_flow(cx, env, trace, (&mixed_element, u))?;
         }
         (TypeInner::DefT(r, def_t), _)
             if let DefTInner::RendersT(renders) = def_t.deref()
@@ -9875,7 +10188,7 @@ fn __flow_impl<'cx>(
                 renders_reason: r.dupe(),
                 u: Box::new(u.dupe()),
             });
-            rec_flow(cx, trace, (t, &exit_u))?;
+            rec_flow(cx, env, trace, (t, &exit_u))?;
         }
         (
             _,
@@ -9884,21 +10197,21 @@ fn __flow_impl<'cx>(
                 u: exit_u,
             },
         ) => {
-            let node = FlowJs::get_builtin_react_type(
-                cx,
+            let node = FlowJs::get_builtin_react_type_with_env(
+                cx, env,
                 Some(trace),
                 renders_reason,
                 None,
                 flow_typing_errors::intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
             )?;
-            rec_flow(cx, trace, (&node, exit_u))?;
+            rec_flow(cx, env, trace, (&node, exit_u))?;
         }
         // ***********************
         // * Object library call *
         // ***********************
         (TypeInner::ObjProtoT(reason), _) => {
             let obj_proto =
-                helpers::get_builtin_type(cx, Some(trace), reason, Some(true), "Object")?;
+                helpers::get_builtin_type(cx, env, Some(trace), reason, Some(true), "Object")?;
             return Ok(Some(TailCall::RecFlow(
                 obj_proto,
                 u.dupe(),
@@ -9910,7 +10223,7 @@ fn __flow_impl<'cx>(
         // *************************
         (TypeInner::FunProtoT(reason), _) => {
             let fun_proto =
-                helpers::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
+                helpers::get_builtin_type(cx, env, Some(trace), reason, Some(true), "Function")?;
             return Ok(Some(TailCall::RecFlow(
                 fun_proto,
                 u.dupe(),
@@ -9927,8 +10240,9 @@ fn __flow_impl<'cx>(
                 false_t: tc,
             }),
         ) if try_ts.is_empty() => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 flow_js_utils::incompatible_types_error(t, tc, use_op.dupe(), None),
             )?;
         }
@@ -9958,7 +10272,7 @@ fn __flow_impl<'cx>(
                 reason,
                 DefT::new(DefTInner::StrGeneralT(literal_kind)),
             ));
-            rec_flow(cx, trace, (&str_t, u))?;
+            rec_flow(cx, env, trace, (&str_t, u))?;
         }
         // *******************************
         // * ToString abstract operation *
@@ -9977,7 +10291,7 @@ fn __flow_impl<'cx>(
             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
         ) =>
         {
-            rec_flow(cx, trace, (l, t_out))?;
+            rec_flow(cx, env, trace, (l, t_out))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -9991,11 +10305,11 @@ fn __flow_impl<'cx>(
             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
         ) =>
         {
-            rec_flow(cx, trace, (t, t_out))?;
+            rec_flow(cx, env, trace, (t, t_out))?;
         }
         (_, UseTInner::ToStringT { reason, t_out, .. }) => {
             let str_mod = str_module_t::why(reason.dupe());
-            rec_flow(cx, trace, (&str_mod, t_out))?;
+            rec_flow(cx, env, trace, (&str_mod, t_out))?;
         }
         // ***********************************
         // * The indexer half of a key set   *
@@ -10017,13 +10331,14 @@ fn __flow_impl<'cx>(
         ) =>
         {
             if *include_symbols {
-                rec_flow(cx, trace, (l, t_out.as_ref()))?;
+                rec_flow(cx, env, trace, (l, t_out.as_ref()))?;
             }
         }
         // Every other key stringifies.
         (_, UseTInner::GetKeysDictKeyT { reason, t_out, .. }) => {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     l,
@@ -10074,8 +10389,9 @@ fn __flow_impl<'cx>(
                     )
                 ) =>
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: method_reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -10098,7 +10414,7 @@ fn __flow_impl<'cx>(
                             },
                         ))))),
                     ));
-                    rec_flow(cx, trace, (&arr_no_dro, u))?;
+                    rec_flow(cx, env, trace, (&arr_no_dro, u))?;
                 }
                 UseTInner::GetPropT(box data)
                     if let PropRef::Named { name, .. } = data.propref.as_ref()
@@ -10116,8 +10432,9 @@ fn __flow_impl<'cx>(
                             )
                         ) =>
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: data.reason.loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -10140,7 +10457,7 @@ fn __flow_impl<'cx>(
                             },
                         ))))),
                     ));
-                    rec_flow(cx, trace, (&arr_no_dro, u))?;
+                    rec_flow(cx, env, trace, (&arr_no_dro, u))?;
                 }
                 _ => {
                     let dro_elem = mk_react_dro(
@@ -10151,6 +10468,7 @@ fn __flow_impl<'cx>(
                     );
                     let ro_arr = get_builtin_typeapp(
                         cx,
+                        env,
                         reason,
                         Some(true),
                         "$ReadOnlyArray",
@@ -10168,7 +10486,7 @@ fn __flow_impl<'cx>(
                         },
                         u,
                     );
-                    rec_flow(cx, trace, (&ro_arr, &u_mod))?;
+                    rec_flow(cx, env, trace, (&ro_arr, &u_mod))?;
                 }
             }
         }
@@ -10183,8 +10501,8 @@ fn __flow_impl<'cx>(
                         | UseTInner::LookupT(..)
                 ) =>
         {
-            let arr_t = get_builtin_typeapp(cx, reason, None, "Array", vec![elem_t.dupe()]);
-            rec_flow(cx, trace, (&arr_t, u))?;
+            let arr_t = get_builtin_typeapp(cx, env, reason, None, "Array", vec![elem_t.dupe()]);
+            rec_flow(cx, env, trace, (&arr_t, u))?;
         }
         // *************************
         // * Tuple "length" access *
@@ -10196,6 +10514,7 @@ fn __flow_impl<'cx>(
         {
             flow_js_utils::get_prop_t_kit::on_array_length::<FlowJs>(
                 cx,
+                env,
                 &trace,
                 reason.dupe(),
                 *inexact,
@@ -10248,9 +10567,15 @@ fn __flow_impl<'cx>(
                 ReactDro(dro_loc.dupe(), dro_type.clone()),
                 elem_t.dupe(),
             );
-            let ro_arr =
-                get_builtin_typeapp(cx, reason, Some(true), "$ReadOnlyArray", vec![dro_elem]);
-            rec_flow(cx, trace, (&ro_arr, &u_mod))?;
+            let ro_arr = get_builtin_typeapp(
+                cx,
+                env,
+                reason,
+                Some(true),
+                "$ReadOnlyArray",
+                vec![dro_elem],
+            );
+            rec_flow(cx, env, trace, (&ro_arr, &u_mod))?;
         }
         (TypeInner::DefT(reason, def_t), _)
             if let DefTInner::ArrT(arr) = def_t.deref()
@@ -10267,8 +10592,8 @@ fn __flow_impl<'cx>(
                 ) =>
         {
             let t = elemt_of_arrtype(arr);
-            let ro_arr = get_builtin_typeapp(cx, reason, None, "$ReadOnlyArray", vec![t]);
-            rec_flow(cx, trace, (&ro_arr, u))?;
+            let ro_arr = get_builtin_typeapp(cx, env, reason, None, "$ReadOnlyArray", vec![t]);
+            rec_flow(cx, env, trace, (&ro_arr, u))?;
         }
         // ***********************
         // * String library call *
@@ -10279,8 +10604,8 @@ fn __flow_impl<'cx>(
                 DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
             ) && primitive_promoting_use_t(u) =>
         {
-            let string_t = helpers::get_builtin_type(cx, Some(trace), reason, None, "String")?;
-            rec_flow(cx, trace, (&string_t, u))?;
+            let string_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "String")?;
+            rec_flow(cx, env, trace, (&string_t, u))?;
         }
         // ***********************
         // * Number library call *
@@ -10291,8 +10616,8 @@ fn __flow_impl<'cx>(
                 DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
             ) && primitive_promoting_use_t(u) =>
         {
-            let number_t = helpers::get_builtin_type(cx, Some(trace), reason, None, "Number")?;
-            rec_flow(cx, trace, (&number_t, u))?;
+            let number_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "Number")?;
+            rec_flow(cx, env, trace, (&number_t, u))?;
         }
         // ************************
         // * Boolean library call *
@@ -10303,8 +10628,8 @@ fn __flow_impl<'cx>(
                 DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
             ) && primitive_promoting_use_t(u) =>
         {
-            let bool_t = helpers::get_builtin_type(cx, Some(trace), reason, None, "Boolean")?;
-            rec_flow(cx, trace, (&bool_t, u))?;
+            let bool_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "Boolean")?;
+            rec_flow(cx, env, trace, (&bool_t, u))?;
         }
         // ***********************
         // * BigInt library call *
@@ -10315,8 +10640,8 @@ fn __flow_impl<'cx>(
                 DefTInner::BigIntGeneralT(_) | DefTInner::SingletonBigIntT { .. }
             ) && primitive_promoting_use_t(u) =>
         {
-            let bigint_t = helpers::get_builtin_type(cx, Some(trace), reason, None, "BigInt")?;
-            rec_flow(cx, trace, (&bigint_t, u))?;
+            let bigint_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "BigInt")?;
+            rec_flow(cx, env, trace, (&bigint_t, u))?;
         }
         // ***********************
         // * Symbol library call *
@@ -10327,8 +10652,8 @@ fn __flow_impl<'cx>(
                 DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)
             ) && primitive_promoting_use_t(u) =>
         {
-            let symbol_t = helpers::get_builtin_type(cx, Some(trace), reason, None, "Symbol")?;
-            rec_flow(cx, trace, (&symbol_t, u))?;
+            let symbol_t = helpers::get_builtin_type(cx, env, Some(trace), reason, None, "Symbol")?;
+            rec_flow(cx, env, trace, (&symbol_t, u))?;
         }
         // *****************************************************
         // * Nice error messages for mixed function refinement *
@@ -10344,7 +10669,7 @@ fn __flow_impl<'cx>(
                 ) =>
         {
             let fun_proto = Type::new(TypeInner::FunProtoT(lreason.dupe()));
-            rec_flow(cx, trace, (&fun_proto, u))?;
+            rec_flow(cx, env, trace, (&fun_proto, u))?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -10354,7 +10679,7 @@ fn __flow_impl<'cx>(
             }),
         ) if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction)) => {
             let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, trace, unknown_use(), (l, &open_tout))?;
+            rec_flow_t(cx, env, trace, unknown_use(), (l, &open_tout))?;
         }
         (
             TypeInner::DefT(lreason, def_t),
@@ -10364,8 +10689,9 @@ fn __flow_impl<'cx>(
                 ..
             }),
         ) if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction)) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 flow_js_utils::incompatible_type_error(
                     l,
                     IncompatibleUpperData {
@@ -10376,7 +10702,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
-            rec_flow(cx, trace, (&any, u))?;
+            rec_flow(cx, env, trace, (&any, u))?;
         }
         // Special cases of FunT
         (
@@ -10405,11 +10731,12 @@ fn __flow_impl<'cx>(
                         hint: hint_unavailable(),
                     })));
                     let fun_proto = Type::new(TypeInner::FunProtoT(reason.dupe()));
-                    rec_flow(cx, trace, (&fun_proto, &get_prop_u))
+                    rec_flow(cx, env, trace, (&fun_proto, &get_prop_u))
                 },
             )?;
             apply_method_action(
                 cx,
+                env,
                 trace,
                 &method_type,
                 use_op.dupe(),
@@ -10420,7 +10747,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::FunProtoBindT(reason), _) => {
             let fun_proto = Type::new(TypeInner::FunProtoT(reason.dupe()));
-            rec_flow(cx, trace, (&fun_proto, u))?;
+            rec_flow(cx, env, trace, (&fun_proto, u))?;
         }
         (
             _,
@@ -10432,17 +10759,18 @@ fn __flow_impl<'cx>(
         ) => {
             default_resolve::default_resolve_touts(
                 &|l_inner: Type, r_inner: Type| {
-                    rec_flow_t(cx, trace, unknown_use(), (&l_inner, &r_inner))?;
+                    rec_flow_t(cx, env, trace, unknown_use(), (&l_inner, &r_inner))?;
                     Ok(())
                 },
                 None,
-                cx,
+                env,
                 reason_of_t(l).loc().dupe(),
                 u,
             )?;
             let use_op = Some(use_op_of_lookup_action(lookup_action));
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EIncompatibleProp(Box::new(EIncompatiblePropData {
                     prop: name_of_propref(propref),
                     prop_loc: reason_of_propref(propref).loc().dupe(),
@@ -10461,8 +10789,9 @@ fn __flow_impl<'cx>(
                 None => {}
                 Some(promise_class_id) => {
                     if promise_class_id == *class_id {
-                        flow_js_utils::add_output(
+                        flow_js_utils::add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EUnusedPromise {
                                 loc: reason.loc().dupe(),
                                 async_: *async_,
@@ -10471,6 +10800,7 @@ fn __flow_impl<'cx>(
                     } else {
                         rec_flow(
                             cx,
+                            env,
                             trace,
                             (
                                 super_,
@@ -10498,8 +10828,9 @@ fn __flow_impl<'cx>(
         }
         _ => {
             let use_op = use_op_of_use_t(u);
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 flow_js_utils::incompatible_type_error(
                     l,
                     IncompatibleUpperData {
@@ -10515,11 +10846,11 @@ fn __flow_impl<'cx>(
             };
             default_resolve::default_resolve_touts(
                 &|l_inner: Type, r_inner: Type| {
-                    rec_flow_t(cx, trace, unknown_use(), (&l_inner, &r_inner))?;
+                    rec_flow_t(cx, env, trace, unknown_use(), (&l_inner, &r_inner))?;
                     Ok(())
                 },
                 resolve_callee.as_ref(),
-                cx,
+                env,
                 reason_of_t(l).loc().dupe(),
                 u,
             )?;

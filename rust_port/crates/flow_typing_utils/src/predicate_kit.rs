@@ -31,6 +31,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::BinaryTest;
@@ -161,10 +162,12 @@ impl ConcretizedType {
 
     fn for_all_concrete_ts<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         t: &Type,
         f: &dyn Fn(&ConcretizedType) -> bool,
     ) -> Result<bool, FlowJsException> {
-        let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t)?;
+        let ts =
+            FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason_of_t(t), t)?;
         Ok(ts.iter().all(|t| f(&ConcretizedType(t.dupe()))))
     }
 
@@ -261,6 +264,7 @@ fn run_predicate_over_union_members(
 
 fn concretize_and_run_predicate<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     variant: PredicateConcretetizerVariant,
@@ -273,7 +277,7 @@ fn concretize_and_run_predicate<'cx>(
     ) -> Result<(), FlowJsException>,
 ) -> Result<(), FlowJsException> {
     let reason = reason_of_t(l);
-    let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, reason, l)?;
+    let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, env, reason, l)?;
     // Runs the predicate on a single concretized member `t`, reporting into `rc`.
     let process_one = |t: &Type, rc: &PredicateResultCollector| -> Result<(), FlowJsException> {
         match t.deref() {
@@ -293,9 +297,10 @@ fn concretize_and_run_predicate<'cx>(
                     disjoint_fallback: rc.disjoint_fallback.dupe(),
                 };
                 let repositioned_bound =
-                    FlowJs::reposition_reason(cx, Some(trace), reason, None, bound)?;
+                    FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
                 concretize_and_run_predicate(
                     cx,
+                    env,
                     trace,
                     &repositioned_bound,
                     variant.clone(),
@@ -343,6 +348,7 @@ fn concretize_and_run_predicate<'cx>(
 
 fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     r: &Type,
@@ -360,9 +366,9 @@ fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
         }
         BinaryTest::EqTest => PredicateConcretetizerVariant::ConcretizeRHSForLiteralPredicateTest,
     };
-    let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, reason, r)?;
+    let ts = FlowJs::possible_concrete_types_for_predicate(variant, cx, env, reason, r)?;
     for r in ts.iter() {
-        binary_predicate(cx, trace, sense, b, l, r, result_collector)?;
+        binary_predicate(cx, env, trace, sense, b, l, r, result_collector)?;
     }
     Ok(())
 }
@@ -373,6 +379,7 @@ fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
 // p - predicate
 fn predicate_no_concretization<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
     l: &Type,
@@ -394,11 +401,12 @@ fn predicate_no_concretization<'cx>(
             let p1_clone = p1.dupe();
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 l,
                 concretization_variant_of_predicate(p1),
                 &intermediate_result_collector,
-                &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p1_clone),
+                &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p1_clone),
             )?;
             if *changed.borrow() {
                 report_changes_to_input(result_collector);
@@ -408,11 +416,14 @@ fn predicate_no_concretization<'cx>(
             for t in collected.iter() {
                 concretize_and_run_predicate(
                     cx,
+                    env,
                     trace,
                     t,
                     concretization_variant_of_predicate(p2),
                     result_collector,
-                    &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p2_clone),
+                    &|cx, trace, rc, l| {
+                        predicate_no_concretization(cx, env, trace, rc, l, &p2_clone)
+                    },
                 )?;
             }
             Ok(())
@@ -424,20 +435,22 @@ fn predicate_no_concretization<'cx>(
             let p1_clone = p1.dupe();
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 l,
                 concretization_variant_of_predicate(p1),
                 result_collector,
-                &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p1_clone),
+                &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p1_clone),
             )?;
             let p2_clone = p2.dupe();
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 l,
                 concretization_variant_of_predicate(p2),
                 result_collector,
-                &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p2_clone),
+                &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p2_clone),
             )?;
             Ok(())
         }
@@ -446,6 +459,7 @@ fn predicate_no_concretization<'cx>(
         // (*********************************)
         PredicateInner::BinaryP(b, r) => concretize_binary_rhs_and_run_binary_predicate(
             cx,
+            env,
             trace,
             l,
             r,
@@ -457,6 +471,7 @@ fn predicate_no_concretization<'cx>(
             match inner.deref() {
                 PredicateInner::BinaryP(b, r) => concretize_binary_rhs_and_run_binary_predicate(
                     cx,
+                    env,
                     trace,
                     l,
                     r,
@@ -630,36 +645,36 @@ fn predicate_no_concretization<'cx>(
                 PredicateInner::PropExistsP {
                     propname,
                     reason: _,
-                } => prop_exists_test(cx, propname, false, l, result_collector),
+                } => prop_exists_test(cx, env, propname, false, l, result_collector),
                 PredicateInner::PropTruthyP(key, r) => {
-                    prop_truthy_test(cx, key, r, false, l, result_collector)
+                    prop_truthy_test(cx, env, key, r, false, l, result_collector)
                 }
                 PredicateInner::PropNonMaybeP(key, r) => {
-                    prop_non_maybe_test(cx, key, r, false, l, result_collector)
+                    prop_non_maybe_test(cx, env, key, r, false, l, result_collector)
                 }
                 PredicateInner::PropIsExactlyNullP(key, r) => {
-                    prop_is_exactly_null_test(cx, key, r, false, l, result_collector)
+                    prop_is_exactly_null_test(cx, env, key, r, false, l, result_collector)
                 }
                 PredicateInner::PropNonVoidP(key, r) => {
-                    prop_non_void_test(cx, key, r, false, l, result_collector)
+                    prop_non_void_test(cx, env, key, r, false, l, result_collector)
                 }
                 // classical logic i guess
                 PredicateInner::NotP(inner_p) => {
-                    predicate_no_concretization(cx, trace, result_collector, l, inner_p)
+                    predicate_no_concretization(cx, env, trace, result_collector, l, inner_p)
                 }
                 PredicateInner::AndP(p1, p2) => {
                     let de_morgan = Predicate::new(PredicateInner::OrP(
                         Predicate::new(PredicateInner::NotP(p1.dupe())),
                         Predicate::new(PredicateInner::NotP(p2.dupe())),
                     ));
-                    predicate_no_concretization(cx, trace, result_collector, l, &de_morgan)
+                    predicate_no_concretization(cx, env, trace, result_collector, l, &de_morgan)
                 }
                 PredicateInner::OrP(p1, p2) => {
                     let de_morgan = Predicate::new(PredicateInner::AndP(
                         Predicate::new(PredicateInner::NotP(p1.dupe())),
                         Predicate::new(PredicateInner::NotP(p2.dupe())),
                     ));
-                    predicate_no_concretization(cx, trace, result_collector, l, &de_morgan)
+                    predicate_no_concretization(cx, env, trace, result_collector, l, &de_morgan)
                 }
                 // (********************)
                 // (* Latent predicate *)
@@ -676,6 +691,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     call_latent_param_pred(
                         cx,
+                        env,
                         trace,
                         fun_t,
                         &use_op,
@@ -700,6 +716,7 @@ fn predicate_no_concretization<'cx>(
                     );
                     call_latent_this_pred(
                         cx,
+                        env,
                         trace,
                         fun_t,
                         &use_op,
@@ -894,18 +911,18 @@ fn predicate_no_concretization<'cx>(
         PredicateInner::PropExistsP {
             propname,
             reason: _,
-        } => prop_exists_test(cx, propname, true, l, result_collector),
+        } => prop_exists_test(cx, env, propname, true, l, result_collector),
         PredicateInner::PropTruthyP(key, r) => {
-            prop_truthy_test(cx, key, r, true, l, result_collector)
+            prop_truthy_test(cx, env, key, r, true, l, result_collector)
         }
         PredicateInner::PropNonMaybeP(key, r) => {
-            prop_non_maybe_test(cx, key, r, true, l, result_collector)
+            prop_non_maybe_test(cx, env, key, r, true, l, result_collector)
         }
         PredicateInner::PropIsExactlyNullP(key, r) => {
-            prop_is_exactly_null_test(cx, key, r, true, l, result_collector)
+            prop_is_exactly_null_test(cx, env, key, r, true, l, result_collector)
         }
         PredicateInner::PropNonVoidP(key, r) => {
-            prop_non_void_test(cx, key, r, true, l, result_collector)
+            prop_non_void_test(cx, env, key, r, true, l, result_collector)
         }
         // (********************)
         // (* Latent predicate *)
@@ -922,6 +939,7 @@ fn predicate_no_concretization<'cx>(
             );
             call_latent_param_pred(
                 cx,
+                env,
                 trace,
                 fun_t,
                 &use_op,
@@ -946,6 +964,7 @@ fn predicate_no_concretization<'cx>(
             );
             call_latent_this_pred(
                 cx,
+                env,
                 trace,
                 fun_t,
                 &use_op,
@@ -978,6 +997,7 @@ fn predicate_no_concretization<'cx>(
 /// refined.
 fn call_latent_pred<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     fun_t: &Type,
     use_op: &UseOp,
@@ -989,7 +1009,12 @@ fn call_latent_pred<'cx>(
     tin: &Type,
     result_collector: &PredicateResultCollector,
 ) -> Result<(), FlowJsException> {
-    let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(fun_t), fun_t)?;
+    let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+        cx,
+        env,
+        reason_of_t(fun_t),
+        fun_t,
+    )?;
     for t in ts.iter() {
         match t.deref() {
             TypeInner::IntersectionT(r, rep) => {
@@ -1000,37 +1025,41 @@ fn call_latent_pred<'cx>(
                 let targs_c = targs.dupe();
                 let argts_c = argts.to_vec();
                 let tin_c = tin.dupe();
-                let cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_>> =
-                    members
-                        .into_iter()
-                        .map(|member_t| {
-                            let use_op_inner = use_op_c.dupe();
-                            let reason_inner = reason_c.dupe();
-                            let targs_inner = targs_c.dupe();
-                            let argts_inner = argts_c.clone();
-                            let tin_inner = tin_c.dupe();
-                            Box::new(move |_cx: &Context<'cx>| {
-                                call_latent_pred(
-                                    cx,
-                                    trace,
-                                    &member_t,
-                                    &use_op_inner,
-                                    &reason_inner,
-                                    &targs_inner,
-                                    &argts_inner,
-                                    sense,
-                                    is_target,
-                                    &tin_inner,
-                                    result_collector,
-                                )
-                            })
-                                as Box<
-                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
-                                >
+                let cases: Vec<
+                    Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException> + '_>,
+                > = members
+                    .into_iter()
+                    .map(|member_t| {
+                        let use_op_inner = use_op_c.dupe();
+                        let reason_inner = reason_c.dupe();
+                        let targs_inner = targs_c.dupe();
+                        let argts_inner = argts_c.clone();
+                        let tin_inner = tin_c.dupe();
+                        Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                            call_latent_pred(
+                                cx,
+                                env,
+                                trace,
+                                &member_t,
+                                &use_op_inner,
+                                &reason_inner,
+                                &targs_inner,
+                                &argts_inner,
+                                sense,
+                                is_target,
+                                &tin_inner,
+                                result_collector,
+                            )
                         })
-                        .collect();
+                            as Box<
+                                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>
+                                    + '_,
+                            >
+                    })
+                    .collect();
                 speculation_flow::try_custom(
                     cx,
+                    env,
                     Some(use_op.dupe()),
                     None,
                     None,
@@ -1062,23 +1091,25 @@ fn call_latent_pred<'cx>(
                             let filter_result = if sense {
                                 let repositioned = FlowJs::reposition_reason(
                                     cx,
+                                    env,
                                     Some(trace),
                                     reason,
                                     None,
                                     type_guard,
                                 )?;
-                                let type_ = intersect(cx, tin.dupe(), repositioned)?;
+                                let type_ = intersect(cx, env, tin.dupe(), repositioned)?;
                                 let changed = !Type::ptr_eq(&type_, tin);
                                 FilterResult { type_, changed }
                             } else if !one_sided {
                                 let repositioned = FlowJs::reposition_reason(
                                     cx,
+                                    env,
                                     Some(trace),
                                     reason,
                                     None,
                                     type_guard,
                                 )?;
-                                type_guard_diff(cx, tin, &repositioned)?
+                                type_guard_diff(cx, env, tin, &repositioned)?
                             } else {
                                 // Do not refine else branch on one-sided type-guard
                                 FilterResult {
@@ -1143,10 +1174,11 @@ fn call_latent_pred<'cx>(
                             hint_unavailable(),
                         );
                         let t_ = FlowJs::instantiate_poly_call_or_new(
-                            cx, trace, lparts, uparts, &check,
+                            cx, env, trace, lparts, uparts, &check,
                         )?;
                         call_latent_pred(
                             cx,
+                            env,
                             trace,
                             &t_,
                             use_op,
@@ -1179,6 +1211,7 @@ fn call_latent_pred<'cx>(
 
 fn call_latent_param_pred<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     fun_t: &Type,
     use_op: &UseOp,
@@ -1193,6 +1226,7 @@ fn call_latent_param_pred<'cx>(
     let idx_vec: Vec<i32> = idx.to_vec();
     call_latent_pred(
         cx,
+        env,
         trace,
         fun_t,
         use_op,
@@ -1213,6 +1247,7 @@ fn call_latent_param_pred<'cx>(
 
 fn call_latent_this_pred<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     fun_t: &Type,
     use_op: &UseOp,
@@ -1225,6 +1260,7 @@ fn call_latent_this_pred<'cx>(
 ) -> Result<(), FlowJsException> {
     call_latent_pred(
         cx,
+        env,
         trace,
         fun_t,
         use_op,
@@ -1238,9 +1274,15 @@ fn call_latent_this_pred<'cx>(
     )
 }
 
-fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobError> {
-    fn is_any<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
-        let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t);
+fn intersect<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    t1: Type,
+    t2: Type,
+) -> Result<Type, JobError> {
+    fn is_any<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> Result<bool, JobError> {
+        let ts =
+            FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason_of_t(t), t);
         match ts {
             Ok(ts) => Ok(ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..)))),
             Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
@@ -1303,15 +1345,21 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
         }
     }
 
-    fn type_tags_differ<'cx>(cx: &Context<'cx>, depth: i32, ts1: &[Type], ts2: &[Type]) -> bool {
+    fn type_tags_differ<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        depth: i32,
+        ts1: &[Type],
+        ts2: &[Type],
+    ) -> bool {
         match (ts1, ts2) {
             ([t1, rest1 @ ..], [t2, rest2 @ ..]) => {
                 let t2_c = t2.dupe();
-                let all_differ = ConcretizedType::for_all_concrete_ts(cx, t1, &|ct1| {
-                    types_differ(cx, depth, ct1, &t2_c)
+                let all_differ = ConcretizedType::for_all_concrete_ts(cx, env, t1, &|ct1| {
+                    types_differ(cx, env, depth, ct1, &t2_c)
                 })
                 .unwrap_or(false);
-                all_differ || type_tags_differ(cx, depth, rest1, rest2)
+                all_differ || type_tags_differ(cx, env, depth, rest1, rest2)
             }
             _ => false,
         }
@@ -1320,6 +1368,7 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
     // C<T> has no overlap with C<S> iff T and S have no overlap
     fn instance_tags_differ<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         depth: i32,
         t1: &ConcretizedType,
         t2: &ConcretizedType,
@@ -1351,7 +1400,7 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
                             .iter()
                             .map(|(_, _, t, _)| t.dupe())
                             .collect();
-                        type_tags_differ(cx, depth, &ts1, &ts2)
+                        type_tags_differ(cx, env, depth, &ts1, &ts2)
                     } else {
                         false
                     }
@@ -1362,36 +1411,43 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
         }
     }
 
-    fn types_differ<'cx>(cx: &Context<'cx>, depth: i32, t1: &ConcretizedType, t2: &Type) -> bool {
+    fn types_differ<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        depth: i32,
+        t1: &ConcretizedType,
+        t2: &Type,
+    ) -> bool {
         // To prevent infinite recursion, we use a simple depth mechanism.
         if depth > 2 {
             return false;
         }
         let depth = depth + 1;
-        ConcretizedType::for_all_concrete_ts(cx, t2, &|ct2| {
+        ConcretizedType::for_all_concrete_ts(cx, env, t2, &|ct2| {
             tags_differ(cx, t1, ct2)
                 || ground_types_differ(t1, ct2)
-                || instance_tags_differ(cx, depth, t1, ct2)
+                || instance_tags_differ(cx, env, depth, t1, ct2)
         })
         .unwrap_or(false)
     }
 
     fn try_intersect<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         reason1: &Reason,
         t1_conc: &ConcretizedType,
         t2: &Type,
     ) -> Result<Option<Type>, JobError> {
         let t1 = t1_conc.unwrap();
-        if types_differ(cx, 0, t1_conc, t2) {
+        if types_differ(cx, env, 0, t1_conc, t2) {
             let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
             Ok(Some(Type::new(TypeInner::DefT(
                 r,
                 DefT::new(DefTInner::EmptyT),
             ))))
-        } else if is_any(cx, t1)? {
+        } else if is_any(cx, env, t1)? {
             Ok(Some(t2.dupe()))
-        } else if is_any(cx, t2)? {
+        } else if is_any(cx, env, t2)? {
             // Filter out null and void types from the input if comparing with any
             let t1_wrapped = ConcretizedType::wrap_unsafe(t1.dupe());
             if is_null(&t1_wrapped) || is_void(&t1_wrapped) {
@@ -1404,11 +1460,11 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
                 Ok(Some(t1.dupe()))
             }
         } else if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
-            || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)?
+            || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
         {
             Ok(Some(t1.dupe()))
         } else if type_util::quick_subtype(None::<&fn(&Type)>, t2, t1)
-            || FlowJs::speculative_subtyping_succeeds(cx, t2, t1)?
+            || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t2, t1)?
         {
             Ok(Some(t2.dupe()))
         } else {
@@ -1420,7 +1476,7 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
                     // Apply the refinement on super and underlying type of opaque type.
                     // Preserve nominal_id to retain compatibility with original type.
                     let upper_t = Some(match &nominal_type.upper_t {
-                        Some(upper) => intersect(cx, upper.dupe(), t2.dupe())?,
+                        Some(upper) => intersect(cx, env, upper.dupe(), t2.dupe())?,
                         None => t2.dupe(),
                     });
                     let underlying_t = match &nominal_type.underlying_t {
@@ -1431,12 +1487,12 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
                         }) => {
                             nominal::UnderlyingT::CustomError(Box::new(nominal::CustomErrorData {
                                 custom_error_loc: custom_error_loc.dupe(),
-                                t: intersect(cx, inner_t.dupe(), t2.dupe())?,
+                                t: intersect(cx, env, inner_t.dupe(), t2.dupe())?,
                             }))
                         }
                         nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
                             nominal::UnderlyingT::OpaqueWithLocal {
-                                t: intersect(cx, inner_t.dupe(), t2.dupe())?,
+                                t: intersect(cx, env, inner_t.dupe(), t2.dupe())?,
                             }
                         }
                     };
@@ -1457,12 +1513,20 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
     }
 
     let reason1 = reason_of_t(&t1);
-    match try_intersect(cx, reason1, &ConcretizedType::wrap_unsafe(t1.dupe()), &t2)? {
+    match try_intersect(
+        cx,
+        env,
+        reason1,
+        &ConcretizedType::wrap_unsafe(t1.dupe()),
+        &t2,
+    )? {
         Some(t) => Ok(t),
         None => {
             // No definitive refinement found. We fall back to more expensive
             //  concretization that breaks up all unions (including optimized ones)
-            let ts = match FlowJs::possible_concrete_types_for_inspection(cx, reason1, &t1) {
+            let ts = match FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx, env, reason1, &t1,
+            ) {
                 Ok(ts) => ts,
                 Err(FlowJsException::WorkerCanceled(c)) => {
                     return Err(JobError::Canceled(c));
@@ -1480,6 +1544,7 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
                 // t1 was just concretized
                 let item = match try_intersect(
                     cx,
+                    env,
                     reason1,
                     &ConcretizedType::wrap_unsafe(t1_inner.dupe()),
                     &t2,
@@ -1505,10 +1570,15 @@ fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Result<Type, JobErro
 /// with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
 /// This means that the positive branch will always be taken, and so we are left with
 /// `empty` in the negated case.
-fn type_guard_diff<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<FilterResult, JobError> {
+fn type_guard_diff<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    t1: &Type,
+    t2: &Type,
+) -> Result<FilterResult, JobError> {
     let reason1 = reason_of_t(t1);
     if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
-        || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)?
+        || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, t1, t2)?
     {
         let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
         Ok(FilterResult {
@@ -1516,24 +1586,25 @@ fn type_guard_diff<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<Filte
             changed: true,
         })
     } else {
-        let t1s_conc = match FlowJs::possible_concrete_types_for_inspection(cx, reason1, t1) {
-            Ok(ts) => ts,
-            Err(FlowJsException::WorkerCanceled(c)) => {
-                return Err(JobError::Canceled(c));
-            }
-            Err(FlowJsException::TimedOut(t)) => {
-                return Err(JobError::TimedOut(t));
-            }
-            Err(FlowJsException::DebugThrow { loc }) => {
-                return Err(JobError::DebugThrow { loc });
-            }
-            Err(_) => Vec::new(),
-        };
+        let t1s_conc =
+            match FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason1, t1) {
+                Ok(ts) => ts,
+                Err(FlowJsException::WorkerCanceled(c)) => {
+                    return Err(JobError::Canceled(c));
+                }
+                Err(FlowJsException::TimedOut(t)) => {
+                    return Err(JobError::TimedOut(t));
+                }
+                Err(FlowJsException::DebugThrow { loc }) => {
+                    return Err(JobError::DebugThrow { loc });
+                }
+                Err(_) => Vec::new(),
+            };
         let mut ts: Vec<Type> = Vec::new();
         let mut changed = false;
         for t1_inner in t1s_conc {
             if type_util::quick_subtype(None::<&fn(&Type)>, &t1_inner, t2)
-                || FlowJs::speculative_subtyping_succeeds(cx, &t1_inner, t2)?
+                || FlowJs::speculative_subtyping_succeeds_with_env(cx, env, &t1_inner, t2)?
             {
                 continue;
             }
@@ -1550,12 +1621,13 @@ fn type_guard_diff<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<Filte
 
 fn prop_exists_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     key: &str,
     sense: bool,
     obj: &Type,
     result_collector: &PredicateResultCollector,
 ) -> Result<(), FlowJsException> {
-    match has_prop(cx, &Name::new(key), obj)? {
+    match has_prop(cx, env, &Name::new(key), obj)? {
         Some(has) => {
             if has == sense {
                 report_unchanged_filtering_result_to_predicate_result(obj.dupe(), result_collector);
@@ -1575,6 +1647,7 @@ fn prop_exists_test<'cx>(
 /// due to inexact objects)
 fn has_prop<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     key: &Name,
     obj: &Type,
 ) -> Result<Option<bool>, FlowJsException> {
@@ -1621,6 +1694,7 @@ fn has_prop<'cx>(
 
     fn find_key<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         exact: bool,
         super_t: &Type,
         props_list: &[properties::Id],
@@ -1648,12 +1722,14 @@ fn has_prop<'cx>(
         match current_has_prop {
             Some(true) => Ok(Some(true)),
             _ => {
-                let super_ts = FlowJs::possible_concrete_types_for_inspection(
+                let super_ts = FlowJs::possible_concrete_types_for_inspection_with_env(
                     cx,
+                    env,
                     reason_of_t(super_t),
                     super_t,
                 )?;
-                let super_has_prop = try_all_have_prop(super_ts.iter(), |t| has_prop(cx, key, t))?;
+                let super_has_prop =
+                    try_all_have_prop(super_ts.iter(), |t| has_prop(cx, env, key, t))?;
                 match super_has_prop {
                     Some(true) => Ok(Some(true)),
                     Some(false) if !exact => Ok(None),
@@ -1668,6 +1744,7 @@ fn has_prop<'cx>(
         TypeInner::DefT(_, def_t) => match def_t.deref() {
             DefTInner::ObjT(obj_t) => find_key(
                 cx,
+                env,
                 obj_type::is_exact(&obj_t.flags.obj_kind),
                 &obj_t.proto_t,
                 &[obj_t.props_tmap.dupe()],
@@ -1675,6 +1752,7 @@ fn has_prop<'cx>(
             ),
             DefTInner::InstanceT(inst_t) => find_key(
                 cx,
+                env,
                 false,
                 &inst_t.super_,
                 &[inst_t.inst.own_props.dupe(), inst_t.inst.proto_props.dupe()],
@@ -1687,8 +1765,9 @@ fn has_prop<'cx>(
         TypeInner::FunProtoT(_) => Ok(Some(flow_js_utils::is_function_prototype(key))),
         TypeInner::IntersectionT(reason, rep) => {
             let member_has_prop = try_some_has_prop(rep.members_iter(), |t| {
-                let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason, t)?;
-                try_all_have_prop(ts.iter(), |t| has_prop(cx, key, t))
+                let ts =
+                    FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, t)?;
+                try_all_have_prop(ts.iter(), |t| has_prop(cx, env, key, t))
             })?;
             Ok(member_has_prop)
         }
@@ -1698,6 +1777,7 @@ fn has_prop<'cx>(
 
 fn prop_truthy_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1708,6 +1788,7 @@ fn prop_truthy_test<'cx>(
         key,
         reason,
         cx,
+        env,
         result_collector,
         obj,
         sense,
@@ -1718,6 +1799,7 @@ fn prop_truthy_test<'cx>(
 
 fn prop_non_maybe_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1728,6 +1810,7 @@ fn prop_non_maybe_test<'cx>(
         key,
         reason,
         cx,
+        env,
         result_collector,
         obj,
         sense,
@@ -1738,6 +1821,7 @@ fn prop_non_maybe_test<'cx>(
 
 fn prop_is_exactly_null_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1748,6 +1832,7 @@ fn prop_is_exactly_null_test<'cx>(
         key,
         reason,
         cx,
+        env,
         result_collector,
         obj,
         sense,
@@ -1758,6 +1843,7 @@ fn prop_is_exactly_null_test<'cx>(
 
 fn prop_non_void_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1768,6 +1854,7 @@ fn prop_non_void_test<'cx>(
         key,
         reason,
         cx,
+        env,
         result_collector,
         obj,
         sense,
@@ -1780,6 +1867,7 @@ fn prop_exists_test_generic<'cx>(
     key: &str,
     reason: &Reason,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     result_collector: &PredicateResultCollector,
     orig_obj: &Type,
     sense: bool,
@@ -1799,6 +1887,7 @@ fn prop_exists_test_generic<'cx>(
                                     let pred = if sense { pred } else { not_pred };
                                     concretize_and_guard_prop(
                                         cx,
+                                        env,
                                         &t,
                                         pred,
                                         orig_obj,
@@ -1811,8 +1900,9 @@ fn prop_exists_test_generic<'cx>(
                                         orig_obj.dupe(),
                                         result_collector,
                                     );
-                                    flow_js_utils::add_output(
+                                    flow_js_utils::add_output_with_env(
                                         cx,
+                                        env,
                                         ErrorMessage::EPropNotReadable(Box::new(
                                             EPropNotReadableData {
                                                 prop_loc: reason.loc().dupe(),
@@ -1864,14 +1954,22 @@ fn prop_exists_test_generic<'cx>(
                         }) => {
                             if Polarity::compat(*polarity, Polarity::Positive) {
                                 let pred = if sense { pred } else { not_pred };
-                                concretize_and_guard_prop(cx, t, pred, orig_obj, result_collector)?;
+                                concretize_and_guard_prop(
+                                    cx,
+                                    env,
+                                    t,
+                                    pred,
+                                    orig_obj,
+                                    result_collector,
+                                )?;
                             } else {
                                 report_unchanged_filtering_result_to_predicate_result(
                                     orig_obj.dupe(),
                                     result_collector,
                                 );
-                                flow_js_utils::add_output(
+                                flow_js_utils::add_output_with_env(
                                     cx,
+                                    env,
                                     ErrorMessage::ETupleElementNotReadable(Box::new(
                                         ETupleElementNotReadableData {
                                             use_op: unknown_use(),
@@ -1911,13 +2009,18 @@ fn prop_exists_test_generic<'cx>(
             // the right refinement. See the comment on the implementation of
             // IntersectionPreprocessKit for more details.
             for member_obj in rep.members_iter() {
-                let ts =
-                    FlowJs::possible_concrete_types_for_inspection(cx, inter_reason, member_obj)?;
+                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                    cx,
+                    env,
+                    inter_reason,
+                    member_obj,
+                )?;
                 for t in ts.iter() {
                     prop_exists_test_generic(
                         key,
                         reason,
                         cx,
+                        env,
                         result_collector,
                         orig_obj,
                         sense,
@@ -1939,6 +2042,7 @@ fn prop_exists_test_generic<'cx>(
 
 fn binary_predicate<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     sense: bool,
     test: &BinaryTest,
@@ -1949,6 +2053,7 @@ fn binary_predicate<'cx>(
     match test {
         BinaryTest::InstanceofTest => instanceof_test(
             cx,
+            env,
             trace,
             result_collector,
             sense,
@@ -1956,7 +2061,7 @@ fn binary_predicate<'cx>(
             &InstanceofRhs::TypeOperand(right.dupe()),
         ),
         BinaryTest::SentinelProp(key) => {
-            sentinel_prop_test(key, cx, result_collector, sense, left, right)
+            sentinel_prop_test(key, cx, env, result_collector, sense, left, right)
         }
         BinaryTest::EqTest => Ok(eq_test(cx, result_collector, sense, left, right)),
     }
@@ -1964,6 +2069,7 @@ fn binary_predicate<'cx>(
 
 fn instanceof_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
     sense: bool,
@@ -1992,14 +2098,16 @@ fn instanceof_test<'cx>(
                 a: a.dupe(),
                 seen: SeenClasses::new(),
             };
-            let arrt = FlowJs::get_builtin_typeapp(cx, reason, None, "Array", vec![elemt]);
+            let arrt =
+                FlowJs::get_builtin_typeapp_with_env(cx, env, reason, None, "Array", vec![elemt]);
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 &arrt,
                 PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest,
                 result_collector,
-                &|cx, trace, rc, l| instanceof_test(cx, trace, rc, true, l, &right),
+                &|cx, trace, rc, l| instanceof_test(cx, env, trace, rc, true, l, &right),
             )?;
         }
         (false, TypeInner::DefT(reason, def_t), InstanceofRhs::TypeOperand(right_t))
@@ -2017,14 +2125,16 @@ fn instanceof_test<'cx>(
                 a: a.dupe(),
                 seen: SeenClasses::new(),
             };
-            let arrt = FlowJs::get_builtin_typeapp(cx, reason, None, "Array", vec![elemt]);
+            let arrt =
+                FlowJs::get_builtin_typeapp_with_env(cx, env, reason, None, "Array", vec![elemt]);
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 &arrt,
                 PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest,
                 result_collector,
-                &|cx, trace, rc, l| instanceof_test(cx, trace, rc, false, l, &right),
+                &|cx, trace, rc, l| instanceof_test(cx, env, trace, rc, false, l, &right),
             )?;
         }
         // Suppose that we have an instance x of class C, and we check whether x is
@@ -2050,7 +2160,7 @@ fn instanceof_test<'cx>(
                 a: a.dupe(),
                 seen: SeenClasses::new(),
             };
-            instanceof_test(cx, trace, result_collector, true, c, &right)?;
+            instanceof_test(cx, env, trace, result_collector, true, c, &right)?;
         }
         // If C is a subclass of A, then don't refine the type of x. Otherwise,
         // refine the type of x to A. (In general, the type of x should be refined to
@@ -2077,7 +2187,7 @@ fn instanceof_test<'cx>(
             } else if let Some(seen) = visit_class(seen, instance_t) {
                 // Recursively check whether super(C) extends A, with enough context.
                 let repositioned =
-                    FlowJs::reposition_reason(cx, Some(trace), reason, None, super_c)?;
+                    FlowJs::reposition_reason(cx, env, Some(trace), reason, None, super_c)?;
                 let right_clone = InstanceofRhs::InternalExtendsOperand {
                     reason: extends_reason.dupe(),
                     c: c.dupe(),
@@ -2086,17 +2196,18 @@ fn instanceof_test<'cx>(
                 };
                 concretize_and_run_predicate(
                     cx,
+                    env,
                     trace,
                     &repositioned,
                     PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest,
                     result_collector,
-                    &|cx, trace, rc, l| instanceof_test(cx, trace, rc, true, l, &right_clone),
+                    &|cx, trace, rc, l| instanceof_test(cx, env, trace, rc, true, l, &right_clone),
                 )?;
             } else {
                 // C's chain loops back on itself, so following it will never reach the root.
                 // End the walk where a real prototype chain would have ended.
                 let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
-                instanceof_test(cx, trace, result_collector, true, &obj_proto, right)?;
+                instanceof_test(cx, env, trace, result_collector, true, &obj_proto, right)?;
             }
         }
         // If we are checking `instanceof Object` or `instanceof Function`, objects
@@ -2106,16 +2217,23 @@ fn instanceof_test<'cx>(
             TypeInner::ObjProtoT(reason),
             right @ InstanceofRhs::InternalExtendsOperand { .. },
         ) => {
-            let obj_proto =
-                FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Object")?;
+            let obj_proto = FlowJs::get_builtin_type_with_env(
+                cx,
+                env,
+                Some(trace),
+                reason,
+                Some(true),
+                "Object",
+            )?;
             let right_clone = right.clone();
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 &obj_proto,
                 PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest,
                 result_collector,
-                &|cx, trace, rc, l| instanceof_test(cx, trace, rc, true, l, &right_clone),
+                &|cx, trace, rc, l| instanceof_test(cx, env, trace, rc, true, l, &right_clone),
             )?;
         }
         (
@@ -2124,16 +2242,23 @@ fn instanceof_test<'cx>(
             right @ InstanceofRhs::InternalExtendsOperand { .. },
         ) => {
             //   let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
-            let fun_proto =
-                FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
+            let fun_proto = FlowJs::get_builtin_type_with_env(
+                cx,
+                env,
+                Some(trace),
+                reason,
+                Some(true),
+                "Function",
+            )?;
             let right_clone = right.clone();
             concretize_and_run_predicate(
                 cx,
+                env,
                 trace,
                 &fun_proto,
                 PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest,
                 result_collector,
-                &|cx, trace, rc, l| instanceof_test(cx, trace, rc, true, l, &right_clone),
+                &|cx, trace, rc, l| instanceof_test(cx, env, trace, rc, true, l, &right_clone),
             )?;
         }
         // We hit the root class, so C is not a subclass of A
@@ -2148,8 +2273,8 @@ fn instanceof_test<'cx>(
             // downcast (keep A); otherwise A and C are unrelated, so from a union we
             // prune the member (else keep the guard to avoid a bare `empty`).
             let a_subclass_of_c =
-                FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, a, c)?;
-            let repositioned = flow_js::reposition(cx, r.loc().dupe(), a.dupe())?;
+                FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, env, a, c)?;
+            let repositioned = flow_js::reposition_with_env(cx, env, r.loc().dupe(), a.dupe())?;
             if result_collector.from_union.get() && !a_subclass_of_c {
                 // Prune this member, but stash the guard in case every member prunes.
                 result_collector.disjoint_fallback.add(repositioned);
@@ -2167,7 +2292,7 @@ fn instanceof_test<'cx>(
             let desc = reason_of_t(a).desc(true);
             let loc = class_reason.loc().dupe();
             let repositioned =
-                FlowJs::reposition(cx, Some(trace), loc, Some(desc), None, a.dupe())?;
+                FlowJs::reposition_with_env(cx, env, Some(trace), loc, Some(desc), None, a.dupe())?;
             report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
         }
         (true, TypeInner::AnyT(..), InstanceofRhs::TypeOperand(right_t))
@@ -2177,7 +2302,7 @@ fn instanceof_test<'cx>(
             let desc = reason_of_t(a).desc(true);
             let loc = class_reason.loc().dupe();
             let repositioned =
-                FlowJs::reposition(cx, Some(trace), loc, Some(desc), None, a.dupe())?;
+                FlowJs::reposition_with_env(cx, env, Some(trace), loc, Some(desc), None, a.dupe())?;
             report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
         }
         // Prune the type when any other `instanceof` check succeeds (since this is
@@ -2205,7 +2330,7 @@ fn instanceof_test<'cx>(
                 a: a.dupe(),
                 seen: SeenClasses::new(),
             };
-            instanceof_test(cx, trace, result_collector, false, c, &right)?;
+            instanceof_test(cx, env, trace, result_collector, false, c, &right)?;
         }
         // If C is a subclass of A, then do nothing, since this check cannot
         // succeed. Otherwise, don't refine the type of x.
@@ -2229,7 +2354,7 @@ fn instanceof_test<'cx>(
                 report_changes_to_input(result_collector);
             } else if let Some(seen) = visit_class(seen, instance_t) {
                 let repositioned =
-                    FlowJs::reposition_reason(cx, Some(trace), reason, None, super_c)?;
+                    FlowJs::reposition_reason(cx, env, Some(trace), reason, None, super_c)?;
                 let right_clone = InstanceofRhs::InternalExtendsOperand {
                     reason: extends_reason.dupe(),
                     c: c.dupe(),
@@ -2238,17 +2363,18 @@ fn instanceof_test<'cx>(
                 };
                 concretize_and_run_predicate(
                     cx,
+                    env,
                     trace,
                     &repositioned,
                     PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest,
                     result_collector,
-                    &|cx, trace, rc, l| instanceof_test(cx, trace, rc, false, l, &right_clone),
+                    &|cx, trace, rc, l| instanceof_test(cx, env, trace, rc, false, l, &right_clone),
                 )?;
             } else {
                 // C's chain loops back on itself, so following it will never reach the root.
                 // End the walk where a real prototype chain would have ended.
                 let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
-                instanceof_test(cx, trace, result_collector, false, &obj_proto, right)?;
+                instanceof_test(cx, env, trace, result_collector, false, &obj_proto, right)?;
             }
         }
         (
@@ -2258,7 +2384,7 @@ fn instanceof_test<'cx>(
         ) => {
             // We hit the root class, so C is not a subclass of A.
             // In this case, we will refine the input to C
-            let repositioned = flow_js::reposition(cx, r.loc().dupe(), c.dupe())?;
+            let repositioned = flow_js::reposition_with_env(cx, env, r.loc().dupe(), c.dupe())?;
             report_changed_filtering_result_to_predicate_result(repositioned, result_collector);
         }
         (false, _, _) => {
@@ -2271,17 +2397,19 @@ fn instanceof_test<'cx>(
 fn sentinel_prop_test<'cx>(
     key: &str,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     result_collector: &PredicateResultCollector,
     sense: bool,
     obj: &Type,
     t: &Type,
 ) -> Result<(), FlowJsException> {
-    sentinel_prop_test_generic(key, cx, result_collector, obj, sense, obj, t)
+    sentinel_prop_test_generic(key, cx, env, result_collector, obj, sense, obj, t)
 }
 
 fn sentinel_prop_test_generic<'cx>(
     key: &str,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     result_collector: &PredicateResultCollector,
     orig_obj: &Type,
     sense: bool,
@@ -2349,6 +2477,7 @@ fn sentinel_prop_test_generic<'cx>(
                     let reason = reason_of_t(orig_obj).dupe().replace_desc(desc);
                     concretize_and_run_sentinel_prop_test(
                         cx,
+                        env,
                         &reason,
                         orig_obj,
                         sense,
@@ -2358,8 +2487,9 @@ fn sentinel_prop_test_generic<'cx>(
                     )?;
                 }
                 None => {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: reason_of_t(obj).loc().dupe(),
                             prop_name: Some(Name::new(key)),
@@ -2408,6 +2538,7 @@ fn sentinel_prop_test_generic<'cx>(
                     let reason = reason_of_t(orig_obj).dupe().replace_desc(desc);
                     concretize_and_run_sentinel_prop_test(
                         cx,
+                        env,
                         &reason,
                         orig_obj,
                         sense,
@@ -2416,8 +2547,9 @@ fn sentinel_prop_test_generic<'cx>(
                         result_collector,
                     )?;
                 } else {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::ETupleElementNotReadable(Box::new(
                             ETupleElementNotReadableData {
                                 use_op: unknown_use(),
@@ -2490,6 +2622,7 @@ fn sentinel_prop_test_generic<'cx>(
                                 type_util::tuple_length(reason.dupe(), *inexact, arity.0, arity.1);
                             concretize_and_run_sentinel_prop_test(
                                 cx,
+                                env,
                                 &reason,
                                 orig_obj,
                                 sense,
@@ -2515,8 +2648,9 @@ fn sentinel_prop_test_generic<'cx>(
                 }
                 TypeInner::IntersectionT(inter_reason, rep) => {
                     for member_obj in rep.members_iter() {
-                        let ts = FlowJs::possible_concrete_types_for_inspection(
+                        let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
                             cx,
+                            env,
                             inter_reason,
                             member_obj,
                         )?;
@@ -2524,6 +2658,7 @@ fn sentinel_prop_test_generic<'cx>(
                             sentinel_prop_test_generic(
                                 key,
                                 cx,
+                                env,
                                 result_collector,
                                 orig_obj,
                                 sense,
@@ -2555,6 +2690,7 @@ fn sentinel_prop_test_generic<'cx>(
 
 fn concretize_and_run_sentinel_prop_test<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     orig_obj: &Type,
     sense: bool,
@@ -2585,7 +2721,7 @@ fn concretize_and_run_sentinel_prop_test<'cx>(
         }
     }
 
-    let ts = FlowJs::possible_concrete_types_for_sentinel_prop_test(cx, reason, input)?;
+    let ts = FlowJs::possible_concrete_types_for_sentinel_prop_test(cx, env, reason, input)?;
     for t in ts.iter() {
         match t.deref() {
             TypeInner::UnionT(r, rep) => {
@@ -2617,6 +2753,7 @@ fn concretize_and_run_sentinel_prop_test<'cx>(
                                     for member in rep.members_iter() {
                                         concretize_and_run_sentinel_prop_test(
                                             cx,
+                                            env,
                                             reason,
                                             orig_obj,
                                             sense,
@@ -2657,6 +2794,7 @@ fn concretize_and_run_sentinel_prop_test<'cx>(
                                     for member in rep.members_iter() {
                                         concretize_and_run_sentinel_prop_test(
                                             cx,
+                                            env,
                                             reason,
                                             orig_obj,
                                             sense,
@@ -2778,13 +2916,18 @@ fn eq_test<'cx>(
 // (**********)
 fn concretize_and_guard_prop<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     source: &Type,
     pred: &PropGuard,
     orig_obj: &Type,
     result_collector: &PredicateResultCollector,
 ) -> Result<(), FlowJsException> {
-    let ts =
-        FlowJs::possible_concrete_types_for_operators_checking(cx, reason_of_t(source), source)?;
+    let ts = FlowJs::possible_concrete_types_for_operators_checking_with_env(
+        cx,
+        env,
+        reason_of_t(source),
+        source,
+    )?;
     let all_changed = ts.iter().all(|t| guard_prop(cx, t, pred));
     if all_changed {
         report_changes_to_input(result_collector);
@@ -2830,8 +2973,18 @@ pub enum PredicateResult {
     TypeUnchanged(Type),
 }
 
-pub fn run_predicate_track_changes<'cx>(
+pub(crate) fn run_predicate_track_changes<'cx>(
     cx: &Context<'cx>,
+    t: &Type,
+    p: &Predicate,
+    result_reason: Reason,
+) -> Result<PredicateResult, JobError> {
+    run_predicate_track_changes_with_env(cx, &FlowJsEnv::entry(), t, p, result_reason)
+}
+
+fn run_predicate_track_changes_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     t: &Type,
     p: &Predicate,
     result_reason: Reason,
@@ -2847,11 +3000,12 @@ pub fn run_predicate_track_changes<'cx>(
     let p_clone = p.dupe();
     flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
         cx,
+        env,
         DepthTrace::unit_trace(),
         t,
         concretization_variant_of_predicate(p),
         &result_collector,
-        &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p_clone),
+        &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p_clone),
     ))?;
     let collected: Vec<Type> = result_collector
         .collector
@@ -2874,8 +3028,18 @@ pub fn run_predicate_track_changes<'cx>(
     }
 }
 
-pub fn run_predicate_for_filtering<'cx>(
+pub(crate) fn run_predicate_for_filtering<'cx>(
     cx: &Context<'cx>,
+    t: &Type,
+    p: &Predicate,
+    tout: &Tvar,
+) -> Result<(), JobError> {
+    run_predicate_for_filtering_with_env(cx, &FlowJsEnv::entry(), t, p, tout)
+}
+
+pub(super) fn run_predicate_for_filtering_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     t: &Type,
     p: &Predicate,
     tout: &Tvar,
@@ -2891,16 +3055,19 @@ pub fn run_predicate_for_filtering<'cx>(
     let p_clone = p.dupe();
     flow_js_utils::flow_js_result_to_job_error(concretize_and_run_predicate(
         cx,
+        env,
         DepthTrace::unit_trace(),
         t,
         concretization_variant_of_predicate(p),
         &result_collector,
-        &|cx, trace, rc, l| predicate_no_concretization(cx, trace, rc, l, &p_clone),
+        &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p_clone),
     ))?;
     let tout_type = Type::new(TypeInner::OpenT(tout.dupe()));
     let collected = result_collector.collector.collect_to_vec();
     for t in collected.iter() {
-        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_t(cx, t, &tout_type))?;
+        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_t_with_env(
+            cx, env, t, &tout_type,
+        ))?;
     }
     Ok(())
 }

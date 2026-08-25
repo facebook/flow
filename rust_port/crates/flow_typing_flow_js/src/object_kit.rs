@@ -21,6 +21,7 @@ use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::CondTData;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
@@ -72,6 +73,7 @@ use crate::slice_utils;
 // types.
 fn partition_keys_and_indexer<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -99,8 +101,9 @@ fn partition_keys_and_indexer<'cx>(
         Arc::new(use_op.dupe()),
     );
     // All keys must be a subtype of string | number | symbol
-    FlowJs::rec_flow_t(cx, trace, compatibility_use_op, keys, &union)?;
-    let possible_types = FlowJs::possible_concrete_types_for_inspection(cx, reason, keys)?;
+    FlowJs::rec_flow_t_with_env(cx, env, trace, compatibility_use_op, keys, &union)?;
+    let possible_types =
+        FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, keys)?;
     let mut keys_result: Vec<(Name, Reason)> = Vec::new();
     let mut indexers: Vec<Type> = Vec::new();
     for t in possible_types {
@@ -131,12 +134,14 @@ fn partition_keys_and_indexer<'cx>(
 
 fn dispatch_substituted_name<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     name_t: &Type,
 ) -> Result<(Vec<(Name, Reason)>, Vec<Type>), FlowJsException> {
     /* Returns (dest_names, indexer_keys) — splits the substituted name_type into
      * singleton-string destinations vs. types that contribute to the output indexer. */
-    let possible = FlowJs::possible_concrete_types_for_inspection(cx, reason, name_t)?;
+    let possible =
+        FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, name_t)?;
     let mut dests: Vec<(Name, Reason)> = Vec::new();
     let mut idx_keys: Vec<Type> = Vec::new();
     for t in possible {
@@ -172,6 +177,7 @@ fn dispatch_substituted_name<'cx>(
 #[allow(clippy::too_many_arguments)]
 fn compute_name_remap<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     reason: &Reason,
@@ -192,7 +198,7 @@ fn compute_name_remap<'cx>(
         // A symbol-typed key remaps as a `unique symbol` type, not a string literal.
         let Name::Str(key_str) = k else {
             let r = flow_common::reason::mk_reason(VirtualReasonDesc::RUniqueSymbol, key_loc);
-            return flow_js_utils::type_of_key_name(cx, k.dupe(), &r);
+            return flow_js_utils::type_of_key_name_with_env(env, k.dupe(), &r);
         };
         let key_str = key_str.dupe();
         Type::new(TypeInner::DefT(
@@ -242,7 +248,7 @@ fn compute_name_remap<'cx>(
     let mut all_substituted: Vec<Type> = Vec::new();
     for k in &source_keys {
         let substituted = substitute_name(k);
-        let (dests, idx_keys) = dispatch_substituted_name(cx, reason, &substituted)?;
+        let (dests, idx_keys) = dispatch_substituted_name(cx, env, reason, &substituted)?;
         per_source.insert(
             k.dupe(),
             slice_utils::PerSourceDispatch {
@@ -255,8 +261,12 @@ fn compute_name_remap<'cx>(
     let (source_indexer, indexer_substituted_opt) = match (selected_keys, &flags.obj_kind) {
         (None, ObjKind::Indexed(dict_t)) => {
             let substituted = substitute_name_for_t(dict_t.key.dupe());
-            let possible =
-                FlowJs::possible_concrete_types_for_inspection(cx, reason, &substituted)?;
+            let possible = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx,
+                env,
+                reason,
+                &substituted,
+            )?;
             let all_empty = possible.iter().all(|t| match t.deref() {
                 TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::EmptyT),
                 _ => false,
@@ -286,8 +296,12 @@ fn compute_name_remap<'cx>(
             let mut all: Vec<Type> = Vec::new();
             for xs_t in xs {
                 let substituted = substitute_name_for_t(xs_t.dupe());
-                let possible =
-                    FlowJs::possible_concrete_types_for_inspection(cx, reason, &substituted)?;
+                let possible = FlowJs::possible_concrete_types_for_inspection_with_env(
+                    cx,
+                    env,
+                    reason,
+                    &substituted,
+                )?;
                 let all_empty = possible.iter().all(|t| match t.deref() {
                     TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::EmptyT),
                     _ => false,
@@ -315,7 +329,7 @@ fn compute_name_remap<'cx>(
     match all_substituted.as_slice() {
         [] => {}
         [t] => {
-            partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, t)?;
+            partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, t)?;
         }
         [t0, t1, ts @ ..] => {
             let union = Type::new(TypeInner::UnionT(
@@ -328,7 +342,7 @@ fn compute_name_remap<'cx>(
                     ts.iter().duped().collect::<Rc<[_]>>(),
                 ),
             ));
-            partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, &union)?;
+            partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, &union)?;
         }
     }
     Ok(slice_utils::NameRemap {
@@ -340,6 +354,7 @@ fn compute_name_remap<'cx>(
 
 pub fn mapped_type_of_keys<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -349,7 +364,7 @@ pub fn mapped_type_of_keys<'cx>(
     mapped_type_flags: &MappedTypeFlags,
 ) -> Result<Type, FlowJsException> {
     let (keys_with_reasons, indexers) =
-        partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, keys)?;
+        partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, keys)?;
     // To go from a union to a MappedType we first build an object with all the keys we
     // extract from the union and create an object with all mixed values. Then we push it
     // through the mapped type machinery. The specific type we choose for the properties
@@ -409,7 +424,7 @@ pub fn mapped_type_of_keys<'cx>(
         reachable_targs: Rc::from([]),
     };
     let filter_optional = |t: Type| -> Result<Type, FlowJsException> {
-        let filter_id = crate::flow_js::filter_optional(cx, reason, &t)?;
+        let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason, &t)?;
         Ok(Type::new(TypeInner::OpenT(Tvar::new(
             reason.dupe(),
             filter_id,
@@ -418,7 +433,7 @@ pub fn mapped_type_of_keys<'cx>(
     let name_remap = match name_type {
         None => None,
         Some(nt) => Some(compute_name_remap(
-            cx, trace, &use_op, reason, nt, None, &slice,
+            cx, env, trace, &use_op, reason, nt, None, &slice,
         )?),
     };
     slice_utils::map_object(
@@ -427,6 +442,7 @@ pub fn mapped_type_of_keys<'cx>(
         property_type,
         mapped_type_flags,
         cx,
+        env,
         reason,
         &use_op,
         None,
@@ -437,6 +453,30 @@ pub fn mapped_type_of_keys<'cx>(
 pub fn run<'cx>(
     trace: DepthTrace,
     cx: &Context<'cx>,
+    use_op: UseOp,
+    reason: &Reason,
+    resolve_tool: &object::ResolveTool,
+    tool: &object::Tool,
+    l: &Type,
+    tout: &Type,
+) -> Result<(), FlowJsException> {
+    run_with_env(
+        trace,
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        resolve_tool,
+        tool,
+        l,
+        tout,
+    )
+}
+
+pub(super) fn run_with_env<'cx>(
+    trace: DepthTrace,
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: &object::ResolveTool,
@@ -456,23 +496,25 @@ pub fn run<'cx>(
                           d1: &DictType,
                           d2: &DictType|
          -> Result<(), FlowJsException> {
-            FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &d2.key, &d1.key)?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &d2.value, &d1.value)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &d2.key, &d1.key)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &d2.value, &d1.value)?;
             Ok(())
         };
         let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| {
-            FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
             Ok(())
         };
         let recurse = |cx: &Context<'cx>,
+                       env: &FlowJsEnv,
                        use_op: UseOp,
                        reason: &Reason,
                        resolve_tool: object::ResolveTool,
                        tool: object::Tool,
                        t: Type|
          -> Result<(), FlowJsException> {
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &t,
                 &UseT::new(UseTInner::ObjKitT(
@@ -485,14 +527,15 @@ pub fn run<'cx>(
             )?;
             Ok(())
         };
-        slice_utils::object_spread(
+        slice_utils::object_spread_with_env(
             &dict_check,
-            &flow_js_utils::add_output,
+            &flow_js_utils::add_output_with_env,
             &return_,
             &recurse,
             options,
             state.clone(),
             cx,
+            env,
             use_op,
             reason,
             x,
@@ -510,14 +553,15 @@ pub fn run<'cx>(
                                   tout: &Type|
      -> Result<(), FlowJsException> {
         let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| {
-            FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
             Ok(())
         };
         slice_utils::check_component_config(
-            &|cx, msg| flow_js_utils::add_output(cx, msg),
+            &|cx, env: &FlowJsEnv, msg| flow_js_utils::add_output_with_env(cx, env, msg),
             &return_,
             pmap,
             cx,
+            env,
             use_op,
             reason,
             x,
@@ -540,8 +584,9 @@ pub fn run<'cx>(
                        t: Type| {
             match options {
                 object::rest::MergeMode::ReactConfigMerge(Polarity::Neutral) => {
-                    FlowJs::rec_unify(
+                    FlowJs::rec_unify_with_env(
                         cx,
+                        env,
                         trace,
                         use_op(Polarity::Neutral),
                         UnifyCause::Uncategorized,
@@ -551,26 +596,42 @@ pub fn run<'cx>(
                     )?;
                 }
                 object::rest::MergeMode::ReactConfigMerge(Polarity::Negative) => {
-                    FlowJs::rec_flow_t(cx, trace, use_op(Polarity::Negative), tout, &t)?;
+                    FlowJs::rec_flow_t_with_env(
+                        cx,
+                        env,
+                        trace,
+                        use_op(Polarity::Negative),
+                        tout,
+                        &t,
+                    )?;
                 }
                 object::rest::MergeMode::ReactConfigMerge(Polarity::Positive) => {
-                    FlowJs::rec_flow_t(cx, trace, use_op(Polarity::Positive), &t, tout)?;
+                    FlowJs::rec_flow_t_with_env(
+                        cx,
+                        env,
+                        trace,
+                        use_op(Polarity::Positive),
+                        &t,
+                        tout,
+                    )?;
                 }
                 _ => {
                     // Intentional UnknownUse here.
-                    FlowJs::rec_flow_t(cx, trace, unknown_use(), &t, tout)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, tout)?;
                 }
             }
             Ok(())
         };
         let recurse = |cx: &Context<'cx>,
+                       env: &FlowJsEnv,
                        use_op: UseOp,
                        reason: &Reason,
                        resolve_tool: object::ResolveTool,
                        tool: object::Tool,
                        t: Type| {
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &t,
                 &UseT::new(UseTInner::ObjKitT(
@@ -587,17 +648,18 @@ pub fn run<'cx>(
                           cx: &Context<'cx>,
                           (t1, t2): (&Type, &Type)|
          -> Result<(), FlowJsException> {
-            FlowJs::rec_flow_t(cx, trace, use_op, t1, t2)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)?;
             Ok(())
         };
-        slice_utils::object_rest(
-            &|cx, msg| flow_js_utils::add_output(cx, msg),
+        slice_utils::object_rest_with_env(
+            &|cx, env: &FlowJsEnv, msg| flow_js_utils::add_output_with_env(cx, env, msg),
             &return_,
             &recurse,
             &subt_check,
             options,
             state,
             cx,
+            env,
             use_op,
             reason,
             x,
@@ -616,8 +678,8 @@ pub fn run<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the $Exact type than the use_op associated
         // with the $Exact instantiation *)
-        let t = slice_utils::object_make_exact(cx, reason, x)?;
-        FlowJs::rec_flow_t(cx, trace, unknown_use(), &t, tout)?;
+        let t = slice_utils::object_make_exact(cx, env, reason, x)?;
+        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, tout)?;
         Ok(())
     };
 
@@ -631,8 +693,9 @@ pub fn run<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the ReadOnly type than the use_op associated
         // with the ReadOnly instantiation
-        FlowJs::rec_flow_t(
+        FlowJs::rec_flow_t_with_env(
             cx,
+            env,
             trace,
             unknown_use(),
             &slice_utils::object_read_only(cx, reason, x),
@@ -653,8 +716,9 @@ pub fn run<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the Partial type than the use_op associated
         // with the Partial instantiation
-        FlowJs::rec_flow_t(
+        FlowJs::rec_flow_t_with_env(
             cx,
+            env,
             trace,
             unknown_use(),
             &slice_utils::object_update_optionality(
@@ -680,8 +744,9 @@ pub fn run<'cx>(
         // We always use an unknown_use intentionally when flowing to the tout. The use_op associated
         // with the tvar is more relevant with the use of the Required type than the use_op associated
         // with the Required instantiation
-        FlowJs::rec_flow_t(
+        FlowJs::rec_flow_t_with_env(
             cx,
+            env,
             trace,
             unknown_use(),
             &slice_utils::object_update_optionality(
@@ -760,7 +825,7 @@ pub fn run<'cx>(
                 union_rep::make(None, union_rep::UnionKind::UnknownKind, t0, t1, remaining),
             ))
         };
-        FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
+        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
         Ok(())
     };
 
@@ -874,8 +939,9 @@ pub fn run<'cx>(
                                 let t2_clone = t2.dupe();
                                 let t =
                                     flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
-                                        let filter_id = FlowJs::filter_optional(
+                                        let filter_id = FlowJs::filter_optional_with_env(
                                             cx,
+                                            env,
                                             Some(trace),
                                             reason,
                                             &t1_clone,
@@ -884,8 +950,9 @@ pub fn run<'cx>(
                                             reason.dupe(),
                                             filter_id,
                                         )));
-                                        FlowJs::rec_flow(
+                                        FlowJs::rec_flow_with_env(
                                             cx,
+                                            env,
                                             trace,
                                             &open_t,
                                             &UseT::new(UseTInner::CondT(Box::new(CondTData {
@@ -1059,8 +1126,9 @@ pub fn run<'cx>(
                 let new_state = object::react_config::State::Defaults {
                     config: object::Resolved(x),
                 };
-                FlowJs::rec_flow(
+                FlowJs::rec_flow_with_env(
                     cx,
+                    env,
                     trace,
                     t,
                     &UseT::new(UseTInner::ObjKitT(
@@ -1097,8 +1165,9 @@ pub fn run<'cx>(
                 } else {
                     t0
                 };
-                FlowJs::rec_flow(
+                FlowJs::rec_flow_with_env(
                     cx,
+                    env,
                     trace,
                     &t,
                     &UseT::new(UseTInner::UseT(use_op, tout.dupe())),
@@ -1126,8 +1195,9 @@ pub fn run<'cx>(
                         union_rep::make(None, union_rep::UnionKind::UnknownKind, t0, t1, remaining),
                     ))
                 };
-                FlowJs::rec_flow(
+                FlowJs::rec_flow_with_env(
                     cx,
+                    env,
                     trace,
                     &t,
                     &UseT::new(UseTInner::UseT(use_op, tout.dupe())),
@@ -1152,10 +1222,10 @@ pub fn run<'cx>(
      -> Result<(), FlowJsException> {
         let selected_keys = selected_keys_opt
             .as_ref()
-            .map(|keys| partition_keys_and_indexer(cx, trace, use_op.dupe(), reason, keys))
+            .map(|keys| partition_keys_and_indexer(cx, env, trace, use_op.dupe(), reason, keys))
             .transpose()?;
         let filter_optional = |t: Type| -> Result<Type, FlowJsException> {
-            let filter_id = crate::flow_js::filter_optional(cx, reason, &t)?;
+            let filter_id = crate::flow_js::filter_optional_with_env(cx, env, reason, &t)?;
             Ok(Type::new(TypeInner::OpenT(Tvar::new(
                 reason.dupe(),
                 filter_id,
@@ -1166,6 +1236,7 @@ pub fn run<'cx>(
                 None => None,
                 Some(nt) => Some(compute_name_remap(
                     cx,
+                    env,
                     trace,
                     &use_op,
                     reason,
@@ -1180,6 +1251,7 @@ pub fn run<'cx>(
                 prop_type,
                 mapped_type_flags,
                 cx,
+                env,
                 reason,
                 &use_op,
                 selected_keys.as_ref(),
@@ -1201,7 +1273,7 @@ pub fn run<'cx>(
             }
         };
         // Intentional UnknownUse here.
-        FlowJs::rec_flow_t(cx, trace, unknown_use(), &t, tout)?;
+        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, tout)?;
         Ok(())
     };
 
@@ -1255,24 +1327,20 @@ pub fn run<'cx>(
     };
 
     let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| -> Result<(), FlowJsException> {
-        FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
+        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
         Ok(())
     };
-    let next_wrapped = |cx: &Context<'cx>,
-                        use_op: UseOp,
-                        tool: &object::Tool,
-                        reason: &Reason,
-                        x: Vec1<object::Slice>|
-     -> Result<(), FlowJsException> { next(cx, use_op, tool, reason, x) };
     let recurse = |cx: &Context<'cx>,
+                   env: &FlowJsEnv,
                    use_op: UseOp,
                    reason: &Reason,
                    resolve_tool: object::ResolveTool,
                    tool: &object::Tool,
                    t: Type|
      -> Result<(), FlowJsException> {
-        FlowJs::rec_flow(
+        FlowJs::rec_flow_with_env(
             cx,
+            env,
             trace,
             &t,
             &UseT::new(UseTInner::ObjKitT(
@@ -1285,11 +1353,16 @@ pub fn run<'cx>(
         )?;
         Ok(())
     };
-    let statics = |cx: &Context<'cx>, r: &Reason, i: &Type| -> Result<Type, FlowJsException> {
+    let statics = |cx: &Context<'cx>,
+                   env: &FlowJsEnv,
+                   r: &Reason,
+                   i: &Type|
+     -> Result<Type, FlowJsException> {
         flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, reason, tvar_id| {
             let tvar = Tvar::new(reason.dupe(), tvar_id as u32);
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 i,
                 &UseT::new(UseTInner::GetStaticsT(Box::new(tvar))),
@@ -1297,13 +1370,14 @@ pub fn run<'cx>(
             Ok(())
         })
     };
-    slice_utils::run(
-        &flow_js_utils::add_output,
+    slice_utils::run_with_env(
+        &flow_js_utils::add_output_with_env,
         &return_,
-        &next_wrapped,
+        &next,
         &recurse,
         &statics,
         cx,
+        env,
         use_op,
         reason,
         resolve_tool.clone(),

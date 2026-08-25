@@ -76,7 +76,6 @@ use flow_typing_exists_check::ExistsCheck;
 use flow_typing_generics::GenericId;
 use flow_typing_loc_env::loc_env::LocEnv;
 use flow_typing_loc_env::node_cache::NodeCache;
-use flow_typing_speculation_state::SpeculationState;
 use flow_typing_spread_cache::SpreadCache;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ConstFoldMap;
@@ -311,32 +310,6 @@ pub enum SubstCacheErr {
     ETooManyTypeArgs(ALoc, i32),
 }
 
-pub mod type_app_expansion {
-    use super::*;
-
-    // Array types function like type applications but are not implemented as such. Unless
-    // we decide to unify their implementation with regular typeapps, they need special
-    // handling here
-    #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord)]
-    pub enum Root {
-        Type(type_::Type),
-        Array(flow_common::reason::Reason),
-        ROArray(flow_common::reason::Reason),
-        Tuple(flow_common::reason::Reason, usize),
-    }
-
-    pub type RootSet = BTreeSet<Root>;
-
-    #[derive(Debug, Clone, PartialEq, Eq)]
-    pub enum Bound {
-        Lower,
-        Upper,
-    }
-
-    #[derive(Debug, Clone)]
-    pub struct Entry(pub type_::Type, pub Vec<RootSet>, pub Bound);
-}
-
 #[derive(Debug, Clone)]
 pub struct PossiblyRefinedWriteState {
     pub t: Type,
@@ -432,8 +405,6 @@ pub struct ComponentT<'cx> {
     fix_cache: RefCell<FixCacheMap>,
     spread_cache: RefCell<SpreadCache>,
     const_fold_cache: RefCell<ConstFoldMap>,
-    speculation_state: RefCell<SpeculationState>,
-    instantiation_stack: RefCell<FlowVector<type_app_expansion::Entry>>,
 
     // Post-inference checks
     delayed_forcing_tvars: RefCell<FlowOrdSet<i32>>,
@@ -501,7 +472,6 @@ pub struct ComponentT<'cx> {
     // It is key-ed by the body_loc of components.
     inferred_component_return: RefCell<ALocFuzzyMap<Vec1<Type>>>,
     exhaustive_checks: RefCell<ALocMap<(Vec<ALoc>, bool)>>,
-    in_implicit_instantiation: RefCell<bool>,
     // React$Element does not store the monomorphized version of a component to support
     // cloning polymorphic elements. We need to know the monomorphized version of a component
     // to determine the render type of an element of a polymorphic component, so we keep track
@@ -828,12 +798,9 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         eval_repos_cache: RefCell::new(Default::default()),
         fix_cache: RefCell::new(Default::default()),
         spread_cache: RefCell::new(SpreadCache::new()),
-        instantiation_stack: RefCell::new(FlowVector::new()),
         const_fold_cache: RefCell::new(Default::default()),
-        speculation_state: RefCell::new(SpeculationState(Vec::new())),
         annot_graph: RefCell::new(IntHashMap::default()),
         exhaustive_checks: RefCell::new(ALocMap::new()),
-        in_implicit_instantiation: RefCell::new(false),
         monomorphized_components: RefCell::new(HashMap::new()),
         signature_help_callee: RefCell::new(ALocMap::new()),
         ctor_callee: RefCell::new(ALocMap::new()),
@@ -1301,10 +1268,6 @@ impl<'cx> Context<'cx> {
     ) -> Rc<RefCell<flow_utils_union_find::Graph<type_::constraint::Constraints<'cx, Context<'cx>>>>>
     {
         self.0.ccx.sig_cx.borrow().graph.dupe()
-    }
-
-    pub fn in_implicit_instantiation(&self) -> bool {
-        *self.0.ccx.in_implicit_instantiation.borrow()
     }
 
     pub fn is_checked(&self) -> bool {
@@ -2244,17 +2207,6 @@ impl<'cx> Context<'cx> {
         self.0.ccx.sig_cx.borrow_mut().evaluated = evaluated;
     }
 
-    pub fn run_in_implicit_instantiation_mode<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce() -> R,
-    {
-        let saved = *self.0.ccx.in_implicit_instantiation.borrow();
-        *self.0.ccx.in_implicit_instantiation.borrow_mut() = true;
-        let result = f();
-        *self.0.ccx.in_implicit_instantiation.borrow_mut() = saved;
-        result
-    }
-
     pub fn set_exists_checks(&self, exists_checks: ALocMap<BTreeSet<Type>>) {
         *self.0.ccx.exists_checks.borrow_mut() = exists_checks;
     }
@@ -2343,7 +2295,6 @@ pub struct CacheSnapshot {
     snapshot_subst_cache: type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>,
     snapshot_spread_cache: SpreadCache,
     snapshot_evaluated: type_::eval::Map<Type>,
-    snapshot_instantiation_stack: FlowVector<type_app_expansion::Entry>,
 }
 
 impl<'cx> Context<'cx> {
@@ -2364,7 +2315,6 @@ impl<'cx> Context<'cx> {
             snapshot_subst_cache,
             snapshot_spread_cache: self.0.ccx.spread_cache.borrow().dupe(),
             snapshot_evaluated: self.0.ccx.sig_cx.borrow().evaluated.dupe(),
-            snapshot_instantiation_stack: self.0.ccx.instantiation_stack.borrow().dupe(),
         }
     }
 
@@ -2374,7 +2324,6 @@ impl<'cx> Context<'cx> {
             snapshot_subst_cache,
             snapshot_spread_cache,
             snapshot_evaluated,
-            snapshot_instantiation_stack,
         } = snapshot;
         self.0
             .ccx
@@ -2390,7 +2339,6 @@ impl<'cx> Context<'cx> {
         self.0.ccx.const_fold_cache.borrow_mut().pop_level();
         *self.0.ccx.spread_cache.borrow_mut() = snapshot_spread_cache;
         self.set_evaluated(snapshot_evaluated);
-        *self.0.ccx.instantiation_stack.borrow_mut() = snapshot_instantiation_stack;
     }
 
     pub fn run_and_rolled_back_cache<F, R>(&self, f: F) -> R
@@ -2398,7 +2346,6 @@ impl<'cx> Context<'cx> {
         F: FnOnce() -> R,
     {
         let cache_snapshot = self.take_cache_snapshot();
-        *self.0.ccx.instantiation_stack.borrow_mut() = FlowVector::new();
         let result = f();
         self.restore_cache_snapshot(cache_snapshot);
         result
@@ -2430,7 +2377,6 @@ impl<'cx> Context<'cx> {
             .borrow_mut() = false;
         *self.0.typing_mode.borrow_mut() = TypingMode::SynthesisMode { target_loc };
         let cache_snapshot = self.take_cache_snapshot();
-        *self.0.ccx.instantiation_stack.borrow_mut() = FlowVector::new();
 
         let result = f();
 
@@ -2473,66 +2419,39 @@ impl<'cx> Context<'cx> {
         })
     }
 
+    /// Run a signature tvar's thunk as a normal check. The `flow_js` half of
+    /// this — dropping the enclosing speculation and type-application
+    /// expansion — is `FlowJsEnv::signature_tvar_env`.
     pub fn run_in_signature_tvar_env<F, R>(&self, f: F) -> R
     where
         F: FnOnce() -> R,
     {
-        let saved_speculation_state =
-            std::mem::take(&mut self.0.ccx.speculation_state.borrow_mut().0);
         let saved_typing_mode = self.0.typing_mode.borrow().dupe();
-        let saved_instantiation_stack = self.0.ccx.instantiation_stack.borrow().dupe();
-        *self.0.ccx.instantiation_stack.borrow_mut() = FlowVector::new();
         *self.0.typing_mode.borrow_mut() = TypingMode::CheckingMode;
 
         let result = f();
 
         *self.0.typing_mode.borrow_mut() = saved_typing_mode;
-        *self.0.ccx.speculation_state.borrow_mut() = SpeculationState(saved_speculation_state);
-        *self.0.ccx.instantiation_stack.borrow_mut() = saved_instantiation_stack;
 
         result
     }
 
+    /// Hint evaluation is an independent unit of type evaluation, so it runs
+    /// with the caches rolled back afterwards. Its `flow_js` half — dropping
+    /// the enclosing speculation and expansion — is
+    /// `FlowJsEnv::signature_tvar_env` applied at the call site.
     pub fn run_in_hint_eval_mode<F, R>(&self, f: F) -> R
     where
         F: FnOnce() -> R,
     {
         let old_typing_mode = self.0.typing_mode.borrow().dupe();
-        // We need to run type hint eval in an empty speculation state, since the hint eval is an
-        // independent unit of type evaluation that's separate from an ongoing speculation.
-        let saved_speculation_state =
-            std::mem::take(&mut self.0.ccx.speculation_state.borrow_mut().0);
         *self.0.typing_mode.borrow_mut() = TypingMode::HintEvaluationMode;
         let cache_snapshot = self.take_cache_snapshot();
-        *self.0.ccx.instantiation_stack.borrow_mut() = FlowVector::new();
 
         let result = f();
 
         self.restore_cache_snapshot(cache_snapshot);
-        *self.0.ccx.speculation_state.borrow_mut() = SpeculationState(saved_speculation_state);
         *self.0.typing_mode.borrow_mut() = old_typing_mode;
-
-        result
-    }
-
-    /// Run `f` with the speculation state emptied, restoring it afterwards.
-    ///
-    /// Like `run_in_hint_eval_mode`, but without switching the typing mode:
-    /// resolving a hint's base expression must not be attributed to an ongoing
-    /// speculation, but it still has to run as a normal check so that nested
-    /// hints stay available. `run_in_hint_eval_mode` covers the decomposition
-    /// ops; base hints are resolved eagerly, before that, and need this on their
-    /// own.
-    pub fn run_in_empty_speculation_state<F, R>(&self, f: F) -> R
-    where
-        F: FnOnce() -> R,
-    {
-        let saved_speculation_state =
-            std::mem::take(&mut self.0.ccx.speculation_state.borrow_mut().0);
-
-        let result = f();
-
-        *self.0.ccx.speculation_state.borrow_mut() = SpeculationState(saved_speculation_state);
 
         result
     }
@@ -3021,16 +2940,6 @@ impl<'cx> Context<'cx> {
         &self.0.ccx.spread_cache
     }
 
-    pub fn instantiation_stack(&self) -> std::cell::Ref<'_, FlowVector<type_app_expansion::Entry>> {
-        self.0.ccx.instantiation_stack.borrow()
-    }
-
-    pub fn instantiation_stack_mut(
-        &self,
-    ) -> std::cell::RefMut<'_, FlowVector<type_app_expansion::Entry>> {
-        self.0.ccx.instantiation_stack.borrow_mut()
-    }
-
     pub fn const_fold_cache(&self) -> std::cell::Ref<'_, ConstFoldMap> {
         self.0.ccx.const_fold_cache.borrow()
     }
@@ -3041,22 +2950,6 @@ impl<'cx> Context<'cx> {
 
     pub fn exhaustive_check(&self, loc: &ALoc) -> Option<(Vec<ALoc>, bool)> {
         self.0.ccx.exhaustive_checks.borrow().get(loc).cloned()
-    }
-
-    pub fn speculation_state(&self) -> std::cell::Ref<'_, SpeculationState> {
-        self.0.ccx.speculation_state.borrow()
-    }
-
-    pub fn speculation_state_mut(&self) -> std::cell::RefMut<'_, SpeculationState> {
-        self.0.ccx.speculation_state.borrow_mut()
-    }
-
-    pub fn speculation_id(&self) -> Option<type_::SpecState> {
-        let state = self.0.ccx.speculation_state.borrow();
-        state.0.last().map(|frame| type_::SpecState {
-            speculation_id: frame.speculation_id,
-            case_id: frame.case.case_id,
-        })
     }
 
     pub fn add_avar(&self, id: i32, constraint_: AConstraint<'cx>) {
@@ -3101,9 +2994,12 @@ impl<'cx> Context<'cx> {
         }
     }
 
+    /// A specialized callee recorded by the checker, which never runs inside a
+    /// speculative branch (see `FlowJsEnv`), so it starts with no speculation
+    /// state of its own.
     pub fn new_specialized_callee(&self) -> type_::SpecializedCallee {
         type_::SpecializedCallee {
-            init_speculation_state: self.speculation_id(),
+            init_speculation_state: None,
             finalized: std::rc::Rc::new(std::cell::RefCell::new(std::collections::VecDeque::new())),
             speculative_candidates: std::rc::Rc::new(std::cell::RefCell::new(
                 std::collections::VecDeque::new(),

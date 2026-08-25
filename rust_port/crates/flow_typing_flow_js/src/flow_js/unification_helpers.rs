@@ -12,6 +12,7 @@ use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropPolarityMismatchData;
 use flow_typing_errors::error_message::ETupleArityMismatchData;
 use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeStrictnessKind;
@@ -41,6 +42,7 @@ pub(super) fn ok_unify(unify_any: bool, t: &Type) -> bool {
 
 pub(super) fn __unify<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     unify_cause: UnifyCause,
     unify_any: bool,
@@ -58,11 +60,12 @@ pub(super) fn __unify<'cx>(
     recursion_check::check(cx, trace)?;
 
     if !matches!(unify_cause, UnifyCause::Uncategorized)
-        && !speculation::speculating(cx)
+        && !env.speculating()
         && !tvar_visitors::has_unresolved_tvars(cx, t1)
         && !tvar_visitors::has_unresolved_tvars(cx, t2)
     {
-        match crate::speculation_kit::try_unify(cx, trace, t1.dupe(), use_op.dupe(), t2.dupe()) {
+        match crate::speculation_kit::try_unify(cx, env, trace, t1.dupe(), use_op.dupe(), t2.dupe())
+        {
             Ok(()) => Ok(()),
             Err(FlowJsException::SpeculationSingletonError) => {
                 let explanation = {
@@ -132,8 +135,9 @@ pub(super) fn __unify<'cx>(
                     }
                 };
                 let upper_loc = loc_of_t(t2).dupe();
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EInvariantSubtypingWithUseOp(Box::new(
                         EInvariantSubtypingWithUseOpData {
                             sub_component: None,
@@ -150,13 +154,14 @@ pub(super) fn __unify<'cx>(
             Err(other) => Err(other),
         }
     } else {
-        __unify_inner(cx, use_op, unify_any, t1, t2, trace)
+        __unify_inner(cx, env, use_op, unify_any, t1, t2, trace)
     }
 }
 
 // Should only be called by __unify
 fn __unify_inner<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     unify_any: bool,
     t1: &Type,
@@ -165,13 +170,13 @@ fn __unify_inner<'cx>(
 ) -> Result<(), FlowJsException> {
     match (t1.deref(), t2.deref()) {
         (TypeInner::OpenT(tvar1), TypeInner::OpenT(tvar2)) => {
-            merge_ids(cx, trace, use_op, tvar1.id() as i32, tvar2.id() as i32)?;
+            merge_ids(cx, env, trace, use_op, tvar1.id() as i32, tvar2.id() as i32)?;
         }
         (TypeInner::OpenT(tvar), _) if ok_unify(unify_any, t2) => {
-            resolve_id(cx, trace, use_op, tvar.id() as i32, t2)?;
+            resolve_id(cx, env, trace, use_op, tvar.id() as i32, t2)?;
         }
         (_, TypeInner::OpenT(tvar)) if ok_unify(unify_any, t1) => {
-            resolve_id(cx, trace, unify_flip(use_op), tvar.id() as i32, t1)?;
+            resolve_id(cx, env, trace, unify_flip(use_op), tvar.id() as i32, t1)?;
         }
         (TypeInner::DefT(r1, def1), TypeInner::DefT(r2, def2)) => {
             match (def1.deref(), def2.deref()) {
@@ -209,7 +214,7 @@ fn __unify_inner<'cx>(
                                 .as_ref()
                                 .map(|tv| tuple_ts_of_elements(&tv.elements))
                                 .unwrap_or_default();
-                            array_unify(cx, trace, use_op, (&ts1, elem_t1, &ts2, elem_t2))?;
+                            array_unify(cx, env, trace, use_op, (&ts1, elem_t1, &ts2, elem_t2))?;
                             return Ok(());
                         }
                         (
@@ -236,8 +241,9 @@ fn __unify_inner<'cx>(
                                 || num_req1 != num_req2
                                 || num_total1 != num_total2
                             {
-                                add_output(
+                                add_output_with_env(
                                     cx,
+                                    env,
                                     ErrorMessage::ETupleArityMismatch(Box::new(
                                         ETupleArityMismatchData {
                                             use_op: use_op.dupe(),
@@ -272,8 +278,9 @@ fn __unify_inner<'cx>(
                                                     .is_typescript_loose()
                                                     && ts_safe_direction))
                                             {
-                                                add_output(
+                                                add_output_with_env(
                                                     cx,
+                                                    env,
                                                     ErrorMessage::ETupleElementPolarityMismatch(
                                                         Box::new(
                                                             ETupleElementPolarityMismatchData {
@@ -290,6 +297,7 @@ fn __unify_inner<'cx>(
                                             }
                                             rec_unify(
                                                 cx,
+                                                env,
                                                 trace,
                                                 use_op.dupe(),
                                                 UnifyCause::Uncategorized,
@@ -307,7 +315,7 @@ fn __unify_inner<'cx>(
                             return Ok(());
                         }
                         _ => {
-                            naive_unify(cx, trace, use_op, t1, t2)?;
+                            naive_unify(cx, env, trace, use_op, t1, t2)?;
                             return Ok(());
                         }
                     }
@@ -326,6 +334,7 @@ fn __unify_inner<'cx>(
                     {
                         flow_js_utils::exact_obj_error(
                             cx,
+                            env,
                             &lflags.obj_kind,
                             use_op.dupe(),
                             ureason.dupe(),
@@ -338,6 +347,7 @@ fn __unify_inner<'cx>(
                     {
                         flow_js_utils::exact_obj_error(
                             cx,
+                            env,
                             &uflags.obj_kind,
                             use_op.dupe(),
                             lreason.dupe(),
@@ -351,6 +361,7 @@ fn __unify_inner<'cx>(
                         (Some(ldict_t), Some(udict_t)) => {
                             rec_unify(
                                 cx,
+                                env,
                                 trace,
                                 UseOp::Frame(
                                     Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
@@ -366,6 +377,7 @@ fn __unify_inner<'cx>(
                             )?;
                             rec_unify(
                                 cx,
+                                env,
                                 trace,
                                 UseOp::Frame(
                                     Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
@@ -384,8 +396,9 @@ fn __unify_inner<'cx>(
                             )?;
                         }
                         (Some(_), None) => {
-                            add_output(
+                            add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                                     EPropNotFoundInSubtypingData {
                                         prop_name: None,
@@ -399,8 +412,9 @@ fn __unify_inner<'cx>(
                         }
                         (None, Some(_)) => {
                             let flipped_use_op = unify_flip(use_op.dupe());
-                            add_output(
+                            add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                                     EPropNotFoundInSubtypingData {
                                         prop_name: None,
@@ -439,6 +453,7 @@ fn __unify_inner<'cx>(
                                     (Some(p1), Some(p2)) => {
                                         unify_props(
                                             cx,
+                                            env,
                                             trace,
                                             use_op.dupe(),
                                             &x,
@@ -452,6 +467,7 @@ fn __unify_inner<'cx>(
                                     (Some(p1), None) => {
                                         unify_prop_with_dict(
                                             cx,
+                                            env,
                                             trace,
                                             use_op.dupe(),
                                             &x,
@@ -465,6 +481,7 @@ fn __unify_inner<'cx>(
                                     (None, Some(p2)) => {
                                         unify_prop_with_dict(
                                             cx,
+                                            env,
                                             trace,
                                             use_op.dupe(),
                                             &x,
@@ -492,6 +509,7 @@ fn __unify_inner<'cx>(
                     let this2 = subtype_this_of_function(funtype2);
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         UnifyCause::Uncategorized,
@@ -504,6 +522,7 @@ fn __unify_inner<'cx>(
                     {
                         rec_unify(
                             cx,
+                            env,
                             trace,
                             use_op.dupe(),
                             UnifyCause::Uncategorized,
@@ -514,6 +533,7 @@ fn __unify_inner<'cx>(
                     }
                     return rec_unify(
                         cx,
+                        env,
                         trace,
                         use_op,
                         UnifyCause::Uncategorized,
@@ -523,7 +543,7 @@ fn __unify_inner<'cx>(
                     );
                 }
                 // Fall through to the outer match for remaining DefT cases
-                _ => return naive_unify(cx, trace, use_op, t1, t2),
+                _ => return naive_unify(cx, env, trace, use_op, t1, t2),
             }
         }
         (
@@ -547,6 +567,7 @@ fn __unify_inner<'cx>(
             for (t1_elem, t2_elem) in ts1.iter().zip(ts2.iter()) {
                 rec_unify(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
@@ -576,7 +597,7 @@ fn __unify_inner<'cx>(
                     constraint::Constraints::Resolved(rt1),
                     constraint::Constraints::Resolved(rt2),
                 ) if reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) => {
-                    naive_unify(cx, trace, use_op, &rt1, &rt2)?;
+                    naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
                 (
                     constraint::Constraints::Resolved(rt1),
@@ -584,7 +605,7 @@ fn __unify_inner<'cx>(
                 ) if let rt2 = cx.force_fully_resolved_tvar(&s2)
                     && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) =>
                 {
-                    naive_unify(cx, trace, use_op, &rt1, &rt2)?;
+                    naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
                 (
                     constraint::Constraints::FullyResolved(s1),
@@ -592,7 +613,7 @@ fn __unify_inner<'cx>(
                 ) if let rt1 = cx.force_fully_resolved_tvar(&s1)
                     && reason_of_t(&rt1).concretize_equal(reason_of_t(&rt2), &aloc_tables) =>
                 {
-                    naive_unify(cx, trace, use_op, &rt1, &rt2)?;
+                    naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
                 (
                     constraint::Constraints::FullyResolved(s1),
@@ -614,15 +635,15 @@ fn __unify_inner<'cx>(
                     // introduce differences in their representations that would kill other
                     // optimizations. Thus, we focus on the special case where these types have the same
                     // reason, and then do naive unification.
-                    naive_unify(cx, trace, use_op, &rt1, &rt2)?;
+                    naive_unify(cx, env, trace, use_op, &rt1, &rt2)?;
                 }
                 _ => {
-                    naive_unify(cx, trace, use_op, t1, t2)?;
+                    naive_unify(cx, env, trace, use_op, t1, t2)?;
                 }
             }
         }
         _ => {
-            naive_unify(cx, trace, use_op, t1, t2)?;
+            naive_unify(cx, env, trace, use_op, t1, t2)?;
         }
     }
     Ok(())
@@ -630,6 +651,7 @@ fn __unify_inner<'cx>(
 
 pub(super) fn unify_props<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     x: &Name,
@@ -656,6 +678,7 @@ pub(super) fn unify_props<'cx>(
         {
             rec_unify(
                 cx,
+                env,
                 trace,
                 use_op,
                 UnifyCause::Uncategorized,
@@ -670,6 +693,7 @@ pub(super) fn unify_props<'cx>(
                 (Some(t1), Some(t2)) => {
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         UnifyCause::Uncategorized,
@@ -684,6 +708,7 @@ pub(super) fn unify_props<'cx>(
                 (Some(t1), Some(t2)) => {
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         UnifyCause::Uncategorized,
@@ -699,8 +724,9 @@ pub(super) fn unify_props<'cx>(
             let polarity1 = property::polarity(p1);
             let polarity2 = property::polarity(p2);
             if !strictness_kind.is_typescript_loose() && !Polarity::equal(polarity1, polarity2) {
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
                         lreason: r1.dupe(),
                         ureason: r2.dupe(),
@@ -718,6 +744,7 @@ pub(super) fn unify_props<'cx>(
 // property is compatible with a dictionary, or error if none.
 pub(super) fn unify_prop_with_dict<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     x: &Name,
@@ -739,7 +766,7 @@ pub(super) fn unify_prop_with_dict<'cx>(
             // `unique symbol` type, not as a `SingletonStrT` placeholder.
             let key_t = match x.as_smol_str_opt() {
                 Some(s) => flow_js_utils::string_key(s.dupe(), &prop_reason),
-                None => flow_js_utils::type_of_key_name(cx, x.dupe(), &prop_reason),
+                None => flow_js_utils::type_of_key_name_with_env(env, x.dupe(), &prop_reason),
             };
             let indexer_use_op = UseOp::Frame(
                 Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
@@ -750,6 +777,7 @@ pub(super) fn unify_prop_with_dict<'cx>(
             );
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &key_t,
@@ -764,6 +792,7 @@ pub(super) fn unify_prop_with_dict<'cx>(
             })));
             unify_props(
                 cx,
+                env,
                 trace,
                 use_op,
                 x,
@@ -774,8 +803,9 @@ pub(super) fn unify_prop_with_dict<'cx>(
                 strictness_kind,
             )
         }
-        None => add_output(
+        None => add_output_with_env(
             cx,
+            env,
             ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                 prop_name: Some(x.dupe()),
                 reason_lower: dict_reason.dupe(),
@@ -792,19 +822,21 @@ pub(super) fn unify_prop_with_dict<'cx>(
 // and we're missing some opportunities for nested unification.
 pub(super) fn naive_unify<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     t1: &Type,
     t2: &Type,
 ) -> Result<(), FlowJsException> {
-    rec_flow_t(cx, trace, use_op.dupe(), (t1, t2))?;
-    rec_flow_t(cx, trace, unify_flip(use_op), (t2, t1))
+    rec_flow_t(cx, env, trace, use_op.dupe(), (t1, t2))?;
+    rec_flow_t(cx, env, trace, unify_flip(use_op), (t2, t1))
 }
 
 // TODO: either ensure that array_unify is the same as array_flow both ways, or
 // document why not.
 pub(super) fn array_unify<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     (ts1, e1, ts2, e2): (&[Type], &Type, &[Type], &Type),
@@ -817,6 +849,7 @@ pub(super) fn array_unify<'cx>(
                 // specific element1 = specific element2
                 rec_unify(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
@@ -828,6 +861,7 @@ pub(super) fn array_unify<'cx>(
             (Some(t1), None) => {
                 rec_unify(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
@@ -838,6 +872,7 @@ pub(super) fn array_unify<'cx>(
                 for t in iter1 {
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         UnifyCause::Uncategorized,
@@ -851,6 +886,7 @@ pub(super) fn array_unify<'cx>(
             (None, Some(t2)) => {
                 rec_unify(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
@@ -861,6 +897,7 @@ pub(super) fn array_unify<'cx>(
                 for t in iter2 {
                     rec_unify(
                         cx,
+                        env,
                         trace,
                         use_op.dupe(),
                         UnifyCause::Uncategorized,
@@ -873,7 +910,16 @@ pub(super) fn array_unify<'cx>(
             }
             (None, None) => {
                 // general element1 = general element2
-                return rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, e1, e2);
+                return rec_unify(
+                    cx,
+                    env,
+                    trace,
+                    use_op,
+                    UnifyCause::Uncategorized,
+                    None,
+                    e1,
+                    e2,
+                );
             }
         }
     }

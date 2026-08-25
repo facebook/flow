@@ -2140,7 +2140,7 @@ fn convert_inner<'a>(
                                 type_::str_module_t::at(loc.dupe()),
                             );
                             let t = string_case_transform::resolve(
-                                Some(&|cx, r, t| {
+                                Some(&|r, t| {
                                     FlowJs::possible_concrete_types_for_inspection(cx, r, t)
                                 }),
                                 cx,

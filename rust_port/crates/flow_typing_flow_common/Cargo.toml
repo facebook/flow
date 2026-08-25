@@ -19,8 +19,8 @@ flow_type_sig = { path = "../flow_type_sig" }
 flow_typing_context = { path = "../flow_typing_context" }
 flow_typing_debug = { path = "../flow_typing_debug" }
 flow_typing_errors = { path = "../flow_typing_errors" }
+flow_typing_flow_js_env = { path = "../flow_typing_flow_js_env" }
 flow_typing_generics = { path = "../flow_typing_generics" }
-flow_typing_speculation_state = { path = "../flow_typing_speculation_state" }
 flow_typing_tvar = { path = "../flow_typing_tvar" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_visitors = { path = "../flow_typing_visitors" }

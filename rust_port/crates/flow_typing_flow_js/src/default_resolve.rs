@@ -15,6 +15,7 @@ use flow_common::reason::Reason;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
@@ -68,7 +69,7 @@ use flow_typing_type::type_::react;
 pub fn default_resolve_touts<'cx>(
     flow: &dyn Fn(Type, Type) -> Result<(), FlowJsException>,
     resolve_callee: Option<&(Reason, Vec<Type>)>,
-    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     loc: ALoc,
     u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
@@ -101,7 +102,7 @@ pub fn default_resolve_touts<'cx>(
             }
         };
         callee_recorder::add_callee(
-            cx,
+            env,
             callee_recorder::Kind::All,
             resolve_callee_t,
             specialized_callee.as_ref(),
@@ -174,7 +175,7 @@ pub fn default_resolve_touts<'cx>(
     };
     let resolve_cont = |cont: &Cont<Context<'cx>>| -> Result<(), FlowJsException> {
         match cont {
-            Cont::Upper(use_) => default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_),
+            Cont::Upper(use_) => default_resolve_touts(flow, resolve_callee, env, loc.dupe(), use_),
             Cont::Lower(..) => Ok(()),
         }
     };
@@ -222,7 +223,7 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ImplementsT(..) => Ok(()),
         UseTInner::MixinT(_, t) => resolve(t.dupe()),
         UseTInner::ToStringT { t_out, .. } => {
-            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), t_out)
+            default_resolve_touts(flow, resolve_callee, env, loc.dupe(), t_out)
         }
         UseTInner::SpecializeT(box SpecializeTData { tvar: tout, .. }) => resolve(tout.dupe()),
         UseTInner::ThisSpecializeT(_, _, k) => resolve_cont(k),
@@ -237,10 +238,10 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ArrRestT(box ArrRestTData { tout: t, .. }) => resolve(t.dupe()),
         UseTInner::ObjTestProtoT(_, t) => resolve(t.dupe()),
         UseTInner::GetDictValuesT(_, use_) => {
-            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_)
+            default_resolve_touts(flow, resolve_callee, env, loc.dupe(), use_)
         }
         UseTInner::GetKeysT { t_out, .. } | UseTInner::GetKeysDictKeyT { t_out, .. } => {
-            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), t_out)
+            default_resolve_touts(flow, resolve_callee, env, loc.dupe(), t_out)
         }
         UseTInner::HasOwnPropT(..) => Ok(()),
         UseTInner::GetValuesT(_, t) => resolve(t.dupe()),
@@ -256,7 +257,7 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::CondT(box CondTData { false_t: t, .. }) => resolve(t.dupe()),
         UseTInner::ExtendsUseT(..) => Ok(()),
         UseTInner::ResolveUnionT(box ResolveUnionTData { upper, .. }) => {
-            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), upper)
+            default_resolve_touts(flow, resolve_callee, env, loc.dupe(), upper)
         }
         UseTInner::GetEnumT(box GetEnumTData { tout, .. }) => resolve(tout.dupe()),
         UseTInner::HooklikeT(tvar) | UseTInner::DeepReadOnlyT(tvar, _) => resolve_tvar(tvar),
@@ -270,7 +271,7 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ExitRendersT {
             renders_reason: _,
             u,
-        } => default_resolve_touts(flow, resolve_callee, cx, loc, u),
+        } => default_resolve_touts(flow, resolve_callee, env, loc, u),
         UseTInner::EvalTypeDestructorT(..) => Ok(()),
     }
 }

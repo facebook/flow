@@ -8,6 +8,7 @@
 use std::rc::Rc;
 
 use flow_typing_flow_common::instantiation_utils::implicit_type_argument;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_type::type_::SpecializeTData;
 
@@ -17,25 +18,28 @@ use super::*;
 impl flow_js_utils::InstantiationHelper for FlowJs {
     fn reposition<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::reposition(cx, trace, loc, None, None, t)
+        helpers::reposition(cx, env, trace, loc, None, None, t)
     }
 
     fn is_subtype<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
         t2: Type,
     ) -> Result<(), FlowJsException> {
-        rec_flow_t(cx, trace, use_op, (&t1, &t2))
+        rec_flow_t(cx, env, trace, use_op, (&t1, &t2))
     }
 
     fn unify<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
@@ -43,6 +47,7 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
     ) -> Result<(), FlowJsException> {
         rec_unify(
             cx,
+            env,
             trace,
             use_op,
             UnifyCause::Uncategorized,
@@ -65,6 +70,7 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
 /// Instantiate a polymorphic definition given tparam instantiations in a Call or New expression.  
 pub(super) fn instantiate_with_targs_with_soln<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -86,8 +92,9 @@ pub(super) fn instantiate_with_targs_with_soln<'cx>(
             }
         }
     }
-    FlowJs::instantiate_poly_with_targs(
+    FlowJs::instantiate_poly_with_targs_with_env(
         cx,
+        env,
         trace,
         use_op,
         reason_op,
@@ -101,6 +108,7 @@ pub(super) fn instantiate_with_targs_with_soln<'cx>(
 
 pub(super) fn instantiate_with_targs<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -108,13 +116,22 @@ pub(super) fn instantiate_with_targs<'cx>(
     poly_t: (ALoc, Vec1<TypeParam>, Type),
     targs: Vec<Targ>,
 ) -> Result<Type, FlowJsException> {
-    let (t, _) =
-        instantiate_with_targs_with_soln(cx, trace, use_op, reason_op, reason_tapp, poly_t, targs)?;
+    let (t, _) = instantiate_with_targs_with_soln(
+        cx,
+        env,
+        trace,
+        use_op,
+        reason_op,
+        reason_tapp,
+        poly_t,
+        targs,
+    )?;
     Ok(t)
 }
 
 pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     lparts: (Reason, ALoc, Vec1<TypeParam>, Type),
     uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
@@ -125,6 +142,7 @@ pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
     match type_util::all_explicit_targs(targs.as_deref()) {
         Some(targs) => instantiate_with_targs_with_soln(
             cx,
+            env,
             trace,
             use_op,
             &reason_op,
@@ -136,6 +154,7 @@ pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
             let check = check();
             let result = crate::implicit_instantiation::kit::run_call(
                 cx,
+                env,
                 &check,
                 &return_hint,
                 trace,
@@ -151,6 +170,7 @@ pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
 // and instantiate_poly_call_or_new cx trace lparts uparts check =
 pub(super) fn instantiate_poly_call_or_new<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     lparts: (Reason, ALoc, Vec1<TypeParam>, Type),
     uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
@@ -161,6 +181,7 @@ pub(super) fn instantiate_poly_call_or_new<'cx>(
     match type_util::all_explicit_targs(targs.as_deref()) {
         Some(targs) => instantiate_with_targs(
             cx,
+            env,
             trace,
             use_op,
             &reason_op,
@@ -172,6 +193,7 @@ pub(super) fn instantiate_poly_call_or_new<'cx>(
             let check = check();
             let (t, _) = crate::implicit_instantiation::kit::run_call(
                 cx,
+                env,
                 &check,
                 &return_hint,
                 trace,
@@ -188,6 +210,7 @@ pub(super) fn instantiate_poly_call_or_new<'cx>(
 /// Needed only for `instanceof` refis and React.PropTypes.instanceOf types  
 pub(super) fn instantiate_poly_default_args<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -202,8 +225,9 @@ pub(super) fn instantiate_poly_default_args<'cx>(
         let t = unsoundness::why(UnsoundnessKind::InstanceOfRefinement, reason_op.dupe());
         ts.push(t);
     }
-    let (t, _) = FlowJs::instantiate_poly_with_targs(
+    let (t, _) = FlowJs::instantiate_poly_with_targs_with_env(
         cx,
+        env,
         trace,
         use_op,
         reason_op,
@@ -219,6 +243,7 @@ pub(super) fn instantiate_poly_default_args<'cx>(
 // Specialize This in a class. Eventually this causes substitution
 pub(super) fn instantiate_this_class<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     reason_op: &Reason,
     reason_tapp: &Reason,
@@ -232,6 +257,7 @@ pub(super) fn instantiate_this_class<'cx>(
         Some(ts) => flow_typing_tvar::mk_where(cx, reason_tapp.dupe(), |cx, tout| {
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     c,
@@ -248,6 +274,7 @@ pub(super) fn instantiate_this_class<'cx>(
     };
     rec_flow(
         cx,
+        env,
         trace,
         (
             &tc,

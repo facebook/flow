@@ -44,6 +44,7 @@ use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::implicit_instantiation;
 use flow_typing_flow_js::tvar_resolver;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
@@ -308,6 +309,7 @@ fn in_sandbox_cx<'cx>(
 
 fn synthesis_speculation_call<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     call_reason: &Reason,
     reason: &Reason,
     rep: &inter_rep::InterRep,
@@ -335,12 +337,13 @@ fn synthesis_speculation_call<'cx>(
         call_action,
         return_hint: hint_unavailable(),
     })));
-    flow_js::flow(cx, (&intersection, &use_t))?;
+    flow_js::flow_with_env(cx, env, (&intersection, &use_t))?;
     match &*call_speculation_hint_state.borrow() {
         SpeculationHintState::SpeculationHintUnset
         | SpeculationHintState::SpeculationHintInvalid => {
-            flow_js::add_output(
+            flow_js::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EUnionSpeculationFailed(Box::new(EUnionSpeculationFailedData {
                     use_op: unknown_use(),
                     loc: reason.loc().dupe(),
@@ -355,6 +358,7 @@ fn synthesis_speculation_call<'cx>(
 
 fn simplify_callee<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     use_op: UseOp,
     func_t: &Type,
@@ -374,7 +378,7 @@ fn simplify_callee<'cx>(
                 call_action,
                 return_hint: hint_unavailable(),
             })));
-            flow_js::flow(cx, (&func_t, &use_t))?;
+            flow_js::flow_with_env(cx, env, (&func_t, &use_t))?;
             Ok::<(), FlowJsException>(())
         },
     )?)
@@ -438,6 +442,7 @@ fn get_t<'cx>(cx: &Context<'cx>, t: Type) -> Type {
 
 fn instantiate_callee<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     opts: &HintOptions,
     target_reason: &Reason,
     fn_t: &Type,
@@ -451,6 +456,7 @@ fn instantiate_callee<'cx>(
 
     fn handle_poly<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         opts: &HintOptions,
         target_reason: &Reason,
         reason: &Reason,
@@ -468,108 +474,54 @@ fn instantiate_callee<'cx>(
         t: &Type,
     ) -> Result<Type, SandboxError> {
         match t.deref() {
-            TypeInner::DefT(_, def) => match def.deref() {
-                DefTInner::ObjT(obj) if let Some(id) = obj.call_t.as_ref() => {
-                    let call_t = cx.find_call(*id);
-                    handle_poly(
-                        cx,
-                        opts,
-                        target_reason,
-                        reason,
-                        targs,
-                        arg_list,
-                        return_hints,
-                        arg_index,
-                        &call_t,
-                    )
-                }
-                DefTInner::InstanceT(inst_t) if let Some(id) = inst_t.inst.inst_call_t.as_ref() => {
-                    let call_t = cx.find_call(*id);
-                    handle_poly(
-                        cx,
-                        opts,
-                        target_reason,
-                        reason,
-                        targs,
-                        arg_list,
-                        return_hints,
-                        arg_index,
-                        &call_t,
-                    )
-                }
-                DefTInner::ClassT(instance) => {
-                    let class_reason = type_util::reason_of_t(t);
-                    let statics_id = flow_typing_tvar::mk_no_wrap(cx, class_reason);
-                    let statics = Type::new(TypeInner::OpenT(Tvar::new(
-                        class_reason.dupe(),
-                        statics_id as u32,
-                    )));
-                    let statics_tvar = Tvar::new(class_reason.dupe(), statics_id as u32);
-                    let use_t = UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar)));
-                    flow_js::flow(cx, (instance, &use_t))?;
-                    let resolved = get_t(cx, statics);
-                    handle_poly(
-                        cx,
-                        opts,
-                        target_reason,
-                        reason,
-                        targs,
-                        arg_list,
-                        return_hints,
-                        arg_index,
-                        &resolved,
-                    )
-                }
-                DefTInner::PolyT(box PolyTData {
-                    tparams_loc,
-                    tparams,
-                    t_out,
-                    id: _,
-                    strictness_kind: _,
-                }) => {
-                    if let Some((class_r, inst_r, i, this, this_name)) =
-                        if let TypeInner::DefT(class_r, inner_def) = t_out.deref()
-                            && let DefTInner::ClassT(class_inner) = inner_def.deref()
-                            && let TypeInner::ThisInstanceT(box ThisInstanceTData {
-                                reason: inst_r,
-                                instance: i,
-                                is_this: this,
-                                subst_name: this_name,
-                            }) = class_inner.deref()
-                        {
-                            Some((class_r, inst_r, i, this, this_name))
-                        } else {
-                            None
-                        }
-                    {
-                        let subst_map: FlowOrdMap<SubstName, Type> = tparams
-                            .iter()
-                            .map(|tparam| (tparam.name.dupe(), tparam.bound.dupe()))
-                            .collect();
-                        let substed_i = flow_typing_flow_common::type_subst::subst_instance_type(
-                            cx,
-                            None,
-                            true, // force
-                            false,
-                            flow_typing_flow_common::type_subst::Purpose::Normal,
-                            &subst_map,
-                            i,
-                        );
-                        let fixed = flow_js_utils::fix_this_instance(
-                            cx,
-                            inst_r.dupe(),
-                            inst_r.dupe(),
-                            &substed_i,
-                            *this,
-                            this_name.dupe(),
-                        );
-                        let result_t = Type::new(TypeInner::DefT(
-                            class_r.dupe(),
-                            DefT::new(DefTInner::ClassT(fixed)),
-                        ));
-                        let resolved = get_t(cx, result_t);
+            TypeInner::DefT(_, def) => {
+                match def.deref() {
+                    DefTInner::ObjT(obj) if let Some(id) = obj.call_t.as_ref() => {
+                        let call_t = cx.find_call(*id);
                         handle_poly(
                             cx,
+                            env,
+                            opts,
+                            target_reason,
+                            reason,
+                            targs,
+                            arg_list,
+                            return_hints,
+                            arg_index,
+                            &call_t,
+                        )
+                    }
+                    DefTInner::InstanceT(inst_t)
+                        if let Some(id) = inst_t.inst.inst_call_t.as_ref() =>
+                    {
+                        let call_t = cx.find_call(*id);
+                        handle_poly(
+                            cx,
+                            env,
+                            opts,
+                            target_reason,
+                            reason,
+                            targs,
+                            arg_list,
+                            return_hints,
+                            arg_index,
+                            &call_t,
+                        )
+                    }
+                    DefTInner::ClassT(instance) => {
+                        let class_reason = type_util::reason_of_t(t);
+                        let statics_id = flow_typing_tvar::mk_no_wrap(cx, class_reason);
+                        let statics = Type::new(TypeInner::OpenT(Tvar::new(
+                            class_reason.dupe(),
+                            statics_id as u32,
+                        )));
+                        let statics_tvar = Tvar::new(class_reason.dupe(), statics_id as u32);
+                        let use_t = UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar)));
+                        flow_js::flow_with_env(cx, env, (instance, &use_t))?;
+                        let resolved = get_t(cx, statics);
+                        handle_poly(
+                            cx,
+                            env,
                             opts,
                             target_reason,
                             reason,
@@ -579,103 +531,172 @@ fn instantiate_callee<'cx>(
                             arg_index,
                             &resolved,
                         )
-                    } else {
-                        let call_targs: Option<Vec<Targ>> =
-                            LazyCell::force(targs.as_ref()).clone()?;
-                        match type_util::all_explicit_targ_ts(call_targs.as_deref()) {
-                            Some(targ_ts) => Ok(synthesis_instantiate_callee(
-                                cx, reason, tparams, t_out, targ_ts,
-                            )),
-                            None => {
-                                let call_args_tlist: Vec<CallArg> = {
-                                    let checked_t = |t: &Type, loc: ALoc| -> Type {
-                                        let desc = type_util::reason_of_t(t).desc(true).clone();
-                                        let reason = flow_common::reason::mk_reason(desc, loc);
-                                        type_env::find_write(cx, DefLocType::ExpressionLoc, reason)
-                                    };
-                                    let arg_list_fn: &ConcrArgListFn = arg_list.deref();
-                                    let target_loc = Some(target_reason.loc().dupe());
-                                    let args = arg_list_fn(cx, target_loc)?;
-                                    args.iter()
-                                        .enumerate()
-                                        .map(|(i, (loc, call_arg))| {
-                                            if i as i32 >= arg_index {
-                                                call_arg.clone()
-                                            } else {
-                                                match call_arg.deref() {
-                                                    CallArgInner::Arg(t) => {
-                                                        CallArg::arg(checked_t(t, loc.dupe()))
-                                                    }
-                                                    CallArgInner::SpreadArg(t) => {
-                                                        CallArg::spread_arg(checked_t(
-                                                            t,
-                                                            loc.dupe(),
-                                                        ))
+                    }
+                    DefTInner::PolyT(box PolyTData {
+                        tparams_loc,
+                        tparams,
+                        t_out,
+                        id: _,
+                        strictness_kind: _,
+                    }) => {
+                        if let Some((class_r, inst_r, i, this, this_name)) =
+                            if let TypeInner::DefT(class_r, inner_def) = t_out.deref()
+                                && let DefTInner::ClassT(class_inner) = inner_def.deref()
+                                && let TypeInner::ThisInstanceT(box ThisInstanceTData {
+                                    reason: inst_r,
+                                    instance: i,
+                                    is_this: this,
+                                    subst_name: this_name,
+                                }) = class_inner.deref()
+                            {
+                                Some((class_r, inst_r, i, this, this_name))
+                            } else {
+                                None
+                            }
+                        {
+                            let subst_map: FlowOrdMap<SubstName, Type> = tparams
+                                .iter()
+                                .map(|tparam| (tparam.name.dupe(), tparam.bound.dupe()))
+                                .collect();
+                            let substed_i =
+                                flow_typing_flow_common::type_subst::subst_instance_type(
+                                    cx,
+                                    None,
+                                    true, // force
+                                    false,
+                                    flow_typing_flow_common::type_subst::Purpose::Normal,
+                                    &subst_map,
+                                    i,
+                                );
+                            let fixed = flow_js_utils::fix_this_instance(
+                                cx,
+                                inst_r.dupe(),
+                                inst_r.dupe(),
+                                &substed_i,
+                                *this,
+                                this_name.dupe(),
+                            );
+                            let result_t = Type::new(TypeInner::DefT(
+                                class_r.dupe(),
+                                DefT::new(DefTInner::ClassT(fixed)),
+                            ));
+                            let resolved = get_t(cx, result_t);
+                            handle_poly(
+                                cx,
+                                env,
+                                opts,
+                                target_reason,
+                                reason,
+                                targs,
+                                arg_list,
+                                return_hints,
+                                arg_index,
+                                &resolved,
+                            )
+                        } else {
+                            let call_targs: Option<Vec<Targ>> =
+                                LazyCell::force(targs.as_ref()).clone()?;
+                            match type_util::all_explicit_targ_ts(call_targs.as_deref()) {
+                                Some(targ_ts) => Ok(synthesis_instantiate_callee(
+                                    cx, reason, tparams, t_out, targ_ts,
+                                )),
+                                None => {
+                                    let call_args_tlist: Vec<CallArg> = {
+                                        let checked_t = |t: &Type, loc: ALoc| -> Type {
+                                            let desc = type_util::reason_of_t(t).desc(true).clone();
+                                            let reason = flow_common::reason::mk_reason(desc, loc);
+                                            type_env::find_write(
+                                                cx,
+                                                DefLocType::ExpressionLoc,
+                                                reason,
+                                            )
+                                        };
+                                        let arg_list_fn: &ConcrArgListFn = arg_list.deref();
+                                        let target_loc = Some(target_reason.loc().dupe());
+                                        let args = arg_list_fn(cx, target_loc)?;
+                                        args.iter()
+                                            .enumerate()
+                                            .map(|(i, (loc, call_arg))| {
+                                                if i as i32 >= arg_index {
+                                                    call_arg.clone()
+                                                } else {
+                                                    match call_arg.deref() {
+                                                        CallArgInner::Arg(t) => {
+                                                            CallArg::arg(checked_t(t, loc.dupe()))
+                                                        }
+                                                        CallArgInner::SpreadArg(t) => {
+                                                            CallArg::spread_arg(checked_t(
+                                                                t,
+                                                                loc.dupe(),
+                                                            ))
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        })
-                                        .collect()
-                                };
-                                let return_hint = {
-                                    let return_hints_val: &Vec<ConcrHint> = return_hints.deref();
-                                    match evaluate_hints_inner(
-                                        cx,
-                                        opts,
-                                        reason,
-                                        return_hints_val.clone(),
-                                    )? {
-                                        HintEvalResult::HintAvailable(t, k) => Some((t, k)),
-                                        _ => None,
-                                    }
-                                };
-                                let tout_id = flow_typing_tvar::mk_no_wrap(cx, reason);
-                                let check = ImplicitInstantiationCheck::of_call(
-                                    t.dupe(),
-                                    (
-                                        tparams_loc.dupe(),
-                                        Vec1::try_from_vec(tparams.to_vec())
-                                            .unwrap_or_else(|_| Vec1::new(tparams[0].dupe())),
-                                        t_out.dupe(),
-                                    ),
-                                    unknown_use(),
-                                    reason.dupe(),
-                                    FuncallType {
-                                        call_this_t: unsoundness::unresolved_any(reason.dupe()),
-                                        call_targs: call_targs.clone().map(|v| v.into()),
-                                        call_args_tlist: call_args_tlist.into(),
-                                        call_tout: Tvar::new(reason.dupe(), tout_id as u32),
-                                        call_strict_arity: true,
-                                        call_speculation_hint_state: None,
-                                        call_specialized_callee: None,
-                                    },
-                                );
-                                let subst_map =
-                                    cx.run_in_implicit_instantiation_mode(|| {
+                                            })
+                                            .collect()
+                                    };
+                                    let return_hint = {
+                                        let return_hints_val: &Vec<ConcrHint> =
+                                            return_hints.deref();
+                                        match evaluate_hints_inner(
+                                            cx,
+                                            env,
+                                            opts,
+                                            reason,
+                                            return_hints_val.clone(),
+                                        )? {
+                                            HintEvalResult::HintAvailable(t, k) => Some((t, k)),
+                                            _ => None,
+                                        }
+                                    };
+                                    let tout_id = flow_typing_tvar::mk_no_wrap(cx, reason);
+                                    let check = ImplicitInstantiationCheck::of_call(
+                                        t.dupe(),
+                                        (
+                                            tparams_loc.dupe(),
+                                            Vec1::try_from_vec(tparams.to_vec())
+                                                .unwrap_or_else(|_| Vec1::new(tparams[0].dupe())),
+                                            t_out.dupe(),
+                                        ),
+                                        unknown_use(),
+                                        reason.dupe(),
+                                        FuncallType {
+                                            call_this_t: unsoundness::unresolved_any(reason.dupe()),
+                                            call_targs: call_targs.clone().map(|v| v.into()),
+                                            call_args_tlist: call_args_tlist.into(),
+                                            call_tout: Tvar::new(reason.dupe(), tout_id as u32),
+                                            call_strict_arity: true,
+                                            call_speculation_hint_state: None,
+                                            call_specialized_callee: None,
+                                        },
+                                    );
+                                    let subst_map = {
+                                        let env = &env.solving_implicit_instantiation();
                                         let (targ_map, _) =
                                         implicit_instantiation::instantiation_solver::solve_targs(
-                                            cx, unknown_use(), false, false, return_hint, &check
+                                            cx,env,  unknown_use(), false, false, return_hint, &check
                                         )?;
                                         let map: FlowOrdMap<SubstName, Type> = targ_map
                                             .into_iter()
                                             .map(|(k, v)| (k, v.to_type()))
                                             .collect();
                                         Ok::<_, SandboxError>(map)
-                                    })?;
-                                Ok(flow_js::subst(
-                                    cx,
-                                    None,
-                                    None,
-                                    None,
-                                    &subst_map,
-                                    t_out.dupe(),
-                                ))
+                                    }?;
+                                    Ok(flow_js::subst(
+                                        cx,
+                                        None,
+                                        None,
+                                        None,
+                                        &subst_map,
+                                        t_out.dupe(),
+                                    ))
+                                }
                             }
                         }
                     }
+                    _ => Ok(t.dupe()),
                 }
-                _ => Ok(t.dupe()),
-            },
+            }
             _ => Ok(t.dupe()),
         }
     }
@@ -688,13 +709,14 @@ fn instantiate_callee<'cx>(
                 let target_loc = Some(target_reason.loc().dupe());
                 let args_val = arg_list_fn(cx, target_loc)?;
                 let argts: Vec<CallArg> = args_val.iter().map(|(_, arg)| arg.clone()).collect();
-                synthesis_speculation_call(cx, reason, r, rep, targs_val.clone(), argts)?
+                synthesis_speculation_call(cx, env, reason, r, rep, targs_val.clone(), argts)?
             }
             _ => fn_t.dupe(),
         };
         let resolved = get_t(cx, t);
         handle_poly(
             cx,
+            env,
             opts,
             target_reason,
             reason,
@@ -719,6 +741,7 @@ fn instantiate_callee<'cx>(
 
 fn instantiate_component<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     opts: &HintOptions,
     component: &Type,
     instantiation_hint: &ConcrJsxHints<'cx>,
@@ -741,7 +764,7 @@ fn instantiate_component<'cx>(
 
                 let return_hint = {
                     let hints_val: &Vec<ConcrHint<'cx>> = jsx_hints;
-                    match evaluate_hints_inner(cx, opts, reason, hints_val.clone())? {
+                    match evaluate_hints_inner(cx, env, opts, reason, hints_val.clone())? {
                         HintEvalResult::HintAvailable(t, k) => Some((t, k)),
                         _ => None,
                     }
@@ -765,9 +788,11 @@ fn instantiate_component<'cx>(
                         false,
                     )
                 };
-                let subst_map = cx.run_in_implicit_instantiation_mode(|| {
+                let subst_map = {
+                    let env = &env.solving_implicit_instantiation();
                     let (targ_map, _) = implicit_instantiation::instantiation_solver::solve_targs(
                         cx,
+                        env,
                         unknown_use(),
                         false,
                         false,
@@ -779,7 +804,7 @@ fn instantiate_component<'cx>(
                         .map(|(k, v)| (k, v.to_type()))
                         .collect();
                     Ok::<_, SandboxError>(map)
-                })?;
+                }?;
                 Ok(flow_js::subst(
                     cx,
                     None,
@@ -804,7 +829,7 @@ fn instantiate_component<'cx>(
                         )
                 );
                 if is_poly_fun {
-                    instantiate_component(cx, opts, &call_fn, instantiation_hint)
+                    instantiate_component(cx, env, opts, &call_fn, instantiation_hint)
                 } else {
                     Ok(component_resolved.dupe())
                 }
@@ -812,9 +837,13 @@ fn instantiate_component<'cx>(
             _ => Ok(component_resolved.dupe()),
         },
         TypeInner::TypeAppT(box TypeAppTData { reason, .. }) => {
-            let concrete =
-                FlowJs::singleton_concrete_type_for_inspection(cx, reason, &component_resolved)?;
-            instantiate_component(cx, opts, &concrete, instantiation_hint)
+            let concrete = FlowJs::singleton_concrete_type_for_inspection_with_env(
+                cx,
+                env,
+                reason,
+                &component_resolved,
+            )?;
+            instantiate_component(cx, env, opts, &concrete, instantiation_hint)
         }
         _ => Ok(component_resolved.dupe()),
     }
@@ -822,6 +851,7 @@ fn instantiate_component<'cx>(
 
 fn type_of_hint_decomposition<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     opts: &HintOptions,
     op: &ConcrHintDecompositionInner<'cx>,
     reason: &Reason,
@@ -892,6 +922,7 @@ fn type_of_hint_decomposition<'cx>(
         let get_constructor_method_type = |t: &Type| -> Result<Type, FlowJsException> {
             speculation_flow::get_method_type_unsafe(
                 cx,
+                env,
                 t,
                 reason.dupe(),
                 type_util::mk_named_prop(reason.dupe(), false, Name::new("constructor")),
@@ -1018,7 +1049,12 @@ fn type_of_hint_decomposition<'cx>(
                             )),
                             tout: Box::new(tout),
                         })));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
+                        speculation_flow::resolved_lower_flow_unsafe(
+                            cx,
+                            env,
+                            &reason2,
+                            (&t, &use_t),
+                        )?;
                         Ok::<(), FlowJsException>(())
                     },
                 )?)
@@ -1038,7 +1074,12 @@ fn type_of_hint_decomposition<'cx>(
                             index: i,
                             tout: Type::new(TypeInner::OpenT(tout)),
                         })));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
+                        speculation_flow::resolved_lower_flow_unsafe(
+                            cx,
+                            env,
+                            &reason2,
+                            (&t, &use_t),
+                        )?;
                         Ok::<(), FlowJsException>(())
                     },
                 )?)
@@ -1064,11 +1105,13 @@ fn type_of_hint_decomposition<'cx>(
                             },
                         ))))),
                     ));
-                    cx.run_in_implicit_instantiation_mode(|| {
-                        speculation_flow::flow_t_unsafe(cx, (arr_t, t.dupe()))
-                    })?;
+                    {
+                        let env = &env.solving_implicit_instantiation();
+                        speculation_flow::flow_t_unsafe(cx, env, (arr_t, t.dupe()))
+                    }?;
                     Ok(implicit_instantiation::pin_types::pin_type(
                         cx,
+                        env,
                         unknown_use(),
                         reason,
                         &elem_t,
@@ -1082,9 +1125,10 @@ fn type_of_hint_decomposition<'cx>(
                     cx,
                     reason.dupe(),
                     move |cx, tout| -> Result<(), SandboxError> {
-                        flow_js::flow_t(cx, (&t, tout))?;
-                        let promise_t = FlowJs::get_builtin_typeapp(
+                        flow_js::flow_t_with_env(cx, env, (&t, tout))?;
+                        let promise_t = FlowJs::get_builtin_typeapp_with_env(
                             cx,
+                            env,
                             &reason2,
                             None,
                             "Promise",
@@ -1092,6 +1136,7 @@ fn type_of_hint_decomposition<'cx>(
                         );
                         speculation_flow::resolved_lower_flow_t_unsafe(
                             cx,
+                            env,
                             &reason2,
                             (&promise_t, tout),
                         )?;
@@ -1113,8 +1158,9 @@ fn type_of_hint_decomposition<'cx>(
                         // rather than misrouting into the class-unwrap branch below
                         // (which would silently produce nothing).
                         let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                            FlowJs::possible_concrete_types_for_inspection(
+                            FlowJs::possible_concrete_types_for_inspection_with_env(
                                 cx,
+                                env,
                                 type_util::reason_of_t(t),
                                 t,
                             )
@@ -1143,6 +1189,7 @@ fn type_of_hint_decomposition<'cx>(
                                     ));
                                     speculation_flow::resolved_lower_flow_t_unsafe(
                                         cx,
+                                        env,
                                         &reason2,
                                         (&t, &class_t),
                                     )?;
@@ -1219,6 +1266,7 @@ fn type_of_hint_decomposition<'cx>(
                         );
                         speculation_flow::resolved_upper_flow_t_unsafe(
                             cx,
+                            env,
                             &reason2,
                             (&fun_type, &t),
                         )?;
@@ -1254,6 +1302,7 @@ fn type_of_hint_decomposition<'cx>(
                         );
                         speculation_flow::resolved_upper_flow_t_unsafe(
                             cx,
+                            env,
                             &reason2,
                             (&fun_type, &t),
                         )?;
@@ -1263,7 +1312,7 @@ fn type_of_hint_decomposition<'cx>(
             }
             ConcrHintDecompositionInner::DecompFuncReturn => {
                 let concrete_types =
-                    FlowJs::possible_concrete_types_for_inspection(cx, reason, &t)?;
+                    FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, reason, &t)?;
                 let rest_param = if let [single_t] = concrete_types.as_slice()
                     && let TypeInner::DefT(_, def) = single_t.deref()
                     && let DefTInner::FunT(_, func) = def.deref()
@@ -1287,6 +1336,7 @@ fn type_of_hint_decomposition<'cx>(
                             make_fun_t(&reason2, cx, vec![], rest_param, return_t.dupe(), &None);
                         speculation_flow::resolved_lower_flow_t_unsafe(
                             cx,
+                            env,
                             &reason2,
                             (&t, &fun_type),
                         )?;
@@ -1315,7 +1365,12 @@ fn type_of_hint_decomposition<'cx>(
                                 tout: Type::new(TypeInner::OpenT(props_t)),
                             }),
                         })));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
+                        speculation_flow::resolved_lower_flow_unsafe(
+                            cx,
+                            env,
+                            &reason2,
+                            (&t, &use_t),
+                        )?;
                         Ok::<(), FlowJsException>(())
                     },
                 )?)
@@ -1323,6 +1378,7 @@ fn type_of_hint_decomposition<'cx>(
             ConcrHintDecompositionInner::DecompMethodElem => {
                 Ok(speculation_flow::get_method_type_unsafe(
                     cx,
+                    env,
                     &t,
                     reason.dupe(),
                     PropRef::Computed(Type::new(TypeInner::DefT(
@@ -1334,6 +1390,7 @@ fn type_of_hint_decomposition<'cx>(
             ConcrHintDecompositionInner::DecompMethodName(name) => {
                 Ok(speculation_flow::get_method_type_unsafe(
                     cx,
+                    env,
                     &t,
                     reason.dupe(),
                     type_util::mk_named_prop(reason.dupe(), false, Name::new(name.dupe())),
@@ -1348,6 +1405,7 @@ fn type_of_hint_decomposition<'cx>(
                 let t2 = t.dupe();
                 let reason2 = reason.dupe();
                 let name2 = name.dupe();
+                let env = env.dupe();
                 let result = flow_typing_tvar::mk_where(cx, reason.dupe(), move |cx, prop_t| {
                     let use_t =
                         UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
@@ -1359,7 +1417,12 @@ fn type_of_hint_decomposition<'cx>(
                             static_: false,
                             method_action: Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
                         })));
-                    speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
+                    speculation_flow::resolved_lower_flow_unsafe(
+                        cx,
+                        &env,
+                        &reason2,
+                        (&t2, &use_t),
+                    )?;
                     Ok::<(), FlowJsException>(())
                 });
                 let mut env = cx.environment_mut();
@@ -1390,7 +1453,12 @@ fn type_of_hint_decomposition<'cx>(
                             tout: Box::new(tout),
                             hint: hint_unavailable(),
                         })));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
+                        speculation_flow::resolved_lower_flow_unsafe(
+                            cx,
+                            env,
+                            &reason2,
+                            (&t, &use_t),
+                        )?;
                         Ok::<(), FlowJsException>(())
                     },
                 )?)
@@ -1417,6 +1485,7 @@ fn type_of_hint_decomposition<'cx>(
                         })));
                         speculation_flow::resolved_lower_flow_unsafe(
                             cx,
+                            env,
                             &comp_reason2,
                             (&t, &use_t),
                         )?;
@@ -1438,7 +1507,12 @@ fn type_of_hint_decomposition<'cx>(
                             Type::new(TypeInner::OpenT(tout)),
                             flow_common::reason::mk_id() as i32,
                         ));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t, &use_t))?;
+                        speculation_flow::resolved_lower_flow_unsafe(
+                            cx,
+                            env,
+                            &reason2,
+                            (&t, &use_t),
+                        )?;
                         Ok::<(), FlowJsException>(())
                     },
                 )?)
@@ -1464,7 +1538,12 @@ fn type_of_hint_decomposition<'cx>(
                                 static_: false,
                                 tout: Box::new(prop_t),
                             })));
-                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
+                        speculation_flow::resolved_lower_flow_unsafe(
+                            cx,
+                            env,
+                            &reason2,
+                            (&t2, &use_t),
+                        )?;
                         Ok::<(), FlowJsException>(())
                     });
                 let mut env = cx.environment_mut();
@@ -1477,7 +1556,9 @@ fn type_of_hint_decomposition<'cx>(
                     [] => Ok(t.dupe()),
                     [first, rest @ ..] => {
                         let concrete_types =
-                            FlowJs::possible_concrete_types_for_inspection(cx, reason, &t)?;
+                            FlowJs::possible_concrete_types_for_inspection_with_env(
+                                cx, env, reason, &t,
+                            )?;
                         match concrete_types.as_slice() {
                             [] => Ok(t.dupe()),
                             [_single] => Ok(t.dupe()),
@@ -1557,8 +1638,8 @@ fn type_of_hint_decomposition<'cx>(
                                     reason.dupe(),
                                     move |cx, r, id| {
                                         let tout = Tvar::new(r.dupe(), id as u32);
-                                        crate::predicate_kit::run_predicate_for_filtering(
-                                            cx, &t, &predicate, &tout,
+                                        crate::predicate_kit::run_predicate_for_filtering_with_env(
+                                            cx, env, &t, &predicate, &tout,
                                         )?;
                                         Ok::<(), SandboxError>(())
                                     },
@@ -1570,7 +1651,7 @@ fn type_of_hint_decomposition<'cx>(
             }
             ConcrHintDecompositionInner::SimplifyCallee(callee_reason) => {
                 let simplify = |fn_t: &Type| -> Result<Type, SandboxError> {
-                    let result = simplify_callee(cx, callee_reason, unknown_use(), fn_t)?;
+                    let result = simplify_callee(cx, env, callee_reason, unknown_use(), fn_t)?;
                     Ok(get_t(cx, result))
                 };
                 let simplified = simplify(&t)?;
@@ -1587,11 +1668,11 @@ fn type_of_hint_decomposition<'cx>(
                 }
             }
             ConcrHintDecompositionInner::InstantiateCallee(instantiation_hint) => Ok(
-                instantiate_callee(cx, opts, reason, &t, instantiation_hint)?,
+                instantiate_callee(cx, env, opts, reason, &t, instantiation_hint)?,
             ),
-            ConcrHintDecompositionInner::InstantiateComponent(instantiation_hint) => {
-                Ok(instantiate_component(cx, opts, &t, instantiation_hint)?)
-            }
+            ConcrHintDecompositionInner::InstantiateComponent(instantiation_hint) => Ok(
+                instantiate_component(cx, env, opts, &t, instantiation_hint)?,
+            ),
             ConcrHintDecompositionInner::DecompPromise => {
                 let t = t.dupe();
                 let reason2 = reason.dupe();
@@ -1599,8 +1680,9 @@ fn type_of_hint_decomposition<'cx>(
                     cx,
                     reason.dupe(),
                     move |cx, inner_t| {
-                        let promise_t = FlowJs::get_builtin_typeapp(
+                        let promise_t = FlowJs::get_builtin_typeapp_with_env(
                             cx,
+                            env,
                             &reason2,
                             None,
                             "Promise",
@@ -1608,11 +1690,13 @@ fn type_of_hint_decomposition<'cx>(
                         );
                         speculation_flow::resolved_lower_flow_t_unsafe(
                             cx,
+                            env,
                             &reason2,
                             (&t, &promise_t),
                         )?;
                         speculation_flow::resolved_lower_flow_t_unsafe(
                             cx,
+                            env,
                             &reason2,
                             (&t, inner_t),
                         )?;
@@ -1643,6 +1727,7 @@ fn fully_resolve_final_result<'cx>(cx: &Context<'cx>, t: Type, kind: HintKind) -
 
 fn evaluate_hint_ops<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     opts: &HintOptions,
     reason: &Reason,
     t: Type,
@@ -1651,6 +1736,7 @@ fn evaluate_hint_ops<'cx>(
 ) -> Result<HintEvalResult, JobError> {
     fn loop_ops<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         opts: &HintOptions,
         reason: &Reason,
         mut t: Type,
@@ -1660,7 +1746,7 @@ fn evaluate_hint_ops<'cx>(
             let result = match cx.hint_eval_cache_find_opt(*id as i32) {
                 Some(result) => result,
                 None => {
-                    let result = type_of_hint_decomposition(cx, opts, op.inner(), reason, &t)?;
+                    let result = type_of_hint_decomposition(cx, env, opts, op.inner(), reason, &t)?;
                     cx.add_hint_eval_cache_entry(*id as i32, result.clone());
                     result
                 }
@@ -1676,7 +1762,8 @@ fn evaluate_hint_ops<'cx>(
     // We evaluate the decompositions in synthesis mode, but fully resolve the final result in
     // checking mode, so that any unresolved tvars in the midddle won't fail the evaluation, but
     // unsolved tvars in the final result will fail the evaluation.
-    let result = cx.run_in_hint_eval_mode(|| loop_ops(cx, opts, reason, t, &ops))?;
+    let hint_env = env.signature_tvar_env();
+    let result = cx.run_in_hint_eval_mode(|| loop_ops(cx, &hint_env, opts, reason, t, &ops))?;
     Ok(match result {
         None => HintEvalResult::DecompositionError,
         Some(t) => fully_resolve_final_result(cx, t, kind),
@@ -1685,6 +1772,7 @@ fn evaluate_hint_ops<'cx>(
 
 fn evaluate_hint_inner<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     opts: &HintOptions,
     reason: &Reason,
     hint: ConcrHint<'cx>,
@@ -1710,20 +1798,21 @@ fn evaluate_hint_inner<'cx>(
         Hint::HintT(t, kind) => fully_resolve_final_result(cx, t?, kind),
         Hint::HintDecomp(ops, t, kind) => {
             let ops_vec = ops.into_vec();
-            evaluate_hint_ops(cx, opts, reason, t?, kind, ops_vec)?
+            evaluate_hint_ops(cx, env, opts, reason, t?, kind, ops_vec)?
         }
     })
 }
 
 fn evaluate_hints_inner<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     opts: &HintOptions,
     reason: &Reason,
     hints: Vec<ConcrHint<'cx>>,
 ) -> Result<HintEvalResult, JobError> {
     let mut result = HintEvalResult::NoHint;
     for hint in hints {
-        match evaluate_hint_inner(cx, opts, reason, hint)? {
+        match evaluate_hint_inner(cx, env, opts, reason, hint)? {
             HintEvalResult::HintAvailable(t, kind) => {
                 result = HintEvalResult::HintAvailable(t, kind);
                 break;
@@ -1743,11 +1832,29 @@ pub fn evaluate_hint<'cx>(
     reason: &Reason,
     hint: ConcrHint<'cx>,
 ) -> Result<HintEvalResult, JobError> {
+    evaluate_hint_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        expected_only,
+        skip_optional,
+        reason,
+        hint,
+    )
+}
+
+fn evaluate_hint_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    expected_only: bool,
+    skip_optional: Option<bool>,
+    reason: &Reason,
+    hint: ConcrHint<'cx>,
+) -> Result<HintEvalResult, JobError> {
     let opts = HintOptions {
         expected_only,
         skip_optional: skip_optional.unwrap_or(false),
     };
-    evaluate_hint_inner(cx, &opts, reason, hint)
+    evaluate_hint_inner(cx, env, &opts, reason, hint)
 }
 
 pub fn evaluate_hints<'cx>(
@@ -1757,9 +1864,27 @@ pub fn evaluate_hints<'cx>(
     reason: &Reason,
     hints: Vec<ConcrHint<'cx>>,
 ) -> Result<HintEvalResult, JobError> {
+    evaluate_hints_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        expected_only,
+        skip_optional,
+        reason,
+        hints,
+    )
+}
+
+fn evaluate_hints_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    expected_only: bool,
+    skip_optional: Option<bool>,
+    reason: &Reason,
+    hints: Vec<ConcrHint<'cx>>,
+) -> Result<HintEvalResult, JobError> {
     let opts = HintOptions {
         expected_only,
         skip_optional: skip_optional.unwrap_or(false),
     };
-    evaluate_hints_inner(cx, &opts, reason, hints)
+    evaluate_hints_inner(cx, env, &opts, reason, hints)
 }

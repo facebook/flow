@@ -1973,7 +1973,6 @@ dependencies = [
  "flow_typing_exists_check",
  "flow_typing_generics",
  "flow_typing_loc_env",
- "flow_typing_speculation_state",
  "flow_typing_spread_cache",
  "flow_typing_type",
  "flow_utils_concurrency",
@@ -2054,8 +2053,8 @@ dependencies = [
  "flow_typing_context",
  "flow_typing_debug",
  "flow_typing_errors",
+ "flow_typing_flow_js_env",
  "flow_typing_generics",
- "flow_typing_speculation_state",
  "flow_typing_tvar",
  "flow_typing_type",
  "flow_typing_visitors",
@@ -2081,9 +2080,9 @@ dependencies = [
  "flow_typing_default",
  "flow_typing_errors",
  "flow_typing_flow_common",
+ "flow_typing_flow_js_env",
  "flow_typing_generics",
  "flow_typing_implicit_instantiation_check",
- "flow_typing_speculation_state",
  "flow_typing_spread_cache",
  "flow_typing_tvar",
  "flow_typing_type",
@@ -2091,6 +2090,17 @@ dependencies = [
  "flow_utils_concurrency",
  "flow_utils_union_find",
  "vec1",
+]
+
+[[package]]
+name = "flow_typing_flow_js_env"
+version = "0.0.0"
+dependencies = [
+ "dupe",
+ "flow_aloc",
+ "flow_common",
+ "flow_typing_errors",
+ "flow_typing_type",
 ]
 
 [[package]]
@@ -2139,15 +2149,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "flow_typing_speculation_state"
-version = "0.0.0"
-dependencies = [
- "flow_aloc",
- "flow_typing_errors",
- "flow_typing_type",
-]
-
-[[package]]
 name = "flow_typing_spread_cache"
 version = "0.0.0"
 dependencies = [
@@ -2182,6 +2183,7 @@ dependencies = [
  "flow_typing_exists_check",
  "flow_typing_flow_common",
  "flow_typing_flow_js",
+ "flow_typing_flow_js_env",
  "flow_typing_generics",
  "flow_typing_key",
  "flow_typing_loc_env",
@@ -2264,6 +2266,7 @@ dependencies = [
  "flow_typing_errors",
  "flow_typing_flow_common",
  "flow_typing_flow_js",
+ "flow_typing_flow_js_env",
  "flow_typing_generics",
  "flow_typing_implicit_instantiation_check",
  "flow_typing_key",

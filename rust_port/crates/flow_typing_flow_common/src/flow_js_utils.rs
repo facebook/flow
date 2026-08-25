@@ -42,6 +42,7 @@ use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::intermediate_error_types::Explanation;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
 use flow_typing_type::type_::DefTInner;
@@ -898,6 +899,9 @@ pub fn unwrap_fully_resolved_open_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     unwrapped
 }
 
+/// The tvar is forced later, as a unit of checking of its own rather than a
+/// continuation of whatever solve happens to force it, so `f` runs at
+/// [`FlowJsEnv::entry`].
 pub fn map_on_resolved_type<'cx, F>(cx: &Context<'cx>, reason_op: Reason, l: Type, f: F) -> Type
 where
     F: FnOnce(&Context<'cx>, Type) -> Result<Type, JobError> + 'cx,
@@ -968,12 +972,12 @@ pub fn is_dictionary_exempt(name: &Name) -> bool {
     is_object_prototype_method(name)
 }
 
-pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, t: &Type) {
+pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) {
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::SingletonStrT {
                 from_annot: false, ..
-            } if cx.in_implicit_instantiation() => {
+            } if env.in_implicit_instantiation() => {
                 cx.record_primitive_literal_check(r.loc().dupe());
             }
             DefTInner::SingletonNumT {
@@ -984,7 +988,7 @@ pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, t: &Type) {
             }
             | DefTInner::SingletonBigIntT {
                 from_annot: false, ..
-            } if cx.in_implicit_instantiation() => {
+            } if env.in_implicit_instantiation() => {
                 cx.record_primitive_literal_check(r.loc().dupe());
             }
             _ => {}
@@ -1066,6 +1070,7 @@ pub fn is_union_resolvable(t: &Type) -> bool {
 }
 
 pub mod tvar_visitors {
+
     use std::collections::BTreeSet;
     use std::ops::Deref;
 
@@ -1667,13 +1672,14 @@ pub fn incompatible_types_error(
 pub fn add_output_generic<'src, 'dst>(
     src_cx: &Context<'src>,
     dst_cx: &Context<'dst>,
+    env: &FlowJsEnv,
     msg: ErrorMessage<ALoc>,
 ) -> Result<(), SpeculativeError> {
     use flow_typing_errors::flow_error::error_of_msg;
 
-    if crate::speculation::speculating(src_cx) {
+    if env.speculating() {
         if msg.defered_in_speculation() {
-            crate::speculation::defer_error(src_cx, msg);
+            env.defer_error(msg);
             Ok(())
         } else {
             if src_cx.is_verbose() {
@@ -1712,25 +1718,32 @@ pub fn ordered_reasons(cx: &Context<'_>, reasons: (Reason, Reason)) -> (Reason, 
 }
 
 pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
-    add_output_generic(cx, cx, msg).map_err(FlowJsException::Speculative)
+    add_output_with_env(cx, &FlowJsEnv::entry(), msg)
+}
+
+pub fn add_output_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    msg: ErrorMessage<ALoc>,
+) -> Result<(), FlowJsException> {
+    add_output_generic(cx, cx, env, msg).map_err(FlowJsException::Speculative)
 }
 
 pub fn add_output_non_speculating<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) {
     if let Err(err) = add_output(cx, msg) {
-        if !crate::speculation::speculating(cx) {
-            panic!("Non speculating: {:?}", err);
-        }
+        panic!("Non speculating: {:?}", err);
     }
 }
 
 // In annotation inference, errors are created in the exporting side (src_cx), and
 // are recorded in the importing one (dst_cx).
 pub fn add_annot_inference_error(src_cx: &Context, dst_cx: &Context, msg: ErrorMessage<ALoc>) {
-    add_output_generic(src_cx, dst_cx, msg).unwrap()
+    add_output_generic(src_cx, dst_cx, &FlowJsEnv::entry(), msg).unwrap()
 }
 
 pub fn exact_obj_error<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     obj_kind: &flow_typing_type::type_::ObjKind,
     use_op: UseOp,
     exact_reason: Reason,
@@ -1746,8 +1759,9 @@ pub fn exact_obj_error<'cx>(
         _ => ExactnessErrorKind::UnexpectedInexact,
     };
     let reasons = ordered_reasons(cx, (reason_of_t(l).dupe(), exact_reason));
-    add_output(
+    add_output_with_env(
         cx,
+        env,
         ErrorMessage::EIncompatibleWithExact(reasons, use_op, error_kind),
     )
 }
@@ -2156,9 +2170,18 @@ pub fn poly_minimum_arity(tparams: &Vec1<TypeParam>) -> usize {
         .count()
 }
 
-// This typing
 pub fn default_this_type<'cx>(
     cx: &Context<'cx>,
+    needs_this_param: bool,
+    func: &flow_parser::ast::function::Function<ALoc, ALoc>,
+) -> Result<Type, FlowJsException> {
+    default_this_type_with_env(cx, &FlowJsEnv::entry(), needs_this_param, func)
+}
+
+// This typing
+fn default_this_type_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     needs_this_param: bool,
     func: &flow_parser::ast::function::Function<ALoc, ALoc>,
 ) -> Result<Type, FlowJsException> {
@@ -2178,8 +2201,9 @@ pub fn default_this_type<'cx>(
         params.loc.dupe(),
     );
     if this_finder::missing_this_annotation(needs_this_param, body, params) {
-        add_output(
+        add_output_with_env(
             cx,
+            env,
             ErrorMessage::EMissingLocalAnnotation {
                 reason: reason.to_error_reference(),
                 hint_available: false,
@@ -2217,6 +2241,7 @@ pub fn string_key(value: FlowSmolStr, reason: &Reason) -> Type {
 // common case checking a function as an object
 pub fn quick_error_fun_as_obj<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: &UseOp,
     lower: &Type,
     statics: &Type,
@@ -2261,7 +2286,7 @@ pub fn quick_error_fun_as_obj<'cx>(
                     use_op.dupe(),
                     Some(Explanation::ExplanationFunctionsWithStaticsToObject),
                 );
-                add_output(cx, error_message)?;
+                add_output_with_env(cx, env, error_message)?;
                 Ok(true)
             } else {
                 let reason = flow_typing_type::type_util::reason_of_t(lower);
@@ -2276,7 +2301,7 @@ pub fn quick_error_fun_as_obj<'cx>(
                             suggestion: None,
                         },
                     ));
-                    add_output(cx, err)?;
+                    add_output_with_env(cx, env, err)?;
                 }
                 Ok(true)
             }
@@ -2324,6 +2349,15 @@ pub fn emit_cacheable_env_error<'cx>(
     loc: ALoc,
     err: flow_env_builder::env_api::CacheableEnvError<ALoc>,
 ) {
+    emit_cacheable_env_error_with_env(cx, &FlowJsEnv::entry(), loc, err)
+}
+
+fn emit_cacheable_env_error_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    loc: ALoc,
+    err: flow_env_builder::env_api::CacheableEnvError<ALoc>,
+) {
     use flow_env_builder::env_api::CacheableEnvError;
     use flow_typing_errors::error_message::BindingError;
     use flow_typing_errors::error_message::ErrorMessage;
@@ -2344,11 +2378,20 @@ pub fn emit_cacheable_env_error<'cx>(
             }))
         }
     };
-    add_output(cx, msg).unwrap()
+    add_output_with_env(cx, env, msg).unwrap()
 }
 
 pub fn lookup_builtin_module_error<'cx>(
     cx: &Context<'cx>,
+    module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
+    loc: ALoc,
+) -> Result<Type, FlowJsException> {
+    lookup_builtin_module_error_with_env(cx, &FlowJsEnv::entry(), module_name, loc)
+}
+
+fn lookup_builtin_module_error_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, FlowJsException> {
@@ -2362,8 +2405,9 @@ pub fn lookup_builtin_module_error<'cx>(
         .find(|(pattern, _)| pattern.is_match(module_name_str.as_str()))
         .map(|(_, generator)| flow_data_structure_wrapper::smol_str::FlowSmolStr::new(generator));
 
-    add_output(
+    add_output_with_env(
         cx,
+        env,
         ErrorMessage::EBuiltinModuleLookupFailed(Box::new(EBuiltinModuleLookupFailedData {
             loc: loc.dupe(),
             potential_generator,
@@ -2383,6 +2427,7 @@ pub fn lookup_builtin_module_error<'cx>(
 /// the misleading cannot-resolve-module.
 pub fn cannot_import_global_libdef_error<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     libdef_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     loc: ALoc,
@@ -2391,8 +2436,9 @@ pub fn cannot_import_global_libdef_error<'cx>(
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_type::type_::AnySource;
 
-    add_output(
+    add_output_with_env(
         cx,
+        env,
         ErrorMessage::ECannotImportGlobalLibdef(Box::new(ECannotImportGlobalLibdefData {
             loc: loc.dupe(),
             module_name: module_name.dupe(),
@@ -2473,6 +2519,7 @@ pub fn lookup_builtin_type_result<'cx>(
 
 fn apply_errors<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     result: Result<
         Type,
@@ -2486,7 +2533,7 @@ fn apply_errors<'cx>(
         Ok(t) => t,
         Err((t, errs)) => {
             for err in errs {
-                emit_cacheable_env_error(cx, reason.loc().dupe(), err);
+                emit_cacheable_env_error_with_env(cx, env, reason.loc().dupe(), err);
             }
             t
         }
@@ -2494,13 +2541,31 @@ fn apply_errors<'cx>(
 }
 
 pub fn lookup_builtin_value<'cx>(cx: &Context<'cx>, x: &str, reason: Reason) -> Type {
+    lookup_builtin_value_with_env(cx, &FlowJsEnv::entry(), x, reason)
+}
+
+pub fn lookup_builtin_value_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    x: &str,
+    reason: Reason,
+) -> Type {
     let result = lookup_builtin_value_result(cx, x, reason.dupe());
-    apply_errors(cx, reason, result)
+    apply_errors(cx, env, reason, result)
 }
 
 pub fn lookup_builtin_type<'cx>(cx: &Context<'cx>, x: &str, reason: Reason) -> Type {
+    lookup_builtin_type_with_env(cx, &FlowJsEnv::entry(), x, reason)
+}
+
+pub fn lookup_builtin_type_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    x: &str,
+    reason: Reason,
+) -> Type {
     let result = lookup_builtin_type_result(cx, x, reason.dupe());
-    apply_errors(cx, reason, result)
+    apply_errors(cx, env, reason, result)
 }
 
 pub fn lookup_builtin_typeapp<'cx>(
@@ -2509,9 +2574,19 @@ pub fn lookup_builtin_typeapp<'cx>(
     x: &str,
     targs: Vec<Type>,
 ) -> Type {
+    lookup_builtin_typeapp_with_env(cx, &FlowJsEnv::entry(), reason, x, targs)
+}
+
+fn lookup_builtin_typeapp_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    x: &str,
+    targs: Vec<Type>,
+) -> Type {
     use flow_typing_type::type_util::typeapp;
 
-    let t = lookup_builtin_type(cx, x, reason.dupe());
+    let t = lookup_builtin_type_with_env(cx, env, x, reason.dupe());
     typeapp(false, false, reason, t, targs)
 }
 
@@ -2697,13 +2772,15 @@ pub fn builtin_react_renders_exactly_nominal_id<'cx>(
 
 pub fn enum_proto<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     enum_object_t: Type,
     enum_value_t: Type,
     representation_t: Type,
 ) -> Type {
-    lookup_builtin_typeapp(
+    lookup_builtin_typeapp_with_env(
         cx,
+        env,
         reason,
         "$EnumProto",
         vec![enum_object_t, enum_value_t, representation_t],
@@ -2722,6 +2799,7 @@ pub fn is_munged_prop_name<'cx>(cx: &Context<'cx>, name: &Name) -> bool {
 
 pub fn obj_key_mirror<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     o: &flow_typing_type::type_::ObjType,
     reason_op: &Reason,
 ) -> Type {
@@ -2749,7 +2827,7 @@ pub fn obj_key_mirror<'cx>(
                 let r = reason_op
                     .dupe()
                     .update_desc(|_| VirtualReasonDesc::RUniqueSymbol);
-                map_t(type_of_key_name(cx, key.dupe(), &r), t)
+                map_t(type_of_key_name_with_env(env, key.dupe(), &r), t)
             }
             Name::Str(key_str) => {
                 let key_str = key_str.dupe();
@@ -3041,6 +3119,7 @@ pub fn fix_this_instance<'cx>(
 pub trait InstantiationHelper {
     fn reposition<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
@@ -3048,6 +3127,7 @@ pub trait InstantiationHelper {
 
     fn is_subtype<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
@@ -3056,6 +3136,7 @@ pub trait InstantiationHelper {
 
     fn unify<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
@@ -3083,6 +3164,7 @@ pub mod instantiation_kit {
     use flow_typing_context::Context;
     use flow_typing_errors::error_message::ETooFewTypeArgsData;
     use flow_typing_errors::error_message::ETooManyTypeArgsData;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::DepthTrace;
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
@@ -3092,7 +3174,7 @@ pub mod instantiation_kit {
 
     use super::FlowJsException;
     use super::InstantiationHelper;
-    use super::add_output;
+    use super::add_output_with_env;
     use super::poly_minimum_arity;
     use crate::type_subst::Purpose;
     use crate::type_subst::subst;
@@ -3100,6 +3182,7 @@ pub mod instantiation_kit {
     // Instantiate a polymorphic definition given type arguments.
     pub fn instantiate_poly_with_targs<'cx, H: InstantiationHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -3121,8 +3204,9 @@ pub mod instantiation_kit {
         let arity_loc = tparams_loc;
 
         if (ts.len() as i32) > maximum_arity {
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                     reason_tapp: reason_tapp.to_error_reference(),
                     arity_loc: arity_loc.dupe(),
@@ -3159,8 +3243,9 @@ pub mod instantiation_kit {
                     }
                     (None, None) => {
                         // fewer arguments than params but no default
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                                 reason_tapp: reason_tapp.to_error_reference(),
                                 arity_loc: arity_loc.dupe(),
@@ -3187,7 +3272,7 @@ pub mod instantiation_kit {
             map.insert(typeparam.name.dupe(), t_val);
         }
 
-        if !cx.in_implicit_instantiation() {
+        if !env.in_implicit_instantiation() {
             for typeparam in xs.iter() {
                 let t_val = map
                     .get(&typeparam.name)
@@ -3210,9 +3295,9 @@ pub mod instantiation_kit {
                 );
 
                 if unify_bounds {
-                    H::unify(cx, trace, frame, t_val, bound_subst)?;
+                    H::unify(cx, env, trace, frame, t_val, bound_subst)?;
                 } else {
-                    H::is_subtype(cx, trace, frame, t_val, bound_subst)?;
+                    H::is_subtype(cx, env, trace, frame, t_val, bound_subst)?;
                 }
             }
         }
@@ -3221,17 +3306,51 @@ pub mod instantiation_kit {
             cx,
             Some(use_op),
             true,
-            cx.in_implicit_instantiation(),
+            env.in_implicit_instantiation(),
             Purpose::Normal,
             &map,
             t,
         );
-        let repositioned = H::reposition(cx, Some(trace), reason_tapp.loc().dupe(), substituted_t)?;
+        let repositioned = H::reposition(
+            cx,
+            env,
+            Some(trace),
+            reason_tapp.loc().dupe(),
+            substituted_t,
+        )?;
         Ok((repositioned, all_ts))
     }
 
     pub fn mk_typeapp_of_poly<'cx, H: InstantiationHelper>(
         cx: &Context<'cx>,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        id: flow_typing_type::type_::poly::Id,
+        tparams_loc: ALoc,
+        xs: &Vec1<TypeParam>,
+        t: Type,
+        ts: Rc<[Type]>,
+    ) -> Result<Type, FlowJsException> {
+        mk_typeapp_of_poly_with_env::<H>(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            id,
+            tparams_loc,
+            xs,
+            t,
+            ts,
+        )
+    }
+
+    pub fn mk_typeapp_of_poly_with_env<'cx, H: InstantiationHelper>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -3250,8 +3369,9 @@ pub mod instantiation_kit {
             for err in errs.iter() {
                 match err {
                     SubstCacheErr::ETooManyTypeArgs(arity_loc, maximum_arity) => {
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ETooManyTypeArgs(Box::new(ETooManyTypeArgsData {
                                 reason_tapp: reason_tapp.to_error_reference(),
                                 arity_loc: arity_loc.dupe(),
@@ -3260,8 +3380,9 @@ pub mod instantiation_kit {
                         )?;
                     }
                     SubstCacheErr::ETooFewTypeArgs(arity_loc, minimum_arity) => {
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ETooFewTypeArgs(Box::new(ETooFewTypeArgsData {
                                 reason_tapp: reason_tapp.to_error_reference(),
                                 arity_loc: arity_loc.dupe(),
@@ -3277,6 +3398,7 @@ pub mod instantiation_kit {
         let mut errs_ref = Some(Vec::new());
         let (result_t, _) = instantiate_poly_with_targs::<H>(
             cx,
+            env,
             trace,
             use_op,
             reason_op,
@@ -3295,9 +3417,35 @@ pub mod instantiation_kit {
         Ok(result_t)
     }
 
-    // Instantiate a polymorphic definition by creating fresh type arguments.
     pub fn instantiate_poly<'cx, H: InstantiationHelper>(
         cx: &Context<'cx>,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        unify_bounds: bool,
+        tparams_loc: ALoc,
+        xs: &Vec1<TypeParam>,
+        t: Type,
+    ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
+        instantiate_poly_with_env::<H>(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            unify_bounds,
+            tparams_loc,
+            xs,
+            t,
+        )
+    }
+
+    // Instantiate a polymorphic definition by creating fresh type arguments.
+    pub fn instantiate_poly_with_env<'cx, H: InstantiationHelper>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -3314,6 +3462,7 @@ pub mod instantiation_kit {
 
         instantiate_poly_with_targs::<H>(
             cx,
+            env,
             trace,
             use_op,
             reason_op,
@@ -3446,6 +3595,7 @@ pub mod value_to_type_reference_transform {
     use flow_typing_context::Context;
     use flow_typing_errors::error_message::EMissingTypeArgsData;
     use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnyErrorKind;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::PolyTData;
@@ -3458,15 +3608,16 @@ pub mod value_to_type_reference_transform {
     use flow_typing_type::type_util::reason_of_t;
 
     use super::FlowJsException;
-    use super::add_output;
+    use super::add_output_with_env;
     use super::fix_this_instance;
-    use super::lookup_builtin_type;
+    use super::lookup_builtin_type_with_env;
     use crate::type_subst::Purpose;
     use crate::type_subst::subst;
 
     // a component syntax value annotation becomes React$RendersExactly of that component
     fn run_on_abstract_component<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         reason_component: &Reason,
         reason_op: &Reason,
         l: Type,
@@ -3478,15 +3629,27 @@ pub mod value_to_type_reference_transform {
         let annot_loc = reason_op.loc().dupe();
         let elem_reason = reason_op.dupe().replace_desc(desc).annotate(annot_loc);
 
-        let builtin_t = lookup_builtin_type(cx, "React$RendersExactly", elem_reason.dupe());
+        let builtin_t =
+            lookup_builtin_type_with_env(cx, env, "React$RendersExactly", elem_reason.dupe());
         let t = flow_typing_tvar::mk_fully_resolved(cx, elem_reason.dupe(), builtin_t);
 
         type_util::typeapp(false, true, elem_reason, t, vec![l])
     }
 
-    // let run_on_concrete_type cx ~use_op reason_op kind = function
     pub fn run_on_concrete_type<'cx>(
         cx: &Context<'cx>,
+        use_op: UseOp,
+        reason_op: &Reason,
+        kind: TypeTKind,
+        t: Type,
+    ) -> Result<Type, FlowJsException> {
+        run_on_concrete_type_with_env(cx, &FlowJsEnv::entry(), use_op, reason_op, kind, t)
+    }
+
+    // let run_on_concrete_type cx ~use_op reason_op kind = function
+    pub fn run_on_concrete_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         use_op: UseOp,
         reason_op: &Reason,
         kind: TypeTKind,
@@ -3530,6 +3693,7 @@ pub mod value_to_type_reference_transform {
                     };
                     Ok(run_on_abstract_component(
                         cx,
+                        env,
                         reason_component,
                         reason_op,
                         substituted,
@@ -3544,8 +3708,9 @@ pub mod value_to_type_reference_transform {
                     let tparams_loc = tparams_loc.dupe();
 
                     let min_arity = ids.iter().filter(|tp| tp.default.is_none()).count() as i32;
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EMissingTypeArgs(Box::new(EMissingTypeArgsData {
                             loc: reason_op.loc().dupe(),
                             reason_tapp_desc: reason.desc.clone(),
@@ -3587,8 +3752,9 @@ pub mod value_to_type_reference_transform {
                 // an enum object value annotation becomes the enum type
                 DefTInner::EnumObjectT { enum_value_t, .. } => Ok(enum_value_t.dupe()),
                 DefTInner::EnumValueT(_) => {
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(Box::new(
                             EnumMemberUsedAsTypeData {
                                 reason: reason_op.to_error_reference(),
@@ -3599,13 +3765,18 @@ pub mod value_to_type_reference_transform {
                     Ok(any_t::error(reason_op.dupe()))
                 }
 
-                DefTInner::ReactAbstractComponentT(_) => {
-                    Ok(run_on_abstract_component(cx, reason, reason_op, t.dupe()))
-                }
+                DefTInner::ReactAbstractComponentT(_) => Ok(run_on_abstract_component(
+                    cx,
+                    env,
+                    reason,
+                    reason_op,
+                    t.dupe(),
+                )),
 
                 DefTInner::EmptyT => {
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EValueUsedAsType {
                             reason_use: reason_op.to_error_reference(),
                         },
@@ -3614,8 +3785,9 @@ pub mod value_to_type_reference_transform {
                 }
 
                 _ => {
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EValueUsedAsType {
                             reason_use: reason_op.to_error_reference(),
                         },
@@ -3632,8 +3804,9 @@ pub mod value_to_type_reference_transform {
             ),
 
             TypeInner::AnyT(r, AnySource::AnyError(Some(AnyErrorKind::MissingAnnotation))) => {
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EValueUsedAsType {
                         reason_use: reason_op.to_error_reference(),
                     },
@@ -3644,8 +3817,9 @@ pub mod value_to_type_reference_transform {
             // Short-circut as we already error on the unresolved name.
             TypeInner::AnyT(_, AnySource::AnyError(_)) => Ok(t),
             TypeInner::AnyT(r, _) => {
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EAnyValueUsedAsType {
                         reason_use: reason_op.to_error_reference(),
                     },
@@ -3654,8 +3828,9 @@ pub mod value_to_type_reference_transform {
             }
 
             _ => {
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EValueUsedAsType {
                         reason_use: reason_op.to_error_reference(),
                     },
@@ -3670,13 +3845,14 @@ pub mod value_to_type_reference_transform {
 
 pub fn check_nonstrict_import<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     is_strict: bool,
     imported_is_strict: bool,
     reason: &Reason,
 ) -> Result<(), FlowJsException> {
     if is_strict && !imported_is_strict {
         let loc = reason.loc().dupe();
-        add_output(cx, ErrorMessage::ENonstrictImport(loc))?;
+        add_output_with_env(cx, env, ErrorMessage::ENonstrictImport(loc))?;
     }
     Ok(())
 }
@@ -3707,6 +3883,7 @@ pub trait ImportExportHelperSig {
 
     fn export_named<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         info: (
             Reason,
             FlowOrdMap<Name, NamedSymbol>,
@@ -4064,6 +4241,7 @@ pub mod cjs_require_t_kit {
     use flow_common::reason::Name;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::FieldData;
     use flow_typing_type::type_::ModuleType;
     use flow_typing_type::type_::ModuleTypeInner;
@@ -4080,11 +4258,36 @@ pub mod cjs_require_t_kit {
 
     use super::FlowJsException;
     use super::check_nonstrict_import;
-    use super::lookup_builtin_typeapp;
+    use super::lookup_builtin_typeapp_with_env;
 
-    // require('SomeModule')
     pub fn on_module_t<'cx, R>(
         cx: &Context<'cx>,
+        reposition: R,
+        reason: Reason,
+        module_symbol: Symbol,
+        is_strict: bool,
+        standard_cjs_esm_interop: bool,
+        module_: &ModuleType,
+    ) -> Result<(Type, ALoc), FlowJsException>
+    where
+        R: Fn(&Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
+    {
+        on_module_t_with_env::<R>(
+            cx,
+            &FlowJsEnv::entry(),
+            reposition,
+            reason,
+            module_symbol,
+            is_strict,
+            standard_cjs_esm_interop,
+            module_,
+        )
+    }
+
+    // require('SomeModule')
+    pub fn on_module_t_with_env<'cx, R>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         reposition: R,
         reason: Reason,
         module_symbol: Symbol,
@@ -4101,7 +4304,7 @@ pub mod cjs_require_t_kit {
             module_is_strict: imported_is_strict,
             module_available_platforms: _ignored_todo,
         } = &**module_;
-        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+        check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason)?;
         Ok(match &exports.cjs_export {
             Some((def_loc_opt, t)) => {
                 // reposition the export to point at the require(), like the object
@@ -4156,8 +4359,9 @@ pub mod cjs_require_t_kit {
                 };
 
                 let t = if standard_cjs_esm_interop {
-                    lookup_builtin_typeapp(
+                    lookup_builtin_typeapp_with_env(
                         cx,
+                        env,
                         reason.dupe(),
                         "$Flow$EsmModuleMarkerWrapperInModuleRef",
                         vec![mk_exports_namespace()],
@@ -4214,12 +4418,12 @@ pub mod cjs_require_t_kit {
 
 // import * as X from 'SomeModule';
 pub mod import_module_ns_t_kit {
-
     use dupe::Dupe;
     use flow_common::polarity::Polarity;
     use flow_common::reason::Name;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DictType;
     use flow_typing_type::type_::FieldData;
@@ -4246,6 +4450,24 @@ pub mod import_module_ns_t_kit {
         is_strict: bool,
         module_: &ModuleType,
     ) -> Result<(Type, properties::Id), FlowJsException> {
+        on_module_t_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            is_common_interface_module,
+            reason_op,
+            is_strict,
+            module_,
+        )
+    }
+
+    pub fn on_module_t_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        is_common_interface_module: bool,
+        reason_op: Reason,
+        is_strict: bool,
+        module_: &ModuleType,
+    ) -> Result<(Type, properties::Id), FlowJsException> {
         let ModuleTypeInner {
             module_reason,
             module_export_types: exports,
@@ -4254,7 +4476,7 @@ pub mod import_module_ns_t_kit {
         } = &**module_;
 
         if !is_common_interface_module {
-            check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason_op)?;
+            check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason_op)?;
         }
 
         let reason = module_reason
@@ -4352,6 +4574,7 @@ pub mod import_default_t_kit {
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_typing_context::Context;
     use flow_typing_errors::error_message::ErrorMessage;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::ImportKind;
     use flow_typing_type::type_::ModuleType;
@@ -4361,14 +4584,43 @@ pub mod import_default_t_kit {
     use flow_typing_type::type_util;
 
     use super::FlowJsException;
-    use super::add_output;
+    use super::add_output_with_env;
     use super::check_nonstrict_import;
     use super::import_type_t_kit;
     use super::import_typeof_t_kit;
 
-    // import [type] X from 'SomeModule';
     pub fn on_module_t<'cx>(
         cx: &Context<'cx>,
+        with_concretized_type: &dyn Fn(
+            &Context<'cx>,
+            Reason,
+            Rc<dyn Fn(Type) -> Type + 'cx>,
+            Type,
+        ) -> Type,
+        reason: Reason,
+        import_kind: ImportKind,
+        local_name: &str,
+        module_name: Userland,
+        is_strict: bool,
+        module_: &ModuleType,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        on_module_t_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            with_concretized_type,
+            reason,
+            import_kind,
+            local_name,
+            module_name,
+            is_strict,
+            module_,
+        )
+    }
+
+    // import [type] X from 'SomeModule';
+    pub fn on_module_t_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         with_concretized_type: &dyn Fn(
             &Context<'cx>,
             Reason,
@@ -4388,7 +4640,7 @@ pub mod import_default_t_kit {
             module_is_strict: imported_is_strict,
             module_available_platforms: _ignored_todo,
         } = &**module_;
-        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+        check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason)?;
 
         let (loc_opt, export_t) = match &exports.cjs_export {
             Some((def_loc_opt, t)) => {
@@ -4421,8 +4673,9 @@ pub mod import_default_t_kit {
                             .filter_map(|n| n.as_smol_str_opt())
                             .collect();
                         let suggestion = typo_suggestion(&known_exports, local_name);
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ENoDefaultExport(Box::new((
                                 reason.loc().dupe(),
                                 module_name.dupe(),
@@ -4479,6 +4732,7 @@ pub mod import_default_t_kit {
 
     pub fn on_module_t_for_extends<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         reason: Reason,
         _import_kind: ImportKind,
         local_name: &str,
@@ -4492,7 +4746,7 @@ pub mod import_default_t_kit {
             module_is_strict: imported_is_strict,
             module_available_platforms: _ignored_todo,
         } = &**module_;
-        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+        check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason)?;
 
         match &exports.cjs_export {
             Some((def_loc_opt, t)) => {
@@ -4519,8 +4773,9 @@ pub mod import_default_t_kit {
                             .filter_map(|n| n.as_smol_str_opt())
                             .collect();
                         let suggestion = typo_suggestion(&known_exports, local_name);
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ENoDefaultExport(Box::new((
                                 reason.loc().dupe(),
                                 module_name,
@@ -4553,6 +4808,7 @@ pub mod import_named_t_kit {
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_typing_context::Context;
     use flow_typing_errors::error_message::ErrorMessage;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::ImportKind;
     use flow_typing_type::type_::ModuleType;
@@ -4564,13 +4820,42 @@ pub mod import_named_t_kit {
     use flow_typing_type::type_util;
 
     use super::FlowJsException;
-    use super::add_output;
+    use super::add_output_with_env;
     use super::check_nonstrict_import;
     use super::import_type_t_kit;
     use super::import_typeof_t_kit;
 
     pub fn on_module_t<'cx>(
         cx: &Context<'cx>,
+        with_concretized_type: &dyn Fn(
+            &Context<'cx>,
+            Reason,
+            Rc<dyn Fn(Type) -> Type + 'cx>,
+            Type,
+        ) -> Type,
+        reason: Reason,
+        import_kind: ImportKind,
+        export_name: &FlowSmolStr,
+        module_name: Userland,
+        is_strict: bool,
+        module_: &ModuleType,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        on_module_t_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            with_concretized_type,
+            reason,
+            import_kind,
+            export_name,
+            module_name,
+            is_strict,
+            module_,
+        )
+    }
+
+    pub fn on_module_t_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
         with_concretized_type: &dyn Fn(
             &Context<'cx>,
             Reason,
@@ -4591,7 +4876,7 @@ pub mod import_named_t_kit {
             module_available_platforms: _ignored_todo,
         } = &**module_;
 
-        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+        check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason)?;
 
         // When importing from a CommonJS module, we shadow any potential named
         // exports called "default" with a pointer to the raw `module.exports`
@@ -4728,8 +5013,9 @@ pub mod import_named_t_kit {
                     );
                     Ok((ns.name_loc.dupe(), t))
                 } else {
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EImportTypeAsValue(Box::new((
                             reason.loc().dupe(),
                             FlowSmolStr::new(export_name),
@@ -4774,7 +5060,7 @@ pub mod import_named_t_kit {
                         suggestion,
                     )))
                 };
-                add_output(cx, msg)?;
+                add_output_with_env(cx, env, msg)?;
                 Ok((
                     None,
                     Type::new(TypeInner::AnyT(reason, AnySource::AnyError(None))),
@@ -4785,6 +5071,7 @@ pub mod import_named_t_kit {
 
     pub fn on_module_t_for_extends<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         reason: Reason,
         import_kind: ImportKind,
         export_name: &FlowSmolStr,
@@ -4799,7 +5086,7 @@ pub mod import_named_t_kit {
             module_available_platforms: _ignored_todo,
         } = &**module_;
 
-        check_nonstrict_import(cx, is_strict, *imported_is_strict, &reason)?;
+        check_nonstrict_import(cx, env, is_strict, *imported_is_strict, &reason)?;
 
         let mut value_exports_tmap = cx.find_exports(exports.value_exports_tmap);
         if let Some((def_loc_opt, type_)) = &exports.cjs_export {
@@ -4998,6 +5285,7 @@ pub mod assert_export_is_type_t_kit {
     use flow_common::reason::Name;
     use flow_typing_context::Context;
     use flow_typing_errors::error_message::ErrorMessage;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::PolyTData;
@@ -5006,7 +5294,7 @@ pub mod assert_export_is_type_t_kit {
     use flow_typing_type::type_util::reason_of_t;
 
     use crate::flow_js_utils::FlowJsException;
-    use crate::flow_js_utils::add_output;
+    use crate::flow_js_utils::add_output_with_env;
 
     fn is_type(t: &Type) -> bool {
         match t.deref() {
@@ -5028,12 +5316,22 @@ pub mod assert_export_is_type_t_kit {
         name: Name,
         l: Type,
     ) -> Result<Type, FlowJsException> {
+        on_concrete_type_with_env(cx, &FlowJsEnv::entry(), name, l)
+    }
+
+    pub fn on_concrete_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        name: Name,
+        l: Type,
+    ) -> Result<Type, FlowJsException> {
         if is_type(&l) {
             Ok(l)
         } else {
             let reason = reason_of_t(&l).dupe();
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EExportValueAsType(Box::new((reason.loc().dupe(), name))),
             )?;
             Ok(Type::new(TypeInner::AnyT(
@@ -5359,6 +5657,7 @@ pub mod import_export_utils {
     use flow_typing_errors::error_message::EMissingPlatformSupportWithAvailablePlatformsData;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::ImportKind;
     use flow_typing_type::type_::ModuleType;
@@ -5372,16 +5671,17 @@ pub mod import_export_utils {
 
     use super::ExportClassification;
     use super::FlowJsException;
-    use super::add_output;
+    use super::add_output_with_env;
     use super::cannot_import_global_libdef_error;
     use super::import_default_t_kit;
     use super::import_module_ns_t_kit;
     use super::import_named_t_kit;
     use super::import_typeof_t_kit;
-    use super::lookup_builtin_module_error;
+    use super::lookup_builtin_module_error_with_env;
 
     fn check_platform_availability<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         error_loc: ALoc,
         imported_module_available_platforms: Option<&PlatformSet>,
     ) -> Result<(), FlowJsException> {
@@ -5407,7 +5707,7 @@ pub mod import_export_utils {
                             required_platforms,
                         }),
                     );
-                    add_output(cx, message)?;
+                    add_output_with_env(cx, env, message)?;
                 }
                 Ok(())
             }
@@ -5421,12 +5721,34 @@ pub mod import_export_utils {
         loc: ALoc,
         mref: Userland,
     ) -> Result<Result<ModuleType, Type>, FlowJsException> {
+        get_module_type_or_any_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            perform_platform_validation,
+            import_kind_for_untyped_import_validation,
+            loc,
+            mref,
+        )
+    }
+
+    fn get_module_type_or_any_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        perform_platform_validation: bool,
+        import_kind_for_untyped_import_validation: Option<ImportKind>,
+        loc: ALoc,
+        mref: Userland,
+    ) -> Result<Result<ModuleType, Type>, FlowJsException> {
         if cx.in_declare_module() {
             match cx.builtin_module_opt(&mref) {
                 Some((_reason, m)) => Ok(Ok(m.get_forced(cx).dupe())),
                 None => {
-                    let err_t =
-                        lookup_builtin_module_error(cx, &FlowSmolStr::new(mref.as_str()), loc)?;
+                    let err_t = lookup_builtin_module_error_with_env(
+                        cx,
+                        env,
+                        &FlowSmolStr::new(mref.as_str()),
+                        loc,
+                    )?;
                     Ok(Err(err_t))
                 }
             }
@@ -5442,14 +5764,14 @@ pub mod import_export_utils {
                                         loc.dupe(),
                                         mref.dupe(),
                                     )));
-                                    add_output(cx, message)?;
+                                    add_output_with_env(cx, env, message)?;
                                 }
                                 ImportKind::ImportValue => {
                                     let message = ErrorMessage::EUntypedImport(Box::new((
                                         loc.dupe(),
                                         mref.dupe(),
                                     )));
-                                    add_output(cx, message)?;
+                                    add_output_with_env(cx, env, message)?;
                                 }
                             }
                         }
@@ -5458,14 +5780,16 @@ pub mod import_export_utils {
                             mk_reason(VirtualReasonDesc::RModule(mref.dupe()), module_def_loc),
                         ))
                     }
-                    ResolvedRequire::MissingModule => Err(lookup_builtin_module_error(
+                    ResolvedRequire::MissingModule => Err(lookup_builtin_module_error_with_env(
                         cx,
+                        env,
                         &FlowSmolStr::new(mref.as_str()),
                         loc.dupe(),
                     )?),
                     ResolvedRequire::GlobalLibdefModule(libdef) => {
                         Err(cannot_import_global_libdef_error(
                             cx,
+                            env,
                             &FlowSmolStr::new(mref.as_str()),
                             &FlowSmolStr::new(libdef.as_str()),
                             loc.dupe(),
@@ -5480,6 +5804,7 @@ pub mod import_export_utils {
                         if need_platform_validation {
                             check_platform_availability(
                                 cx,
+                                env,
                                 loc.dupe(),
                                 m.module_available_platforms.as_ref(),
                             )?;
@@ -5494,6 +5819,7 @@ pub mod import_export_utils {
 
     pub fn get_imported_type<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         singleton_concretize_type_for_imports_exports: &dyn Fn(
             &Context<'cx>,
             Reason,
@@ -5519,8 +5845,9 @@ pub mod import_export_utils {
         let t = match source_module {
             Ok(m) => {
                 if remote_name == "default" {
-                    let (name_loc_opt, t) = import_default_t_kit::on_module_t(
+                    let (name_loc_opt, t) = import_default_t_kit::on_module_t_with_env(
                         cx,
+                        env,
                         &with_concretized_type,
                         import_reason.dupe(),
                         import_kind,
@@ -5532,8 +5859,9 @@ pub mod import_export_utils {
                     name_def_loc_ref = name_loc_opt;
                     t
                 } else {
-                    let (name_loc_opt, t) = import_named_t_kit::on_module_t(
+                    let (name_loc_opt, t) = import_named_t_kit::on_module_t_with_env(
                         cx,
+                        env,
                         &with_concretized_type,
                         import_reason.dupe(),
                         import_kind.clone(),
@@ -5558,11 +5886,28 @@ pub mod import_export_utils {
         namespace_symbol: Symbol,
         source_module: &Result<ModuleType, Type>,
     ) -> Result<Type, FlowJsException> {
+        get_module_namespace_type_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            namespace_symbol,
+            source_module,
+        )
+    }
+
+    fn get_module_namespace_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: Reason,
+        namespace_symbol: Symbol,
+        source_module: &Result<ModuleType, Type>,
+    ) -> Result<Type, FlowJsException> {
         let is_strict = cx.is_strict();
         Ok(match source_module {
             Ok(m) => {
-                let (values_type, types_tmap) =
-                    import_module_ns_t_kit::on_module_t(cx, false, reason, is_strict, m)?;
+                let (values_type, types_tmap) = import_module_ns_t_kit::on_module_t_with_env(
+                    cx, env, false, reason, is_strict, m,
+                )?;
                 Type::new(TypeInner::NamespaceT(Rc::new(NamespaceType {
                     namespace_symbol,
                     values_type,
@@ -5582,13 +5927,40 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         local_loc: ALoc,
     ) -> Result<Type, FlowJsException> {
+        import_namespace_specifier_type_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            import_reason,
+            import_kind,
+            module_name,
+            namespace_symbol,
+            source_module,
+            local_loc,
+        )
+    }
+
+    fn import_namespace_specifier_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        import_reason: Reason,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        namespace_symbol: Symbol,
+        source_module: &Result<ModuleType, Type>,
+        local_loc: ALoc,
+    ) -> Result<Type, FlowJsException> {
         match import_kind {
-            AstImportKind::ImportType => {
-                get_module_namespace_type(cx, import_reason, namespace_symbol, source_module)
-            }
+            AstImportKind::ImportType => get_module_namespace_type_with_env(
+                cx,
+                env,
+                import_reason,
+                namespace_symbol,
+                source_module,
+            ),
             AstImportKind::ImportTypeof => {
-                let module_ns_t = get_module_namespace_type(
+                let module_ns_t = get_module_namespace_type_with_env(
                     cx,
+                    env,
                     import_reason.dupe(),
                     namespace_symbol,
                     source_module,
@@ -5608,7 +5980,7 @@ pub mod import_export_utils {
                 );
                 let namespace_symbol =
                     Symbol::mk_module_symbol(FlowSmolStr::new(module_name.as_str()), local_loc);
-                get_module_namespace_type(cx, reason, namespace_symbol, source_module)
+                get_module_namespace_type_with_env(cx, env, reason, namespace_symbol, source_module)
             }
         }
     }
@@ -5636,9 +6008,39 @@ pub mod import_export_utils {
         remote_name: &FlowSmolStr,
         local_name: &FlowSmolStr,
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        import_named_specifier_type_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            import_reason,
+            singleton_concretize_type_for_imports_exports,
+            import_kind,
+            module_name,
+            source_module,
+            remote_name,
+            local_name,
+        )
+    }
+
+    fn import_named_specifier_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        import_reason: Reason,
+        singleton_concretize_type_for_imports_exports: &dyn Fn(
+            &Context<'cx>,
+            Reason,
+            Type,
+        )
+            -> Result<Type, FlowJsException>,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        source_module: &Result<ModuleType, Type>,
+        remote_name: &FlowSmolStr,
+        local_name: &FlowSmolStr,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
         let import_kind = type_kind_of_kind(import_kind);
         get_imported_type(
             cx,
+            env,
             singleton_concretize_type_for_imports_exports,
             import_reason,
             module_name,
@@ -5663,9 +6065,37 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         local_name: &FlowSmolStr,
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
+        import_default_specifier_type_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            import_reason,
+            singleton_concretize_type_for_imports_exports,
+            import_kind,
+            module_name,
+            source_module,
+            local_name,
+        )
+    }
+
+    fn import_default_specifier_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        import_reason: Reason,
+        singleton_concretize_type_for_imports_exports: &dyn Fn(
+            &Context<'cx>,
+            Reason,
+            Type,
+        )
+            -> Result<Type, FlowJsException>,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        source_module: &Result<ModuleType, Type>,
+        local_name: &FlowSmolStr,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException> {
         let import_kind = type_kind_of_kind(import_kind);
         get_imported_type(
             cx,
+            env,
             singleton_concretize_type_for_imports_exports,
             import_reason,
             module_name,
@@ -5684,12 +6114,33 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         remote_name: &FlowSmolStr,
     ) -> Result<Type, FlowJsException> {
+        import_named_specifier_type_for_extends_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            import_reason,
+            import_kind,
+            module_name,
+            source_module,
+            remote_name,
+        )
+    }
+
+    fn import_named_specifier_type_for_extends_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        import_reason: Reason,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        source_module: &Result<ModuleType, Type>,
+        remote_name: &FlowSmolStr,
+    ) -> Result<Type, FlowJsException> {
         let import_kind = type_kind_of_kind(import_kind);
         let is_strict = cx.is_strict();
         match source_module {
             Ok(m) => {
                 let (_name_loc_opt, t) = import_named_t_kit::on_module_t_for_extends(
                     cx,
+                    env,
                     import_reason,
                     import_kind,
                     remote_name,
@@ -5711,12 +6162,33 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
         local_name: &FlowSmolStr,
     ) -> Result<Type, FlowJsException> {
+        import_default_specifier_type_for_extends_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            import_reason,
+            import_kind,
+            module_name,
+            source_module,
+            local_name,
+        )
+    }
+
+    fn import_default_specifier_type_for_extends_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        import_reason: Reason,
+        import_kind: &AstImportKind,
+        module_name: Userland,
+        source_module: &Result<ModuleType, Type>,
+        local_name: &FlowSmolStr,
+    ) -> Result<Type, FlowJsException> {
         let import_kind = type_kind_of_kind(import_kind);
         let is_strict = cx.is_strict();
         match source_module {
             Ok(m) => {
                 let (_name_loc_opt, t) = import_default_t_kit::on_module_t_for_extends(
                     cx,
+                    env,
                     import_reason,
                     import_kind,
                     local_name.as_str(),
@@ -5741,11 +6213,35 @@ pub mod import_export_utils {
     where
         R: Fn(&Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
     {
+        cjs_require_type_with_env::<R>(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            reposition,
+            namespace_symbol,
+            standard_cjs_esm_interop,
+            source_module,
+        )
+    }
+
+    fn cjs_require_type_with_env<'cx, R>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: Reason,
+        reposition: R,
+        namespace_symbol: Symbol,
+        standard_cjs_esm_interop: bool,
+        source_module: &Result<ModuleType, Type>,
+    ) -> Result<(Option<ALoc>, Type), FlowJsException>
+    where
+        R: Fn(&Context<'cx>, ALoc, Type) -> Result<Type, JobError>,
+    {
         let is_strict = cx.is_strict();
         Ok(match source_module {
             Ok(m) => {
-                let (t, def_loc) = super::cjs_require_t_kit::on_module_t(
+                let (t, def_loc) = super::cjs_require_t_kit::on_module_t_with_env(
                     cx,
+                    env,
                     reposition,
                     reason,
                     namespace_symbol,
@@ -5770,6 +6266,27 @@ pub mod import_export_utils {
             -> Result<Type, FlowJsException>,
         purpose: ExpectedModulePurpose,
     ) -> Result<Type, FlowJsException> {
+        get_implicitly_imported_react_type_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            loc,
+            singleton_concretize_type_for_imports_exports,
+            purpose,
+        )
+    }
+
+    pub fn get_implicitly_imported_react_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        loc: ALoc,
+        singleton_concretize_type_for_imports_exports: &dyn Fn(
+            &Context<'cx>,
+            Reason,
+            Type,
+        )
+            -> Result<Type, FlowJsException>,
+        purpose: ExpectedModulePurpose,
+    ) -> Result<Type, FlowJsException> {
         let react_userland = Userland::from_smol_str(FlowSmolStr::new("react"));
         let source_module = match cx.builtin_module_opt(&react_userland) {
             Some((_reason, module_type)) => Ok(module_type.get_forced(cx).dupe()),
@@ -5778,8 +6295,9 @@ pub mod import_export_utils {
                     VirtualReasonDesc::RModule(react_userland.dupe()),
                     loc.dupe(),
                 );
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EExpectedModuleLookupFailed(Box::new(
                         EExpectedModuleLookupFailedData {
                             loc: loc.dupe(),
@@ -5841,6 +6359,7 @@ pub mod import_export_utils {
         let name = FlowSmolStr::new(name);
         let (_name_def_loc, t) = get_imported_type(
             cx,
+            env,
             singleton_concretize_type_for_imports_exports,
             reason,
             react_userland,
@@ -5923,6 +6442,7 @@ pub mod import_export_utils {
 
 pub fn check_method_unbinding<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: &UseOp,
     method_accessible: bool,
     reason_op: &Reason,
@@ -5981,8 +6501,9 @@ pub fn check_method_unbinding<'cx>(
                 None => {
                     if !cx.type_strictness_kind().is_typescript_loose() {
                         let reason_op_from_propref = reason_of_propref(propref);
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
                                 use_op: use_op.dupe(),
                                 reason_op: reason_op_from_propref.dupe(),
@@ -6067,7 +6588,11 @@ pub fn intlike_str_key_as_num(l: &Type) -> Option<Type> {
     )))
 }
 
-pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> Type {
+pub fn type_of_key_name(name: Name, reason: &Reason) -> Type {
+    type_of_key_name_with_env(&FlowJsEnv::entry(), name, reason)
+}
+
+pub fn type_of_key_name_with_env(env: &FlowJsEnv, name: Name, reason: &Reason) -> Type {
     use flow_typing_type::type_::DefT;
 
     let str = match &name {
@@ -6105,7 +6630,7 @@ pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> 
     // f({1: true});
     // ```
     // So, if we are in implicit instantiation, we always treat this as a string.
-    if !cx.in_implicit_instantiation()
+    if !env.in_implicit_instantiation()
         && let Some(value) = intlike_str_safe_int(str)
     {
         let key_reason = reason
@@ -6141,6 +6666,7 @@ pub trait GetPropHelper {
 
     fn dict_read_check<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
         pair: (&Type, &Type),
@@ -6148,6 +6674,7 @@ pub trait GetPropHelper {
 
     fn cg_lookup<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         obj_t: Type,
         method_accessible: bool,
@@ -6157,6 +6684,7 @@ pub trait GetPropHelper {
 
     fn reposition<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
@@ -6164,6 +6692,7 @@ pub trait GetPropHelper {
 
     fn mk_react_dro<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         use_op: UseOp,
         dro: &flow_typing_type::type_::ReactDro,
         t: Type,
@@ -6171,6 +6700,7 @@ pub trait GetPropHelper {
 
     fn return_<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         use_op: UseOp,
         trace: DepthTrace,
         t: Type,
@@ -6178,12 +6708,14 @@ pub trait GetPropHelper {
 
     fn error_type<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         reason: Reason,
     ) -> Result<Self::R, FlowJsException>;
 
     fn cg_get_prop<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         t: Type,
         args: (
@@ -6204,6 +6736,7 @@ pub trait GetPropHelper {
     fn prop_overlaps_with_indexer() -> Option<
         for<'b> fn(
             &Context<'b>,
+            &FlowJsEnv,
             &flow_common::reason::Name,
             &Reason,
             &Type,
@@ -6226,6 +6759,7 @@ pub mod get_prop_t_kit {
     use flow_typing_errors::error_message::EObjectComputedPropertyAccessData;
     use flow_typing_errors::error_message::EPropNotReadableData;
     use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_;
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::DefTInner;
@@ -6260,18 +6794,19 @@ pub mod get_prop_t_kit {
     use super::CgLookupArgs;
     use super::FlowJsException;
     use super::GetPropHelper;
-    use super::add_output;
+    use super::add_output_with_env;
     use super::check_method_unbinding;
     use super::enum_proto;
     use super::is_dictionary_exempt;
     use super::is_exception_to_react_dro;
     use super::is_munged_prop_name;
     use super::tvar_visitors;
-    use super::type_of_key_name;
+    use super::type_of_key_name_with_env;
     use crate::obj_type;
 
     pub fn perform_read_prop_action<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: UseOp,
         propref: &PropRef,
@@ -6284,15 +6819,16 @@ pub mod get_prop_t_kit {
                 let loc = ureason.loc().dupe();
                 let t = match react_dro {
                     Some(dro) if !is_exception_to_react_dro(propref) => {
-                        F::mk_react_dro(cx, use_op.dupe(), dro, t)
+                        F::mk_react_dro(cx, env, use_op.dupe(), dro, t)
                     }
                     _ => t,
                 };
                 F::return_(
                     cx,
+                    env,
                     unknown_use(),
                     *trace,
-                    F::reposition(cx, Some(*trace), loc, t)?,
+                    F::reposition(cx, env, Some(*trace), loc, t)?,
                 )
             }
             None => {
@@ -6316,8 +6852,8 @@ pub mod get_prop_t_kit {
                         use_op,
                     }),
                 );
-                add_output(cx, msg)?;
-                F::error_type(cx, *trace, ureason.dupe())
+                add_output_with_env(cx, env, msg)?;
+                F::error_type(cx, env, *trace, ureason.dupe())
             }
         }
     }
@@ -6328,6 +6864,7 @@ pub mod get_prop_t_kit {
     /// accepts the match and reports any mismatch as an incompatibility instead.
     fn named_prop_matches_indexer<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: &UseOp,
         name: &Name,
@@ -6336,14 +6873,15 @@ pub mod get_prop_t_kit {
     ) -> Result<bool, FlowJsException> {
         match F::prop_overlaps_with_indexer() {
             Some(prop_overlaps_with_indexer) if !tvar_visitors::has_unresolved_tvars(cx, key) => {
-                Ok(prop_overlaps_with_indexer(cx, name, reason_op, key)?)
+                Ok(prop_overlaps_with_indexer(cx, env, name, reason_op, key)?)
             }
             _ => {
                 F::dict_read_check(
                     cx,
+                    env,
                     *trace,
                     use_op,
-                    (&type_of_key_name(cx, name.dupe(), reason_op), key),
+                    (&type_of_key_name_with_env(env, name.dupe(), reason_op), key),
                 )?;
                 Ok(true)
             }
@@ -6352,6 +6890,7 @@ pub mod get_prop_t_kit {
 
     pub fn get_instance_prop<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: &UseOp,
         ignore_dicts: bool,
@@ -6389,9 +6928,10 @@ pub mod get_prop_t_kit {
             ) if !ignore_dicts => {
                 F::dict_read_check(
                     cx,
+                    env,
                     *trace,
                     use_op,
-                    (&type_of_key_name(cx, name.dupe(), reason_op), key),
+                    (&type_of_key_name_with_env(env, name.dupe(), reason_op), key),
                 )?;
                 Ok(Some((
                     Property::new(PropertyInner::Field(Box::new(FieldData {
@@ -6421,7 +6961,7 @@ pub mod get_prop_t_kit {
                 // indexer declared on an earlier `extends` branch must not shadow a
                 // property declared on a later one, so the candidate is held back until
                 // the whole chain has been searched. See `IndexerFallbackData`.
-                if !named_prop_matches_indexer::<F>(cx, trace, use_op, name, reason_op, key)? {
+                if !named_prop_matches_indexer::<F>(cx, env, trace, use_op, name, reason_op, key)? {
                     return Ok(None);
                 }
                 Ok(Some((
@@ -6444,7 +6984,7 @@ pub mod get_prop_t_kit {
                     ..
                 }),
             ) if !ignore_dicts => {
-                F::dict_read_check(cx, *trace, use_op, (k, key))?;
+                F::dict_read_check(cx, env, *trace, use_op, (k, key))?;
                 Ok(Some((
                     Property::new(PropertyInner::Field(Box::new(FieldData {
                         preferred_def_locs: None,
@@ -6466,6 +7006,7 @@ pub mod get_prop_t_kit {
     /// exhausted.
     pub fn get_instance_prop_for_lookup<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: &UseOp,
         ignore_dicts: bool,
@@ -6481,8 +7022,16 @@ pub mod get_prop_t_kit {
         ),
         FlowJsException,
     > {
-        let property =
-            get_instance_prop::<F>(cx, trace, use_op, ignore_dicts, inst, propref, reason_op)?;
+        let property = get_instance_prop::<F>(
+            cx,
+            env,
+            trace,
+            use_op,
+            ignore_dicts,
+            inst,
+            propref,
+            reason_op,
+        )?;
 
         let Some((property, PropertySource::IndexerProperty)) = property else {
             return Ok((property, None));
@@ -6517,6 +7066,7 @@ pub mod get_prop_t_kit {
 
     pub fn read_instance_prop<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: &UseOp,
         instance_t: &Type,
@@ -6532,6 +7082,7 @@ pub mod get_prop_t_kit {
     ) -> Result<F::R, FlowJsException> {
         let (property, indexer_fallback) = get_instance_prop_for_lookup::<F>(
             cx,
+            env,
             trace,
             use_op,
             true,
@@ -6547,10 +7098,19 @@ pub mod get_prop_t_kit {
             cx.test_prop_hit(id);
         }
         if let Some((p, _target_kind)) = property {
-            let p =
-                check_method_unbinding(cx, use_op, method_accessible, reason_op, propref, hint, p)?;
+            let p = check_method_unbinding(
+                cx,
+                env,
+                use_op,
+                method_accessible,
+                reason_op,
+                propref,
+                hint,
+                p,
+            )?;
             return perform_read_prop_action::<F>(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 propref,
@@ -6570,6 +7130,7 @@ pub mod get_prop_t_kit {
             .collect();
         F::cg_lookup(
             cx,
+            env,
             *trace,
             instance_t.dupe(),
             method_accessible,
@@ -6588,6 +7149,7 @@ pub mod get_prop_t_kit {
     // let on_EnumObjectT cx trace enum_reason ~enum_object_t ~enum_value_t ~enum_info access =
     pub fn on_enum_object_t<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         enum_reason: &Reason,
         enum_object_t: Type,
@@ -6608,8 +7170,9 @@ pub mod get_prop_t_kit {
                         member_name.display_smol_str(),
                     ),
                 );
-                add_output(
+                add_output_with_env(
                     cx,
+                    env,
                     flow_typing_errors::error_message::ErrorMessage::EEnumError(
                         flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess(
                             Box::new(EnumInvalidMemberAccessData {
@@ -6623,6 +7186,7 @@ pub mod get_prop_t_kit {
                 )?;
                 F::return_(
                     cx,
+                    env,
                     unknown_use(),
                     *trace,
                     any_t::error(access_reason.dupe()),
@@ -6637,11 +7201,12 @@ pub mod get_prop_t_kit {
                 if members.contains_key(name) {
                     let enum_value_t = F::reposition(
                         cx,
+                        env,
                         Some(*trace),
                         access_reason.loc().dupe(),
                         enum_value_t.dupe(),
                     )?;
-                    F::return_(cx, unknown_use(), *trace, enum_value_t)
+                    F::return_(cx, env, unknown_use(), *trace, enum_value_t)
                 } else {
                     let keys_owned: Vec<_> = members.keys().map(|k| k.dupe()).collect();
                     let keys: Vec<&flow_data_structure_wrapper::smol_str::FlowSmolStr> =
@@ -6653,18 +7218,20 @@ pub mod get_prop_t_kit {
             _ => {
                 let t = enum_proto(
                     cx,
+                    env,
                     access_reason.dupe(),
                     enum_object_t.dupe(),
                     enum_value_t.dupe(),
                     representation_t.dupe(),
                 );
-                F::cg_get_prop(cx, *trace, t, access.clone())
+                F::cg_get_prop(cx, env, *trace, t, access.clone())
             }
         }
     }
 
     pub fn on_array_length<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         reason: Reason,
         inexact: bool,
@@ -6676,9 +7243,10 @@ pub mod get_prop_t_kit {
         let t = type_util::tuple_length(reason, inexact, arity.0, arity.1);
         F::return_(
             cx,
+            env,
             unknown_use(),
             *trace,
-            F::reposition(cx, Some(*trace), loc, t)?,
+            F::reposition(cx, env, Some(*trace), loc, t)?,
         )
     }
 
@@ -6689,6 +7257,7 @@ pub mod get_prop_t_kit {
     // never_union_void_on_computed_prop_access is the flag to disable the union void behavior.
     pub fn get_obj_prop<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: &UseOp,
         skip_optional: bool,
@@ -6749,7 +7318,7 @@ pub mod get_prop_t_kit {
                 }),
             ) if !is_dictionary_exempt(name) => {
                 //   Dictionaries match all property reads
-                if !named_prop_matches_indexer::<F>(cx, trace, use_op, name, reason_op, key)? {
+                if !named_prop_matches_indexer::<F>(cx, env, trace, use_op, name, reason_op, key)? {
                     return Ok(None);
                 }
                 let type_ = union_void_if_instructed(value.dupe());
@@ -6771,7 +7340,7 @@ pub mod get_prop_t_kit {
                     ..
                 }),
             ) => {
-                F::dict_read_check(cx, *trace, use_op, (k, key))?;
+                F::dict_read_check(cx, env, *trace, use_op, (k, key))?;
                 let type_ = union_void_if_instructed(value.dupe());
                 Ok(Some((
                     PropertyType::OrdinaryField {
@@ -6787,6 +7356,7 @@ pub mod get_prop_t_kit {
 
     pub fn read_obj_prop<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: &DepthTrace,
         use_op: UseOp,
         from_annot: bool,
@@ -6803,6 +7373,7 @@ pub mod get_prop_t_kit {
         ));
         match get_obj_prop::<F>(
             cx,
+            env,
             trace,
             &use_op,
             skip_optional,
@@ -6817,6 +7388,7 @@ pub mod get_prop_t_kit {
                 }
                 perform_read_prop_action::<F>(
                     cx,
+                    env,
                     trace,
                     use_op,
                     propref,
@@ -6863,44 +7435,47 @@ pub mod get_prop_t_kit {
                         use_op,
                         ids: [o.props_tmap.dupe()].into_iter().collect(),
                     };
-                    F::cg_lookup(cx, *trace, l, true, o.proto_t.dupe(), data)
+                    F::cg_lookup(cx, env, *trace, l, true, o.proto_t.dupe(), data)
                 }
                 PropRef::Computed(elem_t) => match elem_t.deref() {
                     TypeInner::OpenT(_) => {
                         let loc = type_util::loc_of_t(elem_t).dupe();
-                        add_output(
+                        add_output_with_env(
                                     cx,
+                                    env,
                                     flow_typing_errors::error_message::ErrorMessage::EInternal(Box::new((
                                         loc,
                                         flow_typing_errors::error_message::InternalError::PropRefComputedOpen,
                                     ))),
                                 )?;
-                        F::error_type(cx, *trace, reason_op)
+                        F::error_type(cx, env, *trace, reason_op)
                     }
                     TypeInner::GenericT(box GenericTData { bound, .. }) if matches!(bound.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::SingletonStrT { .. })) =>
                     {
                         let loc = type_util::loc_of_t(elem_t).dupe();
-                        add_output(
+                        add_output_with_env(
                                     cx,
+                                    env,
                                     flow_typing_errors::error_message::ErrorMessage::EInternal(Box::new((
                                         loc,
                                         flow_typing_errors::error_message::InternalError::PropRefComputedLiteral,
                                     ))),
                                 )?;
-                        F::error_type(cx, *trace, reason_op)
+                        F::error_type(cx, env, *trace, reason_op)
                     }
                     TypeInner::DefT(_, d)
                         if matches!(d.deref(), DefTInner::SingletonStrT { .. }) =>
                     {
                         let loc = type_util::loc_of_t(elem_t).dupe();
-                        add_output(
+                        add_output_with_env(
                                     cx,
+                                    env,
                                     flow_typing_errors::error_message::ErrorMessage::EInternal(Box::new((
                                         loc,
                                         flow_typing_errors::error_message::InternalError::PropRefComputedLiteral,
                                     ))),
                                 )?;
-                        F::error_type(cx, *trace, reason_op)
+                        F::error_type(cx, env, *trace, reason_op)
                     }
                     TypeInner::GenericT(box GenericTData { bound, .. }) if matches!(bound.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::SingletonNumT { .. })) =>
                     {
@@ -6916,15 +7491,16 @@ pub mod get_prop_t_kit {
                         };
                         let reason_prop = reason_of_t(elem_t).dupe();
                         let kind = flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(value);
-                        add_output(
+                        add_output_with_env(
                                     cx,
+                                    env,
                                     flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                                         reason_obj: reason_obj.dupe(),
                                         reason_prop,
                                         kind,
                                     })),
                                 )?;
-                        F::error_type(cx, *trace, reason_op)
+                        F::error_type(cx, env, *trace, reason_op)
                     }
                     TypeInner::DefT(_, d)
                         if matches!(d.deref(), DefTInner::SingletonNumT { .. }) =>
@@ -6938,30 +7514,32 @@ pub mod get_prop_t_kit {
                         };
                         let reason_prop = reason_of_t(elem_t).dupe();
                         let kind = flow_typing_errors::intermediate_error_types::InvalidObjKey::kind_of_num_value(value);
-                        add_output(
+                        add_output_with_env(
                                     cx,
+                                    env,
                                     flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                                         reason_obj: reason_obj.dupe(),
                                         reason_prop,
                                         kind,
                                     })),
                                 )?;
-                        F::error_type(cx, *trace, reason_op)
+                        F::error_type(cx, env, *trace, reason_op)
                     }
                     TypeInner::AnyT(_, src) => {
-                        F::return_(cx, unknown_use(), *trace, any_t::why(*src, reason_op))
+                        F::return_(cx, env, unknown_use(), *trace, any_t::why(*src, reason_op))
                     }
                     _ => {
                         let reason_prop = reason_of_t(elem_t).dupe();
-                        add_output(
+                        add_output_with_env(
                                     cx,
+                                    env,
                                     flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
                                         reason_obj: reason_obj.dupe(),
                                         reason_prop,
                                         kind: flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
                                     })),
                                 )?;
-                        F::error_type(cx, *trace, reason_op)
+                        F::error_type(cx, env, *trace, reason_op)
                     }
                 },
             },
@@ -6976,6 +7554,7 @@ pub mod get_prop_t_kit {
 // See docs GetPropsKit.get_obj_prop for explanation of never_union_void_on_computed_prop_access
 pub fn array_elem_check<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     write_action: bool,
     never_union_void_on_computed_prop_access: bool,
     l: &Type,
@@ -7088,8 +7667,9 @@ pub fn array_elem_check<'cx>(
                                         if write_action
                                             && !Polarity::compat(*polarity, Polarity::Negative)
                                         {
-                                            add_output(
+                                            add_output_with_env(
                                                 cx,
+                                                env,
                                                 ErrorMessage::ETupleElementNotWritable(Box::new(
                                                     ETupleElementNotWritableData {
                                                         use_op: use_op.dupe(),
@@ -7103,8 +7683,9 @@ pub fn array_elem_check<'cx>(
                                         } else if !write_action
                                             && !Polarity::compat(*polarity, Polarity::Positive)
                                         {
-                                            add_output(
+                                            add_output_with_env(
                                                 cx,
+                                                env,
                                                 ErrorMessage::ETupleElementNotReadable(Box::new(
                                                     ETupleElementNotReadableData {
                                                         use_op: use_op.dupe(),
@@ -7149,8 +7730,9 @@ pub fn array_elem_check<'cx>(
                                     }
                                     None => {
                                         if is_tuple {
-                                            add_output(
+                                            add_output_with_env(
                                                 cx,
+                                                env,
                                                 ErrorMessage::ETupleOutOfBounds(Box::new(
                                                     ETupleOutOfBoundsData {
                                                         use_op: use_op.dupe(),
@@ -7178,8 +7760,9 @@ pub fn array_elem_check<'cx>(
                             Err(_) => {
                                 // not an integer index
                                 if is_tuple {
-                                    add_output(
+                                    add_output_with_env(
                                         cx,
+                                        env,
                                         ErrorMessage::ETupleNonIntegerIndex(Box::new(
                                             ETupleNonIntegerIndexData {
                                                 use_op: use_op.dupe(),
@@ -7206,8 +7789,9 @@ pub fn array_elem_check<'cx>(
 
     if let Some(dro) = &react_dro {
         if write_action {
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EROArrayWrite(
                     reason.loc().dupe(),
                     VirtualUseOp::Frame(
@@ -7230,10 +7814,14 @@ pub fn array_elem_check<'cx>(
             },
             None => ErrorMessage::EROArrayWrite(reason.loc().dupe(), use_op.dupe()),
         };
-        add_output(cx, error)?;
+        add_output_with_env(cx, env, error)?;
     }
 
     Ok((value, is_tuple, use_op, react_dro))
+}
+
+pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type::type_::PropRef {
+    propref_for_elem_t_with_env(cx, &FlowJsEnv::entry(), l)
 }
 
 // let propref_for_elem_t cx l =
@@ -7254,7 +7842,11 @@ pub fn array_elem_check<'cx>(
 //     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
 //     mk_named_prop ~reason ~from_indexed_access:true name
 //   | l -> Computed l
-pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type::type_::PropRef {
+pub fn propref_for_elem_t_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    l: &Type,
+) -> flow_typing_type::type_::PropRef {
     use flow_common::js_number::ecma_string_of_float;
     use flow_common::js_number::is_float_safe_integer;
     use flow_typing_type::type_::DefTInner;
@@ -7269,7 +7861,7 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
             if let Some(upper_t) = &nominal_type.upper_t {
                 if let TypeInner::DefT(_, def) = upper_t.deref() {
                     if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
-                        update_lit_type_from_annot(cx, l);
+                        update_lit_type_from_annot(cx, env, l);
                         let name = Name::new(name.dupe());
                         let reason = reason
                             .dupe()
@@ -7278,7 +7870,7 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
                     }
                     if let DefTInner::SingletonNumT { value, .. } = def.deref() {
                         if is_float_safe_integer(value.0) {
-                            update_lit_type_from_annot(cx, l);
+                            update_lit_type_from_annot(cx, env, l);
                             let reason =
                                 reason
                                     .dupe()
@@ -7303,7 +7895,7 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
         TypeInner::GenericT(box GenericTData { bound, reason, .. }) => {
             if let TypeInner::DefT(_, def) = bound.deref() {
                 if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
-                    update_lit_type_from_annot(cx, l);
+                    update_lit_type_from_annot(cx, env, l);
                     let name = Name::new(name.dupe());
                     let reason = reason
                         .dupe()
@@ -7312,7 +7904,7 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
                 }
                 if let DefTInner::SingletonNumT { value, .. } = def.deref() {
                     if is_float_safe_integer(value.0) {
-                        update_lit_type_from_annot(cx, l);
+                        update_lit_type_from_annot(cx, env, l);
                         let reason =
                             reason
                                 .dupe()
@@ -7335,7 +7927,7 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
         }
         TypeInner::DefT(reason, def) => {
             if let DefTInner::SingletonStrT { value: name, .. } = def.deref() {
-                update_lit_type_from_annot(cx, l);
+                update_lit_type_from_annot(cx, env, l);
                 let name = Name::new(name.dupe());
                 // let reason = replace_desc_reason (RProperty (Some name)) reason in
                 let reason = reason
@@ -7352,7 +7944,7 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
             }
             if let DefTInner::SingletonNumT { value, .. } = def.deref() {
                 if is_float_safe_integer(value.0) {
-                    update_lit_type_from_annot(cx, l);
+                    update_lit_type_from_annot(cx, env, l);
                     let reason = reason
                         .dupe()
                         .replace_desc(VirtualReasonDesc::RProperty(Some(Name::new(
@@ -7368,8 +7960,8 @@ pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type:
     }
 }
 
-pub fn keylist_of_props<'cx>(
-    cx: &Context<'cx>,
+pub fn keylist_of_props(
+    env: &FlowJsEnv,
     props: &flow_typing_type::type_::properties::PropertiesMap,
     reason_op: &Reason,
     include_symbols: bool,
@@ -7385,7 +7977,7 @@ pub fn keylist_of_props<'cx>(
         // omits symbol keys, matching JavaScript.
         let Name::Str(name) = name else {
             if include_symbols {
-                acc.push(type_of_key_name(cx, name.dupe(), reason_op));
+                acc.push(type_of_key_name_with_env(env, name.dupe(), reason_op));
             }
             continue;
         };
@@ -7512,18 +8104,20 @@ pub fn key_sources_of_instance_t<E>(
 
 pub fn keylist_of_prop_ids(
     cx: &Context<'_>,
+    env: &FlowJsEnv,
     prop_ids: &[properties::Id],
     reason_op: &Reason,
     include_symbols: bool,
 ) -> Vec<Type> {
     prop_ids
         .iter()
-        .flat_map(|id| keylist_of_props(cx, &cx.find_props(id.dupe()), reason_op, include_symbols))
+        .flat_map(|id| keylist_of_props(env, &cx.find_props(id.dupe()), reason_op, include_symbols))
         .collect()
 }
 
 pub fn objt_to_obj_rest<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     props_tmap: flow_typing_type::type_::properties::Id,
     reachable_targs: Option<Rc<[(Type, flow_common::polarity::Polarity)]>>,
     obj_kind: flow_typing_type::type_::ObjKind,
@@ -7555,8 +8149,9 @@ pub fn objt_to_obj_rest<'cx>(
             let new_prop = match p.deref() {
                 PropertyInner::Field(fd) => {
                     if !Polarity::compat(fd.polarity, Polarity::Positive) {
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                                 prop_loc: reason_of_t(&fd.type_).loc().dupe(),
                                 prop_name: Some(name.dupe()),
@@ -7572,8 +8167,9 @@ pub fn objt_to_obj_rest<'cx>(
                     })))
                 }
                 PropertyInner::Set { key_loc: _, type_ } => {
-                    add_output(
+                    add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotReadable(Box::new(EPropNotReadableData {
                             prop_loc: reason_of_t(type_).loc().dupe(),
                             prop_name: Some(name.dupe()),
@@ -7716,6 +8312,7 @@ pub fn unary_negate_bigint_lit(
 
 pub fn flow_unary_arith<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     l: &Type,
     reason: Reason,
     kind: UnaryArithKind,
@@ -7757,14 +8354,22 @@ pub fn flow_unary_arith<'cx>(
             }
             DefTInner::BigIntGeneralT { .. } => Ok(l.dupe()),
             _ => {
-                add_output(cx, ErrorMessage::EArithmeticOperand(reason_of_t(l).dupe()))?;
+                add_output_with_env(
+                    cx,
+                    env,
+                    ErrorMessage::EArithmeticOperand(reason_of_t(l).dupe()),
+                )?;
                 Ok(any_t::error(reason))
             }
         },
         (Plus, TypeInner::DefT(reason_bigint, def_t))
             if matches!(def_t.deref(), DefTInner::BigIntGeneralT { .. }) =>
         {
-            add_output(cx, ErrorMessage::EBigIntNumCoerce(reason_bigint.dupe()))?;
+            add_output_with_env(
+                cx,
+                env,
+                ErrorMessage::EBigIntNumCoerce(reason_bigint.dupe()),
+            )?;
             Ok(any_t::error(reason))
         }
         (Plus, _) => Ok(num_module_t::why(reason)),
@@ -7805,7 +8410,11 @@ pub fn flow_unary_arith<'cx>(
             Ok(any_t::why(src, reason))
         }
         (_, _) => {
-            add_output(cx, ErrorMessage::EArithmeticOperand(reason_of_t(l).dupe()))?;
+            add_output_with_env(
+                cx,
+                env,
+                ErrorMessage::EArithmeticOperand(reason_of_t(l).dupe()),
+            )?;
             Ok(any_t::error(reason))
         }
     }
@@ -7813,6 +8422,7 @@ pub fn flow_unary_arith<'cx>(
 
 pub fn flow_arith<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     l: &Type,
     r: &Type,
@@ -7857,7 +8467,7 @@ pub fn flow_arith<'cx>(
                     DefTInner::BigIntGeneralT { .. } | DefTInner::SingletonBigIntT { .. }
                 ) =>
         {
-            add_output(cx, ErrorMessage::EBigIntRShift3(bigint_reason.dupe()))?;
+            add_output_with_env(cx, env, ErrorMessage::EBigIntRShift3(bigint_reason.dupe()))?;
             Ok(any_t::error(reason))
         }
         (TypeInner::DefT(_, l_def), TypeInner::DefT(_, r_def))
@@ -7896,8 +8506,9 @@ pub fn flow_arith<'cx>(
             Ok(str_module_t::why(reason))
         }
         _ => {
-            add_output(
+            add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                     loc: reason.loc().dupe(),
                     reason_l: reason_of_t(l).dupe(),
@@ -8061,6 +8672,7 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
 
 pub fn validate_tuple_elements<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason_tuple: &Reason,
     error_on_req_after_opt: bool,
     elements: &[flow_typing_type::type_::TupleElement],
@@ -8088,8 +8700,9 @@ pub fn validate_tuple_elements<'cx>(
                     ..
                 }) if valid => {
                     if error_on_req_after_opt {
-                        add_output(
+                        add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ETupleRequiredAfterOptional(Box::new(
                                 ETupleRequiredAfterOptionalData {
                                     reason_tuple: reason_tuple.dupe(),
@@ -8114,6 +8727,38 @@ pub fn validate_tuple_elements<'cx>(
 
 pub fn mk_tuple_type<'cx, F>(
     cx: &Context<'cx>,
+    strictness_kind: TypeStrictnessKind,
+    id: flow_typing_type::type_::eval::Id,
+    mk_type_destructor: F,
+    inexact: bool,
+    reason: Reason,
+    elements: Vec<flow_typing_type::type_::UnresolvedParam>,
+) -> Result<Type, FlowJsException>
+where
+    F: FnOnce(
+        &Context<'cx>,
+        UseOp,
+        Reason,
+        Type,
+        flow_typing_type::type_::Destructor,
+        flow_typing_type::type_::eval::Id,
+    ) -> Result<Type, FlowJsException>,
+{
+    mk_tuple_type_with_env::<F>(
+        cx,
+        &FlowJsEnv::entry(),
+        strictness_kind,
+        id,
+        mk_type_destructor,
+        inexact,
+        reason,
+        elements,
+    )
+}
+
+fn mk_tuple_type_with_env<'cx, F>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     strictness_kind: TypeStrictnessKind,
     id: flow_typing_type::type_::eval::Id,
     mk_type_destructor: F,
@@ -8206,7 +8851,7 @@ where
                 r.reverse();
                 r.iter().map(|(el, _)| el.clone()).collect()
             };
-            let (valid, arity) = validate_tuple_elements(cx, &reason, true, &elements)?;
+            let (valid, arity) = validate_tuple_elements(cx, env, &reason, true, &elements)?;
             let arity = (arity.0 as i32, arity.1 as i32);
 
             if valid {
@@ -8881,7 +9526,7 @@ pub mod render_types {
 pub mod callee_recorder {
     use dupe::Dupe;
     use flow_common::reason::Reason;
-    use flow_typing_context::Context;
+    use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::CallTData;
     use flow_typing_type::type_::SpecializedCallee;
     use flow_typing_type::type_::Type;
@@ -8895,8 +9540,8 @@ pub mod callee_recorder {
         All,
     }
 
-    fn add_tast<'cx>(cx: &Context<'cx>, l: Type, specialized_callee: &SpecializedCallee) {
-        match cx.speculation_id() {
+    fn add_tast(env: &FlowJsEnv, l: Type, specialized_callee: &SpecializedCallee) {
+        match env.speculation_id() {
             Some(id) if Some(id.dupe()) != specialized_callee.init_speculation_state => {
                 // It is possible that the call we are inspecting was initiated in a speculative
                 // state. It is important to compare with the state during the beginning of the
@@ -8917,8 +9562,8 @@ pub mod callee_recorder {
     // intersection types. These would appear under speculation, so we can effectively
     // enforce this constraint by checking that we are not in a speculation enviornment.
     // Also we skip voided out results in case of optional chaining.
-    fn add_signature_help<'cx>(cx: &Context<'cx>, l: Type, specialized_callee: &SpecializedCallee) {
-        if cx.speculation_id().is_none() {
+    fn add_signature_help(env: &FlowJsEnv, l: Type, specialized_callee: &SpecializedCallee) {
+        if env.speculation_id().is_none() {
             specialized_callee.sig_help.borrow_mut().push_front(l);
         }
     }
@@ -8937,8 +9582,8 @@ pub mod callee_recorder {
         }
     }
 
-    pub fn add_callee<'cx>(
-        cx: &Context<'cx>,
+    pub fn add_callee(
+        env: &FlowJsEnv,
         kind: Kind,
         l: Type,
         specialized_callee: Option<&SpecializedCallee>,
@@ -8947,18 +9592,18 @@ pub mod callee_recorder {
             // Avoid recording results computed during implicit instantiation. We redo the
             // call after the instantiation portion using the concretized results. We will
             // record that latter call result.
-            if !cx.in_implicit_instantiation() {
+            if !env.in_implicit_instantiation() {
                 if do_tast(kind) {
-                    add_tast(cx, l.dupe(), specialized_callee);
+                    add_tast(env, l.dupe(), specialized_callee);
                 }
                 if do_sig_help(kind) {
-                    add_signature_help(cx, l, specialized_callee);
+                    add_signature_help(env, l, specialized_callee);
                 }
             }
         }
     }
 
-    pub fn add_callee_use<'cx, CX>(cx: &Context<'cx>, kind: Kind, l: Type, u: &UseT<CX>) {
+    pub fn add_callee_use<CX>(env: &FlowJsEnv, kind: Kind, l: Type, u: &UseT<CX>) {
         use flow_typing_type::type_::UseTInner;
         match &**u {
             UseTInner::CallT(box CallTData { call_action, .. }) => match call_action.as_ref() {
@@ -8968,7 +9613,7 @@ pub mod callee_recorder {
                         ..
                     },
                 ) => {
-                    add_callee(cx, kind, l, call_specialized_callee.as_ref());
+                    add_callee(env, kind, l, call_specialized_callee.as_ref());
                 }
                 _ => {}
             },

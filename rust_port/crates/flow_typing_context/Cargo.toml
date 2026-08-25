@@ -21,7 +21,6 @@ flow_typing_errors = { path = "../flow_typing_errors" }
 flow_typing_exists_check = { path = "../flow_typing_exists_check" }
 flow_typing_generics = { path = "../flow_typing_generics" }
 flow_typing_loc_env = { path = "../flow_typing_loc_env" }
-flow_typing_speculation_state = { path = "../flow_typing_speculation_state" }
 flow_typing_spread_cache = { path = "../flow_typing_spread_cache" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }

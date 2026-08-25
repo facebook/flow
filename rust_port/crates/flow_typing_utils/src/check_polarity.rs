@@ -20,6 +20,7 @@ use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
@@ -52,8 +53,19 @@ pub fn check_polarity<'cx>(
     polarity: Polarity,
     t: &Type,
 ) -> Result<(), FlowJsException> {
+    check_polarity_with_env(cx, &FlowJsEnv::entry(), tparams, polarity, t)
+}
+
+fn check_polarity_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    tparams: &BTreeMap<SubstName, TypeParam>,
+    polarity: Polarity,
+    t: &Type,
+) -> Result<(), FlowJsException> {
     check_polarity_impl(
         cx,
+        env,
         Some(DepthTrace::unit_trace()),
         &mut HashSet::new(),
         tparams,
@@ -66,6 +78,7 @@ pub fn check_polarity<'cx>(
 // [seen] is the set of visited EvalT ids
 fn check_polarity_impl<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -80,13 +93,14 @@ fn check_polarity_impl<'cx>(
             bound,
             ..
         }) => match tparams.get(name) {
-            None => check_polarity_impl(cx, trace, seen, tparams, polarity, bound)?,
+            None => check_polarity_impl(cx, env, trace, seen, tparams, polarity, bound)?,
             Some(tp) => {
                 if !Polarity::compat(tp.polarity, polarity)
                     && !flow_common::files::has_ts_ext(cx.file())
                 {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPolarityMismatch(Box::new(EPolarityMismatchData {
                             loc: reason.loc().dupe(),
                             type_param_loc: reason.def_loc().dupe(),
@@ -109,15 +123,15 @@ fn check_polarity_impl<'cx>(
         | TypeInner::NullProtoT(_)
         | TypeInner::ObjProtoT(_) => {}
         TypeInner::OptionalT { type_, .. } | TypeInner::MaybeT(_, type_) => {
-            check_polarity_impl(cx, trace, seen, tparams, polarity, type_)?;
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, type_)?;
         }
         TypeInner::TemplateLiteralT { types, .. } => {
             for t in types {
-                check_polarity_impl(cx, trace, seen, tparams, polarity, t)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, t)?;
             }
         }
         TypeInner::StringMappingT { arg, .. } => {
-            check_polarity_impl(cx, trace, seen, tparams, polarity, arg)?;
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, arg)?;
         }
         TypeInner::NamespaceT(ns) => {
             let NamespaceType {
@@ -125,17 +139,26 @@ fn check_polarity_impl<'cx>(
                 values_type,
                 types_tmap,
             } = ns.deref();
-            check_polarity_impl(cx, trace, seen, tparams, polarity, values_type)?;
-            check_polarity_propmap(cx, trace, false, seen, tparams, polarity, types_tmap.dupe())?;
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, values_type)?;
+            check_polarity_propmap(
+                cx,
+                env,
+                trace,
+                false,
+                seen,
+                tparams,
+                polarity,
+                types_tmap.dupe(),
+            )?;
         }
         TypeInner::UnionT(_, rep) => {
             for member in rep.members_iter() {
-                check_polarity_impl(cx, trace, seen, tparams, polarity, member)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, member)?;
             }
         }
         TypeInner::IntersectionT(_, rep) => {
             for member in rep.members_iter() {
-                check_polarity_impl(cx, trace, seen, tparams, polarity, member)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, member)?;
             }
         }
         TypeInner::ThisTypeAppT(box ThisTypeAppTData { targs: None, .. }) => {
@@ -155,22 +178,25 @@ fn check_polarity_impl<'cx>(
             // point. We need to know the polarity of the type parameters in order to
             // know the position of any found GenericTs. This call will continue
             // checking the type args once the root type is resolved.
-            type_operation_utils::distribute_union_intersection::distribute(
+            type_operation_utils::distribute_union_intersection::distribute_with_env(
                 cx,
+                env,
                 None,
                 &|cx, reason, t| {
-                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection(
-                        cx, reason, t,
+                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
+                        cx, env, reason, t,
                     )
                 },
                 &|reason| reason.loc().dupe(),
-                &|cx, l| {
+                &|cx, env, l| {
                     match l.deref() {
                         TypeInner::AnyT(..) => return Ok(()),
                         TypeInner::DefT(_, d) => {
                             if let DefTInner::PolyT(box PolyTData { tparams: tps, .. }) = d.deref()
                             {
-                                return variance_check(cx, trace, tparams, polarity, tps, targs);
+                                return variance_check(
+                                    cx, env, trace, tparams, polarity, tps, targs,
+                                );
                             }
                         }
                         // We will encounter this when walking an extends clause which does
@@ -180,8 +206,9 @@ fn check_polarity_impl<'cx>(
                         TypeInner::ThisInstanceT(..) if targs.is_empty() => return Ok(()),
                         _ => {}
                     }
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         flow_js_utils::incompatible_type_error_with_lower_kind(
                             l,
                             flow_js_utils::error_message_kind_of_lower(t),
@@ -197,7 +224,7 @@ fn check_polarity_impl<'cx>(
             )?;
         }
         TypeInner::KeysT(_, inner_t) => {
-            check_polarity_impl(cx, trace, seen, tparams, Polarity::Positive, inner_t)?;
+            check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, inner_t)?;
         }
         //   | EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, r, ReadOnlyType); id } ->
         TypeInner::EvalT {
@@ -221,8 +248,9 @@ fn check_polarity_impl<'cx>(
                     r.dupe(),
                     |cx, tvar_reason, tvar_id| {
                         let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                        flow_typing_flow_js::flow_js::FlowJs::eval_destructor(
+                        flow_typing_flow_js::flow_js::FlowJs::eval_destructor_with_env(
                             cx,
+                            env,
                             trace_val,
                             use_op.dupe(),
                             r,
@@ -234,11 +262,11 @@ fn check_polarity_impl<'cx>(
                 )?;
                 seen.insert(id.dupe());
                 let concrete_types =
-                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection(
-                        cx, r, &out,
+                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
+                        cx, env, r, &out,
                     )?;
                 for ct in &concrete_types {
-                    check_polarity_impl(cx, trace, seen, tparams, Polarity::Positive, ct)?;
+                    check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, ct)?;
                 }
             }
         }
@@ -257,7 +285,7 @@ fn check_polarity_impl<'cx>(
                 }));
                 targs_list.push(arg_t.dupe());
             }
-            variance_check(cx, trace, tparams, polarity, &tps_list, &targs_list)?;
+            variance_check(cx, env, trace, tparams, polarity, &tps_list, &targs_list)?;
         }
         // TODO
         TypeInner::EvalT { .. } => {}
@@ -280,7 +308,7 @@ fn check_polarity_impl<'cx>(
             | DefTInner::SymbolT
             | DefTInner::UniqueSymbolT(_) => {}
             DefTInner::ClassT(inner_t) => {
-                check_polarity_impl(cx, trace, seen, tparams, polarity, inner_t)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, inner_t)?;
             }
             DefTInner::InstanceT(instance_t) => {
                 let InstTypeInner {
@@ -304,13 +332,14 @@ fn check_polarity_impl<'cx>(
                     inst_abstract_props: _,
                     strictness_kind: _,
                 } = instance_t.inst.deref();
-                check_polarity_impl(cx, trace, seen, tparams, polarity, &instance_t.static_)?;
-                check_polarity_impl(cx, trace, seen, tparams, polarity, &instance_t.super_)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, &instance_t.static_)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, &instance_t.super_)?;
                 for impl_t in instance_t.implements.iter() {
-                    check_polarity_impl(cx, trace, seen, tparams, polarity, impl_t)?;
+                    check_polarity_impl(cx, env, trace, seen, tparams, polarity, impl_t)?;
                 }
                 check_polarity_propmap(
                     cx,
+                    env,
                     trace,
                     false,
                     seen,
@@ -320,6 +349,7 @@ fn check_polarity_impl<'cx>(
                 )?;
                 check_polarity_propmap(
                     cx,
+                    env,
                     trace,
                     true,
                     seen,
@@ -329,6 +359,7 @@ fn check_polarity_impl<'cx>(
                 )?;
                 check_polarity_propmap(
                     cx,
+                    env,
                     trace,
                     false,
                     seen,
@@ -338,6 +369,7 @@ fn check_polarity_impl<'cx>(
                 )?;
                 check_polarity_propmap(
                     cx,
+                    env,
                     trace,
                     false,
                     seen,
@@ -346,13 +378,13 @@ fn check_polarity_impl<'cx>(
                     class_private_methods.dupe(),
                 )?;
                 if let Some(call_t) = call_t {
-                    check_polarity_call(cx, trace, seen, tparams, polarity, *call_t)?;
+                    check_polarity_call(cx, env, trace, seen, tparams, polarity, *call_t)?;
                 }
                 if let Some(construct_t) = construct_t {
-                    check_polarity_call(cx, trace, seen, tparams, polarity, *construct_t)?;
+                    check_polarity_call(cx, env, trace, seen, tparams, polarity, *construct_t)?;
                 }
                 if let Some(inst_dict) = inst_dict {
-                    check_polarity_dict(cx, trace, seen, tparams, polarity, inst_dict)?;
+                    check_polarity_dict(cx, env, trace, seen, tparams, polarity, inst_dict)?;
                 }
             }
             // We can ignore the statics of function annotations, since
@@ -372,14 +404,22 @@ fn check_polarity_impl<'cx>(
                 } = f.deref();
                 let inv_polarity = Polarity::inv(polarity);
                 for param in params.iter() {
-                    check_polarity_impl(cx, trace, seen, tparams, inv_polarity, &param.1)?;
+                    check_polarity_impl(cx, env, trace, seen, tparams, inv_polarity, &param.1)?;
                 }
                 if let Some(rest_param) = rest_param {
-                    check_polarity_impl(cx, trace, seen, tparams, inv_polarity, &rest_param.2)?;
+                    check_polarity_impl(
+                        cx,
+                        env,
+                        trace,
+                        seen,
+                        tparams,
+                        inv_polarity,
+                        &rest_param.2,
+                    )?;
                 }
-                check_polarity_impl(cx, trace, seen, tparams, polarity, return_t)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, return_t)?;
                 if let Some(tg) = type_guard {
-                    check_polarity_impl(cx, trace, seen, tparams, polarity, &tg.type_guard)?;
+                    check_polarity_impl(cx, env, trace, seen, tparams, polarity, &tg.type_guard)?;
                 }
             }
             DefTInner::ArrT(arr) => {
@@ -399,12 +439,21 @@ fn check_polarity_impl<'cx>(
                         tuple_view: None,
                         ..
                     }) => {
-                        check_polarity_impl(cx, trace, seen, tparams, Polarity::Neutral, elem_t)?;
+                        check_polarity_impl(
+                            cx,
+                            env,
+                            trace,
+                            seen,
+                            tparams,
+                            Polarity::Neutral,
+                            elem_t,
+                        )?;
                     }
                     ArrType::TupleAT(box TupleATData { elements, .. }) => {
                         for elem in elements.iter() {
                             check_polarity_impl(
                                 cx,
+                                env,
                                 trace,
                                 seen,
                                 tparams,
@@ -414,7 +463,7 @@ fn check_polarity_impl<'cx>(
                         }
                     }
                     ArrType::ROArrayAT(box (inner_t, _)) => {
-                        check_polarity_impl(cx, trace, seen, tparams, polarity, inner_t)?;
+                        check_polarity_impl(cx, env, trace, seen, tparams, polarity, inner_t)?;
                     }
                 }
             }
@@ -429,6 +478,7 @@ fn check_polarity_impl<'cx>(
                 } = obj.deref();
                 check_polarity_propmap(
                     cx,
+                    env,
                     trace,
                     false,
                     seen,
@@ -437,11 +487,11 @@ fn check_polarity_impl<'cx>(
                     props_tmap.dupe(),
                 )?;
                 if let ObjKind::Indexed(ref dict) = flags.obj_kind {
-                    check_polarity_dict(cx, trace, seen, tparams, polarity, dict)?;
+                    check_polarity_dict(cx, env, trace, seen, tparams, polarity, dict)?;
                 }
-                check_polarity_impl(cx, trace, seen, tparams, polarity, proto_t)?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, proto_t)?;
                 if let Some(call_t) = call_t {
-                    check_polarity_call(cx, trace, seen, tparams, polarity, *call_t)?;
+                    check_polarity_call(cx, env, trace, seen, tparams, polarity, *call_t)?;
                 }
             }
             DefTInner::PolyT(box PolyTData {
@@ -454,25 +504,41 @@ fn check_polarity_impl<'cx>(
                 // refer to one of the tparams we're looking for.
                 let mut tparams_acc = tparams.clone();
                 for tp in tps.iter() {
-                    check_polarity_typeparam(cx, trace, seen, &tparams_acc, polarity, tp)?;
+                    check_polarity_typeparam(cx, env, trace, seen, &tparams_acc, polarity, tp)?;
                     tparams_acc.insert(tp.name.dupe(), tp.clone());
                 }
                 //     check_polarity cx ?trace seen tparams polarity t
-                check_polarity_impl(cx, trace, seen, &tparams_acc, polarity, t_out)?;
+                check_polarity_impl(cx, env, trace, seen, &tparams_acc, polarity, t_out)?;
             }
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config,
                 renders,
                 ..
             }) => {
-                check_polarity_impl(cx, trace, seen, tparams, Polarity::inv(polarity), config)?;
-                check_polarity_impl(cx, trace, seen, tparams, polarity, renders)?;
+                check_polarity_impl(
+                    cx,
+                    env,
+                    trace,
+                    seen,
+                    tparams,
+                    Polarity::inv(polarity),
+                    config,
+                )?;
+                check_polarity_impl(cx, env, trace, seen, tparams, polarity, renders)?;
             }
             DefTInner::RendersT(renders) => {
                 use flow_typing_type::type_::CanonicalRendersForm;
                 match renders.deref() {
                     CanonicalRendersForm::NominalRenders { renders_super, .. } => {
-                        check_polarity_impl(cx, trace, seen, tparams, polarity, renders_super)?;
+                        check_polarity_impl(
+                            cx,
+                            env,
+                            trace,
+                            seen,
+                            tparams,
+                            polarity,
+                            renders_super,
+                        )?;
                     }
                     CanonicalRendersForm::StructuralRenders {
                         renders_structural_type,
@@ -480,6 +546,7 @@ fn check_polarity_impl<'cx>(
                     } => {
                         check_polarity_impl(
                             cx,
+                            env,
                             trace,
                             seen,
                             tparams,
@@ -506,6 +573,7 @@ fn check_polarity_impl<'cx>(
 
 fn check_polarity_propmap<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     skip_ctor: bool,
     seen: &mut HashSet<eval::Id>,
@@ -517,7 +585,7 @@ fn check_polarity_propmap<'cx>(
     for (x, p) in pmap.iter() {
         if skip_ctor && *x == Name::new("constructor") {
         } else {
-            check_polarity_prop(cx, trace, seen, tparams, polarity, p)?;
+            check_polarity_prop(cx, env, trace, seen, tparams, polarity, p)?;
         }
     }
     Ok(())
@@ -525,6 +593,7 @@ fn check_polarity_propmap<'cx>(
 
 fn check_polarity_prop<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -534,6 +603,7 @@ fn check_polarity_prop<'cx>(
     match prop.deref() {
         PropertyInner::Field(fd) => check_polarity_impl(
             cx,
+            env,
             trace,
             seen,
             tparams,
@@ -541,15 +611,22 @@ fn check_polarity_prop<'cx>(
             &fd.type_,
         ),
         PropertyInner::Get { type_, .. } => {
-            check_polarity_impl(cx, trace, seen, tparams, polarity, type_)
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, type_)
         }
-        PropertyInner::Set { type_, .. } => {
-            check_polarity_impl(cx, trace, seen, tparams, Polarity::inv(polarity), type_)
-        }
+        PropertyInner::Set { type_, .. } => check_polarity_impl(
+            cx,
+            env,
+            trace,
+            seen,
+            tparams,
+            Polarity::inv(polarity),
+            type_,
+        ),
         PropertyInner::GetSet(gs) => {
-            check_polarity_impl(cx, trace, seen, tparams, polarity, &gs.get_type)?;
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, &gs.get_type)?;
             check_polarity_impl(
                 cx,
+                env,
                 trace,
                 seen,
                 tparams,
@@ -558,7 +635,7 @@ fn check_polarity_prop<'cx>(
             )
         }
         PropertyInner::Method { type_, .. } => {
-            check_polarity_impl(cx, trace, seen, tparams, polarity, type_)
+            check_polarity_impl(cx, env, trace, seen, tparams, polarity, type_)
         }
     }
 }
@@ -566,6 +643,7 @@ fn check_polarity_prop<'cx>(
 // and check_polarity_dict cx ?trace seen tparams polarity d =
 fn check_polarity_dict<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -578,9 +656,10 @@ fn check_polarity_dict<'cx>(
         value,
         dict_polarity,
     } = d;
-    check_polarity_impl(cx, trace, seen, tparams, Polarity::Neutral, key)?;
+    check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Neutral, key)?;
     check_polarity_impl(
         cx,
+        env,
         trace,
         seen,
         tparams,
@@ -592,6 +671,7 @@ fn check_polarity_dict<'cx>(
 
 fn check_polarity_call<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -599,11 +679,12 @@ fn check_polarity_call<'cx>(
     id: i32,
 ) -> Result<(), FlowJsException> {
     let t = cx.find_call(id);
-    check_polarity_impl(cx, trace, seen, tparams, polarity, &t)
+    check_polarity_impl(cx, env, trace, seen, tparams, polarity, &t)
 }
 
 fn check_polarity_typeparam<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -620,15 +701,16 @@ fn check_polarity_typeparam<'cx>(
         is_const: _,
     } = tp.deref();
     let mult_polarity = Polarity::mult(polarity, *tp_polarity);
-    check_polarity_impl(cx, trace, seen, tparams, mult_polarity, bound)?;
+    check_polarity_impl(cx, env, trace, seen, tparams, mult_polarity, bound)?;
     if let Some(default) = default {
-        check_polarity_impl(cx, trace, seen, tparams, mult_polarity, default)?;
+        check_polarity_impl(cx, env, trace, seen, tparams, mult_polarity, default)?;
     }
     Ok(())
 }
 
 fn variance_check<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     tparams: &BTreeMap<SubstName, TypeParam>,
     polarity: Polarity,
@@ -639,6 +721,7 @@ fn variance_check<'cx>(
     for (tp, targ) in tps.iter().zip(targs.iter()) {
         check_polarity_impl(
             cx,
+            env,
             trace,
             &mut HashSet::new(),
             tparams,

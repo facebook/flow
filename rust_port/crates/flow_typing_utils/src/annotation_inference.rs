@@ -27,6 +27,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::slice_utils;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DepthTrace;
@@ -66,6 +67,7 @@ use crate::avar;
 /// once it resolves, mirroring the dispatch (`GetKeysDictKeyT`) path.
 fn elab_dict_key<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     seen: &FlowOrdSet<i32>,
     reason_op: &Reason,
@@ -73,6 +75,7 @@ fn elab_dict_key<'cx>(
 ) -> Type {
     elab_t(
         cx,
+        env,
         dst_cx,
         Some(seen.dupe()),
         dict_key,
@@ -143,8 +146,14 @@ fn get_fully_resolved_type_helper<'cx>(dst_cx: &Context<'cx>, cx: &Context<'cx>,
     t
 }
 
-fn get_builtin_typeapp<'cx>(cx: &Context<'cx>, reason: Reason, x: &str, targs: Vec<Type>) -> Type {
-    let t = flow_js_utils::lookup_builtin_type(cx, x, reason.dupe());
+fn get_builtin_typeapp<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    x: &str,
+    targs: Vec<Type>,
+) -> Type {
+    let t = flow_js_utils::lookup_builtin_type_with_env(cx, env, x, reason.dupe());
     type_util::typeapp(false, false, reason, t, targs)
 }
 
@@ -295,6 +304,7 @@ impl flow_js_utils::InstantiationHelper for AnnotInstantiationHelper {
 
     fn is_subtype<'cx>(
         _cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _trace: DepthTrace,
         _use_op: UseOp,
         _t1: Type,
@@ -305,6 +315,7 @@ impl flow_js_utils::InstantiationHelper for AnnotInstantiationHelper {
 
     fn unify<'cx>(
         _cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _trace: DepthTrace,
         _use_op: UseOp,
         _t1: Type,
@@ -315,6 +326,7 @@ impl flow_js_utils::InstantiationHelper for AnnotInstantiationHelper {
 
     fn reposition<'cx>(
         _cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _trace: Option<DepthTrace>,
         _loc: ALoc,
         t: Type,
@@ -325,6 +337,7 @@ impl flow_js_utils::InstantiationHelper for AnnotInstantiationHelper {
 
 fn instantiate_poly<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason_op: Reason,
     reason_tapp: Reason,
@@ -333,24 +346,27 @@ fn instantiate_poly<'cx>(
     t: Type,
 ) -> Type {
     let xs = vec1::Vec1::try_from_vec(ids).expect("tparams should be non-empty");
-    let (t, _) = flow_js_utils::instantiation_kit::instantiate_poly::<AnnotInstantiationHelper>(
-        cx,
-        dummy_trace(),
-        use_op,
-        &reason_op,
-        &reason_tapp,
-        false,
-        tparams_loc,
-        &xs,
-        t,
-    )
-    // Annotation inference is never speculative
-    .unwrap();
+    let (t, _) =
+        flow_js_utils::instantiation_kit::instantiate_poly_with_env::<AnnotInstantiationHelper>(
+            cx,
+            env,
+            dummy_trace(),
+            use_op,
+            &reason_op,
+            &reason_tapp,
+            false,
+            tparams_loc,
+            &xs,
+            t,
+        )
+        // Annotation inference is never speculative
+        .unwrap();
     t
 }
 
 fn mk_typeapp_of_poly<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason_op: Reason,
     reason_tapp: Reason,
@@ -361,8 +377,9 @@ fn mk_typeapp_of_poly<'cx>(
     ts: Rc<[Type]>,
 ) -> Type {
     let xs = vec1::Vec1::try_from_vec(xs).expect("tparams should be non-empty");
-    flow_js_utils::instantiation_kit::mk_typeapp_of_poly::<AnnotInstantiationHelper>(
+    flow_js_utils::instantiation_kit::mk_typeapp_of_poly_with_env::<AnnotInstantiationHelper>(
         cx,
+        env,
         dummy_trace(),
         use_op,
         &reason_op,
@@ -379,12 +396,14 @@ fn mk_typeapp_of_poly<'cx>(
 
 fn with_concretized_type<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     r: Reason,
     f: Rc<dyn Fn(Type) -> Type + 'cx>,
     t: Type,
 ) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -398,6 +417,7 @@ fn with_concretized_type<'cx>(
 
 fn cg_lookup_<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: &UseOp,
     t: Type,
     reason_op: &Reason,
@@ -407,6 +427,7 @@ fn cg_lookup_<'cx>(
 ) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -428,6 +449,7 @@ fn cg_lookup_<'cx>(
 /// there is nothing to report at all.
 fn annot_lookup_failed<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason_op: &Reason,
     reason_prop: &Reason,
     name: &Name,
@@ -454,6 +476,7 @@ fn annot_lookup_failed<'cx>(
     match indexer_fallback {
         Some(fallback) => get_prop_t_kit::perform_read_prop_action::<AnnotGetPropHelper>(
             cx,
+            env,
             &dummy_trace(),
             use_op.dupe(),
             propref,
@@ -474,6 +497,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 
     fn error_type<'cx>(
         _cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _trace: DepthTrace,
         reason: Reason,
     ) -> Result<Type, FlowJsException> {
@@ -482,6 +506,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 
     fn return_<'cx>(
         cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _use_op: UseOp,
         _trace: DepthTrace,
         t: Type,
@@ -501,6 +526,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 
     fn dict_read_check<'cx>(
         _cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _trace: DepthTrace,
         _use_op: &UseOp,
         _pair: (&Type, &Type),
@@ -511,6 +537,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 
     fn reposition<'cx>(
         cx: &Context<'cx>,
+        _env: &FlowJsEnv,
         _trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
@@ -522,6 +549,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
     //   cg_lookup_ cx use_op t reason_op propref obj_t
     fn cg_lookup<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         _trace: DepthTrace,
         obj_t: Type,
         _method_accessible: bool,
@@ -537,6 +565,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         } = args;
         Ok(cg_lookup_(
             cx,
+            env,
             &use_op,
             super_t,
             &reason_op,
@@ -548,6 +577,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 
     fn cg_get_prop<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         _trace: DepthTrace,
         t: Type,
         args: (UseOp, Reason, Option<i32>, (Reason, Name)),
@@ -555,6 +585,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         let (use_op, access_reason, _, (prop_reason, name)) = args;
         Ok(elab_t(
             cx,
+            env,
             &effective_dst_cx(cx),
             None,
             t,
@@ -569,6 +600,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 
     fn mk_react_dro<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         _use_op: UseOp,
         dro: &type_::ReactDro,
         t: Type,
@@ -576,6 +608,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         let reason = type_util::reason_of_t(&t).dupe();
         elab_t(
             cx,
+            env,
             &effective_dst_cx(cx),
             None,
             t,
@@ -592,6 +625,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
     fn prop_overlaps_with_indexer() -> Option<
         fn(
             &Context,
+            &FlowJsEnv,
             &Name,
             &Reason,
             &Type,
@@ -609,6 +643,7 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
 /// [id] once again when [dep_id] gets resolved.
 fn ensure_annot_resolved<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     reason: Reason,
     id: i32,
@@ -618,7 +653,7 @@ fn ensure_annot_resolved<'cx>(
         Some(constraint) => match constraint.deref() {
             AConstraintInner::AnnotUnresolved { .. } => {
                 let t = error_recursive(cx, dst_cx, &reason);
-                resolve_id(cx, dst_cx, reason, id, t.dupe());
+                resolve_id(cx, env, dst_cx, reason, id, t.dupe());
                 t
             }
             AConstraintInner::AnnotOp { id: dep_id, .. } => {
@@ -629,7 +664,7 @@ fn ensure_annot_resolved<'cx>(
                     deps
                 });
                 let t = error_recursive(cx, dst_cx, &reason);
-                resolve_id(cx, dst_cx, reason, id, t.dupe());
+                resolve_id(cx, env, dst_cx, reason, id, t.dupe());
                 t
             }
         },
@@ -642,6 +677,7 @@ fn get_fully_resolved_type<'cx>(cx: &Context<'cx>, dst_cx: &Context<'cx>, id: i3
 
 fn mk_lazy_tvar<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     f: impl FnOnce(&Context<'cx>, i32) + 'cx,
 ) -> Type {
@@ -649,6 +685,7 @@ fn mk_lazy_tvar<'cx>(
     let tvar = Type::new(TypeInner::OpenT(type_::Tvar::new(reason.dupe(), id as u32)));
     let reason2 = reason.dupe();
     let cx2 = cx.dupe();
+    let env2 = env.dupe();
     let lazy_fn = move |_cx: &Context<'cx>| {
         avar::unresolved_with_id(&cx2, id, reason2.dupe());
         f(&cx2, id);
@@ -656,7 +693,7 @@ fn mk_lazy_tvar<'cx>(
         // respective annotation constraint has been processed. If not we infer
         // the empty type.
         let dst_cx2 = cx2.merge_dst_cx().unwrap_or_else(|| cx2.dupe());
-        ensure_annot_resolved(&cx2, &dst_cx2, reason2.dupe(), id)
+        ensure_annot_resolved(&cx2, &env2, &dst_cx2, reason2.dupe(), id)
     };
     let forcing_state = ForcingState::of_lazy_t(reason.dupe(), lazy_fn);
     let node = flow_utils_union_find::Node::create_root(Constraints::FullyResolved(forcing_state));
@@ -669,11 +706,21 @@ pub fn mk_sig_tvar<'cx>(
     reason: Reason,
     resolved: Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
 ) -> Type {
+    mk_sig_tvar_with_env(cx, &FlowJsEnv::entry(), reason, resolved)
+}
+
+fn mk_sig_tvar_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    resolved: Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+) -> Type {
     let reason2 = reason.dupe();
-    mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
+    let env_for_resolve = env.dupe();
+    mk_lazy_tvar(cx, env, reason.dupe(), move |cx, id| {
         let t = resolved.get_forced(cx).dupe();
         let dst_cx = cx.merge_dst_cx().unwrap_or_else(|| cx.dupe());
-        resolve_id(cx, &dst_cx, reason2, id, t);
+        resolve_id(cx, &env_for_resolve, &dst_cx, reason2, id, t);
     })
 }
 
@@ -681,7 +728,14 @@ pub fn mk_sig_tvar<'cx>(
 /// - If [t] is a concrete type, we mark [id1] as a resolved annotation tvar and
 ///   record it as fully resolved in the type graph. *
 /// - If [t] is an OpenT (_, id2), then we unify [id1] and [id2]. (See merge_ids.)
-fn resolve_id<'cx>(cx: &Context<'cx>, dst_cx: &Context<'cx>, reason: Reason, id: i32, t: Type) {
+fn resolve_id<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    dst_cx: &Context<'cx>,
+    reason: Reason,
+    id: i32,
+    t: Type,
+) {
     match cx.find_avar_opt(id) {
         None => {
             // The avar is already resolved. This happens when the avar is recursively
@@ -690,7 +744,7 @@ fn resolve_id<'cx>(cx: &Context<'cx>, dst_cx: &Context<'cx>, reason: Reason, id:
         Some(constraints1) => {
             let t = match t.deref() {
                 TypeInner::OpenT(tvar) => {
-                    ensure_annot_resolved(cx, dst_cx, reason.dupe(), tvar.id() as i32)
+                    ensure_annot_resolved(cx, env, dst_cx, reason.dupe(), tvar.id() as i32)
                 }
                 _ => t,
             };
@@ -715,13 +769,14 @@ fn resolve_id<'cx>(cx: &Context<'cx>, dst_cx: &Context<'cx>, reason: Reason, id:
                 );
             }
             let dependents1 = constraints1.deps();
-            resolve_dependent_set(cx, dst_cx, reason, &dependents1.borrow(), t);
+            resolve_dependent_set(cx, env, dst_cx, reason, &dependents1.borrow(), t);
         }
     }
 }
 
 fn resolve_dependent_set<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     reason: Reason,
     dependents: &FlowOrdSet<i32>,
@@ -729,8 +784,8 @@ fn resolve_dependent_set<'cx>(
 ) {
     cx.iter_annot_dependent_set(
         |id, op| {
-            let result = elab_t(cx, dst_cx, None, t.dupe(), op.dupe());
-            resolve_id(cx, dst_cx, reason.dupe(), id, result);
+            let result = elab_t(cx, env, dst_cx, None, t.dupe(), op.dupe());
+            resolve_id(cx, env, dst_cx, reason.dupe(), id, result);
         },
         dependents,
     );
@@ -738,6 +793,7 @@ fn resolve_dependent_set<'cx>(
 
 fn elab_open<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     seen: &FlowOrdSet<i32>,
     reason: Reason,
@@ -764,14 +820,22 @@ fn elab_open<'cx>(
             let mut seen2 = seen.dupe();
             seen2.insert(id);
             let op2 = op.dupe();
+            let env_for_resolved = env.dupe();
             let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                 // Use merge_dst_cx if set (during cross-file merge), otherwise cx.
                 let dst_cx = cx.merge_dst_cx().unwrap_or_else(|| cx.dupe());
                 let t = get_fully_resolved_type(cx, &dst_cx, id);
-                elab_t(cx, &dst_cx, Some(seen2.dupe()), t, op2.dupe())
+                elab_t(
+                    cx,
+                    &env_for_resolved,
+                    &dst_cx,
+                    Some(seen2.dupe()),
+                    t,
+                    op2.dupe(),
+                )
             })
                 as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-            mk_sig_tvar(cx, op.reason(), resolved)
+            mk_sig_tvar_with_env(cx, env, op.reason(), resolved)
         }
         Some(constraint) => match constraint.deref() {
             AConstraintInner::AnnotUnresolved { .. } | AConstraintInner::AnnotOp { .. } => {
@@ -784,6 +848,7 @@ fn elab_open<'cx>(
 
 pub fn elab_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     seen: Option<FlowOrdSet<i32>>,
     t: Type,
@@ -803,12 +868,13 @@ pub fn elab_t<'cx>(
             let reason = defer_use_t.1.dupe();
             match defer_use_t.2.deref() {
                 Destructor::ReadOnlyType => {
-                    let t = make_readonly(cx, use_op, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    let t = make_readonly(cx, env, use_op, reason, inner_t.dupe());
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::ReactDRO(box react_dro) => {
                     let t = elab_t(
                         cx,
+                        env,
                         dst_cx,
                         None,
                         inner_t.dupe(),
@@ -820,19 +886,19 @@ pub fn elab_t<'cx>(
                             },
                         ))),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::ExactType => {
-                    let t = make_exact(cx, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    let t = make_exact(cx, env, reason, inner_t.dupe());
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::PartialType => {
-                    let t = make_partial(cx, use_op, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    let t = make_partial(cx, env, use_op, reason, inner_t.dupe());
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::RequiredType => {
-                    let t = make_required(cx, use_op, reason, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    let t = make_required(cx, env, use_op, reason, inner_t.dupe());
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::SpreadType(box DestructorSpreadTypeData(
                     target,
@@ -856,41 +922,51 @@ pub fn elab_t<'cx>(
                         union_reason: None,
                         curr_resolve_idx: 0,
                     };
-                    let t =
-                        object_spread(cx, use_op, reason, target.clone(), state, inner_t.dupe());
-                    elab_t(cx, dst_cx, None, t, op)
+                    let t = object_spread_with_env(
+                        cx,
+                        env,
+                        use_op,
+                        reason,
+                        target.clone(),
+                        state,
+                        inner_t.dupe(),
+                    );
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::RestType(options, r) => {
                     let state = type_::object::rest::State::One(r.dupe());
                     let t = object_rest_internal(
                         cx,
+                        env,
                         use_op,
                         reason,
                         options.clone(),
                         state,
                         inner_t.dupe(),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::TypeMap(TypeMap::ObjectKeyMirror) => {
                     let t = elab_t(
                         cx,
+                        env,
                         dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotObjKeyMirror(reason)),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::ValuesType => {
                     let t = elab_t(
                         cx,
+                        env,
                         dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotGetValuesT(reason)),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::PropertyType { name } => {
                     let reason_op = reason.dupe().replace_desc(
@@ -898,6 +974,7 @@ pub fn elab_t<'cx>(
                     );
                     let t = elab_t(
                         cx,
+                        env,
                         dst_cx,
                         None,
                         inner_t.dupe(),
@@ -912,11 +989,12 @@ pub fn elab_t<'cx>(
                             },
                         }))),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::ElementType { index_type } => {
                     let t = elab_t(
                         cx,
+                        env,
                         dst_cx,
                         None,
                         inner_t.dupe(),
@@ -926,17 +1004,18 @@ pub fn elab_t<'cx>(
                             key: index_type.dupe(),
                         }),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 Destructor::EnumType => {
                     let t = elab_t(
                         cx,
+                        env,
                         dst_cx,
                         None,
                         inner_t.dupe(),
                         Op::new(OpInner::AnnotGetEnumT(reason)),
                     );
-                    elab_t(cx, dst_cx, None, t, op)
+                    elab_t(cx, env, dst_cx, None, t, op)
                 }
                 _ => error_unsupported(None, cx, dst_cx, reason, &op),
             }
@@ -944,6 +1023,7 @@ pub fn elab_t<'cx>(
         (TypeInner::OpenT(tvar), OpInner::AnnotConcretizeForInspection { .. }) => {
             let t = elab_open(
                 cx,
+                env,
                 dst_cx,
                 &seen,
                 tvar.reason().dupe(),
@@ -958,6 +1038,7 @@ pub fn elab_t<'cx>(
         }
         (TypeInner::OpenT(tvar), _) => elab_open(
             cx,
+            env,
             dst_cx,
             &seen,
             tvar.reason().dupe(),
@@ -966,11 +1047,11 @@ pub fn elab_t<'cx>(
         ),
         (TypeInner::AnnotT(r, inner_t, _), _) => {
             let t = reposition(cx, r.loc().dupe(), inner_t.dupe());
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
         // The remaining cases are dispatched to elab_t_concrete.
         // This split avoids an extremely long match expression.
-        _ => elab_t_concrete(cx, dst_cx, seen, t, op),
+        _ => elab_t_concrete(cx, env, dst_cx, seen, t, op),
     }
 }
 
@@ -994,6 +1075,7 @@ fn general_error<'cx>(cx: &Context<'cx>, _dst_cx: &Context<'cx>, t: &Type, op: &
 
 fn elab_t_concrete<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     seen: FlowOrdSet<i32>,
     t: Type,
@@ -1026,13 +1108,14 @@ fn elab_t_concrete<'cx>(
             let reason_op = op.reason();
             let tc = specialize_class(
                 cx,
+                env,
                 type_.dupe(),
                 reason_op,
                 reason_tapp.dupe(),
                 targs.clone(),
             );
-            let t = this_specialize(cx, reason_tapp, this_t.dupe(), tc);
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            let t = this_specialize(cx, env, reason_tapp, this_t.dupe(), tc);
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
         (
             TypeInner::TypeAppT(box TypeAppTData {
@@ -1049,6 +1132,7 @@ fn elab_t_concrete<'cx>(
             let reason_op = op.reason();
             let t = mk_typeapp_instance(
                 cx,
+                env,
                 use_op.dupe(),
                 reason_op,
                 reason.dupe(),
@@ -1056,7 +1140,7 @@ fn elab_t_concrete<'cx>(
                 type_.dupe(),
                 targs.clone(),
             );
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
         (TypeInner::DefT(def_reason, def_t), OpInner::AnnotUseTTypeT { reason, kind }) => {
             match def_t.deref() {
@@ -1086,7 +1170,7 @@ fn elab_t_concrete<'cx>(
                         &subst_map,
                         t_out.dupe(),
                     );
-                    elab_t(cx, dst_cx, Some(seen), t_, op)
+                    elab_t(cx, env, dst_cx, Some(seen), t_, op)
                 }
                 DefTInner::PolyT(box PolyTData {
                     tparams_loc,
@@ -1100,6 +1184,7 @@ fn elab_t_concrete<'cx>(
                     let reason_tapp = def_reason.dupe();
                     let t = mk_typeapp_of_poly(
                         cx,
+                        env,
                         type_::unknown_use(),
                         reason.dupe(),
                         reason_tapp,
@@ -1109,7 +1194,7 @@ fn elab_t_concrete<'cx>(
                         t_out.dupe(),
                         Rc::from([]),
                     );
-                    elab_t(cx, dst_cx, Some(seen), t, op)
+                    elab_t(cx, env, dst_cx, Some(seen), t, op)
                 }
                 DefTInner::PolyT(box PolyTData {
                     tparams_loc,
@@ -1151,15 +1236,19 @@ fn elab_t_concrete<'cx>(
                             def_reason.dupe(),
                             type_::DefT::new(DefTInner::ClassT(fixed)),
                         ));
-                        elab_t(cx, dst_cx, Some(seen), c, op)
+                        elab_t(cx, env, dst_cx, Some(seen), c, op)
                     }
                     //  a class value annotation becomes the instance type
                     _ => reposition(cx, reason.loc().dupe(), instance.dupe()),
                 },
                 // a component syntax value annotation becomes an element of that component
-                DefTInner::ReactAbstractComponentT(_) => {
-                    get_builtin_typeapp(cx, reason.dupe(), "React$RendersExactly", vec![t.dupe()])
-                }
+                DefTInner::ReactAbstractComponentT(_) => get_builtin_typeapp(
+                    cx,
+                    env,
+                    reason.dupe(),
+                    "React$RendersExactly",
+                    vec![t.dupe()],
+                ),
                 DefTInner::TypeT(_, l) => l.dupe(),
                 // A `unique symbol` value used in a type position resolves to its
                 // own `unique symbol` type, so a value-level symbol binding can
@@ -1246,8 +1335,13 @@ fn elab_t_concrete<'cx>(
         // ****************
         (_, OpInner::AnnotAssertExportIsTypeT { name, .. }) => {
             // Annotation inference is never speculative
-            flow_js_utils::assert_export_is_type_t_kit::on_concrete_type(cx, name.dupe(), t)
-                .unwrap()
+            flow_js_utils::assert_export_is_type_t_kit::on_concrete_type_with_env(
+                cx,
+                env,
+                name.dupe(),
+                t,
+            )
+            .unwrap()
         }
         (_, OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(_)) => t,
         // **********************************
@@ -1273,13 +1367,14 @@ fn elab_t_concrete<'cx>(
             let reason_op = op.reason();
             let tc = specialize_class(
                 cx,
+                env,
                 type_.dupe(),
                 reason_op,
                 reason_tapp.dupe(),
                 targs.clone(),
             );
-            let t = this_specialize(cx, reason_tapp, this_t.dupe(), tc);
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            let t = this_specialize(cx, env, reason_tapp, this_t.dupe(), tc);
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
         (
             TypeInner::TypeAppT(box TypeAppTData {
@@ -1295,6 +1390,7 @@ fn elab_t_concrete<'cx>(
             let reason_op = op.reason();
             let t = mk_typeapp_instance(
                 cx,
+                env,
                 use_op.dupe(),
                 reason_op,
                 reason.dupe(),
@@ -1302,7 +1398,7 @@ fn elab_t_concrete<'cx>(
                 type_.dupe(),
                 targs.clone(),
             );
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
         (_, OpInner::AnnotConcretizeForImportsExports(_, f)) => f(t),
         // **************
@@ -1314,6 +1410,7 @@ fn elab_t_concrete<'cx>(
             let upper_t = nominal_type.upper_t.as_ref().unwrap().dupe();
             elab_t(
                 cx,
+                env,
                 dst_cx,
                 Some(seen),
                 upper_t,
@@ -1333,7 +1430,7 @@ fn elab_t_concrete<'cx>(
             &nominal_type.underlying_t
             && reason.loc().source() == reason.def_loc().source() =>
         {
-            elab_t(cx, dst_cx, Some(seen), inner_t.dupe(), op)
+            elab_t(cx, env, dst_cx, Some(seen), inner_t.dupe(), op)
         }
         //   elab_t cx ~seen t op
         (TypeInner::NominalT { nominal_type, .. }, _)
@@ -1341,7 +1438,7 @@ fn elab_t_concrete<'cx>(
                 box type_::nominal::CustomErrorData { t: inner_t, .. },
             ) = &nominal_type.underlying_t =>
         {
-            elab_t(cx, dst_cx, Some(seen), inner_t.dupe(), op)
+            elab_t(cx, env, dst_cx, Some(seen), inner_t.dupe(), op)
         }
         // ******
         //  Keys
@@ -1353,12 +1450,13 @@ fn elab_t_concrete<'cx>(
         (TypeInner::KeysT(reason, inner), _) => {
             let keys_t = elab_t(
                 cx,
+                env,
                 dst_cx,
                 Some(seen.dupe()),
                 inner.dupe(),
                 Op::new(OpInner::AnnotGetKeysT(reason.dupe())),
             );
-            elab_t(cx, dst_cx, Some(seen), keys_t, op)
+            elab_t(cx, env, dst_cx, Some(seen), keys_t, op)
         }
         (TypeInner::DefT(_, def_t), OpInner::AnnotGetKeysT(reason_op))
             if let DefTInner::ObjT(obj) = def_t.deref() =>
@@ -1366,9 +1464,16 @@ fn elab_t_concrete<'cx>(
             let dict_t = flow_typing_flow_common::obj_type::get_dict_opt(&obj.flags.obj_kind);
             let props = cx.find_props(obj.props_tmap.dupe());
             // Type-level `keyof` includes `unique symbol` keys.
-            let mut keylist = flow_js_utils::keylist_of_props(cx, &props, reason_op, true);
+            let mut keylist = flow_js_utils::keylist_of_props(env, &props, reason_op, true);
             if let Some(dict) = dict_t {
-                keylist.push(elab_dict_key(cx, dst_cx, &seen, reason_op, dict.key.dupe()));
+                keylist.push(elab_dict_key(
+                    cx,
+                    env,
+                    dst_cx,
+                    &seen,
+                    reason_op,
+                    dict.key.dupe(),
+                ));
             }
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
         }
@@ -1380,6 +1485,7 @@ fn elab_t_concrete<'cx>(
                     let collector = TypeCollector::create();
                     elab_t(
                         cx,
+                        env,
                         dst_cx,
                         Some(seen.dupe()),
                         t.dupe(),
@@ -1393,9 +1499,9 @@ fn elab_t_concrete<'cx>(
                 inst_t,
             )
             .expect("annotation_inference::AnnotGetKeysT concretize closure is infallible");
-            let keylist = flow_js_utils::keylist_of_prop_ids(cx, &prop_ids, reason_op, true);
+            let keylist = flow_js_utils::keylist_of_prop_ids(cx, env, &prop_ids, reason_op, true);
             let keylist = dict_keys.into_iter().fold(keylist, |mut keylist, key| {
-                keylist.push(elab_dict_key(cx, dst_cx, &seen, reason_op, key));
+                keylist.push(elab_dict_key(cx, env, dst_cx, &seen, reason_op, key));
                 keylist
             });
             type_util::union_of_ts(reason_op.dupe(), keylist, None)
@@ -1436,6 +1542,7 @@ fn elab_t_concrete<'cx>(
         // ******************************
         (TypeInner::UnionT(_, _), OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
+            env,
             dst_cx,
             data.use_op.dupe(),
             &op,
@@ -1448,12 +1555,13 @@ fn elab_t_concrete<'cx>(
             let reason = op.reason();
             let ts: Vec<Type> = rep
                 .members_iter()
-                .map(|member| elab_t(cx, dst_cx, Some(seen.dupe()), member.dupe(), op.dupe()))
+                .map(|member| elab_t(cx, env, dst_cx, Some(seen.dupe()), member.dupe(), op.dupe()))
                 .collect();
             type_util::union_of_ts(reason, ts, None)
         }
         (TypeInner::IntersectionT(_, _), OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
+            env,
             dst_cx,
             data.use_op.dupe(),
             &op,
@@ -1679,6 +1787,7 @@ fn elab_t_concrete<'cx>(
                 .unwrap_or_else(|| Rc::from([]));
             mk_typeapp_of_poly(
                 cx,
+                env,
                 data.use_op.dupe(),
                 data.reason.dupe(),
                 data.reason2.dupe(),
@@ -1707,6 +1816,7 @@ fn elab_t_concrete<'cx>(
                 let collector = TypeCollector::create();
                 elab_t(
                     cx,
+                    env,
                     dst_cx,
                     Some(seen.dupe()),
                     t.dupe(),
@@ -1812,6 +1922,7 @@ fn elab_t_concrete<'cx>(
                 let collector = TypeCollector::create();
                 elab_t(
                     cx,
+                    env,
                     dst_cx,
                     Some(seen.dupe()),
                     t.dupe(),
@@ -1850,6 +1961,7 @@ fn elab_t_concrete<'cx>(
             let reason_op = op.reason();
             let t = instantiate_poly(
                 cx,
+                env,
                 use_op,
                 reason_op,
                 reason_tapp.dupe(),
@@ -1857,7 +1969,7 @@ fn elab_t_concrete<'cx>(
                 ids.to_vec(),
                 t_out.dupe(),
             );
-            elab_t(cx, dst_cx, Some(seen), t, op)
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
         (
             TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -1877,7 +1989,7 @@ fn elab_t_concrete<'cx>(
                 *is_this,
                 subst_name.dupe(),
             );
-            elab_t(cx, dst_cx, Some(seen), fixed, op)
+            elab_t(cx, env, dst_cx, Some(seen), fixed, op)
         }
         // ***************************
         //  React Abstract Components
@@ -1889,12 +2001,13 @@ fn elab_t_concrete<'cx>(
                     OpInner::AnnotGetPropT(_) | OpInner::AnnotGetElemT { .. }
                 ) =>
         {
-            let statics = flow_js_utils::lookup_builtin_type(
+            let statics = flow_js_utils::lookup_builtin_type_with_env(
                 cx,
+                env,
                 "React$AbstractComponentStatics",
                 reason.dupe(),
             );
-            elab_t(cx, dst_cx, Some(seen), statics, op)
+            elab_t(cx, env, dst_cx, Some(seen), statics, op)
         }
         // ***************
         //  ObjTestProtoT
@@ -1970,6 +2083,7 @@ fn elab_t_concrete<'cx>(
                             let (property, candidate) =
                                 get_prop_t_kit::get_instance_prop_for_lookup::<AnnotGetPropHelper>(
                                     cx,
+                                    env,
                                     &trace,
                                     use_op,
                                     true,
@@ -1985,6 +2099,7 @@ fn elab_t_concrete<'cx>(
                                 Some((p, _)) => {
                                     get_prop_t_kit::perform_read_prop_action::<AnnotGetPropHelper>(
                                         cx,
+                                        env,
                                         &trace,
                                         use_op.dupe(),
                                         propref,
@@ -1998,6 +2113,7 @@ fn elab_t_concrete<'cx>(
                                 // A candidate found closer to the access wins.
                                 None => cg_lookup_(
                                     cx,
+                                    env,
                                     use_op,
                                     inst_t.super_.dupe(),
                                     reason_op,
@@ -2023,6 +2139,7 @@ fn elab_t_concrete<'cx>(
                     let trace = dummy_trace();
                     match get_prop_t_kit::get_obj_prop::<AnnotGetPropHelper>(
                         cx,
+                        env,
                         &trace,
                         &type_::unknown_use(),
                         false,
@@ -2037,6 +2154,7 @@ fn elab_t_concrete<'cx>(
                         Some((p, _)) => {
                             get_prop_t_kit::perform_read_prop_action::<AnnotGetPropHelper>(
                                 cx,
+                                env,
                                 &trace,
                                 use_op.dupe(),
                                 propref,
@@ -2049,6 +2167,7 @@ fn elab_t_concrete<'cx>(
                         }
                         None => cg_lookup_(
                             cx,
+                            env,
                             use_op,
                             o.proto_t.dupe(),
                             reason_op,
@@ -2065,13 +2184,23 @@ fn elab_t_concrete<'cx>(
                     if let flow_typing_type::type_::PropRef::Named { name, .. } = propref
                         && flow_js_utils::is_object_prototype_method(name) =>
                 {
-                    flow_js_utils::lookup_builtin_value(cx, "Object", reason_op.dupe())
+                    flow_js_utils::lookup_builtin_value_with_env(
+                        cx,
+                        env,
+                        "Object",
+                        reason_op.dupe(),
+                    )
                 }
                 TypeInner::FunProtoT(_)
                     if let flow_typing_type::type_::PropRef::Named { name, .. } = propref
                         && flow_js_utils::is_function_prototype(name) =>
                 {
-                    flow_js_utils::lookup_builtin_value(cx, "Function", reason_op.dupe())
+                    flow_js_utils::lookup_builtin_value_with_env(
+                        cx,
+                        env,
+                        "Function",
+                        reason_op.dupe(),
+                    )
                 }
                 TypeInner::DefT(_, def_t)
                     if matches!(def_t.deref(), DefTInner::NullT)
@@ -2083,6 +2212,7 @@ fn elab_t_concrete<'cx>(
                 {
                     annot_lookup_failed(
                         cx,
+                        env,
                         reason_op,
                         reason_prop,
                         name,
@@ -2100,6 +2230,7 @@ fn elab_t_concrete<'cx>(
                 {
                     annot_lookup_failed(
                         cx,
+                        env,
                         reason_op,
                         reason_prop,
                         name,
@@ -2108,7 +2239,7 @@ fn elab_t_concrete<'cx>(
                         indexer_fallback.as_deref(),
                     )
                 }
-                _ => elab_t_wildcard_op(cx, dst_cx, seen, t, op),
+                _ => elab_t_wildcard_op(cx, env, dst_cx, seen, t, op),
             }
         }
 
@@ -2198,6 +2329,7 @@ fn elab_t_concrete<'cx>(
                 TypeInner::DefT(reason_obj, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
                     flow_js_utils::objt_to_obj_rest(
                         cx,
+                        env,
                         o.props_tmap.dupe(),
                         Some(Rc::from([])),
                         o.flags.obj_kind.clone(),
@@ -2237,7 +2369,7 @@ fn elab_t_concrete<'cx>(
                 // | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
                 //     elab_t cx ~seen values_type op
                 TypeInner::NamespaceT(ns) => {
-                    elab_t(cx, dst_cx, Some(seen), ns.values_type.dupe(), op)
+                    elab_t(cx, env, dst_cx, Some(seen), ns.values_type.dupe(), op)
                 }
                 _ => {
                     let reason_op_catch = op.reason();
@@ -2276,6 +2408,7 @@ fn elab_t_concrete<'cx>(
                 Some(prop) => prop,
                 None => elab_t(
                     cx,
+                    env,
                     dst_cx,
                     Some(seen),
                     ns.values_type.dupe(),
@@ -2292,7 +2425,9 @@ fn elab_t_concrete<'cx>(
                 ),
             }
         }
-        (TypeInner::NamespaceT(ns), _) => elab_t(cx, dst_cx, Some(seen), ns.values_type.dupe(), op),
+        (TypeInner::NamespaceT(ns), _) => {
+            elab_t(cx, env, dst_cx, Some(seen), ns.values_type.dupe(), op)
+        }
         (_, OpInner::AnnotGetTypeFromNamespaceT(data)) => {
             let AnnotGetTypeFromNamespaceTData {
                 reason,
@@ -2302,6 +2437,7 @@ fn elab_t_concrete<'cx>(
             let (prop_ref_reason, prop_name) = prop_ref;
             elab_t(
                 cx,
+                env,
                 dst_cx,
                 Some(seen),
                 t,
@@ -2342,6 +2478,7 @@ fn elab_t_concrete<'cx>(
                             let trace = dummy_trace();
                             get_prop_t_kit::read_instance_prop::<AnnotGetPropHelper>(
                                 cx,
+                                env,
                                 &trace,
                                 use_op,
                                 &t,
@@ -2375,6 +2512,7 @@ fn elab_t_concrete<'cx>(
                         let trace = dummy_trace();
                         get_prop_t_kit::read_obj_prop::<AnnotGetPropHelper>(
                             cx,
+                            env,
                             &trace,
                             use_op.dupe(),
                             *from_annot,
@@ -2421,6 +2559,7 @@ fn elab_t_concrete<'cx>(
                     );
                     flow_js_utils::get_prop_t_kit::on_enum_object_t::<AnnotGetPropHelper>(
                         cx,
+                        env,
                         &trace,
                         enum_reason,
                         t.dupe(),
@@ -2447,6 +2586,7 @@ fn elab_t_concrete<'cx>(
                     let trace = dummy_trace();
                     flow_js_utils::get_prop_t_kit::on_array_length::<AnnotGetPropHelper>(
                         cx,
+                        env,
                         &trace,
                         reason.dupe(),
                         *inexact,
@@ -2462,26 +2602,28 @@ fn elab_t_concrete<'cx>(
                         ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => {
                             let arr_t = get_builtin_typeapp(
                                 cx,
+                                env,
                                 reason.dupe(),
                                 "Array",
                                 vec![elem_t.dupe()],
                             );
-                            elab_t(cx, dst_cx, Some(seen), arr_t, op)
+                            elab_t(cx, env, dst_cx, Some(seen), arr_t, op)
                         }
                         ArrType::TupleAT(box TupleATData { .. })
                         | ArrType::ROArrayAT(box (_, _)) => {
                             let elem_t = type_::elemt_of_arrtype(arr.as_ref());
                             let arr_t = get_builtin_typeapp(
                                 cx,
+                                env,
                                 reason.dupe(),
                                 "$ReadOnlyArray",
                                 vec![elem_t],
                             );
-                            elab_t(cx, dst_cx, Some(seen), arr_t, op)
+                            elab_t(cx, env, dst_cx, Some(seen), arr_t, op)
                         }
                     }
                 }
-                _ => elab_t_wildcard_op(cx, dst_cx, seen, t, op),
+                _ => elab_t_wildcard_op(cx, env, dst_cx, seen, t, op),
             }
         }
         // ************
@@ -2489,6 +2631,7 @@ fn elab_t_concrete<'cx>(
         // ************
         (_, OpInner::AnnotObjKitT(data)) => object_kit_concrete(
             cx,
+            env,
             dst_cx,
             data.use_op.dupe(),
             &op,
@@ -2520,6 +2663,7 @@ fn elab_t_concrete<'cx>(
             let key_type = key.dupe();
             elab_t(
                 cx,
+                env,
                 dst_cx,
                 Some(seen),
                 key_type,
@@ -2546,6 +2690,7 @@ fn elab_t_concrete<'cx>(
             let key_type = key.dupe();
             elab_t(
                 cx,
+                env,
                 dst_cx,
                 Some(seen),
                 key_type,
@@ -2574,9 +2719,10 @@ fn elab_t_concrete<'cx>(
                         DefTInner::ObjT(_) | DefTInner::InstanceT(_)
                     ) =>
                 {
-                    let prop_ref = flow_js_utils::propref_for_elem_t(cx, &t);
+                    let prop_ref = flow_js_utils::propref_for_elem_t_with_env(cx, env, &t);
                     elab_t(
                         cx,
+                        env,
                         dst_cx,
                         Some(seen),
                         source_type,
@@ -2606,6 +2752,7 @@ fn elab_t_concrete<'cx>(
                 {
                     let (value, _, _, _) = flow_js_utils::array_elem_check(
                         cx,
+                        env,
                         false,
                         *from_annot,
                         &t,
@@ -2624,7 +2771,7 @@ fn elab_t_concrete<'cx>(
         (TypeInner::DefT(_, def_t), OpInner::AnnotObjKeyMirror(reason_op))
             if let DefTInner::ObjT(o) = def_t.deref() =>
         {
-            flow_js_utils::obj_key_mirror(cx, o, reason_op)
+            flow_js_utils::obj_key_mirror(cx, env, o, reason_op)
         }
         (_, OpInner::AnnotObjKeyMirror(_)) => {
             error_unsupported(None, cx, dst_cx, type_util::reason_of_t(&t).dupe(), &op)
@@ -2648,6 +2795,7 @@ fn elab_t_concrete<'cx>(
         // *********************
         (TypeInner::NominalT { nominal_type, .. }, _) if nominal_type.upper_t.is_some() => elab_t(
             cx,
+            env,
             dst_cx,
             Some(seen),
             nominal_type.upper_t.as_ref().unwrap().dupe(),
@@ -2667,6 +2815,7 @@ fn elab_t_concrete<'cx>(
             if flow_js_utils::needs_resolution(&rhs_type) || flow_js_utils::is_generic(&rhs_type) {
                 elab_t(
                     cx,
+                    env,
                     dst_cx,
                     Some(seen),
                     rhs_type,
@@ -2684,7 +2833,8 @@ fn elab_t_concrete<'cx>(
                     (&t, &rhs_type)
                 };
                 // Annotation inference is never speculative
-                flow_js_utils::flow_arith(cx, reason.dupe(), lhs_t, rhs_t, kind.clone()).unwrap()
+                flow_js_utils::flow_arith(cx, env, reason.dupe(), lhs_t, rhs_t, kind.clone())
+                    .unwrap()
             }
         }
         // ***********************
@@ -2692,7 +2842,7 @@ fn elab_t_concrete<'cx>(
         // ***********************
         (_, OpInner::AnnotUnaryArithT { reason, kind }) => {
             // Annotation inference is never speculative
-            flow_js_utils::flow_unary_arith(cx, &t, reason.dupe(), kind.clone()).unwrap()
+            flow_js_utils::flow_unary_arith(cx, env, &t, reason.dupe(), kind.clone()).unwrap()
         }
         // ***************************
         //  Singleton primitive types
@@ -2708,14 +2858,14 @@ fn elab_t_concrete<'cx>(
                     from_annot: false,
                 }),
             ));
-            elab_t(cx, dst_cx, Some(seen), new_t, op)
+            elab_t(cx, env, dst_cx, Some(seen), new_t, op)
         }
         (TypeInner::NullProtoT(reason), _) => {
             let new_t = Type::new(TypeInner::DefT(
                 reason.dupe(),
                 type_::DefT::new(DefTInner::NullT),
             ));
-            elab_t(cx, dst_cx, Some(seen), new_t, op)
+            elab_t(cx, env, dst_cx, Some(seen), new_t, op)
         }
         // ******************
         //  Function Statics
@@ -2725,7 +2875,7 @@ fn elab_t_concrete<'cx>(
                 && object_like_op(op.deref()) =>
         {
             let static_ = reposition(cx, reason.loc().dupe(), static_.dupe());
-            elab_t(cx, dst_cx, Some(seen), static_, op)
+            elab_t(cx, env, dst_cx, Some(seen), static_, op)
         }
         // ***************
         //  Class statics
@@ -2734,8 +2884,8 @@ fn elab_t_concrete<'cx>(
             if let DefTInner::ClassT(instance) = def_t.deref()
                 && object_like_op(op.deref()) =>
         {
-            let statics = get_statics(cx, reason.dupe(), instance.dupe());
-            elab_t(cx, dst_cx, Some(seen), statics, op)
+            let statics = get_statics(cx, env, reason.dupe(), instance.dupe());
+            elab_t(cx, env, dst_cx, Some(seen), statics, op)
         }
         (
             TypeInner::DefT(enum_reason, def_t),
@@ -2766,12 +2916,13 @@ fn elab_t_concrete<'cx>(
         //  Object, function, etc. library calls
         // **************************************
         (TypeInner::ObjProtoT(reason), _) => {
-            let obj_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Object");
-            elab_t(cx, dst_cx, Some(seen), obj_proto, op)
+            let obj_proto = get_builtin_type_with_env(cx, env, reason.dupe(), Some(true), "Object");
+            elab_t(cx, env, dst_cx, Some(seen), obj_proto, op)
         }
         (TypeInner::FunProtoT(reason), _) => {
-            let fun_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Function");
-            elab_t(cx, dst_cx, Some(seen), fun_proto, op)
+            let fun_proto =
+                get_builtin_type_with_env(cx, env, reason.dupe(), Some(true), "Function");
+            elab_t(cx, env, dst_cx, Some(seen), fun_proto, op)
         }
         // ***********
         //  ToStringT
@@ -2800,6 +2951,7 @@ fn elab_t_concrete<'cx>(
         }
         (_, OpInner::AnnotGetKeysDictKeyT(reason)) => elab_t(
             cx,
+            env,
             dst_cx,
             Some(seen),
             t,
@@ -2832,8 +2984,8 @@ fn elab_t_concrete<'cx>(
                 DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => "Symbol",
                 _ => unreachable!(),
             };
-            let builtin = get_builtin_type(cx, reason.dupe(), Some(true), name);
-            elab_t(cx, dst_cx, Some(seen), builtin, op)
+            let builtin = get_builtin_type_with_env(cx, env, reason.dupe(), Some(true), name);
+            elab_t(cx, env, dst_cx, Some(seen), builtin, op)
         }
         (TypeInner::DefT(reason, def_t), _)
             if matches!(
@@ -2846,6 +2998,7 @@ fn elab_t_concrete<'cx>(
         {
             elab_t(
                 cx,
+                env,
                 dst_cx,
                 Some(seen),
                 Type::new(TypeInner::FunProtoT(reason.dupe())),
@@ -2858,6 +3011,7 @@ fn elab_t_concrete<'cx>(
 
 fn elab_t_wildcard_op<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     seen: FlowOrdSet<i32>,
     t: Type,
@@ -2873,7 +3027,7 @@ fn elab_t_wildcard_op<'cx>(
         && object_like_op(op.deref())
     {
         let static_ = reposition(cx, reason.loc().dupe(), static_.dupe());
-        return elab_t(cx, dst_cx, Some(seen), static_, op);
+        return elab_t(cx, env, dst_cx, Some(seen), static_, op);
     }
     // ***************
     //  Class statics
@@ -2882,19 +3036,19 @@ fn elab_t_wildcard_op<'cx>(
         && let DefTInner::ClassT(instance) = def_t.deref()
         && object_like_op(op.deref())
     {
-        let statics = get_statics(cx, reason.dupe(), instance.dupe());
-        return elab_t(cx, dst_cx, Some(seen), statics, op);
+        let statics = get_statics(cx, env, reason.dupe(), instance.dupe());
+        return elab_t(cx, env, dst_cx, Some(seen), statics, op);
     }
     // **************************************
     //  Object, function, etc. library calls
     // **************************************
     if let TypeInner::ObjProtoT(reason) = t.deref() {
-        let obj_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Object");
-        return elab_t(cx, dst_cx, Some(seen), obj_proto, op);
+        let obj_proto = get_builtin_type_with_env(cx, env, reason.dupe(), Some(true), "Object");
+        return elab_t(cx, env, dst_cx, Some(seen), obj_proto, op);
     }
     if let TypeInner::FunProtoT(reason) = t.deref() {
-        let fun_proto = get_builtin_type(cx, reason.dupe(), Some(true), "Function");
-        return elab_t(cx, dst_cx, Some(seen), fun_proto, op);
+        let fun_proto = get_builtin_type_with_env(cx, env, reason.dupe(), Some(true), "Function");
+        return elab_t(cx, env, dst_cx, Some(seen), fun_proto, op);
     }
     // **********************
     //  Promoting primitives
@@ -2910,8 +3064,8 @@ fn elab_t_wildcard_op<'cx>(
             _ => None,
         };
         if let Some(name) = name {
-            let builtin = get_builtin_type(cx, reason.dupe(), Some(true), name);
-            return elab_t(cx, dst_cx, Some(seen), builtin, op);
+            let builtin = get_builtin_type_with_env(cx, env, reason.dupe(), Some(true), name);
+            return elab_t(cx, env, dst_cx, Some(seen), builtin, op);
         }
     }
     if let TypeInner::DefT(reason, def_t) = t.deref()
@@ -2926,6 +3080,7 @@ fn elab_t_wildcard_op<'cx>(
     {
         return elab_t(
             cx,
+            env,
             dst_cx,
             Some(seen),
             Type::new(TypeInner::FunProtoT(reason.dupe())),
@@ -2941,10 +3096,20 @@ pub fn get_builtin_type<'cx>(
     use_desc: Option<bool>,
     name: &str,
 ) -> Type {
+    get_builtin_type_with_env(cx, &FlowJsEnv::entry(), reason, use_desc, name)
+}
+
+fn get_builtin_type_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    use_desc: Option<bool>,
+    name: &str,
+) -> Type {
     let use_desc = use_desc.unwrap_or(false);
-    let t = flow_js_utils::lookup_builtin_type(cx, name, reason.dupe());
+    let t = flow_js_utils::lookup_builtin_type_with_env(cx, env, name, reason.dupe());
     let reason_type = type_util::reason_of_t(&t);
-    mk_instance_raw(cx, None, reason, Some(use_desc), reason_type.dupe(), t)
+    mk_instance_raw(cx, env, None, reason, Some(use_desc), reason_type.dupe(), t)
 }
 
 pub fn specialize<'cx>(
@@ -2955,8 +3120,29 @@ pub fn specialize<'cx>(
     reason_tapp: Reason,
     ts: Option<Rc<[Type]>>,
 ) -> Type {
+    specialize_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        t,
+        use_op,
+        reason_op,
+        reason_tapp,
+        ts,
+    )
+}
+
+fn specialize_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    t: Type,
+    use_op: UseOp,
+    reason_op: Reason,
+    reason_tapp: Reason,
+    ts: Option<Rc<[Type]>>,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -2969,9 +3155,16 @@ pub fn specialize<'cx>(
     )
 }
 
-fn this_specialize<'cx>(cx: &Context<'cx>, reason: Reason, this: Type, t: Type) -> Type {
+fn this_specialize<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    this: Type,
+    t: Type,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -2984,6 +3177,7 @@ fn this_specialize<'cx>(cx: &Context<'cx>, reason: Reason, this: Type, t: Type) 
 
 fn specialize_class<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     c: Type,
     reason_op: Reason,
     reason_tapp: Reason,
@@ -2991,8 +3185,9 @@ fn specialize_class<'cx>(
 ) -> Type {
     match ts {
         None => c,
-        Some(ts) => specialize(
+        Some(ts) => specialize_with_env(
             cx,
+            env,
             c,
             type_::unknown_use(),
             reason_op,
@@ -3002,8 +3197,18 @@ fn specialize_class<'cx>(
     }
 }
 
-pub fn mk_type_reference<'cx>(
+pub(crate) fn mk_type_reference<'cx>(
     cx: &Context<'cx>,
+    type_t_kind: TypeTKind,
+    reason: Reason,
+    c: Type,
+) -> Type {
+    mk_type_reference_with_env(cx, &FlowJsEnv::entry(), type_t_kind, reason, c)
+}
+
+fn mk_type_reference_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     type_t_kind: TypeTKind,
     reason: Reason,
     c: Type,
@@ -3011,10 +3216,12 @@ pub fn mk_type_reference<'cx>(
     let reason2 = reason.dupe();
     let type_t_kind2 = type_t_kind;
     let c2 = c.dupe();
-    let tvar = mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
+    let env_for_thunk = env.dupe();
+    let tvar = mk_lazy_tvar(cx, env, reason.dupe(), move |cx, id| {
         let dst_cx = effective_dst_cx(cx);
         let t = elab_t(
             cx,
+            &env_for_thunk,
             &dst_cx,
             None,
             c2.dupe(),
@@ -3023,7 +3230,7 @@ pub fn mk_type_reference<'cx>(
                 kind: type_t_kind2,
             }),
         );
-        resolve_id(cx, &dst_cx, reason2.dupe(), id, t);
+        resolve_id(cx, &env_for_thunk, &dst_cx, reason2.dupe(), id, t);
     });
     Type::new(TypeInner::AnnotT(reason, tvar, false))
 }
@@ -3035,8 +3242,27 @@ pub fn mk_instance<'cx>(
     use_desc: Option<bool>,
     c: Type,
 ) -> Type {
+    mk_instance_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        type_t_kind,
+        instance_reason,
+        use_desc,
+        c,
+    )
+}
+
+fn mk_instance_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    type_t_kind: Option<TypeTKind>,
+    instance_reason: Reason,
+    use_desc: Option<bool>,
+    c: Type,
+) -> Type {
     mk_instance_raw(
         cx,
+        env,
         type_t_kind,
         instance_reason.dupe(),
         use_desc,
@@ -3047,6 +3273,7 @@ pub fn mk_instance<'cx>(
 
 fn mk_instance_raw<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     type_t_kind: Option<TypeTKind>,
     instance_reason: Reason,
     use_desc: Option<bool>,
@@ -3057,6 +3284,7 @@ fn mk_instance_raw<'cx>(
     let use_desc = use_desc.unwrap_or(false);
     let source = elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         c,
@@ -3070,6 +3298,7 @@ fn mk_instance_raw<'cx>(
 
 fn mk_typeapp_instance<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason_op: Reason,
     reason_tapp: Reason,
@@ -3077,8 +3306,9 @@ fn mk_typeapp_instance<'cx>(
     c: Type,
     ts: Rc<[Type]>,
 ) -> Type {
-    let t = specialize(
+    let t = specialize_with_env(
         cx,
+        env,
         c.dupe(),
         use_op,
         reason_op,
@@ -3089,13 +3319,14 @@ fn mk_typeapp_instance<'cx>(
         type_util::mod_reason_of_t(&|_| reason_tapp.dupe(), &t)
     } else {
         let reason_type = type_util::reason_of_t(&c);
-        mk_instance_raw(cx, None, reason_tapp, None, reason_type.dupe(), t)
+        mk_instance_raw(cx, env, None, reason_tapp, None, reason_type.dupe(), t)
     }
 }
 
-fn get_statics<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+fn get_statics<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, reason: Reason, t: Type) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3111,9 +3342,22 @@ pub fn get_prop<'cx>(
     name: Name,
     t: Type,
 ) -> Type {
+    get_prop_with_env(cx, &FlowJsEnv::entry(), use_op, reason, op_reason, name, t)
+}
+
+fn get_prop_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    op_reason: Option<Reason>,
+    name: Name,
+    t: Type,
+) -> Type {
     let op_reason = op_reason.unwrap_or_else(|| reason.dupe());
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3126,9 +3370,27 @@ pub fn get_prop<'cx>(
     )
 }
 
-pub fn get_elem<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, key: Type, t: Type) -> Type {
+pub(crate) fn get_elem<'cx>(
+    cx: &Context<'cx>,
+    use_op: UseOp,
+    reason: Reason,
+    key: Type,
+    t: Type,
+) -> Type {
+    get_elem_with_env(cx, &FlowJsEnv::entry(), use_op, reason, key, t)
+}
+
+fn get_elem_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    key: Type,
+    t: Type,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3148,15 +3410,37 @@ pub fn qualify_type<'cx>(
     prop_name: Name,
     t: Type,
 ) -> Type {
+    qualify_type_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        op_reason,
+        prop_name,
+        t,
+    )
+}
+
+fn qualify_type_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    op_reason: Reason,
+    prop_name: Name,
+    t: Type,
+) -> Type {
     let op_reason2 = op_reason.dupe();
     let reason2 = reason.dupe();
     let use_op2 = use_op.dupe();
     let prop_name2 = prop_name.dupe();
     let t2 = t.dupe();
-    mk_lazy_tvar(cx, op_reason.dupe(), move |cx, id| {
+    let env_for_thunk = env.dupe();
+    mk_lazy_tvar(cx, env, op_reason.dupe(), move |cx, id| {
         let dst_cx = effective_dst_cx(cx);
         let t = elab_t(
             cx,
+            &env_for_thunk,
             &dst_cx,
             None,
             t2.dupe(),
@@ -3168,18 +3452,30 @@ pub fn qualify_type<'cx>(
                 },
             ))),
         );
-        resolve_id(cx, &dst_cx, op_reason2, id, t);
+        resolve_id(cx, &env_for_thunk, &dst_cx, op_reason2, id, t);
     })
 }
 
 pub fn assert_export_is_type<'cx>(cx: &Context<'cx>, reason: Reason, name: &str, t: Type) -> Type {
+    assert_export_is_type_with_env(cx, &FlowJsEnv::entry(), reason, name, t)
+}
+
+fn assert_export_is_type_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    name: &str,
+    t: Type,
+) -> Type {
     let reason2 = reason.dupe();
     let name2 = Name::new(name);
     let t2 = t.dupe();
-    mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
+    let env_for_thunk = env.dupe();
+    mk_lazy_tvar(cx, env, reason.dupe(), move |cx, id| {
         let dst_cx = effective_dst_cx(cx);
         let t = elab_t(
             cx,
+            &env_for_thunk,
             &dst_cx,
             None,
             t2.dupe(),
@@ -3188,12 +3484,32 @@ pub fn assert_export_is_type<'cx>(cx: &Context<'cx>, reason: Reason, name: &str,
                 name: name2.dupe(),
             }),
         );
-        resolve_id(cx, &dst_cx, reason2, id, t);
+        resolve_id(cx, &env_for_thunk, &dst_cx, reason2, id, t);
     })
 }
 
-pub fn cjs_require<'cx>(
+pub(crate) fn cjs_require<'cx>(
     cx: &Context<'cx>,
+    reason: Reason,
+    namespace_symbol: flow_common::flow_symbol::Symbol,
+    is_strict: bool,
+    standard_cjs_esm_interop: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
+    cjs_require_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        namespace_symbol,
+        is_strict,
+        standard_cjs_esm_interop,
+        resolved_require,
+    )
+}
+
+fn cjs_require_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     namespace_symbol: flow_common::flow_symbol::Symbol,
     is_strict: bool,
@@ -3203,12 +3519,14 @@ pub fn cjs_require<'cx>(
     let reason2 = reason.dupe();
     let namespace_symbol2 = namespace_symbol.clone();
     let lz = get_lazy_module_type_or_any_src(&resolved_require);
+    let env_for_thunk = env.dupe();
     let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let result = lz.get_forced(cx).clone();
         match result {
             Ok(module_type) => {
-                let (t, _) = flow_js_utils::cjs_require_t_kit::on_module_t(
+                let (t, _) = flow_js_utils::cjs_require_t_kit::on_module_t_with_env(
                     cx,
+                    &env_for_thunk,
                     |_cx, _loc, t| Ok(t),
                     reason2.dupe(),
                     namespace_symbol2.clone(),
@@ -3228,10 +3546,25 @@ pub fn cjs_require<'cx>(
         }
     })
         as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-    mk_sig_tvar(cx, reason, resolved)
+    mk_sig_tvar_with_env(cx, env, reason, resolved)
 }
 
-pub fn lazy_cjs_extract_named_exports<'cx>(
+pub(crate) fn lazy_cjs_extract_named_exports<'cx>(
+    reason: Reason,
+    local_module: type_::ModuleType,
+    t: Type,
+) -> Rc<
+    flow_lazy::Lazy<
+        Context<'cx>,
+        type_::ModuleType,
+        Box<dyn FnOnce(&Context<'cx>) -> type_::ModuleType + 'cx>,
+    >,
+> {
+    lazy_cjs_extract_named_exports_with_env(&FlowJsEnv::entry(), reason, local_module, t)
+}
+
+fn lazy_cjs_extract_named_exports_with_env<'cx>(
+    env: &FlowJsEnv,
     reason: Reason,
     local_module: type_::ModuleType,
     t: Type,
@@ -3243,11 +3576,13 @@ pub fn lazy_cjs_extract_named_exports<'cx>(
     >,
 > {
     let reason2 = reason.dupe();
+    let env = env.dupe();
     Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let reason3 = reason2.dupe();
         let concretize = |t: Type| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
             let result = elab_t(
                 cx,
+                &env,
                 &effective_dst_cx(cx),
                 None,
                 t,
@@ -3282,9 +3617,20 @@ pub fn lazy_cjs_extract_named_exports<'cx>(
     })))
 }
 
-pub fn import_typeof<'cx>(cx: &Context<'cx>, reason: Reason, name: &str, t: Type) -> Type {
+pub(crate) fn import_typeof<'cx>(cx: &Context<'cx>, reason: Reason, name: &str, t: Type) -> Type {
+    import_typeof_with_env(cx, &FlowJsEnv::entry(), reason, name, t)
+}
+
+fn import_typeof_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    name: &str,
+    t: Type,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3304,12 +3650,36 @@ pub fn import_default<'cx>(
     is_strict: bool,
     resolved_require: flow_typing_context::ResolvedRequire<'cx>,
 ) -> Type {
+    import_default_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        import_kind,
+        export_name,
+        module_name,
+        is_strict,
+        resolved_require,
+    )
+}
+
+fn import_default_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    import_kind: type_::ImportKind,
+    export_name: &str,
+    module_name: flow_common::flow_import_specifier::Userland,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
     let on_module_reason = reason.dupe();
     let export_name = export_name.to_owned();
+    let on_module_env = env.dupe();
     let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
-        let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t(
+        let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t_with_env(
             cx,
-            &with_concretized_type,
+            &on_module_env,
+            &|cx, r, f, t| with_concretized_type(cx, &on_module_env, r, f, t),
             on_module_reason.dupe(),
             import_kind.clone(),
             &export_name,
@@ -3330,7 +3700,7 @@ pub fn import_default<'cx>(
             },
         ) as Box<dyn FnOnce(&Context<'cx>) -> Type>,
     ));
-    mk_sig_tvar(cx, reason, resolved)
+    mk_sig_tvar_with_env(cx, env, reason, resolved)
 }
 
 pub fn import_named<'cx>(
@@ -3342,13 +3712,37 @@ pub fn import_named<'cx>(
     is_strict: bool,
     resolved_require: flow_typing_context::ResolvedRequire<'cx>,
 ) -> Type {
+    import_named_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        import_kind,
+        export_name,
+        module_name,
+        is_strict,
+        resolved_require,
+    )
+}
+
+fn import_named_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    import_kind: type_::ImportKind,
+    export_name: &str,
+    module_name: flow_common::flow_import_specifier::Userland,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
     let reason2 = reason.dupe();
     let export_name2: FlowSmolStr = export_name.into();
     let module_name2 = module_name.clone();
+    let on_module_env = env.dupe();
     let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
-        let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t(
+        let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t_with_env(
             cx,
-            &with_concretized_type,
+            &on_module_env,
+            &|cx, r, f, t| with_concretized_type(cx, &on_module_env, r, f, t),
             reason2.dupe(),
             import_kind.clone(),
             &export_name2,
@@ -3369,11 +3763,33 @@ pub fn import_named<'cx>(
         }
     })
         as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-    mk_sig_tvar(cx, reason, resolved)
+    mk_sig_tvar_with_env(cx, env, reason, resolved)
 }
 
-pub fn import_default_for_extends<'cx>(
+pub(crate) fn import_default_for_extends<'cx>(
     cx: &Context<'cx>,
+    reason: Reason,
+    import_kind: type_::ImportKind,
+    local_name: &FlowSmolStr,
+    module_name: flow_common::flow_import_specifier::Userland,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
+    import_default_for_extends_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        import_kind,
+        local_name,
+        module_name,
+        is_strict,
+        resolved_require,
+    )
+}
+
+fn import_default_for_extends_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     import_kind: type_::ImportKind,
     local_name: &FlowSmolStr,
@@ -3384,9 +3800,11 @@ pub fn import_default_for_extends<'cx>(
     let reason2 = reason.dupe();
     let local_name = local_name.dupe();
     let module_name2 = module_name.clone();
+    let on_module_env = env.dupe();
     let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
         let (_name_loc_opt, t) = flow_js_utils::import_default_t_kit::on_module_t_for_extends(
             cx,
+            &on_module_env,
             reason2.dupe(),
             import_kind.clone(),
             local_name.as_str(),
@@ -3407,11 +3825,33 @@ pub fn import_default_for_extends<'cx>(
         }
     })
         as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-    mk_sig_tvar(cx, reason, resolved)
+    mk_sig_tvar_with_env(cx, env, reason, resolved)
 }
 
-pub fn import_named_for_extends<'cx>(
+pub(crate) fn import_named_for_extends<'cx>(
     cx: &Context<'cx>,
+    reason: Reason,
+    import_kind: type_::ImportKind,
+    export_name: &FlowSmolStr,
+    module_name: flow_common::flow_import_specifier::Userland,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
+    import_named_for_extends_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        import_kind,
+        export_name,
+        module_name,
+        is_strict,
+        resolved_require,
+    )
+}
+
+fn import_named_for_extends_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: Reason,
     import_kind: type_::ImportKind,
     export_name: &FlowSmolStr,
@@ -3422,9 +3862,11 @@ pub fn import_named_for_extends<'cx>(
     let reason2 = reason.dupe();
     let export_name2 = export_name.dupe();
     let module_name2 = module_name.clone();
+    let on_module_env = env.dupe();
     let on_module = move |cx: &Context<'cx>, m: &type_::ModuleType| -> Type {
         let (_name_loc_opt, t) = flow_js_utils::import_named_t_kit::on_module_t_for_extends(
             cx,
+            &on_module_env,
             reason2.dupe(),
             import_kind.clone(),
             &export_name2,
@@ -3445,7 +3887,7 @@ pub fn import_named_for_extends<'cx>(
         }
     })
         as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-    mk_sig_tvar(cx, reason, resolved)
+    mk_sig_tvar_with_env(cx, env, reason, resolved)
 }
 
 pub fn import_ns<'cx>(
@@ -3455,26 +3897,47 @@ pub fn import_ns<'cx>(
     is_strict: bool,
     resolved_require: flow_typing_context::ResolvedRequire<'cx>,
 ) -> Type {
+    import_ns_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        namespace_symbol,
+        is_strict,
+        resolved_require,
+    )
+}
+
+fn import_ns_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    namespace_symbol: flow_common::flow_symbol::Symbol,
+    is_strict: bool,
+    resolved_require: flow_typing_context::ResolvedRequire<'cx>,
+) -> Type {
     let reason2 = reason.dupe();
     let namespace_symbol2 = namespace_symbol.clone();
     let lz = get_lazy_module_type_or_any_src(&resolved_require);
+    let env_for_thunk = env.dupe();
     let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let result = lz.get_forced(cx).clone();
         match result {
             Ok(m) => {
-                let (values_type, types_tmap) = flow_js_utils::import_module_ns_t_kit::on_module_t(
-                    cx,
-                    false,
-                    reason2.dupe(),
-                    is_strict,
-                    &m,
-                )
-                .unwrap_or_else(|_| {
-                    (
-                        type_::any_t::error(reason2.dupe()),
-                        properties::Id::generate_id(),
+                let (values_type, types_tmap) =
+                    flow_js_utils::import_module_ns_t_kit::on_module_t_with_env(
+                        cx,
+                        &env_for_thunk,
+                        false,
+                        reason2.dupe(),
+                        is_strict,
+                        &m,
                     )
-                });
+                    .unwrap_or_else(|_| {
+                        (
+                            type_::any_t::error(reason2.dupe()),
+                            properties::Id::generate_id(),
+                        )
+                    });
                 Type::new(TypeInner::NamespaceT(Rc::new(type_::NamespaceType {
                     namespace_symbol: namespace_symbol2.clone(),
                     values_type,
@@ -3485,7 +3948,7 @@ pub fn import_ns<'cx>(
         }
     })
         as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-    mk_sig_tvar(cx, reason, resolved)
+    mk_sig_tvar_with_env(cx, env, reason, resolved)
 }
 
 pub fn copy_named_exports<'cx>(
@@ -3507,6 +3970,22 @@ pub fn copy_type_exports<'cx>(
     reason: Reason,
     target_module_type: &type_::ModuleType,
 ) {
+    copy_type_exports_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        source_module,
+        reason,
+        target_module_type,
+    )
+}
+
+fn copy_type_exports_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    source_module: Result<type_::ModuleType, Type>,
+    reason: Reason,
+    target_module_type: &type_::ModuleType,
+) {
     match source_module {
         Ok(m) => {
             let reason2 = reason.dupe();
@@ -3517,6 +3996,7 @@ pub fn copy_type_exports<'cx>(
                  -> Result<Type, flow_utils_concurrency::job_error::JobError> {
                     let result = elab_t(
                         cx,
+                        env,
                         &effective_dst_cx(cx),
                         None,
                         t,
@@ -3557,12 +4037,24 @@ pub fn mk_non_generic_render_type<'cx>(
     renders_variant: type_::RendersVariant,
     t: Type,
 ) -> Type {
-    let concretize = |cx: &Context<'cx>,
-                      t: &Type|
-     -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
+    mk_non_generic_render_type_with_env(cx, &FlowJsEnv::entry(), reason, renders_variant, t)
+}
+
+fn mk_non_generic_render_type_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    renders_variant: type_::RendersVariant,
+    t: Type,
+) -> Type {
+    let concretize_env = env.dupe();
+    let concretize = move |cx: &Context<'cx>,
+                           t: &Type|
+          -> Result<Vec<Type>, flow_utils_concurrency::job_error::JobError> {
         let c = TypeCollector::create();
         elab_t(
             cx,
+            &concretize_env,
             &effective_dst_cx(cx),
             None,
             t.dupe(),
@@ -3595,8 +4087,20 @@ pub fn arith<'cx>(
     rhs_t: Type,
     kind: type_::arith_kind::ArithKind,
 ) -> Type {
+    arith_with_env(cx, &FlowJsEnv::entry(), reason, lhs_t, rhs_t, kind)
+}
+
+fn arith_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    lhs_t: Type,
+    rhs_t: Type,
+    kind: type_::arith_kind::ArithKind,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         lhs_t,
@@ -3615,8 +4119,19 @@ pub fn unary_arith<'cx>(
     t: Type,
     kind: type_::UnaryArithKind,
 ) -> Type {
+    unary_arith_with_env(cx, &FlowJsEnv::entry(), reason, t, kind)
+}
+
+fn unary_arith_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    t: Type,
+    kind: type_::UnaryArithKind,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3625,8 +4140,13 @@ pub fn unary_arith<'cx>(
 }
 
 pub fn unary_not<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+    unary_not_with_env(cx, &FlowJsEnv::entry(), reason, t)
+}
+
+fn unary_not_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, reason: Reason, t: Type) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3635,8 +4155,13 @@ pub fn unary_not<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
 }
 
 pub fn mixin<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+    mixin_with_env(cx, &FlowJsEnv::entry(), reason, t)
+}
+
+fn mixin_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, reason: Reason, t: Type) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3644,10 +4169,21 @@ pub fn mixin<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
     )
 }
 
-// and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
 pub fn obj_rest<'cx>(cx: &Context<'cx>, reason: Reason, xs: Vec<FlowSmolStr>, t: Type) -> Type {
+    obj_rest_with_env(cx, &FlowJsEnv::entry(), reason, xs, t)
+}
+
+// and obj_rest cx reason xs t = elab_t cx t (Annot_ObjRestT (reason, xs))
+fn obj_rest_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    xs: Vec<FlowSmolStr>,
+    t: Type,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,
@@ -3670,6 +4206,7 @@ pub fn arr_rest<'cx>(cx: &Context<'cx>, _use_op: UseOp, reason: Reason, _i: i32,
 
 fn object_kit_concrete<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     use_op: UseOp,
     op: &Op<'cx>,
@@ -3684,14 +4221,16 @@ fn object_kit_concrete<'cx>(
     use flow_typing_type::type_::object::ObjectToolReactConfigData;
 
     let add_output = |cx: &Context<'cx>,
+                      env: &FlowJsEnv,
                       msg: flow_typing_errors::error_message::ErrorMessage<flow_aloc::ALoc>|
      -> Result<(), FlowJsException> {
-        flow_js_utils::add_output(cx, msg)?;
+        flow_js_utils::add_output_with_env(cx, env, msg)?;
         Ok(())
     };
     let return_ =
         |_cx: &Context<'cx>, _use_op: UseOp, t: Type| -> Result<Type, FlowJsException> { Ok(t) };
     let recurse = |cx: &Context<'cx>,
+                   env: &FlowJsEnv,
                    use_op: UseOp,
                    reason: &Reason,
                    resolve_tool: object::ResolveTool,
@@ -3700,6 +4239,7 @@ fn object_kit_concrete<'cx>(
      -> Result<Type, FlowJsException> {
         Ok(object_kit(
             cx,
+            env,
             dst_cx,
             use_op,
             reason.dupe(),
@@ -3708,8 +4248,12 @@ fn object_kit_concrete<'cx>(
             x,
         ))
     };
-    let statics = |cx: &Context<'cx>, reason: &Reason, t: &Type| -> Result<Type, FlowJsException> {
-        Ok(get_statics(cx, reason.dupe(), t.dupe()))
+    let statics = |cx: &Context<'cx>,
+                   env: &FlowJsEnv,
+                   reason: &Reason,
+                   t: &Type|
+     -> Result<Type, FlowJsException> {
+        Ok(get_statics(cx, env, reason.dupe(), t.dupe()))
     };
     let op2 = op.clone();
     let next = |cx: &Context<'cx>,
@@ -3719,17 +4263,18 @@ fn object_kit_concrete<'cx>(
                 x: vec1::Vec1<object::Slice>|
      -> Result<Type, FlowJsException> {
         match tool {
-            object::Tool::MakeExact => slice_utils::object_make_exact(cx, reason, x),
-            object::Tool::Spread(box (options, state)) => slice_utils::object_spread(
+            object::Tool::MakeExact => slice_utils::object_make_exact(cx, env, reason, x),
+            object::Tool::Spread(box (options, state)) => slice_utils::object_spread_with_env(
                 &|_cx, _use_op, _d1, _d2| Ok(()),
                 &add_output,
                 &return_,
-                &|cx, use_op, reason, resolve_tool, tool, x| {
-                    recurse(cx, use_op, reason, resolve_tool, &tool, x)
+                &|cx, env, use_op, reason, resolve_tool, tool, x| {
+                    recurse(cx, env, use_op, reason, resolve_tool, &tool, x)
                 },
                 options,
                 state.clone(),
                 cx,
+                env,
                 use_op,
                 reason,
                 x,
@@ -3745,16 +4290,17 @@ fn object_kit_concrete<'cx>(
                                   _cx: &Context<'cx>,
                                   (_t1, _t2): (&Type, &Type)|
                  -> Result<(), FlowJsException> { Ok(()) };
-                slice_utils::object_rest(
+                slice_utils::object_rest_with_env(
                     &add_output,
                     &rest_return,
-                    &|cx, use_op, reason, resolve_tool, tool, x| {
-                        recurse(cx, use_op, reason, resolve_tool, &tool, x)
+                    &|cx, env, use_op, reason, resolve_tool, tool, x| {
+                        recurse(cx, env, use_op, reason, resolve_tool, &tool, x)
                     },
                     &subt_check,
                     options,
                     state,
                     cx,
+                    env,
                     use_op,
                     reason,
                     x,
@@ -3782,6 +4328,7 @@ fn object_kit_concrete<'cx>(
                     &return_,
                     props,
                     cx,
+                    env,
                     use_op,
                     reason,
                     x,
@@ -3794,13 +4341,14 @@ fn object_kit_concrete<'cx>(
             }
         }
     };
-    slice_utils::run(
+    slice_utils::run_with_env(
         &add_output,
         &return_,
         &next,
         &recurse,
         &statics,
         cx,
+        env,
         use_op,
         &reason,
         resolve_tool,
@@ -3812,6 +4360,7 @@ fn object_kit_concrete<'cx>(
 
 fn object_kit<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     dst_cx: &Context<'cx>,
     use_op: UseOp,
     reason: Reason,
@@ -3821,6 +4370,7 @@ fn object_kit<'cx>(
 ) -> Type {
     elab_t(
         cx,
+        env,
         dst_cx,
         None,
         t,
@@ -3841,10 +4391,23 @@ pub fn object_spread<'cx>(
     state: type_::object::spread::State,
     t: Type,
 ) -> Type {
+    object_spread_with_env(cx, &FlowJsEnv::entry(), use_op, reason, target, state, t)
+}
+
+fn object_spread_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    target: type_::object::spread::Target,
+    state: type_::object::spread::State,
+    t: Type,
+) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     let tool = type_::object::Tool::Spread(Box::new((target, state)));
     object_kit(
         cx,
+        env,
         &effective_dst_cx(cx),
         use_op,
         reason,
@@ -3856,6 +4419,7 @@ pub fn object_spread<'cx>(
 
 fn object_rest_internal<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: Reason,
     target: type_::object::rest::MergeMode,
@@ -3866,6 +4430,7 @@ fn object_rest_internal<'cx>(
     let tool = type_::object::Tool::Rest(Box::new((target, state)));
     object_kit(
         cx,
+        env,
         &effective_dst_cx(cx),
         use_op,
         reason,
@@ -3875,10 +4440,17 @@ fn object_rest_internal<'cx>(
     )
 }
 
-fn make_readonly<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, t: Type) -> Type {
+fn make_readonly<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    t: Type,
+) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
+        env,
         &effective_dst_cx(cx),
         use_op,
         reason,
@@ -3888,10 +4460,17 @@ fn make_readonly<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, t: Type)
     )
 }
 
-fn make_partial<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, t: Type) -> Type {
+fn make_partial<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    t: Type,
+) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
+        env,
         &effective_dst_cx(cx),
         use_op,
         reason,
@@ -3901,10 +4480,17 @@ fn make_partial<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, t: Type) 
     )
 }
 
-fn make_required<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, t: Type) -> Type {
+fn make_required<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    reason: Reason,
+    t: Type,
+) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
+        env,
         &effective_dst_cx(cx),
         use_op,
         reason,
@@ -3914,10 +4500,11 @@ fn make_required<'cx>(cx: &Context<'cx>, use_op: UseOp, reason: Reason, t: Type)
     )
 }
 
-fn make_exact<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+fn make_exact<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, reason: Reason, t: Type) -> Type {
     let resolve_tool = type_::object::ResolveTool::Resolve(type_::object::Resolve::Next);
     object_kit(
         cx,
+        env,
         &effective_dst_cx(cx),
         type_::unknown_use(),
         reason,
@@ -3928,8 +4515,18 @@ fn make_exact<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
 }
 
 pub fn obj_test_proto<'cx>(cx: &Context<'cx>, reason: Reason, t: Type) -> Type {
+    obj_test_proto_with_env(cx, &FlowJsEnv::entry(), reason, t)
+}
+
+fn obj_test_proto_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: Reason,
+    t: Type,
+) -> Type {
     elab_t(
         cx,
+        env,
         &effective_dst_cx(cx),
         None,
         t,

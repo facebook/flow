@@ -23,6 +23,7 @@ use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::string_case_transform;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::BigIntLiteral;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -660,13 +661,15 @@ pub fn try_resolve_to_strings(
 pub fn extract_strings_concretized<'cx>(
     possible_concrete_types_for_inspection: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         &reason::Reason,
         &Type,
     ) -> Result<Vec<Type>, FlowJsException>,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     t: &Type,
 ) -> Result<Option<Vec<FlowSmolStr>>, FlowJsException> {
-    let ts = possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)?;
+    let ts = possible_concrete_types_for_inspection(cx, env, type_util::reason_of_t(t), t)?;
     Ok(ts
         .iter()
         .map(|t| extract_strings_aux(true, t))
@@ -677,15 +680,17 @@ pub fn extract_strings_concretized<'cx>(
 pub fn try_resolve_concretized<'cx>(
     possible_concrete_types_for_inspection: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         &reason::Reason,
         &Type,
     ) -> Result<Vec<Type>, FlowJsException>,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     types: &[Type],
 ) -> Result<Option<Vec<Vec<FlowSmolStr>>>, FlowJsException> {
     types
         .iter()
-        .map(|t| extract_strings_concretized(possible_concrete_types_for_inspection, cx, t))
+        .map(|t| extract_strings_concretized(possible_concrete_types_for_inspection, cx, env, t))
         .collect::<Result<Option<Vec<_>>, _>>()
 }
 
@@ -693,14 +698,16 @@ pub fn try_resolve_concretized<'cx>(
 pub fn try_resolve_to_strings_concretized<'cx>(
     possible_concrete_types_for_inspection: &dyn Fn(
         &Context<'cx>,
+        &FlowJsEnv,
         &reason::Reason,
         &Type,
     ) -> Result<Vec<Type>, FlowJsException>,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     quasis: &[FlowSmolStr],
     types: &[Type],
 ) -> Result<Option<Vec<FlowSmolStr>>, FlowJsException> {
-    let resolved = try_resolve_concretized(possible_concrete_types_for_inspection, cx, types)?;
+    let resolved = try_resolve_concretized(possible_concrete_types_for_inspection, cx, env, types)?;
     Ok(finalize_to_strings(quasis, resolved))
 }
 
@@ -924,9 +931,15 @@ pub fn resolve<'cx>(
 /// inference for APIs like `<T extends 'a'|'b'>(x: \`get${T}\`): T`.
 pub fn concretize_placeholders<'cx>(
     possible_concrete_types_for_inspection: Option<
-        &dyn Fn(&Context<'cx>, &reason::Reason, &Type) -> Result<Vec<Type>, FlowJsException>,
+        &dyn Fn(
+            &Context<'cx>,
+            &FlowJsEnv,
+            &reason::Reason,
+            &Type,
+        ) -> Result<Vec<Type>, FlowJsException>,
     >,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     upper: &Type,
     types: &[Type],
 ) -> Result<Vec<Type>, FlowJsException> {
@@ -953,7 +966,7 @@ pub fn concretize_placeholders<'cx>(
             out.push(t.dupe());
             continue;
         }
-        match extract_strings_concretized(concretize, cx, t)? {
+        match extract_strings_concretized(concretize, cx, env, t)? {
             Some(ss) => {
                 match mk_singleton_or_union(&union_reason, union_aloc.dupe(), mk_str, &ss) {
                     Some(t2) => out.push(t2),
@@ -977,9 +990,15 @@ pub fn concretize_placeholders<'cx>(
 /// with their stringified singleton/union form before matching.
 pub fn subtype_str_lit_into_template<'cx>(
     possible_concrete_types_for_inspection: Option<
-        &dyn Fn(&Context<'cx>, &reason::Reason, &Type) -> Result<Vec<Type>, FlowJsException>,
+        &dyn Fn(
+            &Context<'cx>,
+            &FlowJsEnv,
+            &reason::Reason,
+            &Type,
+        ) -> Result<Vec<Type>, FlowJsException>,
     >,
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lower: &Type,
@@ -988,12 +1007,19 @@ pub fn subtype_str_lit_into_template<'cx>(
     quasis: &[FlowSmolStr],
     types: &[Type],
 ) -> Result<(), FlowJsException> {
-    let types = concretize_placeholders(possible_concrete_types_for_inspection, cx, upper, types)?;
+    let types = concretize_placeholders(
+        possible_concrete_types_for_inspection,
+        cx,
+        env,
+        upper,
+        types,
+    )?;
     let (quasis, types) = fold_concrete_placeholders(quasis, &types);
-    flow_js_utils::update_lit_type_from_annot(cx, lower);
+    flow_js_utils::update_lit_type_from_annot(cx, env, lower);
     match match_string_against_template(s, &quasis, &types) {
-        MatchResult::InvariantViolation => flow_js_utils::add_output(
+        MatchResult::InvariantViolation => flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::EInternal(Box::new((
                 type_util::reason_of_t(upper).loc().dupe(),
                 InternalError::UnexpectedAnnotationInference(FlowSmolStr::new_inline(
@@ -1001,8 +1027,9 @@ pub fn subtype_str_lit_into_template<'cx>(
                 )),
             ))),
         ),
-        MatchResult::Mismatch => flow_js_utils::add_output(
+        MatchResult::Mismatch => flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::EIncompatibleDefs(Box::new(EIncompatibleDefsData {
                 use_op: use_op.dupe(),
                 reason_lower: type_util::reason_of_t(lower).dupe(),
@@ -1030,7 +1057,14 @@ pub fn subtype_str_lit_into_template<'cx>(
                             value: part_str,
                         }),
                     ));
-                    crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &str_t, &t)?;
+                    crate::flow_js::FlowJs::rec_flow_t_with_env(
+                        cx,
+                        env,
+                        trace,
+                        use_op.dupe(),
+                        &str_t,
+                        &t,
+                    )?;
                 }
             }
             Ok(())
@@ -1042,6 +1076,7 @@ pub fn subtype_str_lit_into_template<'cx>(
 /// (expanding generics) and flow each one into the RHS union independently.
 pub fn subtype_template_into_union<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lower: &Type,
@@ -1061,7 +1096,7 @@ pub fn subtype_template_into_union<'cx>(
                 value: s,
             }),
         ));
-        crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &str_t, upper)?;
+        crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &str_t, upper)?;
     }
     Ok(())
 }
@@ -1112,6 +1147,7 @@ pub enum TlToTlResult {
 ///    Uses raw LHS quasis/types (unfolded), matching the original semantics.
 pub fn try_subtype_template_to_template<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     l_reason: &reason::Reason,
@@ -1145,6 +1181,7 @@ pub fn try_subtype_template_to_template<'cx>(
         subtype_str_lit_into_template(
             None,
             cx,
+            env,
             trace,
             use_op,
             &lower,
@@ -1162,7 +1199,7 @@ pub fn try_subtype_template_to_template<'cx>(
                 TypeInner::DefT(_, def) if matches!(def.deref(), DefTInner::StrGeneralT(_))
             ) && placeholder_coerces_to_string(l);
             if !skip {
-                crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op.dupe(), l, r)?;
+                crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), l, r)?;
             }
         }
         return Ok(TlToTlResult::Handled);
@@ -1178,14 +1215,14 @@ pub fn try_subtype_template_to_template<'cx>(
     {
         let chopped = &lp.as_str()[rp.len()..];
         if chopped.is_empty() {
-            crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op, &lt[0], &rt[0])?;
+            crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &lt[0], &rt[0])?;
         } else {
             let lower = Type::new(TypeInner::TemplateLiteralT {
                 reason: l_reason.dupe(),
                 quasis: vec![chopped.into(), FlowSmolStr::new_inline("")],
                 types: vec![lt[0].dupe()],
             });
-            crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op, &lower, &rt[0])?;
+            crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &lower, &rt[0])?;
         }
         return Ok(TlToTlResult::Handled);
     }
@@ -1200,14 +1237,14 @@ pub fn try_subtype_template_to_template<'cx>(
     {
         let chopped = &ls.as_str()[..ls.len() - rs.len()];
         if chopped.is_empty() {
-            crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op, &lt[0], &rt[0])?;
+            crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &lt[0], &rt[0])?;
         } else {
             let lower = Type::new(TypeInner::TemplateLiteralT {
                 reason: l_reason.dupe(),
                 quasis: vec![FlowSmolStr::new_inline(""), chopped.into()],
                 types: vec![lt[0].dupe()],
             });
-            crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op, &lower, &rt[0])?;
+            crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &lower, &rt[0])?;
         }
         return Ok(TlToTlResult::Handled);
     }
@@ -1225,6 +1262,7 @@ pub fn try_subtype_template_to_template<'cx>(
 /// can't be resolved.
 pub fn subtype_template_to_other<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &reason::Reason,
@@ -1233,8 +1271,11 @@ pub fn subtype_template_to_other<'cx>(
     types: &[Type],
 ) -> Result<(), FlowJsException> {
     match try_resolve_to_strings_concretized(
-        &|cx, r, t| crate::flow_js::FlowJs::possible_concrete_types_for_inspection(cx, r, t),
+        &|cx, env, r, t| {
+            crate::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)
+        },
         cx,
+        env,
         quasis,
         types,
     )? {
@@ -1261,7 +1302,7 @@ pub fn subtype_template_to_other<'cx>(
                         DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
                     ))
                 });
-            crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op, &lower, upper)
+            crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &lower, upper)
         }
         None => {
             let literal_kind = if quasis.iter().any(|q| !q.is_empty()) {
@@ -1273,7 +1314,7 @@ pub fn subtype_template_to_other<'cx>(
                 reason.dupe(),
                 DefT::new(DefTInner::StrGeneralT(literal_kind)),
             ));
-            crate::flow_js::FlowJs::rec_flow_t(cx, trace, use_op, &str_t, upper)
+            crate::flow_js::FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &str_t, upper)
         }
     }
 }

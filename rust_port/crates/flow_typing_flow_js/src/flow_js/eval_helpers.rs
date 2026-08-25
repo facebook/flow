@@ -8,6 +8,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::ConditionalTData;
 use flow_typing_type::type_::DestructorConditionalTypeData;
@@ -35,6 +36,7 @@ use super::*;
 
 pub(super) fn eval_selector<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     annot: bool,
     reason: &Reason,
@@ -69,6 +71,7 @@ pub(super) fn eval_selector<'cx>(
                 let default_tout = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout| {
                     flow_opt(
                         cx,
+                        env,
                         trace,
                         (
                             tout,
@@ -163,11 +166,12 @@ pub(super) fn eval_selector<'cx>(
             Type::new(TypeInner::OpenT(tvar.dupe())),
         )),
     };
-    flow_opt(cx, trace, (curr_t, &use_t))
+    flow_opt(cx, env, trace, (curr_t, &use_t))
 }
 
 pub(super) fn evaluate_type_destructor<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -175,12 +179,17 @@ pub(super) fn evaluate_type_destructor<'cx>(
     d: &Destructor,
     tvar: &Tvar,
 ) -> Result<(), FlowJsException> {
-    match evaluate_type_destructor_(cx, trace, use_op.dupe(), reason, t, d, tvar) {
+    match evaluate_type_destructor_(cx, env, trace, use_op.dupe(), reason, t, d, tvar) {
         Ok(()) => Ok(()),
         Err(FlowJsException::LimitExceeded) => {
-            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reason.loc().dupe()))?;
+            flow_js_utils::add_output_with_env(
+                cx,
+                env,
+                ErrorMessage::ERecursionLimit(reason.loc().dupe()),
+            )?;
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (
@@ -195,6 +204,7 @@ pub(super) fn evaluate_type_destructor<'cx>(
 
 fn evaluate_type_destructor_<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -217,7 +227,7 @@ fn evaluate_type_destructor_<'cx>(
                     tout: Box::new(tvar.dupe()),
                 },
             )));
-            rec_flow(cx, trace, (&t, &x))
+            rec_flow(cx, env, trace, (&t, &x))
         }
         // | GenericT { bound = OpenT _; _ } ->
         TypeInner::GenericT(box GenericTData {
@@ -236,7 +246,7 @@ fn evaluate_type_destructor_<'cx>(
                     tout: Box::new(tvar.dupe()),
                 },
             )));
-            rec_flow(cx, trace, (&t, &x))
+            rec_flow(cx, env, trace, (&t, &x))
         }
         TypeInner::GenericT(box GenericTData {
             bound,
@@ -262,9 +272,9 @@ fn evaluate_type_destructor_<'cx>(
                     bound: inner_t.dupe(),
                     no_infer: *no_infer,
                 })));
-                rec_flow(cx, trace, (&generic_t, &x))
+                rec_flow(cx, env, trace, (&generic_t, &x))
             } else {
-                eval_destructor(cx, trace, use_op, reason, &t, d, tvar)
+                eval_destructor(cx, env, trace, use_op, reason, &t, d, tvar)
             }
         }
         TypeInner::EvalT { .. } => {
@@ -277,7 +287,7 @@ fn evaluate_type_destructor_<'cx>(
                     tout: Box::new(tvar.dupe()),
                 },
             )));
-            rec_flow(cx, trace, (&t, &x))
+            rec_flow(cx, env, trace, (&t, &x))
         }
         TypeInner::AnnotT(r, inner_t, use_desc) => {
             let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
@@ -289,15 +299,16 @@ fn evaluate_type_destructor_<'cx>(
                     tout: Box::new(tvar.dupe()),
                 },
             )));
-            rec_flow(cx, trace, (inner_t, &x))
+            rec_flow(cx, env, trace, (inner_t, &x))
         }
-        _ => eval_destructor(cx, trace, use_op, reason, &t, d, tvar),
+        _ => eval_destructor(cx, env, trace, use_op, reason, &t, d, tvar),
     }
 }
 
 // and mk_type_destructor cx ~trace use_op reason t d id =
 pub(super) fn mk_type_destructor<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -346,6 +357,7 @@ pub(super) fn mk_type_destructor<'cx>(
                     reason.dupe(),
                     t.dupe(),
                     move |cx, t| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                        let env = &FlowJsEnv::entry();
                         match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                             cx,
                             reason_clone.dupe(),
@@ -355,6 +367,7 @@ pub(super) fn mk_type_destructor<'cx>(
                                 let cache_snapshot = cx.take_cache_snapshot();
                                 let result = evaluate_type_destructor(
                                     cx,
+                                    env,
                                     trace,
                                     use_op_clone.dupe(),
                                     &reason_clone,
@@ -404,6 +417,7 @@ pub(super) fn mk_type_destructor<'cx>(
                         cx.set_evaluated(evaluated);
                         evaluate_type_destructor(
                             cx,
+                            env,
                             trace,
                             use_op_clone,
                             &reason_clone,
@@ -431,6 +445,7 @@ pub(super) fn mk_type_destructor<'cx>(
 
 pub(super) fn eval_destructor<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -450,6 +465,7 @@ pub(super) fn eval_destructor<'cx>(
         // into the structure of the rest of this function. We handle them upfront instead.
         let mapped_t = crate::object_kit::mapped_type_of_keys(
             cx,
+            env,
             trace,
             use_op.dupe(),
             reason,
@@ -462,6 +478,7 @@ pub(super) fn eval_destructor<'cx>(
         // Intentional unknown_use for the tout Flow
         return rec_flow(
             cx,
+            env,
             trace,
             (
                 &mapped_t,
@@ -498,7 +515,7 @@ pub(super) fn eval_destructor<'cx>(
             upper: Box::new(upper),
             id: flow_common::reason::mk_id() as i32,
         })));
-        rec_flow(cx, trace, (&first, &u))
+        rec_flow(cx, env, trace, (&first, &u))
     };
 
     let destruct_maybe = |f: Option<Box<dyn Fn(Type) -> Type>>,
@@ -531,6 +548,7 @@ pub(super) fn eval_destructor<'cx>(
                 // and lower_t to be inspectable
                 eagerly_eval_destructor_if_resolved(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     reason,
@@ -575,6 +593,7 @@ pub(super) fn eval_destructor<'cx>(
             });
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 (&nominal_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
@@ -622,7 +641,7 @@ pub(super) fn eval_destructor<'cx>(
                 name: name.dupe(),
                 no_infer: *no_infer,
             })));
-            eval_destructor(cx, trace, use_op, reason, &new_generic, d, tout)
+            eval_destructor(cx, env, trace, use_op, reason, &new_generic, d, tout)
         }
         (
             TypeInner::GenericT(box GenericTData {
@@ -646,7 +665,7 @@ pub(super) fn eval_destructor<'cx>(
                 name: name.dupe(),
                 no_infer: *no_infer,
             })));
-            eval_destructor(cx, trace, use_op, reason, &new_generic, d, tout)
+            eval_destructor(cx, env, trace, use_op, reason, &new_generic, d, tout)
         }
         (
             TypeInner::NominalT {
@@ -666,7 +685,7 @@ pub(super) fn eval_destructor<'cx>(
             && let nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } =
                 &nominal_type.underlying_t =>
         {
-            eval_destructor(cx, trace, use_op, reason, inner_t, d, tout)
+            eval_destructor(cx, env, trace, use_op, reason, inner_t, d, tout)
         }
         (
             TypeInner::NominalT {
@@ -682,7 +701,7 @@ pub(super) fn eval_destructor<'cx>(
             custom_error_loc: _,
         }) = &nominal_type.underlying_t =>
         {
-            eval_destructor(cx, trace, use_op, reason, inner_t, d, tout)
+            eval_destructor(cx, env, trace, use_op, reason, inner_t, d, tout)
         }
         // Specialize TypeAppTs before evaluating them so that we can handle special
         // cases. Like the union case below. mk_typeapp_instance will return an AnnotT
@@ -712,6 +731,7 @@ pub(super) fn eval_destructor<'cx>(
             ));
             let specialized_t = mk_typeapp_instance_annot(
                 cx,
+                env,
                 Some(trace),
                 use_op_tapp.dupe(),
                 reason,
@@ -731,6 +751,7 @@ pub(super) fn eval_destructor<'cx>(
             let eval_t = flow_cache::eval::id(cx, generic_t, destructor);
             rec_flow(
                 cx,
+                env,
                 trace,
                 (
                     &eval_t,
@@ -759,6 +780,7 @@ pub(super) fn eval_destructor<'cx>(
             ));
             let specialized_t = mk_typeapp_instance_annot(
                 cx,
+                env,
                 Some(trace),
                 use_op_tapp.dupe(),
                 reason,
@@ -771,6 +793,7 @@ pub(super) fn eval_destructor<'cx>(
             let eval_t = flow_cache::eval::id(cx, specialized_t, destructor);
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&eval_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
@@ -924,7 +947,7 @@ pub(super) fn eval_destructor<'cx>(
             )
         }
         (TypeInner::AnnotT(r, inner_t, use_desc), _) => {
-            let repos_t = helpers::reposition_reason(cx, Some(trace), r, *use_desc, inner_t)?;
+            let repos_t = helpers::reposition_reason(cx, env, Some(trace), r, *use_desc, inner_t)?;
             let destructor = TypeDestructorT::new(TypeDestructorTInner(
                 use_op.dupe(),
                 reason.dupe(),
@@ -933,6 +956,7 @@ pub(super) fn eval_destructor<'cx>(
             let eval_t = flow_cache::eval::id(cx, repos_t, destructor);
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 (&eval_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
@@ -948,7 +972,7 @@ pub(super) fn eval_destructor<'cx>(
             }),
             _,
         ) if let TypeInner::AnnotT(_, inner_t, use_desc) = bound.deref() => {
-            let repos_t = helpers::reposition_reason(cx, Some(trace), r, *use_desc, inner_t)?;
+            let repos_t = helpers::reposition_reason(cx, env, Some(trace), r, *use_desc, inner_t)?;
             let destructor = TypeDestructorT::new(TypeDestructorTInner(
                 use_op.dupe(),
                 reason.dupe(),
@@ -964,6 +988,7 @@ pub(super) fn eval_destructor<'cx>(
             let eval_t = flow_cache::eval::id(cx, generic_t, destructor);
             rec_flow_t(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 (&eval_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
@@ -977,6 +1002,7 @@ pub(super) fn eval_destructor<'cx>(
                     // to win.
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1005,7 +1031,7 @@ pub(super) fn eval_destructor<'cx>(
                         tout: Box::new(tout.dupe()),
                         hint: hint_unavailable(),
                     })));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::ElementType { index_type } => {
                     let u = UseT::new(UseTInner::GetElemT(Box::new(GetElemTData {
@@ -1018,10 +1044,11 @@ pub(super) fn eval_destructor<'cx>(
                         key_t: index_type.dupe(),
                         tout: Box::new(tout.dupe()),
                     })));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::OptionalIndexedAccessNonMaybeType { index } => rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         t,
@@ -1047,7 +1074,7 @@ pub(super) fn eval_destructor<'cx>(
                         ))),
                         id: flow_common::reason::mk_id() as i32,
                     })));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::SpreadType(box DestructorSpreadTypeData(
                     options,
@@ -1078,7 +1105,7 @@ pub(super) fn eval_destructor<'cx>(
                         Box::new(object::Tool::Spread(Box::new((options.clone(), state)))),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::SpreadTupleType(box DestructorSpreadTupleTypeData {
                     reason_tuple,
@@ -1102,7 +1129,7 @@ pub(super) fn eval_destructor<'cx>(
                             },
                         }),
                     })));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::ReactCheckComponentConfig { props } => {
                     use flow_typing_type::type_::object;
@@ -1116,7 +1143,7 @@ pub(super) fn eval_destructor<'cx>(
                         }),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::RestType(options, t_prime) => {
                     use flow_typing_type::type_::object;
@@ -1129,12 +1156,13 @@ pub(super) fn eval_destructor<'cx>(
                         Box::new(object::Tool::Rest(Box::new((options.clone(), state)))),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::ExactType => {
                     use flow_typing_type::type_::object;
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1152,6 +1180,7 @@ pub(super) fn eval_destructor<'cx>(
                     use flow_typing_type::type_::object;
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1167,6 +1196,7 @@ pub(super) fn eval_destructor<'cx>(
                 }
                 Destructor::ReactDRO(box react_dro) => rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         t,
@@ -1180,6 +1210,7 @@ pub(super) fn eval_destructor<'cx>(
                     use flow_typing_type::type_::object;
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1197,6 +1228,7 @@ pub(super) fn eval_destructor<'cx>(
                     use flow_typing_type::type_::object;
                     rec_flow(
                         cx,
+                        env,
                         trace,
                         (
                             t,
@@ -1212,6 +1244,7 @@ pub(super) fn eval_destructor<'cx>(
                 }
                 Destructor::ValuesType => rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         t,
@@ -1238,10 +1271,11 @@ pub(super) fn eval_destructor<'cx>(
                         false_t: false_t.dupe(),
                         tout: Box::new(tout.dupe()),
                     })));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::TypeMap(tmap) => rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         t,
@@ -1255,6 +1289,7 @@ pub(super) fn eval_destructor<'cx>(
                 ),
                 Destructor::ReactElementConfigType => rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         t,
@@ -1301,7 +1336,7 @@ pub(super) fn eval_destructor<'cx>(
                         }))),
                         Type::new(TypeInner::OpenT(tout.dupe())),
                     ));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
                 Destructor::EnumType => {
                     let u = UseT::new(UseTInner::GetEnumT(Box::new(GetEnumTData {
@@ -1311,7 +1346,7 @@ pub(super) fn eval_destructor<'cx>(
                         kind: GetEnumKind::GetEnumObject,
                         tout: Type::new(TypeInner::OpenT(tout.dupe())),
                     })));
-                    rec_flow(cx, trace, (t, &u))
+                    rec_flow(cx, env, trace, (t, &u))
                 }
             }
         }
@@ -1320,6 +1355,7 @@ pub(super) fn eval_destructor<'cx>(
 
 pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -1328,7 +1364,7 @@ pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
     tvar: i32,
 ) -> Result<Type, FlowJsException> {
     let tvar_obj = Tvar::new(reason.dupe(), tvar as u32);
-    eval_destructor(cx, trace, use_op.dupe(), reason, t, d, &tvar_obj)?;
+    eval_destructor(cx, env, trace, use_op.dupe(), reason, t, d, &tvar_obj)?;
     let result = Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), tvar as u32)));
     // Check has_unresolved_tvars first: these use exception-based early exit
     // and are cheaper than free_var_finder which traverses the entire type.
@@ -1342,7 +1378,7 @@ pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
         Ok(result)
     } else {
         crate::tvar_resolver::resolve(cx, crate::tvar_resolver::default_no_lowers, true, &result);
-        let t = singleton_concrete_type_for_inspection(cx, reason, &result)?;
+        let t = singleton_concrete_type_for_inspection(cx, env, reason, &result)?;
         Ok(match t.deref() {
             TypeInner::OpenT(inner_tvar) => {
                 let id = inner_tvar.id() as i32;
@@ -1401,6 +1437,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                 reason.dupe(),
                 t.dupe(),
                 move |cx, t| -> Result<Type, flow_utils_concurrency::job_error::JobError> {
+                    let env = &FlowJsEnv::entry();
                     match crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                         cx,
                         reason_clone.dupe(),
@@ -1408,6 +1445,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                             let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                             evaluate_type_destructor(
                                 cx,
+                                env,
                                 trace,
                                 use_op_clone.dupe(),
                                 &reason_clone,
@@ -1464,6 +1502,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                         Type,
                         flow_utils_concurrency::job_error::JobError,
                     > {
+                        let env = &FlowJsEnv::entry();
                         let use_op = use_op_for_map.dupe();
                         let reason = reason_for_map.dupe();
                         let d = d_for_map.clone();
@@ -1482,10 +1521,10 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                 let tvar_spec = tvar.dupe();
                                 let result =
                                     crate::speculation_kit::try_singleton_custom_throw_on_failure(
-                                        cx,
-                                        Box::new(move |cx| {
+                                        cx, env,
+                                        Box::new(move |cx, env: &FlowJsEnv| {
                                             evaluate_type_destructor(
-                                                cx,
+                                                cx, env,
                                                 trace,
                                                 use_op_spec,
                                                 &reason_spec,
@@ -1548,7 +1587,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
                                             )),
                                         });
                                         rec_flow_t(
-                                            cx,
+                                            cx, env,
                                             trace,
                                             unknown_use(),
                                             (&stuck, &Type::new(TypeInner::OpenT(tvar.dupe()))),

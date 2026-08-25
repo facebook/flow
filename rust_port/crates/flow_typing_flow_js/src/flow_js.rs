@@ -36,7 +36,6 @@ use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_context::SubstCacheErr;
-use flow_typing_context::type_app_expansion;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
@@ -54,8 +53,9 @@ use flow_typing_flow_common::flow_js_utils::tvar_visitors;
 use flow_typing_flow_common::flow_js_utils::use_op_of_lookup_action;
 use flow_typing_flow_common::instantiation_utils;
 use flow_typing_flow_common::obj_type;
-use flow_typing_flow_common::speculation;
 use flow_typing_flow_common::type_subst;
+use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_flow_js_env::type_app_expansion;
 use flow_typing_generics::GenericId;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
@@ -222,12 +222,773 @@ pub struct FlowJs;
 
 impl FlowJs {
     // Base methods
+    pub fn flow_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t: &Type,
+        use_t: &UseT<Context<'cx>>,
+    ) -> Result<(), FlowJsException> {
+        helpers::flow(cx, env, (t, use_t))
+    }
+
+    pub(super) fn flow_opt_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        t: &Type,
+        use_t: &UseT<Context<'cx>>,
+    ) -> Result<(), FlowJsException> {
+        helpers::flow_opt(cx, env, trace, (t, use_t))
+    }
+
+    fn flow_p_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: UseOp,
+        reason1: &Reason,
+        reason2: &Reason,
+        propref: &PropRef,
+        prop1: &PropertyType,
+        prop2: &PropertyType,
+    ) -> Result<(), FlowJsException> {
+        helpers::flow_p(cx, env, use_op, reason1, reason2, propref, (prop1, prop2))
+    }
+
+    pub fn flow_t_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), FlowJsException> {
+        helpers::flow_t(cx, env, (t1, t2))
+    }
+
+    pub fn reposition_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        loc: ALoc,
+        desc: Option<&ReasonDesc>,
+        annot_loc: Option<ALoc>,
+        t: Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::reposition(cx, env, trace, loc, desc, annot_loc, t)
+    }
+
+    pub(super) fn rec_flow_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        t: &Type,
+        use_t: &UseT<Context<'cx>>,
+    ) -> Result<(), FlowJsException> {
+        helpers::rec_flow(cx, env, trace, (t, use_t))
+    }
+
+    pub(super) fn rec_flow_t_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), FlowJsException> {
+        helpers::rec_flow_t(cx, env, trace, use_op, (t1, t2))
+    }
+
+    pub(super) fn rec_unify_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        unify_cause: UnifyCause,
+        unify_any: Option<bool>,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), FlowJsException> {
+        helpers::rec_unify(cx, env, trace, use_op, unify_cause, unify_any, t1, t2)
+    }
+
+    fn unify_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: Option<UseOp>,
+        unify_cause: UnifyCause,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), FlowJsException> {
+        helpers::unify(cx, env, use_op, unify_cause, t1, t2)
+    }
+
+    pub(super) fn unify_opt_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        use_op: UseOp,
+        unify_cause: UnifyCause,
+        unify_any: Option<bool>,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<(), FlowJsException> {
+        helpers::unify_opt(cx, env, trace, use_op, unify_cause, unify_any, t1, t2)
+    }
+
+    pub(super) fn filter_optional_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<u32, FlowJsException> {
+        helpers::filter_optional(cx, env, trace, reason, t)
+    }
+
+    pub(super) fn mk_typeapp_instance_annot_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        from_value: bool,
+        use_desc: Option<bool>,
+        t: &Type,
+        targs: Rc<[Type]>,
+    ) -> Result<Type, FlowJsException> {
+        helpers::mk_typeapp_instance_annot(
+            cx,
+            env,
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            from_value,
+            use_desc,
+            t,
+            targs,
+        )
+    }
+
+    pub(super) fn mk_typeapp_instance_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        from_value: bool,
+        t: &Type,
+        targs: Rc<[Type]>,
+    ) -> Result<Type, FlowJsException> {
+        helpers::mk_typeapp_instance(
+            cx,
+            env,
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            from_value,
+            t,
+            targs,
+        )
+    }
+
+    pub fn mk_react_dro<'cx>(
+        cx: &Context<'cx>,
+        use_op: UseOp,
+        react_dro: ReactDro,
+        t: Type,
+    ) -> Result<Type, FlowJsException> {
+        Ok(helpers::mk_react_dro(cx, use_op, react_dro, t))
+    }
+
+    // Builtins methods
+    pub fn get_builtin_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        reason: &Reason,
+        use_desc: Option<bool>,
+        name: &str,
+    ) -> Result<Type, FlowJsException> {
+        helpers::get_builtin_type(cx, env, trace, reason, use_desc, name)
+    }
+
+    pub(super) fn get_builtin_react_type_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        reason: &Reason,
+        use_desc: Option<bool>,
+        purpose: ExpectedModulePurpose,
+    ) -> Result<Type, FlowJsException> {
+        helpers::get_builtin_react_type(cx, env, trace, reason, use_desc, purpose)
+    }
+
+    pub fn get_builtin_typeapp_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        use_desc: Option<bool>,
+        name: &str,
+        targs: Vec<Type>,
+    ) -> Type {
+        helpers::get_builtin_typeapp(cx, env, reason, use_desc, name, targs)
+    }
+
+    pub(super) fn get_builtin_react_typeapp_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        use_desc: Option<bool>,
+        purpose: ExpectedModulePurpose,
+        targs: Vec<Type>,
+    ) -> Result<Type, FlowJsException> {
+        helpers::get_builtin_react_typeapp(cx, env, reason, use_desc, purpose, targs)
+    }
+
+    pub(crate) fn perform_read_prop_action<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: VirtualUseOp<ALoc>,
+        propref: &PropRef,
+        property_type: &PropertyType,
+        reason: &Reason,
+        dro: Option<(ALoc, DroType)>,
+        tvar: &Tvar,
+    ) -> Result<(), FlowJsException> {
+        let react_dro = dro.map(|(loc, dro_type)| ReactDro(loc, dro_type));
+        (flow_js_utils::get_prop_t_kit::perform_read_prop_action::<FlowJs>(
+            cx,
+            env,
+            &trace,
+            use_op,
+            propref,
+            property_type.clone(),
+            reason,
+            &react_dro,
+        )?)(cx, tvar.dupe())
+    }
+
+    // Subtyping methods
+    pub fn speculative_subtyping_succeeds_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<bool, JobError> {
+        helpers::speculative_subtyping_succeeds_non_speculating(cx, env, t1, t2)
+    }
+
+    pub fn speculative_subtyping_succeeds_with_flow_errors<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        t1: &Type,
+        t2: &Type,
+    ) -> Result<bool, FlowJsException> {
+        helpers::speculative_subtyping_succeeds(cx, env, t1, t2)
+    }
+
+    pub(super) fn possible_concrete_types_for_optional_chain_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_optional_chain(cx, env, reason, t)
+    }
+
+    pub fn possible_concrete_types_for_inspection_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_inspection(cx, env, reason, t)
+    }
+
+    pub fn possible_concrete_types_for_enum_exhaustive_check_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_enum_exhaustive_check(cx, env, reason, t)
+    }
+
+    fn possible_concrete_types_for_imports_exports_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_imports_exports(cx, env, reason, t)
+    }
+
+    pub fn possible_concrete_types_for_operators_checking_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_operators_checking(cx, env, reason, t)
+    }
+
+    pub fn possible_concrete_types_for_object_assign<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_object_assign(cx, env, reason, t)
+    }
+
+    fn possible_concrete_types_for_destructuring_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_destructuring(cx, env, reason, t)
+    }
+
+    fn possible_concrete_types_for_computed_object_keys_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_computed_object_keys(cx, env, reason, t)
+    }
+
+    pub fn reposition_reason<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        reason: &Reason,
+        use_desc: Option<bool>,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::reposition_reason(cx, env, trace, reason, use_desc.unwrap_or(false), t)
+    }
+
+    pub fn eval_destructor_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason: &Reason,
+        t: &Type,
+        destructor: &Destructor,
+        tvar: &Tvar,
+    ) -> Result<(), FlowJsException> {
+        eval_helpers::eval_destructor(cx, env, trace, use_op, reason, t, destructor, tvar)
+    }
+
+    pub(super) fn multiflow_subtype_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: VirtualUseOp<ALoc>,
+        reason: &Reason,
+        call_args: &[CallArg],
+        funtype: &FunType,
+    ) -> Result<(), FlowJsException> {
+        multi_arg_helpers::multiflow_subtype(cx, env, trace, use_op, reason, call_args, funtype)
+    }
+
+    pub(super) fn flow_type_args_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason1: &Reason,
+        reason2: &Reason,
+        targs1: Rc<[(SubstName, Reason, Type, Polarity)]>,
+        targs2: Rc<[(SubstName, Reason, Type, Polarity)]>,
+    ) -> Result<(), FlowJsException> {
+        inheritance_helpers::flow_type_args(
+            cx, env, trace, use_op, reason1, reason2, targs1, targs2,
+        )
+    }
+
+    pub(super) fn instantiate_this_class_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        this_t: &Type,
+        targs: Option<Rc<[Type]>>,
+        t: &Type,
+        cont: &Cont<Context<'cx>>,
+    ) -> Result<(), FlowJsException> {
+        instantiation_helpers::instantiate_this_class(
+            cx,
+            env,
+            trace,
+            reason_op,
+            reason_tapp,
+            this_t,
+            targs,
+            t,
+            cont,
+        )
+    }
+
+    fn instantiate_poly_with_targs_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        mut errs_ref: Option<&mut Vec<SubstCacheErr>>,
+        unify_bounds: Option<bool>,
+        poly_t: (ALoc, Vec1<TypeParam>, Type),
+        targs: Vec<Type>,
+    ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
+        let unify_bounds = unify_bounds.unwrap_or(false);
+        let (tparams_loc, xs, t) = poly_t;
+        let mut errs_opt = errs_ref.as_deref_mut().map(std::mem::take);
+        let result = flow_js_utils::instantiation_kit::instantiate_poly_with_targs::<FlowJs>(
+            cx,
+            env,
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            &mut errs_opt,
+            unify_bounds,
+            tparams_loc,
+            &xs,
+            t,
+            targs,
+        );
+        if let (Some(errs), Some(v)) = (errs_opt, errs_ref) {
+            *v = errs;
+        }
+        result
+    }
+
+    pub(super) fn instantiate_poly_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        unify_bounds: Option<bool>,
+        poly_t: (ALoc, Vec1<TypeParam>, Type),
+    ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
+        let unify_bounds = unify_bounds.unwrap_or(false);
+        let (tparams_loc, xs, t) = poly_t;
+        flow_js_utils::instantiation_kit::instantiate_poly_with_env::<FlowJs>(
+            cx,
+            env,
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            unify_bounds,
+            tparams_loc,
+            &xs,
+            t,
+        )
+    }
+
+    pub fn instantiate_poly_call_or_new<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        poly_info: (Reason, ALoc, Vec1<TypeParam>, Type),
+        call_info: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
+        implicit_check: &dyn Fn() -> flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck,
+    ) -> Result<Type, FlowJsException> {
+        instantiation_helpers::instantiate_poly_call_or_new(
+            cx,
+            env,
+            trace,
+            poly_info,
+            call_info,
+            implicit_check,
+        )
+    }
+
+    fn mk_typeapp_of_poly_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+        poly_id: poly::Id,
+        loc: ALoc,
+        tparams: Vec1<TypeParam>,
+        t: &Type,
+        targs: Rc<[Type]>,
+    ) -> Result<Type, FlowJsException> {
+        flow_js_utils::instantiation_kit::mk_typeapp_of_poly_with_env::<FlowJs>(
+            cx,
+            env,
+            trace,
+            use_op,
+            reason_op,
+            reason_tapp,
+            poly_id,
+            loc,
+            &tparams,
+            t.dupe(),
+            targs,
+        )
+    }
+
+    fn mk_instance_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        type_t_kind: Option<TypeTKind>,
+        trace: Option<DepthTrace>,
+        reason: &Reason,
+        use_desc: Option<bool>,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::mk_instance(
+            cx,
+            env,
+            type_t_kind,
+            trace,
+            reason,
+            use_desc.unwrap_or(false),
+            t,
+        )
+    }
+
+    // Eval methods
+    fn eval_selector_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: Option<DepthTrace>,
+        annot: bool,
+        reason: &Reason,
+        t: &Type,
+        selector: &Selector,
+        tvar: &Tvar,
+        index: i32,
+    ) -> Result<(), FlowJsException> {
+        eval_helpers::eval_selector(cx, env, trace, annot, reason, t, selector, tvar, index)
+    }
+
+    fn mk_type_destructor_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason: &Reason,
+        t: &Type,
+        destructor: &Destructor,
+        eval_id: eval::Id,
+    ) -> Result<Type, FlowJsException> {
+        eval_helpers::mk_type_destructor(cx, env, trace, use_op, reason, t, destructor, eval_id)
+    }
+
+    pub fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
+        cx: &Context<'cx>,
+        use_op: UseOp,
+        reason: &Reason,
+        t: &Type,
+        destructor: &Destructor,
+        eval_id: eval::Id,
+    ) -> Result<Type, FlowJsException> {
+        eval_helpers::mk_possibly_evaluated_destructor_for_annotations(
+            cx, use_op, reason, t, destructor, eval_id,
+        )
+    }
+
+    // React methods
+    pub(crate) fn react_subtype_class_component_render<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        t: &Type,
+        reason_op: &Reason,
+        render_t: &Type,
+    ) -> Result<(), FlowJsException> {
+        react_kit::subtype_class_component_render(cx, env, trace, use_op, t, reason_op, render_t)
+    }
+
+    pub(crate) fn react_get_config<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        t: &Type,
+        use_op: VirtualUseOp<ALoc>,
+        reason_op: &Reason,
+        tool: react::Tool<Context<'cx>>,
+        polarity: Polarity,
+        tout: &Type,
+    ) -> Result<(), FlowJsException> {
+        react_kit::get_config(cx, env, trace, t, use_op, reason_op, &tool, polarity, tout)
+    }
+
+    // ImplicitInstantiationKit methods
+    fn run_conditional_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: DepthTrace,
+        use_op: UseOp,
+        reason: &Reason,
+        tparams: &[TypeParam],
+        check_t: &Type,
+        extends_t: &Type,
+        true_t: &Type,
+        false_t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        implicit_instantiation::kit::run_conditional(
+            cx, env, trace, use_op, reason, tparams, check_t, extends_t, true_t, false_t,
+        )
+    }
+
+    pub(super) fn run_render_extractor_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: UseOp,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        implicit_instantiation::kit::run_render_extractor(cx, env, use_op, reason, t)
+    }
+
+    pub fn run_await<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: UseOp,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        implicit_instantiation::kit::run_await(cx, env, use_op, reason, t)
+    }
+
+    // S methods
+    fn resolve_spread_list_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        use_op: UseOp,
+        reason_op: &Reason,
+        unresolved_params: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
+        spread_resolve: SpreadResolve,
+    ) -> Result<(), FlowJsException> {
+        multi_arg_helpers::resolve_spread_list(
+            cx,
+            env,
+            use_op,
+            reason_op,
+            unresolved_params,
+            spread_resolve,
+        )
+    }
+
+    pub fn possible_concrete_types_for_predicate<'cx>(
+        predicate_concretizer_variant: PredicateConcretetizerVariant,
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_predicate(
+            predicate_concretizer_variant,
+            cx,
+            env,
+            reason,
+            t,
+        )
+    }
+
+    pub fn possible_concrete_types_for_sentinel_prop_test<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_sentinel_prop_test(cx, env, reason, t)
+    }
+
+    fn singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
+            cx, env, reason, t,
+        )
+    }
+
+    pub fn singleton_concretize_type_for_imports_exports_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::singleton_concretize_type_for_imports_exports(cx, env, reason, t)
+    }
+
+    pub fn singleton_concrete_type_for_inspection_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::singleton_concrete_type_for_inspection(cx, env, reason, t)
+    }
+
+    pub fn singleton_concrete_type_for_type_cast<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::singleton_concrete_type_for_type_cast(cx, env, reason, t)
+    }
+
+    fn all_possible_concrete_types_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::all_possible_concrete_types(cx, env, reason, t)
+    }
+
+    fn singleton_concrete_type_for_match_arg_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        keep_unions: bool,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::singleton_concrete_type_for_match_arg(cx, env, keep_unions, reason, t)
+    }
+
+    fn possible_concrete_types_for_match_arg_with_env<'cx>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        keep_unions: bool,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, FlowJsException> {
+        helpers::possible_concrete_types_for_match_arg(cx, env, keep_unions, reason, t)
+    }
+}
+
+impl FlowJs {
     pub fn flow<'cx>(
         cx: &Context<'cx>,
         t: &Type,
         use_t: &UseT<Context<'cx>>,
     ) -> Result<(), FlowJsException> {
-        helpers::flow(cx, (t, use_t))
+        Self::flow_with_env(cx, &FlowJsEnv::entry(), t, use_t)
     }
 
     pub fn flow_opt<'cx>(
@@ -236,7 +997,7 @@ impl FlowJs {
         t: &Type,
         use_t: &UseT<Context<'cx>>,
     ) -> Result<(), FlowJsException> {
-        helpers::flow_opt(cx, trace, (t, use_t))
+        Self::flow_opt_with_env(cx, &FlowJsEnv::entry(), trace, t, use_t)
     }
 
     pub fn flow_p<'cx>(
@@ -248,11 +1009,20 @@ impl FlowJs {
         prop1: &PropertyType,
         prop2: &PropertyType,
     ) -> Result<(), FlowJsException> {
-        helpers::flow_p(cx, use_op, reason1, reason2, propref, (prop1, prop2))
+        Self::flow_p_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            use_op,
+            reason1,
+            reason2,
+            propref,
+            prop1,
+            prop2,
+        )
     }
 
     pub fn flow_t<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), FlowJsException> {
-        helpers::flow_t(cx, (t1, t2))
+        Self::flow_t_with_env(cx, &FlowJsEnv::entry(), t1, t2)
     }
 
     pub fn reposition<'cx>(
@@ -263,7 +1033,7 @@ impl FlowJs {
         annot_loc: Option<ALoc>,
         t: Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::reposition(cx, trace, loc, desc, annot_loc, t)
+        Self::reposition_with_env(cx, &FlowJsEnv::entry(), trace, loc, desc, annot_loc, t)
     }
 
     pub fn rec_flow<'cx>(
@@ -272,7 +1042,7 @@ impl FlowJs {
         t: &Type,
         use_t: &UseT<Context<'cx>>,
     ) -> Result<(), FlowJsException> {
-        helpers::rec_flow(cx, trace, (t, use_t))
+        Self::rec_flow_with_env(cx, &FlowJsEnv::entry(), trace, t, use_t)
     }
 
     pub fn rec_flow_t<'cx>(
@@ -282,7 +1052,7 @@ impl FlowJs {
         t1: &Type,
         t2: &Type,
     ) -> Result<(), FlowJsException> {
-        helpers::rec_flow_t(cx, trace, use_op, (t1, t2))
+        Self::rec_flow_t_with_env(cx, &FlowJsEnv::entry(), trace, use_op, t1, t2)
     }
 
     pub fn rec_unify<'cx>(
@@ -294,7 +1064,16 @@ impl FlowJs {
         t1: &Type,
         t2: &Type,
     ) -> Result<(), FlowJsException> {
-        helpers::rec_unify(cx, trace, use_op, unify_cause, unify_any, t1, t2)
+        Self::rec_unify_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            unify_cause,
+            unify_any,
+            t1,
+            t2,
+        )
     }
 
     pub fn unify<'cx>(
@@ -304,7 +1083,7 @@ impl FlowJs {
         t1: &Type,
         t2: &Type,
     ) -> Result<(), FlowJsException> {
-        helpers::unify(cx, use_op, unify_cause, t1, t2)
+        Self::unify_with_env(cx, &FlowJsEnv::entry(), use_op, unify_cause, t1, t2)
     }
 
     pub fn unify_opt<'cx>(
@@ -316,7 +1095,16 @@ impl FlowJs {
         t1: &Type,
         t2: &Type,
     ) -> Result<(), FlowJsException> {
-        helpers::unify_opt(cx, trace, use_op, unify_cause, unify_any, t1, t2)
+        Self::unify_opt_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            unify_cause,
+            unify_any,
+            t1,
+            t2,
+        )
     }
 
     pub fn filter_optional<'cx>(
@@ -325,7 +1113,7 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<u32, FlowJsException> {
-        helpers::filter_optional(cx, trace, reason, t)
+        Self::filter_optional_with_env(cx, &FlowJsEnv::entry(), trace, reason, t)
     }
 
     pub fn mk_typeapp_instance_annot<'cx>(
@@ -339,8 +1127,9 @@ impl FlowJs {
         t: &Type,
         targs: Rc<[Type]>,
     ) -> Result<Type, FlowJsException> {
-        helpers::mk_typeapp_instance_annot(
+        Self::mk_typeapp_instance_annot_with_env(
             cx,
+            &FlowJsEnv::entry(),
             trace,
             use_op,
             reason_op,
@@ -362,8 +1151,9 @@ impl FlowJs {
         t: &Type,
         targs: Rc<[Type]>,
     ) -> Result<Type, FlowJsException> {
-        helpers::mk_typeapp_instance(
+        Self::mk_typeapp_instance_with_env(
             cx,
+            &FlowJsEnv::entry(),
             trace,
             use_op,
             reason_op,
@@ -374,24 +1164,6 @@ impl FlowJs {
         )
     }
 
-    pub fn flow_use_op<'cx>(
-        cx: &Context<'cx>,
-        use_op: UseOp,
-        use_t: UseT<Context<'cx>>,
-    ) -> Result<UseT<Context<'cx>>, FlowJsException> {
-        Ok(helpers::flow_use_op(cx, use_op, use_t))
-    }
-
-    pub fn mk_react_dro<'cx>(
-        cx: &Context<'cx>,
-        use_op: UseOp,
-        react_dro: ReactDro,
-        t: Type,
-    ) -> Result<Type, FlowJsException> {
-        Ok(helpers::mk_react_dro(cx, use_op, react_dro, t))
-    }
-
-    // Builtins methods
     pub fn get_builtin_type<'cx>(
         cx: &Context<'cx>,
         trace: Option<DepthTrace>,
@@ -399,7 +1171,7 @@ impl FlowJs {
         use_desc: Option<bool>,
         name: &str,
     ) -> Result<Type, FlowJsException> {
-        helpers::get_builtin_type(cx, trace, reason, use_desc, name)
+        Self::get_builtin_type_with_env(cx, &FlowJsEnv::entry(), trace, reason, use_desc, name)
     }
 
     pub fn get_builtin_react_type<'cx>(
@@ -409,7 +1181,14 @@ impl FlowJs {
         use_desc: Option<bool>,
         purpose: ExpectedModulePurpose,
     ) -> Result<Type, FlowJsException> {
-        helpers::get_builtin_react_type(cx, trace, reason, use_desc, purpose)
+        Self::get_builtin_react_type_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            reason,
+            use_desc,
+            purpose,
+        )
     }
 
     pub fn get_builtin_typeapp<'cx>(
@@ -419,7 +1198,7 @@ impl FlowJs {
         name: &str,
         targs: Vec<Type>,
     ) -> Type {
-        helpers::get_builtin_typeapp(cx, reason, use_desc, name, targs)
+        Self::get_builtin_typeapp_with_env(cx, &FlowJsEnv::entry(), reason, use_desc, name, targs)
     }
 
     pub fn get_builtin_react_typeapp<'cx>(
@@ -429,46 +1208,22 @@ impl FlowJs {
         purpose: ExpectedModulePurpose,
         targs: Vec<Type>,
     ) -> Result<Type, FlowJsException> {
-        helpers::get_builtin_react_typeapp(cx, reason, use_desc, purpose, targs)
-    }
-
-    pub fn perform_read_prop_action<'cx>(
-        cx: &Context<'cx>,
-        trace: DepthTrace,
-        use_op: VirtualUseOp<ALoc>,
-        propref: &PropRef,
-        property_type: &PropertyType,
-        reason: &Reason,
-        dro: Option<(ALoc, DroType)>,
-        tvar: &Tvar,
-    ) -> Result<(), FlowJsException> {
-        let react_dro = dro.map(|(loc, dro_type)| ReactDro(loc, dro_type));
-        (flow_js_utils::get_prop_t_kit::perform_read_prop_action::<FlowJs>(
+        Self::get_builtin_react_typeapp_with_env(
             cx,
-            &trace,
-            use_op,
-            propref,
-            property_type.clone(),
+            &FlowJsEnv::entry(),
             reason,
-            &react_dro,
-        )?)(cx, tvar.dupe())
+            use_desc,
+            purpose,
+            targs,
+        )
     }
 
-    // Subtyping methods
     pub fn speculative_subtyping_succeeds<'cx>(
         cx: &Context<'cx>,
         t1: &Type,
         t2: &Type,
     ) -> Result<bool, JobError> {
-        helpers::speculative_subtyping_succeeds_non_speculating(cx, t1, t2)
-    }
-
-    pub fn speculative_subtyping_succeeds_with_flow_errors<'cx>(
-        cx: &Context<'cx>,
-        t1: &Type,
-        t2: &Type,
-    ) -> Result<bool, FlowJsException> {
-        helpers::speculative_subtyping_succeeds(cx, t1, t2)
+        Self::speculative_subtyping_succeeds_with_env(cx, &FlowJsEnv::entry(), t1, t2)
     }
 
     pub fn possible_concrete_types_for_optional_chain<'cx>(
@@ -476,7 +1231,12 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_optional_chain(cx, reason, t)
+        Self::possible_concrete_types_for_optional_chain_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn possible_concrete_types_for_inspection<'cx>(
@@ -484,7 +1244,7 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_inspection(cx, reason, t)
+        Self::possible_concrete_types_for_inspection_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     pub fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
@@ -492,7 +1252,12 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_enum_exhaustive_check(cx, reason, t)
+        Self::possible_concrete_types_for_enum_exhaustive_check_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn possible_concrete_types_for_imports_exports<'cx>(
@@ -500,7 +1265,12 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_imports_exports(cx, reason, t)
+        Self::possible_concrete_types_for_imports_exports_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn possible_concrete_types_for_operators_checking<'cx>(
@@ -508,15 +1278,12 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_operators_checking(cx, reason, t)
-    }
-
-    pub fn possible_concrete_types_for_object_assign<'cx>(
-        cx: &Context<'cx>,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_object_assign(cx, reason, t)
+        Self::possible_concrete_types_for_operators_checking_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn possible_concrete_types_for_destructuring<'cx>(
@@ -524,7 +1291,7 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_destructuring(cx, reason, t)
+        Self::possible_concrete_types_for_destructuring_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     pub fn possible_concrete_types_for_computed_object_keys<'cx>(
@@ -532,17 +1299,12 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_computed_object_keys(cx, reason, t)
-    }
-
-    pub fn reposition_reason<'cx>(
-        cx: &Context<'cx>,
-        trace: Option<DepthTrace>,
-        reason: &Reason,
-        use_desc: Option<bool>,
-        t: &Type,
-    ) -> Result<Type, FlowJsException> {
-        helpers::reposition_reason(cx, trace, reason, use_desc.unwrap_or(false), t)
+        Self::possible_concrete_types_for_computed_object_keys_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn eval_destructor<'cx>(
@@ -554,7 +1316,16 @@ impl FlowJs {
         destructor: &Destructor,
         tvar: &Tvar,
     ) -> Result<(), FlowJsException> {
-        eval_helpers::eval_destructor(cx, trace, use_op, reason, t, destructor, tvar)
+        Self::eval_destructor_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason,
+            t,
+            destructor,
+            tvar,
+        )
     }
 
     pub fn multiflow_subtype<'cx>(
@@ -565,7 +1336,15 @@ impl FlowJs {
         call_args: &[CallArg],
         funtype: &FunType,
     ) -> Result<(), FlowJsException> {
-        multi_arg_helpers::multiflow_subtype(cx, trace, use_op, reason, call_args, funtype)
+        Self::multiflow_subtype_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason,
+            call_args,
+            funtype,
+        )
     }
 
     pub fn flow_type_args<'cx>(
@@ -577,7 +1356,16 @@ impl FlowJs {
         targs1: Rc<[(SubstName, Reason, Type, Polarity)]>,
         targs2: Rc<[(SubstName, Reason, Type, Polarity)]>,
     ) -> Result<(), FlowJsException> {
-        inheritance_helpers::flow_type_args(cx, trace, use_op, reason1, reason2, targs1, targs2)
+        Self::flow_type_args_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason1,
+            reason2,
+            targs1,
+            targs2,
+        )
     }
 
     pub fn instantiate_this_class<'cx>(
@@ -590,8 +1378,9 @@ impl FlowJs {
         t: &Type,
         cont: &Cont<Context<'cx>>,
     ) -> Result<(), FlowJsException> {
-        instantiation_helpers::instantiate_this_class(
+        Self::instantiate_this_class_with_env(
             cx,
+            &FlowJsEnv::entry(),
             trace,
             reason_op,
             reason_tapp,
@@ -608,31 +1397,23 @@ impl FlowJs {
         use_op: UseOp,
         reason_op: &Reason,
         reason_tapp: &Reason,
-        mut errs_ref: Option<&mut Vec<SubstCacheErr>>,
+        errs_ref: Option<&mut Vec<SubstCacheErr>>,
         unify_bounds: Option<bool>,
         poly_t: (ALoc, Vec1<TypeParam>, Type),
         targs: Vec<Type>,
     ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
-        let unify_bounds = unify_bounds.unwrap_or(false);
-        let (tparams_loc, xs, t) = poly_t;
-        let mut errs_opt = errs_ref.as_deref_mut().map(std::mem::take);
-        let result = flow_js_utils::instantiation_kit::instantiate_poly_with_targs::<FlowJs>(
+        Self::instantiate_poly_with_targs_with_env(
             cx,
+            &FlowJsEnv::entry(),
             trace,
             use_op,
             reason_op,
             reason_tapp,
-            &mut errs_opt,
+            errs_ref,
             unify_bounds,
-            tparams_loc,
-            &xs,
-            t,
+            poly_t,
             targs,
-        );
-        if let (Some(errs), Some(v)) = (errs_opt, errs_ref) {
-            *v = errs;
-        }
-        result
+        )
     }
 
     pub fn instantiate_poly<'cx>(
@@ -644,34 +1425,15 @@ impl FlowJs {
         unify_bounds: Option<bool>,
         poly_t: (ALoc, Vec1<TypeParam>, Type),
     ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
-        let unify_bounds = unify_bounds.unwrap_or(false);
-        let (tparams_loc, xs, t) = poly_t;
-        flow_js_utils::instantiation_kit::instantiate_poly::<FlowJs>(
+        Self::instantiate_poly_with_env(
             cx,
+            &FlowJsEnv::entry(),
             trace,
             use_op,
             reason_op,
             reason_tapp,
             unify_bounds,
-            tparams_loc,
-            &xs,
-            t,
-        )
-    }
-
-    pub fn instantiate_poly_call_or_new<'cx>(
-        cx: &Context<'cx>,
-        trace: DepthTrace,
-        poly_info: (Reason, ALoc, Vec1<TypeParam>, Type),
-        call_info: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
-        implicit_check: &dyn Fn() -> flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck,
-    ) -> Result<Type, FlowJsException> {
-        instantiation_helpers::instantiate_poly_call_or_new(
-            cx,
-            trace,
-            poly_info,
-            call_info,
-            implicit_check,
+            poly_t,
         )
     }
 
@@ -687,16 +1449,17 @@ impl FlowJs {
         t: &Type,
         targs: Rc<[Type]>,
     ) -> Result<Type, FlowJsException> {
-        flow_js_utils::instantiation_kit::mk_typeapp_of_poly::<FlowJs>(
+        Self::mk_typeapp_of_poly_with_env(
             cx,
+            &FlowJsEnv::entry(),
             trace,
             use_op,
             reason_op,
             reason_tapp,
             poly_id,
             loc,
-            &tparams,
-            t.dupe(),
+            tparams,
+            t,
             targs,
         )
     }
@@ -709,10 +1472,17 @@ impl FlowJs {
         use_desc: Option<bool>,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::mk_instance(cx, type_t_kind, trace, reason, use_desc.unwrap_or(false), t)
+        Self::mk_instance_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            type_t_kind,
+            trace,
+            reason,
+            use_desc,
+            t,
+        )
     }
 
-    // Eval methods
     pub fn eval_selector<'cx>(
         cx: &Context<'cx>,
         trace: Option<DepthTrace>,
@@ -723,7 +1493,17 @@ impl FlowJs {
         tvar: &Tvar,
         index: i32,
     ) -> Result<(), FlowJsException> {
-        eval_helpers::eval_selector(cx, trace, annot, reason, t, selector, tvar, index)
+        Self::eval_selector_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            annot,
+            reason,
+            t,
+            selector,
+            tvar,
+            index,
+        )
     }
 
     pub fn mk_type_destructor<'cx>(
@@ -735,48 +1515,18 @@ impl FlowJs {
         destructor: &Destructor,
         eval_id: eval::Id,
     ) -> Result<Type, FlowJsException> {
-        eval_helpers::mk_type_destructor(cx, trace, use_op, reason, t, destructor, eval_id)
-    }
-
-    pub fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
-        cx: &Context<'cx>,
-        use_op: UseOp,
-        reason: &Reason,
-        t: &Type,
-        destructor: &Destructor,
-        eval_id: eval::Id,
-    ) -> Result<Type, FlowJsException> {
-        eval_helpers::mk_possibly_evaluated_destructor_for_annotations(
-            cx, use_op, reason, t, destructor, eval_id,
+        Self::mk_type_destructor_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason,
+            t,
+            destructor,
+            eval_id,
         )
     }
 
-    // React methods
-    pub fn react_subtype_class_component_render<'cx>(
-        cx: &Context<'cx>,
-        trace: DepthTrace,
-        use_op: UseOp,
-        t: &Type,
-        reason_op: &Reason,
-        render_t: &Type,
-    ) -> Result<(), FlowJsException> {
-        react_kit::subtype_class_component_render(cx, trace, use_op, t, reason_op, render_t)
-    }
-
-    pub fn react_get_config<'cx>(
-        cx: &Context<'cx>,
-        trace: DepthTrace,
-        t: &Type,
-        use_op: VirtualUseOp<ALoc>,
-        reason_op: &Reason,
-        tool: react::Tool<Context<'cx>>,
-        polarity: Polarity,
-        tout: &Type,
-    ) -> Result<(), FlowJsException> {
-        react_kit::get_config(cx, trace, t, use_op, reason_op, &tool, polarity, tout)
-    }
-
-    // ImplicitInstantiationKit methods
     pub fn run_conditional<'cx>(
         cx: &Context<'cx>,
         trace: DepthTrace,
@@ -788,8 +1538,17 @@ impl FlowJs {
         true_t: &Type,
         false_t: &Type,
     ) -> Result<Type, FlowJsException> {
-        implicit_instantiation::kit::run_conditional(
-            cx, trace, use_op, reason, tparams, check_t, extends_t, true_t, false_t,
+        Self::run_conditional_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            trace,
+            use_op,
+            reason,
+            tparams,
+            check_t,
+            extends_t,
+            true_t,
+            false_t,
         )
     }
 
@@ -799,19 +1558,9 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        implicit_instantiation::kit::run_render_extractor(cx, use_op, reason, t)
+        Self::run_render_extractor_with_env(cx, &FlowJsEnv::entry(), use_op, reason, t)
     }
 
-    pub fn run_await<'cx>(
-        cx: &Context<'cx>,
-        use_op: UseOp,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<Type, FlowJsException> {
-        implicit_instantiation::kit::run_await(cx, use_op, reason, t)
-    }
-
-    // S methods
     pub fn resolve_spread_list<'cx>(
         cx: &Context<'cx>,
         use_op: UseOp,
@@ -819,8 +1568,9 @@ impl FlowJs {
         unresolved_params: flow_data_structure_wrapper::list::FlowOcamlList<UnresolvedParam>,
         spread_resolve: SpreadResolve,
     ) -> Result<(), FlowJsException> {
-        multi_arg_helpers::resolve_spread_list(
+        Self::resolve_spread_list_with_env(
             cx,
+            &FlowJsEnv::entry(),
             use_op,
             reason_op,
             unresolved_params,
@@ -828,30 +1578,16 @@ impl FlowJs {
         )
     }
 
-    pub fn possible_concrete_types_for_predicate<'cx>(
-        predicate_concretizer_variant: PredicateConcretetizerVariant,
-        cx: &Context<'cx>,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_predicate(predicate_concretizer_variant, cx, reason, t)
-    }
-
-    pub fn possible_concrete_types_for_sentinel_prop_test<'cx>(
-        cx: &Context<'cx>,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_sentinel_prop_test(cx, reason, t)
-    }
-
     pub fn singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports<'cx>(
         cx: &Context<'cx>,
         reason: &Reason,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
-            cx, reason, t,
+        Self::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
         )
     }
 
@@ -860,7 +1596,12 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::singleton_concretize_type_for_imports_exports(cx, reason, t)
+        Self::singleton_concretize_type_for_imports_exports_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            reason,
+            t,
+        )
     }
 
     pub fn singleton_concrete_type_for_inspection<'cx>(
@@ -868,15 +1609,7 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::singleton_concrete_type_for_inspection(cx, reason, t)
-    }
-
-    pub fn singleton_concrete_type_for_type_cast<'cx>(
-        cx: &Context<'cx>,
-        reason: &Reason,
-        t: &Type,
-    ) -> Result<Type, FlowJsException> {
-        helpers::singleton_concrete_type_for_type_cast(cx, reason, t)
+        Self::singleton_concrete_type_for_inspection_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     pub fn all_possible_concrete_types<'cx>(
@@ -884,7 +1617,7 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::all_possible_concrete_types(cx, reason, t)
+        Self::all_possible_concrete_types_with_env(cx, &FlowJsEnv::entry(), reason, t)
     }
 
     pub fn singleton_concrete_type_for_match_arg<'cx>(
@@ -893,7 +1626,13 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Type, FlowJsException> {
-        helpers::singleton_concrete_type_for_match_arg(cx, keep_unions, reason, t)
+        Self::singleton_concrete_type_for_match_arg_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            keep_unions,
+            reason,
+            t,
+        )
     }
 
     pub fn possible_concrete_types_for_match_arg<'cx>(
@@ -902,7 +1641,13 @@ impl FlowJs {
         reason: &Reason,
         t: &Type,
     ) -> Result<Vec<Type>, FlowJsException> {
-        helpers::possible_concrete_types_for_match_arg(cx, keep_unions, reason, t)
+        Self::possible_concrete_types_for_match_arg_with_env(
+            cx,
+            &FlowJsEnv::entry(),
+            keep_unions,
+            reason,
+            t,
+        )
     }
 }
 
@@ -910,15 +1655,20 @@ impl FlowJs {
 // Top-level re-exports
 // ======================================================================
 
-pub fn flow<'cx>(
+pub fn flow_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     (l, u): (&Type, &UseT<Context<'cx>>),
 ) -> Result<(), FlowJsException> {
-    FlowJs::flow(cx, l, u)
+    FlowJs::flow_with_env(cx, env, l, u)
 }
 
-pub fn flow_t<'cx>(cx: &Context<'cx>, (t1, t2): (&Type, &Type)) -> Result<(), FlowJsException> {
-    FlowJs::flow_t(cx, t1, t2)
+pub fn flow_t_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    (t1, t2): (&Type, &Type),
+) -> Result<(), FlowJsException> {
+    FlowJs::flow_t_with_env(cx, env, t1, t2)
 }
 
 pub fn subst<'cx>(
@@ -940,8 +1690,9 @@ pub fn subst<'cx>(
     )
 }
 
-pub fn mk_default<'cx>(
+fn mk_default<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     d: &flow_typing_default::Default<Type>,
 ) -> Result<Type, FlowJsException> {
@@ -957,8 +1708,8 @@ pub fn mk_default<'cx>(
             //     flow_t cx (t1, tvar);
             //     flow_t cx (t2, tvar))
             flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
-                flow_t(cx, (&t1, tvar))?;
-                flow_t(cx, (&t2, tvar))?;
+                flow_t_with_env(cx, env, (&t1, tvar))?;
+                flow_t_with_env(cx, env, (&t2, tvar))?;
                 Ok(())
             })
         },
@@ -969,8 +1720,9 @@ pub fn mk_default<'cx>(
             let t = t?;
             flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, _reason, tvar_id| {
                 let tvar = Tvar::new(r.dupe(), tvar_id as u32);
-                FlowJs::eval_selector(
+                FlowJs::eval_selector_with_env(
                     cx,
+                    env,
                     None,
                     false,
                     &r,
@@ -986,66 +1738,78 @@ pub fn mk_default<'cx>(
 
 // Export some functions without the trace parameter
 
-pub fn mk_instance<'cx>(
+fn mk_instance_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     type_t_kind: Option<TypeTKind>,
     instance_reason: &Reason,
     use_desc: Option<bool>,
     c: &Type,
 ) -> Result<Type, FlowJsException> {
-    FlowJs::mk_instance(cx, type_t_kind, None, instance_reason, use_desc, c)
+    FlowJs::mk_instance_with_env(cx, env, type_t_kind, None, instance_reason, use_desc, c)
 }
 
-pub fn get_builtin_type<'cx>(
+fn get_builtin_type_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     use_desc: Option<bool>,
     x: &str,
 ) -> Result<Type, FlowJsException> {
-    FlowJs::get_builtin_type(cx, None, reason, use_desc, x)
+    FlowJs::get_builtin_type_with_env(cx, env, None, reason, use_desc, x)
 }
 
-pub fn get_builtin_react_type<'cx>(
+fn get_builtin_react_type_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     use_desc: Option<bool>,
     purpose: ExpectedModulePurpose,
 ) -> Result<Type, FlowJsException> {
-    FlowJs::get_builtin_react_type(cx, None, reason, use_desc, purpose)
+    FlowJs::get_builtin_react_type_with_env(cx, env, None, reason, use_desc, purpose)
 }
 
-pub fn reposition_reason<'cx>(
+fn reposition_reason<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     use_desc: Option<bool>,
     t: &Type,
 ) -> Result<Type, FlowJsException> {
-    FlowJs::reposition_reason(cx, None, reason, use_desc, t)
+    FlowJs::reposition_reason(cx, env, None, reason, use_desc, t)
 }
 
-pub fn filter_optional<'cx>(
+pub(super) fn filter_optional_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     opt_t: &Type,
 ) -> Result<u32, FlowJsException> {
-    FlowJs::filter_optional(cx, None, reason, opt_t)
+    FlowJs::filter_optional_with_env(cx, env, None, reason, opt_t)
 }
 
-pub fn unify<'cx>(
+pub fn unify_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: Option<UseOp>,
     t1: &Type,
     t2: &Type,
 ) -> Result<(), FlowJsException> {
-    FlowJs::unify(cx, use_op, UnifyCause::Uncategorized, t1, t2)
+    FlowJs::unify_with_env(cx, env, use_op, UnifyCause::Uncategorized, t1, t2)
 }
 
-pub fn reposition<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type) -> Result<Type, FlowJsException> {
-    FlowJs::reposition(cx, None, loc, None, None, t)
-}
-
-pub fn mk_typeapp_instance_annot<'cx>(
+pub fn reposition_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    loc: ALoc,
+    t: Type,
+) -> Result<Type, FlowJsException> {
+    FlowJs::reposition_with_env(cx, env, None, loc, None, None, t)
+}
+
+fn mk_typeapp_instance_annot_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason_op: &Reason,
     reason_tapp: &Reason,
@@ -1053,8 +1817,9 @@ pub fn mk_typeapp_instance_annot<'cx>(
     c: &Type,
     ts: Rc<[Type]>,
 ) -> Result<Type, FlowJsException> {
-    FlowJs::mk_typeapp_instance_annot(
+    FlowJs::mk_typeapp_instance_annot_with_env(
         cx,
+        env,
         None,
         use_op,
         reason_op,
@@ -1065,16 +1830,18 @@ pub fn mk_typeapp_instance_annot<'cx>(
         ts,
     )
 }
-pub fn mk_type_destructor<'cx>(
+fn mk_type_destructor_with_env<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
     t: &Type,
     d: &Destructor,
     id: eval::Id,
 ) -> Result<Type, FlowJsException> {
-    match FlowJs::mk_type_destructor(
+    match FlowJs::mk_type_destructor_with_env(
         cx,
+        env,
         DepthTrace::dummy_trace(),
         use_op,
         reason,
@@ -1084,7 +1851,11 @@ pub fn mk_type_destructor<'cx>(
     ) {
         Ok(result) => Ok(result),
         Err(FlowJsException::LimitExceeded) => {
-            flow_js_utils::add_output(cx, ErrorMessage::ERecursionLimit(reason.loc().dupe()))?;
+            flow_js_utils::add_output_with_env(
+                cx,
+                env,
+                ErrorMessage::ERecursionLimit(reason.loc().dupe()),
+            )?;
             let result = any_t::why(AnySource::AnyError(None), reason.dupe());
             let mut evaluated = cx.evaluated();
             evaluated.insert(id, result.dupe());
@@ -1096,35 +1867,136 @@ pub fn mk_type_destructor<'cx>(
 }
 
 // exporting this for convenience
-pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
-    flow_js_utils::add_output(cx, msg)
+pub fn add_output_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    msg: ErrorMessage<ALoc>,
+) -> Result<(), FlowJsException> {
+    flow_js_utils::add_output_with_env(cx, env, msg)
 }
 
-// Non-speculating variants
+pub fn flow<'cx>(
+    cx: &Context<'cx>,
+    pair: (&Type, &UseT<Context<'cx>>),
+) -> Result<(), FlowJsException> {
+    flow_with_env(cx, &FlowJsEnv::entry(), pair)
+}
+
+pub fn flow_t<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) -> Result<(), FlowJsException> {
+    flow_t_with_env(cx, &FlowJsEnv::entry(), pair)
+}
+
+pub fn mk_instance<'cx>(
+    cx: &Context<'cx>,
+    type_t_kind: Option<TypeTKind>,
+    instance_reason: &Reason,
+    use_desc: Option<bool>,
+    c: &Type,
+) -> Result<Type, FlowJsException> {
+    mk_instance_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        type_t_kind,
+        instance_reason,
+        use_desc,
+        c,
+    )
+}
+
+pub fn get_builtin_type<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    use_desc: Option<bool>,
+    x: &str,
+) -> Result<Type, FlowJsException> {
+    get_builtin_type_with_env(cx, &FlowJsEnv::entry(), reason, use_desc, x)
+}
+
+pub fn get_builtin_react_type<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    use_desc: Option<bool>,
+    purpose: ExpectedModulePurpose,
+) -> Result<Type, FlowJsException> {
+    get_builtin_react_type_with_env(cx, &FlowJsEnv::entry(), reason, use_desc, purpose)
+}
+
+pub fn filter_optional<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    opt_t: &Type,
+) -> Result<u32, FlowJsException> {
+    filter_optional_with_env(cx, &FlowJsEnv::entry(), reason, opt_t)
+}
+
+pub fn unify<'cx>(
+    cx: &Context<'cx>,
+    use_op: Option<UseOp>,
+    t1: &Type,
+    t2: &Type,
+) -> Result<(), FlowJsException> {
+    unify_with_env(cx, &FlowJsEnv::entry(), use_op, t1, t2)
+}
+
+pub fn reposition<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type) -> Result<Type, FlowJsException> {
+    reposition_with_env(cx, &FlowJsEnv::entry(), loc, t)
+}
+
+pub fn mk_typeapp_instance_annot<'cx>(
+    cx: &Context<'cx>,
+    use_op: UseOp,
+    reason_op: &Reason,
+    reason_tapp: &Reason,
+    from_value: bool,
+    c: &Type,
+    ts: Rc<[Type]>,
+) -> Result<Type, FlowJsException> {
+    mk_typeapp_instance_annot_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason_op,
+        reason_tapp,
+        from_value,
+        c,
+        ts,
+    )
+}
+
+pub fn mk_type_destructor<'cx>(
+    cx: &Context<'cx>,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    id: eval::Id,
+) -> Result<Type, FlowJsException> {
+    mk_type_destructor_with_env(cx, &FlowJsEnv::entry(), use_op, reason, t, d, id)
+}
+
+pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
+    add_output_with_env(cx, &FlowJsEnv::entry(), msg)
+}
+
+// Non-speculating entry points
 //
-// These wrappers are called from non-speculating contexts (statement.rs,
-// merge.rs, env_resolution.rs, etc.). For non-cancellation errors (Speculative,
-// LimitExceeded, SpeculationSingletonError), they preserve the original
-// "absorb when speculating, panic otherwise" semantics. For WorkerCanceled,
-// TimedOut, and DebugThrow they always propagate via JobError, so the type
-// system enforces propagation up to the per-file boundary in mk_check.
-// See /tmp/flow-cancel-design.md Section 6.1.
+// These wrappers are called from checker entry points (statement.rs, merge.rs,
+// env_resolution.rs, ...), which by definition are not inside a speculation
+// branch: taking no [FlowJsEnv] is what makes that true, so no error can be
+// deferred to a branch. For WorkerCanceled, TimedOut and DebugThrow they
+// propagate via JobError, so the type system enforces propagation up to the
+// per-file boundary in mk_check. Anything else is a bug and panics.
 
 pub fn flow_non_speculating<'cx>(
     cx: &Context<'cx>,
     (l, u): (&Type, &UseT<Context<'cx>>),
 ) -> Result<(), JobError> {
-    match flow(cx, (l, u)) {
+    match flow_with_env(cx, &FlowJsEnv::entry(), (l, u)) {
         Ok(()) => Ok(()),
         Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
         Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
         Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
-        Err(err) => {
-            if !flow_typing_flow_common::speculation::speculating(cx) {
-                panic!("Non speculating: {:?}", err);
-            }
-            Ok(())
-        }
+        Err(err) => panic!("Non speculating: {:?}", err),
     }
 }
 
@@ -1132,17 +2004,12 @@ pub fn flow_t_non_speculating<'cx>(
     cx: &Context<'cx>,
     (t1, t2): (&Type, &Type),
 ) -> Result<(), JobError> {
-    match flow_t(cx, (t1, t2)) {
+    match flow_t_with_env(cx, &FlowJsEnv::entry(), (t1, t2)) {
         Ok(()) => Ok(()),
         Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
         Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
         Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
-        Err(err) => {
-            if !flow_typing_flow_common::speculation::speculating(cx) {
-                panic!("Non speculating: {:?}", err);
-            }
-            Ok(())
-        }
+        Err(err) => panic!("Non speculating: {:?}", err),
     }
 }
 
@@ -1151,7 +2018,7 @@ pub fn mk_default_non_speculating<'cx>(
     reason: &Reason,
     d: &flow_typing_default::Default<Type>,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(mk_default(cx, reason, d))
+    flow_js_utils::flow_js_result_to_job_error(mk_default(cx, &FlowJsEnv::entry(), reason, d))
 }
 
 pub fn mk_instance_non_speculating<'cx>(
@@ -1161,8 +2028,9 @@ pub fn mk_instance_non_speculating<'cx>(
     use_desc: Option<bool>,
     c: &Type,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(mk_instance(
+    flow_js_utils::flow_js_result_to_job_error(mk_instance_with_env(
         cx,
+        &FlowJsEnv::entry(),
         type_t_kind,
         instance_reason,
         use_desc,
@@ -1176,7 +2044,13 @@ pub fn get_builtin_type_non_speculating<'cx>(
     use_desc: Option<bool>,
     x: &str,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(get_builtin_type(cx, reason, use_desc, x))
+    flow_js_utils::flow_js_result_to_job_error(get_builtin_type_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        use_desc,
+        x,
+    ))
 }
 
 pub fn get_builtin_react_type_non_speculating<'cx>(
@@ -1185,8 +2059,12 @@ pub fn get_builtin_react_type_non_speculating<'cx>(
     use_desc: Option<bool>,
     purpose: ExpectedModulePurpose,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(get_builtin_react_type(
-        cx, reason, use_desc, purpose,
+    flow_js_utils::flow_js_result_to_job_error(get_builtin_react_type_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        use_desc,
+        purpose,
     ))
 }
 
@@ -1196,7 +2074,13 @@ pub fn reposition_reason_non_speculating<'cx>(
     use_desc: Option<bool>,
     t: &Type,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(reposition_reason(cx, reason, use_desc, t))
+    flow_js_utils::flow_js_result_to_job_error(reposition_reason(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        use_desc,
+        t,
+    ))
 }
 
 pub fn unify_non_speculating<'cx>(
@@ -1205,17 +2089,12 @@ pub fn unify_non_speculating<'cx>(
     t1: &Type,
     t2: &Type,
 ) -> Result<(), JobError> {
-    match unify(cx, use_op, t1, t2) {
+    match unify_with_env(cx, &FlowJsEnv::entry(), use_op, t1, t2) {
         Ok(()) => Ok(()),
         Err(FlowJsException::WorkerCanceled(c)) => Err(JobError::Canceled(c)),
         Err(FlowJsException::TimedOut(t)) => Err(JobError::TimedOut(t)),
         Err(FlowJsException::DebugThrow { loc }) => Err(JobError::DebugThrow { loc }),
-        Err(err) => {
-            if !flow_typing_flow_common::speculation::speculating(cx) {
-                panic!("Non speculating: {:?}", err);
-            }
-            Ok(())
-        }
+        Err(err) => panic!("Non speculating: {:?}", err),
     }
 }
 
@@ -1224,7 +2103,7 @@ pub fn reposition_non_speculating<'cx>(
     loc: ALoc,
     t: Type,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(reposition(cx, loc, t))
+    flow_js_utils::flow_js_result_to_job_error(reposition_with_env(cx, &FlowJsEnv::entry(), loc, t))
 }
 
 pub fn mk_typeapp_instance_annot_non_speculating<'cx>(
@@ -1236,8 +2115,9 @@ pub fn mk_typeapp_instance_annot_non_speculating<'cx>(
     c: &Type,
     ts: Rc<[Type]>,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(mk_typeapp_instance_annot(
+    flow_js_utils::flow_js_result_to_job_error(mk_typeapp_instance_annot_with_env(
         cx,
+        &FlowJsEnv::entry(),
         use_op,
         reason_op,
         reason_tapp,
@@ -1255,13 +2135,17 @@ pub fn mk_type_destructor_non_speculating<'cx>(
     d: &Destructor,
     id: eval::Id,
 ) -> Result<Type, JobError> {
-    flow_js_utils::flow_js_result_to_job_error(mk_type_destructor(cx, use_op, reason, t, d, id))
+    flow_js_utils::flow_js_result_to_job_error(mk_type_destructor_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        use_op,
+        reason,
+        t,
+        d,
+        id,
+    ))
 }
 
 pub fn add_output_non_speculating<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) {
-    if let Err(err) = add_output(cx, msg) {
-        if !flow_typing_flow_common::speculation::speculating(cx) {
-            panic!("Non speculating: {:?}", err);
-        }
-    }
+    flow_js_utils::add_output_non_speculating(cx, msg)
 }

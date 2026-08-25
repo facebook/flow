@@ -11,6 +11,7 @@ use std::sync::Arc;
 use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_flow_common::flow_js_utils;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -25,6 +26,7 @@ use super::*;
 
 pub(super) fn flow_type_args<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -56,13 +58,32 @@ pub(super) fn flow_type_args<'cx>(
         );
         match polarity {
             Polarity::Negative => {
-                rec_flow(cx, trace, (&t2, &UseT::new(UseTInner::UseT(use_op, t1))))?;
+                rec_flow(
+                    cx,
+                    env,
+                    trace,
+                    (&t2, &UseT::new(UseTInner::UseT(use_op, t1))),
+                )?;
             }
             Polarity::Positive => {
-                rec_flow(cx, trace, (&t1, &UseT::new(UseTInner::UseT(use_op, t2))))?;
+                rec_flow(
+                    cx,
+                    env,
+                    trace,
+                    (&t1, &UseT::new(UseTInner::UseT(use_op, t2))),
+                )?;
             }
             Polarity::Neutral => {
-                rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)?;
+                rec_unify(
+                    cx,
+                    env,
+                    trace,
+                    use_op,
+                    UnifyCause::Uncategorized,
+                    None,
+                    &t1,
+                    &t2,
+                )?;
             }
         }
     }
@@ -118,6 +139,7 @@ pub(super) fn inst_type_to_obj_type<'cx>(
 // which don't have an own/proto distinction.
 pub(super) fn structural_subtype<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     upper_inst_abstract: bool,
@@ -167,11 +189,12 @@ pub(super) fn structural_subtype<'cx>(
                     strictness_kind: l_obj.strictness_kind,
                 }))),
             ));
-            rec_flow_t(cx, trace, use_op, (&lower, &o))?;
+            rec_flow_t(cx, env, trace, use_op, (&lower, &o))?;
         }
         _ => {
             inst_structural_subtype(
                 cx,
+                env,
                 trace,
                 use_op,
                 upper_inst_abstract,
@@ -193,6 +216,7 @@ pub(super) fn structural_subtype<'cx>(
 
 pub(super) fn inst_structural_subtype<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     upper_inst_abstract: bool,
@@ -237,6 +261,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     let lpolarity = &l_dict.dict_polarity;
                     subtyping_kit::rec_flow_p(
                         cx,
+                        env,
                         Some(trace),
                         UseOp::Frame(
                             Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
@@ -260,6 +285,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     )?;
                     subtyping_kit::rec_flow_p(
                         cx,
+                        env,
                         Some(trace),
                         UseOp::Frame(
                             Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
@@ -304,6 +330,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 let nonstrict_returning = inst_dict.as_ref().map(|d| (d.value.dupe(), t.dupe()));
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         lower,
@@ -346,6 +373,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 let propref = mk_named_prop(reason.dupe(), false, name.dupe());
                 rec_flow(
                     cx,
+                    env,
                     trace,
                     (
                         lower,
@@ -380,6 +408,7 @@ pub(super) fn inst_structural_subtype<'cx>(
         let propref = mk_named_prop(reason.dupe(), false, name.dupe());
         rec_flow(
             cx,
+            env,
             trace,
             (
                 lower,
@@ -419,6 +448,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                         let lt = cx.find_call(lid);
                         rec_flow(
                             cx,
+                            env,
                             trace,
                             (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut))),
                         )?;
@@ -433,7 +463,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                                 suggestion: None,
                             },
                         ));
-                        add_output(cx, error_message)?;
+                        add_output_with_env(cx, env, error_message)?;
                     }
                 }
             }
@@ -447,7 +477,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                         suggestion: None,
                     },
                 ));
-                add_output(cx, error_message)?;
+                add_output_with_env(cx, env, error_message)?;
             }
         }
     }
@@ -467,7 +497,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     use_op: use_op.dupe(),
                 },
             ));
-            add_output(cx, error_message)
+            add_output_with_env(cx, env, error_message)
         };
         // Diamond inheritance (e.g. [B extends X], [C extends X],
         // [D extends B, C]) collects [X]'s sig multiple times via
@@ -477,11 +507,11 @@ pub(super) fn inst_structural_subtype<'cx>(
         // abstract bit (either an abstract class via [ClassT] or an
         // [abstract new () => T] interface) and upper does not.
         let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-            possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+            helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
         };
         if !upper_inst_abstract && flow_js_utils::is_class_abstract(&concretize, lower)? {
-            add_output(
-                cx,
+            add_output_with_env(
+                cx, env,
                 ErrorMessage::EAbstractClass(Box::new(
                     flow_typing_errors::error_message::EAbstractClassData {
                         kind: flow_typing_errors::intermediate_error_types::AbstractErrorKind::AbstractConstructorAssignedToNonAbstract,
@@ -502,6 +532,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     )?) {
                         Some(lt) => rec_flow(
                             cx,
+                            env,
                             trace,
                             (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()))),
                         )?,
@@ -512,6 +543,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                     match flow_js_utils::extract_class_ctor_t(&concretize, cx, this)? {
                         Some(lt) => rec_flow(
                             cx,
+                            env,
                             trace,
                             (&lt, &UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()))),
                         )?,
@@ -535,6 +567,7 @@ pub(super) fn inst_structural_subtype<'cx>(
 
 pub(super) fn check_super<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -567,6 +600,7 @@ pub(super) fn check_super<'cx>(
     let propref = mk_named_prop(reason_prop, false, x.dupe());
     rec_flow(
         cx,
+        env,
         trace,
         (
             &t,

@@ -24,6 +24,7 @@ flow_typing_errors = { path = "../flow_typing_errors" }
 flow_typing_exists_check = { path = "../flow_typing_exists_check" }
 flow_typing_flow_common = { path = "../flow_typing_flow_common" }
 flow_typing_flow_js = { path = "../flow_typing_flow_js" }
+flow_typing_flow_js_env = { path = "../flow_typing_flow_js_env" }
 flow_typing_generics = { path = "../flow_typing_generics" }
 flow_typing_key = { path = "../flow_typing_key" }
 flow_typing_loc_env = { path = "../flow_typing_loc_env" }

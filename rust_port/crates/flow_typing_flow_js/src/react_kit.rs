@@ -24,6 +24,7 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
 use flow_typing_flow_common::obj_type;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::CallMData;
 use flow_typing_type::type_::CanonicalRendersForm;
 use flow_typing_type::type_::ComponentKind;
@@ -82,6 +83,7 @@ use crate::tvar_resolver;
 
 pub fn err_incompatible<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     reason: &Reason,
 ) -> Result<(), FlowJsException> {
@@ -89,23 +91,27 @@ pub fn err_incompatible<'cx>(
         reason: reason.dupe(),
         use_op,
     };
-    flow_js_utils::add_output(cx, err)
+    flow_js_utils::add_output_with_env(cx, env, err)
 }
 
 pub fn component_class<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     reason: &Reason,
     props: &Type,
 ) -> Result<Type, FlowJsException> {
     Ok(Type::new(TypeInner::DefT(
         reason.dupe(),
-        DefT::new(DefTInner::ClassT(FlowJs::get_builtin_react_typeapp(
-            cx,
-            reason,
-            None,
-            ExpectedModulePurpose::ReactModuleForReactClassComponent,
-            vec![props.dupe(), flow_typing_tvar::mk(cx, reason.dupe())],
-        )?)),
+        DefT::new(DefTInner::ClassT(
+            FlowJs::get_builtin_react_typeapp_with_env(
+                cx,
+                env,
+                reason,
+                None,
+                ExpectedModulePurpose::ReactModuleForReactClassComponent,
+                vec![props.dupe(), flow_typing_tvar::mk(cx, reason.dupe())],
+            )?,
+        )),
     )))
 }
 
@@ -121,6 +127,7 @@ enum IntrinsicLiteral {
 
 fn get_intrinsic<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     component_reason: &Reason,
     reason_op: &Reason,
@@ -136,7 +143,7 @@ fn get_intrinsic<'cx>(
             VirtualReasonDesc::RType("$JSXIntrinsics".into()),
             component_reason.loc().dupe(),
         );
-        FlowJs::get_builtin_type(cx, None, &reason, None, "$JSXIntrinsics")?
+        FlowJs::get_builtin_type_with_env(cx, env, None, &reason, None, "$JSXIntrinsics")?
     };
     // Create a use_op for the upcoming operations.
     let use_op = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::ReactGetIntrinsic {
@@ -153,8 +160,9 @@ fn get_intrinsic<'cx>(
     match literal {
         IntrinsicLiteral::Literal(_) => {}
         IntrinsicLiteral::General(gen_lit) => {
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &intrinsics,
                 &UseT::new(UseTInner::HasOwnPropT(Box::new(HasOwnPropTData {
@@ -189,8 +197,9 @@ fn get_intrinsic<'cx>(
                     DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
                 ))),
             };
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &intrinsics,
                 &UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
@@ -222,8 +231,9 @@ fn get_intrinsic<'cx>(
     };
     // if intrinsic is null, we will treat it like prototype termination,
     // but we should error like a GetPropT would instead.
-    FlowJs::rec_flow(
+    FlowJs::rec_flow_with_env(
         cx,
+        env,
         trace,
         &intrinsic,
         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
@@ -245,6 +255,7 @@ fn get_intrinsic<'cx>(
 
 pub fn subtype_class_component_render<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     class_component_instance: &Type,
@@ -269,8 +280,9 @@ pub fn subtype_class_component_render<'cx>(
         specialized_callee: None,
     }));
     // Call the `render` method.
-    FlowJs::rec_flow(
+    FlowJs::rec_flow_with_env(
         cx,
+        env,
         trace,
         class_component_instance,
         &UseT::new(UseTInner::MethodT(Box::new(MethodTData {
@@ -281,8 +293,9 @@ pub fn subtype_class_component_render<'cx>(
             method_action: Box::new(action),
         }))),
     )?;
-    FlowJs::rec_flow_t(
+    FlowJs::rec_flow_t_with_env(
         cx,
+        env,
         trace,
         use_op,
         &Type::new(TypeInner::OpenT(Tvar::new(reason_op.dupe(), tvar as u32))),
@@ -294,6 +307,7 @@ pub fn subtype_class_component_render<'cx>(
 // on the given polarity.
 fn lookup_defaults<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
     reason_op: &Reason,
@@ -320,8 +334,9 @@ fn lookup_defaults<'cx>(
         polarity: pole,
     };
     // Lookup the `defaultProps` property.
-    FlowJs::rec_flow(
+    FlowJs::rec_flow_with_env(
         cx,
+        env,
         trace,
         component,
         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
@@ -344,6 +359,7 @@ fn lookup_defaults<'cx>(
 // return None.
 fn get_defaults<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
     reason_op: &Reason,
@@ -358,27 +374,38 @@ fn get_defaults<'cx>(
         return Ok(None);
     };
     let tvar = flow_typing_tvar::mk(cx, reason_op.dupe());
-    lookup_defaults(cx, trace, component, reason_op, &tvar, Polarity::Positive)?;
+    lookup_defaults(
+        cx,
+        env,
+        trace,
+        component,
+        reason_op,
+        &tvar,
+        Polarity::Positive,
+    )?;
     Ok(Some(tvar))
 }
 
 fn add_optional_ref_prop_to_props<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     props: &Type,
     reason_op: &Reason,
     instance: &Type,
     tout: Type,
 ) -> Result<(), FlowJsException> {
-    let ref_setter_type = FlowJs::get_builtin_react_typeapp(
+    let ref_setter_type = FlowJs::get_builtin_react_typeapp_with_env(
         cx,
+        env,
         reason_op,
         None,
         ExpectedModulePurpose::ReactModuleForReactRefSetterType,
         vec![instance.dupe()],
     )?;
-    FlowJs::rec_flow(
+    FlowJs::rec_flow_with_env(
         cx,
+        env,
         trace,
         props,
         &UseT::new(UseTInner::ObjKitT(
@@ -407,6 +434,7 @@ fn add_optional_ref_prop_to_props<'cx>(
 
 fn props_to_tout<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
     use_op: &UseOp,
@@ -419,14 +447,15 @@ fn props_to_tout<'cx>(
             // Class components or legacy components.
             DefTInner::ClassT(i) => {
                 let props = flow_typing_tvar::mk(cx, reason_op.dupe());
-                FlowJs::rec_flow_t(
+                FlowJs::rec_flow_t_with_env(
                     cx,
+                    env,
                     trace,
                     unknown_use(),
                     component,
-                    &component_class(cx, r, &props)?,
+                    &component_class(cx, env, r, &props)?,
                 )?;
-                add_optional_ref_prop_to_props(cx, trace, &props, reason_op, i, tout.dupe())?;
+                add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, i, tout.dupe())?;
                 Ok(())
             }
             //  Functional components.
@@ -448,12 +477,13 @@ fn props_to_tout<'cx>(
                             .first()
                             .map(|p| p.1.dupe())
                             .unwrap_or_else(|| obj_type::mk(ObjKind::Exact, cx, r.dupe()));
-                        FlowJs::rec_flow_t(cx, trace, unknown_use(), &t, &tout)?;
+                        FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, &tout)?;
                     }
                     _ => {
-                        err_incompatible(cx, unknown_use(), r)?;
-                        FlowJs::rec_flow_t(
+                        err_incompatible(cx, env, unknown_use(), r)?;
+                        FlowJs::rec_flow_t_with_env(
                             cx,
+                            env,
                             trace,
                             unknown_use(),
                             &any_t::error(reason_op.dupe()),
@@ -476,11 +506,12 @@ fn props_to_tout<'cx>(
                 {
                     // Keep the object's reason for better error reporting
                     let modified = type_util::mod_reason_of_t(&|_| r.dupe(), &call_t);
-                    props_to_tout(cx, trace, &modified, use_op, reason_op, tout)?;
+                    props_to_tout(cx, env, trace, &modified, use_op, reason_op, tout)?;
                 } else {
-                    err_incompatible(cx, unknown_use(), r)?;
-                    FlowJs::rec_flow_t(
+                    err_incompatible(cx, env, unknown_use(), r)?;
+                    FlowJs::rec_flow_t_with_env(
                         cx,
+                        env,
                         trace,
                         unknown_use(),
                         &any_t::error(reason_op.dupe()),
@@ -494,6 +525,7 @@ fn props_to_tout<'cx>(
                 let props = flow_typing_tvar::mk(cx, reason_op.dupe());
                 get_intrinsic(
                     cx,
+                    env,
                     trace,
                     type_util::reason_of_t(component),
                     reason_op,
@@ -508,6 +540,7 @@ fn props_to_tout<'cx>(
                     |cx, tout_t| {
                         get_intrinsic(
                             cx,
+                            env,
                             trace,
                             type_util::reason_of_t(component),
                             reason_op,
@@ -518,7 +551,7 @@ fn props_to_tout<'cx>(
                         )
                     },
                 )?;
-                add_optional_ref_prop_to_props(cx, trace, &props, reason_op, &i, tout)?;
+                add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, &i, tout)?;
                 Ok(())
             }
             DefTInner::StrGeneralT(gen_lit) => {
@@ -529,6 +562,7 @@ fn props_to_tout<'cx>(
                     |cx, tout_t| {
                         get_intrinsic(
                             cx,
+                            env,
                             trace,
                             type_util::reason_of_t(component),
                             reason_op,
@@ -541,6 +575,7 @@ fn props_to_tout<'cx>(
                 )?;
                 get_intrinsic(
                     cx,
+                    env,
                     trace,
                     type_util::reason_of_t(component),
                     reason_op,
@@ -549,14 +584,15 @@ fn props_to_tout<'cx>(
                     Polarity::Positive,
                     &tout,
                 )?;
-                add_optional_ref_prop_to_props(cx, trace, &props, reason_op, &i, tout)?;
+                add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, &i, tout)?;
                 Ok(())
             }
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config, ..
             }) => {
-                FlowJs::rec_flow(
+                FlowJs::rec_flow_with_env(
                     cx,
+                    env,
                     trace,
                     config,
                     &UseT::new(UseTInner::ConvertEmptyPropsToMixedT(r.loc().dupe(), tout)),
@@ -565,9 +601,10 @@ fn props_to_tout<'cx>(
             }
             // ...otherwise, error.
             _ => {
-                err_incompatible(cx, use_op.dupe(), type_util::reason_of_t(component))?;
-                FlowJs::rec_flow_t(
+                err_incompatible(cx, env, use_op.dupe(), type_util::reason_of_t(component))?;
+                FlowJs::rec_flow_t_with_env(
                     cx,
+                    env,
                     trace,
                     unknown_use(),
                     &any_t::error(reason_op.dupe()),
@@ -578,8 +615,9 @@ fn props_to_tout<'cx>(
         },
         // Any and any specializations
         TypeInner::AnyT(reason, src) => {
-            FlowJs::rec_flow_t(
+            FlowJs::rec_flow_t_with_env(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 &any_t::why(src.clone(), reason.dupe()),
@@ -589,9 +627,10 @@ fn props_to_tout<'cx>(
         }
         _ => {
             // ...otherwise, error.
-            err_incompatible(cx, use_op.dupe(), type_util::reason_of_t(component))?;
-            FlowJs::rec_flow_t(
+            err_incompatible(cx, env, use_op.dupe(), type_util::reason_of_t(component))?;
+            FlowJs::rec_flow_t_with_env(
                 cx,
+                env,
                 trace,
                 unknown_use(),
                 &any_t::error(reason_op.dupe()),
@@ -623,6 +662,7 @@ fn props_to_tout<'cx>(
 // destructor annotations. Like object spread, $Diff, and $Rest.
 pub fn get_config<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     component: &Type,
     use_op: UseOp,
@@ -643,14 +683,15 @@ pub fn get_config<'cx>(
         );
         match pole {
             Polarity::Positive => {
-                FlowJs::rec_flow_t(cx, trace, use_op, config, tout)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, config, tout)?;
             }
             Polarity::Negative => {
-                FlowJs::rec_flow_t(cx, trace, use_op, tout, config)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, tout, config)?;
             }
             Polarity::Neutral => {
-                FlowJs::rec_unify(
+                FlowJs::rec_unify_with_env(
                     cx,
+                    env,
                     trace,
                     use_op,
                     UnifyCause::Uncategorized,
@@ -669,14 +710,23 @@ pub fn get_config<'cx>(
             .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
         let use_op_clone = use_op.dupe();
         flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tout_t| {
-            props_to_tout(cx, trace, component, &use_op_clone, &reason, tout_t.dupe())
+            props_to_tout(
+                cx,
+                env,
+                trace,
+                component,
+                &use_op_clone,
+                &reason,
+                tout_t.dupe(),
+            )
         })?
     };
-    let defaults = get_defaults(cx, trace, component, reason_op)?;
+    let defaults = get_defaults(cx, env, trace, component, reason_op)?;
     match defaults {
         None => {
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &props,
                 &UseT::new(UseTInner::UseT(use_op, tout.dupe())),
@@ -686,8 +736,9 @@ pub fn get_config<'cx>(
         Some(defaults) => {
             let tool = object::ResolveTool::Resolve(object::Resolve::Next);
             let state = object::rest::State::One(defaults);
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &props,
                 &UseT::new(UseTInner::ObjKitT(
@@ -706,9 +757,21 @@ pub fn get_config<'cx>(
     }
 }
 
-// let run cx trace ~use_op reason_op l u =
 pub fn run<'cx>(
     cx: &Context<'cx>,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason_op: &Reason,
+    l: &Type,
+    u: &react::Tool<Context<'cx>>,
+) -> Result<(), FlowJsException> {
+    run_with_env(cx, &FlowJsEnv::entry(), trace, use_op, reason_op, l, u)
+}
+
+// let run cx trace ~use_op reason_op l u =
+pub(super) fn run_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -723,6 +786,7 @@ pub fn run<'cx>(
     // inferred props type.
     fn tin_to_props<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
         reason_op: &Reason,
@@ -745,7 +809,7 @@ pub fn run<'cx>(
                         )),
                         id: eval::Id::generate_id(),
                     });
-                    FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &props)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
                     Ok(())
                 }
                 // Stateless functional components.
@@ -763,15 +827,17 @@ pub fn run<'cx>(
                                 .first()
                                 .map(|p| p.1.dupe())
                                 .unwrap_or_else(|| obj_type::mk(ObjKind::Exact, cx, r.dupe()));
-                            FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &t)?;
-                            if !cx.in_implicit_instantiation() {
-                                FlowJs::rec_flow_t(
+                            FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &t)?;
+                            if !env.in_implicit_instantiation() {
+                                FlowJs::rec_flow_t_with_env(
                                     cx,
+                                    env,
                                     trace,
                                     unknown_use(),
                                     &ft.return_t,
-                                    &FlowJs::get_builtin_react_type(
+                                    &FlowJs::get_builtin_react_type_with_env(
                                         cx,
+                                        env,
                                         None,
                                         reason_op,
                                         None,
@@ -781,9 +847,10 @@ pub fn run<'cx>(
                             }
                         }
                         _ => {
-                            err_incompatible(cx, unknown_use(), r)?;
-                            FlowJs::rec_flow_t(
+                            err_incompatible(cx, env, unknown_use(), r)?;
+                            FlowJs::rec_flow_t_with_env(
                                 cx,
+                                env,
                                 trace,
                                 unknown_use(),
                                 &any_t::error(reason_op.dupe()),
@@ -807,11 +874,12 @@ pub fn run<'cx>(
                     {
                         // Keep the object's reason for better error reporting
                         let modified = type_util::mod_reason_of_t(&|_| r.dupe(), &call_t);
-                        return tin_to_props(cx, trace, use_op, reason_op, &modified, tin);
+                        return tin_to_props(cx, env, trace, use_op, reason_op, &modified, tin);
                     }
-                    err_incompatible(cx, unknown_use(), r)?;
-                    FlowJs::rec_flow_t(
+                    err_incompatible(cx, env, unknown_use(), r)?;
+                    FlowJs::rec_flow_t_with_env(
                         cx,
+                        env,
                         trace,
                         unknown_use(),
                         &any_t::error(reason_op.dupe()),
@@ -821,7 +889,14 @@ pub fn run<'cx>(
                 }
                 // Abstract components.
                 DefTInner::ReactAbstractComponentT(_) => {
-                    FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &mixed_t::why(r.dupe()))?;
+                    FlowJs::rec_flow_t_with_env(
+                        cx,
+                        env,
+                        trace,
+                        unknown_use(),
+                        tin,
+                        &mixed_t::why(r.dupe()),
+                    )?;
                     Ok(())
                 }
                 // Intrinsic components.
@@ -836,7 +911,7 @@ pub fn run<'cx>(
                         )),
                         id: eval::Id::generate_id(),
                     });
-                    FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &props)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
                     Ok(())
                 }
                 DefTInner::StrGeneralT(_) => {
@@ -850,15 +925,16 @@ pub fn run<'cx>(
                         )),
                         id: eval::Id::generate_id(),
                     });
-                    FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &props)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
                     Ok(())
                 }
                 // ...otherwise, error.
                 _ => {
                     let reason = type_util::reason_of_t(component);
-                    err_incompatible(cx, use_op.dupe(), reason)?;
-                    FlowJs::rec_flow_t(
+                    err_incompatible(cx, env, use_op.dupe(), reason)?;
+                    FlowJs::rec_flow_t_with_env(
                         cx,
+                        env,
                         trace,
                         unknown_use(),
                         tin,
@@ -868,8 +944,9 @@ pub fn run<'cx>(
                 }
             },
             TypeInner::AnyT(reason, source) => {
-                FlowJs::rec_flow_t(
+                FlowJs::rec_flow_t_with_env(
                     cx,
+                    env,
                     trace,
                     unknown_use(),
                     tin,
@@ -880,8 +957,15 @@ pub fn run<'cx>(
             // ...otherwise, error.
             _ => {
                 let reason = type_util::reason_of_t(component);
-                err_incompatible(cx, use_op.dupe(), reason)?;
-                FlowJs::rec_flow_t(cx, trace, unknown_use(), tin, &any_t::error(reason.dupe()))?;
+                err_incompatible(cx, env, use_op.dupe(), reason)?;
+                FlowJs::rec_flow_t_with_env(
+                    cx,
+                    env,
+                    trace,
+                    unknown_use(),
+                    tin,
+                    &any_t::error(reason.dupe()),
+                )?;
                 Ok(())
             }
         }
@@ -889,6 +973,7 @@ pub fn run<'cx>(
 
     fn config_check<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -908,11 +993,11 @@ pub fn run<'cx>(
         } else {
             let use_op_clone = use_op.dupe();
             let props = flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_t| {
-                tin_to_props(cx, trace, &use_op_clone, reason_op, l, tout_t)
+                tin_to_props(cx, env, trace, &use_op_clone, reason_op, l, tout_t)
             })?;
             // For class components and function components we want to lookup the
             // static default props property so that we may add it to our config input.
-            let defaults = get_defaults(cx, trace, l, reason_op)?;
+            let defaults = get_defaults(cx, env, trace, l, reason_op)?;
             (props, defaults)
         };
         let ref_manipulation = object::react_config::RefManipulation::KeepRef;
@@ -938,8 +1023,9 @@ pub fn run<'cx>(
         // speculation error message score. Usually we will already have a
         // ReactCreateElementCall use_op, but we want errors after this point to
         // win when picking the best errors speculation discovered.
-        FlowJs::rec_flow(
+        FlowJs::rec_flow_with_env(
             cx,
+            env,
             trace,
             jsx_props,
             &UseT::new(UseTInner::ObjKitT(
@@ -962,6 +1048,7 @@ pub fn run<'cx>(
 
     fn create_element<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         original_use_op: UseOp,
         reason_op: &Reason,
@@ -994,7 +1081,7 @@ pub fn run<'cx>(
             }
         }
         let use_op = unwrap(original_use_op);
-        config_check(cx, trace, use_op.dupe(), reason_op, l, jsx_props)?;
+        config_check(cx, env, trace, use_op.dupe(), reason_op, l, jsx_props)?;
 
         // If our jsx props is void or null then we want to replace it with an
         // empty object.
@@ -1008,8 +1095,9 @@ pub fn run<'cx>(
                 type_util::reason_of_t(jsx_props).dupe(),
                 |cx, normalized_config| {
                     let reason = type_util::reason_of_t(jsx_props).dupe();
-                    FlowJs::rec_flow(
+                    FlowJs::rec_flow_with_env(
                         cx,
+                        env,
                         trace,
                         jsx_props,
                         &UseT::new(UseTInner::ObjKitT(
@@ -1037,8 +1125,9 @@ pub fn run<'cx>(
                 .replace_desc(VirtualReasonDesc::RReactKey);
             // Create the key type.
             let key_t = type_util::optional(
-                type_util::maybe(FlowJs::get_builtin_type(
+                type_util::maybe(FlowJs::get_builtin_type_with_env(
                     cx,
+                    env,
                     None,
                     &reason_key,
                     None,
@@ -1069,8 +1158,9 @@ pub fn run<'cx>(
                     reason_lower: type_util::reason_of_t(&normalized_jsx_props).dupe(),
                     reason_upper: reason_key.dupe(),
                 }));
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &normalized_jsx_props,
                 &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
@@ -1097,8 +1187,9 @@ pub fn run<'cx>(
         };
         let elem = {
             let use_op_clone = use_op.dupe();
-            FlowJs::get_builtin_typeapp(
+            FlowJs::get_builtin_typeapp_with_env(
                 cx,
+                env,
                 &elem_reason,
                 Some(true),
                 "ExactReactElement_DEPRECATED",
@@ -1107,6 +1198,7 @@ pub fn run<'cx>(
                     flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_t| {
                         get_config(
                             cx,
+                            env,
                             trace,
                             l,
                             use_op_clone.dupe(),
@@ -1122,7 +1214,12 @@ pub fn run<'cx>(
 
         // Concretize to an ObjT so that we can asssociate the monomorphized component with the props id
         let elem = {
-            let result = FlowJs::singleton_concrete_type_for_inspection(cx, &elem_reason, &elem)?;
+            let result = FlowJs::singleton_concrete_type_for_inspection_with_env(
+                cx,
+                env,
+                &elem_reason,
+                &elem,
+            )?;
             if let TypeInner::NominalT {
                 reason: _,
                 nominal_type: opq,
@@ -1200,7 +1297,7 @@ pub fn run<'cx>(
                             ))),
                         ));
                         callee_recorder::add_callee(
-                            cx,
+                            env,
                             callee_recorder::Kind::Tast,
                             inst_component,
                             specialized_component.as_ref(),
@@ -1209,7 +1306,7 @@ pub fn run<'cx>(
                     (DefTInner::FunT(..), _) => {
                         let fn_t = dropped.dupe();
                         callee_recorder::add_callee(
-                            cx,
+                            env,
                             callee_recorder::Kind::Tast,
                             fn_t,
                             specialized_component.as_ref(),
@@ -1221,9 +1318,10 @@ pub fn run<'cx>(
         }
 
         let elem = if should_generalize {
-            match renders_kit::try_synthesize_render_type(cx, false, &elem)? {
-                None => FlowJs::get_builtin_react_type(
+            match renders_kit::try_synthesize_render_type_with_env(cx, env, false, &elem)? {
+                None => FlowJs::get_builtin_react_type_with_env(
                     cx,
+                    env,
                     Some(trace),
                     &elem_reason,
                     None,
@@ -1246,8 +1344,9 @@ pub fn run<'cx>(
         } else {
             elem
         };
-        FlowJs::rec_flow_t(
+        FlowJs::rec_flow_t_with_env(
             cx,
+            env,
             trace,
             unknown_use(),
             &elem,
@@ -1269,6 +1368,7 @@ pub fn run<'cx>(
             specialized_component,
         }) => create_element(
             cx,
+            env,
             trace,
             use_op,
             reason_op,
@@ -1283,10 +1383,18 @@ pub fn run<'cx>(
             tout,
         ),
         react::Tool::ConfigCheck { props: jsx_props } => {
-            config_check(cx, trace, use_op, reason_op, l, jsx_props)
+            config_check(cx, env, trace, use_op, reason_op, l, jsx_props)
         }
-        react::Tool::GetConfig { tout } => {
-            get_config(cx, trace, l, use_op, reason_op, u, Polarity::Positive, tout)
-        }
+        react::Tool::GetConfig { tout } => get_config(
+            cx,
+            env,
+            trace,
+            l,
+            use_op,
+            reason_op,
+            u,
+            Polarity::Positive,
+            tout,
+        ),
     }
 }

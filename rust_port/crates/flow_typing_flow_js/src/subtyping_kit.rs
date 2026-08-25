@@ -20,7 +20,6 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
-use flow_typing_context::type_app_expansion;
 use flow_typing_errors::error_message::EClassToObjectData;
 use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EExpectedBigIntLitData;
@@ -52,8 +51,9 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::instantiation_utils;
 use flow_typing_flow_common::obj_type;
-use flow_typing_flow_common::speculation;
 use flow_typing_flow_common::string_case_transform;
+use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_flow_js_env::type_app_expansion;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
@@ -144,12 +144,13 @@ use crate::type_inference_hooks_js;
 
 fn flow_all_in_union<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: &DepthTrace,
     rep: &union_rep::UnionRep,
     u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     flow_js_utils::iter_union(
-        |cx, trace, (t, u)| FlowJs::rec_flow(cx, *trace, t, u),
+        |cx, trace, (t, u)| FlowJs::rec_flow_with_env(cx, env, *trace, t, u),
         (),
         |_, _| (),
         cx,
@@ -161,6 +162,7 @@ fn flow_all_in_union<'cx>(
 
 fn add_output_prop_polarity_mismatch<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     lreason: &Reason,
     ureason: &Reason,
@@ -170,8 +172,9 @@ fn add_output_prop_polarity_mismatch<'cx>(
     if strictness_kind.is_typescript_loose() {
         Ok(())
     } else if let Ok(props) = Vec1::try_from_vec(props) {
-        flow_js_utils::add_output(
+        flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
                 lreason: lreason.dupe(),
                 ureason: ureason.dupe(),
@@ -221,6 +224,7 @@ fn property_type_for_subtyping(
 
 fn rec_flow_p_inner<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     lower_upper_property: Option<(&Property, &Property)>,
@@ -238,6 +242,7 @@ fn rec_flow_p_inner<'cx>(
             (lower_property.deref(), upper_property.deref())
         && try_method_bivariant(
             cx,
+            env,
             trace.unwrap_or_else(DepthTrace::dummy_trace),
             use_op.dupe(),
             lt,
@@ -261,8 +266,9 @@ fn rec_flow_p_inner<'cx>(
             // TS treats read-write-on-both-sides property type mismatch in
             // extends/implements/instantiation contexts as covariant, not invariant.
             // Match that by skipping unification and doing a covariant subtype check.
-            FlowJs::flow_opt(
+            FlowJs::flow_opt_with_env(
                 cx,
+                env,
                 trace,
                 lt,
                 &UseT::new(UseTInner::UseT(use_op, ut.dupe())),
@@ -294,7 +300,7 @@ fn rec_flow_p_inner<'cx>(
                     }
                 }
             };
-            FlowJs::unify_opt(cx, trace, use_op, unify_cause, None, lt, ut)?;
+            FlowJs::unify_opt_with_env(cx, env, trace, use_op, unify_cause, None, lt, ut)?;
             Ok(vec![])
         }
         // directional cases
@@ -305,8 +311,9 @@ fn rec_flow_p_inner<'cx>(
                 property::read_t_of_property_type(up),
             ) {
                 (Some(lt), Some(ut)) => {
-                    FlowJs::flow_opt(
+                    FlowJs::flow_opt_with_env(
                         cx,
+                        env,
                         trace,
                         &lt,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
@@ -323,8 +330,9 @@ fn rec_flow_p_inner<'cx>(
                 property::write_t_of_property_type(up, None),
             ) {
                 (Some(lt), Some(ut)) => {
-                    FlowJs::flow_opt(
+                    FlowJs::flow_opt_with_env(
                         cx,
+                        env,
                         trace,
                         &ut,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), lt)),
@@ -352,6 +360,7 @@ fn index_of_param(params: &[(Option<Name>, Type)], x: &Name) -> Option<usize> {
 
 fn func_type_guard_compat<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     grd1: (
@@ -372,8 +381,9 @@ fn func_type_guard_compat<'cx>(
     let (reason1, params1, impl1, (loc1, x1), t1) = grd1;
     let (reason2, params2, impl2, (loc2, x2), t2) = grd2;
     if impl1 && !impl2 {
-        flow_js_utils::add_output(
+        flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::ETypeGuardImpliesMismatch {
                 use_op: use_op.dupe(),
                 reasons: (reason1.dupe(), reason2.dupe()),
@@ -395,8 +405,9 @@ fn func_type_guard_compat<'cx>(
             VirtualReasonDesc::RTypeGuardParam(x2.display_smol_str()),
             loc2.dupe(),
         );
-        flow_js_utils::add_output(
+        flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::ETypeGuardIndexMismatch {
                 use_op: use_op.dupe(),
                 reasons: (lower, upper),
@@ -404,14 +415,24 @@ fn func_type_guard_compat<'cx>(
         )?;
     }
     if impl2 {
-        FlowJs::rec_flow_t(cx, trace, use_op, t1, t2)
+        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)
     } else {
-        FlowJs::rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, t1, t2)
+        FlowJs::rec_unify_with_env(
+            cx,
+            env,
+            trace,
+            use_op,
+            UnifyCause::Uncategorized,
+            None,
+            t1,
+            t2,
+        )
     }
 }
 
 fn funt_to_funt_check_this_contravariant<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     lreason: &Reason,
     ft1: &flow_typing_type::type_::FunType,
@@ -434,8 +455,9 @@ fn funt_to_funt_check_this_contravariant<'cx>(
         (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {
             let sub_this2 = type_util::subtype_this_of_function(ft2);
             let sub_this1 = type_util::subtype_this_of_function(ft1);
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 &sub_this2,
                 &UseT::new(UseTInner::UseT(use_op, sub_this1)),
@@ -445,8 +467,9 @@ fn funt_to_funt_check_this_contravariant<'cx>(
         // Flow files ban this because it would allow methods to be unbound through casting.
         (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
             if !unbound && !cx.type_strictness_kind().is_typescript_loose() {
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
                         use_op: use_op.dupe(),
                         reason_op: lreason.dupe(),
@@ -458,8 +481,9 @@ fn funt_to_funt_check_this_contravariant<'cx>(
                 )?;
             }
             let sub_this1 = type_util::subtype_this_of_function(ft1);
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 this_param2,
                 &UseT::new(UseTInner::UseT(use_op, sub_this1)),
@@ -469,8 +493,9 @@ fn funt_to_funt_check_this_contravariant<'cx>(
         // Ok as long as the types match up
         (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
         | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
-            FlowJs::rec_flow(
+            FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 this_param2,
                 &UseT::new(UseTInner::UseT(use_op, this_param1.dupe())),
@@ -492,6 +517,7 @@ fn funt_to_funt_check_this_ignore(_use_op: &UseOp) -> Result<(), FlowJsException
 // the TS-mode path).
 fn funt_to_funt_check<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -541,8 +567,9 @@ fn funt_to_funt_check<'cx>(
             ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
             ReactEffectType::ArbitraryEffect,
         ) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
                     use_op: use_op.dupe(),
                     lower: lreason.dupe(),
@@ -556,8 +583,9 @@ fn funt_to_funt_check<'cx>(
             ReactEffectType::ArbitraryEffect,
             ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
         ) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
                     use_op: use_op.dupe(),
                     lower: lreason.dupe(),
@@ -571,8 +599,9 @@ fn funt_to_funt_check<'cx>(
             ReactEffectType::HookDecl(_) | ReactEffectType::HookAnnot,
             ReactEffectType::HookDecl(_),
         ) => {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EHookUniqueIncompatible(Box::new(EHookUniqueIncompatibleData {
                     use_op: use_op.dupe(),
                     lower: lreason.dupe(),
@@ -588,8 +617,9 @@ fn funt_to_funt_check<'cx>(
         }),
         Arc::new(use_op.dupe()),
     );
-    FlowJs::rec_flow(
+    FlowJs::rec_flow_with_env(
         cx,
+        env,
         trace,
         &ft1.return_t,
         &UseT::new(UseTInner::UseT(ret_use_op, ft2.return_t.dupe())),
@@ -598,8 +628,9 @@ fn funt_to_funt_check<'cx>(
         (None, Some(_)) => {
             // Non-predicate functions are incompatible with predicate ones
             // TODO: somehow the original flow needs to be propagated as well
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::ETypeGuardFuncIncompatibility {
                     use_op: use_op.dupe(),
                     reasons: (lreason.dupe(), ureason.dupe()),
@@ -621,6 +652,7 @@ fn funt_to_funt_check<'cx>(
             let name2 = Name::new(tg2.param_name.1.dupe());
             func_type_guard_compat(
                 cx,
+                env,
                 trace,
                 use_op.dupe(),
                 (
@@ -658,6 +690,7 @@ fn funt_to_funt_check<'cx>(
 // run in the chosen direction.
 fn bivariant_param_flow<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     source: &Type,
@@ -665,6 +698,7 @@ fn bivariant_param_flow<'cx>(
 ) -> Result<(), FlowJsException> {
     fn flow_param<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: &UseOp,
         lower: &Type,
@@ -679,6 +713,7 @@ fn bivariant_param_flow<'cx>(
                     {
                         funt_to_funt_check(
                             cx,
+                            env,
                             trace,
                             use_op.dupe(),
                             lreason,
@@ -688,21 +723,23 @@ fn bivariant_param_flow<'cx>(
                             &|use_op| funt_to_funt_check_this_ignore(use_op),
                             &|use_op| {
                                 funt_to_funt_check_params_contravariant(
-                                    cx, trace, ureason, ft1, ft2, use_op,
+                                    cx, env, trace, ureason, ft1, ft2, use_op,
                                 )
                             },
                         )
                     }
-                    _ => FlowJs::rec_flow(
+                    _ => FlowJs::rec_flow_with_env(
                         cx,
+                        env,
                         trace,
                         lower,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), upper.dupe())),
                     ),
                 }
             }
-            _ => FlowJs::rec_flow(
+            _ => FlowJs::rec_flow_with_env(
                 cx,
+                env,
                 trace,
                 lower,
                 &UseT::new(UseTInner::UseT(use_op.dupe(), upper.dupe())),
@@ -715,11 +752,14 @@ fn bivariant_param_flow<'cx>(
     let use_op_spec = use_op.dupe();
     match speculation_kit::try_singleton_custom_throw_on_failure(
         cx,
-        Box::new(move |cx| flow_param(cx, trace, &use_op_spec, &target_spec, &source_spec)),
+        env,
+        Box::new(move |cx, env: &FlowJsEnv| {
+            flow_param(cx, env, trace, &use_op_spec, &target_spec, &source_spec)
+        }),
     ) {
         Ok(()) => Ok(()),
         Err(FlowJsException::SpeculationSingletonError) => {
-            flow_param(cx, trace, &use_op, source, target)
+            flow_param(cx, env, trace, &use_op, source, target)
         }
         Err(other) => Err(other),
     }
@@ -730,6 +770,7 @@ fn bivariant_param_flow<'cx>(
 // flows into ft1's params.
 fn funt_to_funt_check_params_contravariant<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     ureason: &Reason,
     ft1: &flow_typing_type::type_::FunType,
@@ -744,7 +785,7 @@ fn funt_to_funt_check_params_contravariant<'cx>(
     if let Some(FunRestParam(_, _, rest)) = &ft2.rest_param {
         args.push(CallArg::spread_arg(rest.dupe()));
     }
-    FlowJs::multiflow_subtype(cx, trace, use_op.dupe(), ureason, &args, ft1)
+    FlowJs::multiflow_subtype_with_env(cx, env, trace, use_op.dupe(), ureason, &args, ft1)
 }
 
 // TS-mode bivariant param-flow check used for method-syntax properties: a
@@ -768,6 +809,7 @@ fn funt_to_funt_check_params_contravariant<'cx>(
 // here was deferred since method-syntax with rest is uncommon.
 fn funt_to_funt_check_params_bivariant<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     lreason: &Reason,
     ureason: &Reason,
@@ -792,7 +834,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                             }),
                             Arc::new(use_op.dupe()),
                         );
-                        bivariant_param_flow(cx, trace, inner_use_op, t1_rest, t2)?;
+                        bivariant_param_flow(cx, env, trace, inner_use_op, t1_rest, t2)?;
                         n += 1;
                         params2 = rest2;
                     }
@@ -815,7 +857,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                             }))),
                             Arc::new(use_op.dupe()),
                         );
-                        bivariant_param_flow(cx, trace, inner_use_op, t1, rest_t)?;
+                        bivariant_param_flow(cx, env, trace, inner_use_op, t1, rest_t)?;
                         n += 1;
                         params1 = rest1;
                     }
@@ -832,8 +874,9 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                         );
                         let void =
                             Type::new(TypeInner::DefT(ureason.dupe(), DefT::new(DefTInner::VoidT)));
-                        FlowJs::rec_flow(
+                        FlowJs::rec_flow_with_env(
                             cx,
+                            env,
                             trace,
                             &void,
                             &UseT::new(UseTInner::UseT(inner_use_op, t1.dupe())),
@@ -855,7 +898,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                     }))),
                     Arc::new(use_op.dupe()),
                 );
-                bivariant_param_flow(cx, trace, inner_use_op, t1, t2)?;
+                bivariant_param_flow(cx, env, trace, inner_use_op, t1, t2)?;
                 n += 1;
                 params1 = rest1;
                 params2 = rest2;
@@ -871,7 +914,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
                 }),
                 Arc::new(use_op.dupe()),
             );
-            bivariant_param_flow(cx, trace, use_op, t1_rest, t2_rest)
+            bivariant_param_flow(cx, env, trace, use_op, t1_rest, t2_rest)
         }
         _ => Ok(()),
     }
@@ -879,6 +922,7 @@ fn funt_to_funt_check_params_bivariant<'cx>(
 
 fn funt_to_funt_method_bivariant<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -888,6 +932,7 @@ fn funt_to_funt_method_bivariant<'cx>(
 ) -> Result<(), FlowJsException> {
     funt_to_funt_check(
         cx,
+        env,
         trace,
         use_op,
         lreason,
@@ -895,10 +940,12 @@ fn funt_to_funt_method_bivariant<'cx>(
         ureason,
         ft2,
         &|use_op| {
-            funt_to_funt_check_this_contravariant(cx, trace, lreason, ft1, ureason, ft2, use_op)
+            funt_to_funt_check_this_contravariant(
+                cx, env, trace, lreason, ft1, ureason, ft2, use_op,
+            )
         },
         &|use_op| {
-            funt_to_funt_check_params_bivariant(cx, trace, lreason, ureason, ft1, ft2, use_op)
+            funt_to_funt_check_params_bivariant(cx, env, trace, lreason, ureason, ft1, ft2, use_op)
         },
     )
 }
@@ -917,6 +964,7 @@ fn funt_to_funt_method_bivariant<'cx>(
 // to TS-style bivariant method params.
 fn try_method_bivariant<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lt: &Type,
@@ -924,6 +972,7 @@ fn try_method_bivariant<'cx>(
 ) -> Result<bool, FlowJsException> {
     fn direct_method_bivariant<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         lt: &Type,
@@ -934,7 +983,9 @@ fn try_method_bivariant<'cx>(
                 if let (DefTInner::FunT(_, ft1), DefTInner::FunT(_, ft2)) =
                     (ld.deref(), ud.deref()) =>
             {
-                funt_to_funt_method_bivariant(cx, trace, use_op, lreason_f, ft1, ureason_f, ft2)?;
+                funt_to_funt_method_bivariant(
+                    cx, env, trace, use_op, lreason_f, ft1, ureason_f, ft2,
+                )?;
                 Ok(true)
             }
             (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
@@ -981,15 +1032,17 @@ fn try_method_bivariant<'cx>(
                         &map2,
                         p2.bound.dupe(),
                     );
-                    FlowJs::rec_flow(
+                    FlowJs::rec_flow_with_env(
                         cx,
+                        env,
                         trace,
                         &bound2,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), bound1)),
                     )?;
                     if p1.is_const != p2.is_const {
-                        flow_js_utils::add_output(
+                        flow_js_utils::add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::ETypeParamConstIncompatibility(Box::new(
                                 ETypeParamConstIncompatibilityData {
                                     use_op: use_op.dupe(),
@@ -1030,12 +1083,13 @@ fn try_method_bivariant<'cx>(
                             (ld.deref(), ud.deref()) =>
                     {
                         funt_to_funt_method_bivariant(
-                            cx, trace, use_op, lreason_f, ft1, ureason_f, ft2,
+                            cx, env, trace, use_op, lreason_f, ft1, ureason_f, ft2,
                         )?;
                     }
                     _ => {
-                        flow_js_utils::add_output(
+                        flow_js_utils::add_output_with_env(
                             cx,
+                            env,
                             ErrorMessage::EInternal(Box::new((
                                 type_util::loc_of_t(lt).dupe(),
                                 InternalError::MethodBivariantInvariant(FlowSmolStr::from(
@@ -1092,6 +1146,7 @@ fn try_method_bivariant<'cx>(
 
     fn apply_method_bivariant<'cx>(
         cx: &Context<'cx>,
+        env: &FlowJsEnv,
         trace: DepthTrace,
         use_op: UseOp,
         lt: &Type,
@@ -1100,13 +1155,14 @@ fn try_method_bivariant<'cx>(
         match (lt.deref(), ut.deref()) {
             (_, TypeInner::IntersectionT(_, rep)) => {
                 for ut in rep.members_iter() {
-                    apply_method_bivariant(cx, trace, use_op.dupe(), lt, ut)?;
+                    apply_method_bivariant(cx, env, trace, use_op.dupe(), lt, ut)?;
                 }
                 Ok(())
             }
             (TypeInner::IntersectionT(_, rep), _) => {
-                let mut cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>>> =
-                    vec![];
+                let mut cases: Vec<
+                    Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
+                > = vec![];
                 for lt in rep
                     .members_iter()
                     .filter(|lt| can_try_method_bivariant(lt, ut))
@@ -1114,13 +1170,14 @@ fn try_method_bivariant<'cx>(
                     let lt = lt.dupe();
                     let ut = ut.dupe();
                     let use_op = use_op.dupe();
-                    cases.push(Box::new(move |cx: &Context<'cx>| {
-                        apply_method_bivariant(cx, trace, use_op, &lt, &ut)
+                    cases.push(Box::new(move |cx: &Context<'cx>, env: &FlowJsEnv| {
+                        apply_method_bivariant(cx, env, trace, use_op, &lt, &ut)
                     }));
                 }
                 let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), ut.dupe()));
                 speculation_kit::try_custom(
                     cx,
+                    env,
                     Some(use_op),
                     Some(use_t),
                     None,
@@ -1128,12 +1185,12 @@ fn try_method_bivariant<'cx>(
                     cases,
                 )
             }
-            _ => direct_method_bivariant(cx, trace, use_op, lt, ut).map(|_| ()),
+            _ => direct_method_bivariant(cx, env, trace, use_op, lt, ut).map(|_| ()),
         }
     }
 
     if can_try_method_bivariant(lt, ut) {
-        apply_method_bivariant(cx, trace, use_op, lt, ut)?;
+        apply_method_bivariant(cx, env, trace, use_op, lt, ut)?;
         Ok(true)
     } else {
         Ok(false)
@@ -1142,6 +1199,7 @@ fn try_method_bivariant<'cx>(
 
 fn recover_missing_props<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: &UseOp,
     reason_upper: &Reason,
@@ -1157,8 +1215,9 @@ fn recover_missing_props<'cx>(
             } if strictness_kind.is_typescript_loose() => {
                 // This no-op flow intentionally avoids the invariant constraint used for Flow
                 // object subtyping while preserving the missing-property recovery path.
-                FlowJs::flow_opt(
+                FlowJs::flow_opt_with_env(
                     cx,
+                    env,
                     Some(trace),
                     &any,
                     &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
@@ -1168,8 +1227,9 @@ fn recover_missing_props<'cx>(
                 type_: ut,
                 polarity: Polarity::Neutral,
             } => {
-                FlowJs::unify_opt(
+                FlowJs::unify_opt_with_env(
                     cx,
+                    env,
                     Some(trace),
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
@@ -1180,16 +1240,18 @@ fn recover_missing_props<'cx>(
             }
             up_pt => {
                 if let Some(ut) = property::read_t_of_property_type(&up_pt) {
-                    FlowJs::flow_opt(
+                    FlowJs::flow_opt_with_env(
                         cx,
+                        env,
                         Some(trace),
                         &any,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
                     )?;
                 }
                 if let Some(ut) = property::write_t_of_property_type(&up_pt, None) {
-                    FlowJs::flow_opt(
+                    FlowJs::flow_opt_with_env(
                         cx,
+                        env,
                         Some(trace),
                         &ut,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), any.dupe())),
@@ -1207,6 +1269,7 @@ fn recover_missing_props<'cx>(
 /// in a single error.
 pub(crate) fn add_output_missing_props_from_lookup<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     data: &LookupPropsForSubtypingData,
     ids: Option<&properties::Set>,
 ) -> Result<(), FlowJsException> {
@@ -1214,8 +1277,9 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
     let mut missing = vec![];
     let add_output_one =
         |prop_name: Option<Name>, suggestion: Option<FlowSmolStr>| -> Result<(), FlowJsException> {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                     reason_lower: data.reason_lower.dupe(),
                     reason_upper: data.reason_upper.dupe(),
@@ -1243,8 +1307,9 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
         Ok(prop_names) if prop_names.len() == 1 => {
             add_output_one(Some(prop_names.first().dupe()), None)
         }
-        Ok(prop_names) => flow_js_utils::add_output(
+        Ok(prop_names) => flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names,
                 reason_lower: data.reason_lower.dupe(),
@@ -1257,6 +1322,7 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
 
 fn flow_obj_to_obj<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -1312,7 +1378,7 @@ fn flow_obj_to_obj<'cx>(
                 Arc::new(use_op.dupe()),
             );
             if lit {
-                FlowJs::rec_flow_t(cx, trace, use_op_k.dupe(), lk, uk)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op_k.dupe(), lk, uk)?;
             } else {
                 let l_t = Type::new(TypeInner::DefT(
                     lreason.dupe(),
@@ -1326,6 +1392,7 @@ fn flow_obj_to_obj<'cx>(
                 // report these errors again a second time when checking values.
                 let errs = rec_flow_p_inner(
                     cx,
+                    env,
                     Some(trace),
                     use_op_k.dupe(),
                     None,
@@ -1345,6 +1412,7 @@ fn flow_obj_to_obj<'cx>(
                 )?;
                 add_output_prop_polarity_mismatch(
                     cx,
+                    env,
                     use_op_k,
                     lreason,
                     ureason,
@@ -1363,7 +1431,7 @@ fn flow_obj_to_obj<'cx>(
                 Arc::new(use_op.dupe()),
             );
             if lit {
-                FlowJs::rec_flow_t(cx, trace, use_op_v, lv, uv)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op_v, lv, uv)?;
             } else {
                 let l_t = Type::new(TypeInner::DefT(
                     lreason.dupe(),
@@ -1375,6 +1443,7 @@ fn flow_obj_to_obj<'cx>(
                 ));
                 let errs = rec_flow_p_inner(
                     cx,
+                    env,
                     Some(trace),
                     use_op_v.dupe(),
                     None,
@@ -1394,6 +1463,7 @@ fn flow_obj_to_obj<'cx>(
                 )?;
                 add_output_prop_polarity_mismatch(
                     cx,
+                    env,
                     use_op_v,
                     lreason,
                     ureason,
@@ -1420,6 +1490,7 @@ fn flow_obj_to_obj<'cx>(
             ));
             flow_js_utils::exact_obj_error(
                 cx,
+                env,
                 &lflags.obj_kind,
                 use_op.dupe(),
                 ureason.dupe(),
@@ -1441,8 +1512,9 @@ fn flow_obj_to_obj<'cx>(
             .into_iter()
             .collect();
         if let Ok(missing_props) = Vec1::try_from_vec(missing_props) {
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EPropsExtraAgainstExactObject(Box::new(
                     EPropsExtraAgainstExactObjectData {
                         prop_names: missing_props,
@@ -1456,8 +1528,9 @@ fn flow_obj_to_obj<'cx>(
         if let Some(_lcall) = lcall {
             if ucall.is_none() {
                 let prop = Some(Name::new("$call"));
-                flow_js_utils::add_output(
+                flow_js_utils::add_output_with_env(
                     cx,
+                    env,
                     ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                         EPropNotFoundInSubtypingData {
                             prop_name: prop,
@@ -1477,16 +1550,18 @@ fn flow_obj_to_obj<'cx>(
             let prop_name = Some(Name::new("$call"));
             match lcall {
                 Some(lcall_id) => {
-                    FlowJs::rec_flow(
+                    FlowJs::rec_flow_with_env(
                         cx,
+                        env,
                         trace,
                         &cx.find_call(*lcall_id),
                         &UseT::new(UseTInner::UseT(use_op.dupe(), cx.find_call(*ucall_id))),
                     )?;
                 }
                 None => {
-                    flow_js_utils::add_output(
+                    flow_js_utils::add_output_with_env(
                         cx,
+                        env,
                         ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
                                 reason_lower: lreason.dupe(),
@@ -1548,7 +1623,7 @@ fn flow_obj_to_obj<'cx>(
                                 PropertyInner::Method { type_: ut, .. },
                             ) = (lp.deref(), up.deref())
                             {
-                                try_method_bivariant(cx, trace, mk_use_op(), lt, ut)?
+                                try_method_bivariant(cx, env, trace, mk_use_op(), lt, ut)?
                             } else {
                                 false
                             }
@@ -1564,8 +1639,9 @@ fn flow_obj_to_obj<'cx>(
                                 property::read_t(up),
                             ) {
                                 (Some(lt), Some(ut)) => {
-                                    FlowJs::rec_flow(
+                                    FlowJs::rec_flow_with_env(
                                         cx,
+                                        env,
                                         trace,
                                         &lt,
                                         &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
@@ -1582,7 +1658,7 @@ fn flow_obj_to_obj<'cx>(
                                 PropertyInner::Method { type_: ut, .. },
                             ) = (lp.deref(), up.deref())
                             {
-                                try_method_bivariant(cx, trace, mk_use_op(), lt, ut)?
+                                try_method_bivariant(cx, env, trace, mk_use_op(), lt, ut)?
                             } else {
                                 false
                             }
@@ -1611,8 +1687,9 @@ fn flow_obj_to_obj<'cx>(
                                     // invariant. Skip the try_unify path and do a covariant
                                     // subtype check; do not record this property as an
                                     // invariant-subtyping failure.
-                                    FlowJs::rec_flow(
+                                    FlowJs::rec_flow_with_env(
                                         cx,
+                                        env,
                                         trace,
                                         lt,
                                         &UseT::new(UseTInner::UseT(mk_use_op(), ut.dupe())),
@@ -1628,7 +1705,7 @@ fn flow_obj_to_obj<'cx>(
                                         type_: ref ut,
                                         polarity: Polarity::Neutral,
                                     },
-                                ) if !speculation::speculating(cx)
+                                ) if !env.speculating()
                                     && !flow_js_utils::tvar_visitors::has_unresolved_tvars(
                                         cx, lt,
                                     )
@@ -1638,6 +1715,7 @@ fn flow_obj_to_obj<'cx>(
                                 {
                                     let failed = match speculation_kit::try_unify(
                                         cx,
+                                        env,
                                         trace,
                                         lt.dupe(),
                                         mk_use_op(),
@@ -1667,6 +1745,7 @@ fn flow_obj_to_obj<'cx>(
                                     ));
                                     rec_flow_p_inner(
                                         cx,
+                                        env,
                                         Some(trace),
                                         mk_use_op(),
                                         None,
@@ -1715,8 +1794,8 @@ fn flow_obj_to_obj<'cx>(
                                 property::read_t_of_property_type(&up_for_idx),
                             ) {
                                 (Some(lt), Some(ut)) => {
-                                    FlowJs::rec_flow(
-                                        cx,
+                                    FlowJs::rec_flow_with_env(
+                                        cx, env,
                                         trace,
                                         &lt,
                                         &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
@@ -1734,7 +1813,7 @@ fn flow_obj_to_obj<'cx>(
                                 DefT::new(DefTInner::ObjT(u_obj.dupe())),
                             ));
                             let additional = rec_flow_p_inner(
-                                cx,
+                                cx, env,
                                 Some(trace),
                                 mk_use_op(),
                                 None,
@@ -1754,7 +1833,7 @@ fn flow_obj_to_obj<'cx>(
                         PropertyInner::Field(fd)
                             if matches!(fd.type_.deref(), TypeInner::OptionalT { .. })
                                 && (lit || fd.polarity == Polarity::Positive)
-                                && !cx.in_implicit_instantiation() =>
+                                && !env.in_implicit_instantiation() =>
                         {
                             // If the upper property is optional and readonly (or this is a lit check)
                             // then we only need to check the lower indexer type against the upper
@@ -1765,29 +1844,30 @@ fn flow_obj_to_obj<'cx>(
                             //
                             // We only do this outside of implicit instantiation to avoid accidentally
                             // underconstraining tvars by avoiding flows.
-                            let key_type = flow_js_utils::type_of_key_name(
-                                cx,
+                            let key_type = flow_js_utils::type_of_key_name_with_env(
+                                env,
                                 name.dupe(),
                                 &ureason
                                     .dupe()
                                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
                             );
                             if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
-                                cx, &key_type, key,
+                                cx, env, &key_type, key,
                             )? {
                                 subtype_against_indexer(&mut polarity_mismatch_errs)?;
                             }
                         }
                         _ => {
-                            let key_type = flow_js_utils::type_of_key_name(
-                                cx,
+                            let key_type = flow_js_utils::type_of_key_name_with_env(
+                                env,
                                 name.dupe(),
                                 &ureason
                                     .dupe()
                                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
                             );
-                            FlowJs::rec_flow(
+                            FlowJs::rec_flow_with_env(
                                 cx,
+                                env,
                                 trace,
                                 &key_type,
                                 &UseT::new(UseTInner::UseT(
@@ -1816,8 +1896,9 @@ fn flow_obj_to_obj<'cx>(
                                 && obj_type::is_exact(&lflags.obj_kind) =>
                         {
                             let propref = mk_propref();
-                            FlowJs::rec_flow(
+                            FlowJs::rec_flow_with_env(
                                 cx,
+                                env,
                                 trace,
                                 lproto,
                                 &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
@@ -1855,8 +1936,9 @@ fn flow_obj_to_obj<'cx>(
                                     )),
                                 };
                                 let propref = mk_propref();
-                                FlowJs::rec_flow(
+                                FlowJs::rec_flow_with_env(
                                     cx,
+                                    env,
                                     trace,
                                     lproto,
                                     &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
@@ -1943,8 +2025,9 @@ fn flow_obj_to_obj<'cx>(
                 ))),
                 Arc::new(use_op.dupe()),
             );
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EInvariantSubtypingWithUseOp(Box::new(
                     EInvariantSubtypingWithUseOpData {
                         sub_component: None,
@@ -1993,8 +2076,8 @@ fn flow_obj_to_obj<'cx>(
                     upper_object_reason: ureason.dupe(),
                     properties: properties.clone(),
                 };
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EInvariantSubtypingWithUseOp(Box::new(EInvariantSubtypingWithUseOpData {
                     sub_component: Some(
                         intermediate_error_types::SubComponentOfInvariantSubtypingError::ObjectProps(
@@ -2039,8 +2122,9 @@ fn flow_obj_to_obj<'cx>(
             },
         );
     if let Ok(props) = Vec1::try_from_vec(regular_missing) {
-        flow_js_utils::add_output(
+        flow_js_utils::add_output_with_env(
             cx,
+            env,
             ErrorMessage::EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names: props,
                 reason_lower: lreason.dupe(),
@@ -2061,8 +2145,9 @@ fn flow_obj_to_obj<'cx>(
             ));
             let lower_obj_loc = lreason.def_loc().dupe();
             let upper_obj_loc = ureason.def_loc().dupe();
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 ErrorMessage::EPropsNotFoundInInvariantSubtyping(Box::new(
                     EPropsNotFoundInInvariantSubtypingData {
                         prop_names: props,
@@ -2080,6 +2165,7 @@ fn flow_obj_to_obj<'cx>(
     }
     recover_missing_props(
         cx,
+        env,
         trace,
         &use_op,
         ureason,
@@ -2088,6 +2174,7 @@ fn flow_obj_to_obj<'cx>(
     )?;
     add_output_prop_polarity_mismatch(
         cx,
+        env,
         use_op.dupe(),
         lreason,
         ureason,
@@ -2138,8 +2225,9 @@ fn flow_obj_to_obj<'cx>(
                             property::read_t_of_property_type(&up_type),
                         ) {
                             (Some(lt), Some(ut)) => {
-                                FlowJs::rec_flow(
+                                FlowJs::rec_flow_with_env(
                                     cx,
+                                    env,
                                     trace,
                                     &lt,
                                     &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
@@ -2165,6 +2253,7 @@ fn flow_obj_to_obj<'cx>(
                         ));
                         let errs = rec_flow_p_inner(
                             cx,
+                            env,
                             Some(trace),
                             use_op.dupe(),
                             None,
@@ -2178,6 +2267,7 @@ fn flow_obj_to_obj<'cx>(
                         )?;
                         add_output_prop_polarity_mismatch(
                             cx,
+                            env,
                             use_op,
                             lreason,
                             ureason,
@@ -2191,17 +2281,19 @@ fn flow_obj_to_obj<'cx>(
             // upper dictionary because that information may be useful to infer a type. Outside of implicit instantiation,
             // flowing both can cause redundant errors when the key is already not a valid indexer key, so we avoid the
             // value flows when that does not pass
-            if !cx.in_implicit_instantiation() {
+            if !env.in_implicit_instantiation() {
                 for (name, lp) in cx.find_props(lflds.dupe()).iter() {
                     if !cx.has_prop(uflds.dupe(), name) {
-                        let key_type = flow_js_utils::type_of_key_name(cx, name.dupe(), lreason);
+                        let key_type =
+                            flow_js_utils::type_of_key_name_with_env(env, name.dupe(), lreason);
                         if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
-                            cx, &key_type, key,
+                            cx, env, &key_type, key,
                         )? {
                             flow_prop_to_indexer(lp, name)?;
                         } else {
-                            flow_js_utils::add_output(
+                            flow_js_utils::add_output_with_env(
                                 cx,
+                                env,
                                 ErrorMessage::EIndexerCheckFailed(Box::new(
                                     EIndexerCheckFailedData {
                                         prop_name: name.dupe(),
@@ -2222,12 +2314,17 @@ fn flow_obj_to_obj<'cx>(
                 for (name, lp) in cx.find_props(lflds.dupe()).iter() {
                     if !cx.has_prop(uflds.dupe(), name) {
                         flow_prop_to_indexer(lp, name)?;
-                        keys_list.push(flow_js_utils::type_of_key_name(cx, name.dupe(), lreason));
+                        keys_list.push(flow_js_utils::type_of_key_name_with_env(
+                            env,
+                            name.dupe(),
+                            lreason,
+                        ));
                     }
                 }
                 let keys = type_util::union_of_ts(lreason.dupe(), keys_list, None);
-                FlowJs::rec_flow(
+                FlowJs::rec_flow_with_env(
                     cx,
+                    env,
                     trace,
                     &keys,
                     &UseT::new(UseTInner::UseT(
@@ -2256,7 +2353,7 @@ fn flow_obj_to_obj<'cx>(
                         r,
                         DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
                     ));
-                    FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &mixed, value)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &mixed, value)?;
                 }
                 _ => {}
             }
@@ -2299,8 +2396,9 @@ fn flow_obj_to_obj<'cx>(
                             property::read_t_of_property_type(&up_type),
                         ) {
                             (Some(lt), Some(ut)) => {
-                                FlowJs::rec_flow(
+                                FlowJs::rec_flow_with_env(
                                     cx,
+                                    env,
                                     trace,
                                     &lt,
                                     &UseT::new(UseTInner::UseT(use_op, ut)),
@@ -2323,6 +2421,7 @@ fn flow_obj_to_obj<'cx>(
                         ));
                         let errs = rec_flow_p_inner(
                             cx,
+                            env,
                             Some(trace),
                             use_op.dupe(),
                             None,
@@ -2336,6 +2435,7 @@ fn flow_obj_to_obj<'cx>(
                         )?;
                         add_output_prop_polarity_mismatch(
                             cx,
+                            env,
                             use_op,
                             lreason,
                             ureason,
@@ -2353,8 +2453,9 @@ fn flow_obj_to_obj<'cx>(
         lreason.dupe(),
         DefT::new(DefTInner::ObjT(l_obj.dupe())),
     ));
-    FlowJs::rec_flow(
+    FlowJs::rec_flow_with_env(
         cx,
+        env,
         trace,
         uproto,
         &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
@@ -2375,6 +2476,7 @@ fn flow_obj_to_obj<'cx>(
 // non-subtyped value
 fn flow_to_mutable_child<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     unify_cause: UnifyCause,
@@ -2383,14 +2485,15 @@ fn flow_to_mutable_child<'cx>(
     t2: &Type,
 ) -> Result<(), FlowJsException> {
     if fresh {
-        FlowJs::rec_flow(
+        FlowJs::rec_flow_with_env(
             cx,
+            env,
             trace,
             t1,
             &UseT::new(UseTInner::UseT(use_op, t2.dupe())),
         )?;
     } else {
-        FlowJs::rec_unify(cx, trace, use_op, unify_cause, None, t1, t2)?;
+        FlowJs::rec_unify_with_env(cx, env, trace, use_op, unify_cause, None, t1, t2)?;
     }
     Ok(())
 }
@@ -2439,6 +2542,7 @@ fn flow_to_mutable_child<'cx>(
 //    * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
 fn array_flow<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     lit1: bool,
@@ -2460,6 +2564,7 @@ fn array_flow<'cx>(
                 if index == 0 {
                     flow_to_mutable_child(
                         cx,
+                        env,
                         trace,
                         use_op,
                         UnifyCause::MutableArray {
@@ -2478,6 +2583,7 @@ fn array_flow<'cx>(
             (_, None) => {
                 flow_to_mutable_child(
                     cx,
+                    env,
                     trace,
                     use_op,
                     UnifyCause::MutableArray {
@@ -2494,6 +2600,7 @@ fn array_flow<'cx>(
             (Some(t1_elem), Some(t2_elem)) => {
                 flow_to_mutable_child(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
@@ -2514,6 +2621,7 @@ fn take_n_from_set(n: usize, set: &UnionEnumSet) -> Vec<UnionEnum> {
 
 pub fn union_to_union<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
@@ -2535,6 +2643,7 @@ pub fn union_to_union<'cx>(
         flow_js_utils::UnionOptimizationGuardResult::Maybe => {
             flow_all_in_union(
                 cx,
+                env,
                 &trace,
                 rep,
                 &UseT::new(UseTInner::UseT(use_op, u.dupe())),
@@ -2562,8 +2671,9 @@ pub fn union_to_union<'cx>(
                     },
                 )),
             );
-            flow_js_utils::add_output(
+            flow_js_utils::add_output_with_env(
                 cx,
+                env,
                 flow_js_utils::incompatible_types_error(l, u, use_op, explanation),
             )?;
         }
@@ -2573,6 +2683,7 @@ pub fn union_to_union<'cx>(
 
 pub fn rec_sub_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     use_op: UseOp,
     l: &Type,
     u: &Type,
@@ -2581,8 +2692,8 @@ pub fn rec_sub_t<'cx>(
     match (l.deref(), u.deref()) {
         // The sink component of an annotation constrains values flowing
         // into the annotated site.
-        (_, TypeInner::AnnotT(r, t, use_desc)) => FlowJs::rec_flow(
-            cx,
+        (_, TypeInner::AnnotT(r, t, use_desc)) => FlowJs::rec_flow_with_env(
+            cx, env,
             trace,
             t,
             &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
@@ -2593,8 +2704,8 @@ pub fn rec_sub_t<'cx>(
             }))),
         ),
         (TypeInner::AnnotT(r, t, use_desc), _) => {
-            let t = FlowJs::reposition_reason(cx, Some(trace), r, Some(*use_desc), t)?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &t, u)
+            let t = FlowJs::reposition_reason(cx, env, Some(trace), r, Some(*use_desc), t)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
 
         // *******************************
@@ -2612,7 +2723,7 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::NullT | DefTInner::VoidT) =>
         {
             let empty = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::EmptyT)));
-            FlowJs::rec_flow_t(cx, trace, use_op, &empty, tout)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &empty, tout)
         }
         (TypeInner::DefT(r, ld), TypeInner::MaybeT(_, tout))
             if matches!(ld.deref(), DefTInner::MixedT(MixedFlavor::MixedEverything)) =>
@@ -2621,30 +2732,30 @@ pub fn rec_sub_t<'cx>(
                 r.dupe(),
                 DefT::new(DefTInner::MixedT(MixedFlavor::MixedNonMaybe)),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, &mixed, tout)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &mixed, tout)
         }
         (TypeInner::MaybeT(r, t), TypeInner::MaybeT(_, _)) => {
             let t = type_util::push_type_alias_reason(r, t.dupe());
-            FlowJs::rec_flow_t(cx, trace, use_op, &t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
         (TypeInner::MaybeT(reason, t), _) => {
             let reason = reason.dupe().replace_desc(VirtualReasonDesc::RNullOrVoid);
             let t = type_util::push_type_alias_reason(&reason, t.dupe());
             let null = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
             let void = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::VoidT)));
-            FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &null, u)?;
-            FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &void, u)?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &null, u)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &void, u)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
         (TypeInner::DefT(r, ld), TypeInner::OptionalT { type_: tout, .. })
             if matches!(ld.deref(), DefTInner::VoidT) =>
         {
             let empty = Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::EmptyT)));
-            FlowJs::rec_flow_t(cx, trace, use_op, &empty, tout)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &empty, tout)
         }
         (TypeInner::OptionalT { type_: t, .. }, TypeInner::OptionalT { .. })
         | (TypeInner::OptionalT { type_: t, .. }, TypeInner::MaybeT(_, _)) => {
-            FlowJs::rec_flow_t(cx, trace, use_op, t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
         (
             TypeInner::OptionalT {
@@ -2655,8 +2766,8 @@ pub fn rec_sub_t<'cx>(
             _,
         ) => {
             let void = void::why_with_use_desc(*use_desc, reason.dupe());
-            FlowJs::rec_flow_t(cx, trace, use_op.dupe(), &void, u)?;
-            FlowJs::rec_flow_t(cx, trace, use_op, t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &void, u)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
         (
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
@@ -2668,8 +2779,8 @@ pub fn rec_sub_t<'cx>(
             _,
         ) => {
             let reason_op = type_util::reason_of_t(u);
-            FlowJs::instantiate_this_class(
-                cx,
+            FlowJs::instantiate_this_class_with_env(
+                cx, env,
                 trace,
                 reason_op,
                 reason,
@@ -2690,8 +2801,8 @@ pub fn rec_sub_t<'cx>(
             }),
         ) => {
             let reason_op = type_util::reason_of_t(l);
-            FlowJs::instantiate_this_class(
-                cx,
+            FlowJs::instantiate_this_class_with_env(
+                cx, env,
                 trace,
                 reason_op,
                 reason,
@@ -2722,7 +2833,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::IntersectionT(_, rep), _)
             if rep
                 .members_iter()
-                .any(|member| flow_typing_flow_common::concrete_type_eq::eq(cx, member, u)) =>
+                .any(|member| flow_typing_flow_common::concrete_type_eq::eq_with_env(cx,env,  member, u)) =>
         {
             Ok(())
         }
@@ -2759,32 +2870,31 @@ pub fn rec_sub_t<'cx>(
                 use_desc: _,
             }),
         ) => {
-            if instantiation_utils::type_app_expansion::push_unless_loop(
+            if let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
                 cx,
+                env,
                 type_app_expansion::Bound::Lower,
                 c1,
                 ts1,
+            ) && let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
+                cx,
+                &env,
+                type_app_expansion::Bound::Upper,
+                c2,
+                ts2,
             ) {
-                if instantiation_utils::type_app_expansion::push_unless_loop(
+                FlowJs::rec_flow_with_env(
                     cx,
-                    type_app_expansion::Bound::Upper,
+                    &env,
+                    trace,
                     c2,
-                    ts2,
-                ) {
-                    FlowJs::rec_flow(
-                        cx,
-                        trace,
-                        c2,
-                        &UseT::new(UseTInner::ConcretizeTypeAppsT(
-                            use_op.dupe(),
-                            Box::new((ts2.dupe(), *fv2, op2.dupe(), r2.dupe())),
-                            Box::new((c1.dupe(), ts1.dupe(), *fv1, op1.dupe(), r1.dupe())),
-                            true,
-                        )),
-                    )?;
-                    instantiation_utils::type_app_expansion::pop(cx);
-                }
-                instantiation_utils::type_app_expansion::pop(cx);
+                    &UseT::new(UseTInner::ConcretizeTypeAppsT(
+                        use_op.dupe(),
+                        Box::new((ts2.dupe(), *fv2, op2.dupe(), r2.dupe())),
+                        Box::new((c1.dupe(), ts1.dupe(), *fv1, op1.dupe(), r1.dupe())),
+                        true,
+                    )),
+                )?;
             }
             Ok(())
         }
@@ -2800,14 +2910,16 @@ pub fn rec_sub_t<'cx>(
             _,
         ) => {
             let reason_op = type_util::reason_of_t(u);
-            if instantiation_utils::type_app_expansion::push_unless_loop(
+            if let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
                 cx,
+                env,
                 type_app_expansion::Bound::Lower,
                 type_,
                 targs,
             ) {
-                let inst = FlowJs::mk_typeapp_instance(
-                    cx,
+                let env = &env;
+                let inst = FlowJs::mk_typeapp_instance_with_env(
+                    cx, env,
                     Some(trace),
                     use_op_tapp.dupe(),
                     reason_op,
@@ -2817,14 +2929,13 @@ pub fn rec_sub_t<'cx>(
                     targs.dupe(),
                 )?;
                 let t = FlowJs::reposition_reason(
-                    cx,
+                    cx, env,
                     Some(trace),
                     reason_tapp,
                     Some(*type_app_use_desc),
                     &inst,
                 )?;
-                FlowJs::rec_flow_t(cx, trace, use_op, &t, u)?;
-                instantiation_utils::type_app_expansion::pop(cx);
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)?;
             }
             Ok(())
         }
@@ -2840,14 +2951,16 @@ pub fn rec_sub_t<'cx>(
             }),
         ) => {
             let reason_op = type_util::reason_of_t(l);
-            if instantiation_utils::type_app_expansion::push_unless_loop(
+            if let Some(env) = instantiation_utils::type_app_expansion::push_unless_loop(
                 cx,
+                env,
                 type_app_expansion::Bound::Upper,
                 type_,
                 targs,
             ) {
-                let t = FlowJs::mk_typeapp_instance(
-                    cx,
+                let env = &env;
+                let t = FlowJs::mk_typeapp_instance_with_env(
+                    cx, env,
                     Some(trace),
                     use_op_tapp.dupe(),
                     reason_op,
@@ -2861,8 +2974,8 @@ pub fn rec_sub_t<'cx>(
                 // that for us, because ts may not be 0->1, so using them to make an Annot would break
                 // invariants that we rely on. In particular, it would force us to traverse AnnotTs to
                 // do any propagation, which is extremely costly.
-                FlowJs::rec_flow(
-                    cx,
+                FlowJs::rec_flow_with_env(
+                    cx, env,
                     trace,
                     &t,
                     &UseT::new(UseTInner::ReposUseT(Box::new(ReposUseTData {
@@ -2872,7 +2985,6 @@ pub fn rec_sub_t<'cx>(
                         type_: l.dupe(),
                     }))),
                 )?;
-                instantiation_utils::type_app_expansion::pop(cx);
             }
             Ok(())
         }
@@ -2896,26 +3008,26 @@ pub fn rec_sub_t<'cx>(
             match &lnom.nominal_id {
                 // When we are subtyping between two stuck EvalT, we just want to give a simple yes/no answer.
                 // Complex subtyping on these stuck EvalTs is not supported
-                nominal::Id::StuckEval(_) if !cx.in_implicit_instantiation() => {
+                nominal::Id::StuckEval(_) if !env.in_implicit_instantiation() => {
                     match speculation_kit::try_singleton_custom_throw_on_failure(
-                        cx,
+                        cx, env,
                         Box::new({
                             let use_op = use_op.dupe();
                             let lreason = lreason.dupe();
                             let ureason = ureason.dupe();
                             let ltargs = lnom.nominal_type_args.dupe();
                             let utargs = unom.nominal_type_args.dupe();
-                            move |cx: &Context| {
-                                FlowJs::flow_type_args(
-                                    cx, trace, use_op, &lreason, &ureason, ltargs, utargs,
+                            move |cx: &Context, env: &FlowJsEnv| {
+                                FlowJs::flow_type_args_with_env(
+                                    cx, env, trace, use_op, &lreason, &ureason, ltargs, utargs,
                                 )
                             }
                         }),
                     ) {
                         Ok(()) => {}
                         Err(FlowJsException::SpeculationSingletonError) => {
-                            flow_js_utils::add_output(
-                                cx,
+                            flow_js_utils::add_output_with_env(
+                                cx,env,
                                 flow_js_utils::incompatible_types_error(l, u, use_op, None),
                             )?;
                         }
@@ -2923,8 +3035,8 @@ pub fn rec_sub_t<'cx>(
                     }
                 }
                 _ => {
-                    FlowJs::flow_type_args(
-                        cx,
+                    FlowJs::flow_type_args_with_env(
+                        cx, env,
                         trace,
                         use_op,
                         lreason,
@@ -2980,8 +3092,8 @@ pub fn rec_sub_t<'cx>(
                     ))
                 });
                 let lower_1_reason = type_util::reason_of_t(&lower_1).dupe();
-                FlowJs::rec_unify(
-                    cx,
+                FlowJs::rec_unify_with_env(
+                    cx, env,
                     trace,
                     VirtualUseOp::Frame(
                         Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBoundCompatibility {
@@ -3007,8 +3119,8 @@ pub fn rec_sub_t<'cx>(
                         DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
                     ))
                 });
-                FlowJs::rec_unify(
-                    cx,
+                FlowJs::rec_unify_with_env(
+                    cx, env,
                     trace,
                     VirtualUseOp::Frame(
                         Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBoundCompatibility {
@@ -3025,8 +3137,8 @@ pub fn rec_sub_t<'cx>(
             }
             // Do not check underlying type even if we have access to them, because underlying types
             // are not visible across module boundaries.
-            FlowJs::flow_type_args(
-                cx,
+            FlowJs::flow_type_args_with_env(
+                cx, env,
                 trace,
                 use_op,
                 lreason,
@@ -3064,7 +3176,7 @@ pub fn rec_sub_t<'cx>(
         } =>
         {
             if let nominal::UnderlyingT::OpaqueWithLocal { t } = &lnom.underlying_t {
-                FlowJs::rec_flow_t(cx, trace, use_op, t, u)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)?;
             }
             Ok(())
         }
@@ -3097,7 +3209,7 @@ pub fn rec_sub_t<'cx>(
         } =>
         {
             if let nominal::UnderlyingT::OpaqueWithLocal { t } = &unom.underlying_t {
-                FlowJs::rec_flow_t(cx, trace, use_op, l, t)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, t)?;
             }
             Ok(())
         }
@@ -3110,7 +3222,7 @@ pub fn rec_sub_t<'cx>(
         ) if let nominal::UnderlyingT::CustomError(box nominal::CustomErrorData { t, .. }) =
             &lnom.underlying_t =>
         {
-            FlowJs::rec_flow_t(cx, trace, use_op, t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
         (
             _,
@@ -3139,7 +3251,7 @@ pub fn rec_sub_t<'cx>(
                 )),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, l, t)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, t)
         }
 
         // **********************
@@ -3164,8 +3276,8 @@ pub fn rec_sub_t<'cx>(
             ) = (ld.deref(), ud.deref()) =>
         {
             if actual_lit.0 != expected_lit.0 {
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                         reason_lower: rl.dupe(),
                         reason_upper: ru.dupe(),
@@ -3184,8 +3296,8 @@ pub fn rec_sub_t<'cx>(
             ) = (ld.deref(), ud.deref()) =>
         {
             if actual_lit.1 != *expected {
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
                         reason_lower: rl.dupe(),
                         reason_upper: ru.dupe(),
@@ -3203,7 +3315,7 @@ pub fn rec_sub_t<'cx>(
                     from_annot: false,
                 }),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, l, &u_new)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &u_new)
         }
 
         // **********************
@@ -3237,12 +3349,12 @@ pub fn rec_sub_t<'cx>(
             ) = (ld.deref(), ud.deref()) =>
         {
             if expected == actual {
-                flow_js_utils::update_lit_type_from_annot(cx, l);
+                flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             } else {
                 // TODO: ordered_reasons should not be necessary
                 let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
                         reason_lower: rl,
                         reason_upper: ru,
@@ -3258,8 +3370,8 @@ pub fn rec_sub_t<'cx>(
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
                     reason_lower: rl,
                     reason_upper: ru,
@@ -3277,12 +3389,12 @@ pub fn rec_sub_t<'cx>(
             ) = (ld.deref(), ud.deref()) =>
         {
             if expected.0 == actual.0 {
-                flow_js_utils::update_lit_type_from_annot(cx, l);
+                flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             } else {
                 // TODO: ordered_reasons should not be necessary
                 let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                         reason_lower: rl,
                         reason_upper: ru,
@@ -3298,8 +3410,8 @@ pub fn rec_sub_t<'cx>(
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
                     reason_lower: rl,
                     reason_upper: ru,
@@ -3319,8 +3431,8 @@ pub fn rec_sub_t<'cx>(
             if expected != actual {
                 // TODO: ordered_reasons should not be necessary
                 let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
                         reason_lower: rl,
                         reason_upper: ru,
@@ -3336,8 +3448,8 @@ pub fn rec_sub_t<'cx>(
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
                     reason_lower: rl,
                     reason_upper: ru,
@@ -3356,8 +3468,8 @@ pub fn rec_sub_t<'cx>(
             if expected.0 != actual.0 {
                 // TODO: ordered_reasons should not be necessary
                 let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
                         reason_lower: rl,
                         reason_upper: ru,
@@ -3373,8 +3485,8 @@ pub fn rec_sub_t<'cx>(
         {
             // TODO: ordered_reasons should not be necessary
             let (rl, ru) = flow_js_utils::ordered_reasons(cx, (rl.dupe(), ru.dupe()));
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
                     reason_lower: rl,
                     reason_upper: ru,
@@ -3397,8 +3509,8 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::UniqueSymbolT(_))
                 && matches!(ud.deref(), DefTInner::UniqueSymbolT(_)) =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 flow_js_utils::incompatible_types_error(l, u, use_op, None),
             )
         }
@@ -3407,8 +3519,8 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::SymbolT)
                 && matches!(ud.deref(), DefTInner::UniqueSymbolT(_)) =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 flow_js_utils::incompatible_types_error(l, u, use_op, None),
             )
         }
@@ -3418,7 +3530,7 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(reason_s, ld), TypeInner::KeysT(reason_op, o))
             if let DefTInner::SingletonStrT { value: x, .. } = ld.deref() =>
         {
-            flow_js_utils::update_lit_type_from_annot(cx, l);
+            flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
@@ -3428,8 +3540,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l.dupe(),
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3458,8 +3570,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l.dupe(),
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3479,7 +3591,7 @@ pub fn rec_sub_t<'cx>(
         ) if let TypeInner::DefT(_, bd) = bound.deref()
             && let DefTInner::SingletonStrT { value: x, .. } = bd.deref() =>
         {
-            flow_js_utils::update_lit_type_from_annot(cx, l);
+            flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let reason_next = reason_s
                 .dupe()
                 .replace_desc_new(VirtualReasonDesc::RProperty(Some(Name::new(x.dupe()))));
@@ -3489,8 +3601,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l.dupe(),
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3511,8 +3623,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l.dupe(),
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3542,8 +3654,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l.dupe(),
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3573,8 +3685,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l_new,
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3611,8 +3723,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_next,
                 type_: l_new,
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3640,8 +3752,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_s.dupe(),
                 type_: l_new,
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3669,8 +3781,8 @@ pub fn rec_sub_t<'cx>(
                 reason: reason_s.dupe(),
                 type_: l_new,
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -3682,8 +3794,8 @@ pub fn rec_sub_t<'cx>(
         }
         (TypeInner::KeysT(reason1, o1), _) => {
             // flow all keys of o1 to u
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o1,
                 &UseT::new(UseTInner::GetKeysT {
@@ -3701,7 +3813,7 @@ pub fn rec_sub_t<'cx>(
             if rep.members_iter().any(flow_js_utils::is_union_resolvable) =>
         {
             flow_js_utils::iter_resolve_union(
-                |cx, trace, (t, u)| FlowJs::rec_flow(cx, *trace, &t, &u),
+                |cx, trace, (t, u)| FlowJs::rec_flow_with_env(cx, env, *trace, &t, &u),
                 cx,
                 &trace,
                 reason.dupe(),
@@ -3710,7 +3822,7 @@ pub fn rec_sub_t<'cx>(
             )
         }
         (TypeInner::UnionT(_, rep), TypeInner::UnionT(_, _)) => {
-            union_to_union(cx, trace, use_op, l, rep, u)
+            union_to_union(cx, env, trace, use_op, l, rep, u)
         }
         (
             TypeInner::NominalT {
@@ -3755,7 +3867,7 @@ pub fn rec_sub_t<'cx>(
                 ),
             ) {
                 (union_rep::QuickMemResult::No, union_rep::QuickMemResult::No) => {
-                    FlowJs::rec_flow_t(cx, trace, use_op, l, &maybe)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &maybe)
                 }
                 (union_rep::QuickMemResult::Yes, union_rep::QuickMemResult::No) => {
                     let filtered = flow_js_utils::remove_predicate_from_union(
@@ -3764,7 +3876,7 @@ pub fn rec_sub_t<'cx>(
                         |t| type_util::quick_subtype(None::<&fn(&Type)>, t, &void),
                         rep,
                     );
-                    FlowJs::rec_flow_t(cx, trace, use_op, &filtered, &maybe)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, &maybe)
                 }
                 (union_rep::QuickMemResult::No, union_rep::QuickMemResult::Yes) => {
                     let filtered = flow_js_utils::remove_predicate_from_union(
@@ -3773,7 +3885,7 @@ pub fn rec_sub_t<'cx>(
                         |t| type_util::quick_subtype(None::<&fn(&Type)>, t, &null),
                         rep,
                     );
-                    FlowJs::rec_flow_t(cx, trace, use_op, &filtered, &maybe)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, &maybe)
                 }
                 (union_rep::QuickMemResult::Yes, union_rep::QuickMemResult::Yes) => {
                     let filtered = flow_js_utils::remove_predicate_from_union(
@@ -3785,10 +3897,10 @@ pub fn rec_sub_t<'cx>(
                         },
                         rep,
                     );
-                    FlowJs::rec_flow_t(cx, trace, use_op, &filtered, &maybe)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, &maybe)
                 }
                 _ => flow_all_in_union(
-                    cx,
+                    cx, env,
                     &trace,
                     rep,
                     &UseT::new(UseTInner::UseT(use_op, u.dupe())),
@@ -3810,7 +3922,7 @@ pub fn rec_sub_t<'cx>(
                 &void,
                 rep,
             ) {
-                union_rep::QuickMemResult::No => FlowJs::rec_flow_t(cx, trace, use_op, l, opt),
+                union_rep::QuickMemResult::No => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, opt),
                 union_rep::QuickMemResult::Yes => {
                     let filtered = flow_js_utils::remove_predicate_from_union(
                         reason.dupe(),
@@ -3818,10 +3930,10 @@ pub fn rec_sub_t<'cx>(
                         |t| type_util::quick_subtype(None::<&fn(&Type)>, t, &void),
                         rep,
                     );
-                    FlowJs::rec_flow_t(cx, trace, use_op, &filtered, opt)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &filtered, opt)
                 }
                 _ => flow_all_in_union(
-                    cx,
+                    cx, env,
                     &trace,
                     rep,
                     &UseT::new(UseTInner::UseT(use_op, u.dupe())),
@@ -3833,8 +3945,8 @@ pub fn rec_sub_t<'cx>(
                 eprintln!("UnionT ~> IntersectionT slow case");
             }
             for t in rep.members_iter() {
-                FlowJs::rec_flow(
-                    cx,
+                FlowJs::rec_flow_with_env(
+                    cx, env,
                     trace,
                     l,
                     &UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe())),
@@ -3864,7 +3976,7 @@ pub fn rec_sub_t<'cx>(
                             let representative = representative.dupe();
                             drop(members);
                             match speculation_kit::try_singleton_throw_on_failure(
-                                cx,
+                                cx, env,
                                 trace,
                                 representative.dupe(),
                                 UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
@@ -3877,8 +3989,8 @@ pub fn rec_sub_t<'cx>(
                                         &representative,
                                         use_op,
                                     );
-                                    FlowJs::rec_flow(
-                                        cx,
+                                    FlowJs::rec_flow_with_env(
+                                        cx, env,
                                         trace,
                                         &representative,
                                         &UseT::new(UseTInner::UseT(use_op, u.dupe())),
@@ -3889,8 +4001,8 @@ pub fn rec_sub_t<'cx>(
                                         |elt: UnionEnum| -> Result<(), FlowJsException> {
                                             if Some(tag) == union_rep::tag_of_member(u) {
                                                 if !enums.iter().all(|e| *e == elt) {
-                                                    flow_js_utils::add_output(
-                                                        cx,
+                                                    flow_js_utils::add_output_with_env(
+                                                        cx,env,
                                                         flow_js_utils::incompatible_types_error(
                                                             l,
                                                             u,
@@ -3901,7 +4013,7 @@ pub fn rec_sub_t<'cx>(
                                                 }
                                             } else {
                                                 flow_all_in_union(
-                                                    cx,
+                                                    cx, env,
                                                     &trace,
                                                     rep,
                                                     &UseT::new(UseTInner::UseT(
@@ -3936,7 +4048,7 @@ pub fn rec_sub_t<'cx>(
                                         }
                                         _ => {
                                             flow_all_in_union(
-                                                cx,
+                                                cx, env,
                                                 &trace,
                                                 rep,
                                                 &UseT::new(UseTInner::UseT(use_op, u.dupe())),
@@ -3951,7 +4063,7 @@ pub fn rec_sub_t<'cx>(
                     Ok(())
                 }
                 _ => flow_all_in_union(
-                    cx,
+                    cx, env,
                     &trace,
                     rep,
                     &UseT::new(UseTInner::UseT(use_op, u.dupe())),
@@ -3965,8 +4077,8 @@ pub fn rec_sub_t<'cx>(
                 }
             }
             for t in rep.members_iter() {
-                FlowJs::rec_flow(
-                    cx,
+                FlowJs::rec_flow_with_env(
+                    cx, env,
                     trace,
                     l,
                     &UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe())),
@@ -3981,8 +4093,8 @@ pub fn rec_sub_t<'cx>(
                 && {
                     if let Some(enums) = rep.check_enum() {
                         if !enums.contains(&UnionEnum::Str(x.dupe())) {
-                            flow_js_utils::add_output(
-                                cx,
+                            flow_js_utils::add_output_with_env(
+                                cx,env,
                                 flow_js_utils::incompatible_types_error(
                                     l,
                                     u,
@@ -3997,7 +4109,7 @@ pub fn rec_sub_t<'cx>(
                     }
                 } =>
         {
-            flow_js_utils::update_lit_type_from_annot(cx, l);
+            flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             Ok(())
         }
         (_, TypeInner::UnionT(_, rep))
@@ -4005,7 +4117,7 @@ pub fn rec_sub_t<'cx>(
                 let ts: Vec<Type> = type_mapper::union_flatten(cx, rep.members_iter().duped());
                 ts.iter().any(|t| {
                     type_util::quick_subtype(
-                        Some(&|t: &Type| flow_js_utils::update_lit_type_from_annot(cx, t)),
+                        Some(&|t: &Type| flow_js_utils::update_lit_type_from_annot(cx,env,  t)),
                         l,
                         t,
                     )
@@ -4029,7 +4141,7 @@ pub fn rec_sub_t<'cx>(
             //  To handle these cases, we first check to see if the union contains any implicitly instantiated
             //  tvars. If so, we start speculation. If not, we try to see if the RHS is a supertype of React.Node
             //  before kicking off regular speculation
-            let union_contains_instantiable_tvars = if cx.in_implicit_instantiation() {
+            let union_contains_instantiable_tvars = if env.in_implicit_instantiation() {
                 rep.members_iter().any(|t| {
                     if let TypeInner::OpenT(tvar) = t.deref() {
                         use constraint::Constraints;
@@ -4046,17 +4158,17 @@ pub fn rec_sub_t<'cx>(
             } else {
                 false
             };
-            let node = FlowJs::get_builtin_react_type(
-                cx,
+            let node = FlowJs::get_builtin_react_type_with_env(
+                cx, env,
                 None,
                 renders_r,
                 Some(true),
                 intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
             )?;
             if union_contains_instantiable_tvars
-                || !FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, &node, u)?
+                || !FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, env, &node, u)?
             {
-                speculation_kit::try_union(cx, None, trace, use_op, l.dupe(), r.dupe(), rep)?;
+                speculation_kit::try_union(cx, env, None, trace, use_op, l.dupe(), r.dupe(), rep)?;
             }
             Ok(())
         }
@@ -4070,15 +4182,15 @@ pub fn rec_sub_t<'cx>(
             TypeInner::UnionT(r, rep),
         ) if lnom.upper_t.is_some() => {
             let upper_t = lnom.upper_t.as_ref().unwrap();
-            let ts = FlowJs::possible_concrete_types_for_inspection(
-                cx,
+            let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx, env,
                 type_util::reason_of_t(upper_t),
                 upper_t,
             )?;
             match ts.as_slice() {
                 [] | [_] => {
                     // Same as `_ ~> UnionT` case below
-                    speculation_kit::try_union(cx, None, trace, use_op, l.dupe(), r.dupe(), rep)
+                    speculation_kit::try_union(cx, env, None, trace, use_op, l.dupe(), r.dupe(), rep)
                 }
                 [lt1, lt2, lts @ ..] => {
                     let make_opaque = |t: Type| -> Type {
@@ -4103,7 +4215,7 @@ pub fn rec_sub_t<'cx>(
                         members,
                     );
                     let union_t = Type::new(TypeInner::UnionT(lreason.dupe(), union_of_opaques));
-                    FlowJs::rec_flow_t(cx, trace, use_op, &union_t, u)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &union_t, u)
                 }
             }
         }
@@ -4111,7 +4223,7 @@ pub fn rec_sub_t<'cx>(
             if template_literal_type::try_resolve_to_strings(quasis, types, true).is_some() =>
         {
             template_literal_type::subtype_template_into_union(
-                cx, trace, use_op, l, u, quasis, types,
+                cx, env, trace, use_op, l, u, quasis, types,
             )
         }
         (_, TypeInner::UnionT(r, rep)) => {
@@ -4119,18 +4231,19 @@ pub fn rec_sub_t<'cx>(
             // correct branch. This process is reused for intersections as well. See
             // comments on try_union and try_intersection.
             let l_for_annot = l.dupe();
-            let on_success: Box<dyn FnOnce(&Context<'cx>)> = Box::new(move |cx| {
-                flow_js_utils::update_lit_type_from_annot(cx, &l_for_annot);
-            });
-            speculation_kit::try_union(cx, Some(on_success), trace, use_op, l.dupe(), r.dupe(), rep)
+            let on_success: Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv)> =
+                Box::new(move |cx, env| {
+                    flow_js_utils::update_lit_type_from_annot(cx, env, &l_for_annot);
+                });
+            speculation_kit::try_union(cx, env, Some(on_success), trace, use_op, l.dupe(), r.dupe(), rep)
         }
         // maybe and optional types are just special union types
         (_, TypeInner::MaybeT(r2, t2)) => {
             let t2 = type_util::push_type_alias_reason(r2, t2.dupe());
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, t2)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2)))
         }
         (_, TypeInner::OptionalT { type_: t2, .. }) => {
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, t2.dupe())))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t2.dupe())))
         }
         // object types: an intersection may satisfy an object UB without
         // any particular member of the intersection doing so completely.
@@ -4164,8 +4277,8 @@ pub fn rec_sub_t<'cx>(
                     reachable_targs: Rc::from([]),
                     strictness_kind: obj.strictness_kind,
                 };
-                FlowJs::rec_flow(
-                    cx,
+                FlowJs::rec_flow_with_env(
+                    cx, env,
                     trace,
                     l,
                     &UseT::new(UseTInner::UseT(
@@ -4177,8 +4290,8 @@ pub fn rec_sub_t<'cx>(
                     )),
                 )?;
             }
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 l,
                 &UseT::new(UseTInner::UseT(use_op, obj.proto_t.dupe())),
@@ -4190,7 +4303,7 @@ pub fn rec_sub_t<'cx>(
         // reused for unions as well. See comments on try_union and
         // try_intersection.)
         (TypeInner::IntersectionT(r, rep), _) => speculation_kit::try_intersection(
-            cx,
+            cx, env,
             trace,
             UseT::new(UseTInner::UseT(use_op, u.dupe())),
             r.dupe(),
@@ -4198,7 +4311,7 @@ pub fn rec_sub_t<'cx>(
         ),
         (TypeInner::NullProtoT(reason), _) => {
             let null = Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)));
-            FlowJs::rec_flow_t(cx, trace, use_op, &null, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &null, u)
         }
 
         // Subtyping arm bodies live in template_literal_type; patterns and
@@ -4207,8 +4320,9 @@ pub fn rec_sub_t<'cx>(
             if let DefTInner::SingletonStrT { value, .. } = ld.deref() =>
         {
             template_literal_type::subtype_str_lit_into_template(
-                Some(&|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t)),
+                Some(&|cx, env: &FlowJsEnv, r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)),
                 cx,
+                env,
                 trace,
                 use_op,
                 l,
@@ -4234,7 +4348,7 @@ pub fn rec_sub_t<'cx>(
                 ..
             },
         ) => match template_literal_type::try_subtype_template_to_template(
-            cx,
+            cx, env,
             trace,
             use_op.dupe(),
             l_reason,
@@ -4247,7 +4361,7 @@ pub fn rec_sub_t<'cx>(
             template_literal_type::TlToTlResult::Handled => Ok(()),
             template_literal_type::TlToTlResult::NotApplicable => {
                 template_literal_type::subtype_template_to_other(
-                    cx, trace, use_op, l_reason, u, lq, lt,
+                    cx, env, trace, use_op, l_reason, u, lq, lt,
                 )
             }
         },
@@ -4259,7 +4373,7 @@ pub fn rec_sub_t<'cx>(
             },
             _,
         ) => template_literal_type::subtype_template_to_other(
-            cx, trace, use_op, reason, u, quasis, types,
+            cx, env, trace, use_op, reason, u, quasis, types,
         ),
         // StringMappingT<kind, arg> on the right: we get here when `arg` couldn't
         //    be eagerly reduced by `string_case_transform::resolve` (generic,
@@ -4274,10 +4388,10 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(_, ld), TypeInner::StringMappingT { reason, kind, arg })
             if let DefTInner::SingletonStrT { value, .. } = ld.deref() =>
         {
-            flow_js_utils::update_lit_type_from_annot(cx, l);
+            flow_js_utils::update_lit_type_from_annot(cx,env,  l);
             let arg_loc = reason.loc().dupe();
-            let ts = FlowJs::possible_concrete_types_for_inspection(
-                cx,
+            let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx, env,
                 type_util::reason_of_t(arg),
                 arg,
             )?;
@@ -4302,20 +4416,20 @@ pub fn rec_sub_t<'cx>(
             match arg_concretized {
                 Some(arg_prime) => {
                     let resolved = string_case_transform::resolve(
-                        Some(&|cx, r, t| FlowJs::possible_concrete_types_for_inspection(cx, r, t)),
+                        Some(&|r, t| FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, r, t)),
                         cx,
                         *kind,
                         arg_loc,
                         arg_prime,
                     );
-                    FlowJs::rec_flow_t(cx, trace, use_op, l, &resolved)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &resolved)
                 }
                 None => {
                     if string_case_transform::is_canonical(*kind, value.as_str()) {
-                        FlowJs::rec_flow_t(cx, trace, use_op, l, arg)
+                        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, arg)
                     } else {
-                        flow_js_utils::add_output(
-                            cx,
+                        flow_js_utils::add_output_with_env(
+                            cx,env,
                             flow_js_utils::incompatible_types_error(
                                 l,
                                 u,
@@ -4342,7 +4456,7 @@ pub fn rec_sub_t<'cx>(
                 reason.dupe(),
                 DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, &str_t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &str_t, u)
         }
 
         // When do we consider a polymorphic type <X:U> T to be a subtype of another
@@ -4479,15 +4593,15 @@ pub fn rec_sub_t<'cx>(
                         &map2,
                         param2.bound.dupe(),
                     );
-                    FlowJs::rec_flow(
-                        cx,
+                    FlowJs::rec_flow_with_env(
+                        cx, env,
                         trace,
                         &bound2,
                         &UseT::new(UseTInner::UseT(use_op.dupe(), bound1)),
                     )?;
                     if param1.is_const != param2.is_const {
-                        flow_js_utils::add_output(
-                            cx,
+                        flow_js_utils::add_output_with_env(
+                            cx,env,
                             ErrorMessage::ETypeParamConstIncompatibility(Box::new(
                                 ETypeParamConstIncompatibilityData {
                                     use_op: use_op.dupe(),
@@ -4519,7 +4633,7 @@ pub fn rec_sub_t<'cx>(
                     &map2,
                     t2.dupe(),
                 );
-                FlowJs::rec_flow_t(cx, trace, use_op, &t1_subst, &t2_subst)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t1_subst, &t2_subst)?;
             }
             Ok(())
         }
@@ -4527,7 +4641,7 @@ pub fn rec_sub_t<'cx>(
         (_, TypeInner::DefT(_, ud))
             if let DefTInner::PolyT(box PolyTData { t_out: t, .. }) = ud.deref() =>
         {
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, t.dupe())))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, t.dupe())))
         }
         // TODO: ideally we'd do the same when lower bounds flow to a
         // this-abstracted class, but fixing the class is easier; might need to
@@ -4554,7 +4668,7 @@ pub fn rec_sub_t<'cx>(
                 class_r.dupe(),
                 DefT::new(DefTInner::ClassT(fixed)),
             ));
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, class_t)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, class_t)))
         }
         (
             _,
@@ -4574,7 +4688,7 @@ pub fn rec_sub_t<'cx>(
                 *this,
                 this_name.dupe(),
             );
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, fixed)))
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, fixed)))
         }
         // This rule is hit when a polymorphic type appears outside a
         // type application expression - i.e. not followed by a type argument list
@@ -4593,8 +4707,8 @@ pub fn rec_sub_t<'cx>(
         {
             let reason_op = type_util::reason_of_t(u);
             let ids = Vec1::try_from_vec(ids.to_vec()).unwrap();
-            let (t_, _) = FlowJs::instantiate_poly(
-                cx,
+            let (t_, _) = FlowJs::instantiate_poly_with_env(
+                cx, env,
                 trace,
                 use_op.dupe(),
                 reason_op,
@@ -4602,7 +4716,7 @@ pub fn rec_sub_t<'cx>(
                 None,
                 (tparams_loc.dupe(), ids, t.dupe()),
             )?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &t_, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t_, u)
         }
         // when a this-abstracted class flows to upper bounds, fix the class
         (TypeInner::DefT(class_r, ld), _)
@@ -4627,7 +4741,7 @@ pub fn rec_sub_t<'cx>(
                 class_r.dupe(),
                 DefT::new(DefTInner::ClassT(fixed)),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, &class_t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &class_t, u)
         }
         (
             TypeInner::ThisInstanceT(box ThisInstanceTData {
@@ -4647,7 +4761,7 @@ pub fn rec_sub_t<'cx>(
                 *this,
                 this_name.dupe(),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, &fixed, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &fixed, u)
         }
 
         // ****************************
@@ -4694,7 +4808,7 @@ pub fn rec_sub_t<'cx>(
         {
             // Contravariant config check
             FlowJs::react_get_config(
-                cx,
+                cx, env,
                 trace,
                 l,
                 use_op.dupe(),
@@ -4705,7 +4819,7 @@ pub fn rec_sub_t<'cx>(
             )?;
             // check rendersl <: rendersu
             FlowJs::react_subtype_class_component_render(
-                cx, trace, use_op, this, reasonl, renders,
+                cx, env, trace, use_op, this, reasonl, renders,
             )?;
             Ok(())
         }
@@ -4727,8 +4841,8 @@ pub fn rec_sub_t<'cx>(
             //  1. We can't perform the key check. If config is mixed, which can happen in
             //  polymorphic HOCs then the [string]: mixed indexer causes spurious errors.
             //  2. We check the ref here, so we don't need to check it in the config as well.
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 l,
                 &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
@@ -4740,7 +4854,7 @@ pub fn rec_sub_t<'cx>(
                 }))),
             )?;
             // check rendered elements are covariant
-            FlowJs::rec_flow_t(cx, trace, use_op, &ft.return_t, renders)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &ft.return_t, renders)
         }
 
         // Object Component ~> AbstractComponent
@@ -4753,8 +4867,8 @@ pub fn rec_sub_t<'cx>(
                     component_kind: ComponentKind::Structural,
                 }) = ud.deref() =>
         {
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 l,
                 &UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
@@ -4788,7 +4902,7 @@ pub fn rec_sub_t<'cx>(
                 reasonu.dupe(),
                 DefT::new(DefTInner::FunT(mixed, Rc::new(funtype))),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, &call_t, &fun_t)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &call_t, &fun_t)
         }
         // AbstractComponent ~> AbstractComponent
         (TypeInner::DefT(reasonl, ld), TypeInner::DefT(_reasonu, ud))
@@ -4803,7 +4917,7 @@ pub fn rec_sub_t<'cx>(
                     component_kind: ComponentKind::Structural,
                 }) = ud.deref() =>
         {
-            FlowJs::rec_flow_t(cx, trace, use_op.dupe(), configu, configl)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), configu, configl)?;
             let rendersl = match component_kind {
                 ComponentKind::Nominal(renders_id, renders_name, _) => {
                     let reason =
@@ -4832,7 +4946,7 @@ pub fn rec_sub_t<'cx>(
                 Arc::new(VirtualFrameUseOp::RendersCompatibility),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, &rendersl, rendersu)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &rendersl, rendersu)
         }
         (TypeInner::DefT(_reasonl, ld), TypeInner::DefT(_reasonu, ud))
             if let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
@@ -4855,23 +4969,23 @@ pub fn rec_sub_t<'cx>(
                         (idu, Some(name_u.as_str())),
                     )) =>
         {
-            FlowJs::rec_flow_t(cx, trace, use_op.dupe(), configu, configl)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), configu, configl)?;
             let use_op = UseOp::Frame(
                 Arc::new(VirtualFrameUseOp::RendersCompatibility),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, rendersl, rendersu)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, rendersl, rendersu)
         }
         (TypeInner::DefT(reasonl, ld), TypeInner::DefT(reasonu, ud))
             if let DefTInner::RendersT(r1) = ld.deref()
                 && let DefTInner::RendersT(r2) = ud.deref() =>
         {
-            renders_kit::rec_renders_to_renders(cx, trace, use_op, (reasonl, r1), (reasonu, r2))
+            renders_kit::rec_renders_to_renders(cx, env, trace, use_op, (reasonl, r1), (reasonu, r2))
         }
         (_, TypeInner::DefT(renders_r, ud))
             if let DefTInner::RendersT(upper_renders) = ud.deref() =>
         {
-            renders_kit::non_renders_to_renders(cx, trace, use_op, l, renders_r, upper_renders)
+            renders_kit::non_renders_to_renders(cx, env, trace, use_op, l, renders_r, upper_renders)
         }
         // Exiting the renders world
         (TypeInner::DefT(r, ld), _)
@@ -4881,14 +4995,14 @@ pub fn rec_sub_t<'cx>(
                     if matches!(renders.deref(), CanonicalRendersForm::IntrinsicRenders(_) | CanonicalRendersForm::NominalRenders { .. })
             ) =>
         {
-            let mixed_element = FlowJs::get_builtin_react_type(
-                cx,
+            let mixed_element = FlowJs::get_builtin_react_type_with_env(
+                cx, env,
                 None,
                 r,
                 None,
                 intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactMixedElementType,
             )?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &mixed_element, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &mixed_element, u)
         }
         (TypeInner::DefT(r, ld), _)
             if let DefTInner::RendersT(renders) = ld.deref()
@@ -4901,7 +5015,7 @@ pub fn rec_sub_t<'cx>(
                 renders_reason: r.dupe(),
                 u: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
             });
-            FlowJs::rec_flow(cx, trace, t, &u_prime)
+            FlowJs::rec_flow_with_env(cx, env, trace, t, &u_prime)
         }
         (TypeInner::DefT(r, ld), _)
             if matches!(
@@ -4913,7 +5027,7 @@ pub fn rec_sub_t<'cx>(
                 renders_reason: r.dupe(),
                 u: Box::new(UseT::new(UseTInner::UseT(use_op, u.dupe()))),
             });
-            FlowJs::rec_flow(cx, trace, l, &u_prime)
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &u_prime)
         }
 
         // ***********************************************
@@ -4926,7 +5040,7 @@ pub fn rec_sub_t<'cx>(
                 (ld.deref(), ud.deref()) =>
         {
             funt_to_funt_check(
-                cx,
+                cx, env,
                 trace,
                 use_op,
                 lreason,
@@ -4935,18 +5049,18 @@ pub fn rec_sub_t<'cx>(
                 ft2,
                 &|use_op| {
                     funt_to_funt_check_this_contravariant(
-                        cx, trace, lreason, ft1, ureason, ft2, use_op,
+                        cx, env, trace, lreason, ft1, ureason, ft2, use_op,
                     )
                 },
                 &|use_op| {
-                    funt_to_funt_check_params_contravariant(cx, trace, ureason, ft1, ft2, use_op)
+                    funt_to_funt_check_params_contravariant(cx, env, trace, ureason, ft1, ft2, use_op)
                 },
             )
         }
 
         // unwrap namespace type into object type, drop all information about types in the namespace
-        (TypeInner::NamespaceT(ns), _) => FlowJs::rec_flow_t(cx, trace, use_op, &ns.values_type, u),
-        (_, TypeInner::NamespaceT(ns)) => FlowJs::rec_flow_t(cx, trace, use_op, l, &ns.values_type),
+        (TypeInner::NamespaceT(ns), _) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &ns.values_type, u),
+        (_, TypeInner::NamespaceT(ns)) => FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &ns.values_type),
 
         // ObjT -> ObjT
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
@@ -4964,7 +5078,7 @@ pub fn rec_sub_t<'cx>(
                 if print_fast_path {
                     eprintln!("ObjT ~> ObjT fast path: no");
                 }
-                flow_obj_to_obj(cx, trace, use_op, lreason, l_obj, ureason, u_obj)?;
+                flow_obj_to_obj(cx, env, trace, use_op, lreason, l_obj, ureason, u_obj)?;
             }
             Ok(())
         }
@@ -4989,8 +5103,8 @@ pub fn rec_sub_t<'cx>(
                     .is_typescript_loose() =>
         {
             let reasons = flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EIncompatibleWithExact(
                     reasons,
                     use_op,
@@ -5026,8 +5140,8 @@ pub fn rec_sub_t<'cx>(
                     }
                     InstanceKind::RecordKind { .. } => intermediate_error_types::ClassKind::Record,
                 };
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EClassToObject(Box::new(EClassToObjectData {
                         reason_class: lreason.dupe(),
                         reason_obj: ureason.dupe(),
@@ -5048,8 +5162,8 @@ pub fn rec_sub_t<'cx>(
                 let prop_name = Some(Name::new("$call"));
                 match lcall {
                     Some(lcall) => {
-                        FlowJs::rec_flow(
-                            cx,
+                        FlowJs::rec_flow_with_env(
+                            cx, env,
                             trace,
                             &cx.find_call(lcall),
                             &UseT::new(UseTInner::UseT(use_op.dupe(), cx.find_call(ucall))),
@@ -5065,7 +5179,7 @@ pub fn rec_sub_t<'cx>(
                                 suggestion: None,
                             },
                         ));
-                        flow_js_utils::add_output(cx, error_message)?;
+                        flow_js_utils::add_output_with_env(cx,env, error_message)?;
                     }
                 }
             }
@@ -5098,7 +5212,7 @@ pub fn rec_sub_t<'cx>(
                                     PropertyInner::Method { type_: ut, .. },
                                 ) = (lp.deref(), up.deref())
                                 {
-                                    try_method_bivariant(cx, trace, prop_use_op.dupe(), lt, ut)?
+                                    try_method_bivariant(cx, env, trace, prop_use_op.dupe(), lt, ut)?
                                 } else {
                                     false
                                 }
@@ -5109,7 +5223,7 @@ pub fn rec_sub_t<'cx>(
                                 let lower_prop_type =
                                     property_type_for_subtyping(lp, strictness_kind);
                                 let new_errs = rec_flow_p_inner(
-                                    cx,
+                                    cx, env,
                                     Some(trace),
                                     prop_use_op,
                                     None,
@@ -5141,8 +5255,8 @@ pub fn rec_sub_t<'cx>(
                             } else {
                                 LookupKind::Strict(lreason.dupe())
                             };
-                            FlowJs::rec_flow(
-                                cx,
+                            FlowJs::rec_flow_with_env(
+                                cx, env,
                                 trace,
                                 super_,
                                 &UseT::new(UseTInner::ReposLowerT {
@@ -5185,8 +5299,8 @@ pub fn rec_sub_t<'cx>(
             };
             if let Some((first_propref, _)) = missing_props.first() {
                 let propref = first_propref.clone();
-                FlowJs::rec_flow(
-                    cx,
+                FlowJs::rec_flow_with_env(
+                    cx, env,
                     trace,
                     super_,
                     &UseT::new(UseTInner::ReposLowerT {
@@ -5215,15 +5329,15 @@ pub fn rec_sub_t<'cx>(
                 )?;
             }
             add_output_prop_polarity_mismatch(
-                cx,
+                cx, env,
                 use_op.dupe(),
                 lreason,
                 ureason,
                 errs,
                 strictness_kind,
             )?;
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 l,
                 &UseT::new(UseTInner::UseT(use_op, uproto.dupe())),
@@ -5241,8 +5355,8 @@ pub fn rec_sub_t<'cx>(
                 && matches!(inst.inst.inst_kind, InstanceKind::RecordKind { .. })
                 && let Some(record_name) = &inst.inst.class_name =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 flow_js_utils::incompatible_types_error(
                     l,
                     u,
@@ -5264,8 +5378,8 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::ObjT(_))
                 && matches!(ud.deref(), DefTInner::InstanceT(_)) =>
         {
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 l,
                 &type_util::extends_use_type(use_op, l.dupe(), u.dupe()),
@@ -5295,7 +5409,7 @@ pub fn rec_sub_t<'cx>(
                 _ => {
                     let error_message =
                         flow_js_utils::incompatible_types_error(l, u, use_op.dupe(), None);
-                    flow_js_utils::add_output(cx, error_message)?;
+                    flow_js_utils::add_output_with_env(cx,env, error_message)?;
                     any_t::error(reason_op.dupe())
                 }
             };
@@ -5309,7 +5423,7 @@ pub fn rec_sub_t<'cx>(
                 ))),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, &fun_t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &fun_t, u)
         }
 
         // ********************************************
@@ -5360,7 +5474,7 @@ pub fn rec_sub_t<'cx>(
                 .as_ref()
                 .map(|tv| type_util::tuple_ts_of_elements(&tv.elements))
                 .unwrap_or_default();
-            array_flow(cx, trace, use_op, lit1, r1, r2, l, u, &ts1, t1, &ts2, t2)
+            array_flow(cx, env, trace, use_op, lit1, r1, r2, l, u, &ts1, t1, &ts2, t2)
         }
         // Tuples can flow to tuples with the same arity
         (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
@@ -5388,8 +5502,8 @@ pub fn rec_sub_t<'cx>(
                 && num_req1 >= num_req2
                 && (num_total1 <= num_total2 || *upper_inexact))
             {
-                flow_js_utils::add_output(
-                    cx,
+                flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                         use_op: use_op.dupe(),
                         lower_reason: r1.dupe(),
@@ -5412,8 +5526,8 @@ pub fn rec_sub_t<'cx>(
                                             optional2: bool|
                  -> Result<(), FlowJsException> {
                     if !(fresh || Polarity::compat(p1, p2)) {
-                        flow_js_utils::add_output(
-                            cx,
+                        flow_js_utils::add_output_with_env(
+                            cx,env,
                             ErrorMessage::ETupleElementPolarityMismatch(Box::new(
                                 ETupleElementPolarityMismatchData {
                                     index: n,
@@ -5465,14 +5579,14 @@ pub fn rec_sub_t<'cx>(
                     };
                     match (fresh, p2) {
                         (true, _) | (_, Polarity::Positive) => {
-                            FlowJs::rec_flow_t(cx, trace, elem_use_op, t1, t2_inner)?;
+                            FlowJs::rec_flow_t_with_env(cx, env, trace, elem_use_op, t1, t2_inner)?;
                         }
                         (_, Polarity::Negative) => {
-                            FlowJs::rec_flow_t(cx, trace, elem_use_op, t2_inner, t1)?;
+                            FlowJs::rec_flow_t_with_env(cx, env, trace, elem_use_op, t2_inner, t1)?;
                         }
                         (_, Polarity::Neutral) => {
-                            FlowJs::rec_unify(
-                                cx,
+                            FlowJs::rec_unify_with_env(
+                                cx, env,
                                 trace,
                                 elem_use_op,
                                 UnifyCause::Uncategorized,
@@ -5548,8 +5662,8 @@ pub fn rec_sub_t<'cx>(
         {
             match tuple_view {
                 None => {
-                    flow_js_utils::add_output(
-                        cx,
+                    flow_js_utils::add_output_with_env(
+                        cx,env,
                         ErrorMessage::ENonLitArrayToTuple((r1.dupe(), r2.dupe()), use_op),
                     )?;
                 }
@@ -5567,7 +5681,7 @@ pub fn rec_sub_t<'cx>(
                             },
                         ))))),
                     ));
-                    FlowJs::rec_flow_t(cx, trace, use_op, &tuple_t, u)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &tuple_t, u)?;
                 }
             }
             Ok(())
@@ -5591,8 +5705,8 @@ pub fn rec_sub_t<'cx>(
                 }),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 t1,
                 &UseT::new(UseTInner::UseT(use_op, t2.dupe())),
@@ -5603,8 +5717,8 @@ pub fn rec_sub_t<'cx>(
                 && let DefTInner::ArrT(arr2) = ud.deref()
                 && let ArrType::ArrayAT(box ArrayATData { elem_t, .. }) = arr2.as_ref() =>
         {
-            let arrt = FlowJs::get_builtin_typeapp(cx, r2, None, "Array", vec![elem_t.dupe()]);
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
+            let arrt = FlowJs::get_builtin_typeapp_with_env(cx, env, r2, None, "Array", vec![elem_t.dupe()]);
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
         }
         (TypeInner::DefT(_, ld), TypeInner::DefT(r2, ud))
             if matches!(ld.deref(), DefTInner::InstanceT(_))
@@ -5612,8 +5726,8 @@ pub fn rec_sub_t<'cx>(
                 && let ArrType::ROArrayAT(box (elemt, _)) = arr2.as_ref() =>
         {
             let arrt =
-                FlowJs::get_builtin_typeapp(cx, r2, None, "$ReadOnlyArray", vec![elemt.dupe()]);
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
+                FlowJs::get_builtin_typeapp_with_env(cx, env, r2, None, "$ReadOnlyArray", vec![elemt.dupe()]);
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
         }
 
         // **************************************************
@@ -5623,8 +5737,8 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::InstanceT(_))
                 && matches!(ud.deref(), DefTInner::InstanceT(_)) =>
         {
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 l,
                 &type_util::extends_use_type(use_op, l.dupe(), u.dupe()),
@@ -5638,16 +5752,16 @@ pub fn rec_sub_t<'cx>(
             if let (DefTInner::ClassT(l_inner), DefTInner::ClassT(u_inner)) =
                 (ld.deref(), ud.deref()) =>
         {
-            let repositioned = FlowJs::reposition(
-                cx,
+            let repositioned = FlowJs::reposition_with_env(
+                cx, env,
                 Some(trace),
                 rl.loc().clone(),
                 None,
                 None,
                 l_inner.dupe(),
             )?;
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 &repositioned,
                 &UseT::new(UseTInner::UseT(use_op, u_inner.dupe())),
@@ -5660,7 +5774,7 @@ pub fn rec_sub_t<'cx>(
                 && let DefTInner::ClassT(class_instance) = ud.deref() =>
         {
             let concretize = |t: &Type| {
-                FlowJs::possible_concrete_types_for_inspection(cx, type_util::reason_of_t(t), t)
+                FlowJs::possible_concrete_types_for_inspection_with_env(cx, env, type_util::reason_of_t(t), t)
             };
             match flow_js_utils::combine_construct_ts(flow_js_utils::collect_construct_ts(
                 &concretize,
@@ -5690,10 +5804,10 @@ pub fn rec_sub_t<'cx>(
                             Rc::new(target),
                         )),
                     ));
-                    FlowJs::rec_flow_t(cx, trace, use_op, &construct_t, &target)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &construct_t, &target)
                 }
-                None => flow_js_utils::add_output(
-                    cx,
+                None => flow_js_utils::add_output_with_env(
+                    cx,env,
                     ErrorMessage::EConstructSignatureMissingInSubtyping(Box::new(
                         EConstructSignatureMissingInSubtypingData {
                             reason_lower: reason_l.dupe(),
@@ -5714,7 +5828,7 @@ pub fn rec_sub_t<'cx>(
                 && let Some(call_t) = &o.call_t =>
         {
             let t = cx.find_call(*call_t);
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op.dupe(), t)))?;
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op.dupe(), t)))?;
             let new_obj = ObjType {
                 flags: o.flags.clone(),
                 props_tmap: o.props_tmap.dupe(),
@@ -5727,7 +5841,7 @@ pub fn rec_sub_t<'cx>(
                 reason.dupe(),
                 DefT::new(DefTInner::ObjT(Rc::new(new_obj))),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, l, &obj_t)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &obj_t)
         }
 
         (TypeInner::DefT(_, ld), TypeInner::DefT(reason, ud))
@@ -5736,7 +5850,7 @@ pub fn rec_sub_t<'cx>(
                 && let Some(call_t) = &inst_t.inst.inst_call_t =>
         {
             let t = cx.find_call(*call_t);
-            FlowJs::rec_flow(cx, trace, l, &UseT::new(UseTInner::UseT(use_op.dupe(), t)))?;
+            FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op.dupe(), t)))?;
             let inst_type = {
                 let mut new_inst_inner: InstTypeInner = inst_t.inst.deref().clone();
                 new_inst_inner.inst_call_t = None;
@@ -5751,7 +5865,7 @@ pub fn rec_sub_t<'cx>(
                     DefT::new(DefTInner::InstanceT(Rc::new(new_instance_t))),
                 ))
             };
-            FlowJs::rec_flow_t(cx, trace, use_op, l, &inst_type)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &inst_type)
         }
 
         // FunT ~> ObjT
@@ -5776,8 +5890,8 @@ pub fn rec_sub_t<'cx>(
             let reasons = flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
             match &obj.flags.obj_kind {
                 ObjKind::Exact => {
-                    flow_js_utils::add_output(
-                        cx,
+                    flow_js_utils::add_output_with_env(
+                        cx,env,
                         ErrorMessage::EIncompatibleWithExact(
                             reasons,
                             use_op,
@@ -5786,8 +5900,8 @@ pub fn rec_sub_t<'cx>(
                     )?;
                 }
                 ObjKind::Indexed(_) => {
-                    flow_js_utils::add_output(
-                        cx,
+                    flow_js_utils::add_output_with_env(
+                        cx,env,
                         ErrorMessage::EFunctionIncompatibleWithIndexer(reasons, use_op),
                     )?;
                 }
@@ -5822,13 +5936,14 @@ pub fn rec_sub_t<'cx>(
         {
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
+                env,
                 &use_op,
                 l,
                 statics,
                 u,
                 &cx.find_props(obj.props_tmap.dupe()),
             )? {
-                FlowJs::rec_flow_t(cx, trace, use_op, statics, u)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, statics, u)?;
             }
             Ok(())
         }
@@ -5842,13 +5957,14 @@ pub fn rec_sub_t<'cx>(
             filtered.remove(&Name::new("constructor"));
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
+                env,
                 &use_op,
                 l,
                 statics,
                 u,
                 &filtered,
             )? {
-                FlowJs::rec_flow_t(cx, trace, use_op, statics, u)?;
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, statics, u)?;
             }
             Ok(())
         }
@@ -5860,8 +5976,8 @@ pub fn rec_sub_t<'cx>(
             if matches!(ld.deref(), DefTInner::ClassT(_) | DefTInner::ArrT(_))
                 && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 u,
                 &UseT::new(UseTInner::ImplementsT(use_op, l.dupe())),
@@ -5919,8 +6035,8 @@ pub fn rec_sub_t<'cx>(
                 }
                 _ => "String",
             };
-            let builtin = FlowJs::get_builtin_type(cx, Some(trace), reason, None, builtin_name)?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &builtin, u)
+            let builtin = FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, None, builtin_name)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &builtin, u)
         }
         (TypeInner::DefT(reason, ld), TypeInner::DefT(interface_reason, ud))
             if matches!(
@@ -5928,8 +6044,8 @@ pub fn rec_sub_t<'cx>(
                 DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. }
             ) && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
                     reason: reason.dupe(),
@@ -5944,8 +6060,8 @@ pub fn rec_sub_t<'cx>(
                 DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
             ) && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
                     reason: reason.dupe(),
@@ -5960,8 +6076,8 @@ pub fn rec_sub_t<'cx>(
                 DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
             ) && matches!(ud.deref(), DefTInner::InstanceT(inst) if matches!(inst.inst.inst_kind, InstanceKind::InterfaceKind { .. })) =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
                     reason: reason.dupe(),
@@ -5996,29 +6112,29 @@ pub fn rec_sub_t<'cx>(
             let use_op_c1 = use_op.dupe();
             let use_op_c2 = use_op.dupe();
             speculation_kit::try_custom(
-                cx,
+                cx, env,
                 Some(use_op),
                 None,
                 None,
                 opaque_l_reason.loc().clone(),
                 vec![
-                    Box::new(move |cx: &Context| {
+                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBound {
                                 opaque_t_reason: opaque_u_reason_c,
                             }),
                             Arc::new(use_op_c1),
                         );
-                        FlowJs::rec_flow_t(cx, trace, use_op, &l_clone, &upper_lower)
+                        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &l_clone, &upper_lower)
                     }),
-                    Box::new(move |cx: &Context| {
+                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBound {
                                 opaque_t_reason: opaque_l_reason_c,
                             }),
                             Arc::new(use_op_c2),
                         );
-                        FlowJs::rec_flow_t(cx, trace, use_op, &lower_upper, &u_clone)
+                        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &lower_upper, &u_clone)
                     }),
                 ],
             )
@@ -6037,7 +6153,7 @@ pub fn rec_sub_t<'cx>(
                 }),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t, u)
         }
 
         // Similar to the case of NominalT { upper_t=Some _ }  ~> NominalT { lower_t=Some _ }
@@ -6062,30 +6178,30 @@ pub fn rec_sub_t<'cx>(
             let use_op_c1 = use_op.dupe();
             let use_op_c2 = use_op.dupe();
             speculation_kit::try_custom(
-                cx,
+                cx, env,
                 Some(use_op),
                 None,
                 None,
                 reason.loc().clone(),
                 vec![
-                    Box::new(move |cx: &Context| {
+                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBound {
                                 opaque_t_reason: opaque_u_reason_c,
                             }),
                             Arc::new(use_op_c1),
                         );
-                        FlowJs::rec_flow_t(cx, trace, use_op, &l_clone, &upper_lower)
+                        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &l_clone, &upper_lower)
                     }),
-                    Box::new(move |cx: &Context| {
+                    Box::new(move |cx: &Context, env: &FlowJsEnv| {
                         let repositioned = FlowJs::reposition_reason(
-                            cx,
+                            cx, env,
                             Some(trace),
                             &reason_c,
                             None,
                             &lower_upper,
                         )?;
-                        FlowJs::rec_flow_t(cx, trace, use_op_c2, &repositioned, &u_clone)
+                        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op_c2, &repositioned, &u_clone)
                     }),
                 ],
             )
@@ -6105,7 +6221,7 @@ pub fn rec_sub_t<'cx>(
                 }),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, l, t)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, t)
         }
 
         // *********************
@@ -6114,8 +6230,8 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::DefT(reason, ld), TypeInner::AnyT(_, _))
             if let DefTInner::FunT(static_, _) = ld.deref() =>
         {
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 static_,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -6138,14 +6254,14 @@ pub fn rec_sub_t<'cx>(
         {
             let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
             let statics_tvar = Tvar::new(reason.dupe(), tvar_id as u32);
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 instance,
                 &UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar.dupe()))),
             )?;
             let open_t = Type::new(TypeInner::OpenT(statics_tvar));
-            FlowJs::rec_flow_t(cx, trace, use_op, &open_t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &open_t, u)
         }
 
         // ************************
@@ -6176,14 +6292,14 @@ pub fn rec_sub_t<'cx>(
         {
             let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
             let statics_tvar = Tvar::new(reason.dupe(), tvar_id as u32);
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 instance,
                 &UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar.dupe()))),
             )?;
             let open_t = Type::new(TypeInner::OpenT(statics_tvar));
-            FlowJs::rec_flow_t(cx, trace, use_op, &open_t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &open_t, u)
         }
 
         // *********
@@ -6271,7 +6387,7 @@ pub fn rec_sub_t<'cx>(
                         }),
                         Arc::new(use_op),
                     );
-                    FlowJs::rec_flow_t(cx, trace, use_op, r1, r2)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, r1, r2)?;
                 }
             }
             Ok(())
@@ -6287,7 +6403,7 @@ pub fn rec_sub_t<'cx>(
                 },
             ) = (ld.deref(), ud.deref()) =>
         {
-            FlowJs::rec_flow_t(cx, trace, use_op, ev1, ev2)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, ev1, ev2)
         }
         (TypeInner::DefT(enum_reason_l, ld), TypeInner::DefT(enum_reason_u, ud))
             if let (DefTInner::EnumValueT(ei_l), DefTInner::EnumValueT(ei_u)) =
@@ -6307,7 +6423,7 @@ pub fn rec_sub_t<'cx>(
                 }),
                 Arc::new(use_op),
             );
-            FlowJs::rec_flow_t(cx, trace, use_op, repr_l, repr_u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, repr_l, repr_u)
         }
         (TypeInner::DefT(enum_reason, ld), _)
             if let DefTInner::EnumValueT(ei) = ld.deref()
@@ -6365,8 +6481,8 @@ pub fn rec_sub_t<'cx>(
                 }
                 _ => None,
             };
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(Box::new(
                     EnumIncompatibleData {
                         reason_lower: enum_reason.dupe(),
@@ -6410,9 +6526,9 @@ pub fn rec_sub_t<'cx>(
             );
             match result {
                 GenericSatResult::Satisfied => {
-                    let t1 = FlowJs::reposition_reason(cx, Some(trace), reason1, None, bound1)?;
-                    let t2 = FlowJs::reposition_reason(cx, Some(trace), reason2, None, bound2)?;
-                    FlowJs::rec_flow_t(cx, trace, use_op, &t1, &t2)
+                    let t1 = FlowJs::reposition_reason(cx, env, Some(trace), reason1, None, bound1)?;
+                    let t2 = FlowJs::reposition_reason(cx, env, Some(trace), reason2, None, bound2)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t1, &t2)
                 }
                 GenericSatResult::Lower(id) => {
                     let new_l = Type::new(TypeInner::GenericT(Box::new(GenericTData {
@@ -6422,11 +6538,11 @@ pub fn rec_sub_t<'cx>(
                         no_infer: *no_infer1,
                         id,
                     })));
-                    let t2 = FlowJs::reposition_reason(cx, Some(trace), reason2, None, bound2)?;
-                    FlowJs::rec_flow_t(cx, trace, use_op, &new_l, &t2)
+                    let t2 = FlowJs::reposition_reason(cx, env, Some(trace), reason2, None, bound2)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &new_l, &t2)
                 }
                 GenericSatResult::Upper(id) => {
-                    let t1 = FlowJs::reposition_reason(cx, Some(trace), reason1, None, bound1)?;
+                    let t1 = FlowJs::reposition_reason(cx, env, Some(trace), reason1, None, bound1)?;
                     let new_u = Type::new(TypeInner::GenericT(Box::new(GenericTData {
                         reason: reason2.dupe(),
                         name: name2.dupe(),
@@ -6434,14 +6550,14 @@ pub fn rec_sub_t<'cx>(
                         no_infer: *no_infer2,
                         id,
                     })));
-                    FlowJs::rec_flow_t(cx, trace, use_op, &t1, &new_u)
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t1, &new_u)
                 }
             }
         }
 
         (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
-            let t = FlowJs::reposition_reason(cx, Some(trace), reason, None, bound)?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &t, u)
+            let t = FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
         (_, TypeInner::GenericT(box GenericTData { reason, name, .. })) => {
             let bot = Type::new(TypeInner::DefT(
@@ -6450,34 +6566,34 @@ pub fn rec_sub_t<'cx>(
                     .replace_desc(VirtualReasonDesc::RIncompatibleInstantiation(name.dupe())),
                 DefT::new(DefTInner::EmptyT),
             ));
-            FlowJs::rec_flow_t(cx, trace, use_op, l, &bot)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &bot)
         }
         (TypeInner::ObjProtoT(reason), _) => {
             let obj_proto =
-                FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Object")?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &obj_proto, u)
+                FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Object")?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &obj_proto, u)
         }
         (_, TypeInner::ObjProtoT(reason)) => {
             let obj_proto =
-                FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Object")?;
-            FlowJs::rec_flow_t(cx, trace, use_op, l, &obj_proto)
+                FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Object")?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &obj_proto)
         }
         (TypeInner::FunProtoT(reason), _) => {
             let fun_proto =
-                FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
-            FlowJs::rec_flow_t(cx, trace, use_op, &fun_proto, u)
+                FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Function")?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &fun_proto, u)
         }
         (_, TypeInner::FunProtoT(reason)) => {
             let fun_proto =
-                FlowJs::get_builtin_type(cx, Some(trace), reason, Some(true), "Function")?;
-            FlowJs::rec_flow_t(cx, trace, use_op, l, &fun_proto)
+                FlowJs::get_builtin_type_with_env(cx, env, Some(trace), reason, Some(true), "Function")?;
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, l, &fun_proto)
         }
         (TypeInner::DefT(lreason, ld), TypeInner::DefT(ureason, ud))
             if matches!(ld.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction))
                 && matches!(ud.deref(), DefTInner::FunT(_, _)) =>
         {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 flow_js_utils::incompatible_type_error(
                     l,
                     IncompatibleUpperData {
@@ -6488,11 +6604,11 @@ pub fn rec_sub_t<'cx>(
                 ),
             )?;
             let any = any_t::make(AnySource::AnyError(None), lreason.dupe());
-            FlowJs::rec_flow_t(cx, trace, use_op, &any, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &any, u)
         }
         (TypeInner::FunProtoBindT(reason), _) => {
             let fun_proto_t = Type::new(TypeInner::FunProtoT(reason.dupe()));
-            FlowJs::rec_flow_t(cx, trace, use_op, &fun_proto_t, u)
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &fun_proto_t, u)
         }
         (
             TypeInner::NominalT {
@@ -6501,8 +6617,8 @@ pub fn rec_sub_t<'cx>(
             },
             _,
         ) if lnom.nominal_id == nominal::Id::InternalEnforceUnionOptimized => {
-            flow_js_utils::add_output(
-                cx,
+            flow_js_utils::add_output_with_env(
+                cx,env,
                 ErrorMessage::EUnionOptimizationOnNonUnion(Box::new(
                     EUnionOptimizationOnNonUnionData {
                         loc: reason.loc().dupe(),
@@ -6525,8 +6641,8 @@ pub fn rec_sub_t<'cx>(
                 reason: type_util::reason_of_t(l).dupe(),
                 type_: l.dupe(),
             })));
-            FlowJs::rec_flow(
-                cx,
+            FlowJs::rec_flow_with_env(
+                cx, env,
                 trace,
                 o,
                 &UseT::new(UseTInner::ReposLowerT {
@@ -6537,8 +6653,8 @@ pub fn rec_sub_t<'cx>(
             )
         }
 
-        _ => flow_js_utils::add_output(
-            cx,
+        _ => flow_js_utils::add_output_with_env(
+            cx,env,
             flow_js_utils::incompatible_types_error(l, u, use_op, None),
         ),
     }
@@ -6546,6 +6662,7 @@ pub fn rec_sub_t<'cx>(
 
 pub fn rec_flow_p<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     report_polarity: bool,
@@ -6557,6 +6674,7 @@ pub fn rec_flow_p<'cx>(
 ) -> Result<(), FlowJsException> {
     rec_flow_p_with_lower_upper_property(
         cx,
+        env,
         trace,
         use_op,
         None,
@@ -6572,6 +6690,7 @@ pub fn rec_flow_p<'cx>(
 
 pub fn rec_flow_p_with_lower_upper_property<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     lower_upper_property: Option<(&Property, &Property)>,
@@ -6585,6 +6704,7 @@ pub fn rec_flow_p_with_lower_upper_property<'cx>(
 ) -> Result<(), FlowJsException> {
     let errs = rec_flow_p_inner(
         cx,
+        env,
         trace,
         use_op.dupe(),
         lower_upper_property,
@@ -6596,6 +6716,6 @@ pub fn rec_flow_p_with_lower_upper_property<'cx>(
         lp,
         up,
     )?;
-    add_output_prop_polarity_mismatch(cx, use_op, lreason, ureason, errs, strictness_kind)?;
+    add_output_prop_polarity_mismatch(cx, env, use_op, lreason, ureason, errs, strictness_kind)?;
     Ok(())
 }

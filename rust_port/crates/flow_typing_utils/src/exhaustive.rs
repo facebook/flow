@@ -1243,7 +1243,6 @@ mod value_union_builder {
                         key_loc.dupe(),
                     );
                     let key_t = flow_typing_flow_common::flow_js_utils::type_of_key_name(
-                        cx,
                         flow_common::reason::Name::new(key_name.dupe()),
                         &reason_key,
                     );

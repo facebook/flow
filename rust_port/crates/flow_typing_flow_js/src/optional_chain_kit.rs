@@ -12,6 +12,7 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
@@ -30,6 +31,7 @@ use crate::speculation_kit;
 
 fn run_on_concretized<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     l: &Type,
     reason: &flow_common::reason::Reason,
@@ -39,7 +41,7 @@ fn run_on_concretized<'cx>(
 ) -> Result<(), FlowJsException> {
     match l.deref() {
         TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::VoidT) => {
-            callee_recorder::add_callee_use(cx, callee_recorder::Kind::Tast, l.dupe(), upper);
+            callee_recorder::add_callee_use(env, callee_recorder::Kind::Tast, l.dupe(), upper);
             cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), true);
             if let Some(c) = voided_out_collector {
                 c.add(l.dupe());
@@ -47,7 +49,7 @@ fn run_on_concretized<'cx>(
             return Ok(());
         }
         TypeInner::DefT(r, def_t) if matches!(def_t.deref(), DefTInner::NullT) => {
-            callee_recorder::add_callee_use(cx, callee_recorder::Kind::Tast, l.dupe(), upper);
+            callee_recorder::add_callee_use(env, callee_recorder::Kind::Tast, l.dupe(), upper);
             let void = {
                 match r.desc(true) {
                     VirtualReasonDesc::RNull => Type::new(TypeInner::DefT(
@@ -104,28 +106,32 @@ fn run_on_concretized<'cx>(
             // speculation job (this is a Flow error) and fall back to the
             // intersection as the type for the callee node. (This happens in
             // Default_resolver.)
-            callee_recorder::add_callee_use(cx, callee_recorder::Kind::SigHelp, l.dupe(), &upper);
+            callee_recorder::add_callee_use(env, callee_recorder::Kind::SigHelp, l.dupe(), &upper);
             let r_loc = r.loc().dupe();
             let upper_for_default = upper.dupe();
-            let default_resolve_fn: Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>> = {
+            let default_resolve_fn: Box<
+                dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>,
+            > = {
                 let r_loc_clone = r_loc.dupe();
                 let upper_clone = upper_for_default.dupe();
-                Box::new(move |cx| {
+                Box::new(move |cx, env: &FlowJsEnv| {
                     let flow_fn = |t1: Type, t2: Type| {
-                        FlowJs::flow_t(cx, &t1, &t2)?;
+                        FlowJs::flow_t_with_env(cx, env, &t1, &t2)?;
                         Ok(())
                     };
                     default_resolve::default_resolve_touts(
                         &flow_fn,
                         None,
-                        cx,
+                        env,
                         r_loc_clone,
                         &upper_clone,
                     )?;
                     Ok(())
                 })
             };
-            let cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>>> = rep
+            let cases: Vec<
+                Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>>,
+            > = rep
                 .members_iter()
                 .map(|t| {
                     let t = t.dupe();
@@ -133,23 +139,26 @@ fn run_on_concretized<'cx>(
                     let lhs_reason = lhs_reason.dupe();
                     let upper = upper.dupe();
                     let voided_out_collector_clone = voided_out_collector.clone();
-                    let f: Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>> =
-                        Box::new(move |cx| {
-                            run(
-                                cx,
-                                trace,
-                                &t,
-                                &reason,
-                                &lhs_reason,
-                                &upper,
-                                &voided_out_collector_clone,
-                            )
-                        });
+                    let f: Box<
+                        dyn FnOnce(&Context<'cx>, &FlowJsEnv) -> Result<(), FlowJsException>,
+                    > = Box::new(move |cx, env: &FlowJsEnv| {
+                        run_with_env(
+                            cx,
+                            env,
+                            trace,
+                            &t,
+                            &reason,
+                            &lhs_reason,
+                            &upper,
+                            &voided_out_collector_clone,
+                        )
+                    });
                     f
                 })
                 .collect();
             speculation_kit::try_custom(
                 cx,
+                env,
                 None,
                 Some(upper.dupe()),
                 Some(default_resolve_fn),
@@ -167,7 +176,7 @@ fn run_on_concretized<'cx>(
         _ => false,
     };
     cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), useful);
-    FlowJs::flow(cx, l, upper)?;
+    FlowJs::flow_with_env(cx, env, l, upper)?;
     Ok(())
 }
 
@@ -180,10 +189,34 @@ pub fn run<'cx>(
     upper: &UseT<Context<'cx>>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
-    let concrete_types = FlowJs::possible_concrete_types_for_optional_chain(cx, lhs_reason, lhs)?;
+    run_with_env(
+        cx,
+        &FlowJsEnv::entry(),
+        trace,
+        lhs,
+        reason,
+        lhs_reason,
+        upper,
+        voided_out_collector,
+    )
+}
+
+pub(super) fn run_with_env<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    lhs: &Type,
+    reason: &flow_common::reason::Reason,
+    lhs_reason: &flow_common::reason::Reason,
+    upper: &UseT<Context<'cx>>,
+    voided_out_collector: &Option<TypeCollector>,
+) -> Result<(), FlowJsException> {
+    let concrete_types =
+        FlowJs::possible_concrete_types_for_optional_chain_with_env(cx, env, lhs_reason, lhs)?;
     for t in &concrete_types {
         run_on_concretized(
             cx,
+            env,
             trace,
             t,
             reason,

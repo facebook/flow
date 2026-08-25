@@ -8,6 +8,8 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
+use flow_typing_flow_js_env::FlowJsEnv;
+
 use super::helpers::*;
 use super::*;
 
@@ -43,13 +45,14 @@ use super::*;
 /// for each l in ls: l => u
 pub(super) fn flows_to_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
     u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     for (l, (trace_l, use_op)) in ls.iter() {
-        let u = flow_use_op(cx, use_op.dupe(), u.dupe());
-        join_flow(cx, &[*trace_l, trace], (l, &u))?;
+        let u = flow_use_op(env, use_op.dupe(), u.dupe());
+        join_flow(cx, env, &[*trace_l, trace], (l, &u))?;
     }
     Ok(())
 }
@@ -57,14 +60,15 @@ pub(super) fn flows_to_t<'cx>(
 /// for each u in us: l => u
 pub(super) fn flows_from_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     l: &Type,
     us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
 ) -> Result<(), FlowJsException> {
     for (use_type_key, trace_u) in us.iter() {
-        let u = flow_use_op(cx, new_use_op.dupe(), use_type_key.use_t.dupe());
-        join_flow(cx, &[trace, *trace_u], (l, &u))?;
+        let u = flow_use_op(env, new_use_op.dupe(), use_type_key.use_t.dupe());
+        join_flow(cx, env, &[trace, *trace_u], (l, &u))?;
     }
     Ok(())
 }
@@ -72,6 +76,7 @@ pub(super) fn flows_from_t<'cx>(
 // for each l in ls, u in us: l => u
 pub(super) fn flows_across<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
@@ -80,11 +85,11 @@ pub(super) fn flows_across<'cx>(
     for (l, (trace_l, use_op_prime)) in ls.iter() {
         for (use_type_key, trace_u) in us.iter() {
             let u = flow_use_op(
-                cx,
+                env,
                 use_op_prime.dupe(),
-                flow_use_op(cx, use_op.dupe(), use_type_key.use_t.dupe()),
+                flow_use_op(env, use_op.dupe(), use_type_key.use_t.dupe()),
             );
-            join_flow(cx, &[*trace_l, trace, *trace_u], (l, &u))?;
+            join_flow(cx, env, &[*trace_l, trace, *trace_u], (l, &u))?;
         }
     }
     Ok(())
@@ -92,14 +97,14 @@ pub(super) fn flows_across<'cx>(
 
 /// bounds.upper += u
 fn add_upper_to_bounds<'cx>(
-    cx: &Context<'cx>,
+    env: &FlowJsEnv,
     bounds: &constraint::BoundsRef<Context<'cx>>,
     u: &UseT<Context<'cx>>,
     trace: DepthTrace,
 ) {
     let key = constraint::UseTypeKey {
         use_t: u.dupe(),
-        assoc: cx.speculation_id().map(|s| (s.speculation_id, s.case_id)),
+        assoc: env.speculation_id().map(|s| (s.speculation_id, s.case_id)),
     };
     let mut bounds = bounds.borrow_mut();
     if bounds
@@ -165,13 +170,14 @@ pub(super) fn iter_with_filter<'cx, F>(
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_to_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     opt: bool,
     (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
     t2: &UseT<Context<'cx>>,
 ) {
     if !opt {
-        add_upper_to_bounds(cx, bounds1, t2, trace);
+        add_upper_to_bounds(env, bounds1, t2, trace);
     }
     let bounds1 = bounds1.borrow();
     iter_with_filter(
@@ -179,9 +185,9 @@ pub(super) fn edges_to_t<'cx>(
         &bounds1.lowertvars,
         id1,
         |_root_id, bounds, trace_l, use_op| {
-            let t2 = flow_use_op(cx, use_op.dupe(), t2.dupe());
+            let t2 = flow_use_op(env, use_op.dupe(), t2.dupe());
             add_upper_to_bounds(
-                cx,
+                env,
                 &bounds,
                 &t2,
                 DepthTrace::concat_trace(&[*trace_l, trace]),
@@ -197,6 +203,7 @@ pub(super) fn edges_to_t<'cx>(
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_from_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
@@ -212,7 +219,7 @@ pub(super) fn edges_from_t<'cx>(
         &bounds2.uppertvars,
         id2,
         |_root_id, bounds, trace_u, use_op| {
-            let use_op = pick_use_op(cx, new_use_op, use_op);
+            let use_op = pick_use_op(env, new_use_op, use_op);
             add_lower_to_bounds(
                 &bounds,
                 t1,
@@ -226,6 +233,7 @@ pub(super) fn edges_from_t<'cx>(
 /// for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us]
 pub(super) fn edges_to_ts<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
@@ -233,9 +241,10 @@ pub(super) fn edges_to_ts<'cx>(
     us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
 ) {
     for (use_type_key, trace_u) in us.iter() {
-        let u = flow_use_op(cx, new_use_op.dupe(), use_type_key.use_t.dupe());
+        let u = flow_use_op(env, new_use_op.dupe(), use_type_key.use_t.dupe());
         edges_to_t(
             cx,
+            env,
             DepthTrace::concat_trace(&[trace, *trace_u]),
             opt,
             (id, bounds),
@@ -247,6 +256,7 @@ pub(super) fn edges_to_ts<'cx>(
 /// for each [id'] in [id] + [bounds.uppertvars], [id'.bounds.lower += ls]
 pub(super) fn edges_from_ts<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
@@ -254,9 +264,10 @@ pub(super) fn edges_from_ts<'cx>(
     (id, bounds): (i32, &constraint::BoundsRef<Context<'cx>>),
 ) {
     for (l, (trace_l, use_op)) in ls.iter() {
-        let new_use_op = pick_use_op(cx, use_op, new_use_op);
+        let new_use_op = pick_use_op(env, use_op, new_use_op);
         edges_from_t(
             cx,
+            env,
             DepthTrace::concat_trace(&[*trace_l, trace]),
             &new_use_op,
             opt,
@@ -274,6 +285,7 @@ pub(super) fn edges_from_ts<'cx>(
 ///   each id in [bounds1.lowertvars].
 pub(super) fn edges_and_flows_to_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     opt: bool,
     (id1, bounds1): (i32, &constraint::BoundsRef<Context<'cx>>),
@@ -282,10 +294,7 @@ pub(super) fn edges_and_flows_to_t<'cx>(
     // Skip iff edge exists as part of the speculation path to the current branch
     let skip = {
         let bounds1 = bounds1.borrow();
-        let state = cx.speculation_state();
-        state.0.iter().any(|branch| {
-            let speculation_id = branch.speculation_id;
-            let case_id = branch.case.case_id;
+        env.speculation_path().any(|(speculation_id, case_id)| {
             bounds1.upper.contains_key(&constraint::UseTypeKey {
                 use_t: t2.dupe(),
                 assoc: Some((speculation_id, case_id)),
@@ -300,8 +309,8 @@ pub(super) fn edges_and_flows_to_t<'cx>(
         });
     if !skip {
         let lower = bounds1.borrow().lower.clone();
-        edges_to_t(cx, trace, opt, (id1, bounds1), t2);
-        flows_to_t(cx, trace, &lower, t2)?;
+        edges_to_t(cx, env, trace, opt, (id1, bounds1), t2);
+        flows_to_t(cx, env, trace, &lower, t2)?;
     }
     Ok(())
 }
@@ -314,6 +323,7 @@ pub(super) fn edges_and_flows_to_t<'cx>(
 /// each id in [bounds2.uppertvars].
 pub(super) fn edges_and_flows_from_t<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
@@ -322,8 +332,8 @@ pub(super) fn edges_and_flows_from_t<'cx>(
 ) -> Result<(), FlowJsException> {
     if !bounds2.borrow().lower.contains_key(t1) {
         let upper = bounds2.borrow().upper.clone();
-        edges_from_t(cx, trace, &new_use_op, opt, t1, (id2, bounds2));
-        flows_from_t(cx, trace, &new_use_op, t1, &upper)?;
+        edges_from_t(cx, env, trace, &new_use_op, opt, t1, (id2, bounds2));
+        flows_from_t(cx, env, trace, &new_use_op, t1, &upper)?;
     }
     Ok(())
 }
@@ -377,6 +387,7 @@ fn add_lowertvar_to_bounds<'cx>(
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_to_tvar<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
@@ -392,7 +403,7 @@ pub(super) fn edges_to_tvar<'cx>(
         &bounds1.lowertvars,
         id1,
         |_root_id, bounds, trace_l, use_op| {
-            let use_op = pick_use_op(cx, use_op, new_use_op);
+            let use_op = pick_use_op(env, use_op, new_use_op);
             add_uppertvar_to_bounds(
                 &bounds,
                 id2,
@@ -412,6 +423,7 @@ pub(super) fn edges_to_tvar<'cx>(
 /// goto node (so that updating its bounds is unnecessary).
 pub(super) fn edges_from_tvar<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
@@ -427,7 +439,7 @@ pub(super) fn edges_from_tvar<'cx>(
         &bounds2.uppertvars,
         id2,
         |_root_id, bounds, trace_u, use_op| {
-            let use_op = pick_use_op(cx, new_use_op, use_op);
+            let use_op = pick_use_op(env, new_use_op, use_op);
             add_lowertvar_to_bounds(
                 &bounds,
                 id1,
@@ -444,6 +456,7 @@ pub(super) fn edges_from_tvar<'cx>(
 ///       id.bounds.uppertvars += bounds2.uppertvars
 pub(super) fn add_upper_edges<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
@@ -451,13 +464,13 @@ pub(super) fn add_upper_edges<'cx>(
     (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
 ) {
     let upper = bounds2.borrow().upper.clone();
-    edges_to_ts(cx, trace, &new_use_op, opt, (id1, bounds1), &upper);
-    edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), id2);
+    edges_to_ts(cx, env, trace, &new_use_op, opt, (id1, bounds1), &upper);
+    edges_to_tvar(cx, env, trace, &new_use_op, opt, (id1, bounds1), id2);
     let uppertvars = bounds2.borrow().uppertvars.clone();
     iter_with_filter(cx, &uppertvars, id2, |tvar, _bounds, trace_u, use_op| {
-        let new_use_op = pick_use_op(cx, &new_use_op, use_op);
+        let new_use_op = pick_use_op(env, &new_use_op, use_op);
         let trace = DepthTrace::concat_trace(&[trace, *trace_u]);
-        edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), tvar);
+        edges_to_tvar(cx, env, trace, &new_use_op, opt, (id1, bounds1), tvar);
     });
 }
 
@@ -467,6 +480,7 @@ pub(super) fn add_upper_edges<'cx>(
 ///       id.bounds.lowertvars += bounds1.lowertvars
 pub(super) fn add_lower_edges<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
@@ -474,13 +488,13 @@ pub(super) fn add_lower_edges<'cx>(
     (id2, bounds2): (i32, &constraint::BoundsRef<Context<'cx>>),
 ) {
     let lower = bounds1.borrow().lower.clone();
-    edges_from_ts(cx, trace, &new_use_op, opt, &lower, (id2, bounds2));
-    edges_from_tvar(cx, trace, &new_use_op, opt, id1, (id2, bounds2));
+    edges_from_ts(cx, env, trace, &new_use_op, opt, &lower, (id2, bounds2));
+    edges_from_tvar(cx, env, trace, &new_use_op, opt, id1, (id2, bounds2));
     let lowertvars = bounds1.borrow().lowertvars.clone();
     iter_with_filter(cx, &lowertvars, id1, |tvar, _bounds, trace_l, use_op| {
-        let use_op = pick_use_op(cx, use_op, &new_use_op);
+        let use_op = pick_use_op(env, use_op, &new_use_op);
         let trace = DepthTrace::concat_trace(&[*trace_l, trace]);
-        edges_from_tvar(cx, trace, &use_op, opt, tvar, (id2, bounds2));
+        edges_from_tvar(cx, env, trace, &use_op, opt, tvar, (id2, bounds2));
     });
 }
 
@@ -499,6 +513,7 @@ pub(super) fn unify_flip(use_op: UseOp) -> UseOp {
 /// concrete types.
 pub(super) fn goto<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     (id1, root1): (
@@ -525,7 +540,7 @@ pub(super) fn goto<'cx>(
                     let bounds2 = bounds2.borrow();
                     (bounds1.lower.clone(), bounds2.upper.clone())
                 };
-                flows_across(cx, trace, use_op.dupe(), &lower, &upper)?;
+                flows_across(cx, env, trace, use_op.dupe(), &lower, &upper)?;
             }
             let mut flipped_use_op = None;
             if cond2 {
@@ -535,12 +550,13 @@ pub(super) fn goto<'cx>(
                     let bounds2 = bounds2.borrow();
                     (bounds2.lower.clone(), bounds1.upper.clone())
                 };
-                flows_across(cx, trace, flipped.dupe(), &lower, &upper)?;
+                flows_across(cx, env, trace, flipped.dupe(), &lower, &upper)?;
                 flipped_use_op = Some(flipped);
             }
             if cond1 {
                 add_upper_edges(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     true,
@@ -549,6 +565,7 @@ pub(super) fn goto<'cx>(
                 );
                 add_lower_edges(
                     cx,
+                    env,
                     trace,
                     use_op.dupe(),
                     false,
@@ -559,6 +576,7 @@ pub(super) fn goto<'cx>(
             if let Some(flipped_use_op) = flipped_use_op {
                 add_upper_edges(
                     cx,
+                    env,
                     trace,
                     flipped_use_op.dupe(),
                     false,
@@ -567,6 +585,7 @@ pub(super) fn goto<'cx>(
                 );
                 add_lower_edges(
                     cx,
+                    env,
                     trace,
                     flipped_use_op,
                     true,
@@ -579,9 +598,10 @@ pub(super) fn goto<'cx>(
         }
         (constraint::Constraints::Unresolved(bounds1), constraint::Constraints::Resolved(t2)) => {
             let t2_use = UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()));
-            edges_and_flows_to_t(cx, trace, true, (id1, &bounds1), &t2_use)?;
+            edges_and_flows_to_t(cx, env, trace, true, (id1, &bounds1), &t2_use)?;
             edges_and_flows_from_t(
                 cx,
+                env,
                 trace,
                 unify_flip(use_op.dupe()),
                 true,
@@ -597,9 +617,10 @@ pub(super) fn goto<'cx>(
         ) => {
             let t2 = cx.force_fully_resolved_tvar(&s2);
             let t2_use = UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()));
-            edges_and_flows_to_t(cx, trace, true, (id1, &bounds1), &t2_use)?;
+            edges_and_flows_to_t(cx, env, trace, true, (id1, &bounds1), &t2_use)?;
             edges_and_flows_from_t(
                 cx,
+                env,
                 trace,
                 unify_flip(use_op.dupe()),
                 true,
@@ -611,8 +632,8 @@ pub(super) fn goto<'cx>(
         }
         (constraint::Constraints::Resolved(t1), constraint::Constraints::Unresolved(bounds2)) => {
             let t1_use = UseT::new(UseTInner::UseT(unify_flip(use_op.dupe()), t1.dupe()));
-            edges_and_flows_to_t(cx, trace, true, (id2, &bounds2), &t1_use)?;
-            edges_and_flows_from_t(cx, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
+            edges_and_flows_to_t(cx, env, trace, true, (id2, &bounds2), &t1_use)?;
+            edges_and_flows_from_t(cx, env, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
             cx.set_root_constraints(id2, constraint::Constraints::Resolved(t1));
             cx.add_tvar(id1, Node::create_goto(id2));
             Ok(())
@@ -623,8 +644,8 @@ pub(super) fn goto<'cx>(
         ) => {
             let t1 = cx.force_fully_resolved_tvar(&s1);
             let t1_use = UseT::new(UseTInner::UseT(unify_flip(use_op.dupe()), t1.dupe()));
-            edges_and_flows_to_t(cx, trace, true, (id2, &bounds2), &t1_use)?;
-            edges_and_flows_from_t(cx, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
+            edges_and_flows_to_t(cx, env, trace, true, (id2, &bounds2), &t1_use)?;
+            edges_and_flows_from_t(cx, env, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
             cx.set_root_constraints(id2, constraint::Constraints::FullyResolved(s1));
             cx.add_tvar(id1, Node::create_goto(id2));
             Ok(())
@@ -632,13 +653,31 @@ pub(super) fn goto<'cx>(
         (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
             // replace node first, in case rec_unify recurses back to these tvars
             cx.add_tvar(id1, Node::create_goto(id2));
-            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+            rec_unify(
+                cx,
+                env,
+                trace,
+                use_op,
+                UnifyCause::Uncategorized,
+                None,
+                &t1,
+                &t2,
+            )
         }
         (constraint::Constraints::Resolved(t1), constraint::Constraints::FullyResolved(s2)) => {
             let t2 = cx.force_fully_resolved_tvar(&s2);
             // replace node first, in case rec_unify recurses back to these tvars
             cx.add_tvar(id1, Node::create_goto(id2));
-            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+            rec_unify(
+                cx,
+                env,
+                trace,
+                use_op,
+                UnifyCause::Uncategorized,
+                None,
+                &t1,
+                &t2,
+            )
         }
         (
             constraint::Constraints::FullyResolved(s1),
@@ -648,7 +687,16 @@ pub(super) fn goto<'cx>(
             let t2 = cx.force_fully_resolved_tvar(&s2);
             // replace node first, in case rec_unify recurses back to these tvars
             cx.add_tvar(id1, Node::create_goto(id2));
-            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+            rec_unify(
+                cx,
+                env,
+                trace,
+                use_op,
+                UnifyCause::Uncategorized,
+                None,
+                &t1,
+                &t2,
+            )
         }
         (constraint::Constraints::FullyResolved(s1), constraint::Constraints::Resolved(t2)) => {
             let t1 = cx.force_fully_resolved_tvar(&s1);
@@ -656,7 +704,16 @@ pub(super) fn goto<'cx>(
             cx.set_root_constraints(id2, constraint::Constraints::FullyResolved(s1));
             // replace node first, in case rec_unify recurses back to these tvars
             cx.add_tvar(id1, Node::create_goto(id2));
-            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+            rec_unify(
+                cx,
+                env,
+                trace,
+                use_op,
+                UnifyCause::Uncategorized,
+                None,
+                &t1,
+                &t2,
+            )
         }
     }
 }
@@ -665,6 +722,7 @@ pub(super) fn goto<'cx>(
 /// point to the other. Ranks are used to keep chains short.
 pub(super) fn merge_ids<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     id1: i32,
@@ -676,12 +734,19 @@ pub(super) fn merge_ids<'cx>(
         return Ok(());
     }
     if root1.rank < root2.rank {
-        goto(cx, trace, use_op, (id1, root1), (id2, root2))
+        goto(cx, env, trace, use_op, (id1, root1), (id2, root2))
     } else if root2.rank < root1.rank {
-        goto(cx, trace, unify_flip(use_op), (id2, root2), (id1, root1))
+        goto(
+            cx,
+            env,
+            trace,
+            unify_flip(use_op),
+            (id2, root2),
+            (id1, root1),
+        )
     } else {
         cx.set_root_rank(id2, root1.rank + 1);
-        goto(cx, trace, use_op, (id1, root1), (id2, root2))
+        goto(cx, env, trace, use_op, (id1, root1), (id2, root2))
     }
 }
 
@@ -689,6 +754,7 @@ pub(super) fn merge_ids<'cx>(
 /// and resolving to that type.
 pub(super) fn resolve_id<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
     id: i32,
@@ -699,16 +765,24 @@ pub(super) fn resolve_id<'cx>(
         constraint::Constraints::Unresolved(bounds) => {
             cx.set_root_constraints(id, constraint::Constraints::Resolved(t.dupe()));
             let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe()));
-            edges_and_flows_to_t(cx, trace, true, (id, &bounds), &use_t)?;
-            edges_and_flows_from_t(cx, trace, use_op, true, t, (id, &bounds))
+            edges_and_flows_to_t(cx, env, trace, true, (id, &bounds), &use_t)?;
+            edges_and_flows_from_t(cx, env, trace, use_op, true, t, (id, &bounds))
         }
-        constraint::Constraints::Resolved(t_) => {
-            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t_, t)
-        }
+        constraint::Constraints::Resolved(t_) => rec_unify(
+            cx,
+            env,
+            trace,
+            use_op,
+            UnifyCause::Uncategorized,
+            None,
+            &t_,
+            t,
+        ),
         constraint::Constraints::FullyResolved(s) => {
             let forced = cx.force_fully_resolved_tvar(&s);
             rec_unify(
                 cx,
+                env,
                 trace,
                 use_op,
                 UnifyCause::Uncategorized,

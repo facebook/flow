@@ -10,6 +10,7 @@ use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_typing_context::Context;
+use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::Type;
@@ -186,9 +187,13 @@ fn eq_swap_reason(t1: &Type, t2: &Type) -> bool {
     }
 }
 
+pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
+    eq_with_env(cx, &FlowJsEnv::entry(), t1, t2)
+}
+
 /// This predicate attempts to flatten out OpenTs and AnnotTs before performing a
 /// structural reasonless equality check of two types.
-pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
+pub fn eq_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t1: &Type, t2: &Type) -> bool {
     if t1.ptr_eq(t2) {
         return true;
     }
@@ -208,21 +213,25 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
         (TypeInner::OpenT(tvar), _) => {
             let id1 = tvar.id() as i32;
             match cx.find_graph(id1) {
-                Constraints::Resolved(resolved_t1) => eq(cx, &resolved_t1, t2),
-                Constraints::FullyResolved(s1) => eq(cx, &cx.force_fully_resolved_tvar(&s1), t2),
+                Constraints::Resolved(resolved_t1) => eq_with_env(cx, env, &resolved_t1, t2),
+                Constraints::FullyResolved(s1) => {
+                    eq_with_env(cx, env, &cx.force_fully_resolved_tvar(&s1), t2)
+                }
                 Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
             }
         }
         (_, TypeInner::OpenT(tvar)) => {
             let id2 = tvar.id() as i32;
             match cx.find_graph(id2) {
-                Constraints::Resolved(resolved_t2) => eq(cx, t1, &resolved_t2),
-                Constraints::FullyResolved(s2) => eq(cx, t1, &cx.force_fully_resolved_tvar(&s2)),
+                Constraints::Resolved(resolved_t2) => eq_with_env(cx, env, t1, &resolved_t2),
+                Constraints::FullyResolved(s2) => {
+                    eq_with_env(cx, env, t1, &cx.force_fully_resolved_tvar(&s2))
+                }
                 Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
             }
         }
-        (TypeInner::AnnotT(_, inner_t1, _), _) => eq(cx, inner_t1, t2),
-        (_, TypeInner::AnnotT(_, inner_t2, _)) => eq(cx, t1, inner_t2),
+        (TypeInner::AnnotT(_, inner_t1, _), _) => eq_with_env(cx, env, inner_t1, t2),
+        (_, TypeInner::AnnotT(_, inner_t2, _)) => eq_with_env(cx, env, t1, inner_t2),
         (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
             let members1: Vec<_> = rep1.members_iter().collect();
             let members2: Vec<_> = rep2.members_iter().collect();
@@ -232,19 +241,19 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
             members1
                 .iter()
                 .zip(members2.iter())
-                .all(|(m1, m2)| eq(cx, m1, m2))
+                .all(|(m1, m2)| eq_with_env(cx, env, m1, m2))
         }
         (TypeInner::EvalT { id, .. }, _) => {
             let evaluated = cx.evaluated();
             match evaluated.get(id) {
-                Some(t) => eq(cx, t, t2),
+                Some(t) => eq_with_env(cx, env, t, t2),
                 None => eq_swap_reason(t1, t2),
             }
         }
         (_, TypeInner::EvalT { id, .. }) => {
             let evaluated = cx.evaluated();
             match evaluated.get(id) {
-                Some(t) => eq(cx, t1, t),
+                Some(t) => eq_with_env(cx, env, t1, t),
                 None => eq_swap_reason(t1, t2),
             }
         }
@@ -261,17 +270,21 @@ pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
                 from_value: fv2,
                 ..
             }),
-        ) => eq(cx, inner_t1, inner_t2) && fv1 == fv2 && eq_targs(cx, targs1, targs2),
+        ) => {
+            eq_with_env(cx, env, inner_t1, inner_t2)
+                && fv1 == fv2
+                && eq_targs(cx, env, targs1, targs2)
+        }
         _ => eq_swap_reason(t1, t2),
     }
 }
 
-pub fn eq_targs<'cx>(cx: &Context<'cx>, targs1: &[Type], targs2: &[Type]) -> bool {
+pub fn eq_targs<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, targs1: &[Type], targs2: &[Type]) -> bool {
     if targs1.len() != targs2.len() {
         return false;
     }
     targs1
         .iter()
         .zip(targs2.iter())
-        .all(|(t1, t2)| eq(cx, t1, t2))
+        .all(|(t1, t2)| eq_with_env(cx, env, t1, t2))
 }
