@@ -1,5 +1,11 @@
 # Changelog
 
+### 3.1.5 (2026-08-25)
+
+#### Security
+
+* Fixed a Workspace Trust bypass: the extension declared limited support for untrusted workspaces, so it activated in Restricted Mode and started a Flow language server before the user had trusted the folder. That server reads the workspace's own `.flowconfig`, which an untrusted workspace controls — including options such as `saved_state.fetcher=local`, which makes Flow read and deserialize a `.flow.saved_state` file from that same workspace. Opening a malicious repository and declining to trust it was therefore enough to run Flow against attacker-supplied configuration and saved-state data. Fixed by declaring that untrusted workspaces are not supported. Flow no longer runs in Restricted Mode; to use it, open the folder and choose to trust the authors.
+
 ### 3.1.4 (2026-06-05)
 
 #### Security

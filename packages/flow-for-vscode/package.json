@@ -1,6 +1,6 @@
 {
   "name": "flow-for-vscode",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "publisher": "flowtype",
   "description": "Flow support for VS Code",
   "displayName": "Flow Language Support",
@@ -220,11 +220,8 @@
   },
   "capabilities": {
     "untrustedWorkspaces": {
-      "supported": "limited",
-      "description": "The Path To Flow setting will not be used in Restricted Mode.",
-      "restrictedConfigurations": [
-        "flow.pathToFlow"
-      ]
+      "supported": false,
+      "description": "Flow starts a language server using the workspace's own .flowconfig, and by default runs a flow binary from the workspace's node_modules."
     }
   },
   "prettier": {
