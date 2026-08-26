@@ -2067,6 +2067,48 @@ fn binary_predicate<'cx>(
     }
 }
 
+// Failing the check means failing it against every instance the signatures can
+// construct, so a value survives only if it is unrelated to all of them.
+// Reporting each signature into the shared collector would union the results
+// instead, handing back from one signature what the previous one pruned, so the
+// survivors of each signature become the input of the next.
+fn refine_away_construct_returns<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    result_collector: &PredicateResultCollector,
+    left: &Type,
+    classes: &[InstanceofRhs],
+) -> Result<(), FlowJsException> {
+    let mut survivors = vec![left.dupe()];
+    let mut changed = false;
+    for class_t in classes {
+        if survivors.is_empty() {
+            break;
+        }
+        let mut next = Vec::new();
+        for survivor in &survivors {
+            let sub = PredicateResultCollector {
+                collector: TypeCollector::create(),
+                changed: Rc::new(RefCell::new(false)),
+                from_union: Cell::new(result_collector.from_union.get()),
+                disjoint_fallback: result_collector.disjoint_fallback.dupe(),
+            };
+            instanceof_test(cx, env, trace, &sub, false, survivor, class_t)?;
+            changed = changed || *sub.changed.borrow();
+            next.extend(sub.collector.collect_to_vec());
+        }
+        survivors = next;
+    }
+    if changed {
+        report_changes_to_input(result_collector);
+    }
+    for survivor in survivors {
+        result_collector.collector.add(survivor);
+    }
+    Ok(())
+}
+
 fn instanceof_test<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -2076,6 +2118,48 @@ fn instanceof_test<'cx>(
     left: &Type,
     right: &InstanceofRhs,
 ) -> Result<(), FlowJsException> {
+    if let InstanceofRhs::TypeOperand(right_t) = right
+        && !matches!(
+            right_t.deref(),
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ClassT(_))
+        )
+    {
+        let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+            FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t)
+        };
+        let concretize_sig = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+            FlowJs::possible_concrete_types_for_predicate(
+                PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest,
+                cx,
+                env,
+                reason_of_t(t),
+                t,
+            )
+        };
+        let construct_returns =
+            flow_js_utils::collect_construct_return_ts(&concretize, &concretize_sig, cx, right_t)?;
+        if !construct_returns.is_empty() {
+            let mut classes = Vec::new();
+            for return_t in construct_returns {
+                for instance_t in concretize(&return_t)? {
+                    classes.push(InstanceofRhs::TypeOperand(Type::new(TypeInner::DefT(
+                        reason_of_t(right_t).dupe(),
+                        DefT::new(DefTInner::ClassT(instance_t)),
+                    ))));
+                }
+            }
+            if sense {
+                // A value passes the check when it matches any one signature, so the
+                // union the collector already builds is the right combination.
+                for class_t in &classes {
+                    instanceof_test(cx, env, trace, result_collector, true, left, class_t)?;
+                }
+            } else {
+                refine_away_construct_returns(cx, env, trace, result_collector, left, &classes)?;
+            }
+            return Ok(());
+        }
+    }
     match (sense, left.deref(), right) {
         // instanceof on an ArrT is a special case since we treat ArrT as its own
         // type, rather than an InstanceT of the Array builtin class. So, we resolve

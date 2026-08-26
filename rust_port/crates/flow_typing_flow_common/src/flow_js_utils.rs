@@ -328,6 +328,27 @@ fn construct_return_ts(construct_ts: &[Type]) -> Vec<Type> {
         .collect()
 }
 
+/// Returns the instance types produced by all construct signatures reachable from `t`.
+///
+/// `concretize_sig` runs over each signature before its return is read. A
+/// polymorphic signature is stored as a [PolyT] wrapping the [FunT], which
+/// [construct_return_ts] does not match; concretizing it the way an `instanceof`
+/// RHS is concretized instantiates the parameters first, so `new <T>(v: T):
+/// Box<T>` contributes `Box<any>` instead of being dropped.
+pub fn collect_construct_return_ts<'cx>(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    concretize_sig: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Result<Vec<Type>, FlowJsException> {
+    let construct_ts = collect_construct_ts(concretize, cx, t)?
+        .iter()
+        .map(concretize_sig)
+        .collect::<Result<Vec<_>, _>>()?
+        .concat();
+    Ok(construct_return_ts(&construct_ts))
+}
+
 // A construct signature as a `constructor` method: same parameters, returning
 // void. The instance `new` produces comes from the [ObjTestT] the constructor
 // call is wrapped in, which hands back the class being constructed only when

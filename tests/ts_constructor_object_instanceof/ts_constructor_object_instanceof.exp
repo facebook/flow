@@ -1,0 +1,140 @@
+Error ------------------------------------------------------------------------------------------------- consumer.js:17:3
+
+Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:17:3
+   17|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
+         ^^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:6:13
+    6|   htmlOnly: number;
+                   ^^^^^^ [1]
+   consumer.js:17:23
+   17|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:23:3
+
+Cannot cast `unknownValue.tagName` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   consumer.js:23:3
+   23|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:2:12
+    2|   tagName: string;
+                  ^^^^^^ [1]
+   consumer.js:23:27
+   23|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:28:3
+
+Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:28:3
+   28|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
+         ^^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:6:13
+    6|   htmlOnly: number;
+                   ^^^^^^ [1]
+   consumer.js:28:23
+   28|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:33:3
+
+Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:33:3
+   33|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
+         ^^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:6:13
+    6|   htmlOnly: number;
+                   ^^^^^^ [1]
+   consumer.js:33:23
+   33|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:38:11
+
+Cannot get `element.htmlOnly` because property `htmlOnly` is missing in `ElementLike` [1]. [prop-missing]
+
+   consumer.js:38:11
+   38|   element.htmlOnly; // ERROR: the negative branch retains the original supertype
+                 ^^^^^^^^
+
+References:
+   typescript.ts:14:29
+   14| export declare var element: ElementLike;
+                                   ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:43:14
+
+Cannot get `unionValue.other` because property `other` is missing in `HTMLElementLike` [1]. [prop-missing]
+
+   consumer.js:43:14
+   43|   unionValue.other; // ERROR: unrelated union members are pruned
+                    ^^^^^
+
+References:
+   typescript.ts:41:32
+   41| export declare var unionValue: HTMLElementLike | OtherLike;
+                                      ^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:56:21
+
+Cannot get `overloadedOrOther.tagName` because property `tagName` is missing in `OtherLike` [1]. [prop-missing]
+
+   consumer.js:56:21
+   56|   overloadedOrOther.tagName; // ERROR: only the unrelated member survives
+                           ^^^^^^^
+
+References:
+   typescript.ts:48:57
+   48| export declare var overloadedOrOther: HTMLElementLike | OtherLike;
+                                                               ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:66:11
+
+Cannot get `element.htmlOnly` because property `htmlOnly` is missing in `ElementLike` [1]. [prop-missing]
+
+   consumer.js:66:11
+   66|   element.htmlOnly; // ERROR: a supertype of both return types is not pruned
+                 ^^^^^^^^
+
+References:
+   typescript.ts:14:29
+   14| export declare var element: ElementLike;
+                                   ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:73:16
+
+Cannot get `unknownValue.tagName` because property `tagName` is missing in `BoxLike` [1]. [prop-missing]
+
+   consumer.js:73:16
+   73|   unknownValue.tagName; // ERROR: the refinement is `BoxLike<any>`, not `empty`
+                      ^^^^^^^
+
+References:
+   consumer.js:71:29
+   71| if (unknownValue instanceof BoxLikeConstructor) {
+                                   ^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 9 errors
