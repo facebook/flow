@@ -1,0 +1,4 @@
+[options]
+all=true
+module.system=haste
+saved_state.direct_serialization=true

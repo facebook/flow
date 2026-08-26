@@ -1,0 +1,21 @@
+start after the saved state is rejected (expected: server starts):
+exit code: 0
+
+status (expected: no errors):
+Error ------------------------------------------------------------------------------------------------ stale/dupe.js:1:1
+
+Duplicate module provider for `dupe`. Change either the name of this file or the name of the current module
+provider [1]. [duplicate-module]
+
+   stale/dupe.js
+   ^^^^^^^^^^^^^
+
+References:
+   live/dupe.js:1:1
+   1| /**
+       [1]
+
+
+
+Found 1 error
+exit code: 2
