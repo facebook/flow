@@ -4,8 +4,8 @@ slug: /config/untyped
 description: "Configure Flow to skip typechecking for files matching specified patterns while still allowing them to be imported as the any type."
 ---
 
-The `[untyped]` section in a `.flowconfig` file tells Flow to not typecheck files
-matching the specified regular expressions and instead throw away types and treat modules as [`any`](../types/any.md).
+The `[untyped]` section in a `.flowconfig` file tells Flow to not typecheck the
+matching files and instead throw away types and treat modules as [`any`](../types/any.md).
 
 This is different from the [`[ignore]`](./ignore.md) config section that causes matching files to be ignored by the module resolver,
 which inherently makes them un-typechecked, and also unresolvable by `import` or `require`.
@@ -17,6 +17,57 @@ This also does not typecheck the file contents, but `[declarations]` does extrac
 `[untyped]` instead causes a file to be ignored by the typechecker as if it had `@noflow` in it,
 resolve modules as `any` type, but allow them to NOT be ignored by the module resolver.
 Any matching file is parsed but treated as if it had `@noflow` in it, so its contents are not typechecked and its exports are typed as `any`, but it can still be `require()`'d.
+
+## Flow 0.330 and later
+
+Files are matched with project-relative globs.
+
+Things to keep in mind:
+
+1. `*` matches within one directory and `**` matches across directory
+   boundaries.
+2. Patterns are relative to the project root. Absolute paths and the
+   `<PROJECT_ROOT>` placeholder are not supported.
+
+An example `[untyped]` section might look like:
+
+```
+[untyped]
+**/third_party/**
+**/src/{foo,bar}/**
+**/*.untyped.js
+```
+
+This `[untyped]` section will treat the following files as untyped:
+
+1. Any file or directory under a directory named `third_party`
+2. Any file or directory under a directory named `src/foo` or `src/bar`
+3. Any file that ends with the extension `.untyped.js`
+
+To match only a directory at the project root, start the pattern with its name:
+
+```
+[untyped]
+third_party/**
+```
+
+This treats as untyped the files under the root `third_party/` directory, but
+not files under other directories named `third_party/`, such as
+`src/third_party/`.
+
+### Exclusions {#toc-untyped-exclusions-globs}
+Sometimes you may want to treat as untyped all files inside a directory with the exception of a few. An optional prefix "!" which negates the pattern may help. With this, any matching file excluded by a previous pattern will become typechecked again.
+
+```
+[untyped]
+third_party/**
+!third_party/typed-package-A/**
+!third_party/typed-package-B/**
+```
+
+## Flow 0.329 and earlier
+
+The following regular-expression syntax works in Flow 0.329 and earlier.
 
 Things to keep in mind:
 

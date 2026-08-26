@@ -2911,7 +2911,7 @@ pub struct FlowConfig {
     // This should be reverted to string list after we properly support multiplatform flow roots.
     pub ignores: Vec<(FlowconfigGlobPattern, Option<String>)>,
     // files that should be treated as untyped
-    pub untyped: Vec<String>,
+    pub untyped: Vec<FlowconfigGlobPattern>,
     // files that should be treated as declarations
     pub declarations: Vec<String>,
     // non-root include paths
@@ -3075,11 +3075,12 @@ fn parse_ignores(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(),
     Ok(())
 }
 
-fn parse_untyped(config: &mut FlowConfig, lines: &[(u32, String)]) {
-    config.untyped = trim_lines(lines)
+fn parse_untyped(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
+    config.untyped = trim_numbered_lines(lines)
         .into_iter()
-        .map(|s| opts::ocaml_str_to_rust_regex(&s))
-        .collect();
+        .map(|(line, untyped)| parse_flowconfig_glob(line, untyped, true))
+        .collect::<Result<Vec<_>, Error>>()?;
+    Ok(())
 }
 
 fn parse_declarations(config: &mut FlowConfig, lines: &[(u32, String)]) {
@@ -3310,7 +3311,7 @@ fn parse_section(
         }
         ("options", lines) => parse_options(config, lines),
         ("untyped", lines) => {
-            parse_untyped(config, lines);
+            parse_untyped(config, lines)?;
             Ok(vec![])
         }
         ("version", lines) => {
@@ -3489,7 +3490,7 @@ pub fn init(
     parse_untyped(
         &mut config,
         &untyped.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
-    );
+    )?;
     parse_declarations(
         &mut config,
         &declarations.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
@@ -3619,7 +3620,10 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
     write_ignores(out, &config.ignores)?;
     writeln!(out)?;
     section_if_nonempty(out, "untyped", config.untyped.is_empty(), |out| {
-        write_lines(out, &config.untyped)
+        for untyped in &config.untyped {
+            writeln!(out, "{}", untyped.source())?;
+        }
+        Ok(())
     })?;
     section_if_nonempty(out, "declarations", config.declarations.is_empty(), |out| {
         write_lines(out, &config.declarations)

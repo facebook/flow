@@ -101,10 +101,16 @@ pub struct IgnorePattern {
 }
 
 #[derive(Debug, Clone)]
+pub struct UntypedPattern {
+    pub negated: bool,
+    pub matcher: RootedGlob,
+}
+
+#[derive(Debug, Clone)]
 pub struct FileOptions {
     pub default_lib_dir: Option<LibDir>,
     pub ignores: Vec<IgnorePattern>,
-    pub untyped: Vec<(String, Regex)>,
+    pub untyped: Vec<UntypedPattern>,
     pub declarations: Vec<(String, Regex)>,
     pub implicitly_include_root: bool,
     pub includes: PathMatcher,
@@ -657,11 +663,11 @@ fn is_matching_regex_path(path: &str, pattern: &str, regex: &Regex, current: boo
     }
 }
 
-fn is_matching_ignore_path(path: &str, pattern: &IgnorePattern, current: bool) -> bool {
-    if pattern.negated {
-        current && !pattern.matcher.is_match(path)
+fn is_matching_glob_path(path: &str, negated: bool, matcher: &RootedGlob, current: bool) -> bool {
+    if negated {
+        current && !matcher.is_match(path)
     } else {
-        current || pattern.matcher.is_match(path)
+        current || matcher.is_match(path)
     }
 }
 
@@ -671,11 +677,18 @@ fn is_matching(path: &str, pattern_list: &[(String, Regex)]) -> bool {
     })
 }
 
+fn is_matching_untyped(path: &str, pattern_list: &[UntypedPattern]) -> bool {
+    pattern_list.iter().fold(false, |current, pattern| {
+        is_matching_glob_path(path, pattern.negated, &pattern.matcher, current)
+    })
+}
+
 fn is_matching_ignore(path: &str, pattern_list: &[IgnorePattern]) -> (bool, Option<String>) {
     pattern_list.iter().fold(
         (false, None),
         |(matched_already, current_backup), pattern| {
-            let matches = is_matching_ignore_path(path, pattern, matched_already);
+            let matches =
+                is_matching_glob_path(path, pattern.negated, &pattern.matcher, matched_already);
             let new_backup = if matches && current_backup.is_none() {
                 pattern.backup.clone()
             } else {
@@ -697,9 +710,9 @@ pub fn is_ignored(options: &FileOptions, path: &str) -> (bool, Option<String>) {
 /// true if a file path matches an `[untyped]` entry in config
 pub fn is_untyped(options: &FileOptions, path: &str) -> bool {
     // On Windows, the path may use \ instead of /, but let's standardize the
-    // ignore regex to use /
+    // ignore glob to use /
     let path = normalize_filename_dir_sep(path);
-    is_matching(&path, &options.untyped)
+    is_matching_untyped(&path, &options.untyped)
 }
 
 /// true if a file path matches a `[declarations]` entry in config

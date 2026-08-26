@@ -1,5 +1,5 @@
 [untyped]
-.*/untyped/.*
+**/untyped/**
 
 [options]
 all=false

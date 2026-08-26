@@ -14,11 +14,11 @@
 !my_ignores/root_typecheck/**
 
 [untyped]
-.*/my_untyped/.*
-!.*/my_untyped/typecheck/.*
-!.*/my_untyped/actually_typecheck\.js
-!<PROJECT_ROOT>/my_untyped/typecheck_if_in_root\.js
-!<PROJECT_ROOT>/my_untyped/root_typecheck/.*
+**/my_untyped/**
+!**/my_untyped/typecheck/**
+!**/my_untyped/actually_typecheck.js
+!my_untyped/typecheck_if_in_root.js
+!my_untyped/root_typecheck/**
 
 [options]
 all=false

@@ -953,6 +953,18 @@ fn compile_ignore_pattern(
     }
 }
 
+fn compile_untyped_pattern(
+    root: &Path,
+    pattern: FlowconfigGlobPattern,
+) -> flow_common::files::UntypedPattern {
+    let matcher = RootedGlob::new(root, pattern.pattern())
+        .expect("flowconfig glob should have been validated while parsing");
+    flow_common::files::UntypedPattern {
+        negated: pattern.is_negated(),
+        matcher,
+    }
+}
+
 fn add_include_pattern(matcher: &mut PathMatcher, root: &Path, include: &FlowconfigGlobPattern) {
     matcher
         .add_glob(root, include.pattern())
@@ -1010,19 +1022,17 @@ pub fn file_options(
         .map(|(pattern, backup)| compile_ignore_pattern(root, pattern, backup))
         .collect();
 
-    let all_untyped: Vec<String> = {
-        let mut merged = untyped;
+    let all_untyped: Vec<FlowconfigGlobPattern> = {
+        let mut merged = untyped
+            .into_iter()
+            .map(|pattern| parse_flowconfig_glob_or_exit(pattern, true))
+            .collect::<Vec<_>>();
         merged.extend(flowconfig.untyped.iter().cloned());
         merged
     };
     let untyped = all_untyped
         .into_iter()
-        .map(|pattern| {
-            let expanded =
-                flow_common::files::expand_project_root_token(root, remove_exclusion(&pattern));
-            let regex = Regex::new(&expanded).unwrap();
-            (pattern, regex)
-        })
+        .map(|pattern| compile_untyped_pattern(root, pattern))
         .collect();
 
     let all_declarations: Vec<String> = {
