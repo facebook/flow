@@ -9,6 +9,7 @@ use std::io::Read;
 use std::path::Path;
 
 use flow_aloc::ALoc;
+use flow_command_spec::arg_spec;
 use flow_common::options::JsxMode;
 use flow_common::options::ReactRuntime;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -30,28 +31,24 @@ use flow_parser::parse_error::ParseError;
 use flow_server_utils::file_input::FileInput;
 use flow_typing_errors::error_message::ErrorMessage;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "env-builder-debug",
         "Print the env-builder result as a dependency graph for debugging purposes",
-        command_spec::Visibility::Internal,
+        flow_command_spec::Visibility::Internal,
         format!(
             "Usage: {exe_name} env-builder-debug [OPTION]... [FILE]\n\ne.g. {exe_name} env-builder-debug foo.js\nor   {exe_name} env-builder-debug < foo.js\n"
         ),
     );
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_path_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_path_flag(spec);
     spec.anon("file", &arg_spec::optional(arg_spec::string()))
 }
 
 fn get_file(path: Option<String>, filename: Option<String>) -> FileInput {
     match filename {
-        Some(filename) => FileInput::FileName(command_utils::expand_path(&filename)),
+        Some(filename) => FileInput::FileName(flow_command_utils::expand_path(&filename)),
         None => {
             let mut content = String::new();
             std::io::stdin()
@@ -214,12 +211,13 @@ pub fn main(path: Option<String>, filename: Option<String>) {
 }
 
 fn command_main(args: &arg_spec::Values) {
-    let path = command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
+    let path =
+        flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
     let filename =
-        command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
     main(path, filename);
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), command_main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), command_main)
 }

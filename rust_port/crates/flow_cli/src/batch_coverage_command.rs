@@ -7,30 +7,27 @@
 
 use std::path::Path;
 
+use flow_command_spec::arg_spec;
 use flow_server_env::server_prot;
 use flow_services_coverage::FileCoverage;
 use serde_json::json;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "batch-coverage",
         "Shows aggregate coverage information for a group of files or directories ",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} batch-coverage [OPTION]... [FILE...] \n\ne.g. {exe_name} batch-coverage foo.js bar.js baz.js dirname1 dirname2 --show-all \nor   {exe_name} batch-coverage --input-file filenames.txt\n"
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_flags_no_lazy(spec);
-    let spec = command_utils::add_json_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_flags_no_lazy(spec);
+    let spec = flow_command_utils::add_json_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     spec.flag(
         "--input-file",
         &arg_spec::optional(arg_spec::string()),
@@ -155,46 +152,52 @@ fn output_results(
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
-    let connect_flags = command_utils::get_connect_flags(args);
-    let json_flags = command_utils::get_json_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let wait_for_recheck = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
-    let input_file = command_spec::get(
+    let input_file = flow_command_spec::get(
         args,
         "--input-file",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
-    let show_all = command_spec::get(args, "--show-all", &arg_spec::truthy()).unwrap();
-    let files = command_spec::get(args, "FILE...", &arg_spec::list_of(arg_spec::string()))
+    let show_all = flow_command_spec::get(args, "--show-all", &arg_spec::truthy()).unwrap();
+    let files = flow_command_spec::get(args, "FILE...", &arg_spec::list_of(arg_spec::string()))
         .unwrap()
         .unwrap_or_default();
 
-    let batch = command_utils::get_filenames_from_input(false, input_file.as_deref(), Some(&files))
-        .into_iter()
-        .map(|filename| command_utils::expand_path(&filename))
-        .collect::<Vec<_>>();
+    let batch =
+        flow_command_utils::get_filenames_from_input(false, input_file.as_deref(), Some(&files))
+            .into_iter()
+            .map(|filename| flow_command_utils::expand_path(&filename))
+            .collect::<Vec<_>>();
     let input = batch
         .first()
         .map(|filename| flow_server_utils::file_input::FileInput::FileName(filename.clone()));
-    let root = command_utils::get_the_root(&flowconfig_name, root_arg.as_deref(), input.as_ref());
+    let root =
+        flow_command_utils::get_the_root(&flowconfig_name, root_arg.as_deref(), input.as_ref());
     // pretty implies json
     let json = json_flags.json || json_flags.pretty;
     let request = server_prot::request::Command::BATCH_COVERAGE {
         batch,
         wait_for_recheck,
     };
-    let response =
-        command_utils::connect_and_make_request(&flowconfig_name, &connect_flags, &root, &request);
+    let response = flow_command_utils::connect_and_make_request(
+        &flowconfig_name,
+        &connect_flags,
+        &root,
+        &request,
+    );
     match response {
         server_prot::response::Response::BATCH_COVERAGE(Err(msg)) => {
             eprintln!("{}", msg);
@@ -211,11 +214,11 @@ fn main(args: &arg_spec::Values) {
             );
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

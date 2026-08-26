@@ -11,6 +11,7 @@ use std::fmt;
 use std::io;
 use std::io::Write as _;
 use std::str::FromStr as _;
+use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -151,7 +152,7 @@ pub struct InitializedEnv {
     pub i_errors: crate::lsp_errors::T,
     pub i_config: serde_json::Value,
     pub i_flowconfig: FlowConfig,
-    pub i_file_options: FileOptions,
+    pub i_file_options: Arc<FileOptions>,
 }
 
 impl Clone for InitializedEnv {
@@ -408,16 +409,8 @@ impl fmt::Display for ConnectError {
     }
 }
 
-pub fn server_files_js_default_temp_dir() -> FilePath {
-    flow_server_files::server_files_js::default_temp_dir()
-}
-
 fn connect_temp_dir(connect_params: &ConnectParams) -> String {
-    connect_params.temp_dir.clone().unwrap_or_else(|| {
-        server_files_js_default_temp_dir()
-            .to_string_lossy()
-            .to_string()
-    })
+    flow_command_utils::get_temp_dir(&connect_params.temp_dir)
 }
 
 fn classify_persistent_connect(
@@ -598,144 +591,6 @@ fn kill_stale_server(
     }
 }
 
-pub fn file_options_of_flowconfig(root: &FilePath, flowconfig: &FlowConfig) -> FileOptions {
-    use flow_common::files;
-    use flow_common::path_matcher::PathMatcher;
-    use flow_common::path_matcher::RootedGlob;
-    use regex::Regex;
-    let temp_dir = flow_server_files::server_files_js::default_temp_dir();
-    let temp_dir = files::cached_canonicalize(&temp_dir).unwrap_or(temp_dir);
-    let default_lib_dir = {
-        let libdir = flow_flowlib::libdir(flow_flowlib::BuiltinLib::Prelude, &temp_dir);
-        Some(match libdir {
-            flow_flowlib::LibDir::Prelude(path) => files::LibDir::Prelude(path),
-            flow_flowlib::LibDir::Flowlib(path) => files::LibDir::Flowlib(path),
-            flow_flowlib::LibDir::Tslib(path) => files::LibDir::Tslib(path),
-        })
-    };
-    let ignores = flowconfig
-        .ignores
-        .iter()
-        .map(|(path, backup)| {
-            let matcher = RootedGlob::new(root, path.pattern())
-                .expect("flowconfig glob should have been validated while parsing");
-            files::IgnorePattern {
-                negated: path.is_negated(),
-                backup: backup.clone(),
-                matcher,
-            }
-        })
-        .collect();
-    let untyped: Vec<(String, Regex)> = flowconfig
-        .untyped
-        .iter()
-        .map(|s| {
-            let pattern = s.strip_prefix('!').unwrap_or(s.as_str());
-            let expanded = files::expand_project_root_token(root, pattern);
-            let reg = Regex::new(&expanded).unwrap_or_else(|_| Regex::new("$^").unwrap());
-            (s.clone(), reg)
-        })
-        .collect();
-    let declarations: Vec<(String, Regex)> = flowconfig
-        .declarations
-        .iter()
-        .map(|s| {
-            let pattern = s.strip_prefix('!').unwrap_or(s.as_str());
-            let expanded = files::expand_project_root_token(root, pattern);
-            let reg = Regex::new(&expanded).unwrap_or_else(|_| Regex::new("$^").unwrap());
-            (s.clone(), reg)
-        })
-        .collect();
-    let lib_paths: Vec<(Option<String>, std::path::PathBuf)> = {
-        let flowtyped_path = files::get_flowtyped_path(root);
-        let mut has_explicit_flowtyped_lib = false;
-        let mut config_libs: Vec<(Option<String>, std::path::PathBuf)> = flowconfig
-            .libs
-            .iter()
-            .map(|(sp, lib)| {
-                let abs_lib = files::make_path_absolute(root, lib);
-                if abs_lib == flowtyped_path {
-                    has_explicit_flowtyped_lib = true;
-                }
-                (sp.as_ref().map(|s| s.to_string()), abs_lib)
-            })
-            .collect();
-        if !has_explicit_flowtyped_lib && flowtyped_path.exists() {
-            config_libs.insert(0, (None, flowtyped_path));
-        }
-        config_libs
-    };
-    let implicitly_include_root = flowconfig.options.files_implicitly_include_root;
-    let includes = {
-        let mut path_matcher = PathMatcher::empty();
-        for path in &flowconfig.includes {
-            path_matcher
-                .add_glob(root, path.pattern())
-                .expect("flowconfig glob should have been validated while parsing");
-        }
-        let mut implicitly_included: Vec<std::path::PathBuf> = if implicitly_include_root {
-            vec![root.to_path_buf()]
-        } else {
-            vec![]
-        };
-        for (_, lp) in &lib_paths {
-            implicitly_included.push(lp.clone());
-        }
-        implicitly_included.sort_by_key(|p| p.to_string_lossy().len());
-        for path in &implicitly_included {
-            if !path_matcher.matches(&path.to_string_lossy()) {
-                path_matcher.add_path(path);
-            }
-        }
-        path_matcher
-    };
-    let haste_paths_excludes: Vec<Regex> = flowconfig
-        .options
-        .haste_paths_excludes
-        .iter()
-        .map(|f| {
-            let expanded = files::expand_project_root_token(root, f);
-            Regex::new(&expanded).unwrap_or_else(|_| Regex::new("$^").unwrap())
-        })
-        .collect();
-    let haste_paths_includes: Vec<Regex> = flowconfig
-        .options
-        .haste_paths_includes
-        .iter()
-        .map(|f| {
-            let expanded = files::expand_project_root_token(root, f);
-            Regex::new(&expanded).unwrap_or_else(|_| Regex::new("$^").unwrap())
-        })
-        .collect();
-    let module_declaration_dirnames: Vec<String> = flowconfig
-        .options
-        .module_declaration_dirnames
-        .iter()
-        .map(|dir| files::expand_project_root_token(root, dir))
-        .collect();
-    FileOptions {
-        default_lib_dir,
-        ignores,
-        untyped,
-        declarations,
-        implicitly_include_root,
-        includes,
-        haste_paths_excludes,
-        haste_paths_includes,
-        lib_paths,
-        module_declaration_dirnames,
-        module_file_exts: flowconfig.options.module_file_exts.clone(),
-        module_resource_exts: flowconfig.options.module_resource_exts.clone(),
-        multi_platform: flowconfig.options.multi_platform.unwrap_or(false),
-        multi_platform_extensions: flowconfig.options.multi_platform_extensions.clone(),
-        multi_platform_extension_group_mapping: flowconfig
-            .options
-            .multi_platform_extension_group_mapping
-            .clone(),
-        node_resolver_dirnames: flowconfig.options.node_resolver_dirnames.clone(),
-    }
-}
-
 fn flow_event_logger_persistent_context(
     metadata: &Metadata,
 ) -> flow_event_logger::PersistentContext {
@@ -862,37 +717,6 @@ pub fn log_flusher_run() {
             }
         })
         .expect("failed to spawn LSP log flusher");
-}
-
-pub fn command_utils_check_version(required_version: &Option<String>) -> Result<(), String> {
-    match required_version {
-        None => Ok(()),
-        Some(version_constraint) => {
-            match flow_common_semver::semver::satisfies(
-                Some(true),
-                version_constraint,
-                flow_common::flow_version::version(),
-            ) {
-                Ok(true) => Ok(()),
-                Ok(false) => {
-                    let msg = format!(
-                        "Wrong version of Flow. The config specifies version {} but this is version {}",
-                        version_constraint,
-                        flow_common::flow_version::version()
-                    );
-                    Err(msg)
-                }
-                Err(_) => {
-                    let msg = format!(
-                        "Wrong version of Flow. The config specifies version {} but this is version {}",
-                        version_constraint,
-                        flow_common::flow_version::version()
-                    );
-                    Err(msg)
-                }
-            }
-        }
-    }
 }
 
 use flow_lsp::lsp_fmt;
@@ -3474,13 +3298,8 @@ fn main_handle_unsafe(
             let i_root = flow_common::files::cached_canonicalize(&i_root).unwrap_or(i_root);
             flow_parser::file_key::set_project_root(&i_root.to_string_lossy());
 
-            let lsp_temp_dir: FilePath = i_connect_params
-                .temp_dir
-                .as_ref()
-                .map(|s| FilePath::from(s.as_str()))
-                .unwrap_or_else(server_files_js_default_temp_dir);
-            let lsp_temp_dir =
-                flow_common::files::cached_canonicalize(&lsp_temp_dir).unwrap_or(lsp_temp_dir);
+            let lsp_temp_dir: FilePath =
+                flow_command_utils::normalize_temp_dir(&i_connect_params.temp_dir);
 
             match flow_flowlib::libdir(flow_flowlib::BuiltinLib::Flowlib, &lsp_temp_dir) {
                 flow_flowlib::LibDir::Prelude(path) => {
@@ -3512,7 +3331,10 @@ fn main_handle_unsafe(
                 i_errors: crate::lsp_errors::empty(),
                 i_config: serde_json::Value::Null,
                 i_flowconfig: flowconfig.clone(),
-                i_file_options: file_options_of_flowconfig(&i_root, &flowconfig),
+                i_file_options: flow_command_utils::file_options_of_flowconfig(
+                    &i_root,
+                    &flowconfig,
+                ),
             };
 
             flow_interaction_logger::set_server_config(
@@ -3523,7 +3345,7 @@ fn main_handle_unsafe(
             );
 
             let required_version = flowconfig.version.clone();
-            if let Err(msg) = command_utils_check_version(&required_version) {
+            if let Err(msg) = flow_command_utils::check_version(&required_version) {
                 return Err((
                     error_state,
                     Box::new(FlowLspError::LspException(flow_server_env::lsp::error::T {

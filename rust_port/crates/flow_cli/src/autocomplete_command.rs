@@ -5,16 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_lsp::lsp_fmt;
 use flow_server_env::flow_lsp_conversions;
 use flow_server_env::server_prot;
 use flow_services_autocomplete::autocomplete_sigil;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
-fn lsp_flag(spec: command_spec::Spec) -> command_spec::Spec {
+fn lsp_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--lsp",
         &arg_spec::truthy(),
@@ -27,21 +24,21 @@ fn lsp_flag(spec: command_spec::Spec) -> command_spec::Spec {
 // flow autocomplete command
 // ***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_utils::add_base_flags(command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_utils::add_base_flags(flow_command_spec::Spec::new(
         "autocomplete",
         "Queries autocompletion information",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} autocomplete [OPTION] [FILE] [LINE COLUMN]...\n\nQueries autocompletion information.\n\nIf line and column is specified, then the magic autocomplete token is\nautomatically inserted at the specified position.\n\nExample usage:\n\t{exe_name} autocomplete < foo.js\n\t{exe_name} autocomplete path/to/foo.js < foo.js\n\t{exe_name} autocomplete 12 35 < foo.js\n"
         ),
     ));
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     let spec = lsp_flag(spec);
     spec.flag(
         "--imports",
@@ -84,7 +81,7 @@ fn extract_cursor(
 }
 
 fn file_input_from_stdin(filename: Option<&str>) -> flow_server_utils::file_input::FileInput {
-    command_utils::get_file_from_filename_or_stdin(spec().name.as_str(), filename, None)
+    flow_command_utils::get_file_from_filename_or_stdin(spec().name.as_str(), filename, None)
 }
 
 fn parse_args(
@@ -100,7 +97,7 @@ fn parse_args(
             extract_cursor(input)
         }
         Some([line, column]) => {
-            let cursor = command_utils::convert_input_pos(
+            let cursor = flow_command_utils::convert_input_pos(
                 line.parse().expect("invalid line"),
                 column.parse().expect("invalid column"),
             );
@@ -108,7 +105,7 @@ fn parse_args(
             (input, Some(cursor))
         }
         Some([filename, line, column]) => {
-            let cursor = command_utils::convert_input_pos(
+            let cursor = flow_command_utils::convert_input_pos(
                 line.parse().expect("invalid line"),
                 column.parse().expect("invalid column"),
             );
@@ -118,7 +115,7 @@ fn parse_args(
         _ => {
             eprintln!(
                 "{}",
-                command_spec::command(spec(), |_| {}).string_of_usage()
+                flow_command_spec::command(spec(), |_| {}).string_of_usage()
             );
             flow_common_exit_status::exit(
                 flow_common_exit_status::FlowExitStatus::CommandlineUsageError,
@@ -161,28 +158,29 @@ fn autocomplete_response_to_json(
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
-    let connect_flags = command_utils::get_connect_flags(args);
-    let json_flags = command_utils::get_json_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let wait_for_recheck = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
-    let lsp = command_spec::get(args, "--lsp", &arg_spec::truthy()).unwrap();
-    let imports = command_spec::get(args, "--imports", &arg_spec::truthy()).unwrap();
+    let lsp = flow_command_spec::get(args, "--lsp", &arg_spec::truthy()).unwrap();
+    let imports = flow_command_spec::get(args, "--imports", &arg_spec::truthy()).unwrap();
     let imports_ranked_usage =
-        command_spec::get(args, "--imports-ranked-usage", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--imports-ranked-usage", &arg_spec::truthy()).unwrap();
     let show_ranking_info =
-        command_spec::get(args, "--show-ranking-info", &arg_spec::truthy()).unwrap();
-    let raw_args = command_spec::get(args, "args", &arg_spec::list_of(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--show-ranking-info", &arg_spec::truthy()).unwrap();
+    let raw_args =
+        flow_command_spec::get(args, "args", &arg_spec::list_of(arg_spec::string())).unwrap();
 
     let (input, cursor_opt) = parse_args(raw_args);
-    let root = command_utils::guess_root(
+    let root = flow_command_utils::guess_root(
         &base_flags.flowconfig_name,
         match root_arg.as_deref() {
             Some(root) => Some(root),
@@ -207,7 +205,7 @@ fn main(args: &arg_spec::Values) {
                 imports_ranked_usage,
                 show_ranking_info,
             };
-            let response = command_utils::connect_and_make_request(
+            let response = flow_command_utils::connect_and_make_request(
                 &base_flags.flowconfig_name,
                 &connect_flags,
                 &root,
@@ -257,13 +255,13 @@ fn main(args: &arg_spec::Values) {
                     }
                 }
                 response => {
-                    command_utils::failwith_bad_response(&request, &response);
+                    flow_command_utils::failwith_bad_response(&request, &response);
                 }
             }
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

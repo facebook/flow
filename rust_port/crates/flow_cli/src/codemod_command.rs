@@ -27,6 +27,7 @@ use flow_codemods::utils::codemod_runner::SimpleTypedRunnerConfig;
 use flow_codemods::utils::codemod_runner::TypedRunnerWithPrepassConfig;
 use flow_codemods::utils::codemod_runner::UntypedRunnerConfig;
 use flow_codemods::utils::codemod_utils::MakeMain;
+use flow_command_spec::arg_spec;
 use flow_common::options::Options;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
@@ -42,10 +43,6 @@ use flow_services_autocomplete::module_system_info::LspModuleSystemInfo;
 use flow_services_code_action::code_action_service;
 use flow_typing_context::Context;
 use flow_typing_type::type_::Type;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 #[derive(Clone)]
 enum CodemodSubcommand {
@@ -134,20 +131,22 @@ fn split_csv_flag(value: Option<String>) -> Vec<String> {
 pub(crate) fn codemod_common_spec(
     name: &str,
     doc: &str,
-    visibility: command_spec::Visibility,
+    visibility: flow_command_spec::Visibility,
     usage: String,
-) -> command_spec::Spec {
-    command_utils::add_codemod_flags(command_spec::Spec::new(name, doc, visibility, usage))
+) -> flow_command_spec::Spec {
+    flow_command_utils::add_codemod_flags(flow_command_spec::Spec::new(
+        name, doc, visibility, usage,
+    ))
 }
 
 fn prepare_root(flowconfig_name: &str, root_arg: Option<String>, filenames: &[String]) -> PathBuf {
     match root_arg {
-        None => command_utils::guess_root(
+        None => flow_command_utils::guess_root(
             flowconfig_name,
             filenames.first().map(|filename| filename.as_str()),
         ),
         Some(provided_root) => {
-            let dir = PathBuf::from(command_utils::expand_path(&provided_root));
+            let dir = PathBuf::from(flow_command_utils::expand_path(&provided_root));
             if dir.join(flowconfig_name).exists() {
                 dir
             } else {
@@ -166,8 +165,8 @@ pub(crate) fn prepare_codemod(
 ) -> PreparedCodemod {
     initialize_environment();
 
-    let codemod_flags = command_utils::get_codemod_flags(args);
-    let command_utils::CodemodParams {
+    let codemod_flags = flow_command_utils::get_codemod_flags(args);
+    let flow_command_utils::CodemodParams {
         options_flags,
         saved_state_options_flags,
         ignore_version,
@@ -182,7 +181,7 @@ pub(crate) fn prepare_codemod(
     let flowconfig_name = base_flag.flowconfig_name;
     // Normalizes filepaths (symlinks and shortcuts)
     let mut filenames =
-        command_utils::get_filenames_from_input(false, input_file.as_deref(), anon.as_deref());
+        flow_command_utils::get_filenames_from_input(false, input_file.as_deref(), anon.as_deref());
     if default_dot_when_empty && filenames.is_empty() {
         filenames.push(".".to_string());
     }
@@ -200,11 +199,11 @@ pub(crate) fn prepare_codemod(
 
     let root = prepare_root(&flowconfig_name, root_arg, &filenames);
     let flowconfig_path = root.join(&flowconfig_name);
-    let (flowconfig, flowconfig_hash) = command_utils::read_config_and_hash_or_exit(
+    let (flowconfig, flowconfig_hash) = flow_command_utils::read_config_and_hash_or_exit(
         &flowconfig_path.to_string_lossy(),
         !ignore_version,
     );
-    let options = command_utils::make_options(
+    let options = flow_command_utils::make_options(
         flowconfig_name,
         flowconfig_hash,
         flowconfig,
@@ -214,7 +213,7 @@ pub(crate) fn prepare_codemod(
         saved_state_options_flags,
     );
 
-    let roots = command_utils::expand_file_list(&filenames, Some(&options.file_options))
+    let roots = flow_command_utils::expand_file_list(&filenames, Some(&options.file_options))
         .into_iter()
         .map(|filename| flow_common::files::filename_from_string(&options.file_options, &filename))
         .collect();
@@ -344,15 +343,15 @@ mod annotate_exports_command {
 
     static RUNTIME_CONFIG: OnceLock<AnnotateRuntimeConfig> = OnceLock::new();
 
-    fn spec() -> command_spec::Spec {
+    fn spec() -> flow_command_spec::Spec {
         let doc = "Annotates parts of input that are visible from the exports as required by Flow types-first mode.";
         codemod_common_spec(
             "annotate-exports",
             doc,
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod annotate-exports [OPTION]... [FILE]\n\nAnnotates parts of input that are visible from the exports as required by Flow types-first mode.\n",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
         )
         .flag(
@@ -414,7 +413,7 @@ mod annotate_exports_command {
 
     fn main(args: &arg_spec::Values) {
         let max_type_size = parse_i32_flag(
-            command_spec::get(
+            flow_command_spec::get(
                 args,
                 "--max-type-size",
                 &arg_spec::optional(arg_spec::string()),
@@ -423,7 +422,8 @@ mod annotate_exports_command {
             "--max-type-size",
             100,
         );
-        let default_any = command_spec::get(args, "--default-any", &arg_spec::truthy()).unwrap();
+        let default_any =
+            flow_command_spec::get(args, "--default-any", &arg_spec::truthy()).unwrap();
         RUNTIME_CONFIG
             .set(AnnotateRuntimeConfig {
                 max_type_size,
@@ -440,8 +440,8 @@ mod annotate_exports_command {
         );
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
@@ -455,15 +455,15 @@ mod annotate_literal_declaration_command {
 
     static RUNTIME_CONFIG: OnceLock<RuntimeConfig> = OnceLock::new();
 
-    fn spec() -> command_spec::Spec {
+    fn spec() -> flow_command_spec::Spec {
         let doc = "Annotates literal declaration to fix natural inference errors.";
         codemod_common_spec(
             "annotate-literal-declaration",
             doc,
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod annotate-literal-declaration [OPTION]... [FILE]\n\nAnnotates literal declaration to fix natural inference errors.\n",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
         )
         // Use 1 to ensure that we only add type aliased object type without intersections.
@@ -524,7 +524,7 @@ mod annotate_literal_declaration_command {
 
     fn main(args: &arg_spec::Values) {
         let max_type_size = parse_i32_flag(
-            command_spec::get(
+            flow_command_spec::get(
                 args,
                 "--max-type-size",
                 &arg_spec::optional(arg_spec::string()),
@@ -546,23 +546,23 @@ mod annotate_literal_declaration_command {
         );
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
 mod remove_react_import_command {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
+    fn spec() -> flow_command_spec::Spec {
         let doc = "Remove unnecessary imports of React under react.runtime=automatic.";
         codemod_common_spec(
             "remove-unnecessary-react-import",
             doc,
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod remove-unnecessary-react-import [OPTION]... [FILE]\n\nRemove unnecessary imports of React under react.runtime=automatic.\n",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
         )
     }
@@ -599,8 +599,8 @@ mod remove_react_import_command {
         );
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
@@ -609,15 +609,15 @@ mod annotate_optional_properties_command {
 
     static RUNTIME_CONFIG: OnceLock<AnnotateRuntimeConfig> = OnceLock::new();
 
-    fn spec() -> command_spec::Spec {
+    fn spec() -> flow_command_spec::Spec {
         let doc = "Inserts optional properties on object definitions where properties are missing.";
         codemod_common_spec(
             "annotate-optional-properties",
             doc,
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod annotate-optional-properties [OPTION]... [FILE]\n\nInserts optional properties on object definitions where properties are missing.\n",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
         )
         .flag(
@@ -679,7 +679,7 @@ mod annotate_optional_properties_command {
 
     fn main(args: &arg_spec::Values) {
         let max_type_size = parse_i32_flag(
-            command_spec::get(
+            flow_command_spec::get(
                 args,
                 "--max-type-size",
                 &arg_spec::optional(arg_spec::string()),
@@ -688,7 +688,8 @@ mod annotate_optional_properties_command {
             "--max-type-size",
             100,
         );
-        let default_any = command_spec::get(args, "--default-any", &arg_spec::truthy()).unwrap();
+        let default_any =
+            flow_command_spec::get(args, "--default-any", &arg_spec::truthy()).unwrap();
         RUNTIME_CONFIG
             .set(AnnotateRuntimeConfig {
                 max_type_size,
@@ -705,8 +706,8 @@ mod annotate_optional_properties_command {
         );
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
@@ -952,15 +953,15 @@ mod fix_errors_command {
         }
     }
 
-    fn spec() -> command_spec::Spec {
+    fn spec() -> flow_command_spec::Spec {
         let doc = "Automatically fixes transformable Flow errors.";
         codemod_common_spec(
             "fix-errors",
             doc,
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} codemod fix-errors [OPTION]... [FILE]\n\nAutomatically fixes transformable Flow errors.\n",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
         )
         .flag(
@@ -972,7 +973,7 @@ mod fix_errors_command {
     }
 
     fn main(args: &arg_spec::Values) {
-        let error_codes = command_spec::get(
+        let error_codes = flow_command_spec::get(
             args,
             "--error-codes",
             &arg_spec::optional(arg_spec::string()),
@@ -1000,19 +1001,19 @@ mod fix_errors_command {
         );
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
-fn root_spec() -> command_spec::Spec {
-    command_spec::Spec::new(
+fn root_spec() -> flow_command_spec::Spec {
+    flow_command_spec::Spec::new(
         "codemod",
         "Runs large-scale codebase refactors",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} codemod SUBCOMMAND [OPTION]...",
-            command_utils::exe_name()
+            flow_command_utils::exe_name()
         ),
     )
     .anon(
@@ -1036,9 +1037,9 @@ fn root_spec() -> command_spec::Spec {
     )
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(root_spec(), |args| {
-        let (subcommand, argv) = command_spec::get(
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(root_spec(), |args| {
+        let (subcommand, argv) = flow_command_spec::get(
             args,
             "subcommand",
             &arg_spec::command_flag(vec![
@@ -1073,6 +1074,6 @@ pub(crate) fn command() -> command_spec::Command {
                 remove_react_import_command::command()
             }
         };
-        command_utils::run_command(&command, &argv);
+        flow_command_utils::run_command(&command, &argv);
     })
 }

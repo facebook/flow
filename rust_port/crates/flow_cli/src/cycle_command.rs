@@ -5,27 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_server_env::server_prot;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
-pub(crate) fn spec() -> command_spec::Spec {
-    let spec = command_spec::Spec::new(
+pub(crate) fn spec() -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(
         "cycle",
         "Output .dot file for cycle containing the given file",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} cycle [OPTION]...\n\ne.g. {} cycle path/to/file.js \n",
-            command_utils::exe_name(),
-            command_utils::exe_name()
+            flow_command_utils::exe_name(),
+            flow_command_utils::exe_name()
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
     spec.flag(
         "--types",
         &arg_spec::truthy(),
@@ -36,21 +33,21 @@ pub(crate) fn spec() -> command_spec::Spec {
 }
 
 pub(crate) fn run(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
-    let connect_flags = command_utils::get_connect_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let types_only = command_spec::get(args, "--types", &arg_spec::truthy()).unwrap();
-    let file = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let types_only = flow_command_spec::get(args, "--types", &arg_spec::truthy()).unwrap();
+    let file = flow_command_spec::get(
         args,
         "FILE...",
         &arg_spec::required(None, arg_spec::string()),
     )
     .unwrap();
 
-    let file = command_utils::expand_path(&file);
-    let root = command_utils::guess_root(&base_flags.flowconfig_name, root_arg.as_deref());
+    let file = flow_command_utils::expand_path(&file);
+    let root = flow_command_utils::guess_root(&base_flags.flowconfig_name, root_arg.as_deref());
     let strip_root = |f: &str| {
         if strip_root {
             flow_common::files::relative_path(&root, f)
@@ -63,7 +60,7 @@ pub(crate) fn run(args: &arg_spec::Values) {
         filename: file,
         types_only,
     };
-    let response = command_utils::connect_and_make_request(
+    let response = flow_command_utils::connect_and_make_request(
         &base_flags.flowconfig_name,
         &connect_flags,
         &root,
@@ -85,11 +82,11 @@ pub(crate) fn run(args: &arg_spec::Values) {
             print!("}}");
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), run)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), run)
 }

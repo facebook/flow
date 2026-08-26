@@ -483,7 +483,7 @@ fn consume_args(args: &[String]) -> (Vec<String>, Vec<String>) {
 /// by that name, then the flag without "no-" is looked up.
 ///
 /// Returns None if [name] is not a valid flag.
-pub(crate) fn find_flag<'a>(
+pub fn find_flag<'a>(
     name: &str,
     flags: &'a BTreeMap<String, arg_spec::FlagMetadata>,
 ) -> Option<(String, &'a arg_spec::FlagMetadata)> {
@@ -699,7 +699,7 @@ fn parse_argv(spec: &Spec, argv: &[String]) -> Result<arg_spec::Values, FailedTo
 
 /// If no `col_width` is passed, the length of the longest string of the first column will be used.
 /// `col_pad` will be used as additional padding between the two columns.
-pub(crate) fn format_two_columns(
+pub fn format_two_columns(
     margin: Option<usize>,
     col_width: Option<usize>,
     col_pad: usize,
@@ -758,7 +758,7 @@ fn usage_string(spec: &Spec) -> String {
     format!("{}\n{}", spec.usage, flag_usage)
 }
 
-pub(crate) fn usage(spec: &Spec) {
+pub fn usage(spec: &Spec) {
     println!("{}", usage_string(spec));
 }
 
@@ -798,7 +798,7 @@ impl Command {
         &self.flags
     }
 
-    pub(crate) fn run(&self, args: &arg_spec::Values) {
+    pub fn run(&self, args: &arg_spec::Values) {
         (self.main)(args);
     }
 
@@ -814,7 +814,7 @@ impl Command {
         parse_argv(&spec, argv)
     }
 
-    pub(crate) fn string_of_usage(&self) -> String {
+    pub fn string_of_usage(&self) -> String {
         (self.string_of_usage)()
     }
 }
@@ -827,7 +827,7 @@ pub fn get<T>(
     arg_type.parse(name, values.get(name).map(Vec::as_slice))
 }
 
-pub(crate) fn parse_or_show_help(
+pub fn parse_or_show_help(
     command: &Command,
     argv: &[String],
 ) -> Result<Result<arg_spec::Values, ShowHelp>, FailedToParse> {
@@ -840,7 +840,7 @@ pub(crate) fn parse_or_show_help(
     }
 }
 
-pub(crate) fn error_message(error: &FailedToParse) -> String {
+pub fn error_message(error: &FailedToParse) -> String {
     let mut message = format!("{}: {}", error.msg, error.arg);
     if let Some(details) = &error.details {
         write!(message, " ({details})").unwrap();

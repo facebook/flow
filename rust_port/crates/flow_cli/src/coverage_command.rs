@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_parser::offset_utils;
 use flow_server_env::server_prot;
 use flow_utils_tty::ColorMode;
@@ -12,30 +13,26 @@ use flow_utils_tty::RawColor;
 use flow_utils_tty::Style;
 use serde_json::json;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
 // ***********************************************************************
 // flow coverage command
 // ***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "coverage",
         "Shows coverage information for a given file",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} coverage [OPTION]... [FILE]\n\ne.g. {exe_name} coverage foo.js\nor   {exe_name} coverage < foo.js\n"
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     let spec = spec.flag(
         "--color",
         &arg_spec::truthy(),
@@ -48,7 +45,7 @@ fn spec() -> command_spec::Spec {
         "Print debugging info about each range in the file to stderr. Cannot be used with --json or --pretty",
         None,
     );
-    let spec = command_utils::add_path_flag(spec);
+    let spec = flow_command_utils::add_path_flag(spec);
     spec.flag(
         "--all",
         &arg_spec::truthy(),
@@ -375,25 +372,26 @@ fn handle_response(
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
-    let connect_flags = command_utils::get_connect_flags(args);
-    let json_flags = command_utils::get_json_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let wait_for_recheck = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
-    let color = command_spec::get(args, "--color", &arg_spec::truthy()).unwrap();
-    let debug = command_spec::get(args, "--debug", &arg_spec::truthy()).unwrap();
-    let path = command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-    let force = command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
+    let color = flow_command_spec::get(args, "--color", &arg_spec::truthy()).unwrap();
+    let debug = flow_command_spec::get(args, "--debug", &arg_spec::truthy()).unwrap();
+    let path =
+        flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
+    let force = flow_command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
     let filename =
-        command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
 
     // pretty implies json
     let json = json_flags.json || json_flags.pretty;
@@ -410,12 +408,12 @@ fn main(args: &arg_spec::Values) {
         );
     }
 
-    let file = command_utils::get_file_from_filename_or_stdin(
+    let file = flow_command_utils::get_file_from_filename_or_stdin(
         "coverage",
         filename.as_deref(),
         path.as_deref(),
     );
-    let root = command_utils::guess_root(
+    let root = flow_command_utils::guess_root(
         &flowconfig_name,
         match root_arg.as_deref() {
             Some(root) => Some(root),
@@ -432,8 +430,12 @@ fn main(args: &arg_spec::Values) {
         force,
         wait_for_recheck,
     };
-    let response =
-        command_utils::connect_and_make_request(&flowconfig_name, &connect_flags, &root, &request);
+    let response = flow_command_utils::connect_and_make_request(
+        &flowconfig_name,
+        &connect_flags,
+        &root,
+        &request,
+    );
     match response {
         server_prot::response::Response::COVERAGE(Err(err)) => {
             handle_error(err, json, json_flags.pretty);
@@ -463,11 +465,11 @@ fn main(args: &arg_spec::Values) {
             );
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

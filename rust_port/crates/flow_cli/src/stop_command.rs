@@ -5,49 +5,47 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_commands_connect::command_connect_simple as CCS;
 use flow_commands_connect::command_connect_simple::CCSError;
 use flow_commands_connect::command_connect_simple::MismatchBehavior;
 use flow_commands_connect::command_mean_kill;
 use flow_server_env::socket_handshake;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
 // ***********************************************************************
 // flow stop command
 // ***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(
         "stop",
         "Stops a Flow server",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         "Usage: flow stop [OPTION]... [ROOT]\nStops a flow server\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be current directory if unspecified\n".to_string(),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_temp_dir_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_temp_dir_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
     spec.flag("--quiet", &arg_spec::truthy(), "Quiet mode", None)
         .anon("root", &arg_spec::optional(arg_spec::string()))
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
     let temp_dir =
-        command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string())).unwrap();
-    let quiet = command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+    let quiet = flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap();
     let root_arg =
-        command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
 
-    let root = command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
+    let root = flow_command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
     // Resolve the temp dir the same way `start`/`status` do (platform temp dir
     // via `default_temp_dir`), otherwise `stop` looks for the server's lock and
     // socket files in the wrong place (e.g. the Unix `/tmp/flow` on Windows) and
     // reports "no server to kill" even when a server is running.
-    let tmp_dir = command_utils::normalize_temp_dir(&temp_dir)
+    let tmp_dir = flow_command_utils::normalize_temp_dir(&temp_dir)
         .to_string_lossy()
         .to_string();
 
@@ -135,6 +133,6 @@ fn main(args: &arg_spec::Values) {
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

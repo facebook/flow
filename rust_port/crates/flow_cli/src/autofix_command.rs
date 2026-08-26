@@ -7,6 +7,7 @@
 
 use std::io::Write;
 
+use flow_command_spec::arg_spec;
 use flow_parser::file_key;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -15,33 +16,29 @@ use flow_parser_utils_output::replacement_printer;
 use flow_server_env::server_prot;
 use flow_server_utils::file_input::FileInput;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
 // This module implements the flow command `autofix insert-type` which inserts
 // a type annotation in a file at a position.
 mod insert_type {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "insert type",
             "[EXPERIMENTAL] Insert type information at file and position",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} autofix insert-type [OPTION]... [FILE] LINE COLUMN [END_LINE] [END_COLUMN]\n\ne.g. {exe_name} autofix insert-type foo.js 12 3\nor   {exe_name} autofix insert-type 12 3 < foo.js\n"
             ),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_connect_and_json_flags(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_strip_root_flag(spec);
-        let spec = command_utils::add_verbose_flags(spec);
-        let spec = command_utils::add_from_flag(spec);
-        let spec = command_utils::add_path_flag(spec);
-        let spec = command_utils::add_wait_for_recheck_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_connect_and_json_flags(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_strip_root_flag(spec);
+        let spec = flow_command_utils::add_verbose_flags(spec);
+        let spec = flow_command_utils::add_from_flag(spec);
+        let spec = flow_command_utils::add_path_flag(spec);
+        let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
         spec.flag(
             "--strict-location",
             &arg_spec::truthy(),
@@ -84,7 +81,7 @@ mod insert_type {
                     "flow autofix insert-type: failed to parse position",
                 )
             });
-            let (line, column) = command_utils::convert_input_pos(line, col);
+            let (line, column) = flow_command_utils::convert_input_pos(line, col);
             Position { line, column }
         };
         match args {
@@ -113,7 +110,7 @@ mod insert_type {
             }
             [file, rest @ ..] if rest.len() == 2 || rest.len() == 4 => {
                 let (loc, _) = parse_args(rest);
-                (loc, Some(command_utils::expand_path(file)))
+                (loc, Some(flow_command_utils::expand_path(file)))
             }
             [] => handle_error(
                 flow_common_exit_status::FlowExitStatus::UnknownError,
@@ -167,36 +164,38 @@ mod insert_type {
     }
 
     fn main(args: &arg_spec::Values) {
-        let base_flags = command_utils::get_base_flags(args);
-        let (connect_flags, json, _pretty) = command_utils::get_connect_and_json_flags(args);
+        let base_flags = flow_command_utils::get_base_flags(args);
+        let (connect_flags, json, _pretty) = flow_command_utils::get_connect_and_json_flags(args);
         let root_arg =
-            command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-        let strip_root_arg = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-        let verbose = command_utils::verbose_flags(args);
-        let path =
-            command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-        let wait_for_recheck = command_spec::get(
+            flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                .unwrap();
+        let strip_root_arg =
+            flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+        let verbose = flow_command_utils::verbose_flags(args);
+        let path = flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+        let wait_for_recheck = flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional(arg_spec::bool_flag()),
         )
         .unwrap();
         let location_is_strict =
-            command_spec::get(args, "--strict-location", &arg_spec::truthy()).unwrap();
-        let in_place = command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
+            flow_command_spec::get(args, "--strict-location", &arg_spec::truthy()).unwrap();
+        let in_place = flow_command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
         let omit_targ_defaults =
-            command_spec::get(args, "--omit-typearg-defaults", &arg_spec::truthy()).unwrap();
-        let raw_args = command_spec::get(args, "args", &arg_spec::list_of(arg_spec::string()))
+            flow_command_spec::get(args, "--omit-typearg-defaults", &arg_spec::truthy()).unwrap();
+        let raw_args = flow_command_spec::get(args, "args", &arg_spec::list_of(arg_spec::string()))
             .unwrap()
             .unwrap_or_default();
 
         let (target, source_path) = parse_args(&raw_args);
-        let input = command_utils::get_file_from_filename_or_stdin(
+        let input = flow_command_utils::get_file_from_filename_or_stdin(
             &spec().name,
             source_path.as_deref(),
             path.as_deref(),
         );
-        let root = command_utils::get_the_root(
+        let root = flow_command_utils::get_the_root(
             &base_flags.flowconfig_name,
             root_arg.as_deref(),
             Some(&input),
@@ -229,7 +228,7 @@ mod insert_type {
             wait_for_recheck,
             omit_targ_defaults,
         };
-        let result = command_utils::connect_and_make_request(
+        let result = flow_command_utils::connect_and_make_request(
             flowconfig_name,
             &connect_flags,
             &root,
@@ -254,30 +253,30 @@ mod insert_type {
         }
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
 mod missing_local_annot {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "missing-local-annot",
             "[EXPERIMENTAL] automatically fix missing-local-annot errors",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!("Usage: {exe_name} autofix missing-local-annot [OPTION]... [FILE]\n"),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_connect_and_json_flags(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_strip_root_flag(spec);
-        let spec = command_utils::add_verbose_flags(spec);
-        let spec = command_utils::add_from_flag(spec);
-        let spec = command_utils::add_path_flag(spec);
-        let spec = command_utils::add_wait_for_recheck_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_connect_and_json_flags(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_strip_root_flag(spec);
+        let spec = flow_command_utils::add_verbose_flags(spec);
+        let spec = flow_command_utils::add_from_flag(spec);
+        let spec = flow_command_utils::add_path_flag(spec);
+        let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
         spec.flag(
             "--in-place",
             &arg_spec::truthy(),
@@ -337,31 +336,34 @@ mod missing_local_annot {
     }
 
     fn main(args: &arg_spec::Values) {
-        let base_flags = command_utils::get_base_flags(args);
-        let (connect_flags, json, _pretty) = command_utils::get_connect_and_json_flags(args);
+        let base_flags = flow_command_utils::get_base_flags(args);
+        let (connect_flags, json, _pretty) = flow_command_utils::get_connect_and_json_flags(args);
         let root_arg =
-            command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-        let _strip_root_arg = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-        let verbose = command_utils::verbose_flags(args);
-        let path =
-            command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-        let wait_for_recheck = command_spec::get(
+            flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                .unwrap();
+        let _strip_root_arg =
+            flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+        let verbose = flow_command_utils::verbose_flags(args);
+        let path = flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+        let wait_for_recheck = flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional(arg_spec::bool_flag()),
         )
         .unwrap();
-        let in_place = command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
+        let in_place = flow_command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
         let file =
-            command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string())).unwrap();
+            flow_command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string()))
+                .unwrap();
 
-        let source_path = command_utils::expand_path(&file);
-        let input = command_utils::get_file_from_filename_or_stdin(
+        let source_path = flow_command_utils::expand_path(&file);
+        let input = flow_command_utils::get_file_from_filename_or_stdin(
             &spec().name,
             Some(source_path.as_str()),
             path.as_deref(),
         );
-        let root = command_utils::get_the_root(
+        let root = flow_command_utils::get_the_root(
             &base_flags.flowconfig_name,
             root_arg.as_deref(),
             Some(&input),
@@ -375,7 +377,7 @@ mod missing_local_annot {
             verbose,
             wait_for_recheck,
         };
-        let result = command_utils::connect_and_make_request(
+        let result = flow_command_utils::connect_and_make_request(
             flowconfig_name,
             &connect_flags,
             &root,
@@ -395,30 +397,30 @@ mod missing_local_annot {
         }
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
 mod exports {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "exports",
             "[EXPERIMENTAL] automatically fix signature verification errors",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!("Usage: {exe_name} autofix exports [OPTION]... [FILE]\n"),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_connect_and_json_flags(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_strip_root_flag(spec);
-        let spec = command_utils::add_verbose_flags(spec);
-        let spec = command_utils::add_from_flag(spec);
-        let spec = command_utils::add_path_flag(spec);
-        let spec = command_utils::add_wait_for_recheck_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_connect_and_json_flags(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_strip_root_flag(spec);
+        let spec = flow_command_utils::add_verbose_flags(spec);
+        let spec = flow_command_utils::add_from_flag(spec);
+        let spec = flow_command_utils::add_path_flag(spec);
+        let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
         spec.flag(
             "--in-place",
             &arg_spec::truthy(),
@@ -503,32 +505,35 @@ mod exports {
     }
 
     fn main(args: &arg_spec::Values) {
-        let base_flags = command_utils::get_base_flags(args);
-        let (connect_flags, json, _pretty) = command_utils::get_connect_and_json_flags(args);
+        let base_flags = flow_command_utils::get_base_flags(args);
+        let (connect_flags, json, _pretty) = flow_command_utils::get_connect_and_json_flags(args);
         let root_arg =
-            command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-        let _strip_root_arg = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-        let verbose = command_utils::verbose_flags(args);
-        let path =
-            command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-        let wait_for_recheck = command_spec::get(
+            flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                .unwrap();
+        let _strip_root_arg =
+            flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+        let verbose = flow_command_utils::verbose_flags(args);
+        let path = flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+        let wait_for_recheck = flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional(arg_spec::bool_flag()),
         )
         .unwrap();
-        let in_place = command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
-        let forced = command_spec::get(args, "--force", &arg_spec::truthy()).unwrap();
+        let in_place = flow_command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
+        let forced = flow_command_spec::get(args, "--force", &arg_spec::truthy()).unwrap();
         let file =
-            command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string())).unwrap();
+            flow_command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string()))
+                .unwrap();
 
-        let source_path = command_utils::expand_path(&file);
-        let input = command_utils::get_file_from_filename_or_stdin(
+        let source_path = flow_command_utils::expand_path(&file);
+        let input = flow_command_utils::get_file_from_filename_or_stdin(
             &spec().name,
             Some(source_path.as_str()),
             path.as_deref(),
         );
-        let root = command_utils::get_the_root(
+        let root = flow_command_utils::get_the_root(
             &base_flags.flowconfig_name,
             root_arg.as_deref(),
             Some(&input),
@@ -542,7 +547,7 @@ mod exports {
             verbose,
             wait_for_recheck,
         };
-        let result = command_utils::connect_and_make_request(
+        let result = flow_command_utils::connect_and_make_request(
             flowconfig_name,
             &connect_flags,
             &root,
@@ -568,14 +573,14 @@ mod exports {
         }
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
+pub(crate) fn command() -> flow_command_spec::Command {
     let main = |args: &arg_spec::Values| {
-        let (cmd, argv) = command_spec::get(
+        let (cmd, argv) = flow_command_spec::get(
             args,
             "subcommand",
             &arg_spec::required(
@@ -594,12 +599,12 @@ pub(crate) fn command() -> command_spec::Command {
             "exports" => exports::command(),
             _ => unreachable!(),
         };
-        command_utils::run_command(&cmd, &argv);
+        flow_command_utils::run_command(&cmd, &argv);
     };
-    let spec = command_utils::subcommand_spec(
+    let spec = flow_command_utils::subcommand_spec(
         "autofix",
         "Automatically insert type annotations",
-        command_spec::Visibility::Internal,
+        flow_command_spec::Visibility::Internal,
         vec![
             (
                 "insert-type",
@@ -614,5 +619,5 @@ pub(crate) fn command() -> command_spec::Command {
             ("exports", "exports", exports::command().doc().to_owned()),
         ],
     );
-    command_spec::command(spec, main)
+    flow_command_spec::command(spec, main)
 }

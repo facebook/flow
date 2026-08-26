@@ -7,31 +7,28 @@
 
 use std::io::Write;
 
+use flow_command_spec::arg_spec;
 use flow_server_env::server_prot;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 //***********************************************************************
 // flow save-state command
 //***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(
         "save-state",
         "Tell the server to create a saved-state file",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} save-state [OPTION]...\n\ne.g. {} save-state --root path/to/root --out path/to/my_saved_state\n",
-            command_utils::exe_name(),
-            command_utils::exe_name()
+            flow_command_utils::exe_name(),
+            flow_command_utils::exe_name()
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
     spec.flag(
         "--scm",
         &arg_spec::no_arg(),
@@ -47,15 +44,16 @@ fn spec() -> command_spec::Spec {
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
-    let connect_flags = command_utils::get_connect_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let scm = command_spec::get(args, "--scm", &arg_spec::no_arg()).unwrap();
-    let out = command_spec::get(args, "--out", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let scm = flow_command_spec::get(args, "--scm", &arg_spec::no_arg()).unwrap();
+    let out =
+        flow_command_spec::get(args, "--out", &arg_spec::optional(arg_spec::string())).unwrap();
 
-    let root = command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
+    let root = flow_command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
 
     let out = match (scm, out) {
         (None, None) | (Some(false), None) => {
@@ -77,8 +75,12 @@ fn main(args: &arg_spec::Values) {
     };
 
     let request = server_prot::request::Command::SAVE_STATE { out };
-    let response =
-        command_utils::connect_and_make_request(&flowconfig_name, &connect_flags, &root, &request);
+    let response = flow_command_utils::connect_and_make_request(
+        &flowconfig_name,
+        &connect_flags,
+        &root,
+        &request,
+    );
     match response {
         server_prot::response::Response::SAVE_STATE(Err(msg)) => {
             eprintln!("{}", msg);
@@ -88,10 +90,10 @@ fn main(args: &arg_spec::Values) {
             println!("{}", msg);
             std::io::stdout().flush().expect("failed to flush stdout");
         }
-        response => command_utils::failwith_bad_response(&request, &response),
+        response => flow_command_utils::failwith_bad_response(&request, &response),
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

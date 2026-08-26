@@ -11,31 +11,29 @@
 
 use std::path::Path;
 
+use flow_command_spec::arg_spec;
 use flow_common_errors::error_utils;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::server_prot;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "type-at-pos",
         "Shows the type at a given file and position",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} type-at-pos [OPTION]... [FILE] LINE COLUMN\n\ne.g. {exe_name} type-at-pos foo.js 12 3\nor   {exe_name} type-at-pos 12 3 < foo.js\n"
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_verbose_flags(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_path_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_verbose_flags(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_path_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     spec.flag(
             "--expand-json-output",
             &arg_spec::truthy(),
@@ -249,48 +247,50 @@ fn handle_error(err: String, json: bool, pretty: bool) {
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
-    let connect_flags = command_utils::get_connect_flags(args);
-    let json_flags = command_utils::get_json_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let verbose = command_utils::verbose_flags(args);
-    let path = command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-    let wait_for_recheck = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let verbose = flow_command_utils::verbose_flags(args);
+    let path =
+        flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
-    let expanded = command_spec::get(args, "--expand-json-output", &arg_spec::truthy()).unwrap();
+    let expanded =
+        flow_command_spec::get(args, "--expand-json-output", &arg_spec::truthy()).unwrap();
     let json = json_flags.json || json_flags.pretty || expanded;
     let omit_targ_defaults =
-        command_spec::get(args, "--omit-typearg-defaults", &arg_spec::truthy()).unwrap();
-    let max_depth = command_spec::get(
+        flow_command_spec::get(args, "--omit-typearg-defaults", &arg_spec::truthy()).unwrap();
+    let max_depth = flow_command_spec::get(
         args,
         "--max-depth",
         &arg_spec::required(Some(40), arg_spec::int()),
     )
     .unwrap();
     let verbose_normalizer =
-        command_spec::get(args, "--verbose-normalizer", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--verbose-normalizer", &arg_spec::truthy()).unwrap();
     let debug_print_internal_repr =
-        command_spec::get(args, "--debug-print-internal-repr", &arg_spec::truthy()).unwrap();
-    let no_typed_ast_for_imports = command_spec::get(
+        flow_command_spec::get(args, "--debug-print-internal-repr", &arg_spec::truthy()).unwrap();
+    let no_typed_ast_for_imports = flow_command_spec::get(
         args,
         "--do_not_use_typed_AST_for_imports",
         &arg_spec::truthy(),
     )
     .unwrap();
-    let raw_args = command_spec::get(args, "args", &arg_spec::list_of(arg_spec::string()))
+    let raw_args = flow_command_spec::get(args, "args", &arg_spec::list_of(arg_spec::string()))
         .unwrap()
         .unwrap_or_default();
 
-    let cmd = command_spec::command(spec(), |_| {});
+    let cmd = flow_command_spec::command(spec(), |_| {});
     let (file, line, column) =
-        command_utils::parse_location_with_optional_filename(&cmd, path.as_deref(), &raw_args);
-    let root = command_utils::find_a_root(
+        flow_command_utils::parse_location_with_optional_filename(&cmd, path.as_deref(), &raw_args);
+    let root = flow_command_utils::find_a_root(
         &base_flags.flowconfig_name,
         root_arg.as_deref(),
         Some(&file),
@@ -314,7 +314,7 @@ fn main(args: &arg_spec::Values) {
         debug_print_internal_repr,
         no_typed_ast_for_imports,
     });
-    let response = command_utils::connect_and_make_request(
+    let response = flow_command_utils::connect_and_make_request(
         &base_flags.flowconfig_name,
         &connect_flags,
         &root,
@@ -337,11 +337,11 @@ fn main(args: &arg_spec::Values) {
             );
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

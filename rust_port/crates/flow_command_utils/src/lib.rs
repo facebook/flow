@@ -18,6 +18,8 @@ use std::process::Command as ProcessCommand;
 use std::process::Stdio;
 use std::sync::Arc;
 
+use flow_command_spec::Command;
+use flow_command_spec::arg_spec;
 use flow_common::options::Format;
 use flow_common::options::LogSaving;
 use flow_common::options::Options;
@@ -33,8 +35,6 @@ use flow_config::FlowconfigGlobPattern;
 use flow_config::LazyMode;
 use flow_config::opts::BuiltinLib as ConfigBuiltinLib;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_edenfs_watcher;
-use flow_flowlib::LibDir as FlowlibDir;
 use flow_monitor_rpc::monitor_prot::MonitorToClientMessage;
 use flow_server_env::file_watcher_status;
 use flow_server_env::server_prot;
@@ -44,19 +44,15 @@ use flow_server_utils::file_input::FileInput;
 use flow_utils_concurrency::thread_pool::physical_parallelism;
 use regex::Regex;
 
-use crate::command_spec;
-use crate::command_spec::Command;
-use crate::command_spec::arg_spec;
-
 #[derive(Clone, Debug)]
-pub(crate) enum UnicodeMode {
+pub enum UnicodeMode {
     Never,
     Always,
     Auto,
 }
 
 pub fn run_command(command: &Command, argv: &[String]) {
-    match command_spec::parse_or_show_help(command, argv) {
+    match flow_command_spec::parse_or_show_help(command, argv) {
         Ok(Err(_)) => {
             println!("{}", command.string_of_usage());
             flow_common_exit::exit(FlowExitStatus::NoError, None);
@@ -75,13 +71,13 @@ pub fn run_command(command: &Command, argv: &[String]) {
                 let pretty = json_arg.starts_with("--pretty");
                 flow_common_exit::set_json_mode(pretty);
             }
-            let msg = command_spec::error_message(&error);
+            let msg = flow_command_spec::error_message(&error);
             flow_common_exit::exit(FlowExitStatus::CommandlineUsageError, Some(&msg));
         }
     }
 }
 
-pub(super) fn expand_file_list(
+pub fn expand_file_list(
     filenames: &[String],
     options: Option<&flow_common::files::FileOptions>,
 ) -> BTreeSet<String> {
@@ -111,7 +107,7 @@ pub(super) fn expand_file_list(
     flow_common::files::get_all(&mut *next_files)
 }
 
-pub(super) fn get_filenames_from_input(
+pub fn get_filenames_from_input(
     allow_imaginary: bool,
     input_file: Option<&str>,
     filenames: Option<&[String]>,
@@ -161,7 +157,7 @@ pub(super) fn get_filenames_from_input(
     result
 }
 
-pub(super) fn print_version() {
+pub fn print_version() {
     println!(
         "Flow, a static type checker for JavaScript, version {}",
         flow_common::flow_version::version()
@@ -191,7 +187,7 @@ pub fn expand_path(path: &str) -> String {
     }
 }
 
-pub(crate) fn collect_error_flags(
+pub fn collect_error_flags(
     rendering_mode: cli_output::RenderingMode,
     include_warnings: bool,
     max_warnings: Option<i32>,
@@ -230,7 +226,7 @@ pub(crate) fn collect_error_flags(
     }
 }
 
-pub(crate) fn add_warning_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_warning_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--include-warnings",
         &arg_spec::truthy(),
@@ -245,7 +241,7 @@ pub(crate) fn add_warning_flags(spec: command_spec::Spec) -> command_spec::Spec 
     )
 }
 
-pub(crate) fn add_profile_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_profile_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--profile",
         &arg_spec::truthy(),
@@ -255,19 +251,19 @@ pub(crate) fn add_profile_flag(spec: command_spec::Spec) -> command_spec::Spec {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct ErrorFlagsArgs {
-    pub(crate) color: cli_output::RenderingMode,
-    pub(crate) include_warnings: bool,
-    pub(crate) max_warnings: Option<i32>,
-    pub(crate) one_line: bool,
-    pub(crate) list_files: bool,
-    pub(crate) show_all_errors: bool,
-    pub(crate) show_all_branches: bool,
-    pub(crate) unicode: UnicodeMode,
-    pub(crate) message_width: Option<i32>,
+pub struct ErrorFlagsArgs {
+    pub color: cli_output::RenderingMode,
+    pub include_warnings: bool,
+    pub max_warnings: Option<i32>,
+    pub one_line: bool,
+    pub list_files: bool,
+    pub show_all_errors: bool,
+    pub show_all_branches: bool,
+    pub unicode: UnicodeMode,
+    pub message_width: Option<i32>,
 }
 
-pub(crate) fn add_error_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_error_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     add_warning_flags(
         spec.flag(
             "--color",
@@ -332,9 +328,9 @@ pub(crate) fn add_error_flags(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn get_error_flags_args(args: &arg_spec::Values) -> ErrorFlagsArgs {
+pub fn get_error_flags_args(args: &arg_spec::Values) -> ErrorFlagsArgs {
     ErrorFlagsArgs {
-        color: command_spec::get(
+        color: flow_command_spec::get(
             args,
             "--color",
             &arg_spec::required(
@@ -351,20 +347,21 @@ pub(crate) fn get_error_flags_args(args: &arg_spec::Values) -> ErrorFlagsArgs {
             ),
         )
         .unwrap(),
-        include_warnings: command_spec::get(args, "--include-warnings", &arg_spec::truthy())
+        include_warnings: flow_command_spec::get(args, "--include-warnings", &arg_spec::truthy())
             .unwrap(),
-        max_warnings: command_spec::get(
+        max_warnings: flow_command_spec::get(
             args,
             "--max-warnings",
             &arg_spec::optional(arg_spec::int()),
         )
         .unwrap(),
-        one_line: command_spec::get(args, "--one-line", &arg_spec::truthy()).unwrap(),
-        list_files: command_spec::get(args, "--list-files", &arg_spec::truthy()).unwrap(),
-        show_all_errors: command_spec::get(args, "--show-all-errors", &arg_spec::truthy()).unwrap(),
-        show_all_branches: command_spec::get(args, "--show-all-branches", &arg_spec::truthy())
+        one_line: flow_command_spec::get(args, "--one-line", &arg_spec::truthy()).unwrap(),
+        list_files: flow_command_spec::get(args, "--list-files", &arg_spec::truthy()).unwrap(),
+        show_all_errors: flow_command_spec::get(args, "--show-all-errors", &arg_spec::truthy())
             .unwrap(),
-        unicode: command_spec::get(
+        show_all_branches: flow_command_spec::get(args, "--show-all-branches", &arg_spec::truthy())
+            .unwrap(),
+        unicode: flow_command_spec::get(
             args,
             "--unicode",
             &arg_spec::required(
@@ -377,7 +374,7 @@ pub(crate) fn get_error_flags_args(args: &arg_spec::Values) -> ErrorFlagsArgs {
             ),
         )
         .unwrap(),
-        message_width: command_spec::get(
+        message_width: flow_command_spec::get(
             args,
             "--message-width",
             &arg_spec::optional(arg_spec::int()),
@@ -387,12 +384,12 @@ pub(crate) fn get_error_flags_args(args: &arg_spec::Values) -> ErrorFlagsArgs {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub(crate) struct JsonFlags {
-    pub(crate) json: bool,
-    pub(crate) pretty: bool,
+pub struct JsonFlags {
+    pub json: bool,
+    pub pretty: bool,
 }
 
-pub(crate) fn add_json_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_json_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--json",
         &arg_spec::truthy(),
@@ -407,16 +404,16 @@ pub(crate) fn add_json_flags(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn get_json_flags(args: &arg_spec::Values) -> JsonFlags {
-    let json = command_spec::get(args, "--json", &arg_spec::truthy()).unwrap();
-    let pretty = command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
+pub fn get_json_flags(args: &arg_spec::Values) -> JsonFlags {
+    let json = flow_command_spec::get(args, "--json", &arg_spec::truthy()).unwrap();
+    let pretty = flow_command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
     if json || pretty {
         flow_common_exit::set_json_mode(pretty);
     }
     JsonFlags { json, pretty }
 }
 
-pub fn add_temp_dir_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_temp_dir_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--temp-dir",
         &arg_spec::optional(arg_spec::string()),
@@ -425,7 +422,7 @@ pub fn add_temp_dir_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_lazy_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_lazy_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--lazy",
         &arg_spec::truthy(),
@@ -451,10 +448,10 @@ pub(crate) fn lazy_mode_flag() -> arg_spec::FlagType<Option<LazyMode>> {
     ])
 }
 
-pub(crate) fn get_lazy_flags(args: &arg_spec::Values) -> Option<LazyMode> {
-    let lazy_ = command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
+pub fn get_lazy_flags(args: &arg_spec::Values) -> Option<LazyMode> {
+    let lazy_ = flow_command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
     let lazy_mode =
-        command_spec::get(args, "--lazy-mode", &arg_spec::optional(lazy_mode_flag())).unwrap();
+        flow_command_spec::get(args, "--lazy-mode", &arg_spec::optional(lazy_mode_flag())).unwrap();
     if lazy_ && lazy_mode.is_none() {
         // --lazy === --lazy-mode true
         Some(LazyMode::Lazy)
@@ -463,7 +460,7 @@ pub(crate) fn get_lazy_flags(args: &arg_spec::Values) -> Option<LazyMode> {
     }
 }
 
-pub(crate) fn lazy_mode_arg(lazy_mode: LazyMode) -> &'static str {
+pub fn lazy_mode_arg(lazy_mode: LazyMode) -> &'static str {
     match lazy_mode {
         LazyMode::Lazy => "fs",
         LazyMode::NonLazy => "none",
@@ -471,7 +468,7 @@ pub(crate) fn lazy_mode_arg(lazy_mode: LazyMode) -> &'static str {
     }
 }
 
-pub(crate) fn add_input_file_flag(spec: command_spec::Spec, verb: &str) -> command_spec::Spec {
+pub fn add_input_file_flag(spec: flow_command_spec::Spec, verb: &str) -> flow_command_spec::Spec {
     spec.flag(
         "--input-file",
         &arg_spec::optional(arg_spec::string()),
@@ -483,7 +480,7 @@ pub(crate) fn add_input_file_flag(spec: command_spec::Spec, verb: &str) -> comma
     )
 }
 
-pub(crate) fn add_verbose_focus_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_verbose_focus_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--verbose-focus",
         &arg_spec::truthy(),
@@ -492,7 +489,7 @@ pub(crate) fn add_verbose_focus_flag(spec: command_spec::Spec) -> command_spec::
     )
 }
 
-pub fn add_from_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_from_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--from",
         &arg_spec::optional(arg_spec::string()),
@@ -553,7 +550,7 @@ fn default_from_flag() -> Option<String> {
     }
 }
 
-pub(crate) fn add_strip_root_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_strip_root_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--strip-root",
         &arg_spec::truthy(),
@@ -562,7 +559,7 @@ pub(crate) fn add_strip_root_flag(spec: command_spec::Spec) -> command_spec::Spe
     )
 }
 
-pub(crate) fn add_wait_for_recheck_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_wait_for_recheck_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
@@ -571,7 +568,7 @@ pub(crate) fn add_wait_for_recheck_flag(spec: command_spec::Spec) -> command_spe
     )
 }
 
-pub(crate) fn add_vpn_less_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_vpn_less_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--vpn-less",
         &arg_spec::optional(arg_spec::bool_flag()),
@@ -580,7 +577,7 @@ pub(crate) fn add_vpn_less_flag(spec: command_spec::Spec) -> command_spec::Spec 
     )
 }
 
-pub(crate) fn add_path_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_path_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--path",
         &arg_spec::optional(arg_spec::string()),
@@ -589,12 +586,12 @@ pub(crate) fn add_path_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_autostop_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_autostop_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     // empty to omit it from --help
     spec.flag("--autostop", &arg_spec::truthy(), "", None)
 }
 
-pub(crate) fn add_verbose_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_verbose_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--verbose",
         &arg_spec::truthy(),
@@ -621,17 +618,17 @@ pub(crate) fn add_verbose_flags(spec: command_spec::Spec) -> command_spec::Spec 
     )
 }
 
-pub(crate) fn verbose_flags(args: &arg_spec::Values) -> Option<Verbose> {
-    let verbose = command_spec::get(args, "--verbose", &arg_spec::truthy()).unwrap();
-    let indent = command_spec::get(args, "--verbose-indent", &arg_spec::truthy()).unwrap();
-    let depth = command_spec::get(
+pub fn verbose_flags(args: &arg_spec::Values) -> Option<Verbose> {
+    let verbose = flow_command_spec::get(args, "--verbose", &arg_spec::truthy()).unwrap();
+    let indent = flow_command_spec::get(args, "--verbose-indent", &arg_spec::truthy()).unwrap();
+    let depth = flow_command_spec::get(
         args,
         "--verbose-depth",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
     let enabled_during_flowlib =
-        command_spec::get(args, "--verbose-flowlib", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--verbose-flowlib", &arg_spec::truthy()).unwrap();
     if !verbose && !indent && depth.is_none() {
         None
     } else {
@@ -648,7 +645,9 @@ pub(crate) fn verbose_flags(args: &arg_spec::Values) -> Option<Verbose> {
     }
 }
 
-pub(crate) fn add_slow_to_check_logging_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_slow_to_check_logging_flags(
+    spec: flow_command_spec::Spec,
+) -> flow_command_spec::Spec {
     spec.flag(
         "--log-slow-files-interval",
         &arg_spec::optional(arg_spec::int()),
@@ -669,7 +668,7 @@ pub(crate) fn add_slow_to_check_logging_flags(spec: command_spec::Spec) -> comma
     )
 }
 
-pub(crate) fn add_quiet_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_quiet_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--quiet",
         &arg_spec::truthy(),
@@ -679,7 +678,7 @@ pub(crate) fn add_quiet_flag(spec: command_spec::Spec) -> command_spec::Spec {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub(crate) enum OnMismatchBehavior {
+pub enum OnMismatchBehavior {
     #[default]
     ChooseNewest,
     StopServer,
@@ -687,7 +686,7 @@ pub(crate) enum OnMismatchBehavior {
     ErrorClient,
 }
 
-fn add_on_mismatch_flag(spec: command_spec::Spec) -> command_spec::Spec {
+fn add_on_mismatch_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--on-mismatch",
         &arg_spec::required(
@@ -704,7 +703,7 @@ fn add_on_mismatch_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub fn add_root_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_root_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--root",
         &arg_spec::optional(arg_spec::string()),
@@ -713,7 +712,7 @@ pub fn add_root_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_ignore_version_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_ignore_version_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--ignore-version",
         &arg_spec::truthy(),
@@ -722,7 +721,7 @@ pub(crate) fn add_ignore_version_flag(spec: command_spec::Spec) -> command_spec:
     )
 }
 
-pub(crate) fn add_log_file_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_log_file_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--log-file",
         &arg_spec::optional(arg_spec::string()),
@@ -737,7 +736,7 @@ pub(crate) fn add_log_file_flags(spec: command_spec::Spec) -> command_spec::Spec
     )
 }
 
-pub(crate) fn get_log_file_flags(args: &arg_spec::Values) -> (Option<String>, Option<String>) {
+pub fn get_log_file_flags(args: &arg_spec::Values) -> (Option<String>, Option<String>) {
     fn normalize(log_file: String) -> String {
         let path = std::path::Path::new(&log_file);
         let dirname = path.parent().unwrap_or(std::path::Path::new("."));
@@ -745,10 +744,10 @@ pub(crate) fn get_log_file_flags(args: &arg_spec::Values) -> (Option<String>, Op
         dirname.join(basename).to_string_lossy().to_string()
     }
     let server_log_file =
-        command_spec::get(args, "--log-file", &arg_spec::optional(arg_spec::string()))
+        flow_command_spec::get(args, "--log-file", &arg_spec::optional(arg_spec::string()))
             .unwrap()
             .map(normalize);
-    let monitor_log_file = command_spec::get(
+    let monitor_log_file = flow_command_spec::get(
         args,
         "--monitor-log-file",
         &arg_spec::optional(arg_spec::string()),
@@ -759,13 +758,13 @@ pub(crate) fn get_log_file_flags(args: &arg_spec::Values) -> (Option<String>, Op
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-pub(crate) enum OffsetStyle {
+pub enum OffsetStyle {
     #[default]
     Utf8Bytes,
     JsIndices,
 }
 
-pub(crate) fn add_offset_style_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_offset_style_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--offset-style",
         &arg_spec::optional(arg_spec::enum_flag(vec![
@@ -777,8 +776,8 @@ pub(crate) fn add_offset_style_flag(spec: command_spec::Spec) -> command_spec::S
     )
 }
 
-pub(crate) fn get_offset_style(args: &arg_spec::Values) -> Option<OffsetStyle> {
-    command_spec::get(
+pub fn get_offset_style(args: &arg_spec::Values) -> Option<OffsetStyle> {
+    flow_command_spec::get(
         args,
         "--offset-style",
         &arg_spec::optional(arg_spec::enum_flag(vec![
@@ -789,7 +788,7 @@ pub(crate) fn get_offset_style(args: &arg_spec::Values) -> Option<OffsetStyle> {
     .unwrap()
 }
 
-pub(crate) fn offset_kind_of_offset_style(
+pub fn offset_kind_of_offset_style(
     offset_style: Option<OffsetStyle>,
 ) -> flow_parser::offset_utils::OffsetKind {
     match offset_style {
@@ -798,7 +797,7 @@ pub(crate) fn offset_kind_of_offset_style(
     }
 }
 
-pub(super) fn flowconfig_multi_error(errors: &[(u32, String)]) -> ! {
+pub fn flowconfig_multi_error(errors: &[(u32, String)]) -> ! {
     let msg = errors
         .iter()
         .map(|(line, msg)| format!(".flowconfig:{} {}", line, msg))
@@ -807,13 +806,13 @@ pub(super) fn flowconfig_multi_error(errors: &[(u32, String)]) -> ! {
     flow_common_exit::exit(FlowExitStatus::InvalidFlowconfig, Some(&msg));
 }
 
-pub(super) fn flowconfig_multi_warn(errors: &[(u32, String)]) {
+pub fn flowconfig_multi_warn(errors: &[(u32, String)]) {
     for (line, msg) in errors {
         eprintln!(".flowconfig:{} {}", line, msg);
     }
 }
 
-pub(super) fn read_config_or_exit(flowconfig_path: &str, enforce_warnings: bool) -> FlowConfig {
+pub fn read_config_or_exit(flowconfig_path: &str, enforce_warnings: bool) -> FlowConfig {
     let (flowconfig, warnings, _flowconfig_hash) =
         match flow_config::get_with_ignored_version(flowconfig_path, false) {
             Ok(r) => r,
@@ -838,7 +837,7 @@ pub(super) fn read_config_or_exit(flowconfig_path: &str, enforce_warnings: bool)
     }
 }
 
-pub(super) fn read_config_and_hash_or_exit(
+pub fn read_config_and_hash_or_exit(
     flowconfig_path: &str,
     enforce_warnings: bool,
 ) -> (FlowConfig, String) {
@@ -865,7 +864,7 @@ pub(super) fn read_config_and_hash_or_exit(
     (flowconfig, flowconfig_hash)
 }
 
-pub(super) fn check_version(required_version: &Option<String>) -> Result<(), String> {
+pub fn check_version(required_version: &Option<String>) -> Result<(), String> {
     match required_version {
         None => Ok(()),
         Some(version_constraint) => {
@@ -901,7 +900,7 @@ pub(super) fn check_version(required_version: &Option<String>) -> Result<(), Str
     }
 }
 
-pub(super) fn assert_version(flowconfig: &FlowConfig) {
+pub fn assert_version(flowconfig: &FlowConfig) {
     let required_version = &flowconfig.version;
     match check_version(required_version) {
         Ok(()) => {}
@@ -910,19 +909,19 @@ pub(super) fn assert_version(flowconfig: &FlowConfig) {
 }
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-pub(crate) struct FlowconfigFlags {
-    pub(crate) ignores: Vec<String>,
-    pub(crate) includes: Vec<String>,
-    pub(crate) libs: Vec<String>,
+pub struct FlowconfigFlags {
+    pub ignores: Vec<String>,
+    pub includes: Vec<String>,
+    pub libs: Vec<String>,
     // We store raw_lint_severities as a string list instead of as a LintSettings.t so we
     // can defer parsing of the lint settings until after the flowconfig lint settings
     // are known, to properly detect redundant settings (and avoid false positives)
-    pub(crate) raw_lint_severities: Vec<String>,
-    pub(crate) untyped: Vec<String>,
-    pub(crate) declarations: Vec<String>,
+    pub raw_lint_severities: Vec<String>,
+    pub untyped: Vec<String>,
+    pub declarations: Vec<String>,
 }
 
-pub(crate) fn list_of_string_arg(arg: Option<String>) -> Vec<String> {
+pub fn list_of_string_arg(arg: Option<String>) -> Vec<String> {
     match arg {
         Some(arg) if arg.is_empty() => vec![],
         Some(arg) => arg.split(',').map(ToOwned::to_owned).collect(),
@@ -975,7 +974,7 @@ fn flowlib_builtin_lib(
     }
 }
 
-pub(crate) fn file_options(
+pub fn file_options(
     flowconfig: &FlowConfig,
     root: &Path,
     no_flowlib: bool,
@@ -1059,7 +1058,7 @@ pub(crate) fn file_options(
     // "flow-typed" is always included in the libs list for convenience,
     // but there's no guarantee that it exists on the filesystem.
     if !has_explicit_flowtyped_lib && flowtyped_path.exists() {
-        lib_paths.push((None, flowtyped_path));
+        lib_paths.insert(0, (None, flowtyped_path));
     }
     for lib in libs {
         lib_paths.push((None, flow_common::files::make_path_absolute(root, &lib)));
@@ -1164,7 +1163,7 @@ pub(crate) fn file_options(
     })
 }
 
-pub(crate) fn file_options_of_flowconfig(
+pub fn file_options_of_flowconfig(
     root: &Path,
     flowconfig: &FlowConfig,
 ) -> Arc<flow_common::files::FileOptions> {
@@ -1182,7 +1181,7 @@ pub(crate) fn file_options_of_flowconfig(
     )
 }
 
-pub(crate) fn add_ignore_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_ignore_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--ignore",
         &arg_spec::optional(arg_spec::string()),
@@ -1191,7 +1190,7 @@ pub(crate) fn add_ignore_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_untyped_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_untyped_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--untyped",
         &arg_spec::optional(arg_spec::string()),
@@ -1200,7 +1199,7 @@ pub(crate) fn add_untyped_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_declaration_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_declaration_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--declaration",
         &arg_spec::optional(arg_spec::string()),
@@ -1209,7 +1208,7 @@ pub(crate) fn add_declaration_flag(spec: command_spec::Spec) -> command_spec::Sp
     )
 }
 
-pub(crate) fn add_include_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_include_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--include",
         &arg_spec::optional(arg_spec::string()),
@@ -1218,7 +1217,7 @@ pub(crate) fn add_include_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_lib_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_lib_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--lib",
         &arg_spec::optional(arg_spec::string()),
@@ -1227,7 +1226,7 @@ pub(crate) fn add_lib_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_lints_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub(crate) fn add_lints_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--lints",
         &arg_spec::optional(arg_spec::string()),
@@ -1236,7 +1235,7 @@ pub(crate) fn add_lints_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-pub(crate) fn add_no_restart_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_no_restart_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--no-auto-restart",
         &arg_spec::truthy(),
@@ -1245,39 +1244,39 @@ pub(crate) fn add_no_restart_flag(spec: command_spec::Spec) -> command_spec::Spe
     )
 }
 
-pub(crate) fn add_flowconfig_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_flowconfig_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     add_lints_flag(add_lib_flag(add_include_flag(add_declaration_flag(
         add_untyped_flag(add_ignore_flag(spec)),
     ))))
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) struct ConnectParams {
-    pub(crate) retries: i32,
-    pub(crate) timeout: Option<i32>,
-    pub(crate) no_auto_start: bool,
-    pub(crate) autostop: bool,
-    pub(crate) lazy_mode: Option<LazyMode>,
-    pub(crate) temp_dir: Option<String>,
-    pub(crate) ignore_version: bool,
-    pub(crate) quiet: bool,
-    pub(crate) on_mismatch: OnMismatchBehavior,
+pub struct ConnectParams {
+    pub retries: i32,
+    pub timeout: Option<i32>,
+    pub no_auto_start: bool,
+    pub autostop: bool,
+    pub lazy_mode: Option<LazyMode>,
+    pub temp_dir: Option<String>,
+    pub ignore_version: bool,
+    pub quiet: bool,
+    pub on_mismatch: OnMismatchBehavior,
 }
 
 // The Rust port uses TCP loopback sockets. Under heavily parallel startup, a
 // ready monitor can take longer than three seconds to drain connection attempts.
 const DEFAULT_CONNECT_RETRIES: i32 = 10;
 
-pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
-    let lazy_ = command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
+pub fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
+    let lazy_ = flow_command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
     let lazy_mode =
-        command_spec::get(args, "--lazy-mode", &arg_spec::optional(lazy_mode_flag())).unwrap();
+        flow_command_spec::get(args, "--lazy-mode", &arg_spec::optional(lazy_mode_flag())).unwrap();
     let lazy_mode = if lazy_ && lazy_mode.is_none() {
         Some(LazyMode::Lazy)
     } else {
         lazy_mode
     };
-    let timeout = command_spec::get(args, "--timeout", &arg_spec::int()).unwrap();
+    let timeout = flow_command_spec::get(args, "--timeout", &arg_spec::int()).unwrap();
     match timeout {
         Some(n) if n <= 0 => {
             let msg = format!("Timeout must be a positive integer. Got {}", n);
@@ -1286,18 +1285,24 @@ pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
         _ => {}
     }
     ConnectParams {
-        retries: command_spec::get(args, "--retries", &arg_spec::int())
+        retries: flow_command_spec::get(args, "--retries", &arg_spec::int())
             .unwrap()
             .unwrap_or(DEFAULT_CONNECT_RETRIES),
         timeout,
-        no_auto_start: command_spec::get(args, "--no-auto-start", &arg_spec::truthy()).unwrap(),
+        no_auto_start: flow_command_spec::get(args, "--no-auto-start", &arg_spec::truthy())
+            .unwrap(),
         autostop: false,
         lazy_mode,
-        temp_dir: command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string()))
+        temp_dir: flow_command_spec::get(
+            args,
+            "--temp-dir",
+            &arg_spec::optional(arg_spec::string()),
+        )
+        .unwrap(),
+        ignore_version: flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy())
             .unwrap(),
-        ignore_version: command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
-        quiet: command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
-        on_mismatch: command_spec::get(
+        quiet: flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
+        on_mismatch: flow_command_spec::get(
             args,
             "--on-mismatch",
             &arg_spec::required(
@@ -1314,7 +1319,7 @@ pub(crate) fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
     }
 }
 
-fn add_connect_flags_with_lazy_collector(spec: command_spec::Spec) -> command_spec::Spec {
+fn add_connect_flags_with_lazy_collector(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     let spec = spec
         .flag(
             "--timeout",
@@ -1341,20 +1346,20 @@ fn add_connect_flags_with_lazy_collector(spec: command_spec::Spec) -> command_sp
     add_on_mismatch_flag(spec)
 }
 
-pub(crate) fn add_connect_flags_no_lazy(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_connect_flags_no_lazy(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     add_connect_flags_with_lazy_collector(spec)
 }
 
-pub fn add_connect_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_connect_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     add_connect_flags_with_lazy_collector(add_lazy_flags(spec))
 }
 
-pub(crate) fn add_connect_and_json_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_connect_and_json_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     // For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet
     add_json_flags(add_connect_flags(spec))
 }
 
-pub(crate) fn get_connect_and_json_flags(args: &arg_spec::Values) -> (ConnectParams, bool, bool) {
+pub fn get_connect_and_json_flags(args: &arg_spec::Values) -> (ConnectParams, bool, bool) {
     let connect_flags = get_connect_flags(args);
     let JsonFlags { json, pretty } = get_json_flags(args);
     (
@@ -1376,37 +1381,37 @@ pub fn monitor_log_file(flowconfig_name: &str, tmp_dir: &str, root: &std::path::
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct OptionsFlags {
-    pub(crate) all: bool,
-    pub(crate) debug: bool,
-    pub(crate) flowconfig_flags: FlowconfigFlags,
-    pub(crate) include_warnings: bool,
-    pub(crate) max_warnings: Option<i32>,
-    pub(crate) max_workers: Option<i32>,
-    pub(crate) merge_timeout: Option<i32>,
-    pub(crate) munge_underscore_members: bool,
-    pub(crate) no_flowlib: bool,
-    pub(crate) profile: bool,
-    pub(crate) quiet: bool,
-    pub(crate) slow_to_check_logging: flow_common::slow_to_check_logging::SlowToCheckLogging,
-    pub(crate) strip_root: bool,
-    pub(crate) temp_dir: Option<String>,
-    pub(crate) verbose: Option<Verbose>,
-    pub(crate) wait_for_recheck: Option<bool>,
-    pub(crate) vpn_less: Option<bool>,
-    pub(crate) include_suppressions: bool,
-    pub(crate) estimate_recheck_time: Option<bool>,
-    pub(crate) distributed: bool,
-    pub(crate) no_autoimports: bool,
+pub struct OptionsFlags {
+    pub all: bool,
+    pub debug: bool,
+    pub flowconfig_flags: FlowconfigFlags,
+    pub include_warnings: bool,
+    pub max_warnings: Option<i32>,
+    pub max_workers: Option<i32>,
+    pub merge_timeout: Option<i32>,
+    pub munge_underscore_members: bool,
+    pub no_flowlib: bool,
+    pub profile: bool,
+    pub quiet: bool,
+    pub slow_to_check_logging: flow_common::slow_to_check_logging::SlowToCheckLogging,
+    pub strip_root: bool,
+    pub temp_dir: Option<String>,
+    pub verbose: Option<Verbose>,
+    pub wait_for_recheck: Option<bool>,
+    pub vpn_less: Option<bool>,
+    pub include_suppressions: bool,
+    pub estimate_recheck_time: Option<bool>,
+    pub distributed: bool,
+    pub no_autoimports: bool,
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct SavedStateFlags {
-    pub(crate) saved_state_fetcher: Option<SavedStateFetcher>,
-    pub(crate) saved_state_force_recheck: bool,
-    pub(crate) saved_state_no_fallback: bool,
-    pub(crate) saved_state_skip_version_check: bool,
-    pub(crate) saved_state_verify: bool,
+pub struct SavedStateFlags {
+    pub saved_state_fetcher: Option<SavedStateFetcher>,
+    pub saved_state_force_recheck: bool,
+    pub saved_state_no_fallback: bool,
+    pub saved_state_skip_version_check: bool,
+    pub saved_state_verify: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -1444,7 +1449,7 @@ pub(crate) fn parse_lints_flag(
     }
 }
 
-pub(crate) fn add_options_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_options_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     let spec = add_profile_flag(spec.flag(
         "--debug",
         &arg_spec::truthy(),
@@ -1518,8 +1523,8 @@ pub(crate) fn add_options_flags(spec: command_spec::Spec) -> command_spec::Spec 
     )
 }
 
-pub(crate) fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
-    let merge_timeout = command_spec::get(args, "--merge-timeout", &arg_spec::int()).unwrap();
+pub fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
+    let merge_timeout = flow_command_spec::get(args, "--merge-timeout", &arg_spec::int()).unwrap();
     match merge_timeout {
         Some(timeout) if timeout < 0 => {
             flow_common_exit::exit(
@@ -1531,25 +1536,25 @@ pub(crate) fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
     }
 
     let ignores_str =
-        command_spec::get(args, "--ignore", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--ignore", &arg_spec::optional(arg_spec::string())).unwrap();
     let untyped_str =
-        command_spec::get(args, "--untyped", &arg_spec::optional(arg_spec::string())).unwrap();
-    let declarations_str = command_spec::get(
+        flow_command_spec::get(args, "--untyped", &arg_spec::optional(arg_spec::string())).unwrap();
+    let declarations_str = flow_command_spec::get(
         args,
         "--declaration",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
     let includes_str =
-        command_spec::get(args, "--include", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--include", &arg_spec::optional(arg_spec::string())).unwrap();
     let lib_str =
-        command_spec::get(args, "--lib", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--lib", &arg_spec::optional(arg_spec::string())).unwrap();
     let lints_str =
-        command_spec::get(args, "--lints", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--lints", &arg_spec::optional(arg_spec::string())).unwrap();
 
     OptionsFlags {
-        all: command_spec::get(args, "--all", &arg_spec::truthy()).unwrap(),
-        debug: command_spec::get(args, "--debug", &arg_spec::truthy()).unwrap(),
+        all: flow_command_spec::get(args, "--all", &arg_spec::truthy()).unwrap(),
+        debug: flow_command_spec::get(args, "--debug", &arg_spec::truthy()).unwrap(),
         flowconfig_flags: FlowconfigFlags {
             ignores: list_of_string_arg(ignores_str),
             includes: list_of_string_arg(includes_str),
@@ -1558,42 +1563,46 @@ pub(crate) fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
             untyped: list_of_string_arg(untyped_str),
             declarations: list_of_string_arg(declarations_str),
         },
-        include_warnings: command_spec::get(args, "--include-warnings", &arg_spec::truthy())
+        include_warnings: flow_command_spec::get(args, "--include-warnings", &arg_spec::truthy())
             .unwrap(),
-        max_warnings: command_spec::get(
+        max_warnings: flow_command_spec::get(
             args,
             "--max-warnings",
             &arg_spec::optional(arg_spec::int()),
         )
         .unwrap(),
-        max_workers: command_spec::get(args, "--max-workers", &arg_spec::optional(arg_spec::int()))
-            .unwrap(),
+        max_workers: flow_command_spec::get(
+            args,
+            "--max-workers",
+            &arg_spec::optional(arg_spec::int()),
+        )
+        .unwrap(),
         merge_timeout,
-        munge_underscore_members: command_spec::get(
+        munge_underscore_members: flow_command_spec::get(
             args,
             "--munge-underscore-members",
             &arg_spec::truthy(),
         )
         .unwrap(),
-        no_flowlib: command_spec::get(args, "--no-flowlib", &arg_spec::truthy()).unwrap(),
-        profile: command_spec::get(args, "--profile", &arg_spec::truthy()).unwrap(),
-        quiet: command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
+        no_flowlib: flow_command_spec::get(args, "--no-flowlib", &arg_spec::truthy()).unwrap(),
+        profile: flow_command_spec::get(args, "--profile", &arg_spec::truthy()).unwrap(),
+        quiet: flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
         slow_to_check_logging: flow_common::slow_to_check_logging::SlowToCheckLogging {
-            slow_files_logging_internal: command_spec::get(
+            slow_files_logging_internal: flow_command_spec::get(
                 args,
                 "--log-slow-files-interval",
                 &arg_spec::optional(arg_spec::int()),
             )
             .unwrap()
             .map(|x| x as f64),
-            slow_components_logging_threshold: command_spec::get(
+            slow_components_logging_threshold: flow_command_spec::get(
                 args,
                 "--log-slow-components-threshold",
                 &arg_spec::optional(arg_spec::int()),
             )
             .unwrap()
             .map(|x| x as f64),
-            slow_expressions_logging_threshold: command_spec::get(
+            slow_expressions_logging_threshold: flow_command_spec::get(
                 args,
                 "--log-slow-expressions-threshold",
                 &arg_spec::optional(arg_spec::int()),
@@ -1601,32 +1610,41 @@ pub(crate) fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
             .unwrap()
             .map(|x| x as f64),
         },
-        strip_root: command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap(),
-        temp_dir: command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string()))
-            .unwrap(),
+        strip_root: flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap(),
+        temp_dir: flow_command_spec::get(
+            args,
+            "--temp-dir",
+            &arg_spec::optional(arg_spec::string()),
+        )
+        .unwrap(),
         verbose: verbose_flags(args),
-        wait_for_recheck: command_spec::get(
+        wait_for_recheck: flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
         )
         .unwrap(),
-        vpn_less: command_spec::get(
+        vpn_less: flow_command_spec::get(
             args,
             "--vpn-less",
             &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
         )
         .unwrap(),
-        include_suppressions: command_spec::get(args, "--include-suppressed", &arg_spec::truthy())
-            .unwrap(),
-        estimate_recheck_time: command_spec::get(
+        include_suppressions: flow_command_spec::get(
+            args,
+            "--include-suppressed",
+            &arg_spec::truthy(),
+        )
+        .unwrap(),
+        estimate_recheck_time: flow_command_spec::get(
             args,
             "--estimate-recheck-time",
             &arg_spec::optional_value_with_default(true, arg_spec::bool_flag()),
         )
         .unwrap(),
-        distributed: command_spec::get(args, "--distributed", &arg_spec::truthy()).unwrap(),
-        no_autoimports: command_spec::get(args, "--no-autoimports", &arg_spec::truthy()).unwrap(),
+        distributed: flow_command_spec::get(args, "--distributed", &arg_spec::truthy()).unwrap(),
+        no_autoimports: flow_command_spec::get(args, "--no-autoimports", &arg_spec::truthy())
+            .unwrap(),
     }
 }
 
@@ -1639,7 +1657,7 @@ pub(crate) fn saved_state_fetcher_flag() -> arg_spec::FlagType<Option<SavedState
     ])
 }
 
-pub(crate) fn add_saved_state_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_saved_state_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--saved-state-fetcher",
         &saved_state_fetcher_flag(),
@@ -1675,38 +1693,42 @@ pub(crate) fn add_saved_state_flags(spec: command_spec::Spec) -> command_spec::S
     )
 }
 
-pub(crate) fn get_saved_state_flags(args: &arg_spec::Values) -> SavedStateFlags {
+pub fn get_saved_state_flags(args: &arg_spec::Values) -> SavedStateFlags {
     SavedStateFlags {
-        saved_state_fetcher: command_spec::get(
+        saved_state_fetcher: flow_command_spec::get(
             args,
             "--saved-state-fetcher",
             &saved_state_fetcher_flag(),
         )
         .unwrap(),
-        saved_state_force_recheck: command_spec::get(
+        saved_state_force_recheck: flow_command_spec::get(
             args,
             "--saved-state-force-recheck",
             &arg_spec::truthy(),
         )
         .unwrap(),
-        saved_state_no_fallback: command_spec::get(
+        saved_state_no_fallback: flow_command_spec::get(
             args,
             "--saved-state-no-fallback",
             &arg_spec::truthy(),
         )
         .unwrap(),
-        saved_state_skip_version_check: command_spec::get(
+        saved_state_skip_version_check: flow_command_spec::get(
             args,
             "--saved-state-skip-version-check-DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
             &arg_spec::truthy(),
         )
         .unwrap(),
-        saved_state_verify: command_spec::get(args, "--saved-state-verify", &arg_spec::truthy())
-            .unwrap(),
+        saved_state_verify: flow_command_spec::get(
+            args,
+            "--saved-state-verify",
+            &arg_spec::truthy(),
+        )
+        .unwrap(),
     }
 }
 
-pub(crate) fn add_flowconfig_name_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_flowconfig_name_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--flowconfig-name",
         &arg_spec::required(Some(".flowconfig".to_string()), arg_spec::string()),
@@ -1715,13 +1737,13 @@ pub(crate) fn add_flowconfig_name_flag(spec: command_spec::Spec) -> command_spec
     )
 }
 
-pub fn add_base_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_base_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     add_flowconfig_name_flag(spec)
 }
 
 pub fn get_base_flags(args: &arg_spec::Values) -> BaseFlags {
     BaseFlags {
-        flowconfig_name: command_spec::get(
+        flowconfig_name: flow_command_spec::get(
             args,
             "--flowconfig-name",
             &arg_spec::required(Some(".flowconfig".to_string()), arg_spec::string()),
@@ -1743,7 +1765,7 @@ pub(crate) fn file_watcher_flag() -> arg_spec::FlagType<Option<flow_config::File
     ])
 }
 
-pub(crate) fn add_file_watcher_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_file_watcher_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     let watcher_names = if flow_edenfs_watcher::is_available() {
         "none, dfind, watchman, edenfs"
     } else {
@@ -1787,38 +1809,42 @@ pub(crate) fn add_file_watcher_flag(spec: command_spec::Spec) -> command_spec::S
     )
 }
 
-pub(crate) struct FileWatcherFlags {
-    pub(crate) file_watcher: Option<flow_config::FileWatcher>,
-    pub(crate) file_watcher_debug: bool,
-    pub(crate) file_watcher_timeout: Option<u32>,
-    pub(crate) file_watcher_mergebase_with: Option<String>,
-    pub(crate) file_watcher_sync_timeout: Option<u32>,
+pub struct FileWatcherFlags {
+    pub file_watcher: Option<flow_config::FileWatcher>,
+    pub file_watcher_debug: bool,
+    pub file_watcher_timeout: Option<u32>,
+    pub file_watcher_mergebase_with: Option<String>,
+    pub file_watcher_sync_timeout: Option<u32>,
 }
 
-pub(crate) fn get_file_watcher_flags(args: &arg_spec::Values) -> FileWatcherFlags {
+pub fn get_file_watcher_flags(args: &arg_spec::Values) -> FileWatcherFlags {
     FileWatcherFlags {
-        file_watcher: command_spec::get(
+        file_watcher: flow_command_spec::get(
             args,
             "--file-watcher",
             &arg_spec::optional(file_watcher_flag()),
         )
         .unwrap(),
-        file_watcher_debug: command_spec::get(args, "--file-watcher-debug", &arg_spec::truthy())
-            .unwrap(),
-        file_watcher_timeout: command_spec::get(
+        file_watcher_debug: flow_command_spec::get(
+            args,
+            "--file-watcher-debug",
+            &arg_spec::truthy(),
+        )
+        .unwrap(),
+        file_watcher_timeout: flow_command_spec::get(
             args,
             "--file-watcher-timeout",
             &arg_spec::optional(arg_spec::uint()),
         )
         .unwrap()
         .map(|x| x as u32),
-        file_watcher_mergebase_with: command_spec::get(
+        file_watcher_mergebase_with: flow_command_spec::get(
             args,
             "--file-watcher-mergebase-with",
             &arg_spec::optional(arg_spec::string()),
         )
         .unwrap(),
-        file_watcher_sync_timeout: command_spec::get(
+        file_watcher_sync_timeout: flow_command_spec::get(
             args,
             "--file-watcher-sync-timeout",
             &arg_spec::optional(arg_spec::uint()),
@@ -1828,12 +1854,12 @@ pub(crate) fn get_file_watcher_flags(args: &arg_spec::Values) -> FileWatcherFlag
     }
 }
 
-pub(crate) fn add_options_and_json_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_options_and_json_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     // For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet
     add_json_flags(add_options_flags(spec))
 }
 
-pub(crate) fn add_json_version_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_json_version_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--json-version",
         &arg_spec::optional(arg_spec::string()),
@@ -1842,10 +1868,10 @@ pub(crate) fn add_json_version_flag(spec: command_spec::Spec) -> command_spec::S
     )
 }
 
-pub(crate) fn get_json_version(
+pub fn get_json_version(
     args: &arg_spec::Values,
 ) -> Option<flow_common_errors::error_utils::json_output::JsonVersion> {
-    command_spec::get(
+    flow_command_spec::get(
         args,
         "--json-version",
         &arg_spec::optional(arg_spec::string()),
@@ -1861,7 +1887,7 @@ pub(crate) fn get_json_version(
     })
 }
 
-pub(crate) fn add_no_cgroup_flag(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_no_cgroup_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     // If a command uses this flag, then it will automatically exec systemd-run (if systemd-run is
     // available). This can add a couple hundred ms to the start up time of the command. Only commands
     // that are resource-intensive (or spawn resource intensive processes) and probably should run in
@@ -1874,8 +1900,8 @@ pub(crate) fn add_no_cgroup_flag(spec: command_spec::Spec) -> command_spec::Spec
     )
 }
 
-pub(crate) fn maybe_run_in_cgroup(args: &arg_spec::Values) {
-    let no_cgroup = command_spec::get(args, "--no-cgroup", &arg_spec::truthy()).unwrap();
+pub fn maybe_run_in_cgroup(args: &arg_spec::Values) {
+    let no_cgroup = flow_command_spec::get(args, "--no-cgroup", &arg_spec::truthy()).unwrap();
     if no_cgroup {
         return;
     }
@@ -1970,7 +1996,7 @@ pub fn normalize_temp_dir(cli_value: &Option<String>) -> PathBuf {
     })
 }
 
-pub(super) fn make_options(
+pub fn make_options(
     flowconfig_name: String,
     flowconfig_hash: String,
     flowconfig: FlowConfig,
@@ -1980,13 +2006,76 @@ pub(super) fn make_options(
     saved_state_options_flags: SavedStateFlags,
 ) -> Options {
     let lazy_mode_override = lazy_mode;
+
+    let OptionsFlags {
+        all: all_override,
+        debug: debug_override,
+        flowconfig_flags,
+        include_warnings: include_warnings_override,
+        max_warnings: max_warnings_override,
+        max_workers: max_workers_override,
+        merge_timeout: merge_timeout_override,
+        munge_underscore_members: munge_underscore_members_override,
+        no_flowlib: cli_no_flowlib,
+        profile: profile_override,
+        quiet: quiet_override,
+        slow_to_check_logging: slow_to_check_logging_override,
+        strip_root: strip_root_override,
+        temp_dir: temp_dir_override,
+        verbose: verbose_override,
+        wait_for_recheck: wait_for_recheck_override,
+        vpn_less: vpn_less_override,
+        include_suppressions: include_suppressions_override,
+        estimate_recheck_time: estimate_recheck_time_override,
+        distributed: distributed_override,
+        no_autoimports: no_autoimports_override,
+    } = options_flags;
+
+    let SavedStateFlags {
+        saved_state_fetcher: saved_state_fetcher_override,
+        saved_state_force_recheck,
+        saved_state_no_fallback,
+        saved_state_skip_version_check: saved_state_skip_version_check_override,
+        saved_state_verify,
+    } = saved_state_options_flags;
+
+    let FlowconfigFlags {
+        ignores: ignores_override,
+        includes: includes_override,
+        libs: libs_override,
+        raw_lint_severities,
+        untyped: untyped_override,
+        declarations: declarations_override,
+    } = flowconfig_flags;
+
+    let temp_dir = {
+        normalize_temp_dir(&temp_dir_override)
+            .to_string_lossy()
+            .to_string()
+    };
+
+    let file_options = file_options(
+        &flowconfig,
+        &root,
+        cli_no_flowlib,
+        std::path::Path::new(&temp_dir),
+        ignores_override
+            .into_iter()
+            .map(|ignore| (ignore, None))
+            .collect(),
+        includes_override,
+        libs_override,
+        untyped_override,
+        declarations_override,
+    );
+
     let FlowConfig {
         rollouts,
-        ignores,
-        untyped,
-        declarations,
-        includes,
-        libs,
+        ignores: _,
+        untyped: _,
+        declarations: _,
+        includes: _,
+        libs: _,
         lint_severities,
         strict_mode,
         options:
@@ -2021,14 +2110,14 @@ pub(super) fn make_options(
                 file_watcher_mergebase_with_git: _file_watcher_mergebase_with_git,
                 file_watcher_mergebase_with_hg: _file_watcher_mergebase_with_hg,
                 file_watcher_timeout: _file_watcher_timeout,
-                files_implicitly_include_root,
+                files_implicitly_include_root: _,
                 format_bracket_spacing,
                 format_single_quotes,
                 #[cfg(fbcode_build)]
                     fox: _,
                 haste_module_ref_prefix,
-                haste_paths_excludes,
-                haste_paths_includes,
+                haste_paths_excludes: _,
+                haste_paths_includes: _,
                 hook_compatibility,
                 hook_compatibility_includes,
                 hook_compatibility_excludes,
@@ -2046,15 +2135,15 @@ pub(super) fn make_options(
                 max_workers,
                 merge_timeout,
                 missing_module_generators,
-                module_declaration_dirnames,
-                mut module_file_exts,
+                module_declaration_dirnames: _,
+                module_file_exts: _,
                 module_name_mappers,
-                module_resource_exts,
+                module_resource_exts: _,
                 module_system,
                 modules_are_use_strict,
-                multi_platform,
-                multi_platform_extensions,
-                multi_platform_extension_group_mapping,
+                multi_platform: _,
+                multi_platform_extensions: _,
+                multi_platform_extension_group_mapping: _,
                 multi_platform_ambient_supports_platform_project_overrides,
                 munge_underscores,
                 builtin_lib,
@@ -2064,7 +2153,7 @@ pub(super) fn make_options(
                 node_main_fields,
                 node_package_export_conditions,
                 node_resolver_allow_root_relative,
-                node_resolver_dirnames,
+                node_resolver_dirnames: _,
                 node_resolver_root_relative_dirnames,
                 pattern_matching,
                 projects,
@@ -2118,53 +2207,6 @@ pub(super) fn make_options(
     let ts_syntax = ts_syntax.unwrap_or(false);
     let export_star_excludes_default = export_star_excludes_default.unwrap_or(false);
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
-
-    let OptionsFlags {
-        all: all_override,
-        debug: debug_override,
-        flowconfig_flags,
-        include_warnings: include_warnings_override,
-        max_warnings: max_warnings_override,
-        max_workers: max_workers_override,
-        merge_timeout: merge_timeout_override,
-        munge_underscore_members: munge_underscore_members_override,
-        no_flowlib: cli_no_flowlib,
-        profile: profile_override,
-        quiet: quiet_override,
-        slow_to_check_logging: slow_to_check_logging_override,
-        strip_root: strip_root_override,
-        temp_dir: temp_dir_override,
-        verbose: verbose_override,
-        wait_for_recheck: wait_for_recheck_override,
-        vpn_less: vpn_less_override,
-        include_suppressions: include_suppressions_override,
-        estimate_recheck_time: estimate_recheck_time_override,
-        distributed: distributed_override,
-        no_autoimports: no_autoimports_override,
-    } = options_flags;
-
-    let SavedStateFlags {
-        saved_state_fetcher: saved_state_fetcher_override,
-        saved_state_force_recheck,
-        saved_state_no_fallback,
-        saved_state_skip_version_check: saved_state_skip_version_check_override,
-        saved_state_verify,
-    } = saved_state_options_flags;
-
-    let FlowconfigFlags {
-        ignores: ignores_override,
-        includes: includes_override,
-        libs: libs_override,
-        raw_lint_severities,
-        untyped: untyped_override,
-        declarations: declarations_override,
-    } = flowconfig_flags;
-
-    let temp_dir = {
-        normalize_temp_dir(&temp_dir_override)
-            .to_string_lossy()
-            .to_string()
-    };
 
     let all = all_override || all.unwrap_or(false);
     let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
@@ -2360,14 +2402,6 @@ pub(super) fn make_options(
         &root,
     ));
 
-    if typescript_library_definition_support {
-        for ext in flow_parser::file_key::DTS_EXTENSIONS {
-            if !module_file_exts.contains(&ext.into()) {
-                module_file_exts.insert(0, ext.into());
-            }
-        }
-    }
-
     let node_package_export_conditions = if typescript_library_definition_support {
         // When typescript_library_definition_support is enabled, we add "types"
         // and "import" to the valid export conditions. "types" points to .d.ts
@@ -2384,156 +2418,6 @@ pub(super) fn make_options(
         conditions
     } else {
         node_package_export_conditions
-    };
-
-    let file_options = {
-        use flow_common::files::FileOptions;
-
-        let ignores = {
-            let mut merged: Vec<(FlowconfigGlobPattern, Option<String>)> = ignores_override
-                .into_iter()
-                .map(|ignore| (parse_flowconfig_glob_or_exit(ignore, true), None))
-                .collect();
-            merged.extend(ignores);
-            merged
-        };
-        let ignores_processed = ignores
-            .into_iter()
-            .map(|(pattern, backup)| compile_ignore_pattern(&root, pattern, backup))
-            .collect();
-
-        let untyped = {
-            let mut merged = untyped_override;
-            merged.extend(untyped);
-            merged
-        };
-        let untyped_processed = untyped
-            .into_iter()
-            .map(|pattern| {
-                let expanded = flow_common::files::expand_project_root_token(
-                    &root,
-                    remove_exclusion(&pattern),
-                );
-                let regex = Regex::new(&expanded).unwrap();
-                (pattern, regex)
-            })
-            .collect();
-
-        let declarations = {
-            let mut merged = declarations_override;
-            merged.extend(declarations);
-            merged
-        };
-        let declarations_processed = declarations
-            .into_iter()
-            .map(|pattern| {
-                let expanded = flow_common::files::expand_project_root_token(
-                    &root,
-                    remove_exclusion(&pattern),
-                );
-                let regex = Regex::new(&expanded).unwrap();
-                (pattern, regex)
-            })
-            .collect();
-
-        let flowtyped_path = flow_common::files::make_path_absolute(&root, "flow-typed");
-        let mut has_explicit_flowtyped_lib = false;
-        let mut lib_paths_processed = libs
-            .into_iter()
-            .map(|(scope, path)| {
-                let scope_str = scope.map(|s| s.to_string());
-                let expanded = flow_common::files::expand_project_root_token(&root, &path);
-                let path_buf = flow_common::files::make_path_absolute(&root, &expanded);
-                if path_buf == flowtyped_path {
-                    has_explicit_flowtyped_lib = true;
-                }
-                (scope_str, path_buf)
-            })
-            .collect::<Vec<_>>();
-        if !has_explicit_flowtyped_lib && flowtyped_path.exists() {
-            lib_paths_processed.insert(0, (None, flowtyped_path));
-        }
-        for path in libs_override {
-            lib_paths_processed.push((None, flow_common::files::make_path_absolute(&root, &path)));
-        }
-
-        let includes_processed = {
-            let mut merged_includes = includes_override
-                .into_iter()
-                .map(|include| parse_flowconfig_glob_or_exit(include, false))
-                .collect::<Vec<_>>();
-            merged_includes.extend(includes);
-            let mut matcher = PathMatcher::empty();
-            // Explicitly included paths are always added to the path_matcher
-            for include in merged_includes {
-                add_include_pattern(&mut matcher, &root, &include);
-            }
-            // Implicitly included paths are added only if they're not already being watched
-            let mut implicit_paths = Vec::new();
-            if files_implicitly_include_root {
-                implicit_paths.push(root.to_path_buf());
-            }
-            implicit_paths.extend(lib_paths_processed.iter().map(|(_, path)| path.clone()));
-            // Shortest path first
-            implicit_paths.sort_by_key(|path| path.to_string_lossy().len());
-            for path in implicit_paths {
-                let path_str = path.to_string_lossy().to_string();
-                // If this include is already covered by an explicit include or a shorter implicit include,
-                // then skip it
-                if matcher.matches(&path_str) {
-                    continue;
-                }
-                matcher.add_path(&path);
-            }
-            matcher
-        };
-
-        let haste_paths_excludes_processed = haste_paths_excludes
-            .into_iter()
-            .map(|s| {
-                let expanded = flow_common::files::expand_project_root_token(&root, &s);
-                Regex::new(&expanded).unwrap()
-            })
-            .collect();
-
-        let haste_paths_includes_processed = haste_paths_includes
-            .into_iter()
-            .map(|s| {
-                let expanded = flow_common::files::expand_project_root_token(&root, &s);
-                Regex::new(&expanded).unwrap()
-            })
-            .collect();
-
-        Arc::new(FileOptions {
-            default_lib_dir: Some(match flowlib_dir {
-                FlowlibDir::Prelude(path) => flow_common::files::LibDir::Prelude(path),
-                FlowlibDir::Flowlib(path) => flow_common::files::LibDir::Flowlib(path),
-                FlowlibDir::Tslib(path) => flow_common::files::LibDir::Tslib(path),
-            }),
-            ignores: ignores_processed,
-            untyped: untyped_processed,
-            declarations: declarations_processed,
-            implicitly_include_root: files_implicitly_include_root,
-            haste_paths_excludes: haste_paths_excludes_processed,
-            haste_paths_includes: haste_paths_includes_processed,
-            includes: includes_processed,
-            lib_paths: lib_paths_processed,
-            module_declaration_dirnames: module_declaration_dirnames
-                .into_iter()
-                .map(|dir| {
-                    let expanded = flow_common::files::expand_project_root_token(&root, &dir);
-                    flow_common::files::cached_canonicalize(std::path::Path::new(&expanded))
-                        .map(|p| p.to_string_lossy().to_string())
-                        .unwrap_or(expanded)
-                })
-                .collect(),
-            module_file_exts,
-            module_resource_exts: module_resource_exts.into_iter().collect(),
-            multi_platform: multi_platform.unwrap_or(false),
-            multi_platform_extensions: multi_platform_extensions.to_vec(),
-            multi_platform_extension_group_mapping: multi_platform_extension_group_mapping.to_vec(),
-            node_resolver_dirnames,
-        })
     };
 
     let projects_options = {
@@ -2819,7 +2703,7 @@ pub fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path
     }
 }
 
-pub(crate) fn find_a_root(
+pub fn find_a_root(
     flowconfig_name: &str,
     root: Option<&str>,
     input: Option<&FileInput>,
@@ -2836,7 +2720,7 @@ pub(crate) fn find_a_root(
     )
 }
 
-pub(crate) fn get_the_root(
+pub fn get_the_root(
     flowconfig_name: &str,
     root: Option<&str>,
     input: Option<&FileInput>,
@@ -2867,13 +2751,13 @@ pub(crate) fn get_the_root(
     }
 }
 
-pub(crate) fn convert_input_pos(line: i32, column: i32) -> (i32, i32) {
+pub fn convert_input_pos(line: i32, column: i32) -> (i32, i32) {
     // convert 1,1 based line/column to 1,0 for internal use
     let column = if column > 1 { column - 1 } else { 0 };
     (line, column)
 }
 
-pub(super) fn get_path_of_file(file: &str) -> String {
+pub fn get_path_of_file(file: &str) -> String {
     // copied (and adapted) from Hack's ClientCheck module
     if Path::new(file).exists() {
         expand_path(file)
@@ -2888,7 +2772,7 @@ pub(super) fn get_path_of_file(file: &str) -> String {
     }
 }
 
-pub(crate) fn get_file_from_filename_or_stdin(
+pub fn get_file_from_filename_or_stdin(
     cmd: &str,
     filename: Option<&str>,
     path: Option<&str>,
@@ -2927,7 +2811,7 @@ pub(crate) fn get_file_from_filename_or_stdin(
     }
 }
 
-pub(crate) fn parse_location_with_optional_filename(
+pub fn parse_location_with_optional_filename(
     spec: &Command,
     path: Option<&str>,
     args: &[String],
@@ -3223,7 +3107,7 @@ pub fn connect_and_make_ephemeral_request(
     connect_and_make_request(flowconfig_name, &get_connect_flags(args), root, request)
 }
 
-pub(crate) fn connect_and_make_request(
+pub fn connect_and_make_request(
     flowconfig_name: &str,
     connect_flags: &ConnectParams,
     root: &std::path::Path,
@@ -3291,7 +3175,7 @@ pub(crate) fn connect_and_make_request(
     }
 }
 
-pub(crate) fn failwith_bad_response(
+pub fn failwith_bad_response(
     request: &server_prot::request::Command,
     response: &server_prot::response::Response,
 ) -> ! {
@@ -3306,7 +3190,7 @@ pub(crate) fn failwith_bad_response(
     )
 }
 
-pub(super) fn get_check_or_status_exit_code(
+pub fn get_check_or_status_exit_code(
     errors: &flow_common_errors::error_utils::ConcreteLocPrintableErrorSet,
     warnings: &flow_common_errors::error_utils::ConcreteLocPrintableErrorSet,
     max_warnings: Option<i32>,
@@ -3321,7 +3205,7 @@ pub(super) fn get_check_or_status_exit_code(
     }
 }
 
-pub(crate) fn choose_file_watcher(
+pub fn choose_file_watcher(
     flowconfig: &FlowConfig,
     lazy_mode: Option<LazyMode>,
     file_watcher: Option<flow_config::FileWatcher>,
@@ -3384,7 +3268,7 @@ pub(crate) fn choose_file_watcher(
     }
 }
 
-pub(crate) fn choose_file_watcher_mergebase_with(
+pub fn choose_file_watcher_mergebase_with(
     flowconfig: &FlowConfig,
     vcs: Option<Vcs>,
     mergebase_with: Option<&str>,
@@ -3407,7 +3291,7 @@ pub(crate) fn choose_file_watcher_mergebase_with(
     }
 }
 
-pub(crate) fn choose_file_watcher_timeout(
+pub fn choose_file_watcher_timeout(
     flowconfig: &FlowConfig,
     cli_timeout: Option<u32>,
 ) -> Option<f64> {
@@ -3419,36 +3303,39 @@ pub(crate) fn choose_file_watcher_timeout(
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct CodemodParams {
-    pub(crate) options_flags: OptionsFlags,
-    pub(crate) saved_state_options_flags: SavedStateFlags,
-    pub(crate) ignore_version: bool,
-    pub(crate) write: bool,
-    pub(crate) repeat: bool,
-    pub(crate) log_level: Option<flow_hh_logger::Level>,
-    pub(crate) root: Option<String>,
-    pub(crate) input_file: Option<String>,
-    pub(crate) base_flag: BaseFlags,
-    pub(crate) anon: Option<Vec<String>>,
+pub struct CodemodParams {
+    pub options_flags: OptionsFlags,
+    pub saved_state_options_flags: SavedStateFlags,
+    pub ignore_version: bool,
+    pub write: bool,
+    pub repeat: bool,
+    pub log_level: Option<flow_hh_logger::Level>,
+    pub root: Option<String>,
+    pub input_file: Option<String>,
+    pub base_flag: BaseFlags,
+    pub anon: Option<Vec<String>>,
 }
 
-pub(crate) fn get_codemod_flags(args: &arg_spec::Values) -> CodemodParams {
+pub fn get_codemod_flags(args: &arg_spec::Values) -> CodemodParams {
     let options_flags = get_options_flags(args);
     let saved_state_options_flags = get_saved_state_flags(args);
-    let ignore_version = command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
-    let write = command_spec::get(args, "--write", &arg_spec::truthy()).unwrap();
-    let repeat = command_spec::get(args, "--repeat", &arg_spec::truthy()).unwrap();
+    let ignore_version =
+        flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
+    let write = flow_command_spec::get(args, "--write", &arg_spec::truthy()).unwrap();
+    let repeat = flow_command_spec::get(args, "--repeat", &arg_spec::truthy()).unwrap();
     let log_level =
-        command_spec::get(args, "--log-level", &arg_spec::optional(log_level_flag())).unwrap();
-    let root = command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let input_file = command_spec::get(
+        flow_command_spec::get(args, "--log-level", &arg_spec::optional(log_level_flag())).unwrap();
+    let root =
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let input_file = flow_command_spec::get(
         args,
         "--input-file",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
     let base_flag = get_base_flags(args);
-    let anon = command_spec::get(args, "FILE...", &arg_spec::list_of(arg_spec::string())).unwrap();
+    let anon =
+        flow_command_spec::get(args, "FILE...", &arg_spec::list_of(arg_spec::string())).unwrap();
     let anon = anon.filter(|v| !v.is_empty());
 
     if !write && repeat {
@@ -3481,7 +3368,7 @@ fn log_level_flag() -> arg_spec::FlagType<Option<flow_hh_logger::Level>> {
     ])
 }
 
-pub(crate) fn add_codemod_flags(spec: command_spec::Spec) -> command_spec::Spec {
+pub fn add_codemod_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     let spec = add_options_flags(spec);
     let spec = add_saved_state_flags(spec);
     let spec = add_from_flag(spec);
@@ -3509,20 +3396,20 @@ pub(crate) fn add_codemod_flags(spec: command_spec::Spec) -> command_spec::Spec 
     spec.anon("FILE...", &arg_spec::list_of(arg_spec::string()))
 }
 
-pub(crate) fn subcommand_spec<T: Clone + Send + Sync + 'static>(
+pub fn subcommand_spec<T: Clone + Send + Sync + 'static>(
     name: &str,
     doc: &str,
-    visibility: command_spec::Visibility,
+    visibility: flow_command_spec::Visibility,
     cmd_list: Vec<(&'static str, T, String)>,
-) -> command_spec::Spec {
+) -> flow_command_spec::Spec {
     let mut command_info = cmd_list
         .iter()
         .filter(|(cmd, _, subdoc)| !cmd.is_empty() && !subdoc.is_empty())
         .map(|(cmd, _, subdoc)| (cmd.to_string(), subdoc.clone()))
         .collect::<Vec<_>>();
     command_info.sort_by(|(a, _), (b, _)| a.cmp(b));
-    let command_info = command_spec::format_two_columns(None, None, 1, &command_info);
-    command_spec::Spec::new(
+    let command_info = flow_command_spec::format_two_columns(None, None, 1, &command_info);
+    flow_command_spec::Spec::new(
         name,
         doc,
         visibility,

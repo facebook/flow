@@ -7,15 +7,13 @@
 
 use std::sync::OnceLock;
 
-use crate::command_spec;
+static EXTRA_COMMANDS: OnceLock<fn() -> Vec<flow_command_spec::Command>> = OnceLock::new();
 
-static EXTRA_COMMANDS: OnceLock<fn() -> Vec<command_spec::Command>> = OnceLock::new();
-
-pub fn register_extra_commands(f: fn() -> Vec<command_spec::Command>) {
+pub fn register_extra_commands(f: fn() -> Vec<flow_command_spec::Command>) {
     EXTRA_COMMANDS.set(f).unwrap();
 }
 
-pub(crate) fn extra_commands() -> Vec<command_spec::Command> {
+pub(crate) fn extra_commands() -> Vec<flow_command_spec::Command> {
     match EXTRA_COMMANDS.get() {
         Some(f) => f(),
         None => vec![],

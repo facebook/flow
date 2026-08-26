@@ -5,24 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_lsp_server::flow_lsp;
 use flow_server_env::lsp_connect_params::ConnectParams;
 use flow_server_env::lsp_connect_params::OnMismatchBehavior;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "lsp",
         "Acts as a server for the Language Server Protocol over stdin/stdout",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!("Usage: {exe_name} lsp\n\nRuns a server for the Language Server Protocol\n"),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_temp_dir_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_temp_dir_flag(spec);
     let spec = spec
         .flag(
             "--lazy",
@@ -36,19 +33,21 @@ fn spec() -> command_spec::Spec {
             "Deprecated, has no effect",
             None,
         );
-    let spec = command_utils::add_autostop_flag(spec);
-    command_utils::add_from_flag(spec)
+    let spec = flow_command_utils::add_autostop_flag(spec);
+    flow_command_utils::add_from_flag(spec)
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
     let temp_dir =
-        command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string())).unwrap();
-    let _lazy = command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--temp-dir", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+    let _lazy = flow_command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
     let _lazy_mode =
-        command_spec::get(args, "--lazy-mode", &arg_spec::optional(arg_spec::string())).unwrap();
-    let autostop = command_spec::get(args, "--autostop", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--lazy-mode", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+    let autostop = flow_command_spec::get(args, "--autostop", &arg_spec::truthy()).unwrap();
 
     // always set `quiet`, since the LSP doesn't want any log spew. this only applies to the
     // `start` command and does not imply a quiet server, which will still write to its log
@@ -69,6 +68,6 @@ fn main(args: &arg_spec::Values) {
     flow_lsp::run(&flowconfig_name, connect_params);
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

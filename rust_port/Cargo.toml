@@ -6,6 +6,8 @@ members = [
   "crates/flow_check_cache",
   "crates/flow_cli",
   "crates/flow_codemods",
+  "crates/flow_command_spec",
+  "crates/flow_command_utils",
   "crates/flow_commands_connect",
   "crates/flow_common",
   "crates/flow_common_build_id",

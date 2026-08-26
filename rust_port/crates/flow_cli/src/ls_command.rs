@@ -9,37 +9,34 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use flow_command_spec::arg_spec;
 use flow_common::files;
 use flow_common::files::FileOptions;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 // ***********************************************************************
 // flow ls (list files) command
 // ***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(
         "ls",
         "Lists files visible to Flow",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} ls [OPTION]... [FILE]...\n\nLists files visible to Flow\n",
-            command_utils::exe_name()
+            flow_command_utils::exe_name()
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_ignore_version_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_ignore_flag(spec);
-    let spec = command_utils::add_include_flag(spec);
-    let spec = command_utils::add_untyped_flag(spec);
-    let spec = command_utils::add_declaration_flag(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_json_flags(spec);
-    let spec = command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_ignore_version_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_ignore_flag(spec);
+    let spec = flow_command_utils::add_include_flag(spec);
+    let spec = flow_command_utils::add_untyped_flag(spec);
+    let spec = flow_command_utils::add_declaration_flag(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_json_flags(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
     let spec = spec.flag(
         "--all",
         &arg_spec::truthy(),
@@ -58,7 +55,7 @@ fn spec() -> command_spec::Spec {
         "Output what kind of file each file is and why Flow cares about it",
         None,
     );
-    let spec = command_utils::add_input_file_flag(spec, "ls");
+    let spec = flow_command_utils::add_input_file_flag(spec, "ls");
     spec.anon("files or dirs", &arg_spec::list_of(arg_spec::string()))
 }
 
@@ -180,19 +177,20 @@ fn make_options(
         && untyped_flag.is_none()
         && declaration_flag.is_none()
     {
-        return command_utils::file_options_of_flowconfig(root, flowconfig);
+        return flow_command_utils::file_options_of_flowconfig(root, flowconfig);
     }
 
-    let includes = command_utils::list_of_string_arg(include_flag);
-    let ignores: Vec<(String, Option<String>)> = command_utils::list_of_string_arg(ignore_flag)
-        .into_iter()
-        .map(|ignore| (ignore, None))
-        .collect();
-    let untyped = command_utils::list_of_string_arg(untyped_flag);
-    let declarations = command_utils::list_of_string_arg(declaration_flag);
+    let includes = flow_command_utils::list_of_string_arg(include_flag);
+    let ignores: Vec<(String, Option<String>)> =
+        flow_command_utils::list_of_string_arg(ignore_flag)
+            .into_iter()
+            .map(|ignore| (ignore, None))
+            .collect();
+    let untyped = flow_command_utils::list_of_string_arg(untyped_flag);
+    let declarations = flow_command_utils::list_of_string_arg(declaration_flag);
     let libs: Vec<String> = vec![];
-    let temp_dir = command_utils::normalize_temp_dir(&None);
-    command_utils::file_options(
+    let temp_dir = flow_command_utils::normalize_temp_dir(&None);
+    flow_command_utils::file_options(
         flowconfig,
         root,
         true,
@@ -329,8 +327,8 @@ fn get_next_append_const(
 pub(crate) fn get_all_flow_files(flowconfig_name: &str, root: &Path) -> Vec<String> {
     let config_path = root.join(flowconfig_name);
     let config_path = config_path.to_string_lossy().to_string();
-    let (flowconfig, _) = command_utils::read_config_and_hash_or_exit(&config_path, true);
-    let options = command_utils::file_options_of_flowconfig(root, &flowconfig);
+    let (flowconfig, _) = flow_command_utils::read_config_and_hash_or_exit(&config_path, true);
+    let options = flow_command_utils::file_options_of_flowconfig(root, &flowconfig);
     let mut next_files = get_ls_files(root, false, options, false, None);
     let config_file = flow_server_files::server_files_js::config_file(flowconfig_name, root);
     next_files = get_next_append_const(next_files, vec![config_file]);
@@ -338,37 +336,38 @@ pub(crate) fn get_all_flow_files(flowconfig_name: &str, root: &Path) -> Vec<Stri
 }
 
 fn main_impl(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
-    let ignore_version = command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let ignore_version =
+        flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
     let ignore_flag =
-        command_spec::get(args, "--ignore", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--ignore", &arg_spec::optional(arg_spec::string())).unwrap();
     let include_flag =
-        command_spec::get(args, "--include", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "--include", &arg_spec::optional(arg_spec::string())).unwrap();
     let untyped_flag =
-        command_spec::get(args, "--untyped", &arg_spec::optional(arg_spec::string())).unwrap();
-    let declaration_flag = command_spec::get(
+        flow_command_spec::get(args, "--untyped", &arg_spec::optional(arg_spec::string())).unwrap();
+    let declaration_flag = flow_command_spec::get(
         args,
         "--declaration",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
     let root_flag =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let json_flags = command_utils::get_json_flags(args);
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let json_flags = flow_command_utils::get_json_flags(args);
     let json = json_flags.json;
     let pretty = json_flags.pretty;
-    let all = command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
-    let imaginary = command_spec::get(args, "--imaginary", &arg_spec::truthy()).unwrap();
-    let reason = command_spec::get(args, "--explain", &arg_spec::truthy()).unwrap();
-    let input_file = command_spec::get(
+    let all = flow_command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
+    let imaginary = flow_command_spec::get(args, "--imaginary", &arg_spec::truthy()).unwrap();
+    let reason = flow_command_spec::get(args, "--explain", &arg_spec::truthy()).unwrap();
+    let input_file = flow_command_spec::get(
         args,
         "--input-file",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
-    let root_or_files = command_spec::get(
+    let root_or_files = flow_command_spec::get(
         args,
         "files or dirs",
         &arg_spec::list_of(arg_spec::string()),
@@ -376,8 +375,11 @@ fn main_impl(args: &arg_spec::Values) {
     .unwrap()
     .unwrap_or_default();
 
-    let files_or_dirs =
-        command_utils::get_filenames_from_input(true, input_file.as_deref(), Some(&root_or_files));
+    let files_or_dirs = flow_command_utils::get_filenames_from_input(
+        true,
+        input_file.as_deref(),
+        Some(&root_or_files),
+    );
     let root_hint: Option<String> = match &root_flag {
         Some(r) => Some(r.clone()),
         None => match files_or_dirs.first() {
@@ -395,7 +397,7 @@ fn main_impl(args: &arg_spec::Values) {
             None => None,
         },
     };
-    let root = command_utils::guess_root(&flowconfig_name, root_hint.as_deref());
+    let root = flow_command_utils::guess_root(&flowconfig_name, root_hint.as_deref());
     let config_path = root.join(&flowconfig_name);
     let config_path_str = config_path.to_string_lossy().to_string();
     let (flowconfig, warnings, _hash) =
@@ -502,6 +504,6 @@ fn main_impl(args: &arg_spec::Values) {
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main_impl)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main_impl)
 }

@@ -5,11 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_server_env::server_prot;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 const CMD_NAME: &str = "llm-context-experimental";
 
@@ -17,21 +14,21 @@ const CMD_NAME: &str = "llm-context-experimental";
 // flow llm-context command
 // ***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         CMD_NAME,
         "Outputs LLM context information for given files",
-        command_spec::Visibility::Experimental,
+        flow_command_spec::Visibility::Experimental,
         format!(
             "Usage: {exe_name} llm-context [OPTION]... [FILE]...\n\ne.g. {exe_name} llm-context foo.js bar.js\n"
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     spec.flag(
         "--token-budget",
         &arg_spec::required(Some(4000), arg_spec::int()),
@@ -83,25 +80,25 @@ fn handle_error(err: String, json: bool, pretty: bool) {
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
-    let connect_flags = command_utils::get_connect_flags(args);
-    let json_flags = command_utils::get_json_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let wait_for_recheck = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
-    let token_budget = command_spec::get(
+    let token_budget = flow_command_spec::get(
         args,
         "--token-budget",
         &arg_spec::required(Some(4000), arg_spec::int()),
     )
     .unwrap();
-    let files = command_spec::get(args, "files", &arg_spec::list_of(arg_spec::string()))
+    let files = flow_command_spec::get(args, "files", &arg_spec::list_of(arg_spec::string()))
         .unwrap()
         .unwrap_or_default();
     if files.is_empty() {
@@ -112,7 +109,7 @@ fn main(args: &arg_spec::Values) {
     let root = match root_arg {
         Some(root) => std::path::PathBuf::from(root),
         None => match files.first() {
-            Some(file) => command_utils::find_a_root(
+            Some(file) => flow_command_utils::find_a_root(
                 &flowconfig_name,
                 None,
                 Some(&flow_server_utils::file_input::FileInput::FileName(
@@ -142,8 +139,12 @@ fn main(args: &arg_spec::Values) {
         wait_for_recheck,
     });
     let json = json_flags.json || json_flags.pretty;
-    let response =
-        command_utils::connect_and_make_request(&flowconfig_name, &connect_flags, &root, &request);
+    let response = flow_command_utils::connect_and_make_request(
+        &flowconfig_name,
+        &connect_flags,
+        &root,
+        &request,
+    );
     match response {
         server_prot::response::Response::LLM_CONTEXT(Err(err)) => {
             handle_error(err, json, json_flags.pretty);
@@ -152,11 +153,11 @@ fn main(args: &arg_spec::Values) {
             handle_response(json, json_flags.pretty, response);
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

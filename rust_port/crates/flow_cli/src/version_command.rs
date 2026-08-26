@@ -9,25 +9,23 @@
 // flow ast command
 // ***********************************************************************
 
+use flow_command_spec::arg_spec;
 use flow_common::flow_version;
 use flow_server_env::socket_handshake;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "version",
         "Print version information",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} version [OPTION]... [ROOT]\n\ne.g. {} version\nor   {} version --json\nor   {} version /path/to/root\n",
             exe_name, exe_name, exe_name, exe_name
         ),
     );
-    let spec = command_utils::add_json_flags(spec);
-    let spec = command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_json_flags(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
     spec.flag(
         "--binary",
         &arg_spec::truthy(),
@@ -69,11 +67,11 @@ fn print_binary(json: bool, pretty: bool) {
 }
 
 fn main(args: &arg_spec::Values) {
-    let json_flags = command_utils::get_json_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let json = json_flags.json;
     let pretty = json_flags.pretty;
-    let binary = command_spec::get(args, "--binary", &arg_spec::truthy()).unwrap();
-    let semver = command_spec::get(args, "--semver", &arg_spec::truthy()).unwrap();
+    let binary = flow_command_spec::get(args, "--binary", &arg_spec::truthy()).unwrap();
+    let semver = flow_command_spec::get(args, "--semver", &arg_spec::truthy()).unwrap();
 
     if semver {
         print_semver(json, pretty);
@@ -91,11 +89,11 @@ fn main(args: &arg_spec::Values) {
         });
         flow_hh_json::print_json_endline(pretty, &json);
     } else {
-        command_utils::print_version();
+        flow_command_utils::print_version();
     };
     flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

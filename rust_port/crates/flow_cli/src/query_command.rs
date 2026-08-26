@@ -7,40 +7,37 @@
 
 use std::io::Read;
 
+use flow_command_spec::arg_spec;
 use flow_server_env::server_prot;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
-pub(crate) fn spec() -> command_spec::Spec {
-    let spec = command_spec::Spec::new(
+pub(crate) fn spec() -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(
         "query",
         "Queries per-file metadata as JSON",
-        command_spec::Visibility::Internal,
+        flow_command_spec::Visibility::Internal,
         format!(
             "Usage: {} query [OPTION]... <json-query>\n\ne.g. {} query '{{\"fields\": [\"name\"]}}'\n",
-            command_utils::exe_name(),
-            command_utils::exe_name()
+            flow_command_utils::exe_name(),
+            flow_command_utils::exe_name()
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
     spec.flag("-j", &arg_spec::truthy(), "Read the query from stdin", None)
         .flag("--json-command", &arg_spec::truthy(), "Alias for -j", None)
         .anon("query", &arg_spec::optional(arg_spec::string()))
 }
 
 pub(crate) fn run(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
-    let connect_flags = command_utils::get_connect_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let from_stdin = command_spec::get(args, "-j", &arg_spec::truthy()).unwrap()
-        || command_spec::get(args, "--json-command", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let from_stdin = flow_command_spec::get(args, "-j", &arg_spec::truthy()).unwrap()
+        || flow_command_spec::get(args, "--json-command", &arg_spec::truthy()).unwrap();
     let positional =
-        command_spec::get(args, "query", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "query", &arg_spec::optional(arg_spec::string())).unwrap();
 
     // The query body comes from exactly one source: -j (stdin) or the positional argument.
     let query_json = match (from_stdin, positional) {
@@ -73,9 +70,9 @@ pub(crate) fn run(args: &arg_spec::Values) {
         ),
     };
 
-    let root = command_utils::guess_root(&base_flags.flowconfig_name, root_arg.as_deref());
+    let root = flow_command_utils::guess_root(&base_flags.flowconfig_name, root_arg.as_deref());
     let request = server_prot::request::Command::QUERY { query };
-    let response = command_utils::connect_and_make_request(
+    let response = flow_command_utils::connect_and_make_request(
         &base_flags.flowconfig_name,
         &connect_flags,
         &root,
@@ -90,11 +87,11 @@ pub(crate) fn run(args: &arg_spec::Values) {
             println!("{}", json);
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), run)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), run)
 }

@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use flow_command_spec::arg_spec;
 use flow_common::options::SavedStateFetcher;
 use flow_common::verbose::Verbose;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -21,10 +22,6 @@ use flow_common_errors::error_utils::json_output;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 enum Printer<'a> {
     Json {
@@ -143,17 +140,17 @@ struct PreparedFullCheck {
 fn prepare_full_check(
     flowconfig_name: String,
     root: PathBuf,
-    options_flags: command_utils::OptionsFlags,
+    options_flags: flow_command_utils::OptionsFlags,
     ignore_version: bool,
 ) -> PreparedFullCheck {
     let flowconfig_path = root.join(&flowconfig_name);
     let flowconfig_path = flowconfig_path.to_string_lossy().to_string();
     let (flowconfig, flowconfig_hash) =
-        command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+        flow_command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
     let flowconfig_for_assert = flowconfig.clone();
     let lazy_mode = Some(flow_config::LazyMode::NonLazy);
     // Saved state doesn't make sense for `flow full-check`, so disable it.
-    let saved_state_options_flags = command_utils::SavedStateFlags {
+    let saved_state_options_flags = flow_command_utils::SavedStateFlags {
         // None would mean we would just use the value in the .flowconfig, if available.
         // Instead, let's override that and turn off saved state entirely.
         saved_state_fetcher: Some(SavedStateFetcher::DummyFetcher),
@@ -162,7 +159,7 @@ fn prepare_full_check(
         saved_state_skip_version_check: false,
         saved_state_verify: false,
     };
-    let mut options = Arc::new(command_utils::make_options(
+    let mut options = Arc::new(flow_command_utils::make_options(
         flowconfig_name,
         flowconfig_hash,
         flowconfig,
@@ -188,7 +185,7 @@ pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json:
     } = prepare_full_check(
         flowconfig_name.to_string(),
         root.to_path_buf(),
-        command_utils::OptionsFlags {
+        flow_command_utils::OptionsFlags {
             all: false,
             debug: false,
             flowconfig_flags: Default::default(),
@@ -214,7 +211,7 @@ pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json:
         false,
     );
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
-    command_utils::assert_version(&flowconfig_for_assert);
+    flow_command_utils::assert_version(&flowconfig_for_assert);
     let result = Rc::new(RefCell::new(None));
     let result_for_check = Rc::clone(&result);
     flow_server::server::check_once(
@@ -241,31 +238,31 @@ pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json:
 }
 
 fn check_main(
-    base_flags: command_utils::BaseFlags,
-    error_flags: command_utils::ErrorFlagsArgs,
-    options_flags: command_utils::OptionsFlags,
+    base_flags: flow_command_utils::BaseFlags,
+    error_flags: flow_command_utils::ErrorFlagsArgs,
+    options_flags: flow_command_utils::OptionsFlags,
     json: bool,
     pretty: bool,
     json_version: Option<json_output::JsonVersion>,
-    offset_style: Option<command_utils::OffsetStyle>,
+    offset_style: Option<flow_command_utils::OffsetStyle>,
     ignore_version: bool,
     path_opt: Option<String>,
     (): (),
 ) {
     let flowconfig_name = base_flags.flowconfig_name;
-    let root = command_utils::guess_root(&flowconfig_name, path_opt.as_deref());
+    let root = flow_command_utils::guess_root(&flowconfig_name, path_opt.as_deref());
     let PreparedFullCheck {
         options,
         flowconfig: flowconfig_for_assert,
     } = prepare_full_check(flowconfig_name, root, options_flags, ignore_version);
-    let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+    let offset_kind = flow_command_utils::offset_kind_of_offset_style(offset_style);
     // initialize loggers before doing too much, especially anything that might exit
     flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
 
     if !ignore_version {
-        command_utils::assert_version(&flowconfig_for_assert);
+        flow_command_utils::assert_version(&flowconfig_for_assert);
     }
-    let error_flags = command_utils::collect_error_flags(
+    let error_flags = flow_command_utils::collect_error_flags(
         error_flags.color,
         error_flags.include_warnings,
         error_flags.max_warnings,
@@ -309,7 +306,7 @@ fn check_main(
         },
         None,
     );
-    flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
+    flow_common_exit_status::exit(flow_command_utils::get_check_or_status_exit_code(
         &errors,
         &warnings,
         error_flags.max_warnings,
@@ -319,89 +316,90 @@ fn check_main(
 mod full_check_command {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "full-check",
             "Type-checks all files in the foreground (no server, can be slow on large codebases)",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} full-check [OPTION]... [ROOT]\n\nDoes a full Flow check in the foreground and prints the results.\n\nThis command runs the type checker directly in the foreground without connecting to a Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"
             ),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_error_flags(spec);
-        let spec = command_utils::add_options_and_json_flags(spec);
-        let spec = command_utils::add_json_version_flag(spec);
-        let spec = command_utils::add_offset_style_flag(spec);
-        let spec = command_utils::add_ignore_version_flag(spec);
-        let spec = command_utils::add_from_flag(spec);
-        let spec = command_utils::add_no_cgroup_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_error_flags(spec);
+        let spec = flow_command_utils::add_options_and_json_flags(spec);
+        let spec = flow_command_utils::add_json_version_flag(spec);
+        let spec = flow_command_utils::add_offset_style_flag(spec);
+        let spec = flow_command_utils::add_ignore_version_flag(spec);
+        let spec = flow_command_utils::add_from_flag(spec);
+        let spec = flow_command_utils::add_no_cgroup_flag(spec);
         spec.anon("root", &arg_spec::optional(arg_spec::string()))
     }
 
-    pub(super) fn command() -> command_spec::Command {
+    pub(super) fn command() -> flow_command_spec::Command {
         let check_main = |args: &arg_spec::Values| {
-            let json_flags = command_utils::get_json_flags(args);
-            let options_flags = command_utils::get_options_flags(args);
-            let options_flags = command_utils::OptionsFlags {
+            let json_flags = flow_command_utils::get_json_flags(args);
+            let options_flags = flow_command_utils::get_options_flags(args);
+            let options_flags = flow_command_utils::OptionsFlags {
                 quiet: options_flags.quiet || json_flags.json || json_flags.pretty,
                 ..options_flags
             };
             super::check_main(
-                command_utils::get_base_flags(args),
-                command_utils::get_error_flags_args(args),
+                flow_command_utils::get_base_flags(args),
+                flow_command_utils::get_error_flags_args(args),
                 options_flags,
                 json_flags.json,
                 json_flags.pretty,
-                command_utils::get_json_version(args),
-                command_utils::get_offset_style(args),
-                command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
-                command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap(),
+                flow_command_utils::get_json_version(args),
+                flow_command_utils::get_offset_style(args),
+                flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
+                flow_command_spec::get(args, "root", &arg_spec::optional(arg_spec::string()))
+                    .unwrap(),
                 (),
             );
         };
-        command_spec::command(spec(), check_main)
+        flow_command_spec::command(spec(), check_main)
     }
 }
 
 mod focus_check_command {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "focus-check",
             "Type-checks specific files and their dependents in the foreground (no server)",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} focus-check [OPTION]... [FILES/DIRS]\n\nType-checks the input files/directories and their dependents in the foreground (no server).\n\nIf --root is not specified, Flow will search upward for a .flowconfig file from the first file or dir in FILES/DIR.\nIf --root is not specified and FILES/DIR is omitted, a focus check is ran on the current directory.\n"
             ),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_error_flags(spec);
-        let spec = command_utils::add_options_and_json_flags(spec);
-        let spec = command_utils::add_json_version_flag(spec);
-        let spec = command_utils::add_saved_state_flags(spec);
-        let spec = command_utils::add_offset_style_flag(spec);
-        let spec = command_utils::add_ignore_version_flag(spec);
-        let spec = command_utils::add_verbose_focus_flag(spec);
-        let spec = command_utils::add_from_flag(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_input_file_flag(spec, "check");
-        let spec = command_utils::add_no_cgroup_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_error_flags(spec);
+        let spec = flow_command_utils::add_options_and_json_flags(spec);
+        let spec = flow_command_utils::add_json_version_flag(spec);
+        let spec = flow_command_utils::add_saved_state_flags(spec);
+        let spec = flow_command_utils::add_offset_style_flag(spec);
+        let spec = flow_command_utils::add_ignore_version_flag(spec);
+        let spec = flow_command_utils::add_verbose_focus_flag(spec);
+        let spec = flow_command_utils::add_from_flag(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_input_file_flag(spec, "check");
+        let spec = flow_command_utils::add_no_cgroup_flag(spec);
         spec.anon("root", &arg_spec::list_of(arg_spec::string()))
     }
 
     fn main(
-        base_flags: command_utils::BaseFlags,
-        error_flags: command_utils::ErrorFlagsArgs,
-        options_flags: command_utils::OptionsFlags,
+        base_flags: flow_command_utils::BaseFlags,
+        error_flags: flow_command_utils::ErrorFlagsArgs,
+        options_flags: flow_command_utils::OptionsFlags,
         json: bool,
         pretty: bool,
         json_version: Option<json_output::JsonVersion>,
-        saved_state_options_flags: command_utils::SavedStateFlags,
-        offset_style: Option<command_utils::OffsetStyle>,
+        saved_state_options_flags: flow_command_utils::SavedStateFlags,
+        offset_style: Option<flow_command_utils::OffsetStyle>,
         ignore_version: bool,
         verbose_focus: bool,
         root: Option<String>,
@@ -409,11 +407,14 @@ mod focus_check_command {
         filenames: Vec<String>,
         (): (),
     ) {
-        let filenames =
-            command_utils::get_filenames_from_input(false, input_file.as_deref(), Some(&filenames));
+        let filenames = flow_command_utils::get_filenames_from_input(
+            false,
+            input_file.as_deref(),
+            Some(&filenames),
+        );
         let flowconfig_name = base_flags.flowconfig_name;
         // If --root is explicitly set, then use that as the root. Otherwise, use the first file
-        let root = command_utils::guess_root(
+        let root = flow_command_utils::guess_root(
             &flowconfig_name,
             if root.is_some() {
                 root.as_deref()
@@ -424,9 +425,9 @@ mod focus_check_command {
         let flowconfig_path = root.join(&flowconfig_name);
         let flowconfig_path = flowconfig_path.to_string_lossy().to_string();
         let (flowconfig, flowconfig_hash) =
-            command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+            flow_command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
         let flowconfig_for_assert = flowconfig.clone();
-        let mut options = Arc::new(command_utils::make_options(
+        let mut options = Arc::new(flow_command_utils::make_options(
             flowconfig_name,
             flowconfig_hash,
             flowconfig,
@@ -455,17 +456,17 @@ mod focus_check_command {
             };
             Arc::make_mut(&mut options).verbose = Some(opt_verbose);
         }
-        let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+        let offset_kind = flow_command_utils::offset_kind_of_offset_style(offset_style);
         // initialize loggers before doing too much, especially anything that might exit
         flow_logging_utils::init_loggers(&options, Some(flow_hh_logger::Level::Error));
 
         // do this after loggers are initialized, so we can complain properly
         let expanded_filenames =
-            command_utils::expand_file_list(&filenames, Some(&options.file_options));
+            flow_command_utils::expand_file_list(&filenames, Some(&options.file_options));
         flow_hh_logger::info!("Checking {} files", expanded_filenames.len());
 
         if !ignore_version {
-            command_utils::assert_version(&flowconfig_for_assert);
+            flow_command_utils::assert_version(&flowconfig_for_assert);
         }
 
         let focus_targets: FlowOrdSet<FileKey> = expanded_filenames
@@ -476,7 +477,7 @@ mod focus_check_command {
                 FileKey::source_file_of_absolute(&abs_path.to_string_lossy())
             })
             .collect();
-        let error_flags = command_utils::collect_error_flags(
+        let error_flags = flow_command_utils::collect_error_flags(
             error_flags.color,
             error_flags.include_warnings,
             error_flags.max_warnings,
@@ -520,53 +521,54 @@ mod focus_check_command {
             },
             Some(focus_targets),
         );
-        flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
+        flow_common_exit_status::exit(flow_command_utils::get_check_or_status_exit_code(
             &errors,
             &warnings,
             error_flags.max_warnings,
         ))
     }
 
-    pub(super) fn command() -> command_spec::Command {
+    pub(super) fn command() -> flow_command_spec::Command {
         let main = |args: &arg_spec::Values| {
-            let json_flags = command_utils::get_json_flags(args);
-            let options_flags = command_utils::get_options_flags(args);
-            let options_flags = command_utils::OptionsFlags {
+            let json_flags = flow_command_utils::get_json_flags(args);
+            let options_flags = flow_command_utils::get_options_flags(args);
+            let options_flags = flow_command_utils::OptionsFlags {
                 quiet: options_flags.quiet || json_flags.json || json_flags.pretty,
                 ..options_flags
             };
             self::main(
-                command_utils::get_base_flags(args),
-                command_utils::get_error_flags_args(args),
+                flow_command_utils::get_base_flags(args),
+                flow_command_utils::get_error_flags_args(args),
                 options_flags,
                 json_flags.json,
                 json_flags.pretty,
-                command_utils::get_json_version(args),
-                command_utils::get_saved_state_flags(args),
-                command_utils::get_offset_style(args),
-                command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
-                command_spec::get(args, "--verbose-focus", &arg_spec::truthy()).unwrap(),
-                command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap(),
-                command_spec::get(
+                flow_command_utils::get_json_version(args),
+                flow_command_utils::get_saved_state_flags(args),
+                flow_command_utils::get_offset_style(args),
+                flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
+                flow_command_spec::get(args, "--verbose-focus", &arg_spec::truthy()).unwrap(),
+                flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                    .unwrap(),
+                flow_command_spec::get(
                     args,
                     "--input-file",
                     &arg_spec::optional(arg_spec::string()),
                 )
                 .unwrap(),
-                command_spec::get(args, "root", &arg_spec::list_of(arg_spec::string()))
+                flow_command_spec::get(args, "root", &arg_spec::list_of(arg_spec::string()))
                     .unwrap()
                     .unwrap_or_default(),
                 (),
             );
         };
-        command_spec::command(spec(), main)
+        flow_command_spec::command(spec(), main)
     }
 }
 
-pub(crate) fn full_check_command() -> command_spec::Command {
+pub(crate) fn full_check_command() -> flow_command_spec::Command {
     full_check_command::command()
 }
 
-pub(crate) fn focus_check_command() -> command_spec::Command {
+pub(crate) fn focus_check_command() -> flow_command_spec::Command {
     focus_check_command::command()
 }

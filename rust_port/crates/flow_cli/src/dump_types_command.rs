@@ -5,35 +5,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_common_errors::error_utils;
 use flow_server_env::server_prot;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 // ***********************************************************************
 // flow dump-types command
 // ***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
     // Outputs list of all types in the file
-    let spec = command_spec::Spec::new(
+    let spec = flow_command_spec::Spec::new(
         "dump-types",
         "Outputs types for every expression in the file",
-        command_spec::Visibility::Internal,
+        flow_command_spec::Visibility::Internal,
         format!(
             "Usage: {exe_name} dump-types [OPTION]... [FILE]\n\ne.g. {exe_name} dump-types foo.js\nor   {exe_name} dump-types < foo.js\n"
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_path_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_path_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     spec.flag(
         "--evaluate-type-destructors",
         &arg_spec::truthy(),
@@ -136,39 +133,40 @@ fn handle_error(
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
-    let connect_flags = command_utils::get_connect_flags(args);
-    let json_flags = command_utils::get_json_flags(args);
+    let connect_flags = flow_command_utils::get_connect_flags(args);
+    let json_flags = flow_command_utils::get_json_flags(args);
     let root_arg =
-        command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let path = command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-    let wait_for_recheck = command_spec::get(
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let path =
+        flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
     let evaluate_type_destructors =
-        command_spec::get(args, "--evaluate-type-destructors", &arg_spec::truthy()).unwrap();
-    let for_tool = command_spec::get(
+        flow_command_spec::get(args, "--evaluate-type-destructors", &arg_spec::truthy()).unwrap();
+    let for_tool = flow_command_spec::get(
         args,
         "--for-tool",
         &arg_spec::optional_value_with_default(10, arg_spec::int()),
     )
     .unwrap();
     let filename =
-        command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
 
     let json = json_flags.json || json_flags.pretty;
-    let file = command_utils::get_file_from_filename_or_stdin(
+    let file = flow_command_utils::get_file_from_filename_or_stdin(
         "dump-types",
         filename.as_deref(),
         path.as_deref(),
     );
     let file_content = file.content_of_file_input().ok();
-    let root = command_utils::guess_root(
+    let root = flow_command_utils::guess_root(
         &flowconfig_name,
         match root_arg.as_deref() {
             Some(root) => Some(root),
@@ -186,8 +184,12 @@ fn main(args: &arg_spec::Values) {
         for_tool,
         wait_for_recheck,
     };
-    let response =
-        command_utils::connect_and_make_request(&flowconfig_name, &connect_flags, &root, &request);
+    let response = flow_command_utils::connect_and_make_request(
+        &flowconfig_name,
+        &connect_flags,
+        &root,
+        &request,
+    );
     match response {
         server_prot::response::Response::DUMP_TYPES(Err(err)) => {
             handle_error(
@@ -208,11 +210,11 @@ fn main(args: &arg_spec::Values) {
             );
         }
         response => {
-            command_utils::failwith_bad_response(&request, &response);
+            flow_command_utils::failwith_bad_response(&request, &response);
         }
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

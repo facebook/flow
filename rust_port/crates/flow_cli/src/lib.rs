@@ -23,8 +23,6 @@ mod autofix_command;
 mod batch_coverage_command;
 mod check_contents_command;
 mod codemod_command;
-pub mod command_spec;
-pub mod command_utils;
 mod config_command;
 mod coverage_command;
 mod cycle_command;
@@ -64,14 +62,14 @@ pub(crate) fn get_options_with_root_and_flowconfig_name(
     root: &Path,
     flowconfig_name: &str,
     lazy_mode: Option<LazyMode>,
-    options_flags: command_utils::OptionsFlags,
-    saved_state_options_flags: command_utils::SavedStateFlags,
+    options_flags: flow_command_utils::OptionsFlags,
+    saved_state_options_flags: flow_command_utils::SavedStateFlags,
 ) -> Arc<Options> {
     let flowconfig_path = root.join(flowconfig_name);
     let flowconfig_path = flowconfig_path.to_string_lossy().to_string();
     let (flowconfig, flowconfig_hash) =
-        command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
-    Arc::new(command_utils::make_options(
+        flow_command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+    Arc::new(flow_command_utils::make_options(
         flowconfig_name.to_string(),
         flowconfig_hash,
         flowconfig,
@@ -96,10 +94,10 @@ fn build_monitor_options_and_start_args(
     args: &flow_server_monitor::DaemonizeArgs,
 ) -> (Arc<Options>, StartArgs) {
     let lazy_mode = args.lazy_mode.as_deref().and_then(parse_lazy_mode);
-    let options_flags = command_utils::OptionsFlags {
+    let options_flags = flow_command_utils::OptionsFlags {
         all: args.all,
         debug: args.debug,
-        flowconfig_flags: command_utils::FlowconfigFlags {
+        flowconfig_flags: flow_command_utils::FlowconfigFlags {
             ignores: args.flowconfig_ignores.clone(),
             includes: args.flowconfig_includes.clone(),
             libs: args.flowconfig_libs.clone(),
@@ -126,7 +124,7 @@ fn build_monitor_options_and_start_args(
         distributed: args.distributed,
         no_autoimports: args.no_autoimports,
     };
-    let saved_state_options_flags = command_utils::SavedStateFlags {
+    let saved_state_options_flags = flow_command_utils::SavedStateFlags {
         saved_state_fetcher: args.saved_state_fetcher,
         saved_state_force_recheck: args.saved_state_force_recheck,
         saved_state_no_fallback: args.saved_state_no_fallback,
@@ -178,10 +176,10 @@ fn build_server_daemon_options(
     args: &flow_server::server_daemon::ServerDaemonArgs,
 ) -> Arc<Options> {
     let lazy_mode = args.lazy_mode.as_deref().and_then(parse_lazy_mode);
-    let options_flags = command_utils::OptionsFlags {
+    let options_flags = flow_command_utils::OptionsFlags {
         all: args.all,
         debug: args.debug,
-        flowconfig_flags: command_utils::FlowconfigFlags {
+        flowconfig_flags: flow_command_utils::FlowconfigFlags {
             ignores: args.cli_overrides.flowconfig_ignores.clone(),
             includes: args.cli_overrides.flowconfig_includes.clone(),
             libs: args.cli_overrides.flowconfig_libs.clone(),
@@ -208,7 +206,7 @@ fn build_server_daemon_options(
         distributed: args.distributed,
         no_autoimports: args.cli_overrides.no_autoimports,
     };
-    let saved_state_options_flags = command_utils::SavedStateFlags {
+    let saved_state_options_flags = flow_command_utils::SavedStateFlags {
         saved_state_fetcher: args.saved_state_fetcher,
         saved_state_force_recheck: args.saved_state_force_recheck,
         saved_state_no_fallback: args.saved_state_no_fallback,
@@ -243,7 +241,7 @@ pub(crate) fn check_entry_point() {
     flow_daemon::check_entry_point();
 }
 
-fn explicit_commands() -> Vec<command_spec::Command> {
+fn explicit_commands() -> Vec<flow_command_spec::Command> {
     vec![
         apply_code_action_command::command(),
         ast_command::command(),
@@ -281,7 +279,7 @@ fn explicit_commands() -> Vec<command_spec::Command> {
     ]
 }
 
-fn registered_commands() -> Vec<command_spec::Command> {
+fn registered_commands() -> Vec<flow_command_spec::Command> {
     let explicit = explicit_commands();
     let extra = extra_commands::extra_commands();
     let mut commands = Vec::with_capacity(explicit.len() + extra.len());
@@ -290,7 +288,7 @@ fn registered_commands() -> Vec<command_spec::Command> {
     commands
 }
 
-fn all_commands() -> Vec<command_spec::Command> {
+fn all_commands() -> Vec<flow_command_spec::Command> {
     let registered = registered_commands();
     let mut commands = Vec::with_capacity(registered.len() + 4);
     commands.push(shell_complete_command::command());
@@ -301,7 +299,7 @@ fn all_commands() -> Vec<command_spec::Command> {
     commands
 }
 
-fn find_command(subcmd: &str) -> Option<command_spec::Command> {
+fn find_command(subcmd: &str) -> Option<flow_command_spec::Command> {
     all_commands()
         .into_iter()
         .find(|command| command.name() == subcmd)
@@ -360,7 +358,7 @@ fn flow_shell_main() {
     flow_event_logger::set_command(Some(command_string));
     let init_id = flow_common_utils::random_id::short_string();
     flow_event_logger::init_flow_command(&init_id);
-    command_utils::run_command(&command, &argv);
+    flow_command_utils::run_command(&command, &argv);
 }
 
 pub fn main() {

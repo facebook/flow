@@ -11,18 +11,15 @@ use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
+use flow_command_spec::arg_spec;
+use flow_command_utils::ConnectParams;
+use flow_command_utils::OffsetStyle;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_errors::error_utils::cli_output;
 use flow_common_errors::error_utils::json_output;
 use flow_parser::loc::Loc;
 use flow_server_env::server_prot;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-use crate::command_utils::ConnectParams;
-use crate::command_utils::OffsetStyle;
 
 struct StatusArgs {
     root: PathBuf,
@@ -37,18 +34,18 @@ struct StatusArgs {
 fn spec(
     name: &str,
     doc: &str,
-    visibility: command_spec::Visibility,
+    visibility: flow_command_spec::Visibility,
     usage: String,
     explicit: bool,
-) -> command_spec::Spec {
-    let spec = command_spec::Spec::new(name, doc, visibility, usage);
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_json_version_flag(spec);
-    let spec = command_utils::add_offset_style_flag(spec);
-    let spec = command_utils::add_error_flags(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
+) -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(name, doc, visibility, usage);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_json_version_flag(spec);
+    let spec = flow_command_utils::add_offset_style_flag(spec);
+    let spec = flow_command_utils::add_error_flags(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
     let spec = if explicit {
         spec
     } else {
@@ -78,12 +75,17 @@ fn request_status(
     server_prot::response::LazyStats,
 ) {
     let request = server_prot::request::Command::STATUS { include_warnings };
-    match command_utils::connect_and_make_request(flowconfig_name, connect_flags, root, &request) {
+    match flow_command_utils::connect_and_make_request(
+        flowconfig_name,
+        connect_flags,
+        root,
+        &request,
+    ) {
         server_prot::response::Response::STATUS {
             status_response,
             lazy_stats,
         } => (status_response, lazy_stats),
-        response => command_utils::failwith_bad_response(&request, &response),
+        response => flow_command_utils::failwith_bad_response(&request, &response),
     }
 }
 
@@ -124,7 +126,7 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
     } else {
         None
     };
-    let offset_kind = command_utils::offset_kind_of_offset_style(args.offset_style);
+    let offset_kind = flow_command_utils::offset_kind_of_offset_style(args.offset_style);
     let print_json =
         |errors: &ConcreteLocPrintableErrorSet,
          warnings: &ConcreteLocPrintableErrorSet,
@@ -200,7 +202,7 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
                 .expect("failed to write cli errors");
                 out.flush().expect("failed to flush cli errors");
             }
-            flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
+            flow_common_exit_status::exit(flow_command_utils::get_check_or_status_exit_code(
                 &errors,
                 &warnings,
                 error_flags.max_warnings,
@@ -230,13 +232,14 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
 }
 
 fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
-    let version = command_spec::get(args, "--version", &arg_spec::truthy()).unwrap_or(false);
+    let version = flow_command_spec::get(args, "--version", &arg_spec::truthy()).unwrap_or(false);
     if version {
-        command_utils::print_version();
+        flow_command_utils::print_version();
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
     }
 
-    let help_all_flag = command_spec::get(args, "--help-all", &arg_spec::truthy()).unwrap_or(false);
+    let help_all_flag =
+        flow_command_spec::get(args, "--help-all", &arg_spec::truthy()).unwrap_or(false);
     if help_all_flag {
         let by_visibility = |visibility| {
             let mut result: Vec<_> = command_info
@@ -247,9 +250,9 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
             result.sort_by(|(a, _), (b, _)| a.cmp(b));
             result
         };
-        let public = by_visibility(command_spec::Visibility::Public);
-        let experimental = by_visibility(command_spec::Visibility::Experimental);
-        let internal = by_visibility(command_spec::Visibility::Internal);
+        let public = by_visibility(flow_command_spec::Visibility::Public);
+        let experimental = by_visibility(flow_command_spec::Visibility::Experimental);
+        let internal = by_visibility(flow_command_spec::Visibility::Internal);
         let col_width = 1 + public
             .iter()
             .chain(experimental.iter())
@@ -258,12 +261,12 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
             .max()
             .unwrap_or(0);
         let fmt = |commands: &[(String, String)]| {
-            command_spec::format_two_columns(None, Some(col_width), 1, commands)
+            flow_command_spec::format_two_columns(None, Some(col_width), 1, commands)
         };
         let mut help_all = format!(
             "Documentation: {}\n\nUsage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n",
             crate::extra_commands::docs_url(),
-            command_utils::exe_name(),
+            flow_command_utils::exe_name(),
             fmt(&public),
         );
         if !experimental.is_empty() {
@@ -282,20 +285,20 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
         flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError);
     }
 
-    let base_flags = command_utils::get_base_flags(args);
+    let base_flags = flow_command_utils::get_base_flags(args);
     let flowconfig_name = base_flags.flowconfig_name;
 
     let root_arg =
-        command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let root = command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
+        flow_command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let root = flow_command_utils::guess_root(&flowconfig_name, root_arg.as_deref());
 
-    let (connect_flags, json, pretty) = command_utils::get_connect_and_json_flags(args);
-    let json_version = command_utils::get_json_version(args);
-    let offset_style = command_utils::get_offset_style(args);
+    let (connect_flags, json, pretty) = flow_command_utils::get_connect_and_json_flags(args);
+    let json_version = flow_command_utils::get_json_version(args);
+    let offset_style = flow_command_utils::get_offset_style(args);
     let json = json || json_version.is_some() || pretty;
 
-    let error_flags_args = command_utils::get_error_flags_args(args);
-    let error_flags = command_utils::collect_error_flags(
+    let error_flags_args = flow_command_utils::get_error_flags_args(args);
+    let error_flags = flow_command_utils::collect_error_flags(
         error_flags_args.color,
         error_flags_args.include_warnings,
         error_flags_args.max_warnings,
@@ -306,7 +309,7 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
         error_flags_args.unicode,
         error_flags_args.message_width,
     );
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
 
     let status_args = StatusArgs {
         root,
@@ -324,18 +327,18 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
 pub(crate) struct CommandInfo {
     pub(crate) name: String,
     pub(crate) doc: String,
-    pub(crate) visibility: command_spec::Visibility,
+    pub(crate) visibility: flow_command_spec::Visibility,
 }
 
-pub(crate) fn status_command() -> command_spec::Command {
-    command_spec::command(
+pub(crate) fn status_command() -> flow_command_spec::Command {
+    flow_command_spec::command(
         spec(
             "status",
             "(default) Shows current Flow errors by asking the Flow server",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} status [OPTION]... [ROOT]\nShows current Flow errors by asking the Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n\nStatus command options:",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
             true,
         ),
@@ -343,15 +346,15 @@ pub(crate) fn status_command() -> command_spec::Command {
     )
 }
 
-pub(crate) fn check_command() -> command_spec::Command {
-    command_spec::command(
+pub(crate) fn check_command() -> flow_command_spec::Command {
+    flow_command_spec::command(
         spec(
             "check",
             "(default) Shows current Flow errors by asking the Flow server",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {} check [OPTION]... [ROOT]\nShows current Flow errors by asking the Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n\nCheck command options:",
-                command_utils::exe_name()
+                flow_command_utils::exe_name()
             ),
             true,
         ),
@@ -359,23 +362,23 @@ pub(crate) fn check_command() -> command_spec::Command {
     )
 }
 
-pub(crate) fn default_command(command_info: Vec<CommandInfo>) -> command_spec::Command {
+pub(crate) fn default_command(command_info: Vec<CommandInfo>) -> flow_command_spec::Command {
     let mut public_command_info = command_info
         .iter()
-        .filter(|command| command.visibility == command_spec::Visibility::Public)
+        .filter(|command| command.visibility == flow_command_spec::Visibility::Public)
         .map(|command| (command.name.clone(), command.doc.clone()))
         .collect::<Vec<_>>();
     public_command_info.sort_by(|(a, _), (b, _)| a.cmp(b));
-    let cmd_usage = command_spec::format_two_columns(None, None, 1, &public_command_info);
-    command_spec::command(
+    let cmd_usage = flow_command_spec::format_two_columns(None, None, 1, &public_command_info);
+    flow_command_spec::command(
         spec(
             "default",
             "",
-            command_spec::Visibility::Internal,
+            flow_command_spec::Visibility::Internal,
             format!(
                 "Documentation: {}\n\nUsage: {} [COMMAND] \n\nValid values for COMMAND:\n{}\n\nDefault values if unspecified:\n  COMMAND\tstatus\n\nStatus command options:",
                 crate::extra_commands::docs_url(),
-                command_utils::exe_name(),
+                flow_command_utils::exe_name(),
                 cmd_usage
             ),
             false,

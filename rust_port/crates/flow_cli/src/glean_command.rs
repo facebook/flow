@@ -7,19 +7,18 @@
 
 use std::path::PathBuf;
 
+use flow_command_spec::arg_spec;
+
 use crate::codemod_command;
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 use crate::glean_runner;
-fn spec() -> command_spec::Spec {
+fn spec() -> flow_command_spec::Spec {
     codemod_command::codemod_common_spec(
         "glean",
         "Outputs Glean indexer facts as JSON",
-        command_spec::Visibility::Internal,
+        flow_command_spec::Visibility::Internal,
         format!(
             "Usage: {} glean <path> --output-dir <dirname> --write-root <name>",
-            command_utils::exe_name()
+            flow_command_utils::exe_name()
         ),
     )
     .flag(
@@ -67,28 +66,28 @@ fn spec() -> command_spec::Spec {
 }
 
 fn main(args: &arg_spec::Values) {
-    let output_dir_opt = command_spec::get(
+    let output_dir_opt = flow_command_spec::get(
         args,
         "--output-dir",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
-    let write_root_opt = command_spec::get(
+    let write_root_opt = flow_command_spec::get(
         args,
         "--write-root",
         &arg_spec::optional(arg_spec::string()),
     )
     .unwrap();
     let include_direct_deps =
-        command_spec::get(args, "--include-direct-deps", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--include-direct-deps", &arg_spec::truthy()).unwrap();
     let include_reachable_deps =
-        command_spec::get(args, "--include-reachable-deps", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--include-reachable-deps", &arg_spec::truthy()).unwrap();
     let show_schema_version =
-        command_spec::get(args, "--schema-version", &arg_spec::truthy()).unwrap();
-    let glean_log = command_spec::get(args, "--glean-log", &arg_spec::truthy()).unwrap();
+        flow_command_spec::get(args, "--schema-version", &arg_spec::truthy()).unwrap();
+    let glean_log = flow_command_spec::get(args, "--glean-log", &arg_spec::truthy()).unwrap();
     let glean_timeout = codemod_command::parse_i32_flag(
         Some(
-            command_spec::get(
+            flow_command_spec::get(
                 args,
                 "--glean-timeout",
                 &arg_spec::required(Some("600".to_string()), arg_spec::string()),
@@ -163,6 +162,6 @@ fn main(args: &arg_spec::Values) {
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

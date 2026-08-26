@@ -9,40 +9,37 @@ use std::collections::BTreeSet;
 use std::io::Write;
 use std::path::PathBuf;
 
+use flow_command_spec::arg_spec;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_parser::loc::Loc;
 use flow_server_env::server_prot;
 use flow_server_utils::file_input::FileInput;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
 //***********************************************************************
 // flow check-contents command
 //***********************************************************************
 
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "check-contents",
         "Run typechecker on contents from stdin",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} check-contents [OPTION]... [FILE]\n\nRuns a flow check on the contents of stdin. If FILE is provided, then\ncheck-contents pretends that the contents of stdin come from FILE\n\ne.g. {exe_name} check-contents < foo.js\nor   {exe_name} check-contents foo.js < foo.js\n"
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_connect_and_json_flags(spec);
-    let spec = command_utils::add_json_version_flag(spec);
-    let spec = command_utils::add_offset_style_flag(spec);
-    let spec = command_utils::add_root_flag(spec);
-    let spec = command_utils::add_error_flags(spec);
-    let spec = command_utils::add_strip_root_flag(spec);
-    let spec = command_utils::add_verbose_flags(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_wait_for_recheck_flag(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_connect_and_json_flags(spec);
+    let spec = flow_command_utils::add_json_version_flag(spec);
+    let spec = flow_command_utils::add_offset_style_flag(spec);
+    let spec = flow_command_utils::add_root_flag(spec);
+    let spec = flow_command_utils::add_error_flags(spec);
+    let spec = flow_command_utils::add_strip_root_flag(spec);
+    let spec = flow_command_utils::add_verbose_flags(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
     spec.flag(
         "--all",
         &arg_spec::truthy(),
@@ -53,13 +50,14 @@ fn spec() -> command_spec::Spec {
 }
 
 fn main(args: &arg_spec::Values) {
-    let base_flags = command_utils::get_base_flags(args);
-    let (option_values, json, pretty) = command_utils::get_connect_and_json_flags(args);
-    let json_version = command_utils::get_json_version(args);
-    let offset_style = command_utils::get_offset_style(args);
-    let root = command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-    let error_flags_args = command_utils::get_error_flags_args(args);
-    let error_flags = command_utils::collect_error_flags(
+    let base_flags = flow_command_utils::get_base_flags(args);
+    let (option_values, json, pretty) = flow_command_utils::get_connect_and_json_flags(args);
+    let json_version = flow_command_utils::get_json_version(args);
+    let offset_style = flow_command_utils::get_offset_style(args);
+    let root =
+        flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
+    let error_flags_args = flow_command_utils::get_error_flags_args(args);
+    let error_flags = flow_command_utils::collect_error_flags(
         error_flags_args.color,
         error_flags_args.include_warnings,
         error_flags_args.max_warnings,
@@ -70,22 +68,25 @@ fn main(args: &arg_spec::Values) {
         error_flags_args.unicode,
         error_flags_args.message_width,
     );
-    let strip_root = command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
-    let verbose = command_utils::verbose_flags(args);
-    let wait_for_recheck = command_spec::get(
+    let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let verbose = flow_command_utils::verbose_flags(args);
+    let wait_for_recheck = flow_command_spec::get(
         args,
         "--wait-for-recheck",
         &arg_spec::optional(arg_spec::bool_flag()),
     )
     .unwrap();
-    let all = command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
+    let all = flow_command_spec::get(args, "--all", &arg_spec::truthy()).unwrap();
     let file =
-        command_spec::get(args, "filename", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "filename", &arg_spec::optional(arg_spec::string())).unwrap();
 
-    let file =
-        command_utils::get_file_from_filename_or_stdin(spec().name.as_str(), file.as_deref(), None);
+    let file = flow_command_utils::get_file_from_filename_or_stdin(
+        spec().name.as_str(),
+        file.as_deref(),
+        None,
+    );
     let flowconfig_name = base_flags.flowconfig_name;
-    let root = command_utils::guess_root(
+    let root = flow_command_utils::guess_root(
         &flowconfig_name,
         match root.as_deref() {
             Some(root) => Some(root),
@@ -94,7 +95,7 @@ fn main(args: &arg_spec::Values) {
     );
     // pretty implies json
     let json = json || json_version.is_some() || pretty;
-    let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+    let offset_kind = flow_command_utils::offset_kind_of_offset_style(offset_style);
     if !option_values.quiet && verbose.is_some() {
         eprintln!("NOTE: --verbose writes to the server log file");
     }
@@ -107,11 +108,15 @@ fn main(args: &arg_spec::Values) {
         include_warnings,
         wait_for_recheck,
     };
-    let server_response =
-        command_utils::connect_and_make_request(&flowconfig_name, &option_values, &root, &request);
+    let server_response = flow_command_utils::connect_and_make_request(
+        &flowconfig_name,
+        &option_values,
+        &root,
+        &request,
+    );
     let response = match server_response {
         server_prot::response::Response::CHECK_FILE(response) => response,
-        response => command_utils::failwith_bad_response(&request, &response),
+        response => flow_command_utils::failwith_bad_response(&request, &response),
     };
     let stdin_file = match &file {
         FileInput::FileContent(None, contents) => Some((PathBuf::from("-"), contents.to_string())),
@@ -168,7 +173,7 @@ fn main(args: &arg_spec::Values) {
                 .expect("failed to write cli errors");
                 out.flush().expect("failed to flush cli errors");
                 // Return a successful exit code if there were only warnings.
-                flow_common_exit_status::exit(command_utils::get_check_or_status_exit_code(
+                flow_common_exit_status::exit(flow_command_utils::get_check_or_status_exit_code(
                     &errors,
                     &warnings,
                     error_flags.max_warnings,
@@ -208,6 +213,6 @@ fn main(args: &arg_spec::Values) {
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

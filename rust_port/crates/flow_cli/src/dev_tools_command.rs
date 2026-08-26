@@ -8,13 +8,10 @@
 use std::io;
 use std::path::PathBuf;
 
+use flow_command_spec::arg_spec;
 use flow_dev_tools::ErrorCheckCommand;
 use flow_dev_tools::runtests;
 use flow_dev_tools::update_suppressions::Only;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 #[derive(Clone)]
 enum DevToolsSubcommand {
@@ -36,25 +33,25 @@ fn only_flag() -> arg_spec::FlagType<Option<Only>> {
 }
 
 fn get_optional_string(args: &arg_spec::Values, flag: &str) -> Option<String> {
-    command_spec::get(args, flag, &arg_spec::optional(arg_spec::string())).unwrap()
+    flow_command_spec::get(args, flag, &arg_spec::optional(arg_spec::string())).unwrap()
 }
 
 fn get_flowconfig_name(args: &arg_spec::Values) -> String {
     if args.contains_key("--flowconfigName") {
-        command_spec::get(
+        flow_command_spec::get(
             args,
             "--flowconfigName",
             &arg_spec::required(Some(".flowconfig".to_string()), arg_spec::string()),
         )
         .unwrap()
     } else {
-        command_utils::get_base_flags(args).flowconfig_name
+        flow_command_utils::get_base_flags(args).flowconfig_name
     }
 }
 
 fn get_bin(args: &arg_spec::Values) -> String {
     get_optional_string(args, "--bin")
-        .map(|bin| command_utils::expand_path(&bin))
+        .map(|bin| flow_command_utils::expand_path(&bin))
         .unwrap_or_else(|| {
             std::env::current_exe()
                 .map(|path| path.to_string_lossy().to_string())
@@ -68,7 +65,7 @@ fn get_check(args: &arg_spec::Values) -> ErrorCheckCommand {
     } else {
         "--check"
     };
-    command_spec::get(
+    flow_command_spec::get(
         args,
         flag,
         &arg_spec::required(Some(ErrorCheckCommand::Status), error_check_command_flag()),
@@ -77,17 +74,17 @@ fn get_check(args: &arg_spec::Values) -> ErrorCheckCommand {
 }
 
 fn parse_single_root(args: &arg_spec::Values) -> PathBuf {
-    let Some(root) = command_spec::get(args, "ROOT", &arg_spec::string()).unwrap() else {
+    let Some(root) = flow_command_spec::get(args, "ROOT", &arg_spec::string()).unwrap() else {
         flow_common_exit_status::exit_with_msg(
             flow_common_exit_status::FlowExitStatus::CommandlineUsageError,
             "Missing required ROOT argument",
         );
     };
-    PathBuf::from(command_utils::expand_path(&root))
+    PathBuf::from(flow_command_utils::expand_path(&root))
 }
 
 fn parse_roots(args: &arg_spec::Values) -> Vec<PathBuf> {
-    let roots = command_spec::get(args, "ROOT...", &arg_spec::list_of(arg_spec::string()))
+    let roots = flow_command_spec::get(args, "ROOT...", &arg_spec::list_of(arg_spec::string()))
         .unwrap()
         .unwrap_or_default();
     if roots.is_empty() {
@@ -98,15 +95,15 @@ fn parse_roots(args: &arg_spec::Values) -> Vec<PathBuf> {
     }
     roots
         .into_iter()
-        .map(|root| PathBuf::from(command_utils::expand_path(&root)))
+        .map(|root| PathBuf::from(flow_command_utils::expand_path(&root)))
         .collect()
 }
 
-fn dev_tools_common_spec(name: &str, doc: &str, usage: String) -> command_spec::Spec {
-    command_utils::add_base_flags(command_spec::Spec::new(
+fn dev_tools_common_spec(name: &str, doc: &str, usage: String) -> flow_command_spec::Spec {
+    flow_command_utils::add_base_flags(flow_command_spec::Spec::new(
         name,
         doc,
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         usage,
     ))
     .flag(
@@ -129,7 +126,7 @@ fn dev_tools_common_spec(name: &str, doc: &str, usage: String) -> command_spec::
     )
 }
 
-fn add_bin_flag(spec: command_spec::Spec) -> command_spec::Spec {
+fn add_bin_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
     spec.flag(
         "--bin",
         &arg_spec::optional(arg_spec::string()),
@@ -138,13 +135,13 @@ fn add_bin_flag(spec: command_spec::Spec) -> command_spec::Spec {
     )
 }
 
-fn add_comments_spec() -> command_spec::Spec {
+fn add_comments_spec() -> flow_command_spec::Spec {
     add_bin_flag(dev_tools_common_spec(
         "add-comments",
         "Adds flow comments",
         format!(
             "Usage: {} dev-tools add-comments [OPTION]... ROOT\n\nQueries Flow for the errors for ROOT. The errors automatically have a comment added on the line before them.\n",
-            command_utils::exe_name()
+            flow_command_utils::exe_name()
         ),
     ))
     .flag(
@@ -163,13 +160,13 @@ fn add_comments_spec() -> command_spec::Spec {
     .anon("ROOT", &arg_spec::string())
 }
 
-fn update_suppressions_spec() -> command_spec::Spec {
+fn update_suppressions_spec() -> flow_command_spec::Spec {
     dev_tools_common_spec(
         "update-suppressions",
         "Adds and removes suppression comments",
         format!(
             "Usage: {} dev-tools update-suppressions [OPTION]... ROOT [ROOT...]\n\nRemoves unnecessary, and adds necessary, error suppression comments for ROOT.\n",
-            command_utils::exe_name()
+            flow_command_utils::exe_name()
         ),
     )
     .flag(
@@ -199,16 +196,16 @@ fn update_suppressions_spec() -> command_spec::Spec {
     .anon("ROOT...", &arg_spec::list_of(arg_spec::string()))
 }
 
-fn runtests_spec() -> command_spec::Spec {
-    command_spec::Spec::new(
+fn runtests_spec() -> flow_command_spec::Spec {
+    flow_command_spec::Spec::new(
         "runtests",
         "Runs Flow's check tests (tests/ directory)",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             r#"Usage: {} dev-tools runtests [OPTION]... [TEST_FILTER]
 
 Runs Flow's bash-style tests from the tests/ directory using the cross-platform Rust runner."#,
-            command_utils::exe_name()
+            flow_command_utils::exe_name()
         ),
     )
     .flag(
@@ -333,15 +330,15 @@ Runs Flow's bash-style tests from the tests/ directory using the cross-platform 
     .anon("TEST_FILTER", &arg_spec::string())
 }
 
-fn root_spec() -> command_spec::Spec {
-    command_spec::Spec::new(
+fn root_spec() -> flow_command_spec::Spec {
+    flow_command_spec::Spec::new(
         "dev-tools",
         "Runs Flow developer tools",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} dev-tools SUBCOMMAND [OPTION]...\n\nValid values for SUBCOMMAND:\n{}",
-            command_utils::exe_name(),
-            command_spec::format_two_columns(
+            flow_command_utils::exe_name(),
+            flow_command_spec::format_two_columns(
                 None,
                 None,
                 1,
@@ -372,9 +369,9 @@ fn root_spec() -> command_spec::Spec {
     )
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(root_spec(), |args| {
-        let (subcommand, argv) = command_spec::get(
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(root_spec(), |args| {
+        let (subcommand, argv) = flow_command_spec::get(
             args,
             "subcommand",
             &arg_spec::required(
@@ -391,23 +388,27 @@ pub(crate) fn command() -> command_spec::Command {
         )
         .unwrap();
         let command = match subcommand {
-            DevToolsSubcommand::AddComments => command_spec::command(add_comments_spec(), |args| {
-                run_or_exit(run_add_comments(args))
-            }),
-            DevToolsSubcommand::Runtests => command_spec::command(runtests_spec(), run_runtests),
+            DevToolsSubcommand::AddComments => {
+                flow_command_spec::command(add_comments_spec(), |args| {
+                    run_or_exit(run_add_comments(args))
+                })
+            }
+            DevToolsSubcommand::Runtests => {
+                flow_command_spec::command(runtests_spec(), run_runtests)
+            }
             DevToolsSubcommand::UpdateSuppressions => {
-                command_spec::command(update_suppressions_spec(), |args| {
+                flow_command_spec::command(update_suppressions_spec(), |args| {
                     run_or_exit(run_update_suppressions(args))
                 })
             }
         };
-        command_utils::run_command(&command, &argv);
+        flow_command_utils::run_command(&command, &argv);
     })
 }
 
 fn run_runtests(args: &arg_spec::Values) {
-    let json_output = command_spec::get(args, "--json", &arg_spec::truthy()).unwrap()
-        || command_spec::get(args, "-j", &arg_spec::truthy()).unwrap();
+    let json_output = flow_command_spec::get(args, "--json", &arg_spec::truthy()).unwrap()
+        || flow_command_spec::get(args, "-j", &arg_spec::truthy()).unwrap();
     let args = runtests::Args {
         current_version: flow_common::flow_version::version().to_owned(),
         tests_dir: get_optional_string(args, "--tests-dir"),
@@ -415,28 +416,31 @@ fn run_runtests(args: &arg_spec::Values) {
         filter: get_optional_string(args, "--filter").or_else(|| get_optional_string(args, "-f")),
         test: get_optional_string(args, "--test").or_else(|| get_optional_string(args, "-t")),
         run_test: get_optional_string(args, "--run-test"),
-        positional_filter: command_spec::get(args, "TEST_FILTER", &arg_spec::string()).unwrap(),
-        parallelism: command_spec::get(
+        positional_filter: flow_command_spec::get(args, "TEST_FILTER", &arg_spec::string())
+            .unwrap(),
+        parallelism: flow_command_spec::get(
             args,
             "--parallelism",
             &arg_spec::optional(arg_spec::uint()),
         )
         .unwrap()
-        .or_else(|| command_spec::get(args, "-p", &arg_spec::optional(arg_spec::uint())).unwrap()),
-        check_only: command_spec::get(args, "--check-only", &arg_spec::truthy()).unwrap()
-            || command_spec::get(args, "-c", &arg_spec::truthy()).unwrap(),
-        saved_state: command_spec::get(args, "--saved-state", &arg_spec::truthy()).unwrap()
-            || command_spec::get(args, "-s", &arg_spec::truthy()).unwrap(),
-        record: command_spec::get(args, "--record", &arg_spec::truthy()).unwrap()
-            || command_spec::get(args, "-r", &arg_spec::truthy()).unwrap(),
-        quiet: command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap()
-            || command_spec::get(args, "-q", &arg_spec::truthy()).unwrap(),
-        verbose: command_spec::get(args, "--verbose", &arg_spec::truthy()).unwrap()
-            || command_spec::get(args, "-v", &arg_spec::truthy()).unwrap(),
+        .or_else(|| {
+            flow_command_spec::get(args, "-p", &arg_spec::optional(arg_spec::uint())).unwrap()
+        }),
+        check_only: flow_command_spec::get(args, "--check-only", &arg_spec::truthy()).unwrap()
+            || flow_command_spec::get(args, "-c", &arg_spec::truthy()).unwrap(),
+        saved_state: flow_command_spec::get(args, "--saved-state", &arg_spec::truthy()).unwrap()
+            || flow_command_spec::get(args, "-s", &arg_spec::truthy()).unwrap(),
+        record: flow_command_spec::get(args, "--record", &arg_spec::truthy()).unwrap()
+            || flow_command_spec::get(args, "-r", &arg_spec::truthy()).unwrap(),
+        quiet: flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap()
+            || flow_command_spec::get(args, "-q", &arg_spec::truthy()).unwrap(),
+        verbose: flow_command_spec::get(args, "--verbose", &arg_spec::truthy()).unwrap()
+            || flow_command_spec::get(args, "-v", &arg_spec::truthy()).unwrap(),
         json_output,
-        list: command_spec::get(args, "--list", &arg_spec::truthy()).unwrap()
-            || command_spec::get(args, "-l", &arg_spec::truthy()).unwrap(),
-        list_tests: command_spec::get(args, "--list-tests", &arg_spec::truthy()).unwrap(),
+        list: flow_command_spec::get(args, "--list", &arg_spec::truthy()).unwrap()
+            || flow_command_spec::get(args, "-l", &arg_spec::truthy()).unwrap(),
+        list_tests: flow_command_spec::get(args, "--list-tests", &arg_spec::truthy()).unwrap(),
     };
     match runtests::run(args) {
         Ok(true) => {}
@@ -480,11 +484,11 @@ fn run_update_suppressions(args: &arg_spec::Values) -> io::Result<()> {
             .split(',')
             .map(|site| site.trim().to_string())
             .collect(),
-        include_flowtest: command_spec::get(args, "--include-flowtest", &arg_spec::truthy())
+        include_flowtest: flow_command_spec::get(args, "--include-flowtest", &arg_spec::truthy())
             .unwrap(),
-        only: command_spec::get(args, "--only", &arg_spec::optional(only_flag())).unwrap(),
+        only: flow_command_spec::get(args, "--only", &arg_spec::optional(only_flag())).unwrap(),
         load_root: move |root: &std::path::Path| {
-            let root = command_utils::guess_root(&flowconfig_name, root.to_str());
+            let root = flow_command_utils::guess_root(&flowconfig_name, root.to_str());
             let files = crate::ls_command::get_all_flow_files(&flowconfig_name, &root);
             let result = match error_check_command {
                 ErrorCheckCommand::Status => {

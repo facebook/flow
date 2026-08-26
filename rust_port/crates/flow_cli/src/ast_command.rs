@@ -9,6 +9,7 @@ use std::collections::VecDeque;
 use std::io::Read;
 use std::path::Path;
 
+use flow_command_spec::arg_spec;
 use flow_parser::PERMISSIVE_PARSE_OPTIONS;
 use flow_parser::ParseOptions;
 use flow_parser::estree_translator;
@@ -16,10 +17,6 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_server_utils::file_input::FileInput;
 use serde_json::json;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 // ***********************************************************************
 // flow ast command
@@ -38,12 +35,12 @@ enum AstIncludeComments {
     CommentsDocblock,
 }
 
-fn spec() -> command_spec::Spec {
-    let exe_name = command_utils::exe_name();
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let exe_name = flow_command_utils::exe_name();
+    let spec = flow_command_spec::Spec::new(
         "ast",
         "Print the AST",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {exe_name} ast [OPTION]... [FILE]\n\ne.g. {exe_name} ast foo.js\nor   {exe_name} ast < foo.js\n"
         ),
@@ -124,9 +121,9 @@ fn spec() -> command_spec::Spec {
         "Include or drop location information in the output (default: true)",
         None,
     );
-    let spec = command_utils::add_offset_style_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_path_flag(spec);
+    let spec = flow_command_utils::add_offset_style_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_path_flag(spec);
     spec.anon("file", &arg_spec::optional(arg_spec::string()))
 }
 
@@ -137,7 +134,7 @@ enum AstResultType {
 
 fn get_file(path: Option<String>, filename: Option<String>) -> FileInput {
     match filename {
-        Some(filename) => FileInput::FileName(command_utils::expand_path(&filename)),
+        Some(filename) => FileInput::FileName(flow_command_utils::expand_path(&filename)),
         None => {
             let mut content = String::new();
             std::io::stdin()
@@ -188,12 +185,12 @@ fn translate_token(
 }
 
 fn main(args: &arg_spec::Values) {
-    let include_tokens = command_spec::get(args, "--tokens", &arg_spec::truthy()).unwrap();
-    let pretty = command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
-    let check = command_spec::get(args, "--check", &arg_spec::truthy()).unwrap();
-    let debug = command_spec::get(args, "--debug", &arg_spec::truthy()).unwrap();
-    let pattern = command_spec::get(args, "--pattern", &arg_spec::truthy()).unwrap();
-    let file_type_opt = command_spec::get(
+    let include_tokens = flow_command_spec::get(args, "--tokens", &arg_spec::truthy()).unwrap();
+    let pretty = flow_command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
+    let check = flow_command_spec::get(args, "--check", &arg_spec::truthy()).unwrap();
+    let debug = flow_command_spec::get(args, "--debug", &arg_spec::truthy()).unwrap();
+    let pattern = flow_command_spec::get(args, "--pattern", &arg_spec::truthy()).unwrap();
+    let file_type_opt = flow_command_spec::get(
         args,
         "--type",
         &arg_spec::optional(arg_spec::enum_flag(vec![
@@ -202,11 +199,11 @@ fn main(args: &arg_spec::Values) {
         ])),
     )
     .unwrap();
-    let use_strict = command_spec::get(args, "--strict", &arg_spec::truthy()).unwrap();
-    let no_enums = command_spec::get(args, "--no-enums", &arg_spec::truthy()).unwrap();
+    let use_strict = flow_command_spec::get(args, "--strict", &arg_spec::truthy()).unwrap();
+    let no_enums = flow_command_spec::get(args, "--no-enums", &arg_spec::truthy()).unwrap();
     let no_component_syntax =
-        command_spec::get(args, "--no-component-syntax", &arg_spec::truthy()).unwrap();
-    let include_comments = command_spec::get(
+        flow_command_spec::get(args, "--no-component-syntax", &arg_spec::truthy()).unwrap();
+    let include_comments = flow_command_spec::get(
         args,
         "--include-comments",
         &arg_spec::required(
@@ -219,16 +216,17 @@ fn main(args: &arg_spec::Values) {
         ),
     )
     .unwrap();
-    let include_locs = command_spec::get(
+    let include_locs = flow_command_spec::get(
         args,
         "--include-locs",
         &arg_spec::required(Some(true), arg_spec::bool_flag()),
     )
     .unwrap();
-    let offset_style = command_utils::get_offset_style(args);
-    let path = command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
+    let offset_style = flow_command_utils::get_offset_style(args);
+    let path =
+        flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
     let filename =
-        command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
+        flow_command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
 
     let use_relative_path = filename
         .as_ref()
@@ -243,12 +241,14 @@ fn main(args: &arg_spec::Values) {
         },
     };
 
-    let offset_kind = command_utils::offset_kind_of_offset_style(offset_style);
+    let offset_kind = flow_command_utils::offset_kind_of_offset_style(offset_style);
     let offset_style = match offset_style {
-        None | Some(command_utils::OffsetStyle::Utf8Bytes) => {
+        None | Some(flow_command_utils::OffsetStyle::Utf8Bytes) => {
             estree_translator::OffsetStyle::Utf8Bytes
         }
-        Some(command_utils::OffsetStyle::JsIndices) => estree_translator::OffsetStyle::JsIndices,
+        Some(flow_command_utils::OffsetStyle::JsIndices) => {
+            estree_translator::OffsetStyle::JsIndices
+        }
     };
     let config = estree_translator::Config {
         include_locs,
@@ -404,6 +404,6 @@ fn main(args: &arg_spec::Values) {
     flow_hh_json::print_json_endline(pretty, &results);
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }

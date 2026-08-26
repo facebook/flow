@@ -5,53 +5,50 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_command_spec::arg_spec;
 use flow_config::LazyMode;
 use flow_server_files::server_files_js;
 use flow_server_monitor as monitor;
 use serde_json::json;
 
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
-
 // start command
 
-fn spec() -> command_spec::Spec {
-    let spec = command_spec::Spec::new(
+fn spec() -> flow_command_spec::Spec {
+    let spec = flow_command_spec::Spec::new(
         "start",
         "Starts a Flow server",
-        command_spec::Visibility::Public,
+        flow_command_spec::Visibility::Public,
         format!(
             "Usage: {} start [OPTION]... [ROOT]\n\nStarts a Flow server.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\nA server will be started if none is running over ROOT.\n",
-            command_utils::exe_name(),
+            flow_command_utils::exe_name(),
         ),
     );
-    let spec = command_utils::add_base_flags(spec);
-    let spec = command_utils::add_options_and_json_flags(spec);
-    let spec = command_utils::add_saved_state_flags(spec);
-    let spec = command_utils::add_log_file_flags(spec);
+    let spec = flow_command_utils::add_base_flags(spec);
+    let spec = flow_command_utils::add_options_and_json_flags(spec);
+    let spec = flow_command_utils::add_saved_state_flags(spec);
+    let spec = flow_command_utils::add_log_file_flags(spec);
     let spec = spec.flag(
         "--wait",
         &arg_spec::truthy(),
         "Wait for the server to finish initializing",
         None,
     );
-    let spec = command_utils::add_lazy_flags(spec);
-    let spec = command_utils::add_autostop_flag(spec);
-    let spec = command_utils::add_ignore_version_flag(spec);
-    let spec = command_utils::add_from_flag(spec);
-    let spec = command_utils::add_no_restart_flag(spec);
-    let spec = command_utils::add_file_watcher_flag(spec);
-    let spec = command_utils::add_no_cgroup_flag(spec);
+    let spec = flow_command_utils::add_lazy_flags(spec);
+    let spec = flow_command_utils::add_autostop_flag(spec);
+    let spec = flow_command_utils::add_ignore_version_flag(spec);
+    let spec = flow_command_utils::add_from_flag(spec);
+    let spec = flow_command_utils::add_no_restart_flag(spec);
+    let spec = flow_command_utils::add_file_watcher_flag(spec);
+    let spec = flow_command_utils::add_no_cgroup_flag(spec);
     spec.anon("root", &arg_spec::optional(arg_spec::string()))
 }
 
 fn main(
-    base_flags: command_utils::BaseFlags,
-    options_flags: command_utils::OptionsFlags,
+    base_flags: flow_command_utils::BaseFlags,
+    options_flags: flow_command_utils::OptionsFlags,
     json: bool,
     pretty: bool,
-    saved_state_options_flags: command_utils::SavedStateFlags,
+    saved_state_options_flags: flow_command_utils::SavedStateFlags,
     server_log_file: Option<String>,
     monitor_log_file: Option<String>,
     wait: bool,
@@ -69,17 +66,17 @@ fn main(
     (): (),
 ) {
     let flowconfig_name = base_flags.flowconfig_name;
-    let root = command_utils::guess_root(&flowconfig_name, path_opt.as_deref());
+    let root = flow_command_utils::guess_root(&flowconfig_name, path_opt.as_deref());
     let flowconfig_path = server_files_js::config_file(&flowconfig_name, &root);
     let (flowconfig, flowconfig_hash) =
-        command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+        flow_command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
     flow_event_logger::set_server_config(
         flowconfig.options.log_saving.get("timeout").copied(),
         &flowconfig_name,
         root.clone(),
         flowconfig.options.root_name.as_deref(),
     );
-    let options = command_utils::make_options(
+    let options = flow_command_utils::make_options(
         flowconfig_name.clone(),
         flowconfig_hash,
         flowconfig.clone(),
@@ -92,16 +89,20 @@ fn main(
     flow_logging_utils::init_loggers(&options, None);
 
     if !ignore_version {
-        command_utils::assert_version(&flowconfig);
+        flow_command_utils::assert_version(&flowconfig);
     }
 
     let server_log_file = match server_log_file {
         Some(server_log_file) => server_log_file,
-        None => command_utils::server_log_file(&flowconfig_name, options.temp_dir.as_str(), &root),
+        None => {
+            flow_command_utils::server_log_file(&flowconfig_name, options.temp_dir.as_str(), &root)
+        }
     };
     let monitor_log_file = match monitor_log_file {
         Some(monitor_log_file) => monitor_log_file,
-        None => command_utils::monitor_log_file(&flowconfig_name, options.temp_dir.as_str(), &root),
+        None => {
+            flow_command_utils::monitor_log_file(&flowconfig_name, options.temp_dir.as_str(), &root)
+        }
     };
     let on_spawn = |pid: u32| {
         if pretty || json {
@@ -122,7 +123,7 @@ fn main(
     // A quiet `flow start` doesn't imply a quiet `flow server`
     let mut server_options = options.clone();
     server_options.quiet = false;
-    let file_watcher = command_utils::choose_file_watcher(
+    let file_watcher = flow_command_utils::choose_file_watcher(
         &flowconfig,
         lazy_mode,
         file_watcher,
@@ -130,13 +131,13 @@ fn main(
         file_watcher_sync_timeout,
     );
     let vcs = flow_common_vcs::vcs::find(None, &root);
-    let file_watcher_mergebase_with = command_utils::choose_file_watcher_mergebase_with(
+    let file_watcher_mergebase_with = flow_command_utils::choose_file_watcher_mergebase_with(
         &flowconfig,
         vcs,
         file_watcher_mergebase_with.as_deref(),
     );
     let file_watcher_timeout =
-        command_utils::choose_file_watcher_timeout(&flowconfig, file_watcher_timeout)
+        flow_command_utils::choose_file_watcher_timeout(&flowconfig, file_watcher_timeout)
             .map(|file_watcher_timeout| file_watcher_timeout as u32);
     match monitor::daemonize(monitor::DaemonizeArgs {
         flowconfig_name,
@@ -146,7 +147,7 @@ fn main(
         all: options_flags.all,
         wait,
         lazy_mode: lazy_mode
-            .map(command_utils::lazy_mode_arg)
+            .map(flow_command_utils::lazy_mode_arg)
             .map(ToOwned::to_owned),
         max_workers: options_flags.max_workers,
         wait_for_recheck: options_flags.wait_for_recheck,
@@ -208,36 +209,36 @@ fn main(
     }
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), |args| {
-        let json_flags = command_utils::get_json_flags(args);
-        let options_flags = command_utils::get_options_flags(args);
-        let options_flags = command_utils::OptionsFlags {
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), |args| {
+        let json_flags = flow_command_utils::get_json_flags(args);
+        let options_flags = flow_command_utils::get_options_flags(args);
+        let options_flags = flow_command_utils::OptionsFlags {
             quiet: options_flags.quiet || json_flags.json || json_flags.pretty,
             ..options_flags
         };
-        let (server_log_file, monitor_log_file) = command_utils::get_log_file_flags(args);
-        let file_watcher_flags = command_utils::get_file_watcher_flags(args);
+        let (server_log_file, monitor_log_file) = flow_command_utils::get_log_file_flags(args);
+        let file_watcher_flags = flow_command_utils::get_file_watcher_flags(args);
         main(
-            command_utils::get_base_flags(args),
+            flow_command_utils::get_base_flags(args),
             options_flags,
             json_flags.json,
             json_flags.pretty,
-            command_utils::get_saved_state_flags(args),
+            flow_command_utils::get_saved_state_flags(args),
             server_log_file,
             monitor_log_file,
-            command_spec::get(args, "--wait", &arg_spec::truthy()).unwrap(),
-            command_utils::get_lazy_flags(args),
-            command_spec::get(args, "--autostop", &arg_spec::truthy()).unwrap(),
-            command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
-            command_spec::get(args, "--no-auto-restart", &arg_spec::truthy()).unwrap(),
-            command_spec::get(args, "--no-cgroup", &arg_spec::truthy()).unwrap(),
+            flow_command_spec::get(args, "--wait", &arg_spec::truthy()).unwrap(),
+            flow_command_utils::get_lazy_flags(args),
+            flow_command_spec::get(args, "--autostop", &arg_spec::truthy()).unwrap(),
+            flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy()).unwrap(),
+            flow_command_spec::get(args, "--no-auto-restart", &arg_spec::truthy()).unwrap(),
+            flow_command_spec::get(args, "--no-cgroup", &arg_spec::truthy()).unwrap(),
             file_watcher_flags.file_watcher,
             file_watcher_flags.file_watcher_debug,
             file_watcher_flags.file_watcher_timeout,
             file_watcher_flags.file_watcher_mergebase_with,
             file_watcher_flags.file_watcher_sync_timeout,
-            command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap(),
+            flow_command_spec::get(args, "root", &arg_spec::optional(arg_spec::string())).unwrap(),
             (),
         )
     })

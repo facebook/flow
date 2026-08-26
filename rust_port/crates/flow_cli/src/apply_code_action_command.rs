@@ -7,15 +7,12 @@
 
 use std::io::Write;
 
+use flow_command_spec::arg_spec;
 use flow_lsp::lsp_fmt;
 use flow_parser_utils_output::replacement_printer;
 use flow_parser_utils_output::replacement_printer::Patch;
 use flow_server_env::server_prot;
 use flow_server_utils::file_input::FileInput;
-
-use crate::command_spec;
-use crate::command_spec::arg_spec;
-use crate::command_utils;
 
 // This module implements the flow command `apply-code-action`
 // which exposes LSP code-actions via the CLI
@@ -36,21 +33,21 @@ enum ApplyCodeActionSubcommand {
 mod quickfix {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "Apply available quickfixes",
             "Runs all safe quickfixes. If requested, run one additional best effort quickfix",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} apply-code-action 'experimental.quickfix'  [OPTION]... FILE"
             ),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_connect_flags(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_path_flag(spec);
-        let spec = command_utils::add_wait_for_recheck_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_connect_flags(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_path_flag(spec);
+        let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
         spec.flag(
             "--in-place",
             &arg_spec::truthy(),
@@ -87,32 +84,34 @@ mod quickfix {
     }
 
     fn main(args: &arg_spec::Values) {
-        let base_flags = command_utils::get_base_flags(args);
-        let connect_params = command_utils::get_connect_flags(args);
+        let base_flags = flow_command_utils::get_base_flags(args);
+        let connect_params = flow_command_utils::get_connect_flags(args);
         let root_arg =
-            command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-        let path =
-            command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-        let wait_for_recheck = command_spec::get(
+            flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                .unwrap();
+        let path = flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+        let wait_for_recheck = flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional(arg_spec::bool_flag()),
         )
         .unwrap();
-        let in_place = command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
+        let in_place = flow_command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
         let include_best_effort_fix =
-            command_spec::get(args, "--include-best-effort-fix", &arg_spec::truthy()).unwrap();
+            flow_command_spec::get(args, "--include-best-effort-fix", &arg_spec::truthy()).unwrap();
         let file =
-            command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string())).unwrap();
+            flow_command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string()))
+                .unwrap();
 
-        let source_path = command_utils::expand_path(&file);
+        let source_path = flow_command_utils::expand_path(&file);
         let spec = spec();
-        let input = command_utils::get_file_from_filename_or_stdin(
+        let input = flow_command_utils::get_file_from_filename_or_stdin(
             &spec.name,
             Some(source_path.as_str()),
             path.as_deref(),
         );
-        let root = command_utils::get_the_root(
+        let root = flow_command_utils::get_the_root(
             &base_flags.flowconfig_name,
             root_arg.as_deref(),
             Some(&input),
@@ -125,7 +124,7 @@ mod quickfix {
             },
             wait_for_recheck,
         };
-        let response = command_utils::connect_and_make_request(
+        let response = flow_command_utils::connect_and_make_request(
             &flowconfig_name,
             &connect_params,
             &root,
@@ -139,29 +138,29 @@ mod quickfix {
         }
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
 mod source_add_missing_imports {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "Add mising imports",
             "Runs the 'source.addMissingImports' code action",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!(
                 "Usage: {exe_name} apply-code-action 'source.addMissingImports'  [OPTION]... FILE"
             ),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_connect_flags(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_path_flag(spec);
-        let spec = command_utils::add_wait_for_recheck_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_connect_flags(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_path_flag(spec);
+        let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
         spec.flag(
             "--in-place",
             &arg_spec::truthy(),
@@ -192,30 +191,32 @@ mod source_add_missing_imports {
     }
 
     fn main(args: &arg_spec::Values) {
-        let base_flags = command_utils::get_base_flags(args);
-        let connect_params = command_utils::get_connect_flags(args);
+        let base_flags = flow_command_utils::get_base_flags(args);
+        let connect_params = flow_command_utils::get_connect_flags(args);
         let root_arg =
-            command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-        let path =
-            command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-        let wait_for_recheck = command_spec::get(
+            flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                .unwrap();
+        let path = flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+        let wait_for_recheck = flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional(arg_spec::bool_flag()),
         )
         .unwrap();
-        let in_place = command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
+        let in_place = flow_command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
         let file =
-            command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string())).unwrap();
+            flow_command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string()))
+                .unwrap();
 
-        let source_path = command_utils::expand_path(&file);
+        let source_path = flow_command_utils::expand_path(&file);
         let spec = spec();
-        let input = command_utils::get_file_from_filename_or_stdin(
+        let input = flow_command_utils::get_file_from_filename_or_stdin(
             &spec.name,
             Some(source_path.as_str()),
             path.as_deref(),
         );
-        let root = command_utils::get_the_root(
+        let root = flow_command_utils::get_the_root(
             &base_flags.flowconfig_name,
             root_arg.as_deref(),
             Some(&input),
@@ -226,7 +227,7 @@ mod source_add_missing_imports {
             action: server_prot::code_action::T::SourceAddMissingImports,
             wait_for_recheck,
         };
-        let response = command_utils::connect_and_make_request(
+        let response = flow_command_utils::connect_and_make_request(
             &flowconfig_name,
             &connect_params,
             &root,
@@ -240,27 +241,27 @@ mod source_add_missing_imports {
         }
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
 mod suggest_imports {
     use super::*;
 
-    fn spec() -> command_spec::Spec {
-        let exe_name = command_utils::exe_name();
-        let spec = command_spec::Spec::new(
+    fn spec() -> flow_command_spec::Spec {
+        let exe_name = flow_command_utils::exe_name();
+        let spec = flow_command_spec::Spec::new(
             "Show import suggestions",
             "Shows import suggestions for all unbound names in the file ranked by usage",
-            command_spec::Visibility::Public,
+            flow_command_spec::Visibility::Public,
             format!("Usage: {exe_name} apply-code-action 'suggestImports'  [OPTION]... FILE"),
         );
-        let spec = command_utils::add_base_flags(spec);
-        let spec = command_utils::add_connect_and_json_flags(spec);
-        let spec = command_utils::add_root_flag(spec);
-        let spec = command_utils::add_path_flag(spec);
-        let spec = command_utils::add_wait_for_recheck_flag(spec);
+        let spec = flow_command_utils::add_base_flags(spec);
+        let spec = flow_command_utils::add_connect_and_json_flags(spec);
+        let spec = flow_command_utils::add_root_flag(spec);
+        let spec = flow_command_utils::add_path_flag(spec);
+        let spec = flow_command_utils::add_wait_for_recheck_flag(spec);
         spec.flag(
             "--in-place",
             &arg_spec::truthy(),
@@ -287,38 +288,40 @@ mod suggest_imports {
     }
 
     fn main(args: &arg_spec::Values) {
-        let base_flags = command_utils::get_base_flags(args);
-        let connect_params = command_utils::get_connect_flags(args);
-        let _json = command_spec::get(args, "--json", &arg_spec::truthy()).unwrap();
-        let pretty = command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
+        let base_flags = flow_command_utils::get_base_flags(args);
+        let connect_params = flow_command_utils::get_connect_flags(args);
+        let _json = flow_command_spec::get(args, "--json", &arg_spec::truthy()).unwrap();
+        let pretty = flow_command_spec::get(args, "--pretty", &arg_spec::truthy()).unwrap();
         let root_arg =
-            command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string())).unwrap();
-        let path =
-            command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string())).unwrap();
-        let wait_for_recheck = command_spec::get(
+            flow_command_spec::get(args, "--root", &arg_spec::optional(arg_spec::string()))
+                .unwrap();
+        let path = flow_command_spec::get(args, "--path", &arg_spec::optional(arg_spec::string()))
+            .unwrap();
+        let wait_for_recheck = flow_command_spec::get(
             args,
             "--wait-for-recheck",
             &arg_spec::optional(arg_spec::bool_flag()),
         )
         .unwrap();
-        let _in_place = command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
+        let _in_place = flow_command_spec::get(args, "--in-place", &arg_spec::truthy()).unwrap();
         let file =
-            command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string())).unwrap();
+            flow_command_spec::get(args, "file", &arg_spec::required(None, arg_spec::string()))
+                .unwrap();
 
-        let source_path = command_utils::expand_path(&file);
+        let source_path = flow_command_utils::expand_path(&file);
         let spec = spec();
-        let input = command_utils::get_file_from_filename_or_stdin(
+        let input = flow_command_utils::get_file_from_filename_or_stdin(
             &spec.name,
             Some(source_path.as_str()),
             path.as_deref(),
         );
-        let root = command_utils::get_the_root(
+        let root = flow_command_utils::get_the_root(
             &base_flags.flowconfig_name,
             root_arg.as_deref(),
             Some(&input),
         );
         let flowconfig_name = base_flags.flowconfig_name;
-        let connect_params = command_utils::ConnectParams {
+        let connect_params = flow_command_utils::ConnectParams {
             quiet: connect_params.quiet || _json || pretty,
             ..connect_params
         };
@@ -327,7 +330,7 @@ mod suggest_imports {
             action: server_prot::code_action::T::SuggestImports,
             wait_for_recheck,
         };
-        let response = command_utils::connect_and_make_request(
+        let response = flow_command_utils::connect_and_make_request(
             &flowconfig_name,
             &connect_params,
             &root,
@@ -346,19 +349,19 @@ mod suggest_imports {
         }
     }
 
-    pub(super) fn command() -> command_spec::Command {
-        command_spec::command(spec(), main)
+    pub(super) fn command() -> flow_command_spec::Command {
+        flow_command_spec::command(spec(), main)
     }
 }
 
-fn spec() -> command_spec::Spec {
+fn spec() -> flow_command_spec::Spec {
     let quickfix_command = quickfix::command();
     let source_add_missing_imports_command = source_add_missing_imports::command();
     let suggest_imports_command = suggest_imports::command();
-    command_utils::subcommand_spec(
+    flow_command_utils::subcommand_spec(
         "apply-code-action",
         "Apply code actions (quickfixes, imports)",
-        command_spec::Visibility::Internal,
+        flow_command_spec::Visibility::Internal,
         vec![
             (
                 "experimental.quickfix",
@@ -380,7 +383,7 @@ fn spec() -> command_spec::Spec {
 }
 
 fn main(args: &arg_spec::Values) {
-    let (cmd, argv) = command_spec::get(
+    let (cmd, argv) = flow_command_spec::get(
         args,
         "subcommand",
         &arg_spec::required(
@@ -401,9 +404,9 @@ fn main(args: &arg_spec::Values) {
         ApplyCodeActionSubcommand::SourceAddMissingImports => source_add_missing_imports::command(),
         ApplyCodeActionSubcommand::SuggestImports => suggest_imports::command(),
     };
-    command_utils::run_command(&cmd, &argv);
+    flow_command_utils::run_command(&cmd, &argv);
 }
 
-pub(crate) fn command() -> command_spec::Command {
-    command_spec::command(spec(), main)
+pub(crate) fn command() -> flow_command_spec::Command {
+    flow_command_spec::command(spec(), main)
 }
