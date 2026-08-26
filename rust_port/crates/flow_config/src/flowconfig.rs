@@ -29,8 +29,6 @@ use starlark_map::small_map::SmallMap;
 pub struct Warning(pub u32, pub String);
 pub struct Error(pub u32, pub String);
 
-const GLOB_PREFIX: &str = "glob:";
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FlowconfigGlobPattern {
     source: String,
@@ -59,7 +57,7 @@ impl FlowconfigGlobError {
 
 impl FlowconfigGlobPattern {
     pub fn try_new(source: String, allow_negation: bool) -> Result<Self, FlowconfigGlobError> {
-        let pattern = source.strip_prefix(GLOB_PREFIX).unwrap_or(&source);
+        let pattern = source.as_str();
         let (negated, pattern) = if allow_negation {
             match pattern.strip_prefix('!') {
                 Some(pattern) => (true, pattern),
@@ -3750,14 +3748,14 @@ mod tests {
     }
 
     #[test]
-    fn prefixed_and_unprefixed_globs_have_the_same_semantics() {
+    fn globs_have_the_expected_semantics() {
         let mut config = empty_config();
         let result = parse(
             &mut config,
             vec![
                 (1, "[ignore]".to_owned()),
-                (2, "glob:generated/**/*.{js,jsx}".to_owned()),
-                (3, "glob:!generated/keep/**".to_owned()),
+                (2, "generated/**/*.{js,jsx}".to_owned()),
+                (3, "!generated/keep/**".to_owned()),
                 (4, "legacy/**".to_owned()),
                 (5, "[include]".to_owned()),
                 (6, "../shared/**/src/*.js".to_owned()),
@@ -3779,12 +3777,12 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![
                 (
-                    "glob:generated/**/*.{js,jsx}",
+                    "generated/**/*.{js,jsx}",
                     "generated/**/*.{js,jsx}",
                     false,
                     None,
                 ),
-                ("glob:!generated/keep/**", "generated/keep/**", true, None,),
+                ("!generated/keep/**", "generated/keep/**", true, None,),
                 ("legacy/**", "legacy/**", false, None),
             ]
         );
@@ -3822,12 +3820,7 @@ mod tests {
 
     #[test]
     fn glob_patterns_must_be_project_relative() {
-        for pattern in [
-            "/absolute/**",
-            "glob:/absolute/**",
-            "<PROJECT_ROOT>/src/**",
-            "glob:<PROJECT_ROOT>/src/**",
-        ] {
+        for pattern in ["/absolute/**", "<PROJECT_ROOT>/src/**"] {
             let mut config = empty_config();
             let result = parse(
                 &mut config,
