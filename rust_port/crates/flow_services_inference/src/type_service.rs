@@ -3577,6 +3577,14 @@ pub fn init(
         Err(msg) => {
             // Either there is no saved state or we failed to load it for some reason
             flow_hh_logger::info!("Failed to load saved state: {}", msg);
+            // A saved state is installed into the committed heap before it is validated,
+            // so a rejected one leaves its entries behind. The crawl below only
+            // overwrites files that still exist, so anything the saved state believed in
+            // and the working tree has since dropped would survive -- e.g. a haste
+            // provider that has moved stays registered under its old path and collides
+            // with its new one. The heap starts out empty at init, so discarding it here
+            // just restores that.
+            committed_heap.clear();
             let transaction = ActiveTransaction::new(committed_heap.dupe());
             let (env, libs_ok) =
                 init_from_scratch(options, pool, &transaction.handle(), options.root.as_path());

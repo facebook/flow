@@ -255,6 +255,14 @@ impl CommittedHeap {
         Ok(())
     }
 
+    // A saved state is bulk-loaded straight into the committed heap, so a caller that
+    // rejects it after `load_heap*` has run cannot just drop a transaction to undo it.
+    // Discarding the heap leaves the fallback init to repopulate it from the crawl,
+    // rather than layering onto entries for files the saved state believed existed.
+    pub fn clear(&self) {
+        self.replace_data(CommittedHeapData::with_capacity(0, 0));
+    }
+
     // Decoding happens before the write lock is taken so a failed load leaves the
     // committed heap untouched.
     fn replace_data(&self, data: CommittedHeapData) {
