@@ -200,7 +200,7 @@ fn can_be_empty_string(t: &Type) -> bool {
 //    `type_sig_merge`, which deliberately blocks Flow_js), the syntactic check
 //    stands. On concretization error, fall back to the syntactic check so this
 //    function stays infallible (matches OCaml).
-fn can_be_empty_string_concretized<'cx>(
+fn can_be_empty_string_concretized(
     possible_concrete_types_for_inspection: Option<&PossibleConcreteTypesForInspection<'_>>,
     t: &Type,
 ) -> bool {
