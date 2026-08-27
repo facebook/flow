@@ -105,11 +105,14 @@ impl ActiveTransaction {
             .dupe()
     }
 
-    pub fn commit(mut self, destination: &Arc<CommittedHeap>) {
-        self.0
+    /// Publishes the overlay into the heap the transaction was opened on.
+    pub fn commit(mut self) {
+        let transaction = self
+            .0
             .take()
-            .expect("an active transaction may only be committed once")
-            .commit(destination);
+            .expect("an active transaction may only be committed once");
+        let destination = transaction.committed_heap();
+        transaction.commit(&destination);
     }
 }
 

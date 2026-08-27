@@ -50,11 +50,8 @@ fn committed_heap_init() -> std::sync::Arc<flow_heap::heap_state::CommittedHeap>
     std::sync::Arc::new(flow_heap::heap_state::CommittedHeap::new())
 }
 
-fn make_genv(
-    options: &Options,
-    committed_heap: std::sync::Arc<flow_heap::heap_state::CommittedHeap>,
-) -> flow_server_env::server_env::Genv {
-    flow_server::server_env_build::make_genv(std::sync::Arc::new(options.clone()), committed_heap)
+fn make_genv(options: &Options) -> flow_server_env::server_env::Genv {
+    flow_server::server_env_build::make_genv(std::sync::Arc::new(options.clone()))
 }
 
 pub enum AbstractCodemodRunner<A, T> {
@@ -146,8 +143,8 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
         };
         flow_hh_logger::level::set_min_level(log_level);
         let committed_heap = committed_heap_init();
-        let genv = make_genv(options, committed_heap);
+        let genv = make_genv(options);
         let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
-        rt.block_on(Runner::run(&genv, write, repeat, roots));
+        rt.block_on(Runner::run(&genv, &committed_heap, write, repeat, roots));
     }
 }

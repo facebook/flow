@@ -2758,6 +2758,7 @@ fn get_def(
 fn save_state(
     cache: &CheckContentsCache,
     genv: &server_env::Genv,
+    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> Result<String, String> {
@@ -2767,7 +2768,7 @@ fn save_state(
     cache.clear();
     persistent_connection::clear_type_parse_artifacts_caches();
 
-    let transaction = ActiveTransaction::new(genv.committed_heap.dupe());
+    let transaction = ActiveTransaction::new(committed_heap.dupe());
     flow_saved_state::save(
         std::path::Path::new(saved_state_filename),
         &transaction.handle(),
@@ -3442,10 +3443,11 @@ fn handle_status(
 fn handle_save_state(
     cache: &CheckContentsCache,
     genv: &server_env::Genv,
+    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
     env: &server_env::Env,
     saved_state_filename: &str,
 ) -> EphemeralNonparallelizableResult {
-    let result = save_state(cache, genv, env, saved_state_filename);
+    let result = save_state(cache, genv, committed_heap, env, saved_state_filename);
     Ok((server_prot::response::Response::SAVE_STATE(result), None))
 }
 
@@ -3460,7 +3462,7 @@ pub fn handle_ephemeral_command_for_standalone(
     let server = orchestrator;
     let orchestrator = Some(server);
     let options = &*genv.options;
-    let active_transaction = ActiveTransaction::new(genv.committed_heap.dupe());
+    let active_transaction = ActiveTransaction::new(server.heap().dupe());
     let transaction = active_transaction.handle();
     match command {
         server_prot::request::Command::APPLY_CODE_ACTION {
@@ -3649,7 +3651,7 @@ pub fn handle_ephemeral_command_for_standalone(
                 }
             };
             match filename {
-                Some(filename) => handle_save_state(cache, genv, env, &filename),
+                Some(filename) => handle_save_state(cache, genv, server.heap(), env, &filename),
                 None => Ok((
                     server_prot::response::Response::SAVE_STATE(Err(
                         "Failed to determine saved-state output filename".to_string(),
@@ -7143,12 +7145,15 @@ fn handle_persistent_text_document_diagnostics_lsp(
 
 fn mk_parallelizable_persistent(
     options: &Options,
+    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
     f: PersistentParallelizableWorkload,
 ) -> PersistentCommandHandler {
     let wait_for_recheck = options.wait_for_recheck;
     if wait_for_recheck {
+        let committed_heap = committed_heap.dupe();
         PersistentCommandHandler::HandleNonparallelizablePersistent(Box::new(move |env, cache| {
-            let transaction = flow_heap::parsing_heaps::ActiveTransaction::new(env.heap.dupe());
+            let transaction =
+                flow_heap::parsing_heaps::ActiveTransaction::new(committed_heap.dupe());
 
             f(env, &transaction.handle(), cache)
         }))
@@ -7183,7 +7188,7 @@ fn get_persistent_handler(
     // Start the transaction where the request is served, not here: a queued
     // handler that holds one keeps a read guard on the committed heap, and a
     // recheck cannot publish until every such guard is gone.
-    let committed_heap = &genv.committed_heap;
+    let committed_heap = orchestrator.heap();
     match request_inner {
         lsp_prot::Request::Subscribe => {
             let metadata = metadata.clone();
@@ -7310,6 +7315,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_get_def(
                         Some(&orchestrator),
@@ -7343,6 +7349,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_infer_type(
                         Some(&orchestrator),
@@ -7372,6 +7379,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_code_action_request(
                         Some(&orchestrator),
@@ -7402,6 +7410,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_autocomplete_lsp(
                         Some(&orchestrator),
@@ -7435,6 +7444,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_signaturehelp_lsp(
                         Some(&orchestrator),
@@ -7464,6 +7474,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_text_document_diagnostics_lsp(
                         Some(&orchestrator),
@@ -7496,6 +7507,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_document_highlight(
                         Some(&orchestrator),
@@ -7554,6 +7566,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_prepare_rename(
                         Some(&orchestrator),
@@ -7609,6 +7622,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, _transaction, _cache| {
                     Ok(handle_persistent_workspace_symbol(
                         &options_arc,
@@ -7635,6 +7649,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     handle_persistent_coverage(
                         Some(&orchestrator),
@@ -7658,6 +7673,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, _cache| {
                     let root = options_arc.root.display().to_string();
                     let transaction = transaction.dupe();
@@ -7679,6 +7695,7 @@ fn get_persistent_handler(
             let metadata = metadata.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |_env, _transaction, _cache| {
                     Ok(handle_persistent_ping(id, metadata))
                 }),
@@ -7714,6 +7731,7 @@ fn get_persistent_handler(
                             let orchestrator = orchestrator.clone();
                             mk_parallelizable_persistent(
                                 options,
+                                committed_heap,
                                 Box::new(move |env, transaction, cache| {
                                     Ok(handle_persistent_add_missing_imports_command(
                                         Some(&orchestrator),
@@ -7781,6 +7799,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, _transaction, _cache| {
                     Ok(handle_persistent_auto_close_jsx(
                         &options_arc,
@@ -7806,6 +7825,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_prepare_document_paste(
                         Some(&orchestrator),
@@ -7856,6 +7876,7 @@ fn get_persistent_handler(
             let options_arc = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, _transaction, _cache| {
                     Ok(handle_persistent_linked_editing_range(
                         &options_arc,
@@ -7879,6 +7900,7 @@ fn get_persistent_handler(
             let options_for_closure = genv.options.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, _cache| {
                     Ok(handle_persistent_rename_file_imports(
                         &options_for_closure,
@@ -7905,6 +7927,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_persistent_llm_context(
                         Some(&orchestrator),
@@ -7959,6 +7982,7 @@ fn get_persistent_handler(
             let orchestrator = orchestrator.clone();
             mk_parallelizable_persistent(
                 options,
+                committed_heap,
                 Box::new(move |env, transaction, cache| {
                     Ok(handle_live_errors_request(
                         Some(&orchestrator),

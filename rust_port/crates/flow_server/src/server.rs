@@ -154,6 +154,7 @@ fn init(
     profiling: &ProfilingRunning,
     focus_targets: Option<FlowOrdSet<FileKey>>,
     genv: &Genv,
+    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
 ) -> Result<(Env, Option<String>), RecheckError> {
     // write binary path and version to server log
     flow_hh_logger::info!(
@@ -185,21 +186,19 @@ fn init(
 
     extract_flowlibs_or_exit(options);
 
-    let (env, first_internal_error) = flow_profiling::memory_utils::with_committed_heap(
-        Arc::clone(&genv.committed_heap),
-        || {
+    let (env, first_internal_error) =
+        flow_profiling::memory_utils::with_committed_heap(Arc::clone(committed_heap), || {
             flow_services_inference::type_service::init(
                 orchestrator,
                 options,
                 workers,
-                &genv.committed_heap,
+                committed_heap,
                 focus_targets,
             )
-        },
-    )?;
+        })?;
 
-    sample_init_memory(profiling, &genv.committed_heap);
-    flow_event_logger::sharedmem_init_done(genv.committed_heap.heap_size() as u64);
+    sample_init_memory(profiling, committed_heap);
+    flow_event_logger::sharedmem_init_done(committed_heap.heap_size() as u64);
     Ok((env, first_internal_error))
 }
 
@@ -261,24 +260,17 @@ async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
     }
 }
 
-async fn gc_loop(
-    committed_heap: Arc<flow_heap::heap_state::CommittedHeap>,
-    orchestrator: server_orchestrator::ServerOrchestratorHandle,
-) {
+async fn gc_loop(orchestrator: server_orchestrator::ServerOrchestratorHandle) {
     loop {
         tokio::task::yield_now().await;
-        let done = orchestrator.collect_heap_slice(Arc::clone(&committed_heap), 10000);
+        let done = orchestrator.collect_heap_slice(10000);
         if done {
             break;
         }
     }
 }
 
-fn serve(
-    _genv: &Genv,
-    committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
-    orchestrator: &server_orchestrator::ServerOrchestratorHandle,
-) {
+fn serve(genv: &Genv, orchestrator: &server_orchestrator::ServerOrchestratorHandle) {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -286,9 +278,9 @@ fn serve(
     loop {
         monitor_rpc::status_update(server_status::Event::Ready);
 
-        let _options = &_genv.options;
+        let options = &genv.options;
 
-        let _start_time = std::time::SystemTime::now()
+        let start_time = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs_f64();
@@ -296,8 +288,8 @@ fn serve(
             let orchestrator_for_gc = orchestrator.clone();
             let idle_thread = async {
                 tokio::join!(
-                    idle_logging_loop(Arc::clone(_options), _start_time),
-                    gc_loop(Arc::clone(committed_heap), orchestrator_for_gc),
+                    idle_logging_loop(Arc::clone(options), start_time),
+                    gc_loop(orchestrator_for_gc),
                 );
             };
             let wait_thread =
@@ -311,8 +303,7 @@ fn serve(
             }
         });
 
-        let _profiling =
-            flow_server_rechecker::rechecker::recheck_loop(_genv, committed_heap, orchestrator);
+        let _profiling = flow_server_rechecker::rechecker::recheck_loop(genv, orchestrator);
         // Flush the logs asynchronously
         flow_tokio_runtime::spawn(async {
             if let Err(err) = flow_event_logger_lwt::flush().await {
@@ -331,8 +322,7 @@ pub fn create_program_init(options: Arc<Options>) -> Genv {
         None => {}
     }
 
-    let committed_heap = Arc::new(flow_heap::heap_state::CommittedHeap::new());
-    server_env_build::make_genv(options, committed_heap)
+    server_env_build::make_genv(options)
 }
 
 fn detect_linux_distro() -> Option<String> {
@@ -422,7 +412,9 @@ fn run(
 
     flow_server_rechecker::rechecker::init_tokio_runtime();
 
-    let server_orchestrator = server_orchestrator::ServerOrchestrator::new(options.clone());
+    let committed_heap = Arc::new(flow_heap::heap_state::CommittedHeap::new());
+    let server_orchestrator =
+        server_orchestrator::ServerOrchestrator::new(options.clone(), committed_heap);
     let orchestrator = server_orchestrator.handle();
 
     let genv_arc = Arc::new(create_program_init(options.clone()));
@@ -453,7 +445,13 @@ fn run(
 
     let should_print_summary = options.profile && !options.quiet;
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
-        init(Some(&orchestrator), profiling, None, &genv_arc)
+        init(
+            Some(&orchestrator),
+            profiling,
+            None,
+            &genv_arc,
+            orchestrator.heap(),
+        )
     });
     let (env, first_internal_error) = match init_result {
         Ok(result) => result,
@@ -488,7 +486,7 @@ fn run(
         .as_secs_f64();
     flow_hh_logger::info!("Took {} seconds to initialize.", t_prime - t);
 
-    serve(&genv_arc, &genv_arc.committed_heap, &orchestrator);
+    serve(&genv_arc, &orchestrator);
 }
 
 fn exit_msg_of_exception(error: &dyn std::fmt::Display, msg: &str) -> String {
@@ -634,11 +632,15 @@ where
     flow_logging_utils::set_server_options(&options);
 
     let genv = create_program_init(Arc::clone(&options));
+    // `flow full-check` drives its own loop, so there is no orchestrator to own the heap; this
+    // frame does, for as long as the check runs.
+    let committed_heap = Arc::new(flow_heap::heap_state::CommittedHeap::new());
     let should_print_summary = options.profile && !options.quiet;
 
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         // `flow full-check` runs without a server, so there is no recheck queue to schedule into.
-        let (env, first_internal_error) = init(None, profiling, focus_targets, &genv)?;
+        let (env, first_internal_error) =
+            init(None, profiling, focus_targets, &genv, &committed_heap)?;
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
         let lazy_stats = env.lazy_stats(&options);
         let lazy_msg = if lazy_stats.lazy_mode {
@@ -652,7 +654,7 @@ where
 
         let print_errors = profiling.with_timer(false, "FormatErrors", || {
             let transaction =
-                flow_heap::parsing_heaps::ActiveTransaction::new(genv.committed_heap.clone());
+                flow_heap::parsing_heaps::ActiveTransaction::new(committed_heap.clone());
             let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> Loc { transaction.loc_of_aloc(aloc) };
             let get_ast =
                 |file: &FileKey| -> Option<Arc<Program<Loc, Loc>>> { transaction.get_ast(file) };

@@ -87,7 +87,6 @@ pub(crate) enum Control {
     Shutdown,
     /// Runs one heap-collection slice on the executor and reports whether the cycle is complete.
     CollectHeapSlice {
-        heap: Arc<CommittedHeap>,
         work: usize,
         reply: std::sync::mpsc::Sender<bool>,
     },
@@ -103,12 +102,13 @@ pub(crate) enum Control {
 
 /// The cloneable capability through which other server components interact with the orchestrator.
 ///
-/// A handle can enqueue work and perform synchronous recheck/GC rendezvous, but it neither owns the
-/// executor thread nor exposes its `Env`, cache, or scheduling state.
+/// A handle can enqueue work, perform synchronous recheck/GC rendezvous, and borrow the committed
+/// heap, but it neither owns the executor thread nor exposes its `Env`, cache, or scheduling state.
 #[derive(Clone)]
 pub struct ServerOrchestratorHandle {
     control: Sender<Control>,
     recheck: Arc<RecheckQueue>,
+    heap: Arc<CommittedHeap>,
 }
 
 /// The server-startup owner used to wire producers before command execution begins.
@@ -130,6 +130,7 @@ struct CommandExecutor {
     workloads: Arc<WorkloadStream>,
     options: Arc<Options>,
     recheck: Arc<RecheckQueue>,
+    heap: Arc<CommittedHeap>,
 }
 
 /// The lifetime owner of a started command executor.
@@ -155,13 +156,16 @@ impl Drop for RunningServerOrchestrator {
 }
 
 impl ServerOrchestrator {
-    pub fn new(options: Arc<Options>) -> Self {
+    /// Takes the committed heap at construction: from here on it is the orchestrator that decides
+    /// when the heap is read, published, and compacted, so no other value stores one.
+    pub fn new(options: Arc<Options>, heap: Arc<CommittedHeap>) -> Self {
         let (control, controls) = channel::unbounded();
         let workloads = Arc::new(WorkloadStream::create());
         let recheck = Arc::new(RecheckQueue::new(control.clone()));
         let handle = ServerOrchestratorHandle {
             control: control.clone(),
             recheck: recheck.dupe(),
+            heap: heap.dupe(),
         };
         Self {
             handle,
@@ -171,6 +175,7 @@ impl ServerOrchestrator {
                 workloads,
                 options,
                 recheck,
+                heap,
             },
         }
     }
@@ -236,6 +241,13 @@ impl ServerOrchestratorHandle {
         &self.recheck
     }
 
+    /// The committed heap the executor owns. Lent out so callers that must open their own
+    /// transaction off the command loop — the recheck thread, deferred command closures — read the
+    /// same heap the executor publishes into, instead of each keeping a copy of their own.
+    pub fn heap(&self) -> &Arc<CommittedHeap> {
+        &self.heap
+    }
+
     pub fn commit_recheck(
         &self,
         commit: impl FnOnce() -> EnvRef + Send + 'static,
@@ -281,10 +293,10 @@ impl ServerOrchestratorHandle {
             .expect("the command executor should be running");
     }
 
-    pub fn collect_heap_slice(&self, heap: Arc<CommittedHeap>, work: usize) -> bool {
+    pub fn collect_heap_slice(&self, work: usize) -> bool {
         let (reply, receiver) = std::sync::mpsc::channel();
         self.control
-            .send(Control::CollectHeapSlice { heap, work, reply })
+            .send(Control::CollectHeapSlice { work, reply })
             .expect("the command executor should be running");
         receiver
             .recv()
@@ -312,10 +324,13 @@ impl ServerOrchestratorHandle {
 
 /// All mutable state over which commands and rechecks require a single ordering authority.
 ///
-/// The command executor alone owns this value. Co-locating the current `Env`, workload scheduling,
-/// recheck progress, deferred commands, and Base-dependent cache means their invariants do not rely
-/// on independent locks, flags, or cache-generation checks.
+/// The command executor alone owns this value. Co-locating the committed heap, the current `Env`,
+/// workload scheduling, recheck progress, deferred commands, and Base-dependent cache means their
+/// invariants do not rely on independent locks, flags, or cache-generation checks.
 struct State {
+    /// The committed heap. It is process-lifetime state, not a per-`Env` value, so it lives here
+    /// rather than being carried by every `Env` snapshot the executor publishes.
+    heap: Arc<CommittedHeap>,
     env: EnvRef,
     options: Arc<Options>,
     workloads: Arc<WorkloadStream>,
@@ -339,12 +354,14 @@ fn should_hold_serial_commands(
 
 impl State {
     fn new(
+        heap: Arc<CommittedHeap>,
         env: EnvRef,
         options: Arc<Options>,
         workloads: Arc<WorkloadStream>,
         recheck: Arc<RecheckQueue>,
     ) -> Self {
         Self {
+            heap,
             env,
             options,
             workloads,
@@ -430,7 +447,8 @@ impl State {
                 let _result = reply.send(());
             }
             Control::ConnectionChanged { change } => self.apply_connection_change(change),
-            Control::CollectHeapSlice { heap, work, reply } => {
+            Control::CollectHeapSlice { work, reply } => {
+                let heap = self.heap.dupe();
                 let compaction = std::cell::Cell::new(None);
                 let before_compact = || {
                     crate::monitor_rpc::status_update(server_status::Event::GCStart);
@@ -473,7 +491,7 @@ impl State {
         if (workload.workload_should_be_cancelled)() {
             return WorkloadOutcome::Completed;
         }
-        let transaction = ActiveTransaction::new(self.env.heap.dupe());
+        let transaction = ActiveTransaction::new(self.heap.dupe());
         (workload.workload_handler)(&self.env, &transaction.handle(), &self.cache)
     }
 
@@ -502,7 +520,7 @@ impl State {
         if (workload.parallelizable_workload_should_be_cancelled)() {
             return WorkloadOutcome::Completed;
         }
-        let transaction = ActiveTransaction::new(self.env.heap.dupe());
+        let transaction = ActiveTransaction::new(self.heap.dupe());
         (workload.parallelizable_workload_handler)(&self.env, &transaction.handle(), &self.cache)
     }
 
@@ -570,7 +588,7 @@ fn run_ready(
 
 impl CommandExecutor {
     fn run(self, env: EnvRef, started: std::sync::mpsc::Sender<()>) {
-        let mut state = State::new(env, self.options, self.workloads, self.recheck);
+        let mut state = State::new(self.heap, env, self.options, self.workloads, self.recheck);
         let mut pending_heap_slice = None;
         if !run_ready(&mut state, &self.controls, &mut pending_heap_slice) {
             return;

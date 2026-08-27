@@ -2377,7 +2377,6 @@ pub fn make_next_files(
 }
 
 fn mk_env(
-    heap: Arc<CommittedHeap>,
     files: FlowOrdSet<FileKey>,
     unparsed: FlowOrdSet<FileKey>,
     package_json_files: FlowOrdSet<FileKey>,
@@ -2391,7 +2390,6 @@ fn mk_env(
     previous_connections: Option<&PersistentConnection>,
 ) -> Env {
     Env {
-        heap,
         files,
         unparsed,
         dependency_info: env_cell(dependency_info),
@@ -2927,9 +2925,7 @@ fn init_with_initial_state(
         warnings,
         suppressions,
     };
-    let heap = transaction.committed_heap();
     let env = Env {
-        heap,
         files: parsed,
         dependency_info,
         checked_files: CheckedSet::empty(),
@@ -3471,9 +3467,7 @@ pub fn init_from_scratch(
         } else {
             None
         };
-        let heap = transaction.committed_heap();
         let env = mk_env(
-            heap,
             parsed_set.dupe(),
             unparsed_set.dupe(),
             package_json_files,
@@ -4093,7 +4087,6 @@ pub fn check_files_for_init(
 ) -> Result<(Env, Option<String> /* check_internal_error */), RecheckError> {
     with_transaction_result(message, |_transaction| -> Result<_, RecheckError> {
         let Env {
-            heap,
             dependency_info,
             errors: env_errors,
             coverage: env_coverage,
@@ -4253,7 +4246,6 @@ pub fn check_files_for_init(
         }
         collated_errors.commit();
         let env = Env {
-            heap,
             files: env_files,
             dependency_info: dependency_info_cell,
             checked_files: {

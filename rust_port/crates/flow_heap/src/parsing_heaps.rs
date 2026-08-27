@@ -1021,10 +1021,9 @@ mod tests {
         // The next recheck publishes.
         let recheck = ActiveTransaction::new(heap.dupe());
         recheck.add_unparsed(source_file("changed.js"), 42, None);
-        let heap_for_commit = heap.dupe();
         let (tx, rx) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
-            recheck.commit(&heap_for_commit);
+            recheck.commit();
             tx.send(())
                 .expect("the commit completion receiver should remain alive");
         });
@@ -1169,10 +1168,9 @@ mod tests {
 
         let committing = ActiveTransaction::new(heap.dupe());
         committing.add_unparsed(source_file("b.js"), 42, None);
-        let heap_for_commit = heap.dupe();
         let (tx, rx) = std::sync::mpsc::channel();
         std::thread::spawn(move || {
-            committing.commit(&heap_for_commit);
+            committing.commit();
             tx.send(())
                 .expect("the commit completion receiver should remain alive");
         });
@@ -1199,7 +1197,7 @@ mod tests {
         assert_eq!(transaction.get_file_hash_committed(&file), None);
         assert_eq!(heap.heap_size(), 0);
 
-        transaction.commit(&heap);
+        transaction.commit();
 
         let reader = ActiveTransaction::new(heap.dupe());
         assert_eq!(reader.get_file_hash(&file), Some(1));
@@ -1217,7 +1215,7 @@ mod tests {
         let retry = ActiveTransaction::new(heap.dupe());
         assert_eq!(retry.get_file_hash(&file), None);
         retry.add_unparsed(file.dupe(), 2, None);
-        retry.commit(&heap);
+        retry.commit();
 
         let reader = ActiveTransaction::new(heap.dupe());
         assert_eq!(reader.get_file_hash(&file), Some(2));
@@ -1234,7 +1232,7 @@ mod tests {
         }));
         assert!(result.is_err());
         drop(retained);
-        transaction.commit(&heap);
+        transaction.commit();
     }
 
     #[test]
@@ -1242,7 +1240,7 @@ mod tests {
         let heap = committed_heap();
         let seed = ActiveTransaction::new(heap.dupe());
         seed.add_unparsed(source_file("a.js"), 1, None);
-        seed.commit(&heap);
+        seed.commit();
         heap.state.read().gc_state.lock().new_alloc_size = 1;
 
         let transaction = ActiveTransaction::new(heap.dupe());
@@ -1260,10 +1258,10 @@ mod tests {
         let file = source_file("a.js");
         let insert = ActiveTransaction::new(heap.dupe());
         insert.add_unparsed(file.dupe(), 1, None);
-        insert.commit(&heap);
+        insert.commit();
         let delete = ActiveTransaction::new(heap.dupe());
         delete.clear_file(file, None);
-        delete.commit(&heap);
+        delete.commit();
 
         heap.compact(&no_caches_to_drop);
         assert_eq!(heap.heap_size(), 0);
@@ -1281,7 +1279,7 @@ mod tests {
             .heap_writer()
             .writer()
             .add_haste_dependent(haste.dupe(), file.dupe());
-        write.commit(&heap);
+        write.commit();
 
         let mut bytes = Vec::new();
         heap.save_heap(&mut bytes).expect("heap should serialize");
@@ -1306,7 +1304,7 @@ mod tests {
         seed.heap_writer()
             .writer()
             .add_file_dependent(file.dupe(), even_dependent.dupe());
-        seed.commit(&heap);
+        seed.commit();
 
         let done = Arc::new(AtomicBool::new(false));
         let start = Arc::new(Barrier::new(2));
@@ -1364,7 +1362,7 @@ mod tests {
                     writer.add_file_dependent(file.dupe(), odd_dependent.dupe());
                 }
             }
-            transaction.commit(&heap);
+            transaction.commit();
         }
         done.store(true, Ordering::Release);
         reader
@@ -1378,21 +1376,20 @@ mod tests {
         let file = source_file("a.js");
         let seed = ActiveTransaction::new(heap.dupe());
         seed.add_unparsed(file.dupe(), 1, None);
-        seed.commit(&heap);
+        seed.commit();
 
         let reader = ActiveTransaction::new(heap.dupe());
         assert_eq!(reader.get_file_hash(&file), Some(1));
 
         let writer = ActiveTransaction::new(heap.dupe());
         writer.add_unparsed(file.dupe(), 2, None);
-        let writer_heap = heap.dupe();
         let (started_tx, started_rx) = std::sync::mpsc::channel();
         let (done_tx, done_rx) = std::sync::mpsc::channel();
         let writer_thread = std::thread::spawn(move || {
             started_tx
                 .send(())
                 .expect("test should observe commit starting");
-            writer.commit(&writer_heap);
+            writer.commit();
             done_tx
                 .send(())
                 .expect("test should observe commit finishing");
@@ -1423,7 +1420,7 @@ mod tests {
         let file = source_file("a.js");
         let write = ActiveTransaction::new(heap.dupe());
         write.add_unparsed(file.dupe(), 42, None);
-        write.commit(&heap);
+        write.commit();
 
         let result = heap.load_heap(&mut Cursor::new(Vec::<u8>::new()));
 
@@ -1438,7 +1435,7 @@ mod tests {
         let saved_file = source_file("saved.js");
         let saved_write = ActiveTransaction::new(saved_heap.dupe());
         saved_write.add_unparsed(saved_file.dupe(), 42, None);
-        saved_write.commit(&saved_heap);
+        saved_write.commit();
         let mut bytes = Vec::new();
         saved_heap
             .save_heap(&mut bytes)
@@ -1448,7 +1445,7 @@ mod tests {
         let committed_file = source_file("committed.js");
         let committed_write = ActiveTransaction::new(heap.dupe());
         committed_write.add_unparsed(committed_file.dupe(), 7, None);
-        committed_write.commit(&heap);
+        committed_write.commit();
 
         let load = ActiveTransaction::new(heap.dupe());
         load.load_heap(&mut Cursor::new(bytes))
@@ -1468,7 +1465,7 @@ mod tests {
         let saved_file = source_file("saved.js");
         let saved_write = ActiveTransaction::new(saved_heap.dupe());
         saved_write.add_unparsed(saved_file.dupe(), 42, None);
-        saved_write.commit(&saved_heap);
+        saved_write.commit();
         let mut bytes = Vec::new();
         saved_heap
             .save_heap(&mut bytes)
@@ -1478,12 +1475,12 @@ mod tests {
         let old_file = source_file("old.js");
         let old_write = ActiveTransaction::new(heap.dupe());
         old_write.add_unparsed(old_file.dupe(), 7, None);
-        old_write.commit(&heap);
+        old_write.commit();
 
         let load = ActiveTransaction::new(heap.dupe());
         load.load_heap(&mut Cursor::new(bytes))
             .expect("replacement heap should deserialize");
-        load.commit(&heap);
+        load.commit();
 
         let reader = ActiveTransaction::new(heap);
         assert_eq!(reader.get_file_hash(&old_file), None);

@@ -12,10 +12,7 @@ use flow_server_env::server_env::Genv;
 
 use crate::server_worker;
 
-pub fn make_genv(
-    options: Arc<Options>,
-    committed_heap: Arc<flow_heap::heap_state::CommittedHeap>,
-) -> Genv {
+pub fn make_genv(options: Arc<Options>) -> Genv {
     let workers = {
         let num_workers = options.max_workers;
         if num_workers > 0 {
@@ -24,9 +21,5 @@ pub fn make_genv(
             None
         }
     };
-    Genv {
-        options,
-        workers,
-        committed_heap,
-    }
+    Genv { options, workers }
 }

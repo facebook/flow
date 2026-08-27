@@ -18,6 +18,7 @@ use dupe::Dupe;
 use flow_common::files::LibDir;
 use flow_common::options::Options;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
@@ -233,6 +234,7 @@ pub trait StepRunner {
     fn reporter() -> codemod_report::CodemodReport<Self::Accumulator>;
     fn init_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         roots: BTreeSet<FileKey>,
     ) -> impl std::future::Future<
         Output = Result<
@@ -242,6 +244,7 @@ pub trait StepRunner {
     >;
     fn recheck_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         env: Self::Env,
         iteration: i32,
         roots: BTreeSet<FileKey>,
@@ -255,8 +258,11 @@ pub trait StepRunner {
 }
 
 pub trait Runnable {
+    /// Codemods drive their own loop with no orchestrator, so the heap is owned by the caller and
+    /// lent for the run.
     fn run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         write: bool,
         repeat: bool,
         roots: BTreeSet<FileKey>,
@@ -1182,6 +1188,7 @@ where
     #[allow(unreachable_code)]
     async fn init_run(
         _genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         _roots: BTreeSet<FileKey>,
     ) -> Result<
         ((), (Self::Env, ResultList<Self::Accumulator>)),
@@ -1192,7 +1199,7 @@ where
         let should_print_summary = options.profile;
         let profiling = profiling_start("Codemod", should_print_summary);
         extract_flowlibs_or_exit(options);
-        let heap_transaction = ActiveTransaction::new(_genv.committed_heap.clone());
+        let heap_transaction = ActiveTransaction::new(heap.clone());
         let transaction = heap_transaction.handle();
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
@@ -1216,13 +1223,14 @@ where
             TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, &transaction)
                 .await?;
         drop(transaction);
-        heap_transaction.commit(&_genv.committed_heap);
+        heap_transaction.commit();
         Ok(((), (env, results)))
     }
 
     #[allow(unreachable_code)]
     async fn recheck_run(
         _genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         env: Self::Env,
         _iteration: i32,
         _roots: BTreeSet<FileKey>,
@@ -1247,7 +1255,7 @@ where
         let recheck_result = flow_services_inference::type_service::recheck(
             None,
             pool,
-            &_genv.committed_heap,
+            heap,
             &options_arc,
             &updates,
             &find_ref_request,
@@ -1260,7 +1268,7 @@ where
         );
         let (_, _, _, prepared) = recheck_result.expect("recheck failed");
         let env = prepared.commit();
-        let transaction = ActiveTransaction::new(_genv.committed_heap.clone());
+        let transaction = ActiveTransaction::new(heap.clone());
         log_input_files(&_roots);
         let results = TRC::merge_and_check(
             &env,
@@ -1346,7 +1354,11 @@ where
     C::Accumulator: Clone,
 {
     #[allow(unreachable_code)]
-    async fn run(_genv: &Genv, _roots: BTreeSet<FileKey>) -> ((), ResultList<C::Accumulator>) {
+    async fn run(
+        _genv: &Genv,
+        heap: &Arc<CommittedHeap>,
+        _roots: BTreeSet<FileKey>,
+    ) -> ((), ResultList<C::Accumulator>) {
         let options = &*_genv.options;
         let workers = &_genv.workers;
         let should_print_summary = options.profile;
@@ -1355,7 +1367,7 @@ where
         let all = options.all;
         let filename_set = get_target_filename_set(file_options, all, _roots);
         let next = next_of_filename_set(workers, &filename_set);
-        let reader = ActiveTransaction::new(_genv.committed_heap.clone());
+        let reader = ActiveTransaction::new(heap.clone());
         let reader_handle = reader.handle();
         let parse_results = flow_parsing::parsing_service::parse_with_defaults(
             workers.as_ref().unwrap(),
@@ -1392,17 +1404,19 @@ where
 
     async fn init_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         roots: BTreeSet<FileKey>,
     ) -> Result<
         ((), (Self::Env, ResultList<Self::Accumulator>)),
         flow_utils_concurrency::worker_cancel::WorkerCanceled,
     > {
-        let ((), results) = Self::run(genv, roots).await;
+        let ((), results) = Self::run(genv, heap, roots).await;
         Ok(((), ((), results)))
     }
 
     async fn recheck_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         _env: Self::Env,
         _iteration: i32,
         roots: BTreeSet<FileKey>,
@@ -1410,7 +1424,7 @@ where
         ((), (Self::Env, ResultList<Self::Accumulator>)),
         flow_utils_concurrency::worker_cancel::WorkerCanceled,
     > {
-        let ((), results) = Self::run(genv, roots).await;
+        let ((), results) = Self::run(genv, heap, roots).await;
         Ok(((), ((), results)))
     }
 
@@ -1429,7 +1443,11 @@ where
     C::Accumulator: Clone,
 {
     #[allow(unreachable_code)]
-    async fn run(_genv: &Genv, _roots: BTreeSet<FileKey>) -> ((), ResultList<C::Accumulator>) {
+    async fn run(
+        _genv: &Genv,
+        heap: &Arc<CommittedHeap>,
+        _roots: BTreeSet<FileKey>,
+    ) -> ((), ResultList<C::Accumulator>) {
         let options = &*_genv.options;
         let workers = &_genv.workers;
         let should_print_summary = options.profile;
@@ -1437,7 +1455,7 @@ where
         let mut options = options.clone();
         options.all = true;
         extract_flowlibs_or_exit(&options);
-        let transaction = ActiveTransaction::new(_genv.committed_heap.clone());
+        let transaction = ActiveTransaction::new(heap.clone());
         let reader = transaction.handle();
         let options_arc = Arc::new(options.clone());
         let pool = workers.as_ref().expect("workers required for init");
@@ -1490,17 +1508,19 @@ where
 
     async fn init_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         roots: BTreeSet<FileKey>,
     ) -> Result<
         ((), (Self::Env, ResultList<Self::Accumulator>)),
         flow_utils_concurrency::worker_cancel::WorkerCanceled,
     > {
-        let ((), results) = Self::run(genv, roots).await;
+        let ((), results) = Self::run(genv, heap, roots).await;
         Ok(((), ((), results)))
     }
 
     async fn recheck_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         _env: Self::Env,
         _iteration: i32,
         roots: BTreeSet<FileKey>,
@@ -1508,7 +1528,7 @@ where
         ((), (Self::Env, ResultList<Self::Accumulator>)),
         flow_utils_concurrency::worker_cancel::WorkerCanceled,
     > {
-        let ((), results) = Self::run(genv, roots).await;
+        let ((), results) = Self::run(genv, heap, roots).await;
         Ok(((), ((), results)))
     }
 
@@ -1561,6 +1581,7 @@ where
 
     async fn loop_run(
         genv: &Genv,
+        heap: &Arc<CommittedHeap>,
         mut env: SR::Env,
         mut iteration: i32,
         options: &Options,
@@ -1578,7 +1599,7 @@ where
                 Some(roots) => {
                     header(iteration, &roots);
                     let (_, (new_env, results)) =
-                        SR::recheck_run(genv, env, iteration, roots).await?;
+                        SR::recheck_run(genv, heap, env, iteration, roots).await?;
                     env = new_env;
                     changed_files = Self::post_run(options, write, results).await;
                     iteration += 1;
@@ -1592,11 +1613,17 @@ impl<SR: StepRunner> Runnable for RepeatRunner<SR>
 where
     SR::Accumulator: Clone,
 {
-    async fn run(genv: &Genv, write: bool, repeat: bool, roots: BTreeSet<FileKey>) {
+    async fn run(
+        genv: &Genv,
+        heap: &Arc<CommittedHeap>,
+        write: bool,
+        repeat: bool,
+        roots: BTreeSet<FileKey>,
+    ) {
         if repeat {
             header(0, &roots);
         }
-        let (_prof, (env, results)) = match SR::init_run(genv, roots).await {
+        let (_prof, (env, results)) = match SR::init_run(genv, heap, roots).await {
             Ok(v) => v,
             Err(_) => {
                 eprintln!(">>> Codemod canceled.");
@@ -1606,7 +1633,7 @@ where
         let options = &*genv.options;
         let changed_files = Self::post_run(options, write, results).await;
         if repeat
-            && Self::loop_run(genv, env, 1, options, write, changed_files)
+            && Self::loop_run(genv, heap, env, 1, options, write, changed_files)
                 .await
                 .is_err()
         {

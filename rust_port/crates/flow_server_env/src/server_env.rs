@@ -20,7 +20,6 @@ pub use flow_data_structure_wrapper::overlay_map::EnvCellReadGuard;
 use flow_data_structure_wrapper::overlay_map::OverlayMap;
 use flow_data_structure_wrapper::overlay_map::apply_delta_to_base_map;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
-use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_parser::file_key::FileKey;
 use flow_services_coverage::FileCoverage;
@@ -43,7 +42,6 @@ use crate::server_prot::response::LazyStats;
 pub struct Genv {
     pub options: Arc<Options>,
     pub workers: Option<ThreadPool>,
-    pub committed_heap: Arc<CommittedHeap>,
 }
 
 // The environment constantly maintained by the server.
@@ -187,7 +185,6 @@ impl GlobalLibFiles {
 }
 
 pub struct Env {
-    pub heap: Arc<CommittedHeap>,
     /// All the files that we at least parse (includes libs).
     pub files: FlowOrdSet<FileKey>,
     pub dependency_info: Arc<EnvCell<DependencyInfo>>,
@@ -503,7 +500,6 @@ impl EnvTransaction {
         }
         if needs_new_env {
             Arc::new(Env {
-                heap: env.heap.dupe(),
                 files: files.unwrap_or_else(|| env.files.dupe()),
                 dependency_info: env.dependency_info.dupe(),
                 checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
@@ -528,7 +524,7 @@ impl EnvTransaction {
 
     /// Commits the heap and Env fields together at the consuming transaction boundary.
     pub fn commit_with_transaction(self, transaction: ActiveTransaction) -> EnvRef {
-        transaction.commit(&self.env.heap);
+        transaction.commit();
         self.commit()
     }
 
@@ -565,7 +561,6 @@ impl EnvTransaction {
             collated_errors.commit();
         }
         Env {
-            heap: env.heap.dupe(),
             files: files.unwrap_or_else(|| env.files.dupe()),
             dependency_info: env.dependency_info.dupe(),
             checked_files: checked_files.unwrap_or_else(|| env.checked_files.dupe()),
@@ -586,7 +581,7 @@ impl EnvTransaction {
 
     /// Commits the heap and consumes the remaining Env transaction into an owned Env.
     pub fn into_env_with_transaction(self, transaction: ActiveTransaction) -> Env {
-        transaction.commit(&self.env.heap);
+        transaction.commit();
         self.into_env()
     }
 }
@@ -608,6 +603,7 @@ pub(crate) fn with_connections(env: EnvRef, connections: PersistentConnection) -
 #[cfg(test)]
 mod tests {
     use flow_common_utils::graph::GraphLike;
+    use flow_heap::heap_state::CommittedHeap;
 
     use super::*;
     use crate::dependency_info::PartialDependencyGraph;
@@ -624,7 +620,6 @@ mod tests {
 
     fn env_ref() -> EnvRef {
         Arc::new(Env {
-            heap: Arc::new(CommittedHeap::default()),
             files: FlowOrdSet::new(),
             dependency_info: env_cell(DependencyInfo::empty()),
             checked_files: CheckedSet::empty(),
@@ -650,8 +645,9 @@ mod tests {
 
     #[test]
     fn heap_changes_publish_only_at_transaction_commit() {
+        let heap = Arc::new(CommittedHeap::default());
         let env = env_ref();
-        let heap_transaction = ActiveTransaction::new(env.heap.dupe());
+        let heap_transaction = ActiveTransaction::new(heap.dupe());
         let env_transaction = EnvTransaction::new(env.dupe());
         let file = source_file("file");
 
@@ -666,8 +662,8 @@ mod tests {
         );
         assert!(heap_transaction.get_parse(&file).is_some());
 
-        let committed_env = env_transaction.commit_with_transaction(heap_transaction);
-        let reader = ActiveTransaction::new(committed_env.heap.dupe());
+        env_transaction.commit_with_transaction(heap_transaction);
+        let reader = ActiveTransaction::new(heap);
 
         assert!(
             reader

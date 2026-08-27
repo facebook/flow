@@ -121,7 +121,7 @@ fn recheck(
     let recheck_result = type_service::recheck(
         Some(orchestrator),
         workers,
-        &genv.committed_heap,
+        orchestrator.heap(),
         options,
         &updates,
         &find_ref_request,
@@ -286,7 +286,6 @@ pub(crate) fn recheck_single(
     recheck_count: usize,
     genv: &server_env::Genv,
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
-    committed_heap: &Arc<CommittedHeap>,
 ) -> RecheckOutcome {
     // Drive canceled-recheck restarts iteratively instead of recursively. Each
     // attempt that gets canceled returns `Restart` and asks the orchestrator for a
@@ -296,7 +295,7 @@ pub(crate) fn recheck_single(
     // snapshots to O(1) regardless of how many consecutive cancellations occur.
     let mut recheck_count = recheck_count;
     loop {
-        match recheck_single_attempt(recheck_count, genv, orchestrator, committed_heap) {
+        match recheck_single_attempt(recheck_count, genv, orchestrator) {
             RecheckAttempt::Done(outcome) => return outcome,
             RecheckAttempt::Restart => recheck_count += 1,
         }
@@ -313,7 +312,6 @@ fn recheck_single_attempt(
     recheck_count: usize,
     genv: &server_env::Genv,
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
-    committed_heap: &Arc<CommittedHeap>,
 ) -> RecheckAttempt {
     // Every attempt reads the committed state from its owner rather than carrying an `Env` of its
     // own, so any update that landed while the previous attempt ran is already applied.
@@ -326,7 +324,7 @@ fn recheck_single_attempt(
     let will_be_checked_files = Arc::new(RwLock::new(env.checked_files.dupe()));
     let (priority, workload) = {
         let process_updates = |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
-            process_updates(skip_incompatible, options, committed_heap, updates)
+            process_updates(skip_incompatible, options, orchestrator.heap(), updates)
         };
         let get_forced = || {
             will_be_checked_files
@@ -372,7 +370,7 @@ fn recheck_single_attempt(
     let env_snapshot = env.dupe();
 
     let options_for_cancel = options.dupe();
-    let committed_heap_for_cancel = genv.committed_heap.dupe();
+    let committed_heap_for_cancel = orchestrator.heap().dupe();
     let process_updates_for_cancel =
         move |skip_incompatible: bool, updates: &BTreeSet<String>| -> Updates {
             crate::rechecker::process_updates(
@@ -460,7 +458,7 @@ fn recheck_single_attempt(
             flow_hh_logger::info!(
                 "Recheck successfully canceled. Restarting the recheck to include new file changes"
             );
-            let _done = orchestrator.collect_heap_slice(committed_heap.dupe(), 256000);
+            let _done = orchestrator.collect_heap_slice(256000);
             server_monitor_listener_state::requeue_workload(orchestrator.recheck(), workload);
             RecheckAttempt::Restart
         },
@@ -476,14 +474,13 @@ fn recheck_single_attempt(
 // rechecks. But something is better than nothing...
 pub fn recheck_loop(
     genv: &server_env::Genv,
-    committed_heap: &Arc<CommittedHeap>,
     orchestrator: &server_orchestrator::ServerOrchestratorHandle,
 ) -> Vec<ProfilingFinished> {
     let mut profiling_list: Vec<ProfilingFinished> = Vec::new();
     loop {
         let should_print_summary = genv.options.profile;
         let recheck_series_start = Instant::now();
-        let recheck_result = recheck_single(1, genv, orchestrator, committed_heap);
+        let recheck_result = recheck_single(1, genv, orchestrator);
         let recheck_series_profiling = ProfilingFinished {
             duration: recheck_series_start.elapsed().as_secs_f64(),
         };
