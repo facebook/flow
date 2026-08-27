@@ -580,17 +580,13 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
                 if !parsed.parse_errors.is_empty() {
                     Err(format!("Failed to parse builtin `{}`", filename))
                 } else {
-                    Ok((None, strictness_kind, parsed.ast))
+                    Ok((strictness_kind, parsed.ast))
                 }
             })
             .collect::<Result<Vec<_>, _>>()
     })?;
-    let (_errors, master_cx) = merge::merge_lib_files(
-        &options.projects_options,
-        &builtin_sig_options(),
-        Arc::default(),
-        &asts,
-    );
+    let (_errors, master_cx) =
+        merge::merge_lib_files(&builtin_sig_options(), Arc::default(), &asts);
     STATE.with(|state| {
         state.borrow_mut().master_cx = Arc::new(master_cx);
     });

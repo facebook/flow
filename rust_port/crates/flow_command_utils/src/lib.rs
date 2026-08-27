@@ -1052,26 +1052,25 @@ pub fn file_options(
 
     let flowtyped_path = flow_common::files::make_path_absolute(root, "flow-typed");
     let mut has_explicit_flowtyped_lib = false;
-    let mut lib_paths: Vec<(Option<String>, std::path::PathBuf)> = flowconfig
+    let mut lib_paths: Vec<std::path::PathBuf> = flowconfig
         .libs
         .iter()
-        .map(|(scope, path)| {
-            let scope_str = scope.as_ref().map(|s| s.to_string());
+        .map(|path| {
             let expanded = flow_common::files::expand_project_root_token(root, path);
             let path_buf = flow_common::files::make_path_absolute(root, &expanded);
             if path_buf == flowtyped_path {
                 has_explicit_flowtyped_lib = true;
             }
-            (scope_str, path_buf)
+            path_buf
         })
         .collect();
     // "flow-typed" is always included in the libs list for convenience,
     // but there's no guarantee that it exists on the filesystem.
     if !has_explicit_flowtyped_lib && flowtyped_path.exists() {
-        lib_paths.insert(0, (None, flowtyped_path));
+        lib_paths.insert(0, flowtyped_path);
     }
     for lib in libs {
-        lib_paths.push((None, flow_common::files::make_path_absolute(root, &lib)));
+        lib_paths.push(flow_common::files::make_path_absolute(root, &lib));
     }
 
     let includes = {
@@ -1089,7 +1088,7 @@ pub fn file_options(
         if implicitly_include_root {
             implicit_paths.push(root.to_path_buf());
         }
-        implicit_paths.extend(lib_paths.iter().map(|(_, path)| path.clone()));
+        implicit_paths.extend(lib_paths.iter().cloned());
         // Shortest path first
         implicit_paths.sort_by_key(|path| path.to_string_lossy().len());
         for path in implicit_paths {

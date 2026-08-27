@@ -1290,13 +1290,7 @@ fn init_libs(
     BTreeMap<FileKey, ErrorSet>,
     BTreeMap<FileKey, ErrorSet>,
     ErrorSuppressions,
-    (
-        flow_imports_exports::exports::Exports,
-        Vec<(
-            flow_common::flow_projects::FlowProjects,
-            flow_imports_exports::exports::Exports,
-        )>,
-    ),
+    flow_imports_exports::exports::Exports,
     Arc<MasterContext>,
 ) {
     with_memory_timer(options, "InitLibs", || {
@@ -2381,7 +2375,7 @@ fn mk_env(
     unparsed: FlowOrdSet<FileKey>,
     package_json_files: FlowOrdSet<FileKey>,
     dependency_info: DependencyInfo,
-    ordered_libs: Vec<(Option<FlowSmolStr>, FlowSmolStr)>,
+    ordered_libs: Vec<FlowSmolStr>,
     global_lib_files: server_env::GlobalLibFiles,
     errors: Errors,
     collated_errors: CollatedErrors,
@@ -2689,7 +2683,7 @@ fn init_with_initial_state(
 
     let additional_lib_files: Vec<FileKey> = ordered_libs
         .iter()
-        .map(|(_, name)| files::lib_file_key(name))
+        .map(|name| files::lib_file_key(name))
         .collect();
     let next: parsing_service::Next = {
         let mut files = Some(additional_lib_files);
@@ -2846,12 +2840,7 @@ fn init_with_initial_state(
         ordered_libs: Arc::new(
             ordered_libs
                 .into_iter()
-                .map(|(opt, s)| {
-                    (
-                        opt.map(|o| FlowSmolStr::from(o.as_str())),
-                        FlowSmolStr::from(s.as_str()),
-                    )
-                })
+                .map(|s| FlowSmolStr::from(s.as_str()))
                 .collect(),
         ),
         global_lib_files,
@@ -3211,12 +3200,7 @@ pub fn init_from_scratch(
             dependency_info,
             ordered_libs
                 .into_iter()
-                .map(|(opt, s)| {
-                    (
-                        opt.map(|o| FlowSmolStr::from(o.as_str())),
-                        FlowSmolStr::from(s.as_str()),
-                    )
-                })
+                .map(|s| FlowSmolStr::from(s.as_str()))
                 .collect(),
             global_lib_files,
             errors,

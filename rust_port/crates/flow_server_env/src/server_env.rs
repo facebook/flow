@@ -193,7 +193,7 @@ pub struct Env {
     /// package.json files
     pub package_json_files: FlowOrdSet<FileKey>,
     /// The configured global lib files, in their merge order.
-    pub ordered_libs: Arc<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
+    pub ordered_libs: Arc<Vec<FlowSmolStr>>,
     pub global_lib_files: GlobalLibFiles,
     /// The files which didn't parse (skipped or errored)
     pub unparsed: FlowOrdSet<FileKey>,
@@ -258,7 +258,7 @@ pub struct EnvTransaction {
     dependency_info: Option<OverlayDependencyInfo>,
     checked_files: Option<CheckedSet>,
     package_json_files: Option<FlowOrdSet<FileKey>>,
-    ordered_libs: Option<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
+    ordered_libs: Option<Vec<FlowSmolStr>>,
     global_lib_files: Option<GlobalLibFiles>,
     unparsed: Option<FlowOrdSet<FileKey>>,
     errors: Option<OverlayErrors>,
@@ -325,7 +325,7 @@ impl EnvTransaction {
             .unwrap_or(&self.env.package_json_files)
     }
 
-    pub fn ordered_libs(&self) -> &[(Option<FlowSmolStr>, FlowSmolStr)] {
+    pub fn ordered_libs(&self) -> &[FlowSmolStr] {
         self.ordered_libs
             .as_ref()
             .map_or(self.env.ordered_libs.as_slice(), |libs| libs.as_slice())

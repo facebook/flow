@@ -1,6 +1,0 @@
-common
-//    ^
-fooS
-//  ^
-barS
-//  ^

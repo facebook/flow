@@ -1313,7 +1313,6 @@ pub struct DefClassBinding<Loc, T> {
 #[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct DefDeclareClassBinding<Loc, T> {
     pub id_loc: Loc,
-    pub nominal_id_loc: Loc,
     pub name: FlowSmolStr,
     pub def: DeclareClassSig<Loc, T>,
     pub namespace_types: BTreeMap<FlowSmolStr, (Loc, T)>,
@@ -1521,7 +1520,6 @@ impl<Loc: Clone, T> Def<Loc, T> {
             }
             Def::DeclareClassBinding(inner) => {
                 f_loc(cx, &inner.id_loc);
-                f_loc(cx, &inner.nominal_id_loc);
                 inner.def.iter(cx, f_loc, f_t);
                 for (loc, t) in inner.namespace_types.values() {
                     f_loc(cx, loc);
@@ -1652,7 +1650,6 @@ impl<Loc: Clone, T> Def<Loc, T> {
             Def::DeclareClassBinding(inner) => {
                 Def::DeclareClassBinding(Box::new(DefDeclareClassBinding {
                     id_loc: f_loc(cx, &inner.id_loc),
-                    nominal_id_loc: f_loc(cx, &inner.nominal_id_loc),
                     name: inner.name.dupe(),
                     def: inner.def.map(cx, &f_loc, &f_t),
                     namespace_types: inner

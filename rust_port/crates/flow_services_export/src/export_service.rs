@@ -12,7 +12,6 @@ use dupe::Dupe;
 use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
-use flow_common::flow_projects::FlowProjects;
 use flow_common_modulename::Modulename;
 use flow_common_utils::utils_js;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -368,7 +367,7 @@ fn add_exports_of_checked_file(
 
 // Adds builtins to [index]. See [Exports.of_builtins] for how libdefs
 // are converted as if they "export" things.
-fn add_exports_of_builtins_inner(lib_exports: &Exports, index: &mut ExportIndex) {
+fn add_exports_of_builtins(lib_exports: &Exports, index: &mut ExportIndex) {
     for export in lib_exports.iter() {
         match export {
             Export::Module(FlowImportSpecifier::Userland(module_name), sub_exports) => {
@@ -393,17 +392,6 @@ fn add_exports_of_builtins_inner(lib_exports: &Exports, index: &mut ExportIndex)
             Export::ReExportModule(_) => {}
             Export::ReExportModuleTypes(_) => {}
         }
-    }
-}
-
-pub fn add_exports_of_builtins(
-    libs: &(Exports, Vec<(FlowProjects, Exports)>),
-    index: &mut ExportIndex,
-) {
-    let (lib_exports, scoped_lib_exports) = libs;
-    add_exports_of_builtins_inner(lib_exports, index);
-    for (_scoped_dir, lib_exports) in scoped_lib_exports {
-        add_exports_of_builtins_inner(lib_exports, index);
     }
 }
 
@@ -600,7 +588,7 @@ pub fn index(
 pub fn init(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
-    libs: &(Exports, Vec<(FlowProjects, Exports)>),
+    libs: &Exports,
     parsed: &BTreeSet<FileKey>,
 ) -> ExportSearch {
     let (new_available_exports, _old_available_exports, imports_to_add, _imports_to_remove) =

@@ -36,7 +36,6 @@ use flow_common::files;
 use flow_common::files::FileOptions;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
-use flow_common::flow_projects::FlowProjects;
 use flow_common::flow_projects::ProjectsOptions;
 use flow_common::options::AssertOperator;
 use flow_common::options::JsxMode;
@@ -330,8 +329,7 @@ pub enum MasterContext {
         builtin_leader_file_key: FileKey,
         all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
         global_libdefs: Arc<BTreeSet<FileKey>>,
-        unscoped_builtins: BuiltinsGroup,
-        scoped_builtins: Vec<(FlowProjects, BuiltinsGroup)>,
+        builtins: BuiltinsGroup,
     },
 }
 

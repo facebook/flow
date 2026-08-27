@@ -22,7 +22,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
-use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::Transaction;
@@ -46,35 +45,30 @@ use flow_typing_flow_common::flow_js_utils::add_output_non_speculating;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct OrderedLibInput {
-    pub(crate) scoped_project: Option<String>,
     pub(crate) file: FileKey,
 }
 
 impl OrderedLibInput {
-    pub(crate) fn configured(scoped_project: Option<String>, path: &str) -> Self {
+    pub(crate) fn configured(path: &str) -> Self {
         Self {
-            scoped_project,
             file: flow_common::files::lib_file_key(path),
         }
     }
 
     fn discovered(file: FileKey) -> Self {
-        Self {
-            scoped_project: None,
-            file,
-        }
+        Self { file }
     }
 }
 
 pub(crate) fn assemble_ordered_lib_inputs(
-    configured_libs: &[(Option<String>, String)],
+    configured_libs: &[String],
     discovered_globals: &BTreeSet<FileKey>,
 ) -> Vec<OrderedLibInput> {
     // `FileKey` stores a root-relative, `/`-separated path suffix, so its `Ord` is already the
     // canonical cross-platform order the global scope needs; a `BTreeSet` iterates in it.
     configured_libs
         .iter()
-        .map(|(scoped_project, path)| OrderedLibInput::configured(scoped_project.clone(), path))
+        .map(|path| OrderedLibInput::configured(path))
         .chain(discovered_globals.iter().map(|file| {
             assert!(
                 !file.is_lib_file(),
@@ -100,27 +94,16 @@ fn load_lib_files(
     reader: &Transaction,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
     files: &[OrderedLibInput],
-) -> (
-    bool,
-    MasterContext,
-    Option<Context<'static>>,
-    (Exports, Vec<(FlowProjects, Exports)>),
-) {
+) -> (bool, MasterContext, Option<Context<'static>>, Exports) {
     let mut ok = true;
     let mut ordered_asts: Vec<(
-        Option<String>,
         flow_common::type_strictness::TypeStrictnessKind,
         Arc<ast::Program<Loc, Loc>>,
     )> = Vec::new();
-    for OrderedLibInput {
-        scoped_project,
-        file,
-    } in files
-    {
+    for OrderedLibInput { file } in files {
         match reader.get_ast(file) {
             Some(ast) => {
                 ordered_asts.push((
-                    scoped_project.clone(),
                     flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
                         flow_common::files::has_ts_ext(file),
                     ),
@@ -137,24 +120,17 @@ fn load_lib_files(
 
     let (builtin_exports, master_cx, cx_opt) = if ok {
         let sig_opts = TypeSigOptions::builtin_options(options);
-        let (builtin_errors, master_cx) = merge::merge_lib_files(
-            &options.projects_options,
-            &sig_opts,
-            all_unordered_libs,
-            &ordered_asts,
-        );
+        let (builtin_errors, master_cx) =
+            merge::merge_lib_files(&sig_opts, all_unordered_libs, &ordered_asts);
         match master_cx {
-            MasterContext::EmptyMasterContext => (
-                (Exports::empty(), Vec::new()),
-                MasterContext::EmptyMasterContext,
-                None,
-            ),
+            MasterContext::EmptyMasterContext => {
+                (Exports::empty(), MasterContext::EmptyMasterContext, None)
+            }
             MasterContext::NonEmptyMasterContext {
                 ref builtin_leader_file_key,
                 ref all_unordered_libs,
                 ref global_libdefs,
-                ref unscoped_builtins,
-                ref scoped_builtins,
+                ref builtins,
             } => {
                 let mut metadata = mk_context_metadata(options, global_libdefs.dupe());
                 metadata.overridable.checked = false;
@@ -181,7 +157,7 @@ fn load_lib_files(
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts
                         .iter()
-                        .map(|(_, _, ast)| {
+                        .map(|(_, ast)| {
                             let loc = &ast.loc;
                             let source = loc
                                 .source
@@ -204,26 +180,15 @@ fn load_lib_files(
                 for error in suppression_errors {
                     add_output_non_speculating(&cx, error);
                 }
-                let exports_of_builtins = |builtins: &flow_typing_context::BuiltinsGroup| {
-                    exports::of_builtins(&builtins.builtins)
-                };
-                let scoped_exports = scoped_builtins
-                    .iter()
-                    .map(|(project, builtins)| (*project, exports_of_builtins(builtins)))
-                    .collect();
                 (
-                    (exports_of_builtins(unscoped_builtins), scoped_exports),
+                    exports::of_builtins(&builtins.builtins),
                     master_cx,
                     Some(cx),
                 )
             }
         }
     } else {
-        (
-            (Exports::empty(), Vec::new()),
-            MasterContext::EmptyMasterContext,
-            None,
-        )
+        (Exports::empty(), MasterContext::EmptyMasterContext, None)
     };
     (ok, master_cx, cx_opt, builtin_exports)
 }
@@ -233,7 +198,7 @@ pub struct InitResult {
     pub errors: BTreeMap<FileKey, ErrorSet>,
     pub warnings: BTreeMap<FileKey, ErrorSet>,
     pub suppressions: ErrorSuppressions,
-    pub exports: (Exports, Vec<(FlowProjects, Exports)>),
+    pub exports: Exports,
     pub master_cx: Arc<MasterContext>,
 }
 

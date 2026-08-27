@@ -372,7 +372,6 @@ pub(super) enum LocalBinding<'arena, 'ast> {
     },
     DeclareClassBinding {
         id_loc: LocNode<'arena>,
-        nominal_id_loc: LocNode<'arena>,
         name: FlowSmolStr,
         def: Lazy<'arena, 'ast, DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         namespace_types: BTreeMap<FlowSmolStr, (LocNode<'arena>, Parsed<'arena, 'ast>)>,
@@ -3118,21 +3117,15 @@ pub(super) mod scope {
                 _ => None,
             };
         if let Some(class_node) = merged_class_node {
-            let (dc_id_loc, dc_nominal_id_loc, dc_name, dc_namespace_types) = {
+            let (dc_id_loc, dc_name, dc_namespace_types) = {
                 let data = class_node.0.data();
                 match &*data {
                     LocalBinding::DeclareClassBinding {
                         id_loc,
-                        nominal_id_loc,
                         name,
                         namespace_types,
                         ..
-                    } => (
-                        id_loc.dupe(),
-                        nominal_id_loc.dupe(),
-                        name.dupe(),
-                        namespace_types.clone(),
-                    ),
+                    } => (id_loc.dupe(), name.dupe(), namespace_types.clone()),
                     _ => unreachable!(),
                 }
             };
@@ -3142,7 +3135,6 @@ pub(super) mod scope {
                     &mut *data,
                     LocalBinding::DeclareClassBinding {
                         id_loc: dc_id_loc.dupe(),
-                        nominal_id_loc: dc_nominal_id_loc.dupe(),
                         name: dc_name.dupe(),
                         def: tbls.lazy(Box::new(|_, _, _| {
                             unreachable!("placeholder during interface merge")
@@ -3195,7 +3187,6 @@ pub(super) mod scope {
                 let mut data = class_node.0.data_mut();
                 *data = LocalBinding::DeclareClassBinding {
                     id_loc: dc_id_loc,
-                    nominal_id_loc: dc_nominal_id_loc,
                     name: dc_name,
                     def: merged_def,
                     namespace_types: dc_namespace_types,
@@ -3440,7 +3431,6 @@ pub(super) mod scope {
                 None
             }
         };
-        let is_global_scope = matches!(scopes.get(id), Scope::Global { .. });
         let bind_name = name.clone();
         bind(
             false,
@@ -3489,8 +3479,7 @@ pub(super) mod scope {
                         }
                     };
                     let dc_local = LocalBinding::DeclareClassBinding {
-                        id_loc: id_loc.dupe(),
-                        nominal_id_loc: id_loc,
+                        id_loc,
                         name: name.clone(),
                         def: merged_def,
                         namespace_types: BTreeMap::new(),
@@ -3511,24 +3500,7 @@ pub(super) mod scope {
                     (BindingNode::LocalBinding(node), true)
                 }
                 Some(b @ BindingNode::RemoteBinding(_)) => (b, false),
-                Some(BindingNode::LocalBinding(node)) => {
-                    // In libdefs, earlier definitions override later ones. Consider a `declare class` that's
-                    // present in both common and scoped libdefs. Normally, they will have different identity,
-                    // which can cause surprising subtyping errors when different versions of the class interact.
-                    // See the `libdef_scoped_class_identity` test suite.
-                    //
-                    // To avoid the issue, we always take identity from the last definition, which should
-                    // always come from the common libdefs.
-                    if is_global_scope {
-                        let mut def = node.0.data_mut();
-                        if let LocalBinding::DeclareClassBinding { nominal_id_loc, .. } =
-                            def.deref_mut()
-                        {
-                            *nominal_id_loc = id_loc;
-                        }
-                    }
-                    (BindingNode::LocalBinding(node), false)
-                }
+                Some(BindingNode::LocalBinding(node)) => (BindingNode::LocalBinding(node), false),
             },
         );
     }
@@ -4779,21 +4751,15 @@ pub(super) mod scope {
         existing_entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
         entry: &(LocNode<'arena>, Parsed<'arena, 'ast>),
     ) -> bool {
-        let (dc_id_loc, dc_nominal_id_loc, dc_name, dc_namespace_types) = {
+        let (dc_id_loc, dc_name, dc_namespace_types) = {
             let data = class_node.0.data();
             match &*data {
                 LocalBinding::DeclareClassBinding {
                     id_loc,
-                    nominal_id_loc,
                     name,
                     namespace_types,
                     ..
-                } => (
-                    id_loc.dupe(),
-                    nominal_id_loc.dupe(),
-                    name.dupe(),
-                    namespace_types.clone(),
-                ),
+                } => (id_loc.dupe(), name.dupe(), namespace_types.clone()),
                 _ => return false,
             }
         };
@@ -4811,7 +4777,6 @@ pub(super) mod scope {
                 &mut *data,
                 LocalBinding::DeclareClassBinding {
                     id_loc: dc_id_loc.dupe(),
-                    nominal_id_loc: dc_nominal_id_loc.dupe(),
                     name: dc_name.dupe(),
                     def: Lazy::new(Box::new(|_, _, _| {
                         unreachable!("placeholder during namespace declare-class merge")
@@ -4904,7 +4869,6 @@ pub(super) mod scope {
             let mut data = class_node.0.data_mut();
             *data = LocalBinding::DeclareClassBinding {
                 id_loc: dc_id_loc,
-                nominal_id_loc: dc_nominal_id_loc,
                 name: dc_name,
                 def: merged_def,
                 namespace_types: dc_namespace_types,

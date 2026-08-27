@@ -893,13 +893,11 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
         }
         parse::LocalBinding::DeclareClassBinding {
             id_loc,
-            nominal_id_loc,
             name,
             def,
             namespace_types,
         } => {
             let id_loc = pack_loc(id_loc);
-            let nominal_id_loc = pack_loc(nominal_id_loc);
             let def = {
                 let parsed = def.as_already_forced();
                 pack_declare_class(cx, parsed)
@@ -914,7 +912,6 @@ pub(crate) fn pack_local_binding<'arena, 'ast>(
                 .collect();
             Def::DeclareClassBinding(Box::new(DefDeclareClassBinding {
                 id_loc,
-                nominal_id_loc,
                 name: name.dupe(),
                 def,
                 namespace_types,

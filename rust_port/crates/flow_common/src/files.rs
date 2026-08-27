@@ -116,7 +116,7 @@ pub struct FileOptions {
     pub includes: PathMatcher,
     pub haste_paths_excludes: Vec<Regex>,
     pub haste_paths_includes: Vec<Regex>,
-    pub lib_paths: Vec<(Option<String>, PathBuf)>,
+    pub lib_paths: Vec<PathBuf>,
     pub module_declaration_dirnames: Vec<String>,
     pub module_file_exts: Vec<FlowSmolStr>,
     pub module_resource_exts: HashSet<FlowSmolStr>,
@@ -558,36 +558,34 @@ pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
     }
 }
 
-pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<(Option<String>, String)> {
-    let (libs, filter): (
-        Vec<(Option<String>, PathBuf)>,
-        Box<dyn Fn(&str) -> bool + '_>,
-    ) = match &options.default_lib_dir {
-        None => (
-            options.lib_paths.clone(),
-            Box::new(|path: &str| is_valid_path(options, path)),
-        ),
-        Some(libdir) => {
-            let libs = &options.lib_paths;
-            let root_path = match libdir {
-                LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
-            };
-            let root = root_path.clone();
-            let root_resolved = root.to_string_lossy().to_string();
-            let filter: Box<dyn Fn(&str) -> bool + '_> = Box::new(move |path: &str| {
-                is_prefix(&root_resolved, path) || is_valid_path(options, path)
-            });
-            let mut new_libs = vec![(None, root)];
-            new_libs.extend(libs.iter().cloned());
-            (new_libs, filter)
-        }
-    };
+pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<String> {
+    let (libs, filter): (Vec<PathBuf>, Box<dyn Fn(&str) -> bool + '_>) =
+        match &options.default_lib_dir {
+            None => (
+                options.lib_paths.clone(),
+                Box::new(|path: &str| is_valid_path(options, path)),
+            ),
+            Some(libdir) => {
+                let libs = &options.lib_paths;
+                let root_path = match libdir {
+                    LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
+                };
+                let root = root_path.clone();
+                let root_resolved = root.to_string_lossy().to_string();
+                let filter: Box<dyn Fn(&str) -> bool + '_> = Box::new(move |path: &str| {
+                    is_prefix(&root_resolved, path) || is_valid_path(options, path)
+                });
+                let mut new_libs = vec![root];
+                new_libs.extend(libs.iter().cloned());
+                (new_libs, filter)
+            }
+        };
 
-    let libs: Vec<(Option<String>, String)> = if libs.is_empty() {
+    let libs: Vec<String> = if libs.is_empty() {
         Vec::new()
     } else {
         libs.iter()
-            .flat_map(|(scoped_dir_opt, lib)| {
+            .flat_map(|lib| {
                 let lib_str = lib.to_string_lossy().to_string();
                 let filter_prime = |path: &str| -> bool {
                     (path == lib_str || filter(path)) && !is_json_file(path)
@@ -630,10 +628,7 @@ pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<(Option<Str
                         }
                     }
                 }
-                files
-                    .into_iter()
-                    .map(|lib| (scoped_dir_opt.clone(), lib))
-                    .collect::<Vec<_>>()
+                files.into_iter().collect::<Vec<_>>()
             })
             .collect()
     };
@@ -652,7 +647,7 @@ pub fn is_configured_lib_file(options: &FileOptions, path: &str) -> bool {
         || options
             .lib_paths
             .iter()
-            .any(|(_, lib_path)| path == lib_path || (path.starts_with(lib_path) && valid_path))
+            .any(|lib_path| path == lib_path || (path.starts_with(lib_path) && valid_path))
 }
 
 fn is_matching_regex_path(path: &str, pattern: &str, regex: &Regex, current: bool) -> bool {
@@ -923,7 +918,7 @@ pub fn make_next_files(
                 })
                 .into_iter()
                 .collect();
-            paths.extend(options.lib_paths.iter().map(|(_, path)| path.clone()));
+            paths.extend(options.lib_paths.iter().cloned());
             paths
         } else {
             Vec::new()

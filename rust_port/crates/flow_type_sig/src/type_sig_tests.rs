@@ -7792,7 +7792,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 3,
-                nominal_id_loc: 3,
                 name: "C",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -11606,7 +11605,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 0,
-                nominal_id_loc: 0,
                 name: "C",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -11742,7 +11740,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 9,
-                nominal_id_loc: 9,
                 name: "C3",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -11782,7 +11779,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 11,
-                nominal_id_loc: 11,
                 name: "C4",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -11976,7 +11972,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 0,
-                nominal_id_loc: 0,
                 name: "C",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -13791,7 +13786,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 1,
-                nominal_id_loc: 1,
                 name: "C",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -15155,7 +15149,6 @@ Module {
         DeclareClassBinding(
             DefDeclareClassBinding {
                 id_loc: 0,
-                nominal_id_loc: 0,
                 name: "A",
                 def: DeclareClassSig {
                     tparams: Mono,
@@ -19281,7 +19274,6 @@ Local defs:
 2. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 8,
-        nominal_id_loc: 8,
         name: "Array",
         def: DeclareClassSig {
             tparams: Mono,
@@ -20048,7 +20040,6 @@ Local defs:
 4. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 10,
-        nominal_id_loc: 10,
         name: "Y",
         def: DeclareClassSig {
             tparams: Mono,
@@ -21570,7 +21561,6 @@ Local defs:
 0. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 0,
-        nominal_id_loc: 0,
         name: "C",
         def: DeclareClassSig {
             tparams: Poly(
@@ -21793,7 +21783,6 @@ Local defs:
 1. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 6,
-        nominal_id_loc: 6,
         name: "C",
         def: DeclareClassSig {
             tparams: Poly(
@@ -22143,7 +22132,6 @@ Local defs:
 0. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 0,
-        nominal_id_loc: 0,
         name: "C",
         def: DeclareClassSig {
             tparams: Mono,
@@ -22255,7 +22243,6 @@ Local defs:
 0. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 0,
-        nominal_id_loc: 0,
         name: "C",
         def: DeclareClassSig {
             tparams: Mono,
@@ -22377,7 +22364,6 @@ Local defs:
 0. DeclareClassBinding(
     DefDeclareClassBinding {
         id_loc: 2,
-        nominal_id_loc: 2,
         name: "C",
         def: DeclareClassSig {
             tparams: Mono,

@@ -6,6 +6,7 @@
  */
 
 use std::cell::LazyCell;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
@@ -20,7 +21,6 @@ use flow_aloc::ALocTable;
 use flow_analysis::property_assignment;
 use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
-use flow_common::flow_projects::FlowProjects;
 use flow_common::platform_set;
 use flow_common::platform_set::PlatformSet;
 use flow_common::polarity::Polarity;
@@ -2120,100 +2120,42 @@ fn merge_libs_from_ordered_asts(
 }
 
 pub fn merge_lib_files(
-    project_opts: &flow_common::flow_projects::ProjectsOptions,
     sig_opts: &TypeSigOptions,
     all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
-    ordered_asts_with_scoped_projects: &[(
-        Option<String>,
+    ordered_asts: &[(
         flow_common::type_strictness::TypeStrictnessKind,
         Arc<ast::Program<Loc, Loc>>,
     )],
 ) -> (flow_error::ErrorSet, MasterContext) {
     let global_libdefs: Arc<BTreeSet<FileKey>> = Arc::new(
-        ordered_asts_with_scoped_projects
+        ordered_asts
             .iter()
-            .filter_map(|(_, _, ast)| ast.loc.source.dupe())
+            .filter_map(|(_, ast)| ast.loc.source.dupe())
             .collect(),
     );
-    let builtin_leader_file_key = ordered_asts_with_scoped_projects
+    let builtin_leader_file_key = ordered_asts
         .first()
-        .and_then(|(_, _, ast)| ast.loc.source.dupe());
-
-    let mut grouped: Vec<(
-        Option<FlowProjects>,
-        Vec<(
-            &ast::Program<Loc, Loc>,
-            flow_common::type_strictness::TypeStrictnessKind,
-        )>,
-    )> = Vec::new();
-    for (scoped_project_key, strictness_kind, ast) in ordered_asts_with_scoped_projects.iter() {
-        let scoped_key = scoped_project_key
-            .as_ref()
-            .map(|k| FlowProjects::from_project_str(project_opts, k));
-        let found = grouped.iter_mut().find(|(k, _)| k == &scoped_key);
-        match found {
-            None => grouped.push((scoped_key, vec![(ast.as_ref(), *strictness_kind)])),
-            Some((_, list)) => list.push((ast.as_ref(), *strictness_kind)),
-        }
-    }
-    let non_scoped_asts: Option<Vec<_>> = grouped
+        .and_then(|(_, ast)| ast.loc.source.dupe());
+    let ordered_asts: Vec<_> = ordered_asts
         .iter()
-        .find(|(k, _)| k.is_none())
-        .map(|(_, asts)| asts.to_vec());
-    // Make every scoped asts include all of non-scoped asts at the end
-    let grouped: Vec<_> = grouped
-        .into_iter()
-        .map(|(key, mut asts)| {
-            if key.is_some() {
-                if let Some(non_scoped) = &non_scoped_asts {
-                    asts.extend(non_scoped.iter().copied());
-                }
-            }
-            (key, asts)
-        })
+        .map(|(strictness_kind, ast)| (ast.as_ref(), *strictness_kind))
         .collect();
-    let mut all_errors = flow_error::ErrorSet::default();
-    let scoped_builtins: Vec<_> = grouped
-        .iter()
-        .map(|(key, asts)| {
-            let (builtin_errors, builtin_locs, builtins) =
-                merge_libs_from_ordered_asts(sig_opts, asts);
-            all_errors = flow_error::ErrorSet::union(&all_errors, &builtin_errors);
-            (
-                *key,
-                BuiltinsGroup {
+    let (builtin_errors, builtin_locs, builtins) =
+        merge_libs_from_ordered_asts(sig_opts, &ordered_asts);
+    match builtin_leader_file_key {
+        None => (builtin_errors, MasterContext::EmptyMasterContext),
+        Some(builtin_leader_file_key) => (
+            builtin_errors,
+            MasterContext::NonEmptyMasterContext {
+                builtin_leader_file_key,
+                all_unordered_libs,
+                global_libdefs,
+                builtins: BuiltinsGroup {
                     builtin_locs: Arc::new(builtin_locs),
                     builtins: Arc::new(builtins),
                 },
-            )
-        })
-        .collect();
-    let mut unscoped_list = Vec::new();
-    let mut scoped_list = Vec::new();
-    for (key, bg) in scoped_builtins {
-        match key {
-            None => unscoped_list.push(bg),
-            Some(k) => scoped_list.push((k, bg)),
-        }
-    }
-    match builtin_leader_file_key {
-        None => (all_errors, MasterContext::EmptyMasterContext),
-        Some(builtin_leader_file_key) => {
-            let unscoped_builtins = match unscoped_list.len() {
-                1 => unscoped_list.into_iter().next().unwrap(),
-                _ => panic!("There can be only one group of unscoped builtins"),
-            };
-            (
-                all_errors,
-                MasterContext::NonEmptyMasterContext {
-                    builtin_leader_file_key,
-                    all_unordered_libs,
-                    global_libdefs,
-                    unscoped_builtins,
-                    scoped_builtins: scoped_list,
-                },
-            )
-        }
+            },
+        ),
     }
 }
 
@@ -2227,110 +2169,68 @@ pub fn mk_builtins<'cx>(
             builtin_leader_file_key,
             all_unordered_libs,
             global_libdefs: _,
-            unscoped_builtins,
-            scoped_builtins,
+            builtins,
         } => {
             let builtin_leader_file_key = builtin_leader_file_key.dupe();
             let all_unordered_libs = all_unordered_libs.dupe();
-            let create_mapped_builtins = {
-                let builtin_leader_file_key = builtin_leader_file_key.dupe();
-                let all_unordered_libs = all_unordered_libs.dupe();
-                let metadata = metadata.clone();
-                move |bg: &BuiltinsGroup|
-                     -> Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx> {
-                    use std::cell::RefCell;
-
-                    let builtin_leader_file_key = builtin_leader_file_key.dupe();
-                    let all_unordered_libs = all_unordered_libs.dupe();
-                    let metadata = metadata.clone();
-                    let bg = bg.clone();
-                    let builtins_ref: Rc<RefCell<Builtins<'cx, Context<'cx>>>> =
-                        Rc::new(RefCell::new(Builtins::empty()));
-                    let builtins_ref_clone = builtins_ref.dupe();
-                    let cx = Context::make(
-                        Rc::new(flow_typing_context::make_ccx()),
-                        {
-                            let mut m = metadata.clone();
-                            m.overridable.checked = false;
-                            m
-                        },
-                        builtin_leader_file_key.dupe(),
-                        all_unordered_libs,
-                        {
-                            let builtin_leader_file_key = builtin_leader_file_key.dupe();
-                            Rc::new(LazyCell::new(Box::new(move || {
-                                Rc::new(ALocTable::empty(builtin_leader_file_key))
-                            })
-                                as Box<dyn FnOnce() -> Rc<ALocTable>>))
-                        },
-                        Rc::new(move |_cx: &Context, _| ResolvedRequire::MissingModule),
-                        Rc::new(move |_cx: &Context| -> Builtins<'_, Context<'_>> {
-                            builtins_ref_clone.replace(Builtins::empty())
-                        }),
-                        flow_utils_concurrency::check_budget::CheckBudget::new(None),
-                    );
-                    let (values, types, modules) = type_sig_merge::merge_builtins(
-                        &cx,
-                        builtin_leader_file_key.dupe(),
-                        bg.builtin_locs.dupe(),
-                        bg.builtins.dupe(),
-                    );
-                    let values: FlowOrdMap<_, _> = values.into_iter().collect();
-                    let types: FlowOrdMap<_, _> = types.into_iter().collect();
-                    let modules: FlowOrdMap<_, _> = modules.into_iter().collect();
-                    let original_builtins = Builtins::of_name_map(
-                        Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
-                        Rc::new(|_src_cx: &Context, _dst_cx: &Context, m: &ModuleType| {
-                            m.dupe()
-                        }),
-                        values.dupe(),
-                        types.dupe(),
-                        modules.dupe(),
-                    );
-                    *builtins_ref.borrow_mut() = original_builtins;
-                    let source_cx = cx.dupe();
-                    Rc::new(move |_dst_cx: &Context| {
-                        Builtins::of_name_map_with_source_cx(
-                            source_cx.dupe(),
-                            Rc::new(move |src_cx: &Context, dst_cx: &Context, t: Type| {
-                                copied(dst_cx, src_cx, &t)
-                            }),
-                            Rc::new(move |src_cx: &Context, dst_cx: &Context, m: &ModuleType| {
-                                module_type_copied(dst_cx, src_cx, m)
-                            }),
-                            values.dupe(),
-                            types.dupe(),
-                            modules.dupe(),
-                        )
-                    })
-                }
-            };
-            let mapped_unscoped_builtins = create_mapped_builtins(unscoped_builtins);
-            let mapped_scoped_builtins: Vec<_> = scoped_builtins
-                .iter()
-                .map(|(key, bg)| (*key, create_mapped_builtins(bg)))
-                .collect();
             let metadata = metadata.clone();
-            Rc::new(move |dst_cx: &Context| {
-                let project = FlowProjects::from_path(
-                    &metadata.frozen.projects_options,
-                    dst_cx.file().as_str(),
-                );
-                // With the scoped libdef feature,
-                // the set of libdefs active for a given file might be different.
-                // The correct set of builtins is chosen here.
-                match mapped_scoped_builtins
-                    .iter()
-                    .find_map(|(scoped_project, mapped_builtins)| {
-                        if project.as_ref() == Some(scoped_project) {
-                            Some(mapped_builtins(dst_cx))
-                        } else {
-                            None
-                        }
-                    }) {
-                    None => mapped_unscoped_builtins(dst_cx),
-                    Some(builtins) => builtins,
-                }
+            let builtins = builtins.clone();
+            let builtins_ref: Rc<RefCell<Builtins<'cx, Context<'cx>>>> =
+                Rc::new(RefCell::new(Builtins::empty()));
+            let builtins_ref_clone = builtins_ref.dupe();
+            let cx = Context::make(
+                Rc::new(flow_typing_context::make_ccx()),
+                {
+                    let mut m = metadata;
+                    m.overridable.checked = false;
+                    m
+                },
+                builtin_leader_file_key.dupe(),
+                all_unordered_libs,
+                {
+                    let builtin_leader_file_key = builtin_leader_file_key.dupe();
+                    Rc::new(LazyCell::new(Box::new(move || {
+                        Rc::new(ALocTable::empty(builtin_leader_file_key))
+                    })
+                        as Box<dyn FnOnce() -> Rc<ALocTable>>))
+                },
+                Rc::new(move |_cx: &Context, _| ResolvedRequire::MissingModule),
+                Rc::new(move |_cx: &Context| -> Builtins<'_, Context<'_>> {
+                    builtins_ref_clone.replace(Builtins::empty())
+                }),
+                flow_utils_concurrency::check_budget::CheckBudget::new(None),
+            );
+            let (values, types, modules) = type_sig_merge::merge_builtins(
+                &cx,
+                builtin_leader_file_key,
+                builtins.builtin_locs,
+                builtins.builtins,
+            );
+            let values: FlowOrdMap<_, _> = values.into_iter().collect();
+            let types: FlowOrdMap<_, _> = types.into_iter().collect();
+            let modules: FlowOrdMap<_, _> = modules.into_iter().collect();
+            let original_builtins = Builtins::of_name_map(
+                Rc::new(|_src_cx: &Context, _dst_cx: &Context, t: Type| t),
+                Rc::new(|_src_cx: &Context, _dst_cx: &Context, m: &ModuleType| m.dupe()),
+                values.dupe(),
+                types.dupe(),
+                modules.dupe(),
+            );
+            *builtins_ref.borrow_mut() = original_builtins;
+            let source_cx = cx.dupe();
+            Rc::new(move |_dst_cx: &Context| {
+                Builtins::of_name_map_with_source_cx(
+                    source_cx.dupe(),
+                    Rc::new(move |src_cx: &Context, dst_cx: &Context, t: Type| {
+                        copied(dst_cx, src_cx, &t)
+                    }),
+                    Rc::new(move |src_cx: &Context, dst_cx: &Context, m: &ModuleType| {
+                        module_type_copied(dst_cx, src_cx, m)
+                    }),
+                    values.dupe(),
+                    types.dupe(),
+                    modules.dupe(),
+                )
             })
         }
     }

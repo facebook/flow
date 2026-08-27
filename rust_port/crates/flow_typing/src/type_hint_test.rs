@@ -256,7 +256,6 @@ mod tests {
 
         fn init_master_cx() -> Arc<MasterContext> {
             let asts: Vec<(
-                Option<String>,
                 flow_common::type_strictness::TypeStrictnessKind,
                 Arc<ast::Program<Loc, Loc>>,
             )> = flow_flowlib::contents_list(false)
@@ -266,7 +265,6 @@ mod tests {
                     let lib_file = FileKey::new(FileKeyInner::LibFile(filename.to_string()));
                     let ast = parse_content(&lib_file, lib_content);
                     (
-                        None,
                         flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
                             flow_common::files::has_ts_ext(&lib_file),
                         ),
@@ -295,12 +293,7 @@ mod tests {
                 tslib_syntax: true,
                 is_lib_file: true,
             };
-            let (_, master_cx) = merge::merge_lib_files(
-                &flow_common::flow_projects::ProjectsOptions::default(),
-                &sig_opts,
-                Arc::default(),
-                &asts,
-            );
+            let (_, master_cx) = merge::merge_lib_files(&sig_opts, Arc::default(), &asts);
             Arc::new(master_cx)
         }
 

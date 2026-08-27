@@ -2921,7 +2921,7 @@ pub struct FlowConfig {
     // non-root include paths
     pub includes: Vec<FlowconfigGlobPattern>,
     // library paths. no wildcards
-    pub libs: Vec<(Option<FlowSmolStr>, String)>,
+    pub libs: Vec<String>,
     // lint severities
     pub lint_severities: LintSettings<Severity>,
     // strict mode
@@ -3009,54 +3009,8 @@ fn parse_includes(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<()
     Ok(())
 }
 
-fn parse_libs(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
-    let mapping_re = Regex::new(r"^'([^']*)'[ \t]*->[ \t]*'([^']*)'$").unwrap();
-    let mut libs: Vec<(u32, Option<FlowSmolStr>, String)> = Vec::new();
-
-    for (line_no, line) in lines {
-        let line_trim = line.trim();
-        if line_trim.is_empty() {
-            continue;
-        }
-        if let Some(caps) = mapping_re.captures(line_trim) {
-            libs.push((
-                *line_no,
-                Some(FlowSmolStr::new(caps.get(1).unwrap().as_str().trim())),
-                caps.get(2).unwrap().as_str().trim().to_owned(),
-            ));
-        } else {
-            libs.push((*line_no, None, line_trim.to_owned()));
-        }
-    }
-
-    let mut seen_scoped = false;
-    for (line_no, scoped_project, _) in &libs {
-        match scoped_project {
-            None => {
-                if seen_scoped {
-                    return Err(Error(
-                        *line_no,
-                        "All non-scoped libdefs must come before scoped ones".to_owned(),
-                    ));
-                }
-            }
-            Some(project) => {
-                seen_scoped = true;
-                if !config.options.projects.contains(project) {
-                    return Err(Error(
-                        *line_no,
-                        "Unknown project. If you want to configure scoped libdefs, you need to put [options] section before the [libs] section.".to_owned(),
-                    ));
-                }
-            }
-        }
-    }
-
-    config.libs = libs
-        .into_iter()
-        .map(|(_, scoped, path)| (scoped, path))
-        .collect();
-    Ok(())
+fn parse_libs(config: &mut FlowConfig, lines: &[(u32, String)]) {
+    config.libs = trim_lines(lines);
 }
 
 fn parse_ignores(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
@@ -3301,7 +3255,7 @@ fn parse_section(
             Ok(vec![])
         }
         ("libs", lines) => {
-            parse_libs(config, lines)?;
+            parse_libs(config, lines);
             Ok(vec![])
         }
         ("lints", lines) => parse_lints(config, lines),
@@ -3510,7 +3464,7 @@ pub fn init(
     parse_libs(
         &mut config,
         &libs.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
-    )?;
+    );
     warnings.extend(parse_lints(
         &mut config,
         &lints.into_iter().map(|s| (1, s)).collect::<Vec<_>>(),
@@ -3555,19 +3509,6 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
     fn write_lines(out: &mut dyn std::io::Write, values: &[String]) -> std::io::Result<()> {
         for value in values {
             writeln!(out, "{}", value)?;
-        }
-        Ok(())
-    }
-
-    fn write_libs(
-        out: &mut dyn std::io::Write,
-        libs: &[(Option<FlowSmolStr>, String)],
-    ) -> std::io::Result<()> {
-        for (scoped_dir_opt, lib) in libs {
-            match scoped_dir_opt {
-                None => writeln!(out, "{}", lib)?,
-                Some(scoped_dir) => writeln!(out, "{} -> {}", scoped_dir, lib)?,
-            }
         }
         Ok(())
     }
@@ -3638,7 +3579,7 @@ pub fn write<W: std::io::Write>(out: &mut W, config: &FlowConfig) -> std::io::Re
     }
     writeln!(out)?;
     section_header(out, "libs")?;
-    write_libs(out, &config.libs)?;
+    write_lines(out, &config.libs)?;
     writeln!(out)?;
     section_header(out, "lints")?;
     write_lints(out, config)?;
