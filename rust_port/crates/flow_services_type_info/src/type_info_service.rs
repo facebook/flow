@@ -298,22 +298,34 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
     Ok((friendly_results, serde_json::Value::Array(json_data_list)))
 }
 
+/// The second element is the `$defs` table, present only when `for_tool` is on
+/// and `dedup_threshold` asked for `$ref` output.
 pub fn dump_types<'a>(
     evaluate_type_destructors: EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
+    dedup_threshold: Option<usize>,
     cx: &Context<'a>,
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
-) -> Vec<(Loc, String)> {
+) -> (Vec<(Loc, String)>, Option<String>) {
     // Print type using Flow type syntax
     match for_tool {
-        Some(depth) => query_types::dump_types_for_tool(cx, typed_ast, depth),
+        Some(depth) => query_types::dump_types_for_tool(cx, typed_ast, depth, dedup_threshold),
         None => {
             let opts = PrinterOptions::default();
             let printer = |elt: &flow_common_ty::ty::ALocElt| -> String {
                 ty_printer::string_of_elt_single_line(elt, &opts)
             };
-            query_types::dump_types(&printer, evaluate_type_destructors, cx, file_sig, typed_ast)
+            (
+                query_types::dump_types(
+                    &printer,
+                    evaluate_type_destructors,
+                    cx,
+                    file_sig,
+                    typed_ast,
+                ),
+                None,
+            )
         }
     }
 }

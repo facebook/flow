@@ -43,6 +43,12 @@ fn spec() -> flow_command_spec::Spec {
         "",
         None,
     )
+    .flag(
+        "--dedup",
+        &arg_spec::optional_value_with_default(256, arg_spec::int()),
+        "",
+        None,
+    )
     .anon("file", &arg_spec::optional(arg_spec::string()))
 }
 
@@ -88,13 +94,32 @@ fn types_to_json(
 
 fn handle_response(
     types: Vec<(flow_parser::loc::Loc, String)>,
+    defs: Option<String>,
     json: bool,
     file_content: Option<&String>,
     pretty: bool,
     strip_root: Option<&str>,
 ) {
     if json {
-        flow_hh_json::print_json_endline(pretty, &types_to_json(file_content, strip_root, &types));
+        let types_json = types_to_json(file_content, strip_root, &types);
+        // Only `--dedup` changes the top-level shape, from the historical bare
+        // array to `{"types": [...], "$defs": {...}}`.
+        let payload = match defs {
+            None => types_json,
+            Some(defs) => match serde_json::from_str::<serde_json::Value>(&defs) {
+                Ok(defs_json) => serde_json::json!({
+                    "types": types_json,
+                    "$defs": defs_json,
+                }),
+                Err(err) => {
+                    // We produced this string ourselves, so this is unreachable
+                    // in practice; report it rather than emit a wrong shape.
+                    eprintln!("dump-types: could not re-parse $defs: {err}");
+                    return;
+                }
+            },
+        };
+        flow_hh_json::print_json_endline(pretty, &payload);
     } else {
         let out = types
             .into_iter()
@@ -117,6 +142,7 @@ fn handle_error(
     json: bool,
     pretty: bool,
     strip_root: Option<&str>,
+    dedup_threshold: Option<usize>,
 ) {
     if json {
         flow_hh_json::prerr_json_endline(
@@ -125,8 +151,10 @@ fn handle_error(
                 "error": err,
             }),
         );
-        // also output an empty array on stdout, for JSON parsers
-        handle_response(vec![], json, file_content, pretty, strip_root);
+        // Also output an empty payload on stdout, for JSON parsers. It has to keep the shape the
+        // caller asked for, so a `--dedup` consumer is not handed a bare array on the error path.
+        let empty_defs = dedup_threshold.map(|_| "{}".to_owned());
+        handle_response(vec![], empty_defs, json, file_content, pretty, strip_root);
     } else {
         eprintln!("{}", err);
     }
@@ -156,10 +184,44 @@ fn main(args: &arg_spec::Values) {
         &arg_spec::optional_value_with_default(10, arg_spec::int()),
     )
     .unwrap();
+    // Opt-in: without it the output shape is exactly what it has always been.
+    let dedup_threshold: Option<usize> = flow_command_spec::get(
+        args,
+        "--dedup",
+        &arg_spec::optional_value_with_default(256, arg_spec::int()),
+    )
+    .unwrap()
+    .map(|n: i32| n.max(0) as usize);
     let filename =
         flow_command_spec::get(args, "file", &arg_spec::optional(arg_spec::string())).unwrap();
 
     let json = json_flags.json || json_flags.pretty;
+
+    // `--dedup` replaces repeated subtrees with `{"$ref": id}` and puts the definitions in a
+    // `$defs` table that only the `--for-tool --json` payload has anywhere to carry. Anywhere else
+    // it would print refs with nothing to resolve them against, so it is dropped rather than
+    // half-applied. Dropping it here rather than at each point of use is also what keeps the
+    // success and error payloads the same shape for a given invocation.
+    let dedup_threshold = match dedup_threshold {
+        None => None,
+        Some(threshold) if for_tool.is_some() && json => Some(threshold),
+        Some(_) => {
+            // Name every flag that is missing, not just the first: reporting one at a time makes
+            // the user re-invoke to discover the next.
+            let mut missing = Vec::new();
+            if for_tool.is_none() {
+                missing.push("--for-tool");
+            }
+            if !json {
+                missing.push("--json");
+            }
+            eprintln!(
+                "dump-types: --dedup has no effect without {}; ignoring it",
+                missing.join(" ")
+            );
+            None
+        }
+    };
     let file = flow_command_utils::get_file_from_filename_or_stdin(
         "dump-types",
         filename.as_deref(),
@@ -182,6 +244,7 @@ fn main(args: &arg_spec::Values) {
         input: file,
         evaluate_type_destructors,
         for_tool,
+        dedup_threshold,
         wait_for_recheck,
     };
     let response = flow_command_utils::connect_and_make_request(
@@ -198,11 +261,13 @@ fn main(args: &arg_spec::Values) {
                 json,
                 json_flags.pretty,
                 strip_root.as_deref(),
+                dedup_threshold,
             );
         }
-        server_prot::response::Response::DUMP_TYPES(Ok(response)) => {
+        server_prot::response::Response::DUMP_TYPES(Ok((response, defs))) => {
             handle_response(
                 response,
+                defs,
                 json,
                 file_content.as_ref(),
                 json_flags.pretty,

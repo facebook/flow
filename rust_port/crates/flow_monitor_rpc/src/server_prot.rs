@@ -213,6 +213,10 @@ pub mod request {
             input: FileInput,
             evaluate_type_destructors: bool,
             for_tool: Option<i32>,
+            /// When set, `for_tool` output replaces repeated subtrees larger
+            /// than this many bytes with `{"$ref": id}` and returns a shared
+            /// `$defs` table alongside the per-location types.
+            dedup_threshold: Option<usize>,
             wait_for_recheck: Option<bool>,
         },
         FIND_MODULE {
@@ -326,6 +330,7 @@ pub mod request {
                 evaluate_type_destructors: _,
                 wait_for_recheck: _,
                 for_tool: _,
+                dedup_threshold: _,
             } => format!("dump-types {}", input.filename_of_file_input()),
             Command::FIND_MODULE {
                 moduleref,
@@ -517,7 +522,9 @@ pub mod response {
 
     pub type BatchCoverageResponse = Result<Vec<(FileKey, FileCoverage)>, String>;
 
-    pub type DumpTypesResponse = Result<Vec<(Loc, String)>, String>;
+    /// The per-location types and, for a `--dedup` dump, the serialized `$defs` object they
+    /// reference. The table lives inside the `Ok` so a failed dump cannot carry one.
+    pub type DumpTypesResponse = Result<(Vec<(Loc, String)>, Option<String>), String>;
 
     pub type GetDefResponse = Result<Vec<Loc>, String>;
 

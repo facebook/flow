@@ -2370,8 +2370,10 @@ fn dump_types(
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
+    dedup_threshold: Option<usize>,
     file_input: &FileInput,
-) -> Result<Result<Vec<(flow_parser::loc::Loc, String)>, String>, WorkloadCanceled> {
+) -> Result<Result<(Vec<(flow_parser::loc::Loc, String)>, Option<String>), String>, WorkloadCanceled>
+{
     let file_key = file_key_of_file_input(options, file_input);
     let content = match file_input.content_of_file_input_arc() {
         Ok(c) => c,
@@ -2400,6 +2402,7 @@ fn dump_types(
     Ok(Ok(flow_services_type_info::type_info_service::dump_types(
         evaluate_type_destructors,
         for_tool,
+        dedup_threshold,
         &typecheck_artifacts.cx,
         parse_artifacts.file_sig.clone(),
         &typecheck_artifacts.typed_ast,
@@ -3128,6 +3131,7 @@ fn handle_dump_types(
     transaction: Arc<flow_heap::parsing_heaps::Transaction>,
     evaluate_type_destructors: flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode,
     for_tool: Option<i32>,
+    dedup_threshold: Option<usize>,
     input: &FileInput,
 ) -> EphemeralParallelizableResult {
     let response = dump_types(
@@ -3138,6 +3142,7 @@ fn handle_dump_types(
         transaction,
         evaluate_type_destructors,
         for_tool,
+        dedup_threshold,
         input,
     )?;
     Ok((server_prot::response::Response::DUMP_TYPES(response), None))
@@ -3556,6 +3561,7 @@ pub fn handle_ephemeral_command_for_standalone(
             input,
             evaluate_type_destructors,
             for_tool,
+            dedup_threshold,
             wait_for_recheck: _,
         } => handle_dump_types(
             orchestrator,
@@ -3569,6 +3575,7 @@ pub fn handle_ephemeral_command_for_standalone(
                 flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode::EvaluateNone
             },
             for_tool,
+            dedup_threshold,
             &input,
         ),
         server_prot::request::Command::FIND_MODULE {

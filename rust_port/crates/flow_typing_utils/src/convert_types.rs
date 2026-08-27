@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::Cell;
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::ops::Deref;
 
@@ -77,19 +79,95 @@ pub struct TypeJsonCx<'a, 'cx> {
     /// depth. Depth belongs in the key because `type_to_json` truncates at
     /// `depth < 0`: the same type serializes differently under different
     /// budgets, so keying on the type alone would silently alter the output.
-    memo: RefCell<HashMap<(usize, i32), Json>>,
+    memo: RefCell<HashMap<(usize, i32), MemoEntry>>,
     /// Holds a strong reference to every memoized type. Without it a temporary
     /// `Type` (`OpenT` resolution builds them) could be dropped and a later
     /// allocation reuse its address, serving a stale entry for another type.
     keepalive: RefCell<Vec<Type>>,
+    /// `Some(threshold)` enables `$ref` mode: a serialized subtree of more than
+    /// `threshold` bytes is moved into [`Self::defs`] and every occurrence,
+    /// including the first, is emitted as `{"$ref": id}`. `None` reproduces the
+    /// pre-existing output exactly, reusing the memo by cloning.
+    dedup_threshold: Option<usize>,
+    defs: RefCell<BTreeMap<u32, Json>>,
+    next_def_id: Cell<u32>,
+}
+
+/// What the memo holds for one (allocation, depth) pair.
+enum MemoEntry {
+    /// Emitted inline; repeats are served by cloning.
+    Inline(Json),
+    /// Promoted into `$defs`; repeats are served as `{"$ref": id}`.
+    Ref(u32),
 }
 
 impl<'a, 'cx> TypeJsonCx<'a, 'cx> {
     pub fn new(cx: &'a Context<'cx>) -> Self {
+        Self::with_dedup(cx, None)
+    }
+
+    /// `dedup_threshold` of `Some(n)` turns on `$ref` output for subtrees over
+    /// `n` bytes. Callers that enable it must also emit [`Self::take_defs`].
+    pub fn with_dedup(cx: &'a Context<'cx>, dedup_threshold: Option<usize>) -> Self {
         Self {
             cx,
             memo: RefCell::new(HashMap::new()),
             keepalive: RefCell::new(Vec::new()),
+            dedup_threshold,
+            defs: RefCell::new(BTreeMap::new()),
+            next_def_id: Cell::new(0),
+        }
+    }
+
+    /// Drain the `$defs` table, as a JSON object keyed by ref id. Empty (and meaningless) unless
+    /// this context was built with a threshold.
+    ///
+    /// This ends the batch: the memo and the id counter are reset alongside the table. Draining
+    /// the table on its own would leave memoized `Ref` entries pointing at definitions the caller
+    /// now owns, so a later `type_to_json` on one of those types would emit a `$ref` into a table
+    /// that no longer contains it. Callers today build one context per file and drop it, so that
+    /// is unreachable — but the reset is what makes it unreachable by construction.
+    pub fn take_defs(&self) -> Json {
+        self.memo.borrow_mut().clear();
+        self.next_def_id.set(0);
+        Json::Object(
+            self.defs
+                .take()
+                .into_iter()
+                .map(|(id, def)| (id.to_string(), def))
+                .collect(),
+        )
+    }
+}
+
+/// Approximate serialized byte length of `json`, without building the string.
+///
+/// Under-counts strings that need escaping, since it charges one byte per byte of content. That
+/// only shifts which subtrees sit either side of the threshold, and promotion is semantically
+/// neutral — a `$ref` resolves to the value it replaced — so the threshold is a size-tuning knob
+/// rather than something correctness rests on. It is deterministic, which is what matters: the
+/// same input always promotes the same set.
+fn json_len(json: &Json) -> usize {
+    match json {
+        Json::Null => 4,
+        Json::Bool(b) => {
+            if *b {
+                4
+            } else {
+                5
+            }
+        }
+        Json::Number(n) => n.to_string().len(),
+        Json::String(s) => s.len() + 2,
+        Json::Array(items) => {
+            2 + items.len().saturating_sub(1) + items.iter().map(json_len).sum::<usize>()
+        }
+        Json::Object(entries) => {
+            2 + entries.len().saturating_sub(1)
+                + entries
+                    .iter()
+                    .map(|(k, v)| k.len() + 3 + json_len(v))
+                    .sum::<usize>()
         }
     }
 }
@@ -223,14 +301,38 @@ pub fn type_to_json<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, t: &Type) -> Json
     // `t.deref()` is the `Rc` payload, so this address identifies the
     // allocation; `keepalive` below stops it being recycled under us.
     let key = (t.deref() as *const TypeInner as usize, depth);
-    let cached = cx.memo.borrow().get(&key).cloned();
+    let cached = match cx.memo.borrow().get(&key) {
+        Some(MemoEntry::Inline(json)) => Some(json.clone()),
+        Some(MemoEntry::Ref(id)) => Some(ref_json(*id)),
+        None => None,
+    };
     if let Some(cached) = cached {
         return cached;
     }
     let result = type_to_json_uncached(cx, depth, t);
     cx.keepalive.borrow_mut().push(t.dupe());
-    cx.memo.borrow_mut().insert(key, result.clone());
-    result
+    match cx.dedup_threshold {
+        // Promote on first sight rather than on second: it costs one `$ref`
+        // token for a subtree that turns out to be unique, and in exchange the
+        // whole thing stays single-pass and definitions share with each other.
+        Some(threshold) if json_len(&result) > threshold => {
+            let id = cx.next_def_id.get();
+            cx.next_def_id.set(id + 1);
+            cx.defs.borrow_mut().insert(id, result);
+            cx.memo.borrow_mut().insert(key, MemoEntry::Ref(id));
+            ref_json(id)
+        }
+        _ => {
+            cx.memo
+                .borrow_mut()
+                .insert(key, MemoEntry::Inline(result.clone()));
+            result
+        }
+    }
+}
+
+fn ref_json(id: u32) -> Json {
+    json!({ "$ref": id })
 }
 
 fn type_to_json_uncached<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, t: &Type) -> Json {

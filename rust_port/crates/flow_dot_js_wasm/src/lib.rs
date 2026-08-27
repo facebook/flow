@@ -926,9 +926,11 @@ fn dump_types(params: &Value, for_tool: bool) -> Result<Value, String> {
         config,
         STATE.with(|state| state.borrow().master_cx.dupe()),
     )?;
-    let types = type_info_service::dump_types(
+    // No `--dedup` on the wasm surface, so there is never a `$defs` table to emit.
+    let (types, _) = type_info_service::dump_types(
         EvaluateTypeDestructorsMode::EvaluateNone,
         for_tool.then_some(5),
+        None,
         &checked.prepared.cx,
         checked.prepared.parsed.file_sig.dupe(),
         &checked.typed_ast,

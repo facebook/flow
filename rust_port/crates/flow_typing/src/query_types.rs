@@ -229,15 +229,21 @@ pub fn dump_types<'a>(
     sort_loc_pairs(concretize_loc_pairs(filtered))
 }
 
+/// Returns the per-location types and, when `dedup_threshold` is set, the
+/// shared `$defs` table those locations refer to via `{"$ref": id}`.
 pub fn dump_types_for_tool(
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     depth: i32,
-) -> Vec<(Loc, String)> {
+    dedup_threshold: Option<usize>,
+) -> (Vec<(Loc, String)>, Option<String>) {
     let types = typed_ast_utils::typed_ast_to_list(typed_ast);
     let env = cx.environment();
     let env_values = &env.var_info.env_values;
-    let json_cx = convert_types::TypeJsonCx::new(cx);
+    // That is also why `$defs` has to be a file-level table rather than being
+    // folded into each location's string — cross-location sharing is where
+    // almost all of the size win is.
+    let json_cx = convert_types::TypeJsonCx::with_dedup(cx, dedup_threshold);
     let type_to_json = |t: &Type| -> Json {
         let concrete =
             FlowJs::singleton_concrete_type_for_inspection(cx, type_util::reason_of_t(t), t)
@@ -261,7 +267,9 @@ pub fn dump_types_for_tool(
         (loc, obj.to_string())
     };
     let mapped: Vec<_> = types.into_iter().map(print_type_json).collect();
-    sort_loc_pairs(concretize_loc_pairs(mapped))
+    let sorted = sort_loc_pairs(concretize_loc_pairs(mapped));
+    let defs = dedup_threshold.map(|_| json_cx.take_defs().to_string());
+    (sorted, defs)
 }
 
 pub fn insert_type_normalize<'a, 'cx>(

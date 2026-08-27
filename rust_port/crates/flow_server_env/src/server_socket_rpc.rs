@@ -510,6 +510,7 @@ pub enum CliCommand {
         input: FileInput,
         evaluate_type_destructors: bool,
         for_tool: Option<i32>,
+        dedup_threshold: Option<usize>,
         wait_for_recheck: Option<bool>,
     },
     FIND_MODULE {
@@ -634,11 +635,13 @@ impl From<server_prot::request::Command> for CliCommand {
                 input,
                 evaluate_type_destructors,
                 for_tool,
+                dedup_threshold,
                 wait_for_recheck,
             } => Self::DUMP_TYPES {
                 input: input.into(),
                 evaluate_type_destructors,
                 for_tool,
+                dedup_threshold,
                 wait_for_recheck,
             },
             server_prot::request::Command::FIND_MODULE {
@@ -790,11 +793,13 @@ impl CliCommand {
                 input,
                 evaluate_type_destructors,
                 for_tool,
+                dedup_threshold,
                 wait_for_recheck,
             } => server_prot::request::Command::DUMP_TYPES {
                 input: input.into_server_file_input(),
                 evaluate_type_destructors,
                 for_tool,
+                dedup_threshold,
                 wait_for_recheck,
             },
             CliCommand::FIND_MODULE {
@@ -1441,7 +1446,9 @@ pub type AutofixExportsResponse = Result<(Patch, Vec<String>), String>;
 pub type AutofixMissingLocalAnnotResponse = Result<Patch, String>;
 pub type BatchCoverageResponse = Result<Vec<(String, FileCoverage)>, String>;
 pub type CoverageResponse = Result<Vec<(Loc, CoverageKind)>, String>;
-pub type DumpTypesResponse = Result<Vec<(Loc, String)>, String>;
+/// Mirrors `server_prot`'s: the `$defs` table lives inside the `Ok` so a failed dump cannot
+/// carry one.
+pub type DumpTypesResponse = Result<(Vec<(Loc, String)>, Option<String>), String>;
 pub type CycleResponse = Result<Vec<(String, Vec<String>)>, String>;
 pub type FindModuleResponse = (Option<String>, Vec<String>);
 pub type GetDefResponse = Result<Vec<Loc>, String>;
@@ -1518,11 +1525,14 @@ impl CliResponse {
             server_prot::response::Response::CYCLE(response) => Ok(Self::CYCLE(response)),
             server_prot::response::Response::QUERY(response) => Ok(Self::QUERY(response)),
             server_prot::response::Response::DUMP_TYPES(response) => {
-                Ok(Self::DUMP_TYPES(response.map(|types| {
-                    types
-                        .into_iter()
-                        .map(|(loc, ty)| (Loc::from(loc), ty))
-                        .collect()
+                Ok(Self::DUMP_TYPES(response.map(|(types, defs)| {
+                    (
+                        types
+                            .into_iter()
+                            .map(|(loc, ty)| (Loc::from(loc), ty))
+                            .collect(),
+                        defs,
+                    )
                 })))
             }
             server_prot::response::Response::FIND_MODULE((file_key, failed_candidates)) => {
@@ -1616,11 +1626,14 @@ impl CliResponse {
             CliResponse::CYCLE(response) => server_prot::response::Response::CYCLE(response),
             CliResponse::QUERY(response) => server_prot::response::Response::QUERY(response),
             CliResponse::DUMP_TYPES(response) => {
-                server_prot::response::Response::DUMP_TYPES(response.map(|types| {
-                    types
-                        .into_iter()
-                        .map(|(loc, ty)| (loc.into_flow_loc(), ty))
-                        .collect()
+                server_prot::response::Response::DUMP_TYPES(response.map(|(types, defs)| {
+                    (
+                        types
+                            .into_iter()
+                            .map(|(loc, ty)| (loc.into_flow_loc(), ty))
+                            .collect(),
+                        defs,
+                    )
                 }))
             }
             CliResponse::FIND_MODULE((file_key, failed_candidates)) => {
