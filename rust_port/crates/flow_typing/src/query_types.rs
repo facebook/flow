@@ -237,11 +237,12 @@ pub fn dump_types_for_tool(
     let types = typed_ast_utils::typed_ast_to_list(typed_ast);
     let env = cx.environment();
     let env_values = &env.var_info.env_values;
+    let json_cx = convert_types::TypeJsonCx::new(cx);
     let type_to_json = |t: &Type| -> Json {
         let concrete =
             FlowJs::singleton_concrete_type_for_inspection(cx, type_util::reason_of_t(t), t)
                 .unwrap_or_else(|_| t.dupe());
-        convert_types::type_to_json(cx, depth, &concrete)
+        convert_types::type_to_json(&json_cx, depth, &concrete)
     };
     let print_type_json = |(loc, t): (ALoc, Type)| -> (ALoc, String) {
         let expression_type = type_to_json(&t);
