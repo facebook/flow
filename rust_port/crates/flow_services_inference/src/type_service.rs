@@ -50,7 +50,7 @@ use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 use flow_parsing::parsing_service;
 use flow_saved_state::FetchResult;
-use flow_saved_state::LoadedSavedState;
+use flow_saved_state::SavedStateEnvData;
 use flow_server_env::collated_errors::CollatedErrors;
 use flow_server_env::collated_errors::OverlayCollatedErrors;
 use flow_server_env::dependency_info::DependencyInfo;
@@ -2625,93 +2625,6 @@ fn saved_duplicate_providers_from_direct_state(
         .collect()
 }
 
-fn restore_resolved_requires(
-    transaction: &Arc<Transaction>,
-    file: &FileKey,
-    resolved_modules: Vec<flow_heap::resolved_requires::ResolvedModule>,
-    phantom_dependencies: Vec<Modulename>,
-) {
-    let resolved_modules = resolved_modules
-        .into_iter()
-        .map(|module| transaction.intern_resolved_module(module))
-        .collect();
-    let phantom_dependencies = phantom_dependencies
-        .into_iter()
-        .map(|module| transaction.intern_dependency_from_modulename(module))
-        .collect();
-    let resolved_requires =
-        flow_heap::resolved_requires::ResolvedRequires::new(resolved_modules, phantom_dependencies);
-    transaction.set_resolved_requires(file, resolved_requires);
-}
-
-fn restore_parsed(
-    transaction: &Arc<Transaction>,
-    file: &FileKey,
-    parsed_file_data: flow_saved_state::ParsedFileData,
-) -> BTreeSet<Modulename> {
-    let flow_saved_state::ParsedFileData {
-        haste_module_info,
-        normalized_file_data,
-    } = parsed_file_data;
-    let flow_saved_state::NormalizedFileData {
-        requires,
-        resolved_modules,
-        phantom_dependencies,
-        exports,
-        hash,
-        imports,
-    } = normalized_file_data;
-    let dirty_modules = transaction.add_parsed(
-        file.dupe(),
-        hash,
-        None,
-        haste_module_info,
-        None,
-        None,
-        None,
-        None,
-        None,
-        Arc::new(exports),
-        Arc::from(requires),
-        Arc::new(imports),
-    );
-    restore_resolved_requires(transaction, file, resolved_modules, phantom_dependencies);
-    dirty_modules
-}
-
-fn restore_unparsed(
-    transaction: &Arc<Transaction>,
-    file: &FileKey,
-    unparsed_file_data: flow_saved_state::UnparsedFileData,
-) -> BTreeSet<Modulename> {
-    transaction.add_unparsed(
-        file.dupe(),
-        unparsed_file_data.unparsed_hash,
-        unparsed_file_data.unparsed_haste_module_info,
-    )
-}
-
-fn restore_package(
-    transaction: &Arc<Transaction>,
-    file: &FileKey,
-    package_data: flow_saved_state::PackageFileData,
-) -> BTreeSet<Modulename> {
-    let flow_saved_state::PackageFileData {
-        package_haste_module_info,
-        package_hash,
-        package_info,
-    } = package_data;
-    match package_info {
-        Ok(package_json) => transaction.add_package(
-            file.dupe(),
-            package_hash,
-            package_haste_module_info,
-            Arc::new(package_json),
-        ),
-        Err(()) => transaction.add_unparsed(file.dupe(), package_hash, package_haste_module_info),
-    }
-}
-
 fn clear_deleted_heaps(
     transaction: &Arc<Transaction>,
     env: Option<&Env>,
@@ -2955,171 +2868,15 @@ fn init_with_initial_state(
     (env, libs_ok)
 }
 
-pub fn init_from_legacy_saved_state(
+pub fn init_from_saved_state(
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
-    saved_state: flow_saved_state::SavedStateData,
+    saved_state: SavedStateEnvData,
     updates: &CheckedSet,
     env: Option<&Env>,
 ) -> (Env, bool) {
-    let flow_saved_state::SavedStateData {
-        parsed_heaps,
-        unparsed_heaps,
-        package_heaps,
-        local_errors: saved_local_errors,
-        node_modules_containers: saved_node_modules_containers,
-        dependency_graph,
-        export_index,
-        ..
-    } = saved_state;
-    // Saved state does not record discovered globals yet.
-    let discovered_global_libdefs: BTreeSet<FileKey> = BTreeSet::new();
-    flow_hh_logger::info!("Restoring heaps");
-    monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
-    // Files.node_modules_containers := node_modules_containers;
-    *files::node_modules_containers.write().unwrap() = saved_node_modules_containers;
-    let mut parsed = FlowOrdSet::new();
-    let mut unparsed = FlowOrdSet::new();
-    let mut package_json_files = FlowOrdSet::new();
-    let verify = options.saved_state_verify;
-
-    type RestoreAcc = (BTreeSet<FileKey>, BTreeSet<Modulename>, Vec<FileKey>);
-
-    fn merge(acc: &mut RestoreAcc, other: RestoreAcc) {
-        acc.0.extend(other.0);
-        acc.1.extend(other.1);
-        acc.2.extend(other.2);
-    }
-
-    let parsed_acc: RestoreAcc = flow_utils_concurrency::map_reduce::call(
-        pool,
-        flow_utils_concurrency::map_reduce::make_next(
-            pool.num_workers(),
-            None::<fn(i32, i32, i32)>,
-            None,
-            parsed_heaps,
-        ),
-        {
-            let transaction = transaction.dupe();
-            move |acc: &mut RestoreAcc, batch: Vec<(FileKey, flow_saved_state::ParsedFileData)>| {
-                for (file, parsed_file_data) in batch {
-                    acc.1
-                        .extend(restore_parsed(&transaction, &file, parsed_file_data));
-                    if verify && !verify_hash(&transaction, &file) {
-                        acc.2.push(file.dupe());
-                    }
-                    acc.0.insert(file);
-                }
-            }
-        },
-        merge,
-    );
-    let (parsed_files, dirty_modules_parsed, invalid_parsed_hashes) = parsed_acc;
-    for file in parsed_files {
-        parsed.insert(file);
-    }
-
-    let unparsed_acc: RestoreAcc = flow_utils_concurrency::map_reduce::call(
-        pool,
-        flow_utils_concurrency::map_reduce::make_next(
-            pool.num_workers(),
-            None::<fn(i32, i32, i32)>,
-            None,
-            unparsed_heaps,
-        ),
-        {
-            let transaction = transaction.dupe();
-            move |acc: &mut RestoreAcc,
-                  batch: Vec<(FileKey, flow_saved_state::UnparsedFileData)>| {
-                for (file, unparsed_file_data) in batch {
-                    acc.1
-                        .extend(restore_unparsed(&transaction, &file, unparsed_file_data));
-                    if verify && !verify_hash(&transaction, &file) {
-                        acc.2.push(file.dupe());
-                    }
-                    acc.0.insert(file);
-                }
-            }
-        },
-        merge,
-    );
-    let (unparsed_files, dirty_modules_unparsed, invalid_unparsed_hashes) = unparsed_acc;
-    for file in unparsed_files {
-        unparsed.insert(file);
-    }
-
-    let package_acc: RestoreAcc =
-        package_heaps
-            .into_iter()
-            .fold(Default::default(), |mut acc, (file, package_data)| {
-                acc.1
-                    .extend(restore_package(transaction, &file, package_data));
-                if verify && !verify_hash(transaction, &file) {
-                    acc.2.push(file.dupe());
-                }
-                acc.0.insert(file);
-                acc
-            });
-    let (package_files, dirty_modules_packages, invalid_package_hashes) = package_acc;
-    for file in package_files {
-        package_json_files.insert(file);
-    }
-
-    let mut dirty_modules = dirty_modules_parsed;
-    dirty_modules.extend(dirty_modules_unparsed);
-    dirty_modules.extend(dirty_modules_packages);
-    dirty_modules.extend(clear_deleted_heaps(
-        transaction,
-        env,
-        &parsed,
-        &unparsed,
-        &package_json_files,
-    ));
-    let mut invalid_hashes = invalid_parsed_hashes;
-    invalid_hashes.extend(invalid_unparsed_hashes);
-    invalid_hashes.extend(invalid_package_hashes);
-    if verify {
-        assert_valid_hashes(updates, invalid_hashes);
-    }
-    let local_errors = saved_local_errors;
-
-    let (env, libs_ok) = init_with_initial_state(
-        pool,
-        transaction,
-        options,
-        || {
-            env_cell(flow_saved_state::restore_dependency_info(
-                pool,
-                dependency_graph,
-            ))
-        },
-        BTreeMap::new(),
-        if options.saved_state_persist_export_index {
-            export_index
-        } else {
-            None
-        },
-        discovered_global_libdefs,
-        env,
-        parsed,
-        unparsed,
-        package_json_files,
-        dirty_modules,
-        local_errors,
-    );
-    (env, libs_ok)
-}
-
-pub fn init_from_direct_saved_state(
-    pool: &ThreadPool,
-    transaction: &Arc<Transaction>,
-    options: &Arc<Options>,
-    saved_state: flow_saved_state::SavedStateEnvData,
-    updates: &CheckedSet,
-    env: Option<&Env>,
-) -> (Env, bool) {
-    let flow_saved_state::SavedStateEnvData {
+    let SavedStateEnvData {
         parsed_files,
         unparsed_files,
         package_json_files: saved_package_json_files,
@@ -3134,10 +2891,8 @@ pub fn init_from_direct_saved_state(
     let discovered_global_libdefs: BTreeSet<FileKey> = BTreeSet::new();
     flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
-    // Direct serialization saved state: the heap was already bulk-loaded by
-    // Transaction.load_heap during the load step, so all file data is already in
-    // shared memory. The saved state metadata contains only FilenameSet.t (not
-    // per-file data). We just need to:
+    // The heap was already bulk-loaded during the load step, so all file data is already in shared
+    // memory. The saved-state metadata contains only file sets, so we just need to:
     // 1. Handle deleted files (files in saved state that no longer exist on disk)
     // 2. Compute dirty modules by querying the already-populated heap
     // 3. Optionally verify file hashes
@@ -3189,24 +2944,6 @@ pub fn init_from_direct_saved_state(
         local_errors,
     );
     (env, libs_ok)
-}
-
-pub fn init_from_saved_state(
-    pool: &ThreadPool,
-    transaction: &Arc<Transaction>,
-    options: &Arc<Options>,
-    saved_state: LoadedSavedState,
-    updates: &CheckedSet,
-    env: Option<&Env>,
-) -> (Env, bool) {
-    match saved_state {
-        LoadedSavedState::Legacy_saved_state(data) => {
-            init_from_legacy_saved_state(pool, transaction, options, data, updates, env)
-        }
-        LoadedSavedState::Direct_saved_state(data) => {
-            init_from_direct_saved_state(pool, transaction, options, data, updates, env)
-        }
-    }
 }
 
 pub fn handle_updates_since_saved_state(
@@ -3509,10 +3246,9 @@ pub fn exit_if_no_fallback(msg: Option<&str>, options: &Options) {
 // whole heap through its overlay would mean two serial passes over every entry and
 // dependency edge.
 pub fn load_saved_state(
-    pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
-) -> Result<(ActiveTransaction, LoadedSavedState, CheckedSet), String> {
+) -> Result<(ActiveTransaction, SavedStateEnvData, CheckedSet), String> {
     // Does a best-effort job to load a saved state. If it fails, returns None
     let (fetch_profiling, fetch_result) =
         flow_profiling::profiling_js::with_profiling_sync("FetchSavedState", false, |_| {
@@ -3551,20 +3287,16 @@ pub fn load_saved_state(
             saved_state_filename,
             changed_files,
         } => {
-            let saved_state = match flow_saved_state::load(
-                pool,
-                committed_heap,
-                &saved_state_filename,
-                options,
-            ) {
-                Ok(saved_state) => saved_state,
-                Err(reason) => {
-                    committed_heap.clear_reader_cache();
-                    let msg = format!("Failed to load saved state: {}", reason);
-                    exit_if_no_fallback(Some(&msg), options);
-                    return Err(msg);
-                }
-            };
+            let saved_state =
+                match flow_saved_state::load(committed_heap, &saved_state_filename, options) {
+                    Ok(saved_state) => saved_state,
+                    Err(reason) => {
+                        committed_heap.clear_reader_cache();
+                        let msg = format!("Failed to load saved state: {}", reason);
+                        exit_if_no_fallback(Some(&msg), options);
+                        return Err(msg);
+                    }
+                };
             let transaction = ActiveTransaction::new(committed_heap.dupe());
             let updates = match process_saved_state_updates(options, &transaction, &changed_files) {
                 Ok(updates) => updates,
@@ -3599,7 +3331,7 @@ pub fn init(
     focus_targets: Option<FlowOrdSet<FileKey>>,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let start_time = Instant::now();
-    let (transaction, env, libs_ok) = match load_saved_state(pool, committed_heap, options) {
+    let (transaction, env, libs_ok) = match load_saved_state(committed_heap, options) {
         Ok((transaction, saved_state, updates)) => {
             // We loaded a saved state successfully! We are awesome!
             let (env, libs_ok) = init_from_saved_state(
@@ -3690,7 +3422,7 @@ fn reinit(
     PreparedRecheck,
 )> {
     let (transaction, saved_state, updates_since_saved_state) =
-        match load_saved_state(pool, committed_heap, options) {
+        match load_saved_state(committed_heap, options) {
             Ok(result) => result,
             Err(msg) => {
                 // Either there is no saved state or we failed to load it for some reason

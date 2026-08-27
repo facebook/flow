@@ -237,7 +237,6 @@ pub mod opts {
         pub relay_integration_module_prefix: Option<String>,
         pub relay_integration_module_prefix_includes: Vec<String>,
         pub root_name: Option<String>,
-        pub saved_state_direct_serialization: bool,
         pub saved_state_parallel_decompress: bool,
         pub saved_state_fetcher: SavedStateFetcher,
         pub saved_state_persist_export_index: bool,
@@ -409,7 +408,6 @@ pub mod opts {
                 "<PROJECT_ROOT>/.*",
             )],
             root_name: None,
-            saved_state_direct_serialization: false,
             saved_state_parallel_decompress: false,
             saved_state_fetcher: SavedStateFetcher::DummyFetcher,
             saved_state_persist_export_index: true,
@@ -1809,9 +1807,15 @@ pub mod opts {
         config: &mut Opts,
     ) -> Result<(), OptError> {
         parse_boolean(
-            |opts, v| {
-                opts.saved_state_direct_serialization = v;
-                Ok(())
+            |_opts, v| {
+                if v {
+                    Ok(())
+                } else {
+                    Err(
+                        "Support for saved_state.direct_serialization=false is removed."
+                            .to_string(),
+                    )
+                }
             },
             values,
             config,

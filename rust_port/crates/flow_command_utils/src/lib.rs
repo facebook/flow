@@ -2183,7 +2183,6 @@ pub fn make_options(
                 relay_integration_module_prefix,
                 relay_integration_module_prefix_includes,
                 root_name,
-                saved_state_direct_serialization,
                 saved_state_parallel_decompress,
                 saved_state_fetcher,
                 saved_state_persist_export_index,
@@ -2464,15 +2463,6 @@ pub fn make_options(
         })
         .collect::<Vec<_>>()
         .into();
-    let saved_state_direct_serialization =
-        match std::env::var("FLOW_SAVED_STATE_DIRECT_SERIALIZATION")
-            .ok()
-            .as_deref()
-        {
-            Some("1" | "true") => true,
-            Some("0" | "false") => false,
-            _ => saved_state_direct_serialization,
-        };
     let saved_state_persist_export_index =
         match std::env::var("FLOW_SAVED_STATE_PERSIST_EXPORT_INDEX")
             .ok()
@@ -2581,7 +2571,6 @@ pub fn make_options(
         relay_integration_module_prefix_includes,
         root: Arc::new(root),
         root_name: root_name.map(FlowSmolStr::new),
-        saved_state_direct_serialization,
         saved_state_parallel_decompress,
         // The CLI flag overrides the .flowconfig
         saved_state_fetcher: saved_state_fetcher_override.unwrap_or(saved_state_fetcher),

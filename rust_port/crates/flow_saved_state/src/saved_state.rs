@@ -18,108 +18,29 @@ use std::time::Instant;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_common::files;
-use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::options::Options;
-use flow_common_modulename::HasteModuleInfo;
-use flow_common_modulename::Modulename;
 use flow_common_utils::graph::Graph;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::Transaction;
-use flow_heap::resolved_requires::ResolvedModule;
-use flow_imports_exports::exports::Exports;
-use flow_imports_exports::imports::Imports;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
-use flow_parser_utils::package_json::PackageJson;
 use flow_server_env::dependency_info::DependencyInfo;
-use flow_server_env::dependency_info::PartialDependencyGraph;
 use flow_server_env::server_env::Env;
 use flow_services_export::export_index::Export;
 use flow_services_export::export_index::ExportIndex;
 use flow_services_export::export_index::Kind;
 use flow_services_export::export_index::Source;
 use flow_typing_errors::flow_error::ErrorSet;
-use flow_utils_concurrency::thread_pool::ThreadPool;
-
-use crate::compression::saved_state_compression;
 
 const SAVED_STATE_FILE_TABLE_MAGIC: u64 = 0x464C4F5753465431; // "FLOWSFT1"
 const SAVED_STATE_RAW_BLOCK_MAGIC: u64 = 0x464C4F5752415731; // "FLOWRAW1"
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct NormalizedFileData {
-    pub requires: Vec<FlowImportSpecifier>,
-    pub resolved_modules: Vec<ResolvedModule>,
-    pub phantom_dependencies: Vec<Modulename>,
-    pub exports: Exports,
-    pub hash: u64,
-    pub imports: Imports,
-}
-
-pub type DenormalizedFileData = NormalizedFileData;
-
-// For each parsed file, this is what we will save
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct ParsedFileData {
-    pub haste_module_info: Option<HasteModuleInfo>,
-    pub normalized_file_data: NormalizedFileData,
-}
-
-// We also need to store the info for unparsed files
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct UnparsedFileData {
-    pub unparsed_haste_module_info: Option<HasteModuleInfo>,
-    pub unparsed_hash: u64,
-}
-
-// info for package.json files
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct PackageFileData {
-    pub package_haste_module_info: Option<HasteModuleInfo>,
-    pub package_hash: u64,
-    pub package_info: Result<PackageJson, ()>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct SavedStateDependencyGraph {
-    pub files: Vec<FileKey>,
-    pub impl_deps: Vec<Vec<usize>>,
-    pub sig_deps: Vec<Vec<usize>>,
-}
-
-// This is the complete saved state data representation
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
-pub struct SavedStateData {
-    // The version header should guarantee that a saved state is used by the same version of Flow.
-    // However, config might have changed in a way that invalidates the saved state. In the future,
-    // we probably could allow some config options, whitespace, etc. But for now, let's
-    // invalidate the saved state if the config has changed at all
-    pub flowconfig_hash: FlowSmolStr,
-    pub parsed_heaps: Vec<(FileKey, ParsedFileData)>,
-    pub unparsed_heaps: Vec<(FileKey, UnparsedFileData)>,
-    // package.json info
-    pub package_heaps: Vec<(FileKey, PackageFileData)>,
-    pub non_flowlib_libs: BTreeSet<FlowSmolStr>,
-    // Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
-    //
-    // 1. Much smaller data structure. The whole env.errors data structure can be hundreds of MBs
-    //    when marshal'd, even when there are 0 errors reported to the user)
-    // 2. Saved state is designed to help skip parsing. One of the outputs of parsing are local errors
-    // 3. Local errors should be the same after a lazy init and after a full init. This isn't true
-    //    for the other members of env.errors which are filled in during typechecking
-    pub local_errors: BTreeMap<FileKey, ErrorSet>,
-    pub node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    pub dependency_graph: SavedStateDependencyGraph,
-    pub export_index: Option<ExportIndex>,
-}
-
-// Direct serialization saved state data: the committed heap is dumped directly
-// to disk via CommittedHeap.save_heap. This type holds only lightweight
-// env-level metadata (file sets, dependency graph, etc.) - the per-file data
-// lives in the heap dump itself. On load, CommittedHeap.load_heap bulk-loads the
-// heap, so no per-file restoration is needed.
+// The committed heap is dumped directly to disk via CommittedHeap.save_heap. This type holds only
+// lightweight env-level metadata (file sets, dependency graph, etc.); the per-file data lives in
+// the heap dump itself. On load, CommittedHeap.load_heap bulk-loads the heap, so no per-file
+// restoration is needed.
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct SavedStateEnvData {
     pub flowconfig_hash: FlowSmolStr,
@@ -202,12 +123,6 @@ struct DeserializedSavedStateEnvBaseData {
 }
 
 #[allow(non_camel_case_types)]
-pub enum LoadedSavedState {
-    Legacy_saved_state(SavedStateData),
-    Direct_saved_state(SavedStateEnvData),
-}
-
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum InvalidReason {
     Bad_header,
@@ -271,50 +186,6 @@ pub fn backtrace_of_invalid_reason(reason: &InvalidReason) -> Option<String> {
         | InvalidReason::File_does_not_exist
         | InvalidReason::Flowconfig_mismatch => None,
     }
-}
-
-pub fn non_flowlib_libs(saved_state: &LoadedSavedState) -> &BTreeSet<FlowSmolStr> {
-    match saved_state {
-        LoadedSavedState::Legacy_saved_state(data) => &data.non_flowlib_libs,
-        LoadedSavedState::Direct_saved_state(data) => &data.non_flowlib_libs,
-    }
-}
-
-// With relative paths in File_key.t, denormalization is identity. The data
-// was already sorted on the save side, and no path transformation changes
-// the sort order.
-pub fn denormalize_file_data(_options: &Options, data: NormalizedFileData) -> DenormalizedFileData {
-    data
-}
-
-pub fn restore_dependency_info(
-    pool: &ThreadPool,
-    graph: SavedStateDependencyGraph,
-) -> DependencyInfo {
-    let SavedStateDependencyGraph {
-        files,
-        impl_deps,
-        sig_deps,
-    } = graph;
-    let mut map = BTreeMap::new();
-    for (i, file) in files.iter().enumerate() {
-        let sig_files: BTreeSet<FileKey> = sig_deps
-            .get(i)
-            .into_iter()
-            .flat_map(|deps| deps.iter())
-            .filter_map(|idx| files.get(*idx))
-            .duped()
-            .collect();
-        let impl_files: BTreeSet<FileKey> = impl_deps
-            .get(i)
-            .into_iter()
-            .flat_map(|deps| deps.iter())
-            .filter_map(|idx| files.get(*idx))
-            .duped()
-            .collect();
-        map.insert(file.dupe(), (sig_files, impl_files));
-    }
-    DependencyInfo::of_map(pool, PartialDependencyGraph::from_map(map))
 }
 
 fn saved_state_version() -> String {
@@ -424,159 +295,6 @@ fn collect_node_modules_containers(root: &Path) -> BTreeMap<FlowSmolStr, BTreeSe
         .collect()
 }
 
-fn collect_dependency_graph(dependency_info: &DependencyInfo) -> SavedStateDependencyGraph {
-    let impl_map = dependency_info.implementation_dependency_graph().to_map();
-    let sig_map = dependency_info.sig_dependency_graph().to_map();
-    let files: Vec<_> = impl_map.keys().cloned().collect();
-    let file_to_index: BTreeMap<_, _> = files
-        .iter()
-        .cloned()
-        .enumerate()
-        .map(|(i, file)| (file, i))
-        .collect();
-    let impl_deps = files
-        .iter()
-        .map(|file| {
-            impl_map
-                .get(file)
-                .into_iter()
-                .flat_map(|deps| deps.iter())
-                .filter_map(|dep| file_to_index.get(dep).copied())
-                .collect::<Vec<_>>()
-        })
-        .collect();
-    let sig_deps = files
-        .iter()
-        .map(|file| {
-            sig_map
-                .get(file)
-                .into_iter()
-                .flat_map(|deps| deps.iter())
-                .filter_map(|dep| file_to_index.get(dep).copied())
-                .collect::<Vec<_>>()
-        })
-        .collect();
-    SavedStateDependencyGraph {
-        files,
-        impl_deps,
-        sig_deps,
-    }
-}
-
-// Collect all the data for a single parsed file
-fn collect_parsed_data(transaction: &Transaction, file: &FileKey) -> ParsedFileData {
-    let requires = transaction
-        .get_requires_unsafe(file)
-        .iter()
-        .cloned()
-        .collect();
-    let resolved_requires = transaction.get_resolved_requires_unsafe(file);
-    let resolved_modules = resolved_requires.get_resolved_modules().to_vec();
-    let phantom_dependencies = resolved_requires
-        .get_phantom_dependencies()
-        .iter()
-        .map(|dep| dep.to_modulename())
-        .collect();
-    ParsedFileData {
-        haste_module_info: transaction.get_haste_module_info(file),
-        normalized_file_data: NormalizedFileData {
-            requires,
-            resolved_modules,
-            phantom_dependencies,
-            exports: (*transaction.get_exports_unsafe(file)).clone(),
-            hash: transaction.get_file_hash_unsafe(file),
-            imports: (*transaction.get_imports_unsafe(file)).clone(),
-        },
-    }
-}
-
-// Collect all the data for all the files
-fn collect_saved_state_data(
-    transaction: &Arc<Transaction>,
-    env: &Env,
-    options: &Options,
-) -> SavedStateData {
-    flow_hh_logger::info!("Collecting data for saved state");
-    let parsed_heaps = env
-        .files
-        .iter()
-        .filter(|file| !env.is_lib_file(file))
-        .map(|file| (file.dupe(), collect_parsed_data(transaction, file)))
-        .collect();
-    let unparsed_heaps = env
-        .unparsed
-        .iter()
-        .filter(|file| !env.is_lib_file(file))
-        .map(|file| {
-            (
-                file.dupe(),
-                UnparsedFileData {
-                    unparsed_haste_module_info: transaction.get_haste_module_info(file),
-                    unparsed_hash: transaction.get_file_hash_unsafe(file),
-                },
-            )
-        })
-        .collect();
-    let package_heaps = env
-        .package_json_files
-        .iter()
-        .map(|file| {
-            (
-                file.dupe(),
-                PackageFileData {
-                    package_haste_module_info: transaction.get_haste_module_info(file),
-                    package_hash: transaction.get_file_hash_unsafe(file),
-                    package_info: transaction
-                        .get_package_info(file)
-                        .map(|pkg| Ok((*pkg).clone()))
-                        .unwrap_or(Err(())),
-                },
-            )
-        })
-        .collect();
-    // let node_modules_containers =
-    //   SMap.fold
-    //     (fun key value acc -> SMap.add (normalize_path t key) value acc)
-    //     !Files.node_modules_containers
-    //     SMap.empty
-    // in
-    let node_modules_containers = {
-        let node_modules_containers = files::node_modules_containers.read().unwrap();
-        node_modules_containers
-            .iter()
-            .map(|(key, value)| {
-                (
-                    FlowSmolStr::new(files::relative_path(options.root.as_path(), key.as_str())),
-                    value.clone(),
-                )
-            })
-            .collect()
-    };
-    let dependency_info = env.dependency_info();
-    let dependency_graph = collect_dependency_graph(&dependency_info);
-    let export_index = if options.saved_state_persist_export_index {
-        env.exports
-            .as_ref()
-            .map(|exports| flow_services_export::export_search::get_index(exports).clone())
-    } else {
-        None
-    };
-    let errors = env.errors();
-    SavedStateData {
-        flowconfig_hash: options.flowconfig_hash.dupe(),
-        parsed_heaps,
-        unparsed_heaps,
-        package_heaps,
-        // The builtin flowlibs are excluded from the saved state. The server which loads the saved
-        // state will extract and typecheck its own builtin flowlibs
-        non_flowlib_libs: collect_non_flowlib_libs(env, options),
-        local_errors: errors.local_errors.clone(),
-        node_modules_containers,
-        dependency_graph,
-        export_index,
-    }
-}
-
 fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDataForSerialization {
     flow_hh_logger::info!("Collecting env data for saved state");
     // let root = Options.root options |> File_path.to_string in
@@ -624,29 +342,6 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
             None
         },
     }
-}
-
-fn write_compressed<T: serde::Serialize>(
-    file: &mut impl Write,
-    data: &T,
-) -> Result<(), InvalidReason> {
-    let compressed = saved_state_compression::marshal_and_compress(data)?;
-    let orig_size = saved_state_compression::uncompressed_size(&compressed);
-    let new_size = saved_state_compression::compressed_size(&compressed);
-    flow_hh_logger::info!(
-        "Compressed env data from {} bytes to {} bytes ({:.2}%)",
-        orig_size,
-        new_size,
-        100.0 * new_size as f64 / orig_size as f64,
-    );
-    write_compressed_data(file, &compressed)
-}
-
-fn read_compressed<T: serde::de::DeserializeOwned>(
-    file: &mut impl Read,
-) -> Result<T, InvalidReason> {
-    let compressed = read_compressed_data(file)?;
-    saved_state_compression::decompress_and_unmarshal(&compressed)
 }
 
 fn file_index(file_to_index: &BTreeMap<FileKey, u32>, file: &FileKey) -> u32 {
@@ -1275,31 +970,6 @@ fn read_u64(file: &mut impl Read) -> Result<u64, InvalidReason> {
     Ok(u64::from_le_bytes(bytes))
 }
 
-fn write_compressed_data(
-    file: &mut impl Write,
-    compressed: &saved_state_compression::Compressed,
-) -> Result<(), InvalidReason> {
-    write_u64(file, compressed.uncompressed_size as u64)?;
-    write_u64(file, compressed.compressed_size as u64)?;
-    file.write_all(&compressed.compressed_data)
-        .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))
-}
-
-fn read_compressed_data(
-    file: &mut impl Read,
-) -> Result<saved_state_compression::Compressed, InvalidReason> {
-    let uncompressed_size = read_u64(file)? as usize;
-    let compressed_size = read_u64(file)? as usize;
-    let mut compressed_data = vec![0; compressed_size];
-    file.read_exact(&mut compressed_data)
-        .map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
-    Ok(saved_state_compression::Compressed {
-        compressed_data,
-        compressed_size,
-        uncompressed_size,
-    })
-}
-
 // Saving the saved state generally consists of 3 things:
 //
 // 1. Collecting the various bits of data
@@ -1328,47 +998,23 @@ pub fn save(
     let mut file =
         File::create(&tmp_path).map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     write_version(&mut file)?;
-    let result: Result<(), InvalidReason> = if options.saved_state_direct_serialization {
-        let committed_heap = transaction.committed_heap();
-        let env_data = collect_saved_state_env_data(env, options);
-        if options.saved_state_parallel_decompress {
-            flow_hh_logger::info!("Serializing env metadata");
-            let heap_files = committed_heap.collect_heap_file_table();
-            let files = {
-                let dependency_info = env.dependency_info();
-                write_serialized_env_data_with_heap_files(
-                    &mut file,
-                    env_data,
-                    &dependency_info,
-                    heap_files,
-                )?
-            };
-            flow_hh_logger::info!("Saving heap to saved-state file");
-            committed_heap
-                .save_heap_with_file_table(&mut file, &files)
-                .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))
-        } else {
-            flow_hh_logger::info!("Serializing env metadata");
-            let heap_files = committed_heap.collect_heap_file_table();
-            let files = {
-                let dependency_info = env.dependency_info();
-                write_serialized_env_data_with_heap_files(
-                    &mut file,
-                    env_data,
-                    &dependency_info,
-                    heap_files,
-                )?
-            };
-            flow_hh_logger::info!("Saving heap to saved-state file");
-            committed_heap
-                .save_heap_with_file_table(&mut file, &files)
-                .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))
-        }
-    } else {
-        let data = collect_saved_state_data(transaction, env, options);
-        flow_hh_logger::info!("Compressing saved state with lz4");
-        write_compressed(&mut file, &data)
+    let committed_heap = transaction.committed_heap();
+    let env_data = collect_saved_state_env_data(env, options);
+    flow_hh_logger::info!("Serializing env metadata");
+    let heap_files = committed_heap.collect_heap_file_table();
+    let files = {
+        let dependency_info = env.dependency_info();
+        write_serialized_env_data_with_heap_files(
+            &mut file,
+            env_data,
+            &dependency_info,
+            heap_files,
+        )?
     };
+    flow_hh_logger::info!("Saving heap to saved-state file");
+    let result = committed_heap
+        .save_heap_with_file_table(&mut file, &files)
+        .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()));
     drop(file);
     match result {
         Ok(()) => {
@@ -1440,129 +1086,98 @@ fn denormalize_direct_data(
 }
 
 pub fn load(
-    pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     path: &Path,
     options: &Options,
-) -> Result<LoadedSavedState, InvalidReason> {
-    let _ = pool;
+) -> Result<SavedStateEnvData, InvalidReason> {
     flow_hh_logger::info!("Reading saved-state file at {:?}", path);
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::ReadSavedState,
     );
     let mut file = File::open(path).map_err(|_| InvalidReason::File_does_not_exist)?;
     verify_version(options, &mut file)?;
-    if options.saved_state_direct_serialization {
-        if options.saved_state_parallel_decompress {
-            flow_hh_logger::info!("Reading env metadata from saved-state file");
-            let file_table = read_serialized(&mut file)?;
-            let file_table_thread = std::thread::spawn(move || unmarshal_file_table(&file_table));
-            let env_start = Instant::now();
-            let env_data = read_serialized(&mut file)?;
-            let env_data_unmarshal_thread = std::thread::spawn(move || {
-                unmarshal_serialized::<SavedStateEnvBaseData>("base", &env_data)
-            });
-            let sig_dependency_graph = read_serialized(&mut file)?;
-            let sig_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
-                unmarshal_serialized::<SerializedIndexedGraph>("sig graph", &sig_dependency_graph)
-            });
-            let implementation_dependency_graph = read_serialized(&mut file)?;
-            let implementation_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
-                unmarshal_serialized::<SerializedIndexedGraph>(
-                    "implementation graph",
-                    &implementation_dependency_graph,
-                )
-            });
-            flow_hh_logger::info!("Deserializing env metadata + loading heap in parallel");
-            let thread_panicked =
-                || InvalidReason::Failed_to_decompress("thread panicked".to_string());
-            let file_table = file_table_thread.join().map_err(|_| thread_panicked())??;
-            let files = Arc::new(file_table.files);
-            let env_data_files = files.clone();
-            let env_data_thread = std::thread::spawn(move || {
-                let env_data = env_data_unmarshal_thread.join().map_err(|_| {
+    let data = if options.saved_state_parallel_decompress {
+        flow_hh_logger::info!("Reading env metadata from saved-state file");
+        let file_table = read_serialized(&mut file)?;
+        let file_table_thread = std::thread::spawn(move || unmarshal_file_table(&file_table));
+        let env_start = Instant::now();
+        let env_data = read_serialized(&mut file)?;
+        let env_data_unmarshal_thread = std::thread::spawn(move || {
+            unmarshal_serialized::<SavedStateEnvBaseData>("base", &env_data)
+        });
+        let sig_dependency_graph = read_serialized(&mut file)?;
+        let sig_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
+            unmarshal_serialized::<SerializedIndexedGraph>("sig graph", &sig_dependency_graph)
+        });
+        let implementation_dependency_graph = read_serialized(&mut file)?;
+        let implementation_dependency_graph_unmarshal_thread = std::thread::spawn(move || {
+            unmarshal_serialized::<SerializedIndexedGraph>(
+                "implementation graph",
+                &implementation_dependency_graph,
+            )
+        });
+        flow_hh_logger::info!("Deserializing env metadata + loading heap in parallel");
+        let thread_panicked = || InvalidReason::Failed_to_decompress("thread panicked".to_string());
+        let file_table = file_table_thread.join().map_err(|_| thread_panicked())??;
+        let files = Arc::new(file_table.files);
+        let env_data_files = files.dupe();
+        let env_data_thread = std::thread::spawn(move || {
+            let env_data = env_data_unmarshal_thread.join().map_err(|_| {
+                InvalidReason::Failed_to_decompress("thread panicked".to_string())
+            })??;
+            deserialize_saved_state_base_data(&env_data_files, env_data)
+        });
+        let sig_dependency_graph_files = files.dupe();
+        let sig_dependency_graph_thread = std::thread::spawn(move || {
+            let sig_dependency_graph: SerializedIndexedGraph =
+                sig_dependency_graph_unmarshal_thread.join().map_err(|_| {
                     InvalidReason::Failed_to_decompress("thread panicked".to_string())
                 })??;
-                deserialize_saved_state_base_data(&env_data_files, env_data)
-            });
-            let sig_dependency_graph_files = files.clone();
-            let sig_dependency_graph_thread = std::thread::spawn(move || {
-                let sig_dependency_graph: SerializedIndexedGraph =
-                    sig_dependency_graph_unmarshal_thread.join().map_err(|_| {
+            Ok::<_, InvalidReason>(graph_from_indexed_graph(
+                &sig_dependency_graph_files,
+                sig_dependency_graph,
+            ))
+        });
+        let implementation_dependency_graph_files = files.dupe();
+        let implementation_dependency_graph_thread = std::thread::spawn(move || {
+            let implementation_dependency_graph: SerializedIndexedGraph =
+                implementation_dependency_graph_unmarshal_thread
+                    .join()
+                    .map_err(|_| {
                         InvalidReason::Failed_to_decompress("thread panicked".to_string())
                     })??;
-                Ok::<_, InvalidReason>(graph_from_indexed_graph(
-                    &sig_dependency_graph_files,
-                    sig_dependency_graph,
-                ))
-            });
-            let implementation_dependency_graph_files = files.clone();
-            let implementation_dependency_graph_thread = std::thread::spawn(move || {
-                let implementation_dependency_graph: SerializedIndexedGraph =
-                    implementation_dependency_graph_unmarshal_thread
-                        .join()
-                        .map_err(|_| {
-                            InvalidReason::Failed_to_decompress("thread panicked".to_string())
-                        })??;
-                Ok::<_, InvalidReason>(graph_from_indexed_graph(
-                    &implementation_dependency_graph_files,
-                    implementation_dependency_graph,
-                ))
-            });
-            let heap_start = Instant::now();
-            committed_heap
-                .load_heap_with_file_table(&mut file, files.clone())
-                .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
-            flow_hh_logger::info!("Loaded heap in {:?}", heap_start.elapsed());
-            let data = env_data_thread.join().map_err(|_| thread_panicked())??;
-            let sig_dependency_graph = sig_dependency_graph_thread
-                .join()
-                .map_err(|_| thread_panicked())??;
-            let implementation_dependency_graph = implementation_dependency_graph_thread
-                .join()
-                .map_err(|_| thread_panicked())??;
-            let data = join_saved_state_env_data(
-                data,
-                sig_dependency_graph,
+            Ok::<_, InvalidReason>(graph_from_indexed_graph(
+                &implementation_dependency_graph_files,
                 implementation_dependency_graph,
-            );
-            flow_hh_logger::info!("Loaded env metadata in {:?}", env_start.elapsed());
-            let data = denormalize_direct_data(options, data)?;
-            flow_hh_logger::info!("Finished loading saved-state");
-            Ok(LoadedSavedState::Direct_saved_state(data))
-        } else {
-            flow_hh_logger::info!("Reading env metadata from saved-state file");
-            flow_hh_logger::info!("Deserializing env metadata");
-            let (data, files) = read_serialized_env_data_with_files(&mut file)?;
-            flow_hh_logger::info!("Loading heap from saved-state file");
-            committed_heap
-                .load_heap_with_file_table(&mut file, files)
-                .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
-            let data = denormalize_direct_data(options, data)?;
-            flow_hh_logger::info!("Finished loading saved-state");
-            Ok(LoadedSavedState::Direct_saved_state(data))
-        }
+            ))
+        });
+        let heap_start = Instant::now();
+        committed_heap
+            .load_heap_with_file_table(&mut file, files)
+            .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
+        flow_hh_logger::info!("Loaded heap in {:?}", heap_start.elapsed());
+        let data = env_data_thread.join().map_err(|_| thread_panicked())??;
+        let sig_dependency_graph = sig_dependency_graph_thread
+            .join()
+            .map_err(|_| thread_panicked())??;
+        let implementation_dependency_graph = implementation_dependency_graph_thread
+            .join()
+            .map_err(|_| thread_panicked())??;
+        let data =
+            join_saved_state_env_data(data, sig_dependency_graph, implementation_dependency_graph);
+        flow_hh_logger::info!("Loaded env metadata in {:?}", env_start.elapsed());
+        data
     } else {
-        flow_hh_logger::info!("Decompressing saved-state data");
-        let mut data: SavedStateData = read_compressed(&mut file)?;
-        flow_hh_logger::info!("Denormalizing saved-state data");
-        // Signal progress so the status state machine transitions to Loading_saved_state,
-        // which is required before the Restoring_heaps_start event can fire.
-        flow_server_env::monitor_rpc::status_update(
-            flow_server_env::server_status::Event::LoadSavedStateProgress(
-                flow_server_env::server_status::Progress {
-                    total: None,
-                    finished: 0,
-                },
-            ),
-        );
-        verify_flowconfig_hash(options, &data.flowconfig_hash)?;
-        denormalize_paths(
-            options,
-            &mut data.non_flowlib_libs,
-            &mut data.node_modules_containers,
-        );
-        flow_hh_logger::info!("Finished loading saved-state");
-        Ok(LoadedSavedState::Legacy_saved_state(data))
-    }
+        flow_hh_logger::info!("Reading env metadata from saved-state file");
+        flow_hh_logger::info!("Deserializing env metadata");
+        let (data, files) = read_serialized_env_data_with_files(&mut file)?;
+        flow_hh_logger::info!("Loading heap from saved-state file");
+        committed_heap
+            .load_heap_with_file_table(&mut file, files)
+            .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
+        data
+    };
+    let data = denormalize_direct_data(options, data)?;
+    flow_hh_logger::info!("Finished loading saved-state");
+    Ok(data)
 }
