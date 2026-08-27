@@ -859,8 +859,8 @@ pub fn resolve_pred_func<'cx>(
     let callee_info = info.clone();
     let callee = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let loc = callee_info.callee.loc();
-        // [callee] might be a member access expression. Since we are explicitly unbinding it from
-        // the call, make sure we don't raise a method-unbinding error.
+        // [callee] might be a member access expression. Type it separately in
+        // synthesis mode so resolving predicate metadata does not cache or duplicate errors.
         Ok(type_env::with_class_stack(
             cx,
             callee_info.class_stack.dupe(),

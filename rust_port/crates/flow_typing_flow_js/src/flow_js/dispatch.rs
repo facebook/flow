@@ -59,6 +59,7 @@ use flow_typing_type::type_::ResolvedSpreadArgData;
 use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::SetElemTData;
 use flow_typing_type::type_::SpecializeTData;
+use flow_typing_type::type_::StandaloneCallThisData;
 use flow_typing_type::type_::SuperTData;
 use flow_typing_type::type_::TestPropTData;
 use flow_typing_type::type_::ThisInstanceTData;
@@ -5062,7 +5063,7 @@ fn __flow_impl<'cx>(
             // records `Function.prototype` accesses. Record it here instead --
             // the receiver is a function, so `.call`/`.apply`/`.bind` can only
             // be the `Function.prototype` ones.
-            if let PropRef::Named {
+            let use_typed_bind = if let PropRef::Named {
                 reason: reason_prop,
                 name,
                 ..
@@ -5071,40 +5072,46 @@ fn __flow_impl<'cx>(
                 && matches!(
                     static_.deref(),
                     TypeInner::AnyT(_, AnySource::Unsound(UnsoundnessKind::DummyStatic))
-                )
-            {
+                ) {
                 cx.record_fun_proto_method_lookup(reason_prop.loc().dupe());
-            }
-            let method_type = flow_typing_tvar::mk_no_wrap_where(
-                cx,
-                reason_lookup.dupe(),
-                |cx, tvar_reason, tvar_id| {
-                    let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                    let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
-                        use_op: use_op.dupe(),
-                        reason: reason_lookup.dupe(),
-                        id: None,
-                        from_annot: false,
-                        skip_optional: false,
-                        propref: propref.clone(),
-                        tout: Box::new(tout),
-                        hint: hint_unavailable(),
-                    })));
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            &static_,
-                            &UseT::new(UseTInner::ReposLowerT {
-                                reason: reason.dupe(),
-                                use_desc: false,
-                                use_t: Box::new(use_t),
-                            }),
-                        ),
-                    )
-                },
-            )?;
+                cx.new_this_typing() && name.as_str_opt() == Some("bind")
+            } else {
+                false
+            };
+            let method_type = if use_typed_bind {
+                Type::new(TypeInner::FunProtoBindT(reason_lookup.dupe()))
+            } else {
+                flow_typing_tvar::mk_no_wrap_where(
+                    cx,
+                    reason_lookup.dupe(),
+                    |cx, tvar_reason, tvar_id| {
+                        let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                        let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                            use_op: use_op.dupe(),
+                            reason: reason_lookup.dupe(),
+                            id: None,
+                            from_annot: false,
+                            skip_optional: false,
+                            propref: propref.clone(),
+                            tout: Box::new(tout),
+                            hint: hint_unavailable(),
+                        })));
+                        rec_flow(
+                            cx,
+                            env,
+                            trace,
+                            (
+                                &static_,
+                                &UseT::new(UseTInner::ReposLowerT {
+                                    reason: reason.dupe(),
+                                    use_desc: false,
+                                    use_t: Box::new(use_t),
+                                }),
+                            ),
+                        )
+                    },
+                )?
+            };
             apply_method_action(
                 cx,
                 env,
@@ -5293,11 +5300,27 @@ fn __flow_impl<'cx>(
             let t2 = &calltype.call_tout;
             let call_strict_arity = calltype.call_strict_arity;
             let call_specialized_callee = &calltype.call_specialized_callee;
+            let this_use_op = if cx.new_this_typing()
+                && let RootUseOp::FunCall(data) = root_of_use_op(use_op)
+            {
+                UseOp::Frame(
+                    Arc::new(FrameUseOp::StandaloneCallThis(Box::new(
+                        StandaloneCallThisData {
+                            op: data.op.dupe(),
+                            fn_: data.fn_.dupe(),
+                            receiver: reason_of_t(o1).dupe(),
+                        },
+                    ))),
+                    Arc::new(use_op.dupe()),
+                )
+            } else {
+                use_op.dupe()
+            };
             rec_flow(
                 cx,
                 env,
                 trace,
-                (o2, &UseT::new(UseTInner::UseT(use_op.dupe(), o1.dupe()))),
+                (o2, &UseT::new(UseTInner::UseT(this_use_op, o1.dupe()))),
             )?;
             callee_recorder::add_callee(
                 env,
@@ -6198,16 +6221,20 @@ fn __flow_impl<'cx>(
                 }
                 match property {
                     Some((p, target_kind)) => {
-                        let p = flow_js_utils::check_method_unbinding(
-                            cx,
-                            env,
-                            &use_op,
-                            *method_accessible,
-                            reason_op,
-                            propref,
-                            &hint_unavailable(),
-                            p,
-                        )?;
+                        let p = if cx.new_this_typing() {
+                            flow_js_utils::method_property_for_read(*method_accessible, p)
+                        } else {
+                            flow_js_utils::check_method_unbinding(
+                                cx,
+                                env,
+                                &use_op,
+                                *method_accessible,
+                                reason_op,
+                                propref,
+                                &hint_unavailable(),
+                                p,
+                            )?
+                        };
                         let property_type = property::property_type(&p);
                         perform_lookup_action(
                             cx,

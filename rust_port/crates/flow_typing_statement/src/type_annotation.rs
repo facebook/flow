@@ -3042,6 +3042,12 @@ fn convert_inner<'a>(
                 });
             }
             let (this_t, this_param_ast) = match this_ {
+                // A function type with no `this` param can be called with any
+                // receiver, so its implicit `this` is `mixed` and the
+                // contravariant check in `funt_to_funt_check_this_contravariant`
+                // rejects methods that need a real one. The legacy `any` makes
+                // that check vacuous.
+                None if cx.new_this_typing() => (type_::dummy_this(params_loc.dupe()), None),
                 None => (type_::bound_function_dummy_this(params_loc.dupe()), None),
                 Some(tp) => {
                     let this_loc = &tp.loc;

@@ -5555,8 +5555,10 @@ pub mod cjs_extract_named_exports_t_kit {
                 )?;
                 //   Copy type exports
                 let type_props = cx.find_props(ns.types_tmap.dupe());
-                let type_exports: exports::T =
-                    type_props.extract_named_exports().into_iter().collect();
+                let type_exports: exports::T = type_props
+                    .extract_named_exports(cx.new_this_typing())
+                    .into_iter()
+                    .collect();
                 export_named_t_kit::mod_module_t(
                     cx,
                     exports::T::new(),
@@ -5577,8 +5579,10 @@ pub mod cjs_extract_named_exports_t_kit {
                         on_type(cx, concretize, reason.dupe(), local_module, proto_t.dupe())?;
                     // Copy own props
                     let own_props = cx.find_props(props_tmap);
-                    let own_exports: exports::T =
-                        own_props.extract_named_exports().into_iter().collect();
+                    let own_exports: exports::T = own_props
+                        .extract_named_exports(cx.new_this_typing())
+                        .into_iter()
+                        .collect();
                     export_named_t_kit::mod_module_t(
                         cx,
                         own_exports,
@@ -5604,7 +5608,10 @@ pub mod cjs_extract_named_exports_t_kit {
                             .filter(|(name, _)| !is_munged_prop_name(cx, name))
                             .map(|(name, prop)| (name.dupe(), prop.dupe()))
                             .collect();
-                        filtered.extract_named_exports().into_iter().collect()
+                        filtered
+                            .extract_named_exports(cx.new_this_typing())
+                            .into_iter()
+                            .collect()
                     };
 
                     // Copy own props
@@ -6461,6 +6468,31 @@ pub mod import_export_utils {
 // * GetPropT helper *
 // *******************
 
+pub fn method_property_for_read(
+    method_accessible: bool,
+    p: flow_typing_type::type_::Property,
+) -> flow_typing_type::type_::Property {
+    use std::ops::Deref;
+
+    use flow_typing_type::type_::PropertyInner;
+    use flow_typing_type::type_::properties;
+
+    match p.deref() {
+        PropertyInner::Method { key_loc, type_: t } if !method_accessible => {
+            flow_typing_type::type_::Property::new(PropertyInner::Method {
+                key_loc: key_loc.dupe(),
+                type_: properties::method_to_function(t),
+            })
+        }
+        _ => p,
+    }
+}
+
+/// Legacy counterpart of [method_property_for_read], used when
+/// `experimental.new_this_typing` is off. Detaching a method from its receiver
+/// is an error here unless the hint says the result is only ever used as a
+/// `mixed`/`any`, in which case the method can never be called and the read is
+/// harmless.
 pub fn check_method_unbinding<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -6821,6 +6853,7 @@ pub mod get_prop_t_kit {
     use super::is_dictionary_exempt;
     use super::is_exception_to_react_dro;
     use super::is_munged_prop_name;
+    use super::method_property_for_read;
     use super::tvar_visitors;
     use super::type_of_key_name_with_env;
     use crate::obj_type;
@@ -7119,16 +7152,20 @@ pub mod get_prop_t_kit {
             cx.test_prop_hit(id);
         }
         if let Some((p, _target_kind)) = property {
-            let p = check_method_unbinding(
-                cx,
-                env,
-                use_op,
-                method_accessible,
-                reason_op,
-                propref,
-                hint,
-                p,
-            )?;
+            let p = if cx.new_this_typing() {
+                method_property_for_read(method_accessible, p)
+            } else {
+                check_method_unbinding(
+                    cx,
+                    env,
+                    use_op,
+                    method_accessible,
+                    reason_op,
+                    propref,
+                    hint,
+                    p,
+                )?
+            };
             return perform_read_prop_action::<F>(
                 cx,
                 env,

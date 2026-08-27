@@ -1,0 +1,134 @@
+Error ---------------------------------------------------------------------------------------------- destructors.js:12:3
+
+Cannot call `m` as a standalone function because its `this` parameter requires `A` [1] as the receiver. Call it as a
+method, or bind it to its receiver before calling it. [incompatible-type]
+
+   destructors.js:12:3
+   12|   m(); // ERROR - the receiver is missing
+         ^
+
+References:
+   destructors.js:1:7
+    1| class A {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:16:5
+
+Cannot call `y` with `42` bound to `value` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   destructors.js:16:5
+   16|   y(42); // ERROR - number is incompatible with string
+           ^^ [1]
+
+References:
+   destructors.js:2:13
+    2|   m(value?: string): number {
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:17:3
+
+Cannot cast `y(...)` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   destructors.js:17:3
+   17|   y('value') as string; // ERROR - number is incompatible with string
+         ^^^^^^^^^^
+
+References:
+   destructors.js:2:22
+    2|   m(value?: string): number {
+                            ^^^^^^ [1]
+   destructors.js:17:17
+   17|   y('value') as string; // ERROR - number is incompatible with string
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:83:10
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `I` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   test.js:83:10
+   83| let x3 = {...i}; // cannot spread interface
+                ^^^^^^ [1]
+
+References:
+   test.js:27:19
+   27| declare const i : I;
+                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:84:10
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `J` [2] cannot be spread
+because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   test.js:84:10
+   84| let x4 = {...j}; // cannot spread interface
+                ^^^^^^ [1]
+
+References:
+   test.js:28:19
+   28| declare const j : J;
+                         ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:101:1
+
+Cannot call `extracted` as a standalone function because its `this` parameter requires `A` [1] as the receiver. Call it
+as a method, or bind it to its receiver before calling it. [incompatible-type]
+
+   test.js:101:1
+   101| extracted(); // error: the original receiver is missing
+        ^^^^^^^^^
+
+References:
+   test.js:1:7
+     1| class A {
+              ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:104:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `a` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   test.js:104:5
+   104| a.m.call(new A()); // error: the receiver must be the object used for the method read
+            ^^^^
+
+References:
+   test.js:104:1
+   104| a.m.call(new A()); // error: the receiver must be the object used for the method read
+        ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:128:5
+
+Cannot assign function to `b.m` because property `m` is not writable. [cannot-write]
+
+   128|   b.m = () => {}; // ERROR: cannot-write
+            ^
+
+
+Error ------------------------------------------------------------------------------------------------ with_hint.js:13:1
+
+Cannot call `method` as a standalone function because its `this` parameter requires `Foo` [1] as the receiver. Call it
+as a method, or bind it to its receiver before calling it. [incompatible-type]
+
+   with_hint.js:13:1
+   13| method(); // ERROR - the preserved receiver is missing
+       ^^^^^^
+
+References:
+   with_hint.js:4:7
+    4| class Foo {
+             ^^^ [1]
+
+
+
+Found 9 errors

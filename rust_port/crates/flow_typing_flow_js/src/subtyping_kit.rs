@@ -210,11 +210,17 @@ fn polarity_error_content(
 fn property_type_for_subtyping(
     prop: &Property,
     strictness_kind: TypeStrictnessKind,
+    new_this_typing: bool,
 ) -> PropertyType {
     match prop.deref() {
         PropertyInner::Method { type_, .. } if strictness_kind.is_typescript_loose() => {
+            let get_type = if new_this_typing {
+                properties::method_to_function(type_)
+            } else {
+                properties::unbind_this_method(type_)
+            };
             PropertyType::SyntheticField {
-                get_type: Some(properties::unbind_this_method(type_)),
+                get_type: Some(get_type),
                 set_type: None,
             }
         }
@@ -452,20 +458,17 @@ fn funt_to_funt_check_this_contravariant<'cx>(
     let (this_param1, this_status_1) = &ft1.this_t;
     let (this_param2, this_status_2) = &ft2.this_t;
     match (this_status_1, this_status_2) {
-        (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {
-            let sub_this2 = type_util::subtype_this_of_function(ft2);
-            let sub_this1 = type_util::subtype_this_of_function(ft1);
-            FlowJs::rec_flow_with_env(
-                cx,
-                env,
-                trace,
-                &sub_this2,
-                &UseT::new(UseTInner::UseT(use_op, sub_this1)),
-            )?;
-        }
-        // lower bound method, upper bound function
-        // Flow files ban this because it would allow methods to be unbound through casting.
-        (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) => {
+        // Method receivers are deliberately not compared: `class C implements I`
+        // needs `C.m`'s `this: C` to be compatible with `I.m`'s `this: I`, which
+        // a contravariant check would reject.
+        // It would not compromise safety since after unbinding method,
+        // ThisMethod is turned into ThisFunction.
+        (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {}
+        // Lower bound method, upper bound function. Under the new this typing
+        // this is an ordinary contravariant receiver check. The legacy path
+        // bans it outright instead, because it would let methods be unbound
+        // through casting.
+        (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) if !cx.new_this_typing() => {
             if !unbound && !cx.type_strictness_kind().is_typescript_loose() {
                 flow_js_utils::add_output_with_env(
                     cx,
@@ -489,9 +492,8 @@ fn funt_to_funt_check_this_contravariant<'cx>(
                 &UseT::new(UseTInner::UseT(use_op, sub_this1)),
             )?;
         }
-        // lower bound function, upper bound method.
-        // Ok as long as the types match up
-        (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
+        (ThisStatus::ThisMethod { .. }, ThisStatus::ThisFunction)
+        | (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
         | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
             FlowJs::rec_flow_with_env(
                 cx,
@@ -1635,6 +1637,7 @@ fn flow_obj_to_obj<'cx>(
                                 property::read_t_of_property_type(&property_type_for_subtyping(
                                     &lp,
                                     strictness_kind,
+                                    cx.new_this_typing(),
                                 )),
                                 property::read_t(up),
                             ) {
@@ -1669,7 +1672,11 @@ fn flow_obj_to_obj<'cx>(
                             vec![]
                         } else {
                             match (
-                                property_type_for_subtyping(&lp, strictness_kind),
+                                property_type_for_subtyping(
+                                    &lp,
+                                    strictness_kind,
+                                    cx.new_this_typing(),
+                                ),
                                 property::property_type(up),
                             ) {
                                 (
@@ -2213,7 +2220,7 @@ fn flow_obj_to_obj<'cx>(
                                 polarity: fd.polarity,
                             }
                         }
-                        _ => property_type_for_subtyping(lp, strictness_kind),
+                        _ => property_type_for_subtyping(lp, strictness_kind, cx.new_this_typing()),
                     };
                     let up_type = PropertyType::OrdinaryField {
                         type_: value.dupe(),
@@ -5220,8 +5227,11 @@ pub fn rec_sub_t<'cx>(
                                 false
                             };
                             if !bivariant_handled {
-                                let lower_prop_type =
-                                    property_type_for_subtyping(lp, strictness_kind);
+                                let lower_prop_type = property_type_for_subtyping(
+                                    lp,
+                                    strictness_kind,
+                                    cx.new_this_typing(),
+                                );
                                 let new_errs = rec_flow_p_inner(
                                     cx, env,
                                     Some(trace),

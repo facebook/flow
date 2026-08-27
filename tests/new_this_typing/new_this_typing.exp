@@ -1,0 +1,114 @@
+Error ------------------------------------------------------------------------------------------ annotation_this.js:15:1
+
+Cannot cast `c.m` to function type because in the `this` parameter: `C` [1] is incompatible with `unknown`.
+[incompatible-type]
+
+   annotation_this.js:15:1
+   15| c.m as () => void; // error
+       ^^^
+
+References:
+   annotation_this.js:6:7
+    6| class C {
+             ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ annotation_this.js:18:1
+
+Cannot cast `c.m` to function type because in the `this` parameter: `C` [1] is incompatible with `unknown` [2].
+[incompatible-type]
+
+   annotation_this.js:18:1
+   18| c.m as (this: unknown) => void; // error
+       ^^^
+
+References:
+   annotation_this.js:6:7
+    6| class C {
+             ^ [1]
+   annotation_this.js:18:15
+   18| c.m as (this: unknown) => void; // error
+                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ annotation_this.js:42:1
+
+Cannot cast `withThis` to function type because in the `this` parameter: `C` [1] is incompatible with `unknown`.
+[incompatible-type]
+
+   annotation_this.js:42:1
+   42| withThis as () => void; // error
+       ^^^^^^^^
+
+References:
+   annotation_this.js:40:25
+   40| function withThis(this: C): void {}
+                               ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ receiver_checks.js:13:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `a` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   receiver_checks.js:13:5
+   13| a.m.call(new A()); // error: receiver mismatch
+           ^^^^
+
+References:
+   receiver_checks.js:13:1
+   13| a.m.call(new A()); // error: receiver mismatch
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ receiver_checks.js:16:8
+
+Cannot use `call` because `method` [1] is not a member access. `Function.prototype.call` may only re-supply the receiver
+a method was read from, as in `obj.method.call(obj, ...)`. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   receiver_checks.js:16:8
+   16| method.call(a); // error: the original receiver expression is no longer available
+              ^^^^
+
+References:
+   receiver_checks.js:16:1
+   16| method.call(a); // error: the original receiver expression is no longer available
+       ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ receiver_checks.js:32:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `t` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   receiver_checks.js:32:5
+   32| t.m.call(u, 1); // error: receiver mismatch
+           ^^^^
+
+References:
+   receiver_checks.js:32:1
+   32| t.m.call(u, 1); // error: receiver mismatch
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- receiver_checks.js:40:10
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `Static` [1] the method was
+read from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   receiver_checks.js:40:10
+   40| Static.m.call(a, 1); // error: receiver mismatch
+                ^^^^
+
+References:
+   receiver_checks.js:40:1
+   40| Static.m.call(a, 1); // error: receiver mismatch
+       ^^^^^^ [1]
+
+
+
+Found 7 errors

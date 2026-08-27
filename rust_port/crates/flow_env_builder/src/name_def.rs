@@ -3718,7 +3718,7 @@ impl<'a> DefFinder<'a> {
             }
         }
 
-        match expr.deref()  {
+        match expr.deref() {
             // Member expressions are always synthesizable, but we use hints on
             // member expressions to avoid method-unbinding errors when the hint is
             // a supertype of a mixed (which would make the method un-callable).

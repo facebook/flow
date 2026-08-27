@@ -47,6 +47,7 @@ use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::ReactCreateElementCallData;
 use flow_typing_type::type_::RecordCreateData;
 use flow_typing_type::type_::SetPropertyData;
+use flow_typing_type::type_::StandaloneCallThisData;
 use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::TupleElementCompatibilityData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
@@ -208,6 +209,7 @@ fn score_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(use_op: &Virtual
                 // FunCompatibility is generally followed by another use_op. So let's not
                 // count FunCompatibility.
                 VirtualFrameUseOp::FunCompatibility { .. } => 0,
+                VirtualFrameUseOp::StandaloneCallThis(..) => 0,
                 // FunMissingArg means the error is *less* likely to be correct.
                 VirtualFrameUseOp::FunMissingArg(..) => 0,
                 // Higher signal then PropertyCompatibility, for example.
@@ -497,6 +499,7 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             }
         }
         TupleAssignment { .. }
+        | StandaloneCallThis(..)
         | TypeParamBound { .. }
         | OpaqueTypeLowerBound { .. }
         | OpaqueTypeUpperBound { .. }
@@ -2208,6 +2211,26 @@ where
                     }
 
                     VirtualUseOp::Frame(frame, inner) => match frame.as_ref() {
+                        VirtualFrameUseOp::StandaloneCallThis(box StandaloneCallThisData {
+                            op,
+                            fn_,
+                            receiver,
+                        }) => {
+                            let (all_frames, explanations) = frames;
+                            (
+                                Some((
+                                    loc_of_aloc(&op.loc),
+                                    RootMessage::RootCannotCallStandalone(fn_.desc.clone()),
+                                )),
+                                Some(Message::MessageStandaloneCallRequiresReceiver(
+                                    receiver.dupe(),
+                                )),
+                                loc_of_aloc(&fn_.loc),
+                                all_frames,
+                                explanations,
+                            )
+                        }
+
                         VirtualFrameUseOp::FunRestParam { .. } => loop_impl(
                             loc,
                             frames,
@@ -4945,6 +4968,14 @@ where
                         friendly::desc_of_reason_desc(fn_),
                     ]),
                 ),
+                RootMessage::RootCannotCallStandalone(fn_) => (
+                    RootKind::OperationRoot,
+                    friendly::Message(vec![
+                        text("Cannot call "),
+                        friendly::desc_of_reason_desc(fn_),
+                        text(" as a standalone function"),
+                    ]),
+                ),
                 RootMessage::RootCannotCallWithNamedParam { fn_, lower, name } => (
                     RootKind::OperationRoot,
                     friendly::Message(vec![
@@ -5401,6 +5432,15 @@ where
                 ref_(lower),
                 text(" is incompatible with "),
                 ref_(upper),
+            ]),
+            MessageStandaloneCallRequiresReceiver(receiver) => friendly::Message(vec![
+                text("its "),
+                code("this"),
+                text(" parameter requires "),
+                ref_(receiver),
+                text(
+                    " as the receiver. Call it as a method, or bind it to its receiver before calling it",
+                ),
             ]),
             MessageIncompatibleWithUnionRepresentative {
                 union,
@@ -10548,7 +10588,15 @@ where
                     .map(|exps| exps.iter().map(explanation_to_friendly_msgs).collect());
 
                 let mut friendly_message = msg_to_friendly_msgs(message);
-                if let Some(example_message) = first_singleton_message(example) {
+                if let Some(example_message) = first_singleton_message(example)
+                    && !matches!(
+                        (message, example_message),
+                        (
+                            Message::MessageStandaloneCallRequiresReceiver(_),
+                            Message::MessageStandaloneCallRequiresReceiver(_)
+                        )
+                    )
+                {
                     friendly_message.push(friendly::text(". For example, "));
                     friendly_message.extend(msg_to_friendly_msgs(example_message));
                 }

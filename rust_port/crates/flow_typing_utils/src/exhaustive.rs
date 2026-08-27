@@ -1221,7 +1221,7 @@ mod value_union_builder {
     }
 
     // We implement this ourselves for now because we want to know if we are getting a
-    // property from a indexer or not. Also, to not trigger method unbinding errors.
+    // property from an indexer or not, while preserving type-level method access.
     // TODO: Update existing machinery to return the info we want and use that instead.
     pub fn get_prop<'cx>(
         cx: &Context<'cx>,

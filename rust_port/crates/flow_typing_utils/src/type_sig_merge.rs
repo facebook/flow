@@ -4710,7 +4710,7 @@ fn merge_fun<'cx>(
         });
         let this_t = match &def_ref.this_param {
             None => {
-                if is_method {
+                if is_method || cx.new_this_typing() {
                     type_::implicit_mixed_this(reason2.dupe())
                 } else {
                     type_::bound_function_dummy_this(reason2.loc().dupe())

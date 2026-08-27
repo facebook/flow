@@ -1135,6 +1135,7 @@ pub enum RootMessage<L: Dupe> {
         target: Option<VirtualReasonDesc<L>>,
     },
     RootCannotCall(VirtualReasonDesc<L>),
+    RootCannotCallStandalone(VirtualReasonDesc<L>),
     RootCannotCallWithNamedParam {
         fn_: VirtualReasonDesc<L>,
         lower: VirtualReasonDesc<L>,
@@ -2088,6 +2089,8 @@ pub enum Message<L: Dupe> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
+
+    MessageStandaloneCallRequiresReceiver(VirtualReason<L>),
 
     MessageIncompatibleWithUnionRepresentative {
         union: VirtualReason<L>,

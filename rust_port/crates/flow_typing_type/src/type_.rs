@@ -881,6 +881,23 @@ pub struct FunCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct StandaloneCallThisData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub op: VirtualReason<L>,
+    pub fn_: VirtualReason<L>,
+    pub receiver: VirtualReason<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunCallMethodData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub fn_: VirtualReason<L>,
@@ -1233,6 +1250,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
+    StandaloneCallThis(Box<StandaloneCallThisData<L>>),
     FunMissingArg(Box<FunMissingArgData<L>>),
     FunParam(Box<FunParamData<L>>),
     FunRestParam {
@@ -4640,10 +4658,12 @@ impl TypeGuard {
     }
 }
 
-/// FunTs carry around two `this` types, one to be used during subtyping and
-/// one to be treated as the param when the function is called. This is to allow
-/// more lenient subtyping between class methods without sacrificing soundness
-/// when calling functions.  
+/// FunTs distinguish methods from function values so method-to-method subtyping
+/// can be lenient while calls still check the concrete `this` parameter.
+///
+/// `unbound` is only consulted on the legacy path (`experimental.new_this_typing`
+/// off), where it records that a method has already been detached from its
+/// receiver and must therefore not raise `EMethodUnbinding` again.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ThisStatus {
     ThisMethod { unbound: bool },
@@ -6918,7 +6938,7 @@ pub mod properties {
             self.0.keys()
         }
 
-        pub fn extract_named_exports(&self) -> BTreeMap<Name, NamedSymbol> {
+        pub fn extract_named_exports(&self, new_this_typing: bool) -> BTreeMap<Name, NamedSymbol> {
             let mut tmap = BTreeMap::new();
             for (name, prop) in self.iter() {
                 if let Some(mut type_) = property::read_t(prop) {
@@ -6928,7 +6948,11 @@ pub mod properties {
                     };
 
                     if matches!(prop.deref(), PropertyInner::Method { .. }) {
-                        type_ = unbind_this_method(&type_);
+                        type_ = if new_this_typing {
+                            method_to_function(&type_)
+                        } else {
+                            unbind_this_method(&type_)
+                        };
                     }
 
                     tmap.insert(
@@ -6975,6 +6999,65 @@ pub mod properties {
 
     pub type Map = FlowOrdMap<Id, PropertiesMap>;
 
+    pub fn method_to_function(t: &Type) -> Type {
+        match &**t {
+            TypeInner::DefT(r, def_t) => match &**def_t {
+                DefTInner::FunT(static_, ft)
+                    if matches!(&ft.this_t, (_, ThisStatus::ThisMethod { .. })) =>
+                {
+                    let mut new_ft = (**ft).clone();
+                    new_ft.this_t.1 = ThisStatus::ThisFunction;
+                    Type::new(TypeInner::DefT(
+                        r.dupe(),
+                        DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(new_ft))),
+                    ))
+                }
+                DefTInner::PolyT(box PolyTData {
+                    tparams_loc,
+                    tparams,
+                    t_out,
+                    id,
+                    strictness_kind,
+                }) => {
+                    let new_t_out = method_to_function(t_out);
+                    if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
+                        t.dupe()
+                    } else {
+                        Type::new(TypeInner::DefT(
+                            r.dupe(),
+                            DefT::new(DefTInner::PolyT(Box::new(PolyTData {
+                                tparams_loc: tparams_loc.dupe(),
+                                tparams: tparams.dupe(),
+                                t_out: new_t_out,
+                                id: id.dupe(),
+                                strictness_kind: *strictness_kind,
+                            }))),
+                        ))
+                    }
+                }
+                _ => t.dupe(),
+            },
+            TypeInner::IntersectionT(r, rep) => {
+                let new_rep = rep.map(method_to_function);
+                if new_rep
+                    .members_iter()
+                    .zip(rep.members_iter())
+                    .all(|(t1, t2)| Rc::ptr_eq(&t1.0, &t2.0))
+                {
+                    t.dupe()
+                } else {
+                    Type::new(TypeInner::IntersectionT(r.dupe(), new_rep))
+                }
+            }
+            _ => t.dupe(),
+        }
+    }
+
+    /// Legacy counterpart of [method_to_function], used when
+    /// `experimental.new_this_typing` is off. Instead of preserving the
+    /// receiver as a plain function `this`, it erases the receiver to an
+    /// error-any and marks the method unbound so that `EMethodUnbinding` is
+    /// reported once, at the point of detachment, rather than again downstream.
     pub fn unbind_this_method(t: &Type) -> Type {
         match &**t {
             TypeInner::DefT(r, def_t) => match &**def_t {
@@ -11204,6 +11287,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::ReactDeepReadOnly { .. } => "ReactDeepReadOnly",
         VirtualFrameUseOp::ArrayElementCompatibility { .. } => "ArrayElementCompatibility",
         VirtualFrameUseOp::FunCompatibility { .. } => "FunCompatibility",
+        VirtualFrameUseOp::StandaloneCallThis(..) => "StandaloneCallThis",
         VirtualFrameUseOp::FunMissingArg(..) => "FunMissingArg",
         VirtualFrameUseOp::FunParam(..) => "FunParam",
         VirtualFrameUseOp::FunRestParam { .. } => "FunRestParam",

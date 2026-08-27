@@ -2156,6 +2156,7 @@ pub fn make_options(
                 multi_platform_ambient_supports_platform_project_overrides,
                 munge_underscores,
                 builtin_lib,
+                new_this_typing,
                 no_implicit_override,
                 no_unchecked_indexed_access,
                 node_modules_errors,
@@ -2213,6 +2214,7 @@ pub fn make_options(
     } = flowconfig;
 
     let ts_syntax = ts_syntax.unwrap_or(false);
+    let new_this_typing = new_this_typing.unwrap_or(false);
     let export_star_excludes_default = export_star_excludes_default.unwrap_or(false);
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
 
@@ -2533,6 +2535,7 @@ pub fn make_options(
         module_name_mappers: Arc::from(module_name_mappers),
         modules_are_use_strict,
         munge_underscores: munge_underscore_members_override || munge_underscores,
+        new_this_typing,
         no_implicit_override,
         no_unchecked_indexed_access,
         node_modules_errors,

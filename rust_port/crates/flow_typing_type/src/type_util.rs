@@ -66,6 +66,7 @@ use crate::type_::SetElemTData;
 use crate::type_::SetPrivatePropTData;
 use crate::type_::SetPropertyData;
 use crate::type_::SpecializeTData;
+use crate::type_::StandaloneCallThisData;
 use crate::type_::SuperTData;
 use crate::type_::SwitchRefinementCheckData;
 use crate::type_::TestPropTData;
@@ -1232,6 +1233,13 @@ where
                 lower: mod_reason(lower),
                 upper: mod_reason(upper),
             },
+            StandaloneCallThis(box StandaloneCallThisData { op, fn_, receiver }) => {
+                StandaloneCallThis(Box::new(StandaloneCallThisData {
+                    op: mod_reason(op),
+                    fn_: mod_reason(fn_),
+                    receiver: mod_reason(receiver),
+                }))
+            }
             FunMissingArg(box FunMissingArgData { n, op, def }) => {
                 FunMissingArg(Box::new(FunMissingArgData {
                     n,
@@ -2726,14 +2734,16 @@ pub fn mk_possibly_generic_render_type(
 // `constructor` we sometimes use as a synthetic construct signature has the
 // class-instance type as its return. This helper walks the funtype leaves of
 // [t] (plain [FunT], [PolyT { t_out = FunT }], or [IntersectionT] of either)
-// and rewrites each leaf's [this_t] to an unbound, unconstrained any with
-// [This_Method { unbound = true }], optionally also overriding [return_t].
+// and rewrites each leaf's [this_t] to an unconstrained any, optionally also
+// overriding [return_t]. Construct signatures do not have a meaningful
+// receiver, but keeping [ThisMethod] preserves the lenient method-to-method
+// subtyping behavior.
 //
-// The [This_Method { unbound = true }] is deliberate: it ensures funtype
-// subtyping at [subtyping_kit.rs] does NOT fire [EMethodUnbinding] when a
-// class's method-bound `constructor` flows to a normalized construct sig
-// (both sides land on the [This_Method _, This_Method _] arm). Used by the
-// construct-signature plumbing in [type_annotation.rs] and [flow_js/].
+// The [unbound = true] matters on the legacy path (`experimental.new_this_typing`
+// off): it stops funtype subtyping in [subtyping_kit.rs] from firing
+// [EMethodUnbinding] when a class's method-bound `constructor` flows to a
+// normalized construct sig. Used by the construct-signature plumbing in
+// [type_annotation.rs] and [flow_js/].
 pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type {
     use crate::type_::AnySource;
     use crate::type_::DefT;

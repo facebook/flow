@@ -177,6 +177,7 @@ pub struct Options {
     pub module_name_mappers: Arc<[(Regex, String)]>,
     pub modules_are_use_strict: bool,
     pub munge_underscores: bool,
+    pub new_this_typing: bool,
     pub no_implicit_override: bool,
     pub no_unchecked_indexed_access: bool,
     pub node_modules_errors: bool,

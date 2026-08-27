@@ -211,6 +211,7 @@ pub mod opts {
             Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
         pub munge_underscores: bool,
         pub builtin_lib: BuiltinLib,
+        pub new_this_typing: Option<bool>,
         pub no_implicit_override: bool,
         pub no_unchecked_indexed_access: bool,
         pub node_modules_errors: bool,
@@ -371,6 +372,7 @@ pub mod opts {
             multi_platform_ambient_supports_platform_project_overrides: Vec::new(),
             munge_underscores: false,
             builtin_lib: BuiltinLib::Flowlib,
+            new_this_typing: None,
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
             node_modules_errors: false,
@@ -2255,6 +2257,16 @@ pub mod opts {
                 "experimental.multi_platform.extension_group_mapping",
                 |values, config| multi_platform_extension_group_mapping_parser(values, config),
             ),
+            ("experimental.new_this_typing", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.new_this_typing = Some(v);
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
             (
                 "experimental.opaque_type_new_bound_syntax",
                 |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),

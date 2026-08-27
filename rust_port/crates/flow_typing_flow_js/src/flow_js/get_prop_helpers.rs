@@ -304,6 +304,12 @@ pub(super) fn get_private_prop<'cx>(
                         };
                         let method_props = cx.find_props(method_maps);
                         match method_props.get(&name) {
+                            Some(p) if cx.new_this_typing() => do_lookup(property::property_type(
+                                &flow_js_utils::method_property_for_read(
+                                    allow_method_access,
+                                    p.dupe(),
+                                ),
+                            )),
                             Some(p) => {
                                 if let PropertyInner::Method { type_: t, .. } = p.deref() {
                                     if !allow_method_access
