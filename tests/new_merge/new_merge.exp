@@ -406,6 +406,22 @@ References:
                    ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:79:16
+
+Cannot use `call` because `enumCastMethod` [1] is not a member access. `Function.prototype.call` may only re-supply the
+receiver a method was read from, as in `obj.method.call(obj, ...)`. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   main.js:79:16
+   79| enumCastMethod.call(E17, 'A') as E17 | void; // error: invalid-this-arg
+                      ^^^^
+
+References:
+   main.js:79:1
+   79| enumCastMethod.call(E17, 'A') as E17 | void; // error: invalid-this-arg
+       ^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- main.js:82:1
 
 Cannot cast `x18` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -849,4 +865,4 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 53 errors
+Found 54 errors

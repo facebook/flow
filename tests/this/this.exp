@@ -29,6 +29,22 @@ References:
                                                                                ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- This.js:10:15
+
+Cannot use `bind` because `f1` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   This.js:10:15
+   10| var f1_1 = f1.bind({x: 0})();            // error: invalid-this-arg
+                     ^^^^
+
+References:
+   This.js:10:12
+   10| var f1_1 = f1.bind({x: 0})();            // error: invalid-this-arg
+                  ^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- This.js:11:21
 
 Cannot assign `f1.bind(...)()` to `f1_2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -44,6 +60,38 @@ References:
    This.js:11:12
    11| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- This.js:11:24
+
+Cannot use `bind` because `f1` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   This.js:11:24
+   11| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+                              ^^^^
+
+References:
+   This.js:11:21
+   11| var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
+                           ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- This.js:12:15
+
+Cannot use `bind` because `f1` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   This.js:12:15
+   12| var f1_3 = f1.bind({x: ""})();
+                     ^^^^
+
+References:
+   This.js:12:12
+   12| var f1_3 = f1.bind({x: ""})();
+                  ^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- This.js:18:15
@@ -91,6 +139,22 @@ References:
                                                                                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- This.js:29:15
+
+Cannot use `bind` because `f2` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   This.js:29:15
+   29| var f2_1 = f2.bind({x: 0})();            // error: invalid-this-arg
+                     ^^^^
+
+References:
+   This.js:29:12
+   29| var f2_1 = f2.bind({x: 0})();            // error: invalid-this-arg
+                  ^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- This.js:30:21
 
 Cannot assign `f2.bind(...)()` to `f2_2` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -106,6 +170,38 @@ References:
    This.js:30:12
    30| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- This.js:30:24
+
+Cannot use `bind` because `f2` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   This.js:30:24
+   30| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+                              ^^^^
+
+References:
+   This.js:30:21
+   30| var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
+                           ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- This.js:31:15
+
+Cannot use `bind` because `f2` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   This.js:31:15
+   31| var f2_3 = f2.bind({x: ""})();
+                     ^^^^
+
+References:
+   This.js:31:12
+   31| var f2_3 = f2.bind({x: ""})();
+                  ^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- This.js:35:1
@@ -155,4 +251,4 @@ References:
 
 
 
-Found 10 errors
+Found 16 errors

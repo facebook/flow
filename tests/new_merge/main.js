@@ -76,7 +76,7 @@ E17 as empty; // error enum ~> empty
 E17.A as empty; // error enum ~> empty
 E17.C as empty; // error - not a member
 enumMember as E17; // OK
-enumCastMethod.call(E17, 'A') as E17 | void; // OK
+enumCastMethod.call(E17, 'A') as E17 | void; // error: invalid-this-arg
 
 import {x as x18, y as y18, z as z18} from './eval_readonly';
 x18 as empty; // error number, string ~> empty

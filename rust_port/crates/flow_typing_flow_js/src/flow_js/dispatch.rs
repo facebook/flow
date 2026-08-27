@@ -5057,6 +5057,24 @@ fn __flow_impl<'cx>(
             _ => None,
         } =>
         {
+            // Class methods carry `dummy_static` statics, so the lookup below
+            // resolves on `any` and never reaches the `FunProtoT` arm that
+            // records `Function.prototype` accesses. Record it here instead --
+            // the receiver is a function, so `.call`/`.apply`/`.bind` can only
+            // be the `Function.prototype` ones.
+            if let PropRef::Named {
+                reason: reason_prop,
+                name,
+                ..
+            } = &**propref
+                && matches!(name.as_str_opt(), Some("apply" | "bind" | "call"))
+                && matches!(
+                    static_.deref(),
+                    TypeInner::AnyT(_, AnySource::Unsound(UnsoundnessKind::DummyStatic))
+                )
+            {
+                cx.record_fun_proto_method_lookup(reason_prop.loc().dupe());
+            }
             let method_type = flow_typing_tvar::mk_no_wrap_where(
                 cx,
                 reason_lookup.dupe(),
@@ -9688,10 +9706,21 @@ fn __flow_impl<'cx>(
             TypeInner::FunProtoT(_),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
-                propref: box PropRef::Named { name, .. },
+                propref:
+                    box PropRef::Named {
+                        reason: reason_prop,
+                        name,
+                        ..
+                    },
                 ..
             }),
         ) if flow_js_utils::is_function_prototype(name) => {
+            // Reaching here means the access resolved on `Function.prototype`
+            // rather than on the receiver itself. `statement.rs` reads this back
+            // to decide whether its `.call`/`.apply`/`.bind` receiver check applies.
+            if matches!(name.as_str_opt(), Some("apply" | "bind" | "call")) {
+                cx.record_fun_proto_method_lookup(reason_prop.loc().dupe());
+            }
             // TODO: Ditto above comment for Function.prototype
             let fun = helpers::get_builtin_type(cx, env, Some(trace), reason_op, None, "Function")?;
             rec_flow(cx, env, trace, (&fun, u))?;

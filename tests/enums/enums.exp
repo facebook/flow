@@ -3216,6 +3216,22 @@ References:
             ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- methods.js:52:8
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   methods.js:52:8
+   52| o.cast.call(E, 'x'); // error: .call restrictions
+              ^^^^
+
+References:
+   methods.js:52:1
+   52| o.cast.call(E, 'x'); // error: .call restrictions
+       ^ [1]
+
+
 Error ------------------------------------------------------------------------------------- not-fully-exhaustive.js:19:9
 
 Incomplete exhaustive check: the members `B` and `C` of enum `E` [1] have not been considered in check of `e`. The
@@ -5108,4 +5124,4 @@ References:
 
 
 
-Found 300 errors
+Found 301 errors

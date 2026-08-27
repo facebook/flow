@@ -1,0 +1,619 @@
+Error -------------------------------------------------------------------------------------------- lint_settings.js:12:1
+
+Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
+type [2]. [incompatible-type]
+
+   lint_settings.js:12:1
+   12| o.m.call(other, 1); // error: lint disabled, `this` incompatibility still reported
+       ^^^
+
+References:
+   lint_settings.js:9:22
+    9| declare const other: O;
+                            ^ [1]
+   lint_settings.js:5:13
+    5|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- lint_settings.js:15:1
+
+Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
+type [2]. [incompatible-type]
+
+   lint_settings.js:15:1
+   15| o.m.call(other, 1); // error: lint re-enabled
+       ^^^
+
+References:
+   lint_settings.js:9:22
+    9| declare const other: O;
+                            ^ [1]
+   lint_settings.js:5:13
+    5|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- lint_settings.js:15:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   lint_settings.js:15:5
+   15| o.m.call(other, 1); // error: lint re-enabled
+           ^^^^
+
+References:
+   lint_settings.js:15:1
+   15| o.m.call(other, 1); // error: lint re-enabled
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- lint_settings.js:18:10
+
+Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+
+   lint_settings.js:18:10
+   18| o.m.bind(other); // error: lint disabled, `this` incompatibility still reported
+                ^^^^^
+
+References:
+   lint_settings.js:9:22
+    9| declare const other: O;
+                            ^ [1]
+   lint_settings.js:5:13
+    5|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- lint_settings.js:20:10
+
+Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+
+   lint_settings.js:20:10
+   20| o.m.bind(other); // error
+                ^^^^^
+
+References:
+   lint_settings.js:9:22
+    9| declare const other: O;
+                            ^ [1]
+   lint_settings.js:5:13
+    5|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- lint_settings.js:20:5
+
+Cannot use `bind` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.bind` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   lint_settings.js:20:5
+   20| o.m.bind(other); // error
+           ^^^^
+
+References:
+   lint_settings.js:20:1
+   20| o.m.bind(other); // error
+       ^ [1]
+
+
+Error ----------------------------------------------------------------------------- method_unbinding_interaction.js:13:3
+
+Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   method_unbinding_interaction.js:13:3
+   13| a.m.call(a); // error: method-unbinding only
+         ^ [1]
+
+References:
+   method_unbinding_interaction.js:8:3
+    8|   m(): void {}
+         ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- method_unbinding_interaction.js:14:3
+
+Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
+[method-unbinding]
+
+   method_unbinding_interaction.js:14:3
+   14| a.m.call(new A()); // error: method-unbinding only
+         ^ [1]
+
+References:
+   method_unbinding_interaction.js:8:3
+    8|   m(): void {}
+         ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------- method_unbinding_interaction.js:30:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `t` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   method_unbinding_interaction.js:30:5
+   30| t.m.call(u, 1); // error: receiver mismatch
+           ^^^^
+
+References:
+   method_unbinding_interaction.js:30:1
+   30| t.m.call(u, 1); // error: receiver mismatch
+       ^ [1]
+
+
+Error ---------------------------------------------------------------------------- method_unbinding_interaction.js:38:10
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `Static` [1] the method was
+read from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   method_unbinding_interaction.js:38:10
+   38| Static.m.call(a, 1); // error: receiver mismatch
+                ^^^^
+
+References:
+   method_unbinding_interaction.js:38:1
+   38| Static.m.call(a, 1); // error: receiver mismatch
+       ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- rejected.js:8:1
+
+Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
+type [2]. [incompatible-type]
+
+   rejected.js:8:1
+   8| o.m.call(other, 1); // error: receiver mismatch
+      ^^^
+
+References:
+   rejected.js:6:22
+   6| declare const other: O;
+                           ^ [1]
+   rejected.js:2:13
+   2|   m: (this: {x: number, ...}, y: number) => void,
+                  ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- rejected.js:8:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:8:5
+   8| o.m.call(other, 1); // error: receiver mismatch
+          ^^^^
+
+References:
+   rejected.js:8:1
+   8| o.m.call(other, 1); // error: receiver mismatch
+      ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- rejected.js:9:1
+
+Cannot call `o.m.apply` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
+type [2]. [incompatible-type]
+
+   rejected.js:9:1
+   9| o.m.apply(other, [1]); // error: receiver mismatch
+      ^^^
+
+References:
+   rejected.js:6:22
+   6| declare const other: O;
+                           ^ [1]
+   rejected.js:2:13
+   2|   m: (this: {x: number, ...}, y: number) => void,
+                  ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- rejected.js:9:5
+
+Cannot use `apply` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.apply` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:9:5
+   9| o.m.apply(other, [1]); // error: receiver mismatch
+          ^^^^^
+
+References:
+   rejected.js:9:1
+   9| o.m.apply(other, [1]); // error: receiver mismatch
+      ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ rejected.js:10:10
+
+Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+
+   rejected.js:10:10
+   10| o.m.bind(other); // error: receiver mismatch
+                ^^^^^
+
+References:
+   rejected.js:6:22
+    6| declare const other: O;
+                            ^ [1]
+   rejected.js:2:13
+    2|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:10:5
+
+Cannot use `bind` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.bind` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:10:5
+   10| o.m.bind(other); // error: receiver mismatch
+           ^^^^
+
+References:
+   rejected.js:10:1
+   10| o.m.bind(other); // error: receiver mismatch
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:12:1
+
+Cannot call `o.m.call` because function type [1] requires another argument from function type [2]. [incompatible-type]
+
+   rejected.js:12:1
+    12| o.m.call(); // error: no first argument
+        ^^^
+
+References:
+   rejected.js:2:6
+     2|   m: (this: {x: number, ...}, y: number) => void,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:387:66
+   387|     proto call: <T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:12:1
+
+Cannot call `o.m.call` because in the `this` parameter: `{x: number, ...}` [1] is incompatible with `void` [2].
+[incompatible-type]
+
+   rejected.js:12:1
+   12| o.m.call(); // error: no first argument
+       ^^^
+
+References:
+   rejected.js:2:13
+    2|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [1]
+   rejected.js:12:1
+   12| o.m.call(); // error: no first argument
+       ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:12:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:12:5
+   12| o.m.call(); // error: no first argument
+           ^^^^
+
+References:
+   rejected.js:12:1
+   12| o.m.call(); // error: no first argument
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:13:5
+
+Cannot call `o.m.bind` because a call signature declaring the expected parameter / return type is missing in function
+prototype [1]. [prop-missing]
+
+   rejected.js:13:5
+   13| o.m.bind(); // error: no first argument
+           ^^^^
+
+References:
+   rejected.js:13:1
+   13| o.m.bind(); // error: no first argument
+       ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:13:5
+
+Cannot use `bind` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.bind` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:13:5
+   13| o.m.bind(); // error: no first argument
+           ^^^^
+
+References:
+   rejected.js:13:1
+   13| o.m.bind(); // error: no first argument
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:16:1
+
+Cannot call `o.m.call` because in the `this` parameter: `{x: number, ...}` [1] is incompatible with `unknown` [2].
+[incompatible-type]
+
+   rejected.js:16:1
+   16| o.m.call(...args); // error: spread first argument
+       ^^^
+
+References:
+   rejected.js:2:13
+    2|   m: (this: {x: number, ...}, y: number) => void,
+                   ^^^^^^^^^^^^^^^^ [1]
+   rejected.js:15:27
+   15| declare const args: Array<unknown>;
+                                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:16:5
+
+Cannot call `o.m.call` because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   rejected.js:16:5
+   16| o.m.call(...args); // error: spread first argument
+           ^^^^
+
+References:
+   rejected.js:15:27
+   15| declare const args: Array<unknown>;
+                                 ^^^^^^^ [1]
+   rejected.js:2:34
+    2|   m: (this: {x: number, ...}, y: number) => void,
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:16:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:16:5
+   16| o.m.call(...args); // error: spread first argument
+           ^^^^
+
+References:
+   rejected.js:16:1
+   16| o.m.call(...args); // error: spread first argument
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:18:5
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `o` [1] the method was read
+from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:18:5
+   18| o.m.call(makeReceiver(), 1); // error: not a simple expression
+           ^^^^
+
+References:
+   rejected.js:18:1
+   18| o.m.call(makeReceiver(), 1); // error: not a simple expression
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:23:1
+
+Cannot call `f.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object type [2].
+[incompatible-type]
+
+   rejected.js:23:1
+   23| f.call(o, 1); // error: `f` is not a member access
+       ^
+
+References:
+   rejected.js:5:18
+    5| declare const o: O;
+                        ^ [1]
+   rejected.js:21:26
+   21| declare function f(this: {x: number, ...}, y: number): void;
+                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:23:3
+
+Cannot use `call` because `f` [1] is not a member access. `Function.prototype.call` may only re-supply the receiver a
+method was read from, as in `obj.method.call(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   rejected.js:23:3
+   23| f.call(o, 1); // error: `f` is not a member access
+         ^^^^
+
+References:
+   rejected.js:23:1
+   23| f.call(o, 1); // error: `f` is not a member access
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:24:1
+
+Cannot call `f.apply` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object type [2].
+[incompatible-type]
+
+   rejected.js:24:1
+   24| f.apply(o, [1]); // error: `f` is not a member access
+       ^
+
+References:
+   rejected.js:5:18
+    5| declare const o: O;
+                        ^ [1]
+   rejected.js:21:26
+   21| declare function f(this: {x: number, ...}, y: number): void;
+                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:24:3
+
+Cannot use `apply` because `f` [1] is not a member access. `Function.prototype.apply` may only re-supply the receiver a
+method was read from, as in `obj.method.apply(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   rejected.js:24:3
+   24| f.apply(o, [1]); // error: `f` is not a member access
+         ^^^^^
+
+References:
+   rejected.js:24:1
+   24| f.apply(o, [1]); // error: `f` is not a member access
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:25:8
+
+Cannot call `f.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+
+   rejected.js:25:8
+   25| f.bind(o); // error: `f` is not a member access
+              ^
+
+References:
+   rejected.js:5:18
+    5| declare const o: O;
+                        ^ [1]
+   rejected.js:21:26
+   21| declare function f(this: {x: number, ...}, y: number): void;
+                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:25:3
+
+Cannot use `bind` because `f` [1] is not a member access. `Function.prototype.bind` may only re-supply the receiver a
+method was read from, as in `obj.method.bind(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   rejected.js:25:3
+   25| f.bind(o); // error: `f` is not a member access
+         ^^^^
+
+References:
+   rejected.js:25:1
+   25| f.bind(o); // error: `f` is not a member access
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:26:1
+
+Cannot call `f.call` because in the `this` parameter: `{x: number, ...}` [1] is incompatible with
+`(y: number) => void` [2]. [incompatible-type]
+
+Functions without statics are not compatible with objects.
+
+   rejected.js:26:1
+   26| f.call(f, 1); // error: `f` is not a member access
+       ^
+
+References:
+   rejected.js:21:26
+   21| declare function f(this: {x: number, ...}, y: number): void;
+                                ^^^^^^^^^^^^^^^^ [1]
+   rejected.js:21:19
+   21| declare function f(this: {x: number, ...}, y: number): void;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:26:3
+
+Cannot use `call` because `f` [1] is not a member access. `Function.prototype.call` may only re-supply the receiver a
+method was read from, as in `obj.method.call(obj, ...)`. See https://flow.org/en/docs/types/classes/#toc-this-rebinding
+[invalid-this-arg]
+
+   rejected.js:26:3
+   26| f.call(f, 1); // error: `f` is not a member access
+         ^^^^
+
+References:
+   rejected.js:26:1
+   26| f.call(f, 1); // error: `f` is not a member access
+       ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- rejected.js:29:1
+
+Cannot call `holder.fn.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
+type [2]. [incompatible-type]
+
+   rejected.js:29:1
+   29| holder.fn.call(o, 1); // error: receiver mismatch, must be `holder`
+       ^^^^^^^^^
+
+References:
+   rejected.js:5:18
+    5| declare const o: O;
+                        ^ [1]
+   rejected.js:28:27
+   28| const holder: {fn: (this: {x: number, ...}, y: number) => void} = {fn: f};
+                                 ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ rejected.js:29:11
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `holder` [1] the method was
+read from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   rejected.js:29:11
+   29| holder.fn.call(o, 1); // error: receiver mismatch, must be `holder`
+                 ^^^^
+
+References:
+   rejected.js:29:1
+   29| holder.fn.call(o, 1); // error: receiver mismatch, must be `holder`
+       ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- trivial_this.js:26:12
+
+Cannot use `call` because `objectThis` [1] is not a member access. `Function.prototype.call` may only re-supply the
+receiver a method was read from, as in `obj.method.call(obj, ...)`. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   trivial_this.js:26:12
+   26| objectThis.call(target, 1); // error
+                  ^^^^
+
+References:
+   trivial_this.js:26:1
+   26| objectThis.call(target, 1); // error
+       ^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- trivial_this.js:32:11
+
+Cannot use `call` because `classThis` [1] is not a member access. `Function.prototype.call` may only re-supply the
+receiver a method was read from, as in `obj.method.call(obj, ...)`. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   trivial_this.js:32:11
+   32| classThis.call(new A(), 1); // error
+                 ^^^^
+
+References:
+   trivial_this.js:32:1
+   32| classThis.call(new A(), 1); // error
+       ^^^^^^^^^ [1]
+
+
+
+Found 37 errors

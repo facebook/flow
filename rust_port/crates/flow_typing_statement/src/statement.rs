@@ -2395,7 +2395,6 @@ fn statement_<'a>(
         let generator = func.generator;
         let ast::IdentifierInner {
             loc: name_loc,
-            name: _,
             ..
         } = &**id;
         let reason = func_reason(async_, generator, sig_loc);
@@ -10146,6 +10145,17 @@ pub fn optional_chain<'a>(
                         object_ast,
                         argument_asts,
                     ) = handle_chaining(cx, conf, member_opt, _object, lookup_loc.dupe())?;
+                    if !private_ {
+                        type_operation_utils::type_assertions::check_function_proto_this_arg(
+                            cx,
+                            &name_str,
+                            prop_loc,
+                            _object,
+                            &obj_filtered_out,
+                            arguments,
+                            |expr| refinement::keys::key(true, expr),
+                        )?;
+                    }
                     let prop_ast = match property {
                         expression::member::Property::PropertyExpression(_) => {
                             panic!("unexpected property expression")

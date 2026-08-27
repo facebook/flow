@@ -145,18 +145,28 @@ func(1, 2, 3); // Works.
 
 ### `this` parameter
 
-Every function in JavaScript can be called with a special context named `this`.
-You can call a function with any context that you want. Flow allows you to annotate
-the type for this context by adding a special parameter at the start of the function's parameter list:
+Every function in JavaScript is called with a special context named `this`. Flow
+allows you to annotate the type for this context by adding a special parameter at
+the start of the function's parameter list:
 
 ```js flow-check
-function func<T>(this: { x: T }) : T {
+type Counter = {
+  x: number,
+  getX: (this: Counter) => number,
+};
+
+function getX(this: Counter): number {
   return this.x;
 }
 
-const num: number = func.call({x : 42});
-const str: string = func.call({x : 42}); // Error!
+const counter: Counter = {x: 42, getX};
+const num: number = counter.getX();
+const str: string = counter.getX(); // Error!
 ```
+
+The context comes from the receiver of the call. For receiver-specific methods,
+`call`, `apply` and `bind` may only re-supply that same receiver — see
+[Rebinding `this`](./classes.md#toc-this-rebinding).
 
 This parameter has no effect at runtime, and is erased along with types when Flow is transformed into JavaScript.
 When present, `this` parameters must always appear at the very beginning of the function's parameter list, and must

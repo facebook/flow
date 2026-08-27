@@ -9,7 +9,7 @@ declare class MyArrayLike<T> {
   length: number;
 }
 var x = new MyArrayLike<string>();
-test.apply([], x); // OK
+test.apply([], x); // ERROR: invalid-this-arg
 var y = new MyArrayLike<number>();
 test.apply("", y); // ERROR
 

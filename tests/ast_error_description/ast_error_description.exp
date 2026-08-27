@@ -1344,6 +1344,25 @@ References:
                    ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- expression.js:63:4
+
+Cannot use `call` because function [1] is not a member access. `Function.prototype.call` may only re-supply the receiver
+a method was read from, as in `obj.method.call(obj, ...)`. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   expression.js:63:4
+   63| }).call(42);
+          ^^^^
+
+References:
+   expression.js:61:2
+        v------------------------
+   61| (function (this: number) {
+   62|   ((this as empty) as T).p as empty;
+   63| }).call(42);
+       ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- expression.js:64:1
 
 Cannot cast `42.p` to empty because `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1616,4 +1635,4 @@ References:
 
 
 
-Found 103 errors
+Found 104 errors

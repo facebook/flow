@@ -2177,6 +2177,16 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidReactCreateElement(VirtualReason<L>),
 
+    MessageInvalidThisArgMissingReceiver {
+        name: FlowSmolStr,
+        callee_object: VirtualReason<L>,
+    },
+
+    MessageInvalidThisArgReceiverMismatch {
+        name: FlowSmolStr,
+        receiver: VirtualReason<L>,
+    },
+
     MessageInvalidKeyPropertyInSpread(Box<MessageInvalidKeyPropertyInSpreadData<L>>),
 
     MessageInvalidRendersTypeArgument(Box<MessageInvalidRendersTypeArgumentData<L>>),

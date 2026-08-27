@@ -70,6 +70,7 @@ use flow_typing_errors::error_message::EInvalidDeclarationData;
 use flow_typing_errors::error_message::EInvalidObjectKitData;
 use flow_typing_errors::error_message::EInvalidReactCreateElementData;
 use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
+use flow_typing_errors::error_message::EInvalidThisArgData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EKeySpreadPropData;
 use flow_typing_errors::error_message::EMethodUnbindingData;
@@ -2667,6 +2668,20 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EInvalidReactCreateElement({})",
                 string_of_aloc(None, create_element_loc)
+            )
+        }
+        ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {
+            loc,
+            name,
+            reason,
+            kind,
+        }) => {
+            format!(
+                "EInvalidThisArg ({}) ({}) ({}) ({:?})",
+                string_of_aloc(None, loc),
+                name,
+                dump_reason(cx, reason),
+                kind
             )
         }
         ErrorMessage::EInvalidInfer(loc) => {

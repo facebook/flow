@@ -7,7 +7,7 @@ function f1(this: typeof Object.prototype | {x: number} | {x: string}) : number 
   return this.x // error: x not in Object, string not compatible with number
 }
 
-var f1_1 = f1.bind({x: 0})();            // ok
+var f1_1 = f1.bind({x: 0})();            // error: invalid-this-arg
 var f1_2 : string = f1.bind({x: 0})();   // error, number -> string
 var f1_3 = f1.bind({x: ""})();
 var f1_4 = f1();
@@ -26,7 +26,7 @@ function f2(this: typeof Object.prototype | {x: number} | {x: string}) : number 
     return a2() // error: string not compatible with number
 }
 
-var f2_1 = f2.bind({x: 0})();            // ok
+var f2_1 = f2.bind({x: 0})();            // error: invalid-this-arg
 var f2_2 : string = f2.bind({x: 0})();   // error, number -> string
 var f2_3 = f2.bind({x: ""})();
 // TODO make this error blame the call site, rather than the function body

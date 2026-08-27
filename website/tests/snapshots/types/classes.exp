@@ -308,3 +308,22 @@ References:
 
 
 Found 1 error
+
+=== block 29 ===
+Error ----------------------------------------------------------------------------- -:11:19
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `counter` [1] the method was
+read from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   -:11:19
+   11| counter.increment.call(other); // ERROR: [invalid-this-arg]
+                         ^^^^
+
+References:
+   -:11:1
+   11| counter.increment.call(other); // ERROR: [invalid-this-arg]
+       ^^^^^^^ [1]
+
+
+Found 1 error

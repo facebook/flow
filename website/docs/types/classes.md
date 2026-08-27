@@ -419,6 +419,42 @@ The fixes are either to keep the call bound (`counter.increment()` directly) or 
 
 This is a class-instance rule: method-shorthand on a plain [object type](./objects.md#toc-object-methods) doesn't carry a `this` context to lose (usage of `this` in object literals is banned), so extracting an object method is allowed.
 
+### Rebinding `this` with `call`, `apply` and `bind` {#toc-this-rebinding}
+
+`call`, `apply` and `bind` cannot safely accept a receiver merely because its type is compatible. A subclass method can rely on a more specific `this` than is visible at the call site:
+
+```js
+class X {
+  x: string = 'x';
+  foo(this: X): string { return this.x; }
+}
+
+class Y extends X {
+  y: string = 'y';
+  foo(this: Y): string { return this.y; }
+}
+
+const x: X = new Y(); // Fine: Y is a subtype of X
+x.foo.call(new X()); // Would run Y.prototype.foo with an X as this
+```
+
+At runtime, `x.foo` is `Y.prototype.foo`, so rebinding it to `new X()` would evaluate `this.y` on an object with no `y`. Flow therefore only lets `call`, `apply` and `bind` re-supply the receiver from which the method was read. The class-instance example is rejected earlier by [method unbinding](#toc-method-unbinding); in cases where the method read itself is valid, a different receiver reports `invalid-this-arg`:
+
+```js flow-check
+type Counter = {
+  count: number,
+  increment(this: Counter): number,
+};
+
+declare const counter: Counter;
+declare const other: Counter;
+
+counter.increment.call(counter); // Works
+counter.increment.call(other); // ERROR: [invalid-this-arg]
+```
+
+`invalid-this-arg` is a [lint](../linting/rule-reference.md#toc-invalid-this-arg) that is enabled as an error by default; `// flowlint invalid-this-arg:off` turns it off for a region of a file.
+
 ### `implements` and `extends` RHS must be an interface or class {#toc-cannot-implement}
 
 The right-hand side of `implements` (on a class) or `extends` (on an interface) must name an interface or class — passing an object-type alias errors:

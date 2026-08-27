@@ -485,6 +485,10 @@ pub struct ComponentT<'cx> {
     // Natural inference (records checks on primitive literal types during
     // implicit instantiation)
     primitive_literal_checks: RefCell<ALocSet>,
+    // `call`/`apply`/`bind` accesses that resolved on `Function.prototype`
+    // rather than on a property of the receiver. Keyed by the location of the
+    // property identifier.
+    fun_proto_method_lookups: RefCell<ALocSet>,
     enclosing_context_for_call: RefCell<ALocMap<EnclosingContext>>,
 }
 
@@ -804,6 +808,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         ctor_callee: RefCell::new(ALocMap::new()),
         union_opt: RefCell::new(ALocMap::new()),
         primitive_literal_checks: RefCell::new(ALocSet::new()),
+        fun_proto_method_lookups: RefCell::new(ALocSet::new()),
         enclosing_context_for_call: RefCell::new(ALocMap::new()),
     }
 }
@@ -2231,6 +2236,14 @@ impl<'cx> Context<'cx> {
 
     pub fn is_primitive_literal_checked(&self, loc: &ALoc) -> bool {
         self.0.ccx.primitive_literal_checks.borrow().contains(loc)
+    }
+
+    pub fn record_fun_proto_method_lookup(&self, loc: ALoc) {
+        self.0.ccx.fun_proto_method_lookups.borrow_mut().insert(loc);
+    }
+
+    pub fn is_fun_proto_method_lookup(&self, loc: &ALoc) -> bool {
+        self.0.ccx.fun_proto_method_lookups.borrow().contains(loc)
     }
 
     pub fn set_enclosing_context_for_call(&self, loc: ALoc, t: EnclosingContext) {

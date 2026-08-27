@@ -94,6 +94,25 @@ Error --------------------------------------------------------------------- -:4:
 Found 1 error
 
 === block 11 ===
+Error -------------------------------------------------------------------- -:11:19
+
+Cannot use `call` because its first argument must be the exact same value as the receiver `counter` [1] the method was
+read from. `Function.prototype.call` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   -:11:19
+   11| counter.increment.call(other); // Error
+                         ^^^^
+
+References:
+   -:11:1
+   11| counter.increment.call(other); // Error
+       ^^^^^^^ [1]
+
+
+Found 1 error
+
+=== block 12 ===
 Error --------------------------------------------------------------------- -:5:18
 
 The name of intrinsic element `div` [1] overlaps with a local definition [2] which has a type [1] that can be
@@ -112,13 +131,13 @@ References:
 
 Found 1 error
 
-=== block 12 ===
-No errors!
-
 === block 13 ===
 No errors!
 
 === block 14 ===
+No errors!
+
+=== block 15 ===
 Error ---------------------------------------------------------------------- -:5:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
@@ -139,7 +158,7 @@ References:
 
 Found 1 error
 
-=== block 15 ===
+=== block 16 ===
 Error ---------------------------------------------------------------------- -:4:5
 
 Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]?
@@ -160,7 +179,7 @@ References:
 
 Found 1 error
 
-=== block 16 ===
+=== block 17 ===
 Error --------------------------------------------------------------------- -:4:18
 
 Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-type]
@@ -185,7 +204,7 @@ Unclear type. Using `any`, `Object`, or `Function` types is not safe! [unclear-t
 
 Found 3 errors
 
-=== block 17 ===
+=== block 18 ===
 Error ---------------------------------------------------------------------- -:6:1
 
 This use of `invariant` is unnecessary because array type [1] is always truthy. [unnecessary-invariant]
@@ -202,7 +221,7 @@ References:
 
 Found 1 error
 
-=== block 18 ===
+=== block 19 ===
 Error ---------------------------------------------------------------------- -:8:1
 
 This use of optional chaining (`?.`) is unnecessary because `foo` [1] cannot be nullish or because an earlier `?.` will
@@ -220,7 +239,7 @@ References:
 
 Found 1 error
 
-=== block 19 ===
+=== block 20 ===
 Error --------------------------------------------------------------------- -:10:1
 
 This use of optional chaining (`?.`) is unnecessary because `foo?.bar` [1] cannot be nullish or because an earlier `?.`
@@ -238,7 +257,7 @@ References:
 
 Found 1 error
 
-=== block 20 ===
+=== block 21 ===
 Error ---------------------------------------------------------------------- -:5:3
 
 Getters and setters can have side effects and are unsafe. [unsafe-getters-setters]
@@ -256,7 +275,7 @@ Getters and setters can have side effects and are unsafe. [unsafe-getters-setter
 
 Found 2 errors
 
-=== block 21 ===
+=== block 22 ===
 Error --------------------------------------------------------------------- -:5:16
 
 Flow's support for `Object.assign` is unsafe. Use spreads instead. [unsafe-object-assign]
@@ -267,10 +286,10 @@ Flow's support for `Object.assign` is unsafe. Use spreads instead. [unsafe-objec
 
 Found 1 error
 
-=== block 22 ===
+=== block 23 ===
 No errors!
 
-=== block 23 ===
+=== block 24 ===
 Error ---------------------------------------------------------------------- -:7:3
 
 `Promise` in async scope is unused. Did you mean to `await` it? [unused-promise]

@@ -137,6 +137,7 @@ pub enum LintKind {
     RequireExplicitEnumSwitchCases,
     DefaultImportAccess,
     InvalidImportStarUse,
+    InvalidThisArg,
     NonConstVarExport,
     ThisInExportedFunction,
     MixedImportAndRequire,
@@ -172,6 +173,7 @@ impl LintKind {
             LintKind::RequireExplicitEnumSwitchCases => "require-explicit-enum-switch-cases",
             LintKind::DefaultImportAccess => "default-import-access",
             LintKind::InvalidImportStarUse => "invalid-import-star-use",
+            LintKind::InvalidThisArg => "invalid-this-arg",
             LintKind::NonConstVarExport => "non-const-var-export",
             LintKind::ThisInExportedFunction => "this-in-exported-function",
             LintKind::MixedImportAndRequire => "mixed-import-and-require",
@@ -239,6 +241,7 @@ impl LintKind {
             }
             "default-import-access" => Some(vec![LintKind::DefaultImportAccess]),
             "invalid-import-star-use" => Some(vec![LintKind::InvalidImportStarUse]),
+            "invalid-this-arg" => Some(vec![LintKind::InvalidThisArg]),
             "non-const-var-export" => Some(vec![LintKind::NonConstVarExport]),
             "this-in-exported-function" => Some(vec![LintKind::ThisInExportedFunction]),
             "mixed-import-and-require" => Some(vec![LintKind::MixedImportAndRequire]),

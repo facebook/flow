@@ -1911,6 +1911,48 @@ pub struct EInvalidReactCreateElementData<L: Dupe + PartialOrd + Ord + PartialEq
 #[derive(
     Debug,
     Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum InvalidThisArgKind {
+    /// The callee of `.call`/`.apply`/`.bind` is not a member access, so there
+    /// is no receiver that the first argument could be required to match.
+    MissingReceiver,
+    /// The first argument is absent, spread, or is not the same expression as
+    /// the receiver the callee was read from.
+    ReceiverMismatch,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EInvalidThisArgData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    /// Location of the `call`/`apply`/`bind` identifier.
+    pub loc: L,
+    pub name: FlowSmolStr,
+    /// The receiver the first argument had to match, or, for
+    /// [`InvalidThisArgKind::MissingReceiver`], the callee that has no receiver.
+    pub reason: VirtualReason<L>,
+    pub kind: InvalidThisArgKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     Hash,
@@ -2824,6 +2866,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     },
 
     EInvalidReactCreateElement(Box<EInvalidReactCreateElementData<L>>),
+
+    EInvalidThisArg(Box<EInvalidThisArgData<L>>),
 
     EReactElementFunArity(Box<(L, FlowSmolStr, i32)>),
 
@@ -4192,6 +4236,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EInvalidReactCreateElement(Box::new(EInvalidReactCreateElementData {
                 create_element_loc: f(create_element_loc),
                 invalid_react: map_reason(invalid_react),
+            })),
+
+            EInvalidThisArg(box EInvalidThisArgData {
+                loc,
+                name,
+                reason,
+                kind,
+            }) => EInvalidThisArg(Box::new(EInvalidThisArgData {
+                loc: f(loc),
+                name,
+                reason: map_reason(reason),
+                kind,
             })),
 
             EFunctionCallExtraArg(box (rl, ru, n, op)) => {
@@ -6166,6 +6222,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 create_element_loc: loc,
                 ..
             })
+            | Self::EInvalidThisArg(box EInvalidThisArgData { loc, .. })
             | Self::ENonstrictImport(loc)
             | Self::EUnclearType(loc)
             | Self::EDeprecatedBool(loc)
@@ -6501,6 +6558,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             ErrorMessage::EBadDefaultImportAccess(box (_, _)) => LintError(DefaultImportAccess),
             ErrorMessage::EBadDefaultImportDestructuring(_) => LintError(DefaultImportAccess),
             ErrorMessage::EInvalidImportStarUse(box (_, _)) => LintError(InvalidImportStarUse),
+            ErrorMessage::EInvalidThisArg(box EInvalidThisArgData { .. }) => {
+                LintError(InvalidThisArg)
+            }
             ErrorMessage::ENonConstVarExport(box (_, _)) => LintError(NonConstVarExport),
             ErrorMessage::EThisInExportedFunction(_) => LintError(ThisInExportedFunction),
             ErrorMessage::EMixedImportAndRequire(box (_, _)) => LintError(MixedImportAndRequire),
@@ -7091,6 +7151,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 invalid_react,
                 ..
             }) => Normal(Message::MessageInvalidReactCreateElement(invalid_react)),
+
+            ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {
+                loc: _,
+                name,
+                reason,
+                kind,
+            }) => match kind {
+                InvalidThisArgKind::MissingReceiver => {
+                    Normal(Message::MessageInvalidThisArgMissingReceiver {
+                        name,
+                        callee_object: reason,
+                    })
+                }
+                InvalidThisArgKind::ReceiverMismatch => {
+                    Normal(Message::MessageInvalidThisArgReceiverMismatch {
+                        name,
+                        receiver: reason,
+                    })
+                }
+            },
 
             ErrorMessage::EAnyValueUsedAsType { reason_use } => {
                 Normal(Message::MessageAnyValueUsedAsType(reason_use.desc))
@@ -9447,6 +9527,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | Self::EUnnecessaryInvariant(box (_, _))
             | Self::EUnnecessaryDeclareTypeOnlyExport(_)
             | Self::EAmbiguousObjectType(_)
+            | Self::EInvalidThisArg(box EInvalidThisArgData { .. })
             | Self::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
                 box MatchNonExplicitEnumCheckData { .. },
             ))
@@ -10130,6 +10211,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | ErrorMessage::EUninitializedInstanceProperty { .. }
             | ErrorMessage::ENestedComponent { .. }
             | ErrorMessage::ENestedHook { .. }
+            | ErrorMessage::EInvalidThisArg(box EInvalidThisArgData { .. })
             | ErrorMessage::EUnusedPromise { .. } => match self.kind_of_msg() {
                 ErrorKind::LintError(kind) => {
                     Some(flow_common_errors::error_codes::code_of_lint(&kind))

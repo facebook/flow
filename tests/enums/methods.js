@@ -49,4 +49,4 @@ const o = {
 };
 o.cast('x'); // Error
 E.cast('x'); // OK
-o.cast.call(E, 'x'); // OK
+o.cast.call(E, 'x'); // error: .call restrictions

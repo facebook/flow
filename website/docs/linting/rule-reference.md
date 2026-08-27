@@ -176,6 +176,26 @@ type A = React$Node; // Error
 type B = React.Node; // Ok
 ```
 
+### `invalid-this-arg` {#toc-invalid-this-arg}
+Triggers when `call`, `apply` or `bind` is used to give a method a receiver other than the one it was read from. Rebinding a method whose `this` is receiver-specific runs its body against an object it was never written for, which is unsound in a class hierarchy — see [Rebinding `this`](../types/classes.md#toc-this-rebinding) for why. The permitted shapes are `obj.method.call(obj, ...)` and `this.method.bind(this)`.
+
+This lint is enabled as an error by default.
+
+```js flow-check
+type Counter = {
+  count: number,
+  increment(this: Counter): number,
+};
+
+declare const counter: Counter;
+declare const other: Counter;
+
+counter.increment.call(counter); // Ok
+counter.increment.call(other); // Error
+```
+
+A method that accepts any receiver (`this: unknown`, `this: any`, or no `this` annotation and no use of `this` in the body) is not restricted, and a `call`/`apply`/`bind` member that resolves on the receiver itself rather than on `Function.prototype` is not affected.
+
 ### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjunction with [Flow Strict](../strict/index.md). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 

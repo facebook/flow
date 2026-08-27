@@ -18,15 +18,20 @@ use flow_aloc::ALoc;
 use flow_common::enclosing_context::EnclosingContext;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
+use flow_common::reason::mk_expression_reason;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::ast::expression;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
+use flow_typing_errors::error_message::EInvalidThisArgData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
+use flow_typing_errors::error_message::InvalidThisArgKind;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -34,6 +39,7 @@ use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_key::Key;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
@@ -57,6 +63,7 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::arith_kind::ArithKind;
+use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
@@ -2364,6 +2371,114 @@ fn perform_type_cast_with_env<'cx>(
 
 pub mod type_assertions {
     use super::*;
+
+    fn has_nontrivial_this_param<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
+        fn collect_this_params(t: &Type, out: &mut Vec<Type>) {
+            match t.deref() {
+                TypeInner::DefT(_, def_t) => match def_t.deref() {
+                    DefTInner::FunT(_, ft) => out.push(ft.this_t.0.dupe()),
+                    DefTInner::PolyT(box type_::PolyTData { t_out, .. }) => {
+                        collect_this_params(t_out, out)
+                    }
+                    _ => {}
+                },
+                TypeInner::IntersectionT(_, rep) => {
+                    for member in rep.members_iter() {
+                        collect_this_params(member, out);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        let reason = reason_of_t(t);
+        let concrete = match FlowJs::possible_concrete_types_for_inspection(cx, reason, t) {
+            Ok(concrete) => concrete,
+            Err(FlowJsException::WorkerCanceled(c)) => return Err(JobError::Canceled(c)),
+            Err(FlowJsException::TimedOut(t)) => return Err(JobError::TimedOut(t)),
+            Err(_) => return Ok(false),
+        };
+
+        let mut this_params = Vec::new();
+        for t in &concrete {
+            collect_this_params(t, &mut this_params);
+        }
+        if this_params.is_empty() {
+            return Ok(false);
+        }
+
+        for this_t in this_params {
+            let mixed = mixed_t::why(reason_of_t(&this_t).dupe());
+            match speculation_flow::is_subtyping_successful(cx, mixed, this_t) {
+                Ok(true) => return Ok(false),
+                Ok(false) => {}
+                Err(FlowJsException::WorkerCanceled(c)) => return Err(JobError::Canceled(c)),
+                Err(FlowJsException::TimedOut(t)) => return Err(JobError::TimedOut(t)),
+                Err(_) => return Ok(false),
+            }
+        }
+        Ok(true)
+    }
+
+    pub fn check_function_proto_this_arg<'cx>(
+        cx: &Context<'cx>,
+        name: &FlowSmolStr,
+        prop_loc: &ALoc,
+        callee_object: &expression::Expression<ALoc, ALoc>,
+        callee_object_t: &Type,
+        arguments: &expression::ArgList<ALoc, ALoc>,
+        expression_key: impl Fn(&expression::Expression<ALoc, ALoc>) -> Option<Key>,
+    ) -> Result<(), JobError> {
+        if !matches!(name.as_str(), "apply" | "bind" | "call")
+            || !cx.is_fun_proto_method_lookup(prop_loc)
+        {
+            return Ok(());
+        }
+
+        let receiver = match callee_object.deref() {
+            expression::ExpressionInner::Member { inner, .. } => Some(&inner.object),
+            expression::ExpressionInner::OptionalMember { inner, .. } => Some(&inner.member.object),
+            _ => None,
+        };
+
+        if let Some(receiver) = receiver {
+            let this_arg_key = match arguments.arguments.first() {
+                Some(expression::ExpressionOrSpread::Expression(arg)) => expression_key(arg),
+                _ => None,
+            };
+            if let (Some(receiver_key), Some(this_arg_key)) =
+                (expression_key(receiver), this_arg_key)
+                && receiver_key == this_arg_key
+            {
+                return Ok(());
+            }
+        }
+
+        if !has_nontrivial_this_param(cx, callee_object_t)? {
+            return Ok(());
+        }
+
+        let (kind, reason) = match receiver {
+            Some(receiver) => (
+                InvalidThisArgKind::ReceiverMismatch,
+                mk_expression_reason(receiver),
+            ),
+            None => (
+                InvalidThisArgKind::MissingReceiver,
+                mk_expression_reason(callee_object),
+            ),
+        };
+        flow_js_utils::add_output_non_speculating(
+            cx,
+            ErrorMessage::EInvalidThisArg(Box::new(EInvalidThisArgData {
+                loc: prop_loc.dupe(),
+                name: name.dupe(),
+                reason,
+                kind,
+            })),
+        );
+        Ok(())
+    }
 
     pub fn assert_binary_in_lhs<'cx>(cx: &Context<'cx>, t: &Type) -> Result<(), JobError> {
         assert_binary_in_lhs_with_env(cx, &FlowJsEnv::entry(), t)
