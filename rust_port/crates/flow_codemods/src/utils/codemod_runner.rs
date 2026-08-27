@@ -1267,7 +1267,8 @@ where
             Arc::new(env),
         );
         let (_, _, _, prepared) = recheck_result.expect("recheck failed");
-        let env = prepared.commit();
+        let committed = prepared.commit();
+        let env = committed.env;
         let transaction = ActiveTransaction::new(heap.clone());
         log_input_files(&_roots);
         let results = TRC::merge_and_check(

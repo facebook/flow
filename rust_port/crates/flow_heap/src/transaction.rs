@@ -189,7 +189,8 @@ pub struct HashStats {
 
 impl CommittedHeap {
     pub fn hash_stats(&self) -> HashStats {
-        let state = self.state.read_recursive();
+        let heap = self.state.load_full();
+        let state = heap.read_recursive();
         let file_count = state.data.files.len() as i32;
         let haste_count = state.data.haste_modules.len() as i32;
         Self::hash_stats_from_counts(file_count, haste_count)
@@ -205,74 +206,48 @@ impl CommittedHeap {
     }
 
     pub fn heap_size(&self) -> i32 {
-        let state = self.state.read_recursive();
+        let heap = self.state.load_full();
+        let state = heap.read_recursive();
         (state.data.files.len() + state.data.haste_modules.len()) as i32
     }
 
     pub fn clear_reader_cache(&self) {
-        self.state.read_recursive().reader_cache.clear();
+        self.state.load().read_recursive().reader_cache.clear();
     }
 
     pub fn remove_reader_cache_batch(&self, keys: &[FileKey]) {
-        self.state.read_recursive().reader_cache.remove_batch(keys);
-    }
-
-    // Bulk heap IO reads and writes the committed maps in place. Going through a
-    // transaction would deep-copy the whole heap to snapshot it on save, and on load
-    // would replay every entry and dependency edge through the overlay one at a time
-    // before applying it back — both serial passes over the entire heap.
-    pub fn collect_heap_file_table(&self) -> Vec<FileKey> {
-        let state = self.state.read_recursive();
-        Transaction::heap_file_table(&state.data)
+        self.state
+            .load()
+            .read_recursive()
+            .reader_cache
+            .remove_batch(keys);
     }
 
     // Saving frees nothing, so unlike a compaction it leaves every heap address a cache may be
     // holding valid. Callers that want their caches emptied around a save do it themselves.
     pub fn save_heap(&self, writer: &mut impl Write) -> io::Result<()> {
-        let state = self.state.read_recursive();
+        let heap = self.state.load_full();
+        let state = heap.read_recursive();
         Transaction::write_heap(writer, &state.data)
     }
 
-    pub fn save_heap_with_file_table(
-        &self,
-        writer: &mut impl Write,
-        files: &[FileKey],
-    ) -> io::Result<()> {
-        let state = self.state.read_recursive();
-        Transaction::write_heap_with_file_table(writer, &state.data, files)
+    /// Builds the heap a dump describes.
+    ///
+    /// A dump is a whole heap, not an edit to one, so there is no way to read it into a heap that
+    /// already exists: it becomes a heap, and whether it is the heap the server runs on is for the
+    /// server orchestrator to decide — see [`CommittedHeap::swap_in`].
+    pub fn from_heap_dump(reader: &mut impl Read) -> io::Result<Self> {
+        Ok(Self::with_data(Transaction::read_heap(reader)?))
     }
 
-    pub fn load_heap(&self, reader: &mut impl Read) -> io::Result<()> {
-        let data = Transaction::read_heap(reader)?;
-        self.replace_data(data);
-        Ok(())
-    }
-
-    pub fn load_heap_with_file_table(
-        &self,
+    /// Same, for a dump whose file table is stored outside it. See [`CommittedHeap::from_heap_dump`].
+    pub fn from_heap_dump_with_file_table(
         reader: &mut impl Read,
         files: Arc<Vec<FileKey>>,
-    ) -> io::Result<()> {
-        let data = Transaction::read_heap_with_file_table(reader, files)?;
-        self.replace_data(data);
-        Ok(())
-    }
-
-    // A saved state is bulk-loaded straight into the committed heap, so a caller that
-    // rejects it after `load_heap*` has run cannot just drop a transaction to undo it.
-    // Discarding the heap leaves the fallback init to repopulate it from the crawl,
-    // rather than layering onto entries for files the saved state believed existed.
-    pub fn clear(&self) {
-        self.replace_data(CommittedHeapData::with_capacity(0, 0));
-    }
-
-    // Decoding happens before the write lock is taken so a failed load leaves the
-    // committed heap untouched.
-    fn replace_data(&self, data: CommittedHeapData) {
-        let mut state = self.state.write();
-        state.data = data;
-        state.reader_cache.clear();
-        *state.gc_state.lock() = GcState::default();
+    ) -> io::Result<Self> {
+        Ok(Self::with_data(Transaction::read_heap_with_file_table(
+            reader, files,
+        )?))
     }
 
     fn should_collect(state: &crate::heap_state::CommittedHeapState, gc_state: &GcState) -> bool {
@@ -294,7 +269,8 @@ impl CommittedHeap {
         let heap = self.dupe();
         let (sender, receiver) = mpsc::sync_channel(1);
         rayon::spawn(move || {
-            let state = heap.state.read_recursive();
+            let heap = heap.state.load_full();
+            let state = heap.read_recursive();
             let files = state.data.files.keys().map(Dupe::dupe).collect::<Vec<_>>();
             let haste_modules = state
                 .data
@@ -443,7 +419,8 @@ impl CommittedHeap {
             return;
         }
         before_compact();
-        let mut state = self.state.write();
+        let heap = self.state.load_full();
+        let mut state = heap.write();
         let data = &mut state.data;
         for file in free_files {
             let should_remove = data
@@ -484,8 +461,8 @@ impl CommittedHeap {
         work: usize,
         before_compact: BeforeCompact<'_>,
     ) -> bool {
-        if self
-            .state
+        let heap = self.state.load_full();
+        if heap
             .read_recursive()
             .active_transactions
             .load(Ordering::Acquire)
@@ -495,7 +472,7 @@ impl CommittedHeap {
         }
         let mut work = work;
         while work > 0 {
-            let state = self.state.read_recursive();
+            let state = heap.read_recursive();
             let mut gc_state = state.gc_state.lock();
             match gc_state.phase {
                 GcPhase::Idle => {
@@ -513,7 +490,7 @@ impl CommittedHeap {
             }
         }
         let (is_idle, compact_files, compact_haste_modules) = {
-            let state = self.state.read_recursive();
+            let state = heap.read_recursive();
             let mut gc_state = state.gc_state.lock();
             let is_idle = gc_state.phase == GcPhase::Idle;
             let should_compact = is_idle && Self::should_compact(&state, &gc_state);
@@ -540,8 +517,9 @@ impl CommittedHeap {
     }
 
     fn finish_cycle(self: &Arc<Self>) {
+        let heap = self.state.load_full();
         loop {
-            let state = self.state.read_recursive();
+            let state = heap.read_recursive();
             let mut gc_state = state.gc_state.lock();
             if gc_state.phase != GcPhase::Mark {
                 break;
@@ -549,7 +527,7 @@ impl CommittedHeap {
             self.mark_slice(&mut gc_state, usize::MAX);
         }
         loop {
-            let state = self.state.read_recursive();
+            let state = heap.read_recursive();
             let mut gc_state = state.gc_state.lock();
             if gc_state.phase != GcPhase::Sweep {
                 break;
@@ -559,9 +537,9 @@ impl CommittedHeap {
     }
 
     pub fn compact(self: &Arc<Self>, before_compact: BeforeCompact<'_>) {
+        let heap = self.state.load_full();
         assert_eq!(
-            self.state
-                .read_recursive()
+            heap.read_recursive()
                 .active_transactions
                 .load(Ordering::Acquire),
             0,
@@ -569,13 +547,13 @@ impl CommittedHeap {
         );
         self.finish_cycle();
         {
-            let state = self.state.read_recursive();
+            let state = heap.read_recursive();
             let mut gc_state = state.gc_state.lock();
             self.start_cycle(&mut gc_state);
         }
         self.finish_cycle();
         let (files, haste_modules) = {
-            let state = self.state.read_recursive();
+            let state = heap.read_recursive();
             let mut gc_state = state.gc_state.lock();
             (
                 std::mem::take(&mut gc_state.free_files),
@@ -887,7 +865,8 @@ impl Transaction {
         let haste_modules_len = base.haste_modules.len();
         let heap = CommittedHeap::with_capacity(files_len, haste_modules_len);
         {
-            let mut state = heap.state.write();
+            let state = heap.state.load_full();
+            let mut state = state.write();
             let data = &mut state.data;
             for (file, entry) in base.files.iter() {
                 data.files.insert(file.dupe(), entry.dupe());
@@ -1010,6 +989,27 @@ impl Transaction {
         if let Some(provider_candidates) = provider_candidates {
             file_keys.extend(provider_candidates.iter().map(Dupe::dupe));
         }
+    }
+
+    /// The heap this transaction reads, as a file table for a saved-state dump.
+    ///
+    /// Serializing goes through the transaction rather than the heap handle so that the dump and
+    /// the `Env` being written alongside it describe the same heap. Reading the handle instead
+    /// would pick up whatever it holds at that moment, which a saved-state load may since have
+    /// swapped. It is a read of the state the transaction already holds, so it copies nothing.
+    pub fn collect_heap_file_table(&self) -> Vec<FileKey> {
+        self.with_committed_state(|state| Self::heap_file_table(&state.data))
+    }
+
+    /// Writes the heap this transaction reads. See [`Transaction::collect_heap_file_table`].
+    pub fn save_heap_with_file_table(
+        &self,
+        writer: &mut impl Write,
+        files: &[FileKey],
+    ) -> io::Result<()> {
+        self.with_committed_state(|state| {
+            Self::write_heap_with_file_table(writer, &state.data, files)
+        })
     }
 
     pub(crate) fn heap_file_table(data: &CommittedHeapData) -> Vec<FileKey> {
@@ -1242,24 +1242,6 @@ impl Transaction {
         Ok(())
     }
 
-    pub fn load_heap(&self, reader: &mut impl Read) -> std::io::Result<()> {
-        self.ensure_empty_overlay_for_heap_load()?;
-        let data = Self::read_heap(reader)?;
-        self.stage_heap_replacement(data);
-        Ok(())
-    }
-
-    pub fn load_heap_with_file_table(
-        &self,
-        reader: &mut impl Read,
-        files: Arc<Vec<FileKey>>,
-    ) -> std::io::Result<()> {
-        self.ensure_empty_overlay_for_heap_load()?;
-        let data = Self::read_heap_with_file_table(reader, files)?;
-        self.stage_heap_replacement(data);
-        Ok(())
-    }
-
     pub(crate) fn read_heap(reader: &mut impl Read) -> std::io::Result<CommittedHeapData> {
         let header: SerializedHeapHeader = decode_from_reader(reader)?;
         Self::validate_serialized_heap_header(&header, HEAP_MAGIC_RUST_SHARDED_LOCAL_INDEXED_LZ4)?;
@@ -1386,82 +1368,6 @@ impl Transaction {
             haste_dependents,
             haste_provider_candidates: provider_candidates,
         })
-    }
-
-    fn ensure_empty_overlay_for_heap_load(&self) -> io::Result<()> {
-        if self.overlay.is_empty() {
-            Ok(())
-        } else {
-            Err(io::Error::new(
-                io::ErrorKind::AlreadyExists,
-                "transaction already contains heap changes",
-            ))
-        }
-    }
-
-    fn stage_heap_replacement(&self, data: CommittedHeapData) {
-        let writer_guard = self.heap_writer();
-        let writer = writer_guard.writer();
-        let slot = self.committed.read_recursive();
-        let committed_data = &slot
-            .as_ref()
-            .expect("transaction must hold the committed-heap guard to stage a replacement")
-            .data;
-        for file in committed_data.files.keys() {
-            writer.remove_file_entry(file.dupe());
-        }
-        for info in committed_data.haste_modules.keys() {
-            writer.remove_haste_module(info.dupe());
-        }
-        for (owner, dependents) in committed_data.file_dependents.iter() {
-            for dependent in dependents.iter() {
-                writer.remove_file_dependent(owner.dupe(), dependent.dupe());
-            }
-        }
-        for (owner, dependents) in committed_data.haste_dependents.iter() {
-            for dependent in dependents.iter() {
-                writer.remove_haste_dependent(owner.dupe(), dependent.dupe());
-            }
-        }
-        for (owner, providers) in committed_data.haste_provider_candidates.iter() {
-            for provider in providers.iter() {
-                writer.remove_haste_provider_candidate(owner.dupe(), provider.dupe());
-            }
-        }
-
-        let CommittedHeapData {
-            files,
-            haste_modules,
-            file_dependents,
-            haste_dependents,
-            haste_provider_candidates,
-        } = data;
-        for (file, entry) in files {
-            writer.set_file_entry(file, entry);
-        }
-        for (info, module) in haste_modules {
-            writer.set_haste_module(info, module);
-        }
-        for (owner, dependents) in file_dependents {
-            for dependent in dependents.iter() {
-                writer.add_file_dependent(owner.dupe(), dependent.dupe());
-            }
-        }
-        for (owner, dependents) in haste_dependents {
-            for dependent in dependents.iter() {
-                writer.add_haste_dependent(owner.dupe(), dependent.dupe());
-            }
-        }
-        for (owner, providers) in haste_provider_candidates {
-            for provider in providers.iter() {
-                writer.add_haste_provider_candidate(owner.dupe(), provider.dupe());
-            }
-        }
-
-        self.with_committed_state(|state| {
-            state.reader_cache.clear();
-            *state.gc_state.lock() = GcState::default();
-        });
     }
 
     fn serialized_resolved_module(
@@ -1880,11 +1786,19 @@ impl HeapWrite<'_> {
 
 impl Drop for Transaction {
     fn drop(&mut self) {
-        self.release();
-        let state = self.heap.read_arc_recursive();
+        // The cache to empty belongs to the state this transaction read, which is not necessarily
+        // the state the heap holds now: a saved-state load swaps a whole new one in, and emptying
+        // that one instead would throw away a cache this transaction never touched. Use the guard
+        // while it is still here; a transaction that has already given it back — one that
+        // committed — has published into whatever the heap holds now, so that is the cache to
+        // empty for it.
         if !self.overlay.is_empty() {
-            state.reader_cache.clear();
+            match self.committed.read_recursive().as_ref() {
+                Some(state) => state.reader_cache.clear(),
+                None => self.heap.read_arc_recursive().reader_cache.clear(),
+            }
         }
+        self.release();
         self.overlay.clear_latest_entries_parallel();
     }
 }

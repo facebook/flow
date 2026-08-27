@@ -987,6 +987,7 @@ mod tests {
         );
         assert_eq!(
             heap.state
+                .load()
                 .read()
                 .active_transactions
                 .load(Ordering::Acquire),
@@ -996,6 +997,7 @@ mod tests {
         let cached_read = cached_by_the_ide.committed_reader();
         assert_eq!(
             heap.state
+                .load()
                 .read()
                 .active_transactions
                 .load(Ordering::Acquire),
@@ -1005,6 +1007,7 @@ mod tests {
         drop(cached_read);
         assert_eq!(
             heap.state
+                .load()
                 .read()
                 .active_transactions
                 .load(Ordering::Acquire),
@@ -1241,15 +1244,21 @@ mod tests {
         let seed = ActiveTransaction::new(heap.dupe());
         seed.add_unparsed(source_file("a.js"), 1, None);
         seed.commit();
-        heap.state.read().gc_state.lock().new_alloc_size = 1;
+        heap.state.load().read().gc_state.lock().new_alloc_size = 1;
 
         let transaction = ActiveTransaction::new(heap.dupe());
         assert!(heap.collect_slice(1, &no_caches_to_drop));
-        assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Idle);
+        assert_eq!(
+            heap.state.load().read().gc_state.lock().phase,
+            GcPhase::Idle
+        );
         drop(transaction);
 
         assert!(!heap.collect_slice(1, &no_caches_to_drop));
-        assert_eq!(heap.state.read().gc_state.lock().phase, GcPhase::Mark);
+        assert_eq!(
+            heap.state.load().read().gc_state.lock().phase,
+            GcPhase::Mark
+        );
     }
 
     #[test]
@@ -1283,10 +1292,10 @@ mod tests {
 
         let mut bytes = Vec::new();
         heap.save_heap(&mut bytes).expect("heap should serialize");
-        let loaded_heap = committed_heap();
-        loaded_heap
-            .load_heap(&mut Cursor::new(bytes))
-            .expect("heap should deserialize");
+        let loaded_heap = Arc::new(
+            CommittedHeap::from_heap_dump(&mut Cursor::new(bytes))
+                .expect("heap should deserialize"),
+        );
         let loaded = ActiveTransaction::new(loaded_heap);
 
         assert_eq!(loaded.get_file_hash(&file), Some(42));
@@ -1317,7 +1326,8 @@ mod tests {
         let reader = std::thread::spawn(move || {
             let mut first_read = true;
             while !reader_done.load(Ordering::Acquire) {
-                let state = reader_heap.state.read();
+                let state = reader_heap.state.load_full();
+                let state = state.read();
                 let data = &state.data;
                 if first_read {
                     reader_start.wait();
@@ -1415,76 +1425,126 @@ mod tests {
     }
 
     #[test]
-    fn failed_heap_load_preserves_committed_heap() {
-        let heap = committed_heap();
-        let file = source_file("a.js");
-        let write = ActiveTransaction::new(heap.dupe());
-        write.add_unparsed(file.dupe(), 42, None);
-        write.commit();
-
-        let result = heap.load_heap(&mut Cursor::new(Vec::<u8>::new()));
+    fn failed_heap_load_builds_no_heap() {
+        let result = CommittedHeap::from_heap_dump(&mut Cursor::new(Vec::<u8>::new()));
 
         assert!(result.is_err());
-        let read = ActiveTransaction::new(heap);
-        assert_eq!(read.get_file_hash(&file), Some(42));
     }
 
+    // Reading a dump produces a heap of its own and cannot reach the one in force, so a saved
+    // state that turns out to be unusable costs the server nothing.
     #[test]
-    fn dropping_successful_heap_load_preserves_committed_heap() {
-        let saved_heap = committed_heap();
-        let saved_file = source_file("saved.js");
-        let saved_write = ActiveTransaction::new(saved_heap.dupe());
-        saved_write.add_unparsed(saved_file.dupe(), 42, None);
-        saved_write.commit();
-        let mut bytes = Vec::new();
-        saved_heap
-            .save_heap(&mut bytes)
-            .expect("saved heap should serialize");
-
+    fn reading_a_dump_leaves_the_heap_in_force_alone() {
         let heap = committed_heap();
         let committed_file = source_file("committed.js");
-        let committed_write = ActiveTransaction::new(heap.dupe());
-        committed_write.add_unparsed(committed_file.dupe(), 7, None);
-        committed_write.commit();
+        let write = ActiveTransaction::new(heap.dupe());
+        write.add_unparsed(committed_file.dupe(), 7, None);
+        write.commit();
 
-        let load = ActiveTransaction::new(heap.dupe());
-        load.load_heap(&mut Cursor::new(bytes))
-            .expect("replacement heap should deserialize");
-        assert_eq!(load.get_file_hash(&saved_file), Some(42));
-        assert_eq!(load.get_file_hash(&committed_file), None);
-        drop(load);
+        let loaded = heap_from_dump_of_one_unparsed_file("saved.js", 42);
+        drop(loaded);
 
-        let reader = ActiveTransaction::new(heap);
-        assert_eq!(reader.get_file_hash(&committed_file), Some(7));
-        assert_eq!(reader.get_file_hash(&saved_file), None);
+        let read = ActiveTransaction::new(heap);
+        assert_eq!(
+            read.get_file_hash(&committed_file),
+            Some(7),
+            "the heap in force should still hold what it held"
+        );
+        assert_eq!(
+            read.get_file_hash(&source_file("saved.js")),
+            None,
+            "an unpublished dump should be visible only in the heap it built"
+        );
     }
 
+    // The sequence a reinit from a saved state goes through: the work that decides the saved state
+    // is usable, and the recheck that follows it, are committed into the heap the dump built, and
+    // only the swap makes any of it the heap the server runs on.
     #[test]
-    fn committing_successful_heap_load_replaces_committed_heap() {
-        let saved_heap = committed_heap();
-        let saved_file = source_file("saved.js");
-        let saved_write = ActiveTransaction::new(saved_heap.dupe());
-        saved_write.add_unparsed(saved_file.dupe(), 42, None);
-        saved_write.commit();
-        let mut bytes = Vec::new();
-        saved_heap
-            .save_heap(&mut bytes)
-            .expect("saved heap should serialize");
-
+    fn swap_in_installs_the_loaded_heap_and_what_was_committed_into_it() {
         let heap = committed_heap();
         let old_file = source_file("old.js");
-        let old_write = ActiveTransaction::new(heap.dupe());
-        old_write.add_unparsed(old_file.dupe(), 7, None);
-        old_write.commit();
+        let write = ActiveTransaction::new(heap.dupe());
+        write.add_unparsed(old_file.dupe(), 7, None);
+        write.commit();
 
-        let load = ActiveTransaction::new(heap.dupe());
-        load.load_heap(&mut Cursor::new(bytes))
-            .expect("replacement heap should deserialize");
-        load.commit();
+        let loaded = heap_from_dump_of_one_unparsed_file("saved.js", 42);
+        let since_saved_state = source_file("since_saved_state.js");
+        let reinit = ActiveTransaction::new(loaded.dupe());
+        reinit.add_unparsed(since_saved_state.dupe(), 9, None);
+        reinit.commit();
+        heap.swap_in(loaded);
 
-        let reader = ActiveTransaction::new(heap);
-        assert_eq!(reader.get_file_hash(&old_file), None);
-        assert_eq!(reader.get_file_hash(&saved_file), Some(42));
+        let read = ActiveTransaction::new(heap);
+        assert_eq!(read.get_file_hash(&source_file("saved.js")), Some(42));
+        assert_eq!(
+            read.get_file_hash(&since_saved_state),
+            Some(9),
+            "work committed into the loaded heap before the swap should come with it"
+        );
+        assert_eq!(
+            read.get_file_hash(&old_file),
+            None,
+            "the installed heap replaces the old one wholesale"
+        );
+    }
+
+    // Abandoning the transaction abandons the heap it was checking: nothing reaches the heap in
+    // force until `CommittedHeap::swap_in`.
+    #[test]
+    fn dropping_a_loaded_heaps_transaction_publishes_nothing() {
+        let heap = committed_heap();
+        let old_file = source_file("old.js");
+        let write = ActiveTransaction::new(heap.dupe());
+        write.add_unparsed(old_file.dupe(), 7, None);
+        write.commit();
+
+        let loaded = heap_from_dump_of_one_unparsed_file("saved.js", 42);
+        drop(ActiveTransaction::new(loaded));
+
+        let read = ActiveTransaction::new(heap);
+        assert_eq!(read.get_file_hash(&old_file), Some(7));
+        assert_eq!(read.get_file_hash(&source_file("saved.js")), None);
+    }
+
+    // Publishing stores a pointer rather than writing into the heap in force, so a transaction
+    // that is already open holds on to the heap it opened on and keeps reading it. That is what
+    // lets publishing happen without waiting for every reader to finish.
+    #[test]
+    fn transaction_open_across_a_publish_keeps_reading_its_own_heap() {
+        let heap = committed_heap();
+        let old_file = source_file("old.js");
+        let write = ActiveTransaction::new(heap.dupe());
+        write.add_unparsed(old_file.dupe(), 7, None);
+        write.commit();
+
+        let before_publish = ActiveTransaction::new(heap.dupe());
+
+        let loaded = heap_from_dump_of_one_unparsed_file("saved.js", 42);
+        heap.swap_in(loaded);
+
+        assert_eq!(before_publish.get_file_hash(&old_file), Some(7));
+        assert_eq!(before_publish.get_file_hash(&source_file("saved.js")), None);
+
+        let after_publish = ActiveTransaction::new(heap.dupe());
+        assert_eq!(
+            after_publish.get_file_hash(&source_file("saved.js")),
+            Some(42)
+        );
+        assert_eq!(after_publish.get_file_hash(&old_file), None);
+    }
+
+    fn heap_from_dump_of_one_unparsed_file(name: &str, hash: u64) -> Arc<CommittedHeap> {
+        let heap = committed_heap();
+        let write = ActiveTransaction::new(heap.dupe());
+        write.add_unparsed(source_file(name), hash, None);
+        write.commit();
+        let mut bytes = Vec::new();
+        heap.save_heap(&mut bytes).expect("heap should serialize");
+        Arc::new(
+            CommittedHeap::from_heap_dump(&mut Cursor::new(bytes))
+                .expect("dump should deserialize"),
+        )
     }
 
     #[test]

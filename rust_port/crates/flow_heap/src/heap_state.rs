@@ -13,6 +13,7 @@ use std::hash::Hash;
 use std::sync::Arc;
 use std::sync::atomic::AtomicUsize;
 
+use arc_swap::ArcSwap;
 use dupe::Dupe;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::HasteModuleInfo;
@@ -49,8 +50,15 @@ use crate::resolved_requires::DependencyTarget;
 use crate::resolved_requires::ResolvedRequires;
 use crate::transaction::GcState;
 
+/// A handle on whichever heap is in force.
+///
+/// The state is behind an [`ArcSwap`] because a bulk load replaces the whole heap rather than
+/// adding to it: the replacement is built as a heap of its own — see
+/// [`CommittedHeap::from_heap_dump`] — and installed here by [`CommittedHeap::swap_in`], while
+/// everything that holds an `Arc<CommittedHeap>` keeps pointing at this same handle. Transactions
+/// take the state by `Arc`, so one that is already open goes on reading the state it opened on.
 pub struct CommittedHeap {
-    pub(crate) state: Arc<RwLock<CommittedHeapState>>,
+    pub(crate) state: ArcSwap<RwLock<CommittedHeapState>>,
 }
 
 pub(crate) struct CommittedHeapState {
@@ -58,6 +66,17 @@ pub(crate) struct CommittedHeapState {
     pub(crate) reader_cache: ReaderCache,
     pub(crate) gc_state: Mutex<GcState>,
     pub(crate) active_transactions: AtomicUsize,
+}
+
+impl CommittedHeapState {
+    pub(crate) fn new(data: CommittedHeapData) -> Self {
+        Self {
+            data,
+            reader_cache: ReaderCache::new(),
+            gc_state: Mutex::new(GcState::default()),
+            active_transactions: AtomicUsize::new(0),
+        }
+    }
 }
 
 pub(crate) struct CommittedHeapData {
@@ -94,18 +113,33 @@ impl CommittedHeap {
     }
 
     pub fn with_capacity(files: usize, haste_modules: usize) -> Self {
+        Self::with_data(CommittedHeapData::with_capacity(files, haste_modules))
+    }
+
+    pub(crate) fn with_data(data: CommittedHeapData) -> Self {
         Self {
-            state: Arc::new(RwLock::new(CommittedHeapState {
-                data: CommittedHeapData::with_capacity(files, haste_modules),
-                reader_cache: ReaderCache::new(),
-                gc_state: Mutex::new(GcState::default()),
-                active_transactions: AtomicUsize::new(0),
-            })),
+            state: ArcSwap::from_pointee(RwLock::new(CommittedHeapState::new(data))),
         }
     }
 
+    /// Swaps `loaded` in: from here this handle is the heap `loaded` built.
+    ///
+    /// Publishing stores a pointer. It takes no lock and waits for no reader, because a
+    /// transaction opened before the swap holds the state it opened on by `Arc` — see
+    /// `ActiveTransaction::new` — and goes on reading it consistently. The state being replaced
+    /// dies with the last transaction on it, not here.
+    ///
+    /// Only the server orchestrator calls this. Which heap the server runs on is part of the
+    /// committed state it owns, established once when it adopts the heap init built and again
+    /// whenever it commits a recheck that reinitialised from a saved state. A heap built anywhere
+    /// else stays a heap of its own until the orchestrator adopts it.
+    pub fn swap_in(&self, loaded: Arc<CommittedHeap>) {
+        self.state.store(loaded.state.load_full());
+    }
+
     pub fn apply_overlay(&self, overlay: &HeapOverlay) {
-        let mut state = self.state.write();
+        let state = self.state.load_full();
+        let mut state = state.write();
         let CommittedHeapData {
             files,
             haste_modules,
@@ -145,12 +179,13 @@ impl CommittedHeap {
     }
 
     fn apply_commit_deltas(&self, deltas: HeapOverlayCommitDeltas) {
-        let mut state = self.state.write();
+        let state = self.state.load_full();
+        let mut state = state.write();
         apply_commit_deltas_to_data(&mut state.data, deltas);
     }
 
     pub(crate) fn read_arc_recursive(&self) -> CommittedHeapReadGuard {
-        self.state.read_arc_recursive()
+        self.state.load().read_arc_recursive()
     }
 
     pub(crate) fn apply_commit_deltas_to_both(
@@ -166,8 +201,10 @@ impl CommittedHeap {
             haste_dependents,
             haste_provider_candidates,
         } = deltas;
-        let mut committed = self.state.write();
-        let mut other = other.state.write();
+        let committed = self.state.load_full();
+        let other = other.state.load_full();
+        let mut committed = committed.write();
+        let mut other = other.write();
         let CommittedHeapData {
             files: committed_files,
             haste_modules: committed_haste_modules,
@@ -228,8 +265,10 @@ impl CommittedHeap {
     }
 
     pub fn apply_overlay_to_both(&self, other: &CommittedHeap, overlay: &HeapOverlay) {
-        let mut committed = self.state.write();
-        let mut other = other.state.write();
+        let committed = self.state.load_full();
+        let other = other.state.load_full();
+        let mut committed = committed.write();
+        let mut other = other.write();
         let CommittedHeapData {
             files,
             haste_modules,

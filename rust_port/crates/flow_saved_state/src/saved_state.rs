@@ -39,8 +39,8 @@ const SAVED_STATE_RAW_BLOCK_MAGIC: u64 = 0x464C4F5752415731; // "FLOWRAW1"
 
 // The committed heap is dumped directly to disk via CommittedHeap.save_heap. This type holds only
 // lightweight env-level metadata (file sets, dependency graph, etc.); the per-file data lives in
-// the heap dump itself. On load, CommittedHeap.load_heap bulk-loads the heap, so no per-file
-// restoration is needed.
+// the heap dump itself. On load, CommittedHeap.from_heap_dump builds a whole heap out of it, so no
+// per-file restoration is needed.
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct SavedStateEnvData {
     pub flowconfig_hash: FlowSmolStr,
@@ -998,10 +998,9 @@ pub fn save(
     let mut file =
         File::create(&tmp_path).map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     write_version(&mut file)?;
-    let committed_heap = transaction.committed_heap();
     let env_data = collect_saved_state_env_data(env, options);
     flow_hh_logger::info!("Serializing env metadata");
-    let heap_files = committed_heap.collect_heap_file_table();
+    let heap_files = transaction.collect_heap_file_table();
     let files = {
         let dependency_info = env.dependency_info();
         write_serialized_env_data_with_heap_files(
@@ -1012,7 +1011,7 @@ pub fn save(
         )?
     };
     flow_hh_logger::info!("Saving heap to saved-state file");
-    let result = committed_heap
+    let result = transaction
         .save_heap_with_file_table(&mut file, &files)
         .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()));
     drop(file);
@@ -1085,18 +1084,19 @@ fn denormalize_direct_data(
     Ok(data)
 }
 
+// A dump is a whole heap rather than an edit to one, so it comes back as a heap of its own; making
+// it the heap the server runs on is the caller's call, not this function's.
 pub fn load(
-    committed_heap: &Arc<CommittedHeap>,
     path: &Path,
     options: &Options,
-) -> Result<SavedStateEnvData, InvalidReason> {
+) -> Result<(SavedStateEnvData, Arc<CommittedHeap>), InvalidReason> {
     flow_hh_logger::info!("Reading saved-state file at {:?}", path);
     flow_server_env::monitor_rpc::status_update(
         flow_server_env::server_status::Event::ReadSavedState,
     );
     let mut file = File::open(path).map_err(|_| InvalidReason::File_does_not_exist)?;
     verify_version(options, &mut file)?;
-    let data = if options.saved_state_parallel_decompress {
+    let (data, heap) = if options.saved_state_parallel_decompress {
         flow_hh_logger::info!("Reading env metadata from saved-state file");
         let file_table = read_serialized(&mut file)?;
         let file_table_thread = std::thread::spawn(move || unmarshal_file_table(&file_table));
@@ -1152,8 +1152,7 @@ pub fn load(
             ))
         });
         let heap_start = Instant::now();
-        committed_heap
-            .load_heap_with_file_table(&mut file, files)
+        let heap = CommittedHeap::from_heap_dump_with_file_table(&mut file, files)
             .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
         flow_hh_logger::info!("Loaded heap in {:?}", heap_start.elapsed());
         let data = env_data_thread.join().map_err(|_| thread_panicked())??;
@@ -1166,18 +1165,17 @@ pub fn load(
         let data =
             join_saved_state_env_data(data, sig_dependency_graph, implementation_dependency_graph);
         flow_hh_logger::info!("Loaded env metadata in {:?}", env_start.elapsed());
-        data
+        (data, heap)
     } else {
         flow_hh_logger::info!("Reading env metadata from saved-state file");
         flow_hh_logger::info!("Deserializing env metadata");
         let (data, files) = read_serialized_env_data_with_files(&mut file)?;
         flow_hh_logger::info!("Loading heap from saved-state file");
-        committed_heap
-            .load_heap_with_file_table(&mut file, files)
+        let heap = CommittedHeap::from_heap_dump_with_file_table(&mut file, files)
             .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
-        data
+        (data, heap)
     };
     let data = denormalize_direct_data(options, data)?;
     flow_hh_logger::info!("Finished loading saved-state");
-    Ok(data)
+    Ok((data, Arc::new(heap)))
 }

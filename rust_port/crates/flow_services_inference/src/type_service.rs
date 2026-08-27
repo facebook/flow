@@ -69,6 +69,7 @@ use flow_server_env::server_env::OverlayErrorMap;
 use flow_server_env::server_env::OverlayErrors;
 use flow_server_env::server_env::env_cell;
 use flow_server_env::server_env::overlay_coverage;
+use flow_server_env::server_orchestrator::CommittedRecheck;
 use flow_server_env::server_orchestrator::ServerOrchestratorHandle;
 use flow_server_env::server_status;
 use flow_server_files::server_files_js;
@@ -106,22 +107,32 @@ pub enum RecheckError {
 pub struct PreparedRecheck {
     env_transaction: EnvTransaction,
     heap_transaction: ActiveTransaction,
+    /// Set when the recheck reinitialised from a saved state, whose dump is a whole heap and so
+    /// was built as a heap of its own. The heap in force is untouched until the orchestrator
+    /// adopts this one, which is why abandoning the recheck costs the server nothing.
+    loaded_heap: Option<Arc<CommittedHeap>>,
 }
 
 impl PreparedRecheck {
-    pub fn commit(self) -> EnvRef {
-        self.env_transaction
-            .commit_with_transaction(self.heap_transaction)
+    pub fn commit(self) -> CommittedRecheck {
+        CommittedRecheck {
+            env: self
+                .env_transaction
+                .commit_with_transaction(self.heap_transaction),
+            heap: self.loaded_heap,
+        }
     }
 }
 
 fn prepare_recheck(
     env_transaction: EnvTransaction,
     heap_transaction: ActiveTransaction,
+    loaded_heap: Option<Arc<CommittedHeap>>,
 ) -> PreparedRecheck {
     PreparedRecheck {
         env_transaction,
         heap_transaction,
+        loaded_heap,
     }
 }
 
@@ -2880,8 +2891,9 @@ pub fn init_from_saved_state(
     let discovered_global_libdefs: BTreeSet<FileKey> = BTreeSet::new();
     flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
-    // The heap was already bulk-loaded during the load step, so all file data is already in shared
-    // memory. The saved-state metadata contains only file sets, so we just need to:
+    // The heap dump was bulk-loaded into a heap of its own during the load step, so all file data
+    // is already in the heap this transaction is open on. The saved-state metadata contains only
+    // file sets, so we just need to:
     // 1. Handle deleted files (files in saved state that no longer exist on disk)
     // 2. Compute dirty modules by querying the already-populated heap
     // 3. Optionally verify file hashes
@@ -2938,7 +2950,6 @@ pub fn init_from_saved_state(
 pub fn handle_updates_since_saved_state(
     orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
-    committed_heap: &Arc<CommittedHeap>,
     mut transaction: ActiveTransaction,
     options: &Arc<Options>,
     libs_ok: bool,
@@ -3004,8 +3015,9 @@ pub fn handle_updates_since_saved_state(
                     return (env_transaction.into_env(), transaction);
                 }
                 Err(RecheckError::Canceled(changed_files)) if !changed_files.is_empty() => {
-                    transaction.committed_heap().clear_reader_cache();
-                    transaction = ActiveTransaction::new(committed_heap.dupe());
+                    let heap = transaction.committed_heap();
+                    heap.clear_reader_cache();
+                    transaction = ActiveTransaction::new(heap);
                     let dependencies = changed_files.into_iter().collect();
                     updated_files.add(None, None, Some(dependencies));
                 }
@@ -3224,15 +3236,26 @@ pub fn exit_if_no_fallback(msg: Option<&str>, options: &Options) {
     }
 }
 
-// Loads the saved state and returns the transaction to continue init under. The heap
-// dump replaces the whole base heap, so it is installed into the committed heap before
-// the transaction opens: a transaction holds a read guard on the heap, and staging a
-// whole heap through its overlay would mean two serial passes over every entry and
-// dependency edge.
+// Loads the saved state and returns the transaction to continue under, along with the heap the
+// saved state brought.
+//
+// A saved state's dump replaces the whole heap rather than adding to it, so it is built as a heap
+// of its own and everything that follows — validating it, and the init or recheck that runs on top
+// of it — happens there. The heap in force is left exactly as it was, whether the saved state turns
+// out to be usable or not; making the loaded heap the one the server runs on is the orchestrator's
+// call, not this function's. (Staging a whole heap through a transaction overlay instead would
+// mean two serial passes over every entry and dependency edge.)
 pub fn load_saved_state(
-    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
-) -> Result<(ActiveTransaction, SavedStateEnvData, CheckedSet), String> {
+) -> Result<
+    (
+        ActiveTransaction,
+        Arc<CommittedHeap>,
+        SavedStateEnvData,
+        CheckedSet,
+    ),
+    String,
+> {
     // Does a best-effort job to load a saved state. If it fails, returns None
     let (fetch_profiling, fetch_result) =
         flow_profiling::profiling_js::with_profiling_sync("FetchSavedState", false, |_| {
@@ -3271,22 +3294,21 @@ pub fn load_saved_state(
             saved_state_filename,
             changed_files,
         } => {
-            let saved_state =
-                match flow_saved_state::load(committed_heap, &saved_state_filename, options) {
-                    Ok(saved_state) => saved_state,
+            let (saved_state, loaded_heap) =
+                match flow_saved_state::load(&saved_state_filename, options) {
+                    Ok(loaded) => loaded,
                     Err(reason) => {
-                        committed_heap.clear_reader_cache();
                         let msg = format!("Failed to load saved state: {}", reason);
                         exit_if_no_fallback(Some(&msg), options);
                         return Err(msg);
                     }
                 };
-            let transaction = ActiveTransaction::new(committed_heap.dupe());
+            // The saved state arrives as a heap of its own, so everything from here runs against
+            // that heap, and nothing publishes it until the orchestrator adopts it.
+            let transaction = ActiveTransaction::new(loaded_heap.dupe());
             let updates = match process_saved_state_updates(options, &transaction, &changed_files) {
                 Ok(updates) => updates,
                 Err(msg) => {
-                    drop(transaction);
-                    committed_heap.clear_reader_cache();
                     flow_hh_logger::error!(
                         "The saved state is no longer valid due to file changes: {}",
                         msg
@@ -3302,96 +3324,107 @@ pub fn load_saved_state(
             );
             let mut checked = CheckedSet::empty();
             checked.add(Some(updates), None, None);
-            Ok((transaction, saved_state, checked))
+            Ok((transaction, loaded_heap, saved_state, checked))
         }
     }
 }
 
+/// Builds the server's first committed state: the `Env`, and the heap it was built over.
+///
+/// The heap comes back rather than being installed. When a saved state supplies one, init runs
+/// over that heap start to finish and `committed_heap` is never touched, so an init that gives up
+/// leaves nothing behind to undo. Whoever owns the heap decides what to do with the result: for a
+/// server that is [`flow_server_env::server_orchestrator::ServerOrchestrator::start`], and for
+/// `flow full-check` it is the frame that made the heap in the first place.
 pub fn init(
     orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     committed_heap: &Arc<CommittedHeap>,
     focus_targets: Option<FlowOrdSet<FileKey>>,
-) -> Result<(Env, Option<String>), RecheckError> {
+) -> Result<(Env, Arc<CommittedHeap>, Option<String>), RecheckError> {
     let start_time = Instant::now();
-    let (transaction, env, libs_ok) = match load_saved_state(committed_heap, options) {
-        Ok((transaction, saved_state, updates)) => {
-            // We loaded a saved state successfully! We are awesome!
-            let (env, libs_ok) = init_from_saved_state(
-                pool,
-                &transaction.handle(),
-                options,
-                saved_state,
-                &updates,
-                None,
-            );
-            let (env, transaction) = handle_updates_since_saved_state(
-                orchestrator,
-                pool,
-                committed_heap,
-                transaction,
-                options,
-                libs_ok,
-                &updates,
-                env,
-            );
-            (transaction, env, libs_ok)
-        }
-        Err(msg) => {
-            // Either there is no saved state or we failed to load it for some reason
-            flow_hh_logger::info!("Failed to load saved state: {}", msg);
-            // A saved state is installed into the committed heap before it is validated,
-            // so a rejected one leaves its entries behind. The crawl below only
-            // overwrites files that still exist, so anything the saved state believed in
-            // and the working tree has since dropped would survive -- e.g. a haste
-            // provider that has moved stays registered under its old path and collides
-            // with its new one. The heap starts out empty at init, so discarding it here
-            // just restores that.
-            committed_heap.clear();
-            let transaction = ActiveTransaction::new(committed_heap.dupe());
-            let (env, libs_ok) = init_from_scratch(
-                options,
-                pool,
-                &transaction.handle(),
-                options.root.as_path(),
-                None,
-            );
-            (transaction, env, libs_ok)
-        }
+    let loaded = load_saved_state(options);
+    // Init works on the heap the saved state brought, when there was one, so point memory sampling
+    // at that heap: its timers should measure the heap being built, not the empty one the
+    // orchestrator still has in force.
+    let init_heap = match &loaded {
+        Ok((transaction, ..)) => transaction.committed_heap(),
+        Err(_) => committed_heap.dupe(),
     };
-    let init_time = start_time.elapsed().as_secs_f64();
-    recheck_stats::init(options, init_time, env.files.len() as i64);
-
-    let (env, first_internal_error): (Env, Option<String>) = if !libs_ok {
-        (env, None)
-    } else if options.lazy_mode {
-        match focus_targets {
-            None => {
-                libdef_check_for_lazy_init(orchestrator, options, pool, &transaction.handle(), env)?
+    flow_profiling::memory_utils::with_committed_heap(init_heap.dupe(), || {
+        let (transaction, env, libs_ok) = match loaded {
+            Ok((transaction, _loaded_heap, saved_state, updates)) => {
+                // We loaded a saved state successfully! We are awesome!
+                let (env, libs_ok) = init_from_saved_state(
+                    pool,
+                    &transaction.handle(),
+                    options,
+                    saved_state,
+                    &updates,
+                    None,
+                );
+                let (env, transaction) = handle_updates_since_saved_state(
+                    orchestrator,
+                    pool,
+                    transaction,
+                    options,
+                    libs_ok,
+                    &updates,
+                    env,
+                );
+                (transaction, env, libs_ok)
             }
-            Some(focus_targets) => focus_check_for_init(
-                orchestrator,
-                options,
-                pool,
-                &transaction.handle(),
-                focus_targets,
-                env,
-            )?,
-        }
-    } else {
-        full_check_for_init(orchestrator, options, pool, &transaction.handle(), env)?
-    };
+            Err(msg) => {
+                // Either there is no saved state or we failed to load it for some reason
+                flow_hh_logger::info!("Failed to load saved state: {}", msg);
+                let transaction = ActiveTransaction::new(committed_heap.dupe());
+                let (env, libs_ok) = init_from_scratch(
+                    options,
+                    pool,
+                    &transaction.handle(),
+                    options.root.as_path(),
+                    None,
+                );
+                (transaction, env, libs_ok)
+            }
+        };
+        let init_time = start_time.elapsed().as_secs_f64();
+        recheck_stats::init(options, init_time, env.files.len() as i64);
 
-    let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
-    Ok((env, first_internal_error))
+        let (env, first_internal_error): (Env, Option<String>) = if !libs_ok {
+            (env, None)
+        } else if options.lazy_mode {
+            match focus_targets {
+                None => libdef_check_for_lazy_init(
+                    orchestrator,
+                    options,
+                    pool,
+                    &transaction.handle(),
+                    env,
+                )?,
+                Some(focus_targets) => focus_check_for_init(
+                    orchestrator,
+                    options,
+                    pool,
+                    &transaction.handle(),
+                    focus_targets,
+                    env,
+                )?,
+            }
+        } else {
+            full_check_for_init(orchestrator, options, pool, &transaction.handle(), env)?
+        };
+
+        let env = EnvTransaction::new(Arc::new(env)).into_env_with_transaction(transaction);
+        Ok((env, init_heap, first_internal_error))
+    })
 }
 
 #[allow(clippy::too_many_arguments)]
 fn reinit(
     orchestrator: Option<&ServerOrchestratorHandle>,
     pool: &ThreadPool,
-    committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
     allow_fallback: bool,
     reason: &str,
@@ -3405,8 +3438,8 @@ fn reinit(
     FindRefResults,
     PreparedRecheck,
 )> {
-    let (transaction, saved_state, updates_since_saved_state) =
-        match load_saved_state(committed_heap, options) {
+    let (transaction, loaded_heap, saved_state, updates_since_saved_state) =
+        match load_saved_state(options) {
             Ok(result) => result,
             Err(msg) => {
                 // Either there is no saved state or we failed to load it for some reason
@@ -3471,7 +3504,11 @@ fn reinit(
         changed_file_count: 0,
         top_cycle: None,
     };
-    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(env)), transaction);
+    let prepared = prepare_recheck(
+        EnvTransaction::new(Arc::new(env)),
+        transaction,
+        Some(loaded_heap),
+    );
     Some((log_recheck_event, recheck_stats, Ok(vec![]), prepared))
 }
 
@@ -3594,7 +3631,7 @@ fn reinit_full_check(
         changed_file_count: 0,
         top_cycle: None,
     };
-    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(new_env)), transaction);
+    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(new_env)), transaction, None);
     Ok((log_recheck_event, recheck_stats, Ok(vec![]), prepared))
 }
 
@@ -3661,7 +3698,7 @@ pub fn recheck(
             );
             match recheck_result {
                 Ok((log_recheck_event, recheck_stats, find_ref_results)) => {
-                    let prepared = prepare_recheck(env_transaction, heap_transaction);
+                    let prepared = prepare_recheck(env_transaction, heap_transaction, None);
                     Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
                 }
                 Err(err) => Err(err),
@@ -3680,7 +3717,6 @@ pub fn recheck(
             reinit(
                 orchestrator,
                 pool,
-                committed_heap,
                 options,
                 false,
                 reason,
@@ -3716,7 +3752,6 @@ pub fn recheck(
             match reinit(
                 orchestrator,
                 pool,
-                committed_heap,
                 options,
                 true,
                 "libdef_change_with_mergebase_change",
@@ -3772,7 +3807,7 @@ pub fn recheck(
             );
             match recheck_result {
                 Ok((log_recheck_event, recheck_stats, find_ref_results)) => {
-                    let prepared = prepare_recheck(env_transaction, heap_transaction);
+                    let prepared = prepare_recheck(env_transaction, heap_transaction, None);
                     Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
                 }
                 Err(RecheckError::TooSlow) => {

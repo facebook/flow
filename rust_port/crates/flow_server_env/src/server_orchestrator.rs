@@ -52,6 +52,17 @@ pub struct RecheckSnapshot {
     pub completed_recheck_epoch: u64,
 }
 
+/// The committed state a recheck produces, for the executor to install.
+///
+/// `heap` is set only when the recheck reinitialised from a saved state. A saved-state dump is a
+/// whole heap rather than an edit to one, so it is built as a heap of its own and travels here
+/// unpublished; every other recheck edits the heap in force through its transaction and leaves
+/// this `None`.
+pub struct CommittedRecheck {
+    pub env: EnvRef,
+    pub heap: Option<Arc<CommittedHeap>>,
+}
+
 /// The complete cross-thread protocol understood by the command executor.
 ///
 /// Executor state is deliberately not shared behind a mutex. Commands, recheck transitions, and
@@ -70,7 +81,7 @@ pub(crate) enum Control {
     /// Commits and publishes a new Base and `Env` on the executor thread, then tells subscribed
     /// clients the recheck is over.
     CommitRecheck {
-        commit: Box<dyn FnOnce() -> EnvRef + Send>,
+        commit: Box<dyn FnOnce() -> CommittedRecheck + Send>,
         completed_recheck_epoch: u64,
         reply: std::sync::mpsc::Sender<()>,
     },
@@ -184,7 +195,16 @@ impl ServerOrchestrator {
         self.handle.clone()
     }
 
-    pub fn start(self, env: EnvRef) -> RunningServerOrchestrator {
+    /// Installs the committed state init produced and runs the executor on it.
+    ///
+    /// `heap` is the heap init ended up working on: the one it built from a saved state when there
+    /// was one to load, and otherwise the heap lent out by [`ServerOrchestratorHandle::heap`].
+    /// Init never publishes it — adopting it is the orchestrator's first act, so that from the
+    /// server's first committed state to its last, which heap is in force was decided here.
+    pub fn start(self, env: EnvRef, heap: Arc<CommittedHeap>) -> RunningServerOrchestrator {
+        if !Arc::ptr_eq(&self.executor.heap, &heap) {
+            self.executor.heap.swap_in(heap);
+        }
         self.executor.start(env)
     }
 }
@@ -242,15 +262,16 @@ impl ServerOrchestratorHandle {
     }
 
     /// The committed heap the executor owns. Lent out so callers that must open their own
-    /// transaction off the command loop — the recheck thread, deferred command closures — read the
-    /// same heap the executor publishes into, instead of each keeping a copy of their own.
+    /// transaction off the command loop — init, the recheck thread, deferred command closures —
+    /// read the same heap the executor publishes into, instead of each keeping a copy of their
+    /// own. Borrowing it is not permission to replace it: see [`CommittedHeap::swap_in`].
     pub fn heap(&self) -> &Arc<CommittedHeap> {
         &self.heap
     }
 
     pub fn commit_recheck(
         &self,
-        commit: impl FnOnce() -> EnvRef + Send + 'static,
+        commit: impl FnOnce() -> CommittedRecheck + Send + 'static,
         completed_recheck_epoch: u64,
     ) {
         let (reply, receiver) = std::sync::mpsc::channel();
@@ -431,10 +452,18 @@ impl State {
                 );
                 self.cache.clear();
                 persistent_connection::clear_type_parse_artifacts_caches();
+                let CommittedRecheck { env, heap } = commit();
+                // A recheck that reinitialised from a saved state built a whole heap instead of
+                // editing the one in force. Adopting it is what makes it the heap the server runs
+                // on, and it happens here so that it lands in the same step as the `Env` that
+                // describes it: no command sees one without the other.
+                if let Some(heap) = heap {
+                    self.heap.swap_in(heap);
+                }
                 // `commit` rebuilds `Env` from the snapshot the recheck was lent, so it carries
                 // that snapshot's client list. Re-impose the executor's, which is the current one.
                 let connections = self.env.connections.dupe();
-                self.env = with_connections(commit(), connections);
+                self.env = with_connections(env, connections);
                 self.publish_recheck(completed_recheck_epoch, true);
                 self.publish_recheck_end();
                 let _result = reply.send(());

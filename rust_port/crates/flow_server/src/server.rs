@@ -155,7 +155,14 @@ fn init(
     focus_targets: Option<FlowOrdSet<FileKey>>,
     genv: &Genv,
     committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
-) -> Result<(Env, Option<String>), RecheckError> {
+) -> Result<
+    (
+        Env,
+        Arc<flow_heap::heap_state::CommittedHeap>,
+        Option<String>,
+    ),
+    RecheckError,
+> {
     // write binary path and version to server log
     flow_hh_logger::info!(
         "executable={}",
@@ -186,7 +193,7 @@ fn init(
 
     extract_flowlibs_or_exit(options);
 
-    let (env, first_internal_error) =
+    let (env, init_heap, first_internal_error) =
         flow_profiling::memory_utils::with_committed_heap(Arc::clone(committed_heap), || {
             flow_services_inference::type_service::init(
                 orchestrator,
@@ -197,9 +204,11 @@ fn init(
             )
         })?;
 
-    sample_init_memory(profiling, committed_heap);
-    flow_event_logger::sharedmem_init_done(committed_heap.heap_size() as u64);
-    Ok((env, first_internal_error))
+    // Report the heap init built, which is the one a saved state brought when there was one to
+    // load. It is not in force yet: whoever owns `committed_heap` installs it.
+    sample_init_memory(profiling, &init_heap);
+    flow_event_logger::sharedmem_init_done(init_heap.heap_size() as u64);
+    Ok((env, init_heap, first_internal_error))
 }
 
 async fn idle_logging_loop(_options: Arc<Options>, _start_time: f64) {
@@ -453,11 +462,11 @@ fn run(
             orchestrator.heap(),
         )
     });
-    let (env, first_internal_error) = match init_result {
+    let (env, init_heap, first_internal_error) = match init_result {
         Ok(result) => result,
         Err(error) => exit_on_recheck_error(error),
     };
-    let _orchestrator_owner = server_orchestrator.start(Arc::new(env));
+    let _orchestrator_owner = server_orchestrator.start(Arc::new(env), init_heap);
     let init_duration = profiling.get_profiling_duration();
 
     monitor_rpc::send_telemetry(
@@ -633,13 +642,15 @@ where
 
     let genv = create_program_init(Arc::clone(&options));
     // `flow full-check` drives its own loop, so there is no orchestrator to own the heap; this
-    // frame does, for as long as the check runs.
+    // frame does, for as long as the check runs. Nothing else can see it, so there is nothing to
+    // publish either: whichever heap init comes back with is simply the one this frame goes on to
+    // read errors out of.
     let committed_heap = Arc::new(flow_heap::heap_state::CommittedHeap::new());
     let should_print_summary = options.profile && !options.quiet;
 
     let (profiling, init_result) = with_profiling("Init", should_print_summary, |profiling| {
         // `flow full-check` runs without a server, so there is no recheck queue to schedule into.
-        let (env, first_internal_error) =
+        let (env, committed_heap, first_internal_error) =
             init(None, profiling, focus_targets, &genv, &committed_heap)?;
         let (errors, warnings, suppressed_errors) = error_collator::get(&env);
         let lazy_stats = env.lazy_stats(&options);
