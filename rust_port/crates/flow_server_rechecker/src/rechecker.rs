@@ -56,10 +56,19 @@ pub fn process_updates(
     let transaction = ActiveTransaction::new(committed_heap.dupe());
     match recheck_updates::process_updates(skip_incompatible, options, &transaction, updates) {
         Ok(updates) => Updates::NormalUpdates(updates),
-        Err(recheck_updates::Error::RecoverableShouldReinitNonLazily { msg, updates }) => {
+        Err(recheck_updates::Error::RecoverableShouldReinitNonLazily {
+            msg,
+            updates,
+            changed_declaration_files,
+        }) => {
             flow_hh_logger::info!("Libdef change detected: {}", msg);
             flow_hh_logger::info!("Will require full check reinit ({} updates)", updates.len());
-            Updates::RequiredFullCheckReinit(updates)
+            Updates::RequiredFullCheckReinit {
+                updates,
+                change: server_monitor_listener_state::IncompatibleLibChange {
+                    changed_declaration_files,
+                },
+            }
         }
         Err(recheck_updates::Error::Unrecoverable { msg, exit_status }) => {
             flow_common_exit_status::exit_with_msg(exit_status, &msg);
@@ -82,7 +91,7 @@ fn recheck(
     env: server_env::EnvRef,
     files_to_force: CheckedSet,
     find_ref_command: &mut Option<FindRefCommand>,
-    incompatible_lib_change: bool,
+    incompatible_lib_change: Option<server_monitor_listener_state::IncompatibleLibChange>,
     changed_mergebase: Option<bool>,
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
@@ -105,7 +114,7 @@ fn recheck(
 
     send_start_recheck(&env);
 
-    if incompatible_lib_change {
+    if incompatible_lib_change.is_some() {
         flow_flowlib::extract_if_missing_or_exit(options.file_options.default_lib_dir.as_ref());
     }
 
@@ -334,7 +343,7 @@ fn recheck_single_attempt(
 
     let did_change_mergebase = workload.metadata.changed_mergebase.unwrap_or(false);
     let missed_changes = workload.metadata.missed_changes;
-    let incompatible_lib_change = workload.incompatible_lib_change;
+    let incompatible_lib_change = workload.incompatible_lib_change.dupe();
     let recheck_epoch = workload.recheck_epoch;
 
     let mut files_to_recheck_set = CheckedSet::empty();
@@ -348,7 +357,7 @@ fn recheck_single_attempt(
         files_to_recheck_set.add(Some(env.checked_files.focused().clone()), None, None);
     }
 
-    if !incompatible_lib_change
+    if incompatible_lib_change.is_none()
         && !did_change_mergebase
         && files_to_recheck_set.is_empty()
         && workload.files_to_force.is_empty()

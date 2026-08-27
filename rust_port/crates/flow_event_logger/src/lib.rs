@@ -507,7 +507,6 @@ mod stub {
     pub fn reinit(_reason: &str, _profiling: &serde_json::Value) {}
 
     pub fn global_lib_reinit(
-        _reason: &str,
         _changed_file_count: usize,
         _old_global_count: usize,
         _new_global_count: usize,
@@ -1198,7 +1197,6 @@ mod fb_facade {
     }
 
     pub fn global_lib_reinit(
-        reason: &str,
         changed_file_count: usize,
         old_global_count: usize,
         new_global_count: usize,
@@ -1207,7 +1205,6 @@ mod fb_facade {
         profiling: &serde_json::Value,
     ) {
         fb::global_lib_reinit(
-            reason,
             changed_file_count,
             old_global_count,
             new_global_count,

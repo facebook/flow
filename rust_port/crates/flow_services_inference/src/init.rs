@@ -57,6 +57,32 @@ impl OrderedLibInput {
             file: flow_common::files::lib_file_key(path),
         }
     }
+
+    fn discovered(file: FileKey) -> Self {
+        Self {
+            scoped_project: None,
+            file,
+        }
+    }
+}
+
+pub(crate) fn assemble_ordered_lib_inputs(
+    configured_libs: &[(Option<String>, String)],
+    discovered_globals: &BTreeSet<FileKey>,
+) -> Vec<OrderedLibInput> {
+    // `FileKey` stores a root-relative, `/`-separated path suffix, so its `Ord` is already the
+    // canonical cross-platform order the global scope needs; a `BTreeSet` iterates in it.
+    configured_libs
+        .iter()
+        .map(|(scoped_project, path)| OrderedLibInput::configured(scoped_project.clone(), path))
+        .chain(discovered_globals.iter().map(|file| {
+            assert!(
+                !file.is_lib_file(),
+                "configured LibFile cannot be a parse-discovered global"
+            );
+            OrderedLibInput::discovered(file.dupe())
+        }))
+        .collect()
 }
 
 /// process all lib files: parse, infer, and add the symbols they define

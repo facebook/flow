@@ -782,7 +782,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
             files,
             &reader,
             &_env.master_cx,
-            _env.all_unordered_libs.dupe(),
+            _env.configured_libs(),
             wrap,
         )?;
         flow_hh_logger::info!("Done");
@@ -914,7 +914,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             files,
             &reader,
             &_env.master_cx,
-            _env.all_unordered_libs.dupe(),
+            _env.configured_libs(),
             wrap,
         )?;
         flow_hh_logger::info!("Initial run done");
@@ -989,7 +989,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
             files2,
             &reader,
             &_env.master_cx,
-            _env.all_unordered_libs.dupe(),
+            _env.configured_libs(),
             wrap2,
         )?;
         let mut result: ResultList<Self::Accumulator> = initial_run_result;
@@ -1087,7 +1087,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
             let (mut check, _cache) = flow_services_inference::merge_service::mk_check(
                 reader.clone(),
                 Arc::new(options.clone()),
-                _env.all_unordered_libs.dupe(),
+                _env.configured_libs(),
                 master_cx,
                 flow_services_references::find_refs_types::empty_request(),
             );
@@ -1142,7 +1142,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         let (mut inner, cache) = flow_services_inference::merge_service::mk_check(
             reader.clone(),
             Arc::new(options.clone()),
-            _env.all_unordered_libs.dupe(),
+            _env.configured_libs(),
             &_env.master_cx,
             flow_services_references::find_refs_types::empty_request(),
         );
@@ -1203,6 +1203,7 @@ where
             pool,
             &transaction,
             root,
+            None,
         );
         let file_options = &options.file_options;
         let all = options.all;
@@ -1251,7 +1252,7 @@ where
             &updates,
             &find_ref_request,
             files_to_force,
-            false,
+            None,
             None,  // changed_mergebase
             false, // missed_changes
             &mut will_be_checked_files,
@@ -1446,6 +1447,7 @@ where
             pool,
             &reader,
             root,
+            None,
         );
         let file_options = &options.file_options;
         let all = options.all;

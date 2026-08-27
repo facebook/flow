@@ -100,6 +100,14 @@ Cannot import `at_types_react_marker` because there is no `at_types_react_marker
                 ^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- global-looking-use.js:3:1
+
+Cannot resolve name `rootLatentGlobal`. [cannot-resolve-name]
+
+   3| rootLatentGlobal as number;
+      ^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:20:7
 
 Cannot call `greet` with `42` bound to `name` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -333,4 +341,4 @@ References:
 
 
 
-Found 21 errors
+Found 22 errors

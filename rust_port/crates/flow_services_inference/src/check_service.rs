@@ -34,6 +34,7 @@ use flow_heap::parsing_heaps::Transaction;
 use flow_heap::resolved_requires::Dependency;
 use flow_heap::resolved_requires::ResolvedModule;
 use flow_parser::ast;
+use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::LOC_NONE;
@@ -196,7 +197,14 @@ pub fn mk_check_file(
                 // A global libdef (a `[libs]` file) resolves like any other file,
                 // but it is not a module: report a dedicated "not a module" error
                 // at the import site instead of merging it.
-                Some(dep_file_key) if files::is_lib_file(all_unordered_libs, &dep_file_key) => {
+                Some(dep_file_key)
+                    if files::is_lib_file(all_unordered_libs, &dep_file_key)
+                        || (base_metadata
+                            .frozen
+                            .typescript_global_library_definition_discovery
+                            && transaction.get_dts_file_kind(&dep_file_key)
+                                == Some(DtsFileKind::GlobalLibdef)) =>
+                {
                     ResolvedRequire::GlobalLibdefModule(dep_file_key)
                 }
                 Some(dep_file_key) => match dep_file_key.inner() {

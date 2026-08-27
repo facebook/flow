@@ -1,0 +1,3 @@
+// @flow
+
+rootLatentGlobal as number;

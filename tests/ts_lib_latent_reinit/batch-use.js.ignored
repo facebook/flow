@@ -1,0 +1,5 @@
+import {ordinaryValue} from "./ordinary";
+
+BatchGlobalA as number;
+BatchGlobalB as string;
+ordinaryValue as number;

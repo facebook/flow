@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_common::files;
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -156,6 +157,35 @@ pub type Coverage = BTreeMap<FileKey, FileCoverage>;
 pub type OverlayCoverage =
     OverlayMap<FileKey, FileCoverage, EnvCellMapBase<Coverage, FileKey, FileCoverage>>;
 
+#[derive(Clone, Dupe)]
+pub struct GlobalLibFiles {
+    /// Configured library paths encountered during parsing.
+    configured: Arc<BTreeSet<FlowSmolStr>>,
+    /// Source files classified as global TypeScript declaration libraries.
+    discovered: Arc<BTreeSet<FileKey>>,
+}
+
+impl GlobalLibFiles {
+    pub fn new(configured: Arc<BTreeSet<FlowSmolStr>>, discovered: Arc<BTreeSet<FileKey>>) -> Self {
+        Self {
+            configured,
+            discovered,
+        }
+    }
+
+    pub fn configured(&self) -> Arc<BTreeSet<FlowSmolStr>> {
+        self.configured.dupe()
+    }
+
+    pub fn discovered(&self) -> &Arc<BTreeSet<FileKey>> {
+        &self.discovered
+    }
+
+    pub fn contains(&self, file: &FileKey) -> bool {
+        files::is_lib_file(&self.configured, file) || self.discovered.contains(file)
+    }
+}
+
 pub struct Env {
     pub heap: Arc<CommittedHeap>,
     /// All the files that we at least parse (includes libs).
@@ -167,8 +197,7 @@ pub struct Env {
     pub package_json_files: FlowOrdSet<FileKey>,
     /// The configured global lib files, in their merge order.
     pub ordered_libs: Arc<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
-    /// The global lib files found by discovery, as a membership set.
-    pub all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
+    pub global_lib_files: GlobalLibFiles,
     /// The files which didn't parse (skipped or errored)
     pub unparsed: FlowOrdSet<FileKey>,
     pub errors: Arc<EnvCell<Errors>>,
@@ -196,6 +225,19 @@ impl Env {
         }
     }
 
+    pub fn configured_libs(&self) -> Arc<BTreeSet<FlowSmolStr>> {
+        self.global_lib_files.configured()
+    }
+
+    pub fn discovered_global_libdefs(&self) -> &BTreeSet<FileKey> {
+        self.global_lib_files.discovered()
+    }
+
+    /// Returns whether a file contributes declarations to the global library scope.
+    pub fn is_lib_file(&self, file: &FileKey) -> bool {
+        self.global_lib_files.contains(file)
+    }
+
     pub fn dependency_info(&self) -> EnvCellReadGuard<DependencyInfo> {
         self.dependency_info.read_arc()
     }
@@ -220,7 +262,7 @@ pub struct EnvTransaction {
     checked_files: Option<CheckedSet>,
     package_json_files: Option<FlowOrdSet<FileKey>>,
     ordered_libs: Option<Vec<(Option<FlowSmolStr>, FlowSmolStr)>>,
-    all_unordered_libs: Option<BTreeSet<FlowSmolStr>>,
+    global_lib_files: Option<GlobalLibFiles>,
     unparsed: Option<FlowOrdSet<FileKey>>,
     errors: Option<OverlayErrors>,
     coverage: Option<OverlayCoverage>,
@@ -239,7 +281,7 @@ impl EnvTransaction {
             checked_files: None,
             package_json_files: None,
             ordered_libs: None,
-            all_unordered_libs: None,
+            global_lib_files: None,
             unparsed: None,
             errors: None,
             coverage: None,
@@ -292,10 +334,23 @@ impl EnvTransaction {
             .map_or(self.env.ordered_libs.as_slice(), |libs| libs.as_slice())
     }
 
-    pub fn all_unordered_libs(&self) -> &BTreeSet<FlowSmolStr> {
-        self.all_unordered_libs
+    pub fn global_lib_files(&self) -> &GlobalLibFiles {
+        self.global_lib_files
             .as_ref()
-            .map_or(self.env.all_unordered_libs.as_ref(), |libs| libs)
+            .unwrap_or(&self.env.global_lib_files)
+    }
+
+    pub fn configured_libs(&self) -> &BTreeSet<FlowSmolStr> {
+        &self.global_lib_files().configured
+    }
+
+    pub fn discovered_global_libdefs(&self) -> &BTreeSet<FileKey> {
+        self.global_lib_files().discovered()
+    }
+
+    /// Returns whether a file contributes declarations to the global library scope.
+    pub fn is_lib_file(&self, file: &FileKey) -> bool {
+        self.global_lib_files().contains(file)
     }
 
     pub fn unparsed(&self) -> &FlowOrdSet<FileKey> {
@@ -374,8 +429,11 @@ impl EnvTransaction {
         self.unparsed = Some(unparsed);
     }
 
-    pub fn set_all_unordered_libs(&mut self, all_unordered_libs: BTreeSet<FlowSmolStr>) {
-        self.all_unordered_libs = Some(all_unordered_libs);
+    pub fn set_configured_global_libs(&mut self, configured: BTreeSet<FlowSmolStr>) {
+        self.global_lib_files = Some(GlobalLibFiles::new(
+            Arc::new(configured),
+            self.global_lib_files().discovered().dupe(),
+        ));
     }
 
     pub fn set_errors(&mut self, errors: OverlayErrors) {
@@ -410,7 +468,7 @@ impl EnvTransaction {
             checked_files,
             package_json_files,
             ordered_libs,
-            all_unordered_libs,
+            global_lib_files,
             unparsed,
             errors,
             coverage,
@@ -423,7 +481,7 @@ impl EnvTransaction {
             || checked_files.is_some()
             || package_json_files.is_some()
             || ordered_libs.is_some()
-            || all_unordered_libs.is_some()
+            || global_lib_files.is_some()
             || unparsed.is_some()
             || connections.is_some()
             || exports.is_some()
@@ -454,9 +512,7 @@ impl EnvTransaction {
                 ordered_libs: ordered_libs
                     .map(Arc::new)
                     .unwrap_or_else(|| env.ordered_libs.dupe()),
-                all_unordered_libs: all_unordered_libs
-                    .map(Arc::new)
-                    .unwrap_or_else(|| env.all_unordered_libs.dupe()),
+                global_lib_files: global_lib_files.unwrap_or_else(|| env.global_lib_files.dupe()),
                 unparsed: unparsed.unwrap_or_else(|| env.unparsed.dupe()),
                 errors: env.errors.dupe(),
                 coverage: env.coverage.dupe(),
@@ -484,7 +540,7 @@ impl EnvTransaction {
             checked_files,
             package_json_files,
             ordered_libs,
-            all_unordered_libs,
+            global_lib_files,
             unparsed,
             errors,
             coverage,
@@ -517,9 +573,7 @@ impl EnvTransaction {
             ordered_libs: ordered_libs
                 .map(Arc::new)
                 .unwrap_or_else(|| env.ordered_libs.dupe()),
-            all_unordered_libs: all_unordered_libs
-                .map(Arc::new)
-                .unwrap_or_else(|| env.all_unordered_libs.dupe()),
+            global_lib_files: global_lib_files.unwrap_or_else(|| env.global_lib_files.dupe()),
             unparsed: unparsed.unwrap_or_else(|| env.unparsed.dupe()),
             errors: env.errors.dupe(),
             coverage: env.coverage.dupe(),
@@ -576,7 +630,10 @@ mod tests {
             checked_files: CheckedSet::empty(),
             package_json_files: FlowOrdSet::new(),
             ordered_libs: Arc::new(Vec::new()),
-            all_unordered_libs: Arc::new(BTreeSet::new()),
+            global_lib_files: GlobalLibFiles::new(
+                Arc::new(BTreeSet::new()),
+                Arc::new(BTreeSet::new()),
+            ),
             unparsed: FlowOrdSet::new(),
             errors: env_cell(empty_errors()),
             coverage: env_cell(BTreeMap::new()),

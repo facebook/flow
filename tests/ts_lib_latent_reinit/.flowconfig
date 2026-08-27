@@ -1,0 +1,4 @@
+[options]
+all=true
+experimental.typescript_global_library_definition_discovery=true
+experimental.typescript_library_definition_support=true

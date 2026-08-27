@@ -1,0 +1,213 @@
+======The declaration path is initially absent======
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot resolve name `ReinitGlobal`. [cannot-resolve-name]
+
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+
+======Absent to global rebuilds builtins in place======
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   use.js:1:1
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+References:
+   live.d.ts:1:27
+   1| declare var ReinitGlobal: string;
+                                ^^^^^^ [1]
+   use.js:1:17
+   1| ReinitGlobal as number;
+                      ^^^^^^ [2]
+
+
+
+Found 1 error
+Recoverable update requested full reinit: yes
+Scratch global-lib reinit ran: yes
+
+
+======Global content replacement rebuilds builtins in place======
+No errors!
+
+
+======Global to invalid removes the builtin======
+Error --------------------------------------------------------------------------------------------------- live.d.ts:1:27
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var ReinitGlobal: ;
+                                ^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot resolve name `ReinitGlobal`. [cannot-resolve-name]
+
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+
+
+Found 2 errors
+
+
+======Invalid to global rebuilds the builtin======
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   use.js:1:1
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+References:
+   live.d.ts:1:27
+   1| declare var ReinitGlobal: string;
+                                ^^^^^^ [1]
+   use.js:1:17
+   1| ReinitGlobal as number;
+                      ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======Global to external removes the builtin======
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot resolve name `ReinitGlobal`. [cannot-resolve-name]
+
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+
+======Live and clean global states agree======
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   use.js:1:1
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+References:
+   live.d.ts:1:27
+   1| declare var ReinitGlobal: string;
+                                ^^^^^^ [1]
+   use.js:1:17
+   1| ReinitGlobal as number;
+                      ^^^^^^ [2]
+
+
+
+Found 1 error
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot cast `ReinitGlobal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   use.js:1:1
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+References:
+   live.d.ts:1:27
+   1| declare var ReinitGlobal: string;
+                                ^^^^^^ [1]
+   use.js:1:17
+   1| ReinitGlobal as number;
+                      ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======Global deletion removes the builtin======
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot resolve name `ReinitGlobal`. [cannot-resolve-name]
+
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+
+======A batch can add multiple globals and an ordinary provider======
+Error ------------------------------------------------------------------------------------------------- batch-use.js:3:1
+
+Cannot cast `BatchGlobalA` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   batch-use.js:3:1
+   3| BatchGlobalA as number;
+      ^^^^^^^^^^^^
+
+References:
+   batch-a.d.ts:1:27
+   1| declare var BatchGlobalA: string;
+                                ^^^^^^ [1]
+   batch-use.js:3:17
+   3| BatchGlobalA as number;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- batch-use.js:4:1
+
+Cannot cast `BatchGlobalB` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   batch-use.js:4:1
+   4| BatchGlobalB as string;
+      ^^^^^^^^^^^^
+
+References:
+   batch-b.d.ts:1:27
+   1| declare var BatchGlobalB: number;
+                                ^^^^^^ [1]
+   batch-use.js:4:17
+   4| BatchGlobalB as string;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- batch-use.js:5:1
+
+Cannot cast `ordinaryValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   batch-use.js:5:1
+   5| ordinaryValue as number;
+      ^^^^^^^^^^^^^
+
+References:
+   ordinary.js:1:29
+   1| export const ordinaryValue: string = "value";
+                                  ^^^^^^ [1]
+   batch-use.js:5:18
+   5| ordinaryValue as number;
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:1:1
+
+Cannot resolve name `ReinitGlobal`. [cannot-resolve-name]
+
+   1| ReinitGlobal as number;
+      ^^^^^^^^^^^^
+
+
+
+Found 4 errors

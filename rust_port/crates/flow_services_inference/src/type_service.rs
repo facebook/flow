@@ -44,6 +44,7 @@ use flow_heap::heap_state::CommittedHeap;
 use flow_heap::parsing_heaps::ActiveTransaction;
 use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast::Program;
+use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
@@ -56,6 +57,8 @@ use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::dependency_info::OverlayDependencyInfo;
 use flow_server_env::error_collator;
 use flow_server_env::monitor_rpc;
+use flow_server_env::persistent_connection::PersistentConnection;
+use flow_server_env::server_env;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_env::EnvRef;
 use flow_server_env::server_env::EnvTransaction;
@@ -262,6 +265,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         package_json,
         dirty_modules,
         all_unordered_libs,
+        dts_file_kinds,
     } = parse_results;
     assert!(changed.is_empty());
     let local_errors =
@@ -297,6 +301,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         local_errors,
         package_json,
         all_unordered_libs,
+        dts_file_kinds,
     }
 }
 
@@ -312,6 +317,21 @@ struct CollatedParseResults {
         Vec<Option<(Loc, flow_parser::parse_error::ParseError)>>,
     ),
     all_unordered_libs: BTreeSet<FlowSmolStr>,
+    dts_file_kinds: BTreeMap<FileKey, DtsFileKind>,
+}
+
+impl CollatedParseResults {
+    fn discovered_global_libdefs(&self) -> FlowOrdSet<FileKey> {
+        self.dts_file_kinds
+            .iter()
+            .filter(|(file, kind)| !file.is_lib_file() && **kind == DtsFileKind::GlobalLibdef)
+            .map(|(file, _)| file.dupe())
+            .collect()
+    }
+
+    fn discovered_global_libdefs_state(&self) -> Arc<BTreeSet<FileKey>> {
+        Arc::new(self.discovered_global_libdefs().into_iter().collect())
+    }
 }
 
 fn parse(
@@ -1496,6 +1516,7 @@ pub(crate) mod recheck {
             local_errors: new_local_errors,
             package_json: _,
             all_unordered_libs: discovered_libs,
+            dts_file_kinds: _,
         } = reparse(pool, transaction, options, def_info, modified_next);
         check_recheck_canceled()?;
 
@@ -1521,12 +1542,12 @@ pub(crate) mod recheck {
         let new_or_changed = parsed_set.dupe().union(unparsed_set.dupe());
         let new_or_changed_or_deleted = new_or_changed.dupe().union(deleted.dupe());
 
-        let mut all_unordered_libs = env.all_unordered_libs().clone();
+        let mut all_unordered_libs = env.configured_libs().clone();
         for file in &new_or_changed_or_deleted {
             all_unordered_libs.remove(file.to_absolute().as_str());
         }
         all_unordered_libs.extend(discovered_libs);
-        env.set_all_unordered_libs(all_unordered_libs);
+        env.set_configured_global_libs(all_unordered_libs);
 
         let freshparsed = updates.filter(|file, _kind| parsed_set.contains(file));
 
@@ -1547,7 +1568,7 @@ pub(crate) mod recheck {
             error_collator::update_local_collated_errors(
                 &loc_of_aloc,
                 &get_ast,
-                &FileKey::is_lib_file,
+                &|file| env.is_lib_file(file),
                 &options.root,
                 &options.file_options,
                 options.node_modules_errors,
@@ -1809,7 +1830,7 @@ pub(crate) mod recheck {
             unchanged_files_to_upgrade,
         } = intermediate_values;
         let coverage_for_check = env.take_coverage();
-        let all_unordered_libs = Arc::new(env.all_unordered_libs().clone());
+        let all_unordered_libs = Arc::new(env.configured_libs().clone());
         let dependency_info = env.take_dependency_info();
         let result = (|| {
             let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
@@ -2125,6 +2146,15 @@ fn with_transaction_result<T, E>(
     side_effect_transaction::with_transaction_result_sync(name, f)
 }
 
+type RecheckImplResult = Result<
+    (
+        Box<dyn FnOnce(&serde_json::Value)>,
+        RecheckStats,
+        FindRefResults,
+    ),
+    RecheckError,
+>;
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn recheck_impl(
     orchestrator: Option<&ServerOrchestratorHandle>,
@@ -2137,14 +2167,7 @@ pub(crate) fn recheck_impl(
     changed_mergebase: Option<bool>,
     will_be_checked_files: &mut CheckedSet,
     env: &mut EnvTransaction,
-) -> Result<
-    (
-        Box<dyn FnOnce(&serde_json::Value)>,
-        RecheckStats,
-        FindRefResults,
-    ),
-    RecheckError,
-> {
+) -> RecheckImplResult {
     check_recheck_canceled()?;
     let (stats, record_recheck_time, find_ref_results, first_internal_error) =
         match side_effect_transaction::with_transaction_result_sync("recheck", |side_effects| {
@@ -2217,7 +2240,7 @@ pub(crate) fn recheck_impl(
             error_collator::update_collated_errors(
                 &loc_of_aloc,
                 &get_ast,
-                &FileKey::is_lib_file,
+                &|file| env.is_lib_file(file),
                 options,
                 env.checked_files(),
                 &all_suppressions,
@@ -2360,11 +2383,12 @@ fn mk_env(
     package_json_files: FlowOrdSet<FileKey>,
     dependency_info: DependencyInfo,
     ordered_libs: Vec<(Option<FlowSmolStr>, FlowSmolStr)>,
-    all_unordered_libs: Arc<BTreeSet<FlowSmolStr>>,
+    global_lib_files: server_env::GlobalLibFiles,
     errors: Errors,
     collated_errors: CollatedErrors,
     exports: Option<ExportSearch>,
     master_cx: Arc<MasterContext>,
+    previous_connections: Option<&PersistentConnection>,
 ) -> Env {
     Env {
         heap,
@@ -2374,11 +2398,13 @@ fn mk_env(
         checked_files: CheckedSet::empty(),
         package_json_files,
         ordered_libs: Arc::new(ordered_libs),
-        all_unordered_libs,
+        global_lib_files,
         errors: env_cell(errors),
         coverage: env_cell(BTreeMap::new()),
         collated_errors: env_cell(collated_errors),
-        connections: flow_server_env::persistent_connection::empty(),
+        connections: previous_connections
+            .map(|c| c.dupe())
+            .unwrap_or_else(flow_server_env::persistent_connection::empty),
         exports,
         master_cx,
     }
@@ -2728,6 +2754,7 @@ fn init_with_initial_state(
     restore_dependency_info: impl FnOnce() -> Arc<EnvCell<DependencyInfo>>,
     saved_duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     saved_export_index: Option<ExportIndex>,
+    _saved_discovered_global_libdefs: BTreeSet<FileKey>,
     env: Option<&Env>,
     parsed: FlowOrdSet<FileKey>,
     unparsed: FlowOrdSet<FileKey>,
@@ -2758,6 +2785,8 @@ fn init_with_initial_state(
         Box::new(move || files.take().filter(|files| !files.is_empty()))
     };
 
+    let parse_results = parse(pool, transaction, options, next);
+    let discovered_global_libdefs = parse_results.discovered_global_libdefs_state();
     let CollatedParseResults {
         parsed: additional_parsed,
         unparsed: additional_unparsed,
@@ -2767,20 +2796,20 @@ fn init_with_initial_state(
         local_errors: additional_local_errors,
         package_json: _package_json,
         all_unordered_libs: discovered_libs,
-    } = parse(pool, transaction, options, next);
+        dts_file_kinds: _,
+    } = parse_results;
 
     let all_unordered_libs_set = Arc::new(discovered_libs);
+    let global_lib_files = server_env::GlobalLibFiles::new(
+        all_unordered_libs_set.dupe(),
+        discovered_global_libdefs.dupe(),
+    );
 
     let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
         options,
         transaction,
         all_unordered_libs_set.dupe(),
-        ordered_libs
-            .iter()
-            .map(|(scoped_project, path)| {
-                init::OrderedLibInput::configured(scoped_project.clone(), path)
-            })
-            .collect(),
+        init::assemble_ordered_lib_inputs(&ordered_libs, &discovered_global_libdefs),
         local_errors,
         BTreeMap::new(),
         ErrorSuppressions::empty(),
@@ -2877,7 +2906,7 @@ fn init_with_initial_state(
         error_collator::update_local_collated_errors(
             &loc_of_aloc,
             &get_ast,
-            &FileKey::is_lib_file,
+            &|file| global_lib_files.contains(file),
             &options.root,
             &options.file_options,
             options.node_modules_errors,
@@ -2916,7 +2945,7 @@ fn init_with_initial_state(
                 })
                 .collect(),
         ),
-        all_unordered_libs: all_unordered_libs_set,
+        global_lib_files,
         unparsed,
         errors: env_cell(errors),
         coverage: env_cell(BTreeMap::new()),
@@ -2948,6 +2977,8 @@ pub fn init_from_legacy_saved_state(
         export_index,
         ..
     } = saved_state;
+    // Saved state does not record discovered globals yet.
+    let discovered_global_libdefs: BTreeSet<FileKey> = BTreeSet::new();
     flow_hh_logger::info!("Restoring heaps");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // Files.node_modules_containers := node_modules_containers;
@@ -3073,6 +3104,7 @@ pub fn init_from_legacy_saved_state(
         } else {
             None
         },
+        discovered_global_libdefs,
         env,
         parsed,
         unparsed,
@@ -3102,6 +3134,8 @@ pub fn init_from_direct_saved_state(
         export_index,
         ..
     } = saved_state;
+    // Saved state does not record discovered globals yet.
+    let discovered_global_libdefs: BTreeSet<FileKey> = BTreeSet::new();
     flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // Direct serialization saved state: the heap was already bulk-loaded by
@@ -3150,6 +3184,7 @@ pub fn init_from_direct_saved_state(
         } else {
             None
         },
+        discovered_global_libdefs,
         env,
         parsed,
         unparsed,
@@ -3261,11 +3296,16 @@ pub fn handle_updates_since_saved_state(
     }
 }
 
+/// Crawls the root and builds an [`Env`] from the files it finds. `previous_env` is `Some`
+/// only when an environment is being rebuilt over a heap that a previous one already
+/// populated: its inventory is what tells us which files have since disappeared, and its
+/// persistent connections have to survive the rebuild.
 pub fn init_from_scratch(
     options: &Arc<Options>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     root: &Path,
+    previous_env: Option<&Env>,
 ) -> (Env, bool /* libs_ok */) {
     with_transaction("init", |_transaction| {
         let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
@@ -3296,6 +3336,8 @@ pub fn init_from_scratch(
             Some(files)
         });
 
+        let parse_results = parse(pool, transaction, options, next);
+        let discovered_global_libdefs = parse_results.discovered_global_libdefs_state();
         let CollatedParseResults {
             parsed: parsed_set,
             unparsed: unparsed_set,
@@ -3305,15 +3347,17 @@ pub fn init_from_scratch(
             local_errors,
             package_json: (package_json_files_list, package_json_errors),
             all_unordered_libs: discovered_libs,
-        } = parse(pool, transaction, options, next);
+            dts_file_kinds: _,
+        } = parse_results;
         handle.join().unwrap();
 
         let all_unordered_libs_set = Arc::new(discovered_libs);
+        let global_lib_files = server_env::GlobalLibFiles::new(
+            all_unordered_libs_set.dupe(),
+            discovered_global_libdefs.dupe(),
+        );
 
         assert!(unchanged.is_empty());
-
-        let dirty_modules_ordered: flow_common_modulename::ModulenameSet =
-            dirty_modules.into_iter().collect();
 
         let warnings = BTreeMap::new();
         let package_errors = package_json_files_list
@@ -3339,17 +3383,26 @@ pub fn init_from_scratch(
             .collect::<FlowOrdSet<_>>();
         let local_errors = merge_error_maps(package_errors, local_errors);
 
+        // The crawl only reports files that exist, so anything the previous environment
+        // knew about and this one didn't find is gone. Its heap entry has to go with it,
+        // and the modules it used to provide have to be recommitted below.
+        let dirty_modules_ordered: flow_common_modulename::ModulenameSet = dirty_modules
+            .into_iter()
+            .chain(clear_deleted_heaps(
+                transaction,
+                previous_env,
+                &parsed_set,
+                &unparsed_set,
+                &package_json_files,
+            ))
+            .collect();
+
         flow_hh_logger::info!("Loading libraries");
         let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
             options,
             transaction,
             all_unordered_libs_set.dupe(),
-            ordered_libs
-                .iter()
-                .map(|(scoped_project, path)| {
-                    init::OrderedLibInput::configured(scoped_project.clone(), path)
-                })
-                .collect(),
+            init::assemble_ordered_lib_inputs(&ordered_libs, &discovered_global_libdefs),
             local_errors,
             warnings,
             ErrorSuppressions::empty(),
@@ -3385,7 +3438,7 @@ pub fn init_from_scratch(
             error_collator::update_local_collated_errors(
                 &loc_of_aloc,
                 &get_ast,
-                &FileKey::is_lib_file,
+                &|file| global_lib_files.contains(file),
                 &options.root,
                 &options.file_options,
                 options.node_modules_errors,
@@ -3434,11 +3487,12 @@ pub fn init_from_scratch(
                     )
                 })
                 .collect(),
-            all_unordered_libs_set,
+            global_lib_files,
             errors,
             collated_errors,
             exports,
             master_cx,
+            previous_env.map(|env| &env.connections),
         );
 
         (env, libs_ok)
@@ -3586,8 +3640,13 @@ pub fn init(
             // just restores that.
             committed_heap.clear();
             let transaction = ActiveTransaction::new(committed_heap.dupe());
-            let (env, libs_ok) =
-                init_from_scratch(options, pool, &transaction.handle(), options.root.as_path());
+            let (env, libs_ok) = init_from_scratch(
+                options,
+                pool,
+                &transaction.handle(),
+                options.root.as_path(),
+                None,
+            );
             (transaction, env, libs_ok)
         }
     };
@@ -3713,6 +3772,7 @@ fn reinit_full_check(
     options: &Arc<Options>,
     updates: &CheckedSet,
     files_to_force: CheckedSet,
+    changed_declaration_files: FlowOrdSet<FileKey>,
     will_be_checked_files: &mut CheckedSet,
     env: EnvRef,
 ) -> Result<
@@ -3726,36 +3786,87 @@ fn reinit_full_check(
 > {
     let transaction = ActiveTransaction::new(committed_heap.dupe());
     transaction.committed_heap().clear_reader_cache();
-    flow_hh_logger::info!("Reiniting with a full check.");
-    let env = {
-        let (env, _libs_ok) = side_effect_transaction::with_transaction_result_sync(
-            "partial-reinit",
-            |_transaction| {
-                Ok::<_, std::convert::Infallible>(init_with_initial_state(
+
+    let (new_env, log_recheck_event): (Env, Box<dyn FnOnce(&serde_json::Value)>) =
+        if changed_declaration_files.is_empty() {
+            flow_hh_logger::info!("Reiniting with a full check.");
+            let (new_env, _libs_ok) = with_transaction("partial-reinit", |_side_effects| {
+                init_with_initial_state(
                     pool,
                     &transaction.handle(),
                     options,
                     || env.dependency_info.dupe(),
                     env.errors().duplicate_providers.clone(),
                     None,
+                    env.discovered_global_libdefs().clone(),
                     Some(env.as_ref()),
                     env.files.dupe(),
                     env.unparsed.dupe(),
                     env.package_json_files.dupe(),
                     BTreeSet::new(),
                     env.errors().local_errors.clone(),
-                ))
-            },
-        )
-        .unwrap();
-        env
-    };
+                )
+            });
+            let log: Box<dyn FnOnce(&serde_json::Value)> = Box::new(|profiling| {
+                flow_event_logger::reinit_full_check(profiling);
+            });
+            (new_env, log)
+        } else {
+            // Note from samzhou19815:
+            //
+            // This is a more difficult reinit case.
+            //
+            // When global libdefs change in a complex way (e.g. a d.ts file no longer is a global
+            // libdef or become one), it's hard to recover and do a cheaper init_with_initial_state,
+            // since figuring things out typically need to at least reparse these affected files.
+            //
+            // While it's conceivable that we can do this for just .d.ts classification change, it's
+            // much harder once we need to support things like `declare global` and `declare module`
+            // changes. These changes should not happen a lot.
+            // **Therefore, let's just give up and do a full reinit.** ¯\_(ツ)_/¯
+
+            let changed_file_count = changed_declaration_files.len();
+            let old_global_count = env.discovered_global_libdefs().len();
+            flow_hh_logger::info!(
+                "Reiniting with a full check after {changed_file_count} TypeScript global declaration changes."
+            );
+            let (new_env, _libs_ok) = init_from_scratch(
+                options,
+                pool,
+                &transaction.handle(),
+                options.root.as_path(),
+                Some(env.as_ref()),
+            );
+            let new_global_count = new_env.discovered_global_libdefs().len();
+            let inventory_file_count = new_env.files.len() + new_env.unparsed.len();
+            let deleted_file_count = env
+                .files
+                .iter()
+                .chain(env.unparsed.iter())
+                .filter(|file| !new_env.files.contains(file) && !new_env.unparsed.contains(file))
+                .count();
+            flow_hh_logger::info!(
+                "Global-lib recovery rebuilt {inventory_file_count} files ({deleted_file_count} gone) and changed discovered globals from {old_global_count} to {new_global_count}."
+            );
+            let log: Box<dyn FnOnce(&serde_json::Value)> = Box::new(move |profiling| {
+                flow_event_logger::global_lib_reinit(
+                    changed_file_count,
+                    old_global_count,
+                    new_global_count,
+                    inventory_file_count,
+                    deleted_file_count,
+                    profiling,
+                );
+            });
+            (new_env, log)
+        };
+
     // schedule a recheck of all changes since saved state -- both the upstream
     // changes between when the saved state was generated and master, and local
     // updates since master.
     let mut all_checked_set = CheckedSet::empty();
-    all_checked_set.add(Some(env.files.dupe()), None, None);
-    all_checked_set.union(files_to_force.dupe());
+    all_checked_set.add(Some(new_env.files.dupe()), None, None);
+    all_checked_set.union(files_to_force);
     all_checked_set.union(updates.dupe());
     *will_be_checked_files = all_checked_set.dupe();
 
@@ -3768,15 +3879,12 @@ fn reinit_full_check(
         );
     }
 
-    let log_recheck_event: Box<dyn FnOnce(&serde_json::Value)> = Box::new(|profiling| {
-        flow_event_logger::reinit_full_check(profiling);
-    });
     let recheck_stats = RecheckStats {
         dependent_file_count: 0,
         changed_file_count: 0,
         top_cycle: None,
     };
-    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(env)), transaction);
+    let prepared = prepare_recheck(EnvTransaction::new(Arc::new(new_env)), transaction);
     Ok((log_recheck_event, recheck_stats, Ok(vec![]), prepared))
 }
 
@@ -3789,7 +3897,9 @@ pub fn recheck(
     updates: &CheckedSet,
     find_ref_request: &flow_services_references::find_refs_types::Request,
     files_to_force: CheckedSet,
-    incompatible_lib_change: bool,
+    incompatible_lib_change: Option<
+        flow_server_env::server_monitor_listener_state::IncompatibleLibChange,
+    >,
     changed_mergebase: Option<bool>,
     missed_changes: bool,
     will_be_checked_files: &mut CheckedSet,
@@ -3809,7 +3919,7 @@ pub fn recheck(
         // change. [Recheck_too_slow] cannot fire (it requires changed_mergebase=Some true),
         // and [missed_changes] without a mergebase change was already handled upstream
         // by adding focused files to [updates] (rechecker.ml).
-        if incompatible_lib_change {
+        if let Some(change) = incompatible_lib_change {
             reinit_full_check(
                 orchestrator,
                 pool,
@@ -3817,13 +3927,17 @@ pub fn recheck(
                 options,
                 updates,
                 files_to_force,
+                change.changed_declaration_files,
                 will_be_checked_files,
                 env,
             )
         } else {
             let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
-            let (log_recheck_event, recheck_stats, find_ref_results) = recheck_impl(
+            // Bind the result first: a `&heap_transaction.handle()` temporary in a
+            // `match` scrutinee lives until the end of the match, and
+            // `commit_with_transaction` requires every handle to be dropped.
+            let recheck_result = recheck_impl(
                 orchestrator,
                 pool,
                 &heap_transaction.handle(),
@@ -3834,9 +3948,14 @@ pub fn recheck(
                 changed_mergebase,
                 will_be_checked_files,
                 &mut env_transaction,
-            )?;
-            let prepared = prepare_recheck(env_transaction, heap_transaction);
-            Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
+            );
+            match recheck_result {
+                Ok((log_recheck_event, recheck_stats, find_ref_results)) => {
+                    let prepared = prepare_recheck(env_transaction, heap_transaction);
+                    Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
+                }
+                Err(err) => Err(err),
+            }
         }
     } else {
         let reinit_or_restart = |reason: &str,
@@ -3862,7 +3981,21 @@ pub fn recheck(
             )
             .unwrap()
         };
-        if incompatible_lib_change {
+        if let Some(change) = incompatible_lib_change.as_ref()
+            && !change.changed_declaration_files.is_empty()
+        {
+            reinit_full_check(
+                orchestrator,
+                pool,
+                committed_heap,
+                options,
+                updates,
+                files_to_force,
+                change.changed_declaration_files.dupe(),
+                will_be_checked_files,
+                env,
+            )
+        } else if let Some(change) = incompatible_lib_change {
             // The mergebase changed and a libdef changed. Try loading saved state first -
             // if the saved state was built after the libdef change, we only need to recheck
             // the delta files instead of all files. If saved state loading fails (e.g.
@@ -3894,6 +4027,7 @@ pub fn recheck(
                         options,
                         updates,
                         files_to_force,
+                        change.changed_declaration_files,
                         will_be_checked_files,
                         env,
                     )
@@ -3911,7 +4045,10 @@ pub fn recheck(
             let files_to_force_for_reinit = files_to_force.dupe();
             let heap_transaction = ActiveTransaction::new(committed_heap.dupe());
             let mut env_transaction = EnvTransaction::new(env);
-            match recheck_impl(
+            // Bind the result first: a `&heap_transaction.handle()` temporary in a
+            // `match` scrutinee lives until the end of the match, and
+            // `commit_with_transaction` requires every handle to be dropped.
+            let recheck_result = recheck_impl(
                 orchestrator,
                 pool,
                 &heap_transaction.handle(),
@@ -3922,7 +4059,8 @@ pub fn recheck(
                 changed_mergebase,
                 will_be_checked_files,
                 &mut env_transaction,
-            ) {
+            );
+            match recheck_result {
                 Ok((log_recheck_event, recheck_stats, find_ref_results)) => {
                     let prepared = prepare_recheck(env_transaction, heap_transaction);
                     Ok((log_recheck_event, recheck_stats, find_ref_results, prepared))
@@ -3965,7 +4103,7 @@ pub fn check_files_for_init(
             checked_files: env_checked_files,
             package_json_files,
             ordered_libs,
-            all_unordered_libs,
+            global_lib_files,
             unparsed,
             connections,
             exports,
@@ -4021,7 +4159,7 @@ pub fn check_files_for_init(
             options.dupe(),
             pool,
             transaction,
-            all_unordered_libs.dupe(),
+            global_lib_files.configured().dupe(),
             &flow_services_references::find_refs_types::empty_request(),
             env_errors,
             merge_result.suppressions.clone(),
@@ -4098,7 +4236,7 @@ pub fn check_files_for_init(
             error_collator::update_collated_overlay_errors(
                 &loc_of_aloc,
                 &get_ast,
-                &FileKey::is_lib_file,
+                &|file| global_lib_files.contains(file),
                 options,
                 &to_merge,
                 &merge_result.suppressions,
@@ -4125,7 +4263,7 @@ pub fn check_files_for_init(
             },
             package_json_files,
             ordered_libs,
-            all_unordered_libs,
+            global_lib_files,
             unparsed,
             errors: env_errors_cell,
             coverage: env_coverage_cell,
@@ -4152,7 +4290,8 @@ pub fn libdef_check_for_lazy_init(
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let parsed: FlowOrdSet<FileKey> = env
-        .all_unordered_libs
+        .global_lib_files
+        .configured()
         .iter()
         .map(|n| files::lib_file_key(n))
         .collect();
@@ -4237,7 +4376,7 @@ pub fn check_once(
     // fetch function contributes a `FetchSavedState` child profile.
     with_timer(&options, "FetchSavedState", || {});
 
-    let (env, libs_ok) = init_from_scratch(&options, pool, &transaction.handle(), root);
+    let (env, libs_ok) = init_from_scratch(&options, pool, &transaction.handle(), root, None);
     let env = if libs_ok {
         let (env, _first_internal_error) = if options.lazy_mode {
             match focus_targets {

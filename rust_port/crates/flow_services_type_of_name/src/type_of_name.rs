@@ -644,12 +644,12 @@ fn resolve_name_from_index(
     }?;
     let contents = format!("/* @flow */ {}", contents_body);
     let parse_result =
-        type_contents::parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
+        type_contents::parse_contents(options, env.configured_libs(), &contents, &file_key);
     match type_contents::type_parse_artifacts(
         orchestrator,
         cache,
         options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         reader.dupe(),
         env.master_cx.dupe(),
         file_key.dupe(),

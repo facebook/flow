@@ -262,7 +262,7 @@ pub fn printable_errors_of_file_artifacts_result(
                 get_ast,
                 Some(root.as_path()),
                 errors.clone(),
-                FileKey::is_lib_file,
+                |file| env.is_lib_file(file),
             );
             (errors, ConcreteLocPrintableErrorSet::empty())
         }

@@ -557,20 +557,23 @@ fn check_that_we_care_about_this_file(
         }
     }
 
-    fn check_flow_pragma(
+    fn check_file_is_opted_in(
         options: &Options,
-        all_unordered_libs: &BTreeSet<FlowSmolStr>,
-        _content: &str,
+        env: &server_env::Env,
+        content: &str,
         file_key: &flow_parser::file_key::FileKey,
     ) -> Result<(), &'static str> {
-        if options.all || files::is_lib_file(all_unordered_libs, file_key) {
+        let is_declaration_discovery_candidate = options
+            .typescript_global_library_definition_discovery
+            && flow_parser::file_key::has_dts_ext(file_key.as_str());
+        if options.all || env.is_lib_file(file_key) || is_declaration_discovery_candidate {
             Ok(())
         } else {
             let (_errs, docblock) = parse_docblock(
                 DOCBLOCK_MAX_TOKENS,
                 &options.file_options,
                 file_key,
-                _content,
+                content,
             );
             if docblock.is_flow() {
                 Ok(())
@@ -589,7 +592,7 @@ fn check_that_we_care_about_this_file(
         check_file_not_ignored(file_options, &file_path)
             .and_then(|()| check_file_included(options, file_options, &file_path))
             .and_then(|()| check_is_flow_file(file_options, &file_path))
-            .and_then(|()| check_flow_pragma(options, &env.all_unordered_libs, content, file_key))
+            .and_then(|()| check_file_is_opted_in(options, env, content, file_key))
     }
 }
 
@@ -1052,13 +1055,12 @@ fn autocomplete_on_parsed(
     let type_parse_artifacts_cache = client_id
         .and_then(persistent_connection::get_client)
         .map(|client| persistent_connection::autocomplete_artifacts_cache(&client));
-    let parse_result =
-        || parse_contents(options, env.all_unordered_libs.dupe(), &contents, filename);
+    let parse_result = || parse_contents(options, env.configured_libs(), &contents, filename);
     let (file_artifacts_result, did_hit) = type_parse_artifacts_for_ac_with_cache(
         orchestrator,
         cache,
         options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         type_parse_artifacts_cache.as_ref(),
         transaction.clone(),
         env.master_cx.clone(),
@@ -1389,7 +1391,7 @@ fn errors_of_file(
         }
         Ok((file_key, content)) => {
             let intermediate_result =
-                parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
+                parse_contents(&options, env.configured_libs(), &content, &file_key);
             let result = if !intermediate_result.1.is_empty() {
                 Err(TypeContentsError::Errors(intermediate_result.1))
             } else {
@@ -1397,7 +1399,7 @@ fn errors_of_file(
                     orchestrator,
                     cache,
                     &options,
-                    env.all_unordered_libs.dupe(),
+                    env.configured_libs(),
                     transaction.clone(),
                     env.master_cx.clone(),
                     file_key.clone(),
@@ -1722,12 +1724,12 @@ fn infer_type(
         }
         Ok((file_key, content)) => {
             let parse_result =
-                || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
+                || parse_contents(&options, env.configured_libs(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 &options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache,
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -1847,12 +1849,12 @@ fn type_of_name(
             let mut options = options.clone();
             options.verbose = verbose.as_ref().map(|v| std::sync::Arc::new(v.clone()));
             let parse_result =
-                || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
+                || parse_contents(&options, env.configured_libs(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 &options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache,
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -1936,12 +1938,12 @@ fn inlay_hint(
         }
         Ok((file_key, content)) => {
             let parse_result =
-                || parse_contents(&options, env.all_unordered_libs.dupe(), &content, &file_key);
+                || parse_contents(&options, env.configured_libs(), &content, &file_key);
             let (file_artifacts_result, did_hit_cache) = match type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 &options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache,
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -2069,17 +2071,13 @@ fn insert_type(
                 .0
         })
     };
-    let intermediate_result = parse_contents(
-        options,
-        env.all_unordered_libs.dupe(),
-        &file_content,
-        &file_key,
-    );
+    let intermediate_result =
+        parse_contents(options, env.configured_libs(), &file_content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
         orchestrator,
         cache,
         options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         transaction,
         env.master_cx.clone(),
         file_key,
@@ -2161,17 +2159,13 @@ fn autofix_exports(
                 .0
         })
     });
-    let intermediate_result = parse_contents(
-        options,
-        env.all_unordered_libs.dupe(),
-        &file_content,
-        &file_key,
-    );
+    let intermediate_result =
+        parse_contents(options, env.configured_libs(), &file_content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
         orchestrator,
         cache,
         options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         transaction,
         env.master_cx.clone(),
         file_key.clone(),
@@ -2247,17 +2241,13 @@ fn autofix_missing_local_annot(
                 .0
         })
     };
-    let intermediate_result = parse_contents(
-        options,
-        env.all_unordered_libs.dupe(),
-        &file_content,
-        &file_key,
-    );
+    let intermediate_result =
+        parse_contents(options, env.configured_libs(), &file_content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
         orchestrator,
         cache,
         options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         transaction,
         env.master_cx.clone(),
         file_key,
@@ -2387,13 +2377,12 @@ fn dump_types(
         Ok(c) => c,
         Err(s) => return Ok(Err(s)),
     };
-    let intermediate_result =
-        parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
+    let intermediate_result = parse_contents(options, env.configured_libs(), &content, &file_key);
     let file_artifacts_result = type_parse_artifacts(
         orchestrator,
         cache,
         options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         transaction,
         env.master_cx.clone(),
         file_key,
@@ -2436,13 +2425,12 @@ fn coverage(
 > {
     let mut options = options.clone();
     options.all = options.all || force;
-    let intermediate_result =
-        || parse_contents(&options, env.all_unordered_libs.dupe(), content, file_key);
+    let intermediate_result = || parse_contents(&options, env.configured_libs(), content, file_key);
     let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
         orchestrator,
         cache,
         &options,
-        env.all_unordered_libs.dupe(),
+        env.configured_libs(),
         type_parse_artifacts_cache,
         transaction,
         env.master_cx.clone(),
@@ -2503,9 +2491,7 @@ fn batch_coverage(
         let coverage = env.coverage();
         let mut response: Vec<_> = coverage
             .iter()
-            .filter(|(key, _)| {
-                !files::is_lib_file(&env.all_unordered_libs, key) && filter(&key.to_absolute())
-            })
+            .filter(|(key, _)| !env.is_lib_file(key) && filter(&key.to_absolute()))
             .map(|(key, coverage)| (key.dupe(), coverage.clone()))
             .collect();
         response.reverse();
@@ -2683,12 +2669,12 @@ fn get_def(
         }
         Ok((file_key, content)) => {
             let intermediate_result =
-                || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
+                || parse_contents(options, env.configured_libs(), &content, &file_key);
             let (check_result, did_hit_cache) = match type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache,
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -3102,7 +3088,7 @@ fn query(
     } else {
         env.files
             .iter()
-            .filter(|file_key| !files::is_lib_file(&env.all_unordered_libs, file_key))
+            .filter(|file_key| !env.is_lib_file(file_key))
             .map(|file_key| {
                 let content_hash = if want_content {
                     transaction.get_file_hash_committed(file_key)
@@ -3337,12 +3323,12 @@ fn handle_llm_context(
                 Ok(v) => v,
             };
             let intermediate_result =
-                parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
+                parse_contents(options, env.configured_libs(), &content, &file_key);
             let file_artifacts_result = type_parse_artifacts(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 transaction.clone(),
                 env.master_cx.clone(),
                 file_key.clone(),
@@ -3751,19 +3737,13 @@ fn find_code_actions(
             (Ok(vec![]), extra_data)
         }
         Ok((file_key, file_contents)) => {
-            let intermediate_result = || {
-                parse_contents(
-                    options,
-                    env.all_unordered_libs.dupe(),
-                    &file_contents,
-                    &file_key,
-                )
-            };
+            let intermediate_result =
+                || parse_contents(options, env.configured_libs(), &file_contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache.as_ref(),
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -3884,19 +3864,13 @@ fn add_missing_imports(
         Err(msg) => Err(msg),
         Ok(file_contents) => {
             let uri = &text_document.uri;
-            let intermediate_result = || {
-                parse_contents(
-                    options,
-                    env.all_unordered_libs.dupe(),
-                    &file_contents,
-                    &file_key,
-                )
-            };
+            let intermediate_result =
+                || parse_contents(options, env.configured_libs(), &file_contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache.as_ref(),
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -3937,12 +3911,8 @@ fn organize_imports(
     match file_input.content_of_file_input_arc() {
         Err(msg) => Err(msg),
         Ok(file_contents) => {
-            let (parse_artifacts, _parse_errors) = parse_contents(
-                options,
-                env.all_unordered_libs.dupe(),
-                &file_contents,
-                &file_key,
-            );
+            let (parse_artifacts, _parse_errors) =
+                parse_contents(options, env.configured_libs(), &file_contents, &file_key);
             match parse_artifacts {
                 None => Ok(vec![]),
                 Some(ParseArtifacts { ref ast, .. }) => Ok(
@@ -4859,11 +4829,7 @@ fn loc_to_vscode_linked_location_in_markdown(
         Some(file) => {
             // We'll use default_uri here as we don't expect this to fail
             let location = flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri);
-            let lib = if files::is_lib_file(&env.all_unordered_libs, file) {
-                "(lib) "
-            } else {
-                ""
-            };
+            let lib = if env.is_lib_file(file) { "(lib) " } else { "" };
             let abs = file.to_absolute();
             let basename = std::path::Path::new(&abs)
                 .file_name()
@@ -5259,12 +5225,12 @@ fn handle_persistent_signaturehelp_lsp(
             let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
                 .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
             let intermediate_result =
-                || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &path);
+                || parse_contents(options, env.configured_libs(), &contents, &path);
             let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache.as_ref(),
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -5466,12 +5432,12 @@ fn get_file_artifacts(
             Err(IdeFileError::Skipped(reason)) => (Ok(None), json_of_skipped(&reason)),
             Ok((file_key, content)) => {
                 let intermediate_result =
-                    || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
+                    || parse_contents(options, env.configured_libs(), &content, &file_key);
                 let (file_artifacts_result, did_hit_cache) = type_parse_artifacts_with_cache(
                     orchestrator,
                     cache,
                     options,
-                    env.all_unordered_libs.dupe(),
+                    env.configured_libs(),
                     type_parse_artifacts_cache.as_ref(),
                     transaction.dupe(),
                     env.master_cx.clone(),
@@ -6237,12 +6203,12 @@ fn handle_persistent_llm_context(
                 Ok(v) => v,
             };
             let intermediate_result =
-                || parse_contents(options, env.all_unordered_libs.dupe(), &content, &file_key);
+                || parse_contents(options, env.configured_libs(), &content, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache.as_ref(),
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -6474,7 +6440,7 @@ fn auto_close_jsx_handler(
         }
         Ok((filename, contents)) => {
             let (parse_result, _) =
-                parse_contents(options, env.all_unordered_libs.dupe(), &contents, &filename);
+                parse_contents(options, env.configured_libs(), &contents, &filename);
             match parse_result {
                 None => (Ok(None), None),
                 Some(ParseArtifacts { ast, .. }) => {
@@ -6516,12 +6482,12 @@ fn prepare_document_paste(
         }
         Ok((file_key, contents)) => {
             let intermediate_result =
-                || parse_contents(options, env.all_unordered_libs.dupe(), &contents, &file_key);
+                || parse_contents(options, env.configured_libs(), &contents, &file_key);
             let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
                 orchestrator,
                 cache,
                 options,
-                env.all_unordered_libs.dupe(),
+                env.configured_libs(),
                 type_parse_artifacts_cache.as_ref(),
                 transaction.clone(),
                 env.master_cx.clone(),
@@ -6601,8 +6567,7 @@ fn provide_document_paste(
             uri: uri.clone(),
         }),
     );
-    let (parse_result, _errors) =
-        parse_contents(options, env.all_unordered_libs.dupe(), text, &file_key);
+    let (parse_result, _errors) = parse_contents(options, env.configured_libs(), text, &file_key);
     let (edits, extra_data) = match parse_result {
         None => (
             vec![],
@@ -6755,7 +6720,7 @@ fn linked_editing_range_handler(
         }
         Ok((filename, contents)) => {
             let (parse_result, parse_errors) =
-                parse_contents(options, env.all_unordered_libs.dupe(), &contents, &filename);
+                parse_contents(options, env.configured_libs(), &contents, &filename);
             let has_parse_errors = !parse_errors.is_empty();
             if has_parse_errors {
                 return (Ok(None), None);
@@ -6949,12 +6914,8 @@ fn live_diagnostics_of_uri(
                             &file_path,
                         );
                         let (result, did_hit_cache): (FileArtifactsResult<'static>, Option<bool>) = {
-                            let intermediate_result = parse_contents(
-                                options,
-                                env.all_unordered_libs.dupe(),
-                                content,
-                                &file_key,
-                            );
+                            let intermediate_result =
+                                parse_contents(options, env.configured_libs(), content, &file_key);
                             let (_, parse_errs) = &intermediate_result;
                             if !parse_errs.is_empty() {
                                 (Err(TypeContentsError::Errors(parse_errs.clone())), None)
@@ -6967,7 +6928,7 @@ fn live_diagnostics_of_uri(
                                     orchestrator,
                                     cache,
                                     options,
-                                    env.all_unordered_libs.dupe(),
+                                    env.configured_libs(),
                                     type_parse_artifacts_cache.as_ref(),
                                     transaction.clone(),
                                     env.master_cx.clone(),

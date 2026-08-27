@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -111,6 +112,8 @@ pub struct ParseResults {
     pub dirty_modules: BTreeSet<Modulename>,
     // configured library files encountered by parse attempts
     pub all_unordered_libs: BTreeSet<FlowSmolStr>,
+    // declaration file kinds encountered by parse attempts
+    pub dts_file_kinds: BTreeMap<FileKey, DtsFileKind>,
 }
 
 // **************************** internal ********************************
@@ -521,6 +524,12 @@ fn reducer(
         } => {
             use flow_aloc::aloc_representation_do_not_use;
 
+            if options.typescript_global_library_definition_discovery
+                && let Some(dts_file_kind) = new_dts_file_kind
+            {
+                acc.dts_file_kinds.insert(file_key.dupe(), dts_file_kind);
+            }
+
             let aloc_table =
                 aloc_representation_do_not_use::make_table(file_key.dupe(), locs.into_vec());
             let packed_aloc_table = aloc_table.pack();
@@ -628,6 +637,7 @@ fn merge(a: &mut ParseResults, b: ParseResults) {
     a.package_json.1.extend(b.package_json.1);
     a.dirty_modules.extend(b.dirty_modules);
     a.all_unordered_libs.extend(b.all_unordered_libs);
+    a.dts_file_kinds.extend(b.dts_file_kinds);
 }
 
 // ***************************** public ********************************

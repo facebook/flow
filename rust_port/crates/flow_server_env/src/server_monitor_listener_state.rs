@@ -342,7 +342,12 @@ pub struct RecheckWorkload {
     pub files_to_force: CheckedSet,
     pub find_ref_command: Option<FindRefCommand>,
     pub metadata: FileWatcherMetadata,
-    pub incompatible_lib_change: bool,
+    pub incompatible_lib_change: Option<IncompatibleLibChange>,
+}
+
+#[derive(Clone, Dupe)]
+pub struct IncompatibleLibChange {
+    pub changed_declaration_files: FlowOrdSet<FileKey>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -353,7 +358,10 @@ pub enum Priority {
 
 pub enum Updates {
     NormalUpdates(FlowOrdSet<FileKey>),
-    RequiredFullCheckReinit(FlowOrdSet<FileKey>),
+    RequiredFullCheckReinit {
+        updates: FlowOrdSet<FileKey>,
+        change: IncompatibleLibChange,
+    },
 }
 
 fn empty_recheck_workload() -> RecheckWorkload {
@@ -364,7 +372,7 @@ fn empty_recheck_workload() -> RecheckWorkload {
         files_to_force: CheckedSet::empty(),
         find_ref_command: None,
         metadata: empty_file_watcher_metadata(),
-        incompatible_lib_change: false,
+        incompatible_lib_change: None,
     }
 }
 
@@ -425,12 +433,19 @@ fn update(
     changed
 }
 
-fn update_to_require_reinit(workload: &mut RecheckWorkload) -> bool {
-    if workload.incompatible_lib_change {
-        false
-    } else {
-        workload.incompatible_lib_change = true;
-        true
+fn update_to_require_reinit(workload: &mut RecheckWorkload, change: IncompatibleLibChange) -> bool {
+    match &mut workload.incompatible_lib_change {
+        None => {
+            workload.incompatible_lib_change = Some(change);
+            true
+        }
+        Some(existing) => {
+            let previous_declaration_file_count = existing.changed_declaration_files.len();
+            for file in change.changed_declaration_files {
+                existing.changed_declaration_files.insert(file);
+            }
+            existing.changed_declaration_files.len() != previous_declaration_file_count
+        }
     }
 }
 
@@ -476,13 +491,13 @@ pub fn recheck_fetch(
                                 update(workload, None, Some(&updates), None, None, None)
                             }
                         }
-                        Updates::RequiredFullCheckReinit(updates) => {
+                        Updates::RequiredFullCheckReinit { updates, change } => {
                             let w_changed = if urgent {
                                 update(workload, Some(&updates), None, None, None, None)
                             } else {
                                 update(workload, None, Some(&updates), None, None, None)
                             };
-                            let r_changed = update_to_require_reinit(workload);
+                            let r_changed = update_to_require_reinit(workload, change);
                             w_changed || r_changed
                         }
                     }
@@ -513,7 +528,7 @@ pub fn recheck_fetch(
                             None,
                         )
                     }
-                    Updates::RequiredFullCheckReinit(updates) => {
+                    Updates::RequiredFullCheckReinit { updates, change } => {
                         let focused = {
                             let forced = get_forced();
                             let forced_focused = forced.focused().dupe();
@@ -534,7 +549,7 @@ pub fn recheck_fetch(
                             None,
                             None,
                         );
-                        let r_changed = update_to_require_reinit(workload);
+                        let r_changed = update_to_require_reinit(workload, change);
                         w_changed || r_changed
                     }
                 },
@@ -620,15 +635,16 @@ pub fn requeue_workload(queue: &RecheckQueue, workload: RecheckWorkload) {
         prev.files_to_force.union(workload.files_to_force);
         prev.find_ref_command = workload.find_ref_command.or(prev.find_ref_command.take());
         prev.metadata = merge_file_watcher_metadata(&prev.metadata, &workload.metadata);
-        if prev.incompatible_lib_change || workload.incompatible_lib_change {
+        if prev.incompatible_lib_change.is_some() || workload.incompatible_lib_change.is_some() {
             flow_hh_logger::info!(
                 "Previous recheck requires restart: {}; new workload requires restart: {}",
-                prev.incompatible_lib_change,
-                workload.incompatible_lib_change,
+                prev.incompatible_lib_change.is_some(),
+                workload.incompatible_lib_change.is_some(),
             );
         }
-        prev.incompatible_lib_change =
-            prev.incompatible_lib_change || workload.incompatible_lib_change;
+        if let Some(change) = workload.incompatible_lib_change {
+            update_to_require_reinit(prev, change);
+        }
     });
 }
 
@@ -672,7 +688,7 @@ pub fn get_and_clear_recheck_workload(
             files_to_recheck: FlowOrdSet::new(),
             find_ref_command: None,
             metadata: empty_file_watcher_metadata(),
-            incompatible_lib_change: false,
+            incompatible_lib_change: None,
         };
         let remaining_workload = RecheckWorkload {
             recheck_epoch,

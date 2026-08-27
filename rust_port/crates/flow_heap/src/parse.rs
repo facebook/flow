@@ -367,7 +367,6 @@ impl Parse {
         }
     }
 
-    #[expect(dead_code)]
     pub(crate) fn dts_file_kind(&self) -> Option<DtsFileKind> {
         match self {
             Parse::Typed(typed) => typed.dts_file_kind,

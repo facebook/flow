@@ -21,6 +21,7 @@ use flow_common_modulename::Modulename;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::ast::Program;
+use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
@@ -162,6 +163,10 @@ impl Transaction {
 
     pub fn get_parse_committed(&self, file: &FileKey) -> Option<Parse> {
         self.committed_reader().reader().get_parse_committed(file)
+    }
+
+    pub fn get_dts_file_kind(&self, file: &FileKey) -> Option<DtsFileKind> {
+        self.get_parse(file).and_then(|parse| parse.dts_file_kind())
     }
 
     pub fn get_typed_parse(&self, file: &FileKey) -> Option<TypedParse> {

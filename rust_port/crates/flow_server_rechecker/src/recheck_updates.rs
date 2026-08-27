@@ -8,6 +8,8 @@
 use std::collections::BTreeSet;
 use std::path::Path;
 
+use dupe::Dupe;
+use dupe::IterDupedExt;
 use flow_common::files;
 use flow_common::files::FileOptions;
 use flow_common::flow_version;
@@ -26,6 +28,7 @@ pub enum Error {
     RecoverableShouldReinitNonLazily {
         msg: String,
         updates: FlowOrdSet<FileKey>,
+        changed_declaration_files: FlowOrdSet<FileKey>,
     },
     Unrecoverable {
         msg: String,
@@ -174,12 +177,11 @@ fn check_for_package_json_changes(
     }
 }
 
-fn did_content_change(transaction: &Transaction, filename: &str) -> bool {
-    let file = files::lib_file_key(filename);
-    match std::fs::read_to_string(filename).ok() {
+fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
+    match std::fs::read_to_string(file.to_absolute()).ok() {
         None => true,
         Some(content) => {
-            !parsing_service::does_content_match_file_hash(transaction, &file, &content)
+            !parsing_service::does_content_match_file_hash(transaction, file, &content)
         }
     }
 }
@@ -189,7 +191,7 @@ fn check_for_lib_changes(
     transaction: &Transaction,
     root: &Path,
     skip_incompatible: bool,
-    filter_wanted_updates: &dyn Fn(&BTreeSet<String>) -> FlowOrdSet<FileKey>,
+    filtered_updates: &FlowOrdSet<FileKey>,
     updates: &BTreeSet<String>,
 ) -> Result<(), Error> {
     let flow_typed_path = files::get_flowtyped_path(root)
@@ -198,24 +200,42 @@ fn check_for_lib_changes(
     let is_changed_lib = |filename: &String| -> bool {
         let is_lib = files::is_configured_lib_file(&options.file_options, filename)
             || *filename == flow_typed_path;
-        is_lib && did_content_change(transaction, filename)
+        is_lib && did_content_change(transaction, &files::lib_file_key(filename))
     };
     let libs: BTreeSet<String> = updates
         .iter()
         .filter(|f| is_changed_lib(f))
         .cloned()
         .collect();
-    if !skip_incompatible && !libs.is_empty() {
-        let messages: String = libs
+    let changed_declaration_files = if options.typescript_global_library_definition_discovery {
+        filtered_updates
+            .iter()
+            .filter(|file| {
+                !files::is_configured_lib_file(&options.file_options, file.as_str())
+                    && flow_parser::file_key::has_dts_ext(file.as_str())
+                    && did_content_change(transaction, file)
+            })
+            .duped()
+            .collect()
+    } else {
+        FlowOrdSet::new()
+    };
+    if !skip_incompatible && (!libs.is_empty() || !changed_declaration_files.is_empty()) {
+        let messages = libs
             .iter()
             .rev()
-            .map(|f| format!("Modified lib file: {}", f))
+            .map(|file| format!("Modified lib file: {file}"))
+            .chain(
+                changed_declaration_files
+                    .iter()
+                    .map(|file| format!("Modified TypeScript declaration file: {}", file.as_str())),
+            )
             .collect::<Vec<_>>()
             .join("\n");
-        let updates = filter_wanted_updates(updates);
         Err(Error::RecoverableShouldReinitNonLazily {
             msg: format!("{}\nLib files changed in an incompatible way", messages),
-            updates,
+            updates: filtered_updates.dupe(),
+            changed_declaration_files,
         })
     } else {
         Ok(())
@@ -265,13 +285,14 @@ pub fn process_updates(
     };
     check_for_flowconfig_change(options, skip_incompatible, &config_path, updates)?;
     check_for_package_json_changes(&is_incompatible_pj, skip_incompatible, updates)?;
+    let filtered_updates = do_filter(updates);
     check_for_lib_changes(
         options,
         transaction,
         root,
         skip_incompatible,
-        &do_filter,
+        &filtered_updates,
         updates,
     )?;
-    Ok(do_filter(updates))
+    Ok(filtered_updates)
 }
