@@ -89,8 +89,8 @@ type CompProps = Readonly<{
 // MixedElement
 {
   declare const el: React.MixedElement;
-  React.cloneElement(el); // ERROR
-  React.cloneElement(el, {}); // ERROR
+  React.cloneElement(el); // OK
+  React.cloneElement(el, {}); // OK
 }
 
 // Node
