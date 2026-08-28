@@ -113,7 +113,7 @@ fn main(args: &arg_spec::Values) {
         );
     }
 
-    let prepared = codemod_command::prepare_codemod(args, false);
+    let prepared = codemod_command::prepare_codemod_for_glean(args);
 
     match (output_dir_opt, &write_root_opt) {
         (Some(output_dir), Some(write_root)) => {

@@ -97,6 +97,7 @@ pub(crate) struct GleanRuntimeConfig {
     pub(crate) output_dir: Option<PathBuf>,
     pub(crate) write_root: String,
     pub(crate) include_direct_deps: bool,
+    pub(crate) project_root_input: bool,
     pub(crate) glean_log: bool,
     pub(crate) glean_timeout: i32,
 }
@@ -1844,9 +1845,21 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
 
     fn expand_roots(
         env: &flow_server_env::server_env::Env,
+        options: &Options,
         roots: BTreeSet<FileKey>,
     ) -> BTreeSet<FileKey> {
         let config = GLEAN_RUNTIME_CONFIG.get().unwrap();
+        let roots = if config.project_root_input {
+            let roots = env
+                .files
+                .iter()
+                .filter(|file| file.to_path_buf().starts_with(&*options.root))
+                .cloned()
+                .collect();
+            codemod_runner::get_target_filename_set(&options.file_options, options.all, roots)
+        } else {
+            roots
+        };
         if config.include_direct_deps {
             let roots: FlowOrdSet<FileKey> = roots.iter().cloned().collect();
             let dependency_info = env.dependency_info();
@@ -2175,6 +2188,7 @@ pub(crate) fn make(
             output_dir: output_dir_opt,
             write_root,
             include_direct_deps,
+            project_root_input: prepared.project_root_input,
             glean_log,
             glean_timeout,
         })

@@ -63,6 +63,7 @@ struct AnnotateRuntimeConfig {
 pub(crate) struct PreparedCodemod {
     pub(crate) log_level: Option<flow_hh_logger::Level>,
     pub(crate) options: Options,
+    pub(crate) project_root_input: bool,
     pub(crate) repeat: bool,
     pub(crate) roots: BTreeSet<FileKey>,
     pub(crate) write: bool,
@@ -159,9 +160,10 @@ fn prepare_root(flowconfig_name: &str, root_arg: Option<String>, filenames: &[St
     }
 }
 
-pub(crate) fn prepare_codemod(
+fn prepare_codemod_impl(
     args: &arg_spec::Values,
     default_dot_when_empty: bool,
+    defer_project_root_expansion: bool,
 ) -> PreparedCodemod {
     initialize_environment();
 
@@ -213,17 +215,38 @@ pub(crate) fn prepare_codemod(
         saved_state_options_flags,
     );
 
-    let roots = flow_command_utils::expand_file_list(&filenames, Some(&options.file_options))
-        .into_iter()
-        .map(|filename| flow_common::files::filename_from_string(&options.file_options, &filename))
-        .collect();
+    let project_root_input = defer_project_root_expansion
+        && filenames.len() == 1
+        && std::path::Path::new(&filenames[0]) == *options.root;
+    let roots = if project_root_input {
+        BTreeSet::new()
+    } else {
+        flow_command_utils::expand_file_list(&filenames, Some(&options.file_options))
+            .into_iter()
+            .map(|filename| {
+                flow_common::files::filename_from_string(&options.file_options, &filename)
+            })
+            .collect()
+    };
     PreparedCodemod {
         log_level,
         options,
+        project_root_input,
         repeat,
         roots,
         write,
     }
+}
+
+pub(crate) fn prepare_codemod(
+    args: &arg_spec::Values,
+    default_dot_when_empty: bool,
+) -> PreparedCodemod {
+    prepare_codemod_impl(args, default_dot_when_empty, false)
+}
+
+pub(crate) fn prepare_codemod_for_glean(args: &arg_spec::Values) -> PreparedCodemod {
+    prepare_codemod_impl(args, false, true)
 }
 
 fn string_reporter<A: Clone + Send + Sync + 'static>(
@@ -393,6 +416,7 @@ mod annotate_exports_command {
 
         fn expand_roots(
             _env: &flow_server_env::server_env::Env,
+            _options: &Options,
             roots: BTreeSet<FileKey>,
         ) -> BTreeSet<FileKey> {
             roots
@@ -504,6 +528,7 @@ mod annotate_literal_declaration_command {
 
         fn expand_roots(
             _env: &flow_server_env::server_env::Env,
+            _options: &Options,
             roots: BTreeSet<FileKey>,
         ) -> BTreeSet<FileKey> {
             roots
@@ -659,6 +684,7 @@ mod annotate_optional_properties_command {
 
         fn expand_roots(
             _env: &flow_server_env::server_env::Env,
+            _options: &Options,
             roots: BTreeSet<FileKey>,
         ) -> BTreeSet<FileKey> {
             roots
@@ -752,6 +778,7 @@ mod fix_errors_command {
 
         fn expand_roots(
             _env: &flow_server_env::server_env::Env,
+            _options: &Options,
             roots: BTreeSet<FileKey>,
         ) -> BTreeSet<FileKey> {
             roots

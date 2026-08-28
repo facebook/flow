@@ -193,7 +193,11 @@ pub trait SimpleTypedRunnerConfig {
     type Accumulator: Send + Sync + 'static;
 
     fn reporter() -> codemod_report::CodemodReport<Self::Accumulator>;
-    fn expand_roots(_env: &ServerEnv, roots: BTreeSet<FileKey>) -> BTreeSet<FileKey>;
+    fn expand_roots(
+        _env: &ServerEnv,
+        _options: &Options,
+        roots: BTreeSet<FileKey>,
+    ) -> BTreeSet<FileKey>;
     fn check_options(options: Options) -> Options;
     fn visit(
         options: &Options,
@@ -644,7 +648,11 @@ pub trait TypedRunnerWithPrepassConfig {
     type PrepassResult;
 
     fn reporter() -> codemod_report::CodemodReport<Self::Accumulator>;
-    fn expand_roots(_env: &ServerEnv, roots: BTreeSet<FileKey>) -> BTreeSet<FileKey>;
+    fn expand_roots(
+        _env: &ServerEnv,
+        _options: &Options,
+        roots: BTreeSet<FileKey>,
+    ) -> BTreeSet<FileKey>;
     fn prepass_init() -> Self::PrepassState;
     fn mod_prepass_options(options: Options) -> Options;
     fn check_options(options: Options) -> Options;
@@ -670,7 +678,11 @@ pub trait TypedRunnerConfig {
     type Accumulator;
 
     fn reporter() -> codemod_report::CodemodReport<Self::Accumulator>;
-    fn expand_roots(_env: &ServerEnv, roots: BTreeSet<FileKey>) -> BTreeSet<FileKey>;
+    fn expand_roots(
+        _env: &ServerEnv,
+        _options: &Options,
+        roots: BTreeSet<FileKey>,
+    ) -> BTreeSet<FileKey>;
     fn merge_and_check(
         env: &ServerEnv,
         workers: &Option<ThreadPool>,
@@ -699,8 +711,12 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         C::reporter()
     }
 
-    fn expand_roots(_env: &ServerEnv, roots: BTreeSet<FileKey>) -> BTreeSet<FileKey> {
-        C::expand_roots(_env, roots)
+    fn expand_roots(
+        _env: &ServerEnv,
+        _options: &Options,
+        roots: BTreeSet<FileKey>,
+    ) -> BTreeSet<FileKey> {
+        C::expand_roots(_env, _options, roots)
     }
 
     #[allow(unreachable_code)]
@@ -837,8 +853,12 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         }
     }
 
-    fn expand_roots(_env: &ServerEnv, roots: BTreeSet<FileKey>) -> BTreeSet<FileKey> {
-        C::expand_roots(_env, roots)
+    fn expand_roots(
+        _env: &ServerEnv,
+        _options: &Options,
+        roots: BTreeSet<FileKey>,
+    ) -> BTreeSet<FileKey> {
+        C::expand_roots(_env, _options, roots)
     }
 
     #[allow(unreachable_code)]
@@ -1016,8 +1036,12 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
         C::reporter()
     }
 
-    fn expand_roots(_env: &ServerEnv, roots: BTreeSet<FileKey>) -> BTreeSet<FileKey> {
-        C::expand_roots(_env, roots)
+    fn expand_roots(
+        _env: &ServerEnv,
+        _options: &Options,
+        roots: BTreeSet<FileKey>,
+    ) -> BTreeSet<FileKey> {
+        C::expand_roots(_env, _options, roots)
     }
 
     #[allow(unreachable_code)]
@@ -1215,7 +1239,7 @@ where
         let file_options = &options.file_options;
         let all = options.all;
         let roots = get_target_filename_set(file_options, all, _roots);
-        let roots = TRC::expand_roots(&env, roots);
+        let roots = TRC::expand_roots(&env, options, roots);
         let env_files: BTreeSet<FileKey> = env.files.iter().cloned().collect();
         let roots: BTreeSet<FileKey> = roots.intersection(&env_files).cloned().collect();
         log_input_files(&roots);
