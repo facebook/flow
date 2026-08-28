@@ -54,16 +54,12 @@ type B2 = Readonly<B1>;
         filePaths.push(filePath);
       }
 
-      await runCodemods(
-        [convertLegacyUtilityTypes],
-        filePaths,
-        {
-          all: true,
-          prettierOptions: {},
-          silent: true,
-          yes: true,
-        },
-      );
+      await runCodemods([convertLegacyUtilityTypes], filePaths, {
+        all: true,
+        prettierOptions: {},
+        silent: true,
+        yes: true,
+      });
 
       for (const [name, expectedContents] of Object.entries(expected)) {
         const actual = await fs.readFile(path.join(dir, name), 'utf8');
