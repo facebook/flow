@@ -65,20 +65,6 @@ where
     profiling_js::with_profiling_sync(label, should_print_summary, f)
 }
 
-fn profiling_to_event_logger_json(profiling: &ProfilingFinished) -> serde_json::Value {
-    let mut profiling_props = profiling.to_json_properties();
-    if let Some(timing) = profiling_props
-        .get_mut("timing")
-        .and_then(serde_json::Value::as_object_mut)
-    {
-        timing.insert(
-            "total_wall_duration".to_string(),
-            serde_json::json!(profiling.get_profiling_duration()),
-        );
-    }
-    profiling_props
-}
-
 fn sample_init_memory(
     profiling: &ProfilingRunning,
     committed_heap: &Arc<flow_heap::heap_state::CommittedHeap>,
@@ -127,7 +113,7 @@ fn extract_flowlibs_or_exit(options: &Options) {
     }
 }
 
-fn string_of_saved_state_fetcher(options: &Options) -> &'static str {
+pub fn string_of_saved_state_fetcher(options: &Options) -> &'static str {
     match options.saved_state_fetcher {
         SavedStateFetcher::DummyFetcher => "none",
         SavedStateFetcher::LocalFetcher => "local",
@@ -392,7 +378,7 @@ pub fn check_supported_operating_system(options: &Options) {
 /// monitor exits on OOM rather than restarting (see `process_server_exit` in
 /// flow_server_monitor_server.rs). The arm is kept for type exhaustiveness in
 /// case the policy changes.
-fn string_of_init_trigger(start_cause: server_status::StartCause) -> &'static str {
+pub fn string_of_init_trigger(start_cause: server_status::StartCause) -> &'static str {
     use server_status::RestartReason;
     use server_status::StartCause;
     match start_cause {
@@ -479,7 +465,7 @@ fn run(
     let saved_state_fetcher = string_of_saved_state_fetcher(&options);
     let init_trigger = string_of_init_trigger(start_cause);
 
-    let profiling_props = profiling_to_event_logger_json(&profiling);
+    let profiling_props = profiling.to_event_logger_json_properties();
     flow_event_logger::init_done(
         first_internal_error.as_deref(),
         init_trigger,
@@ -711,7 +697,7 @@ where
     // `check_once` backs `flow full-check`; it's always invoked by the user.
     let init_trigger = string_of_init_trigger(server_status::StartCause::UserInitiated);
 
-    let profiling_props = profiling_to_event_logger_json(&profiling);
+    let profiling_props = profiling.to_event_logger_json_properties();
     flow_event_logger::init_done(
         first_internal_error.as_deref(),
         init_trigger,

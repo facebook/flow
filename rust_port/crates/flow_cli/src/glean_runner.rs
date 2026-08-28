@@ -46,6 +46,10 @@ use flow_parser::offset_utils::OffsetTable;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::Require;
 use flow_parser_utils::file_sig::RequireBindings;
+use flow_profiling::profiling_js;
+use flow_server::server::string_of_init_trigger;
+use flow_server::server::string_of_saved_state_fetcher;
+use flow_server_env::server_status::StartCause;
 use flow_services_autocomplete::find_documentation;
 use flow_type_sig::compact_table::Index;
 use flow_type_sig::compact_table::Table;
@@ -2175,21 +2179,32 @@ pub(crate) fn make(
             glean_timeout,
         })
         .expect("glean config already initialized");
-    if include_reachable_deps {
-        MakeMain::<codemod_runner::MakeSimpleTypedTwoPassRunner<GleanRunnerConfig>>::main(
-            &prepared.options,
-            prepared.write,
-            prepared.repeat,
-            prepared.log_level,
-            prepared.roots.clone(),
-        );
-    } else {
-        MakeMain::<codemod_runner::MakeSimpleTypedRunner<GleanRunnerConfig>>::main(
-            &prepared.options,
-            prepared.write,
-            prepared.repeat,
-            prepared.log_level,
-            prepared.roots.clone(),
-        );
-    }
+    flow_event_logger::set_root(Some(prepared.options.root.to_string_lossy().into_owned()));
+    flow_event_logger::set_eden(Some(flow_common_vcs::eden::is_eden(&prepared.options.root)));
+    flow_logging_utils::set_server_options(&prepared.options);
+
+    let should_print_summary = prepared.options.profile && !prepared.options.quiet;
+    let (profiling, ()) = profiling_js::with_profiling_sync("Glean", should_print_summary, |_| {
+        if include_reachable_deps {
+            MakeMain::<codemod_runner::MakeSimpleTypedTwoPassRunner<GleanRunnerConfig>>::main(
+                &prepared.options,
+                prepared.write,
+                prepared.repeat,
+                prepared.log_level,
+                prepared.roots.clone(),
+            );
+        } else {
+            MakeMain::<codemod_runner::MakeSimpleTypedRunner<GleanRunnerConfig>>::main(
+                &prepared.options,
+                prepared.write,
+                prepared.repeat,
+                prepared.log_level,
+                prepared.roots.clone(),
+            );
+        }
+    });
+    let profiling_props = profiling.to_event_logger_json_properties();
+    let init_trigger = string_of_init_trigger(StartCause::UserInitiated);
+    let saved_state_fetcher = string_of_saved_state_fetcher(&prepared.options);
+    flow_event_logger::init_done(None, init_trigger, saved_state_fetcher, &profiling_props);
 }

@@ -547,6 +547,7 @@ dependencies = [
  "flow_parser",
  "flow_parser_utils",
  "flow_parser_utils_output",
+ "flow_profiling",
  "flow_server",
  "flow_server_env",
  "flow_server_files",

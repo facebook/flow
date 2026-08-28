@@ -465,6 +465,20 @@ impl Finished {
         Value::Object(props)
     }
 
+    pub fn to_event_logger_json_properties(&self) -> Value {
+        let mut profiling_props = self.to_json_properties();
+        if let Some(timing) = profiling_props
+            .get_mut("timing")
+            .and_then(Value::as_object_mut)
+        {
+            timing.insert(
+                "total_wall_duration".to_string(),
+                serde_json::json!(self.get_profiling_duration()),
+            );
+        }
+        profiling_props
+    }
+
     pub fn get_abridged_timing_json_string(&self) -> String {
         flow_hh_json::json_string_of_value(&timing_to_json(true, &self.finished_timing))
     }
@@ -1179,5 +1193,18 @@ mod tests {
             results.contains_key("Parsing"),
             "top-level timer should be present in timing results"
         );
+    }
+
+    #[test]
+    fn event_logger_json_includes_total_wall_duration() {
+        let (profile, ()) = with_profiling_sync("Init", false, |_| ());
+        let duration = profile
+            .to_event_logger_json_properties()
+            .get("timing")
+            .and_then(|timing| timing.get("total_wall_duration"))
+            .and_then(Value::as_f64)
+            .expect("event logger profiling JSON should contain total wall duration");
+
+        assert_eq!(duration, profile.get_profiling_duration());
     }
 }
