@@ -1,0 +1,222 @@
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:34:3
+
+Cannot cast `exact` to object type because an index signature declaring the expected key / value type is read-only in
+`ReadonlyDict` [1] but writable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:34:3
+   34|   exact as {[string]: number}; // ERROR
+         ^^^^^
+
+References:
+   dict_polarity.js:33:24
+   33|   declare const exact: $Exact<ReadonlyDict>;
+                              ^^^^^^^^^^^^^^^^^^^^ [1]
+   dict_polarity.js:34:12
+   34|   exact as {[string]: number}; // ERROR
+                  ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:37:3
+
+Cannot cast `readonly` to object type because an index signature declaring the expected key / value type is read-only in
+`ReadonlyDict` [1] but writable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:37:3
+   37|   readonly as {[string]: number}; // ERROR
+         ^^^^^^^^
+
+References:
+   dict_polarity.js:36:36
+   36|   declare const readonly: Readonly<ReadonlyDict>;
+                                          ^^^^^^^^^^^^ [1]
+   dict_polarity.js:37:15
+   37|   readonly as {[string]: number}; // ERROR
+                     ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:40:3
+
+Cannot cast `partial` to object type because an index signature declaring the expected key / value type is read-only in
+`ReadonlyDict` [1] but writable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:40:3
+   40|   partial as {[string]: number}; // ERROR
+         ^^^^^^^
+
+References:
+   dict_polarity.js:39:34
+   39|   declare const partial: Partial<ReadonlyDict>;
+                                        ^^^^^^^^^^^^ [1]
+   dict_polarity.js:40:14
+   40|   partial as {[string]: number}; // ERROR
+                    ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:43:3
+
+Cannot cast `required` to object type because an index signature declaring the expected key / value type is read-only in
+`ReadonlyDict` [1] but writable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:43:3
+   43|   required as {[string]: number}; // ERROR
+         ^^^^^^^^
+
+References:
+   dict_polarity.js:42:36
+   42|   declare const required: Required<ReadonlyDict>;
+                                          ^^^^^^^^^^^^ [1]
+   dict_polarity.js:43:15
+   43|   required as {[string]: number}; // ERROR
+                     ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:46:3
+
+Cannot cast `omit` to object type because an index signature declaring the expected key / value type is read-only in
+`Omit` [1] but writable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:46:3
+   46|   omit as {[string]: number}; // ERROR
+         ^^^^
+
+References:
+   dict_polarity.js:45:23
+   45|   declare const omit: Omit<ReadonlyDict, empty>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   dict_polarity.js:46:11
+   46|   omit as {[string]: number}; // ERROR
+                 ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:49:3
+
+Cannot cast `mapped` to object type because an index signature declaring the expected key / value type is read-only in
+`ConstantMapped` [1] but writable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:49:3
+   49|   mapped as {[string]: number}; // ERROR
+         ^^^^^^
+
+References:
+   dict_polarity.js:48:25
+   48|   declare const mapped: ConstantMapped<ReadonlyDict>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   dict_polarity.js:49:13
+   49|   mapped as {[string]: number}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:55:3
+
+Cannot cast `exact` to object type because an index signature declaring the expected key / value type is write-only in
+`WriteonlyDict` [1] but readable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:55:3
+   55|   exact as {[string]: unknown}; // ERROR
+         ^^^^^
+
+References:
+   dict_polarity.js:54:24
+   54|   declare const exact: $Exact<WriteonlyDict>;
+                              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   dict_polarity.js:55:12
+   55|   exact as {[string]: unknown}; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:61:3
+
+Cannot cast `partial` to object type because an index signature declaring the expected key / value type is write-only in
+`WriteonlyDict` [1] but readable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:61:3
+   61|   partial as {[string]: unknown}; // ERROR
+         ^^^^^^^
+
+References:
+   dict_polarity.js:60:34
+   60|   declare const partial: Partial<WriteonlyDict>;
+                                        ^^^^^^^^^^^^^ [1]
+   dict_polarity.js:61:14
+   61|   partial as {[string]: unknown}; // ERROR
+                    ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:64:3
+
+Cannot cast `required` to object type because an index signature declaring the expected key / value type is write-only
+in `WriteonlyDict` [1] but readable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:64:3
+   64|   required as {[string]: unknown}; // ERROR
+         ^^^^^^^^
+
+References:
+   dict_polarity.js:63:36
+   63|   declare const required: Required<WriteonlyDict>;
+                                          ^^^^^^^^^^^^^ [1]
+   dict_polarity.js:64:15
+   64|   required as {[string]: unknown}; // ERROR
+                     ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:67:3
+
+Cannot cast `omit` to object type because an index signature declaring the expected key / value type is write-only in
+`Omit` [1] but readable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:67:3
+   67|   omit as {[string]: unknown}; // ERROR
+         ^^^^
+
+References:
+   dict_polarity.js:66:23
+   66|   declare const omit: Omit<WriteonlyDict, empty>;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   dict_polarity.js:67:11
+   67|   omit as {[string]: unknown}; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- dict_polarity.js:70:3
+
+Cannot cast `mapped` to object type because an index signature declaring the expected key / value type is write-only in
+`ConstantMapped` [1] but readable in object type [2]. [incompatible-variance]
+
+   dict_polarity.js:70:3
+   70|   mapped as {[string]: number}; // ERROR
+         ^^^^^^
+
+References:
+   dict_polarity.js:69:25
+   69|   declare const mapped: ConstantMapped<WriteonlyDict>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   dict_polarity.js:70:13
+   70|   mapped as {[string]: number}; // ERROR
+                   ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ dict_polarity.js:160:22
+
+Cannot create `DictComponent` element because in property `key`: [incompatible-type]
+ - Either `unknown` [1] is incompatible with `string` [2].
+ - Or `unknown` [1] is incompatible with `number` [3].
+
+   dict_polarity.js:160:22
+   160|   <DictComponent {...writeonly} />; // ERROR: writeonly indexer cannot provide a key
+                             ^^^^^^^^^
+
+References:
+   dict_polarity.js:159:28
+   159|   declare const writeonly: WriteonlyDict;
+                                   ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:79:26
+    79| declare type React$Key = string | number;
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:79:35
+    79| declare type React$Key = string | number;
+                                          ^^^^^^ [3]
+
+
+
+Found 12 errors

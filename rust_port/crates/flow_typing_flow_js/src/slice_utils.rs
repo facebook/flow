@@ -328,12 +328,32 @@ pub fn read_dict(r: &Reason, dict: &DictType) -> Type {
     }
 }
 
+fn object_tool_dict_polarity_override(tool: &object::Tool) -> Option<Polarity> {
+    match tool {
+        object::Tool::MakeExact
+        | object::Tool::ReadOnly
+        | object::Tool::Partial
+        | object::Tool::Required
+        | object::Tool::Rest(box (object::rest::MergeMode::Omit, _))
+        | object::Tool::ObjectRep
+        | object::Tool::ObjectMap(_) => None,
+        object::Tool::Spread(_)
+        | object::Tool::Rest(box (
+            object::rest::MergeMode::SpreadReversal | object::rest::MergeMode::ReactConfigMerge(_),
+            _,
+        ))
+        | object::Tool::ReactConfig(_)
+        | object::Tool::ReactCheckComponentConfig { .. } => Some(Polarity::Neutral),
+    }
+}
+
 pub fn object_slice<'cx>(
     cx: &Context<'cx>,
     interface: Option<(Type, InstType)>,
     r: &Reason,
     id: properties::Id,
     flags: &Flags,
+    dict_polarity_override: Option<Polarity>,
     frozen: bool,
     reachable_targs: Rc<[(Type, Polarity)]>,
     generics: object::GenericSpreadId,
@@ -349,7 +369,7 @@ pub fn object_slice<'cx>(
             dict_name: None,
             key: dict.key.dupe(),
             value: read_dict(r, &dict),
-            dict_polarity: Polarity::Neutral,
+            dict_polarity: dict_polarity_override.unwrap_or(dict.dict_polarity),
         },
         flags.obj_kind.clone(),
     );
@@ -2002,6 +2022,7 @@ pub fn interface_slice<'cx>(
     static_: &Type,
     inst: InstType,
     id: properties::Id,
+    dict_polarity_override: Option<Polarity>,
     generics: object::GenericSpreadId,
 ) -> object::Slice {
     let strictness_kind = inst.strictness_kind;
@@ -2020,6 +2041,7 @@ pub fn interface_slice<'cx>(
         r,
         id,
         &flags,
+        dict_polarity_override,
         false,
         Rc::from([]),
         generics,
@@ -2106,6 +2128,7 @@ fn resolve_with_env<'cx, A>(
     tool: &object::Tool,
     t: &Type,
 ) -> Result<A, FlowJsException> {
+    let dict_polarity_override = object_tool_dict_polarity_override(tool);
     let (t_generic_id, t) = {
         fn loop_generic<'cx>(
             cx: &Context<'cx>,
@@ -2151,6 +2174,7 @@ fn resolve_with_env<'cx, A>(
                     r,
                     obj.props_tmap.dupe(),
                     &obj.flags,
+                    dict_polarity_override,
                     false,
                     obj.reachable_targs.dupe(),
                     t_generic_id,
@@ -2178,7 +2202,15 @@ fn resolve_with_env<'cx, A>(
                 let own_props = inst.own_props.dupe();
                 let inst_kind = &inst.inst_kind;
                 let resolve_tool_inner = object::ResolveTool::Super(
-                    interface_slice(cx, r, static_, inst.clone(), own_props, t_generic_id),
+                    interface_slice(
+                        cx,
+                        r,
+                        static_,
+                        inst.clone(),
+                        own_props,
+                        dict_polarity_override,
+                        t_generic_id,
+                    ),
                     Rc::new(resolve_tool.clone()),
                 );
                 return match (tool, inst_kind) {
@@ -2669,6 +2701,7 @@ pub fn super_<'cx, A>(
                 static_,
                 inst.clone(),
                 own_props,
+                object_tool_dict_polarity_override(tool),
                 flow_typing_generics::spread_empty(),
             );
             let (props, flags, frozen, generics, reachable_targs) =
