@@ -510,7 +510,7 @@ fn apply_from_flag(command: &Command, args: &arg_spec::Values) {
         None => default_from_flag(),
     };
     flow_event_logger::set_from(from);
-    flow_event_logger::set_agent_id(std::env::var("META_3PAI_INVOCATION_ID").ok());
+    flow_event_logger::set_agent_id(flow_event_logger::agent_invocation_id());
 }
 
 fn default_from_flag() -> Option<String> {
@@ -673,6 +673,15 @@ pub(crate) fn add_quiet_flag(spec: flow_command_spec::Spec) -> flow_command_spec
         "--quiet",
         &arg_spec::truthy(),
         "Suppress output about server startup",
+        None,
+    )
+}
+
+fn add_show_progress_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
+    spec.flag(
+        "--show-progress",
+        &arg_spec::truthy(),
+        "Show server progress, overriding the AI-agent default",
         None,
     )
 }
@@ -1269,12 +1278,17 @@ pub struct ConnectParams {
     pub temp_dir: Option<String>,
     pub ignore_version: bool,
     pub quiet: bool,
+    pub show_progress: bool,
     pub on_mismatch: OnMismatchBehavior,
 }
 
 // The Rust port uses TCP loopback sockets. Under heavily parallel startup, a
 // ready monitor can take longer than three seconds to drain connection attempts.
 const DEFAULT_CONNECT_RETRIES: i32 = 10;
+
+fn should_show_progress(quiet: bool, show_progress: bool, agent_invocation: bool) -> bool {
+    !quiet && (show_progress || !agent_invocation)
+}
 
 pub fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
     let lazy_ = flow_command_spec::get(args, "--lazy", &arg_spec::truthy()).unwrap();
@@ -1311,6 +1325,8 @@ pub fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
         ignore_version: flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy())
             .unwrap(),
         quiet: flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
+        show_progress: flow_command_spec::get(args, "--show-progress", &arg_spec::truthy())
+            .unwrap(),
         on_mismatch: flow_command_spec::get(
             args,
             "--on-mismatch",
@@ -1352,6 +1368,7 @@ fn add_connect_flags_with_lazy_collector(spec: flow_command_spec::Spec) -> flow_
     let spec = add_from_flag(spec);
     let spec = add_ignore_version_flag(spec);
     let spec = add_quiet_flag(spec);
+    let spec = add_show_progress_flag(spec);
     add_on_mismatch_flag(spec)
 }
 
@@ -2636,6 +2653,11 @@ fn make_env<'a>(
         ignore_version: connect_flags.ignore_version,
         emoji: flowconfig.options.emoji.unwrap_or(false),
         quiet: connect_flags.quiet,
+        show_progress: should_show_progress(
+            connect_flags.quiet,
+            connect_flags.show_progress,
+            flow_event_logger::agent_invocation_id().is_some(),
+        ),
         flowconfig_name,
         rerun_on_mismatch,
     }
@@ -2882,10 +2904,14 @@ fn connect_and_make_request_inner(
         Ok(())
     }
 
-    fn eprintf_with_spinner(msg: &str) {
+    fn print_status(msg: &str, enabled: bool, use_spinner: bool) {
+        if !enabled {
+            return;
+        }
+
         let stderr = std::io::stderr();
         let mut stderr = stderr.lock();
-        if stderr.is_terminal() {
+        if use_spinner && stderr.is_terminal() {
             if flow_utils_tty::spinner_used() {
                 flow_utils_tty::print_clear_line(&mut stderr)
                     .expect("failed to clear spinner line");
@@ -2902,7 +2928,7 @@ fn connect_and_make_request_inner(
     // Waits for a response over the socket. If the connection dies, this will throw an exception
     fn wait_for_response(
         stream: &mut flow_common_socket::socket::SocketStream,
-        quiet: bool,
+        show_progress: bool,
         emoji: bool,
         _root: &std::path::Path,
     ) -> Result<server_prot::response::Response, ()> {
@@ -2927,7 +2953,7 @@ fn connect_and_make_request_inner(
                             | std::io::ErrorKind::UnexpectedEof
                     ) =>
                 {
-                    if !quiet && flow_utils_tty::spinner_used() {
+                    if show_progress && flow_utils_tty::spinner_used() {
                         let stderr = std::io::stderr();
                         let mut stderr = stderr.lock();
                         flow_utils_tty::print_clear_line(&mut stderr)
@@ -2936,7 +2962,7 @@ fn connect_and_make_request_inner(
                     return Err(());
                 }
                 Err(e) => {
-                    if !quiet && flow_utils_tty::spinner_used() {
+                    if show_progress && flow_utils_tty::spinner_used() {
                         let stderr = std::io::stderr();
                         let mut stderr = stderr.lock();
                         flow_utils_tty::print_clear_line(&mut stderr)
@@ -2965,14 +2991,16 @@ fn connect_and_make_request_inner(
                         }
                     };
                     if let Some(status_string) = status_string {
-                        if !quiet {
-                            eprintf_with_spinner(&format!("Please wait. {}", status_string));
-                        }
+                        print_status(
+                            &format!("Please wait. {}", status_string),
+                            show_progress,
+                            true,
+                        );
                     }
                     continue;
                 }
                 MonitorToClientMessage::Data(response) => {
-                    if !quiet && flow_utils_tty::spinner_used() {
+                    if show_progress && flow_utils_tty::spinner_used() {
                         let stderr = std::io::stderr();
                         let mut stderr = stderr.lock();
                         flow_utils_tty::print_clear_line(&mut stderr)
@@ -3018,7 +3046,6 @@ fn connect_and_make_request_inner(
             flow_server_env::socket_handshake::VersionMismatchStrategy::ErrorClient
         }
     };
-    let quiet = connect_flags.quiet;
     let client_handshake = (
         flow_server_env::socket_handshake::ClientToMonitor1 {
             client_build_id: flow_server_env::socket_handshake::build_revision(),
@@ -3053,7 +3080,7 @@ fn connect_and_make_request_inner(
         flow_commands_connect::command_connect::connect(&env, &client_handshake);
 
     let response = match send_command(&mut stream, request) {
-        Ok(()) => wait_for_response(&mut stream, quiet, env.emoji, root),
+        Ok(()) => wait_for_response(&mut stream, env.show_progress, env.emoji, root),
         Err(bincode::error::EncodeError::Io { inner, .. })
             if matches!(
                 inner.kind(),
@@ -3062,7 +3089,7 @@ fn connect_and_make_request_inner(
                     | std::io::ErrorKind::UnexpectedEof
             ) =>
         {
-            if !quiet && flow_utils_tty::spinner_used() {
+            if env.show_progress && flow_utils_tty::spinner_used() {
                 let stderr = std::io::stderr();
                 let mut stderr = stderr.lock();
                 flow_utils_tty::print_clear_line(&mut stderr)
@@ -3079,13 +3106,15 @@ fn connect_and_make_request_inner(
         Ok(response) => response,
         Err(()) => {
             flow_commands_connect::command_connect_simple::close_connection(&sockaddr);
-            if !quiet {
-                eprintf_with_spinner(&format!(
+            print_status(
+                &format!(
                     "Lost connection to the flow server ({} {} remaining)",
                     retries,
                     if retries == 1 { "retry" } else { "retries" },
-                ));
-            }
+                ),
+                !env.quiet,
+                env.show_progress,
+            );
             connect_and_make_request_inner(
                 flowconfig_name,
                 connect_flags,
@@ -3433,4 +3462,30 @@ pub fn subcommand_spec<T: Clone + Send + Sync + 'static>(
             ),
         ),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_show_progress;
+
+    #[test]
+    fn human_invocations_show_progress_by_default() {
+        assert!(should_show_progress(false, false, false));
+    }
+
+    #[test]
+    fn agent_invocations_hide_progress_by_default() {
+        assert!(!should_show_progress(false, false, true));
+    }
+
+    #[test]
+    fn agents_can_request_progress() {
+        assert!(should_show_progress(false, true, true));
+    }
+
+    #[test]
+    fn quiet_takes_precedence_over_show_progress() {
+        assert!(!should_show_progress(true, true, true));
+        assert!(!should_show_progress(true, true, false));
+    }
 }

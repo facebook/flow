@@ -28,6 +28,13 @@
 // can be slimmed down to the `pub use flow_facebook_logging::flow_event_logger::*`
 // shape used by sibling facades.
 
+const AGENT_INVOCATION_ID_ENV: &str = "META_3PAI_INVOCATION_ID";
+
+/// Returns the ID for the current AI-agent invocation, when present.
+pub fn agent_invocation_id() -> Option<String> {
+    std::env::var(AGENT_INVOCATION_ID_ENV).ok()
+}
+
 #[cfg(not(fbcode_build))]
 mod stub {
     use std::collections::BTreeMap;
@@ -79,7 +86,7 @@ mod stub {
         pub server_options: Option<ServerOptions>,
         // The time this command started.
         pub start_time: f64,
-        // The agent ID from META_3PAI_INVOCATION_ID.
+        // The AI-agent invocation ID, when present.
         pub agent_id: Option<String>,
     }
 
