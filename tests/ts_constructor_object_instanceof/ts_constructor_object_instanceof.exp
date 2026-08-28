@@ -1,77 +1,77 @@
-Error ------------------------------------------------------------------------------------------------- consumer.js:17:3
+Error ------------------------------------------------------------------------------------------------- consumer.js:20:3
 
 Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   consumer.js:17:3
-   17|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
+   consumer.js:20:3
+   20|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
          ^^^^^^^^^^^^^^^^
 
 References:
    typescript.ts:6:13
     6|   htmlOnly: number;
                    ^^^^^^ [1]
-   consumer.js:17:23
-   17|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
+   consumer.js:20:23
+   20|   element.htmlOnly as string; // ERROR: the refinement is not `any` or `empty`
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- consumer.js:23:3
+Error ------------------------------------------------------------------------------------------------- consumer.js:26:3
 
 Cannot cast `unknownValue.tagName` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   consumer.js:23:3
-   23|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
+   consumer.js:26:3
+   26|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
    typescript.ts:2:12
     2|   tagName: string;
                   ^^^^^^ [1]
-   consumer.js:23:27
-   23|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
+   consumer.js:26:27
+   26|   unknownValue.tagName as number; // ERROR: `unknown` refines to the instance type
                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- consumer.js:28:3
+Error ------------------------------------------------------------------------------------------------- consumer.js:31:3
 
 Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   consumer.js:28:3
-   28|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
+   consumer.js:31:3
+   31|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
          ^^^^^^^^^^^^^^^^
 
 References:
    typescript.ts:6:13
     6|   htmlOnly: number;
                    ^^^^^^ [1]
-   consumer.js:28:23
-   28|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
+   consumer.js:31:23
+   31|   element.htmlOnly as string; // ERROR: inherited construct signatures refine
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- consumer.js:33:3
+Error ------------------------------------------------------------------------------------------------- consumer.js:36:3
 
 Cannot cast `element.htmlOnly` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   consumer.js:33:3
-   33|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
+   consumer.js:36:3
+   36|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
          ^^^^^^^^^^^^^^^^
 
 References:
    typescript.ts:6:13
     6|   htmlOnly: number;
                    ^^^^^^ [1]
-   consumer.js:33:23
-   33|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
+   consumer.js:36:23
+   36|   element.htmlOnly as string; // ERROR: every overload returns an HTML-like instance
                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ consumer.js:38:11
+Error ------------------------------------------------------------------------------------------------ consumer.js:41:11
 
 Cannot get `element.htmlOnly` because property `htmlOnly` is missing in `ElementLike` [1]. [prop-missing]
 
-   consumer.js:38:11
-   38|   element.htmlOnly; // ERROR: the negative branch retains the original supertype
+   consumer.js:41:11
+   41|   element.htmlOnly; // ERROR: the negative branch retains the original supertype
                  ^^^^^^^^
 
 References:
@@ -80,12 +80,12 @@ References:
                                    ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ consumer.js:43:14
+Error ------------------------------------------------------------------------------------------------ consumer.js:46:14
 
 Cannot get `unionValue.other` because property `other` is missing in `HTMLElementLike` [1]. [prop-missing]
 
-   consumer.js:43:14
-   43|   unionValue.other; // ERROR: unrelated union members are pruned
+   consumer.js:46:14
+   46|   unionValue.other; // ERROR: unrelated union members are pruned
                     ^^^^^
 
 References:
@@ -94,12 +94,12 @@ References:
                                       ^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ consumer.js:56:21
+Error ------------------------------------------------------------------------------------------------ consumer.js:59:21
 
 Cannot get `overloadedOrOther.tagName` because property `tagName` is missing in `OtherLike` [1]. [prop-missing]
 
-   consumer.js:56:21
-   56|   overloadedOrOther.tagName; // ERROR: only the unrelated member survives
+   consumer.js:59:21
+   59|   overloadedOrOther.tagName; // ERROR: only the unrelated member survives
                            ^^^^^^^
 
 References:
@@ -108,12 +108,12 @@ References:
                                                                ^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ consumer.js:66:11
+Error ------------------------------------------------------------------------------------------------ consumer.js:69:11
 
 Cannot get `element.htmlOnly` because property `htmlOnly` is missing in `ElementLike` [1]. [prop-missing]
 
-   consumer.js:66:11
-   66|   element.htmlOnly; // ERROR: a supertype of both return types is not pruned
+   consumer.js:69:11
+   69|   element.htmlOnly; // ERROR: a supertype of both return types is not pruned
                  ^^^^^^^^
 
 References:
@@ -122,19 +122,86 @@ References:
                                    ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ consumer.js:73:16
+Error ------------------------------------------------------------------------------------------------ consumer.js:76:16
 
 Cannot get `unknownValue.tagName` because property `tagName` is missing in `BoxLike` [1]. [prop-missing]
 
-   consumer.js:73:16
-   73|   unknownValue.tagName; // ERROR: the refinement is `BoxLike<any>`, not `empty`
+   consumer.js:76:16
+   76|   unknownValue.tagName; // ERROR: the refinement is `BoxLike<any>`, not `empty`
                       ^^^^^^^
 
 References:
-   consumer.js:71:29
-   71| if (unknownValue instanceof BoxLikeConstructor) {
+   consumer.js:74:29
+   74| if (unknownValue instanceof BoxLikeConstructor) {
                                    ^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- consumer.js:81:3
 
-Found 9 errors
+Cannot cast `multiParentBase.child` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   consumer.js:81:3
+   81|   multiParentBase.child as string; // ERROR: multiple interface parents still permit a downcast
+         ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:71:10
+   71|   child: number;
+                ^^^^^^ [1]
+   consumer.js:81:28
+   81|   multiParentBase.child as string; // ERROR: multiple interface parents still permit a downcast
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:82:3
+
+Cannot cast `multiParentBase` to empty because `MultiParentChild` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   consumer.js:82:3
+   82|   multiParentBase as empty; // ERROR: the positive branch is not `empty`
+         ^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:76:10
+   76|   new(): MultiParentChild;
+                ^^^^^^^^^^^^^^^^ [1]
+   consumer.js:82:22
+   82|   multiParentBase as empty; // ERROR: the positive branch is not `empty`
+                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:87:3
+
+Cannot cast `multiParentBase.base` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   consumer.js:87:3
+   87|   multiParentBase.base as number; // ERROR: the negative branch retains the base interface
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   typescript.ts:67:9
+   67|   base: string;
+               ^^^^^^ [1]
+   consumer.js:87:27
+   87|   multiParentBase.base as number; // ERROR: the negative branch retains the base interface
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ consumer.js:92:20
+
+Cannot get `multiParentUnion.other` because property `other` is missing in `MultiParentChild` [1]. [prop-missing]
+
+   consumer.js:92:20
+   92|   multiParentUnion.other; // ERROR: the unrelated union member is pruned
+                          ^^^^^
+
+References:
+   typescript.ts:76:10
+   76|   new(): MultiParentChild;
+                ^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 13 errors

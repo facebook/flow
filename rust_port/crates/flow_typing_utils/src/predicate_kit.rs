@@ -31,6 +31,7 @@ use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
+use flow_typing_flow_js::speculation_kit;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::BigIntLiteral;
@@ -39,6 +40,7 @@ use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
+use flow_typing_type::type_::ExtendsUseTData;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::InstanceKind;
@@ -61,6 +63,8 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::UnionEnumStar;
 use flow_typing_type::type_::UseOp;
+use flow_typing_type::type_::UseT;
+use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::elemt_of_arrtype;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
@@ -2265,7 +2269,6 @@ fn instanceof_test<'cx>(
             let _instance_c = &instance_t.inst;
             let super_c = &instance_t.super_;
             let _instance_a = &a_instance_t.inst;
-            // TODO: intersection
             if flow_js_utils::is_same_instance_type(a_instance_t, instance_t) {
                 report_unchanged_filtering_result_to_predicate_result(c.dupe(), result_collector);
             } else if let Some(seen) = visit_class(seen, instance_t) {
@@ -2292,6 +2295,48 @@ fn instanceof_test<'cx>(
                 // End the walk where a real prototype chain would have ended.
                 let obj_proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
                 instanceof_test(cx, env, trace, result_collector, true, &obj_proto, right)?;
+            }
+        }
+        (
+            sense,
+            TypeInner::IntersectionT(_, _),
+            right @ InstanceofRhs::InternalExtendsOperand { reason, c, a, .. },
+        ) => {
+            let extends_use: UseT<Context<'cx>> =
+                UseT::new(UseTInner::ExtendsUseT(Box::new(ExtendsUseTData {
+                    use_op: unknown_use(),
+                    reason: reason.dupe(),
+                    targs: Vec::new().into(),
+                    true_t: c.dupe(),
+                    false_t: a.dupe(),
+                })));
+            let c_extends_a = match speculation_kit::try_singleton_throw_on_failure(
+                cx,
+                env,
+                trace,
+                left.dupe(),
+                extends_use,
+            ) {
+                Ok(()) => true,
+                Err(FlowJsException::SpeculationSingletonError) => false,
+                Err(other) => return Err(other),
+            };
+            if c_extends_a {
+                if sense {
+                    report_unchanged_filtering_result_to_predicate_result(
+                        c.dupe(),
+                        result_collector,
+                    );
+                } else {
+                    report_changes_to_input(result_collector);
+                }
+            } else {
+                let root = if sense {
+                    Type::new(TypeInner::DefT(reason.dupe(), DefT::new(DefTInner::NullT)))
+                } else {
+                    Type::new(TypeInner::ObjProtoT(reason.dupe()))
+                };
+                instanceof_test(cx, env, trace, result_collector, sense, &root, right)?;
             }
         }
         // If we are checking `instanceof Object` or `instanceof Function`, objects

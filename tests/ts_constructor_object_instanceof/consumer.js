@@ -2,9 +2,12 @@ import {
   BoxLikeConstructor,
   DerivedHTMLElementLike,
   HTMLElementLike,
+  MultiParentChild,
   OverloadedHTMLElementLike,
   UnionReturningHTMLElementLike,
   element,
+  multiParentBase,
+  multiParentUnion,
   overloadedOrOther,
   overloadedValue,
   unionValue,
@@ -71,4 +74,20 @@ if (!(element instanceof UnionReturningHTMLElementLike)) {
 if (unknownValue instanceof BoxLikeConstructor) {
   unknownValue.value;
   unknownValue.tagName; // ERROR: the refinement is `BoxLike<any>`, not `empty`
+}
+
+if (multiParentBase instanceof MultiParentChild) {
+  multiParentBase.child as number;
+  multiParentBase.child as string; // ERROR: multiple interface parents still permit a downcast
+  multiParentBase as empty; // ERROR: the positive branch is not `empty`
+}
+
+if (!(multiParentBase instanceof MultiParentChild)) {
+  multiParentBase.base as string;
+  multiParentBase.base as number; // ERROR: the negative branch retains the base interface
+}
+
+if (multiParentUnion instanceof MultiParentChild) {
+  multiParentUnion.child as number;
+  multiParentUnion.other; // ERROR: the unrelated union member is pruned
 }

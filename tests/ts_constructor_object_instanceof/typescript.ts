@@ -54,3 +54,27 @@ export interface BoxLike<T> {
 export declare var BoxLikeConstructor: {
   new <T>(value: T): BoxLike<T>;
 };
+
+export interface MultiParentLeft {
+  left: string;
+}
+
+export interface MultiParentRight {
+  right: string;
+}
+
+export interface MultiParentBase extends MultiParentLeft, MultiParentRight {
+  base: string;
+}
+
+export interface MultiParentChild extends MultiParentBase {
+  child: number;
+}
+
+export declare var MultiParentChild: {
+  prototype: MultiParentChild;
+  new(): MultiParentChild;
+};
+
+export declare var multiParentBase: MultiParentBase;
+export declare var multiParentUnion: MultiParentBase | OtherLike;

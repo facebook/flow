@@ -160,3 +160,69 @@ function class_util_chain() {
     x as B;
   }
 }
+
+interface MultiParentLeft {
+  left: string;
+}
+
+interface MultiParentRight {
+  right: string;
+}
+
+interface MultiParentBase extends MultiParentLeft, MultiParentRight {
+  base: string;
+}
+
+class MultiParentChild implements MultiParentBase {
+  left: string = '';
+  right: string = '';
+  base: string = '';
+  child: string = '';
+}
+
+declare const multiParentBase: MultiParentBase;
+
+if (multiParentBase instanceof MultiParentChild) {
+  multiParentBase.child as string;
+  multiParentBase.child as number; // error
+  multiParentBase as empty; // error
+}
+
+if (!(multiParentBase instanceof MultiParentChild)) {
+  multiParentBase.base as string;
+  multiParentBase.base as number; // error
+}
+
+interface MultiParentUnrelated {
+  unrelated: boolean;
+}
+
+declare const multiParentUnion: MultiParentBase | MultiParentUnrelated;
+
+if (multiParentUnion instanceof MultiParentChild) {
+  multiParentUnion.child as string;
+  multiParentUnion.unrelated; // error
+}
+
+class SecondParent {
+  second: string = '';
+}
+
+interface FirstParent {
+  first: string;
+}
+
+interface ChildOfSecondParent extends FirstParent, SecondParent {
+  childOfSecond: boolean;
+}
+
+declare const childOfSecondParent: ChildOfSecondParent;
+
+if (childOfSecondParent instanceof SecondParent) {
+  childOfSecondParent.childOfSecond as boolean;
+  childOfSecondParent as empty; // error
+}
+
+if (!(childOfSecondParent instanceof SecondParent)) {
+  childOfSecondParent.noSuchProp;
+}
