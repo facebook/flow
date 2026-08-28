@@ -43,7 +43,7 @@ fn mapper_program<A>(
 }
 
 fn init_loggers(options: &Options) {
-    flow_logging_utils::init_loggers(options, None);
+    flow_logging_utils::init_loggers(options, Some(flow_hh_logger::Level::Off));
 }
 
 fn committed_heap_init() -> std::sync::Arc<flow_heap::heap_state::CommittedHeap> {
@@ -137,11 +137,9 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
         roots: BTreeSet<FileKey>,
     ) {
         initialize_logs(options);
-        let log_level = match log_level {
-            Some(level) => level,
-            None => flow_hh_logger::Level::Off,
-        };
-        flow_hh_logger::level::set_min_level(log_level);
+        if let Some(log_level) = log_level {
+            flow_hh_logger::level::set_min_level(log_level);
+        }
         let committed_heap = committed_heap_init();
         let genv = make_genv(options);
         let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
