@@ -2323,7 +2323,7 @@ fn resolve_with_env<'cx, A>(
                     x,
                 );
             }
-            // mixed is treated as {[string]: mixed} except in type spread and react config checking, where
+            // mixed is treated as {readonly [string]: unknown} except in type spread and react config checking, where
             // it's treated as {}. Any JavaScript value may be treated as an object so this is safe.
             //
             // We ought to use {} for everything since it is a more sound representation
@@ -2356,7 +2356,7 @@ fn resolve_with_env<'cx, A>(
                                 dict_name: None,
                                 key: str_module_t::make(r.dupe()),
                                 value: t.dupe(),
-                                dict_polarity: Polarity::Neutral,
+                                dict_polarity: Polarity::Positive,
                             }),
                             react_dro: None,
                         };
