@@ -18,18 +18,20 @@ interface I {
 declare const a: A;
 declare const i: I;
 
-// Unbinding class methods is OK in .ts (would be method-unbinding error in .js)
+// Extracting class methods is allowed and retains the receiver type. Because
+// the receiver is retained, the extracted method is not a `() => void`: that
+// annotation has an implicit `this: unknown`, which is not a valid `A`.
 a.m; // OK
-a.m satisfies () => void; // OK
+a.m satisfies () => void; // ERROR: `A` receiver is not satisfied by `unknown`
 a.m satisfies empty; // ERROR: proves type is not any
 
 const {m} = a; // OK
-m satisfies () => void; // OK
+m satisfies () => void; // ERROR: `A` receiver is not satisfied by `unknown`
 m satisfies empty; // ERROR: proves type is not any
 
 if (a.m) {} // OK
 
-// Unbinding interface methods is OK in .ts
+// Extracting interface methods is allowed too.
 i.m; // OK
 i.m satisfies () => void; // OK
 i.m satisfies empty; // ERROR: proves type is not any
@@ -38,21 +40,22 @@ const {m: im} = i; // OK
 im satisfies () => void; // OK
 im satisfies empty; // ERROR: proves type is not any
 
-// `this` type is unbound (becomes any) — matches TypeScript semantics
+// The original `this` type is preserved.
 class B {
   self(): this { return this; }
 }
 declare const b: B;
 const {self} = b; // OK
-self satisfies () => B; // OK — any is compatible with B
+self satisfies (this: B) => B; // OK
+self satisfies (this: string) => B; // ERROR: the receiver type is still B
 self satisfies empty; // ERROR: function type is not empty
 
-// Calling unbound methods should work in .ts
+// Calling an extracted method without its receiver is rejected.
 const f = a.m;
-f(); // OK — should not error in .ts
+f(); // ERROR
 
 const {m: am} = a;
-am(); // OK — should not error in .ts
+am(); // ERROR
 
 // Arrow function properties are always OK (unchanged behavior)
 a.n; // OK
@@ -67,7 +70,7 @@ class PrivateMethod {
 
   unbind(): void {
     const method = this.#method; // OK in .ts
-    method();
+    method(); // OK
   }
 }
 

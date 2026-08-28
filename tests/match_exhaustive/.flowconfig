@@ -1,4 +1,5 @@
 [options]
 all=true
+experimental.new_this_typing=true
 enums=true
 no_flowlib=false

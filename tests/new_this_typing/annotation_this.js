@@ -1,7 +1,7 @@
 // A function type annotation with no `this` param gets an implicit top-typed
-// `this`, so the contravariant receiver check in funtype subtyping actually
-// applies. With the flag off that implicit `this` is `any` and every case below
-// is silent.
+// `this`, so the contravariant receiver check in function-type subtyping
+// applies. Under the legacy typing, that implicit `this` was `any` and every
+// case below was silent.
 
 class C {
   x: number = 0;

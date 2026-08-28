@@ -15,21 +15,6 @@ References:
                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- compatible.js:14:10
-
-Cannot return `x` because in property `toString` > the `this` parameter: function type [1] cannot be unbound from the
-context [1] where it was defined. [method-unbinding]
-
-   compatible.js:14:10
-    14|   return x;
-                 ^
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------- dictionary.js:41:9
 
 Cannot assign `new A()` to `o.p` because `A` [1] is incompatible with `B` [2]. [incompatible-type]
@@ -90,21 +75,6 @@ References:
    dictionary.js:79:19
     79|   o.toString() as boolean; // error: string ~> boolean
                           ^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------- dictionary.js:80:10
-
-Cannot return `o` because in property `toString` > the `this` parameter: function type [1] cannot be unbound from the
-context [1] where it was defined. [method-unbinding]
-
-   dictionary.js:80:10
-    80|   return o; // ok
-                 ^
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:87:10
@@ -1574,4 +1544,4 @@ References:
 
 
 
-Found 65 errors
+Found 63 errors

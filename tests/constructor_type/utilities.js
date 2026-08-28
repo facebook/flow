@@ -30,7 +30,7 @@ type Bad2 = InstanceType<() => void>; // ERROR: function is not a constructor
 
 // Overloaded constructors (intersection of FunTs). Two things exercised:
 // (a) direct `new` dispatches both overloads (regression check for
-//     [method-unbinding]: the `this` binding is normalized on every leaf
+//     receiver typing: the `this` binding is normalized on every leaf
 //     of the intersection so neither overload is rejected at call time);
 // (b) `ConstructorParameters` reaches an overloaded construct sig.
 // NOTE: TS-style inference picks the LAST overload for `infer Args`, so
@@ -43,8 +43,8 @@ declare class Overloaded {
     constructor(x: number): void;
     constructor(x: string): void;
 }
-new Overloaded(1); // OK — number overload, no method-unbinding error
-new Overloaded("s"); // OK — string overload, no method-unbinding error
+new Overloaded(1); // OK — number overload, no receiver error
+new Overloaded("s"); // OK — string overload, no receiver error
 new Overloaded(true); // ERROR: neither overload accepts boolean
 type OverloadedParams = ConstructorParameters<typeof Overloaded>;
 const op1: OverloadedParams = [1]; // OK in Flow (first overload); TS would error
@@ -53,8 +53,8 @@ type OverloadedInstance = InstanceType<typeof Overloaded>;
 declare const oi: OverloadedInstance;
 oi.x as number; // OK — InstanceType<typeof Overloaded> is Overloaded
 
-// Generic / polymorphic construct signature. Same point: no method-unbinding
-// error, the polytype is normalized through. Verifies that InstanceType
+// Generic / polymorphic construct signature. Same point: no receiver error,
+// the polytype is normalized through. Verifies that InstanceType
 // preserves the Box<T> shape: with no inference context, T resolves to its
 // top bound (unknown), so the instance is Box<unknown>.
 type Box<T> = { v: T };

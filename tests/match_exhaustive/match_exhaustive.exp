@@ -1902,20 +1902,6 @@ References:
                            ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ objects.js:297:17
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   objects.js:297:17
-   297|     {foo: true, m: _, ...} => {} // ERROR: cannot unbound
-                        ^ [1]
-
-References:
-   objects.js:294:45
-   294|   declare const x: interface {foo: boolean, m(): void};
-                                                    ^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- objects.js:332:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
@@ -2643,4 +2629,4 @@ References:
 
 
 
-Found 192 errors
+Found 191 errors

@@ -1,62 +1,80 @@
-Error -------------------------------------------------------------------------------------------- class_methods.js:6:41
+Error -------------------------------------------------------------------------------------------- class_methods.js:6:10
 
-Cannot get `(new A()).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot call `{...}.method` because object literal [1] is incompatible with `A` [2]. [incompatible-type]
 
-   class_methods.js:6:41
-   6| let _1 = {prop : "", method : (new A()).x }.method(); // method-unbinding, this type becomes any, so no more this typing errors
-                                              ^ [1]
-
-References:
-   class_methods.js:3:5
-   3|     x() : number { return this.prop; }
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- class_methods.js:13:41
-
-Cannot get `(new B()).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   class_methods.js:13:41
-   13| let _2 = {prop : "", method : (new B()).x }.method(); // method-unbinding, this type becomes any, so no more this typing errors
-                                               ^ [1]
+   class_methods.js:6:10
+   6| let _1 = {prop : "", method : (new A()).x }.method(); // error: object literal is not an A receiver
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_methods.js:10:5
-   10|     x() : number { return 3; }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   class_methods.js:1:7
+   1| class A {
+            ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- class_methods.js:21:15
+Error ------------------------------------------------------------------------------------------- class_methods.js:13:10
 
-Cannot get `(new A).x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot call `{...}.method` because object literal [1] is incompatible with `B` [2]. [incompatible-type]
 
-   class_methods.js:21:15
-   21| c.x = (new A).x; // method-unbinding
-                     ^ [1]
-
-References:
-   class_methods.js:3:5
-    3|     x() : number { return this.prop; }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- class_methods.js:28:22
-
-Cannot get `this.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   class_methods.js:28:22
-   28|         let m = this.m; // method-unbinding
-                            ^ [1]
+   class_methods.js:13:10
+   13| let _2 = {prop : "", method : (new B()).x }.method(); // error: object literal is not a B receiver
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   class_methods.js:26:5
-   26|     m(): number { return this.x }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   class_methods.js:8:7
+    8| class B {
+             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_methods.js:21:7
+
+Cannot assign `(new A).x` to `c.x` because in the `this` parameter: `A` [1] is incompatible with `unknown` [2].
+[incompatible-type]
+
+   class_methods.js:21:7
+   21| c.x = (new A).x; // error: A receiver is incompatible with C.x's receiver
+             ^^^^^^^^^
+
+References:
+   class_methods.js:1:7
+    1| class A {
+             ^ [1]
+   class_methods.js:17:18
+   17|     x = function () : number { return 3; }
+                        ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- class_methods.js:22:2
+
+Cannot call `c.x` because `C` [1] is incompatible with `A` [2]. [incompatible-type]
+
+   class_methods.js:22:2
+   22| (c.x()); // error: C is incompatible with the preserved A receiver
+        ^
+
+References:
+   class_methods.js:20:9
+   20| let c = new C();
+               ^^^^^^^ [1]
+   class_methods.js:1:7
+    1| class A {
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- class_methods.js:29:17
+
+Cannot call `m` as a standalone function because its `this` parameter requires `this.m` [1] as the receiver. Call it as
+a method, or bind it to its receiver before calling it. [incompatible-type]
+
+   class_methods.js:29:17
+   29|         let z = m(); // error: the preserved receiver is missing
+                       ^
+
+References:
+   class_methods.js:24:7
+   24| class D {
+             ^ [1]
 
 
 
-Found 4 errors
+Found 5 errors

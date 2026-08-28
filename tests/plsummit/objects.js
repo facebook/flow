@@ -16,5 +16,5 @@ function bar(this: {foo(): string | number, ...},) { return this.foo(); }
 var o = { y: "", foo: foo, bar: bar };
 var o2 = { y: 0, foo: foo, bar: bar };
 
-o.bar();
-var y: number = o2.bar();
+o.bar(); // error: `foo`'s receiver is incompatible with the method annotation
+var y: number = o2.bar(); // errors: receiver incompatibility and string ~> number

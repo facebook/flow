@@ -294,7 +294,7 @@
   declare const x: interface {foo: boolean, m(): void};
 
   match (x) { // OK
-    {foo: true, m: _, ...} => {} // ERROR: cannot unbound
+    {foo: true, m: _, ...} => {} // OK: extracting a method preserves its receiver type
     {foo: false, m: _, ...} => {}
   }
 }

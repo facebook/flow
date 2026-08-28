@@ -1,8 +1,5 @@
-// Class methods carry `dummy_static` statics, so `.call` on them resolves on
-// `any` rather than on `Function.prototype`. The function-statics dispatch arm
-// records those accesses so the check still applies. Reading a class *instance*
-// method as a value additionally trips `method-unbinding`, which rewrites the
-// `this` parameter to `any` -- so only `method-unbinding` is reported there.
+// Reading a class method preserves both its receiver type and receiver
+// expression, so `.call` may only re-supply that exact receiver.
 
 class A {
   m(): void {}
@@ -10,11 +7,11 @@ class A {
 
 declare const a: A;
 
-a.m.call(a); // error: method-unbinding only
-a.m.call(new A()); // error: method-unbinding only
+a.m.call(a); // ok
+a.m.call(new A()); // error: receiver mismatch
 
-// Method shorthand in an object type is not subject to `method-unbinding`, but
-// its `this` is unannotated and therefore trivial, so nothing is reported.
+// Method shorthand in an object type has an unannotated, trivial `this`, so
+// nothing is reported.
 type Shorthand = {x: number, m(y: number): void};
 declare const s: Shorthand;
 declare const other: Shorthand;

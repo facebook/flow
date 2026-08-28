@@ -602,21 +602,6 @@ References:
                      ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:26:32
-
-Cannot assign `a.toString` to `aToString` because in the `this` parameter: function type [1] cannot be unbound from the
-context [1] where it was defined. [method-unbinding]
-
-   object_prototype.js:26:32
-    26| var aToString : () => string = a.toString;
-                                       ^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------- object_prototype.js:31:3
 
 Cannot assign function to `b.toString` because property `toString` is missing in object literal [1]. [prop-missing]
@@ -649,21 +634,6 @@ References:
                         ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:38:28
-
-Cannot get `x.toString` because property `toString` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   object_prototype.js:38:28
-    38| var xToString : number = x.toString; // error
-                                   ^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
 
 Cannot assign `x.toString` to `xToString2` because in the return value: `string` [1] is incompatible with `number` [2].
@@ -682,21 +652,6 @@ References:
                                ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:39:35
-
-Cannot get `x.toString` because property `toString` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   object_prototype.js:39:35
-    39| var xToString2 : () => number = x.toString; // error
-                                          ^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- object_prototype.js:43:26
 
 Cannot assign `y.toString` to `yToString` because `() => string` [1] is incompatible with `number` [2].
@@ -713,36 +668,6 @@ References:
    object_prototype.js:43:17
     43| var yToString : number = y.toString; // error
                         ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- object_prototype.js:43:28
-
-Cannot get `y.toString` because property `toString` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   object_prototype.js:43:28
-    43| var yToString : number = y.toString; // error
-                                   ^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------- object_prototype.js:48:7
-
-Cannot get `123.toString` because property `toString` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   object_prototype.js:48:7
-    48| (123).toString;
-              ^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:510:5
-   510|     toString(radix?: number): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:49:7
@@ -789,21 +714,6 @@ References:
                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:63:51
-
-Cannot assign `a.hasOwnProperty` to `aHasOwnProperty` because in the `this` parameter: function type [1] cannot be
-unbound from the context [1] where it was defined. [method-unbinding]
-
-   object_prototype.js:63:51
-    63| var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty;
-                                                          ^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:241:5
-   241|     hasOwnProperty(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------- object_prototype.js:68:3
 
 Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` is missing in object literal [1].
@@ -837,21 +747,6 @@ References:
                               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:71:34
-
-Cannot get `x.hasOwnProperty` because property `hasOwnProperty` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   object_prototype.js:71:34
-    71| var xHasOwnProperty : number = x.hasOwnProperty; // error
-                                         ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:241:5
-   241|     hasOwnProperty(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
 
 Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because in the return value: `boolean` [1] is incompatible with
@@ -870,21 +765,6 @@ References:
                                                  ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:72:53
-
-Cannot get `x.hasOwnProperty` because property `hasOwnProperty` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   object_prototype.js:72:53
-    72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
-                                                            ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:241:5
-   241|     hasOwnProperty(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- object_prototype.js:76:32
 
 Cannot assign `y.hasOwnProperty` to `yHasOwnProperty` because `(prop: unknown) => boolean` [1] is incompatible with
@@ -901,36 +781,6 @@ References:
    object_prototype.js:76:23
     76| var yHasOwnProperty : number = y.hasOwnProperty; // error
                               ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- object_prototype.js:76:34
-
-Cannot get `y.hasOwnProperty` because property `hasOwnProperty` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   object_prototype.js:76:34
-    76| var yHasOwnProperty : number = y.hasOwnProperty; // error
-                                         ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:241:5
-   241|     hasOwnProperty(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- object_prototype.js:88:57
-
-Cannot assign `a.propertyIsEnumerable` to `aPropertyIsEnumerable` because in the `this` parameter: function type [1]
-cannot be unbound from the context [1] where it was defined. [method-unbinding]
-
-   object_prototype.js:88:57
-    88| var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable;
-                                                                ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:251:5
-   251|     propertyIsEnumerable(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:93:3
@@ -966,21 +816,6 @@ References:
                                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:96:40
-
-Cannot get `x.propertyIsEnumerable` because property `propertyIsEnumerable` [1] cannot be unbound from the context [2]
-where it was defined. [method-unbinding]
-
-   object_prototype.js:96:40
-    96| var xPropertyIsEnumerable : number = x.propertyIsEnumerable; // error
-                                               ^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:251:5
-   251|     propertyIsEnumerable(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
 
 Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because in the return value: `boolean` [1] is
@@ -999,21 +834,6 @@ References:
                                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- object_prototype.js:98:5
-
-Cannot get `x.propertyIsEnumerable` because property `propertyIsEnumerable` [1] cannot be unbound from the context [2]
-where it was defined. [method-unbinding]
-
-   object_prototype.js:98:5
-    98|   x.propertyIsEnumerable; // error
-            ^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:251:5
-   251|     propertyIsEnumerable(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------- object_prototype.js:102:38
 
 Cannot assign `y.propertyIsEnumerable` to `yPropertyIsEnumerable` because `(prop: unknown) => boolean` [1] is
@@ -1030,21 +850,6 @@ References:
    object_prototype.js:102:29
    102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
                                     ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------- object_prototype.js:102:40
-
-Cannot get `y.propertyIsEnumerable` because property `propertyIsEnumerable` [1] cannot be unbound from the context [2]
-where it was defined. [method-unbinding]
-
-   object_prototype.js:102:40
-   102| var yPropertyIsEnumerable : number = y.propertyIsEnumerable; // error
-                                               ^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:251:5
-   251|     propertyIsEnumerable(prop: unknown): boolean;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:119:3
@@ -1079,21 +884,6 @@ References:
                         ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- object_prototype.js:122:27
-
-Cannot get `x.valueOf` because property `valueOf` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   object_prototype.js:122:27
-    122| var xValueOf : number = x.valueOf; // error
-                                   ^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:1740:5
-   1740|     valueOf(): number;
-             ^^^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------- object_prototype.js:126:25
 
 Cannot assign `y.valueOf` to `yValueOf` because `() => unknown` [1] is incompatible with `number` [2].
@@ -1110,36 +900,6 @@ References:
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
                        ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------- object_prototype.js:126:27
-
-Cannot get `y.valueOf` because property `valueOf` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   object_prototype.js:126:27
-   126| var yValueOf : number = y.valueOf; // error
-                                  ^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:257:5
-   257|     valueOf(): unknown;
-            ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------- object_prototype.js:142:38
-
-Cannot assign `a.toLocaleString` to `aToLocaleString` because in the `this` parameter: function type [1] cannot be
-unbound from the context [1] where it was defined. [method-unbinding]
-
-   object_prototype.js:142:38
-   142| var aToLocaleString : () => string = a.toLocaleString;
-                                             ^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:253:5
-   253|     toLocaleString(): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:147:3
@@ -1176,21 +936,6 @@ References:
                                ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- object_prototype.js:150:34
-
-Cannot get `x.toLocaleString` because property `toLocaleString` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   object_prototype.js:150:34
-    150| var xToLocaleString : number = x.toLocaleString; // error
-                                          ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:1728:5
-   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
 
 Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return value: `string` [1] is incompatible with
@@ -1209,21 +954,6 @@ References:
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- object_prototype.js:151:41
-
-Cannot get `x.toLocaleString` because property `toLocaleString` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   object_prototype.js:151:41
-    151| var xToLocaleString2 : () => number = x.toLocaleString; // error
-                                                 ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:1728:5
-   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------- object_prototype.js:155:32
 
 Cannot assign `y.toLocaleString` to `yToLocaleString` because `() => string` [1] is incompatible with `number` [2].
@@ -1240,21 +970,6 @@ References:
    object_prototype.js:155:23
    155| var yToLocaleString : number = y.toLocaleString; // error
                               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------- object_prototype.js:155:34
-
-Cannot get `y.toLocaleString` because property `toLocaleString` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   object_prototype.js:155:34
-   155| var yToLocaleString : number = y.toLocaleString; // error
-                                         ^^^^^^^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:253:5
-   253|     toLocaleString(): string;
-            ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- object_values.js:27:1
@@ -1509,21 +1224,6 @@ References:
                              ^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- proto.js:3:10
-
-Cannot get `o1_proto.toString` because property `toString` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   proto.js:3:10
-     3| o1_proto.toString as empty; // error: function ~> empty
-                 ^^^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:255:5
-   255|     toString(): string;
-            ^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- proto.js:7:1
 
 Cannot cast `o2.__proto__.p` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1571,4 +1271,4 @@ References:
 
 
 
-Found 90 errors
+Found 70 errors

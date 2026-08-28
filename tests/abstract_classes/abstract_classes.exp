@@ -236,21 +236,6 @@ References:
                   ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- method_unbinding.js:10:13
-
-Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   method_unbinding.js:10:13
-   10| const f = b.m; // ERROR
-                   ^ [1]
-
-References:
-   method_unbinding.js:6:3
-    6|   m(): void {}
-         ^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------ private_abstract.js:8:3
 
 The `abstract` modifier cannot be used with `private` member `priv`. [invalid-abstract]
@@ -360,4 +345,4 @@ Cannot instantiate an `abstract` class. [invalid-abstract]
 
 
 
-Found 34 errors
+Found 33 errors

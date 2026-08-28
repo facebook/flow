@@ -33,11 +33,13 @@ function extract_this_parameter_type() {
   3 as ThisParameterType<(this: number, string) => void>; // ok
   '' as ThisParameterType<(this: number, string) => void>; // error: string ~> number
 
-  // This param is inferred as any,
-  // which comes from unsoundness of this param in function type annotation.
-  3 as unknown as ThisParameterType<(string, number) => string>; // ok
+  declare const implicitThis: ThisParameterType<(string, number) => string>;
+  implicitThis as number; // error: unknown ~> number
 
   3 as OmitThisParameter<ThisParameterType<(this: number, string) => void>>; // ok: ThisParameterType extracts `number`; OmitThisParameter on a non-function falls through unchanged, so target is `number`
+
+  declare const noThisParam: OmitThisParameter<(this: number, string) => void>;
+  noThisParam(''); // ok: the explicit `this` parameter was removed
 }
 
 function recursive_awaited_type() {

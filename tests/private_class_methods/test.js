@@ -50,14 +50,14 @@ class Outer {
   }
 }
 
-class PrivateMethodUnbound {
+class PrivateMethodExtracted {
   #foo(): number { return 3; }
   static #bar(): string { return 'bar'; }
 
   test(): void {
-    // Method unbound errors
-    this.#foo;
-    PrivateMethodUnbound.#bar;
+    // Extracting private methods preserves their receiver types.
+    this.#foo; // OK
+    PrivateMethodExtracted.#bar; // OK
   }
 }
 

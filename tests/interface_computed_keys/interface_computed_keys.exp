@@ -330,21 +330,6 @@ References:
                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- imp.js:101:17
-
-Cannot get `valueThenMethod.a` because property `a` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   imp.js:101:17
-   101| valueThenMethod.a as number; // ERROR: the method is not a number
-                        ^ [1]
-
-References:
-   exp.js:70:3
-    70|   a(): void,
-          ^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- imp.js:105:17
 
 Cannot call `methodThenValue.a` because `number` [1] is not a function. [not-a-function]
@@ -1010,21 +995,6 @@ References:
                              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- value_keys.js:113:17
-
-Cannot get `valueThenMethod.a` because property `a` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   value_keys.js:113:17
-   113| valueThenMethod.a as number; // ERROR: the method is not a number
-                        ^ [1]
-
-References:
-   value_keys.js:109:3
-   109|   a(): void,
-          ^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------- value_keys.js:121:17
 
 Cannot call `methodThenValue.a` because `number` [1] is not a function. [not-a-function]
@@ -1522,4 +1492,4 @@ Cannot get `writeOnlyKey.a` because property `a` is not readable. [cannot-read]
 
 
 
-Found 104 errors
+Found 102 errors

@@ -1043,21 +1043,6 @@ The utility type `$Shape` is deprecated, use `Partial` instead. [deprecated-util
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- type_filter_union.js:9:50
-
-Cannot get `(thumbnails ?? []).filter` because property `filter` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   type_filter_union.js:9:50
-      9| const loadedThumbnailsCount = (thumbnails ?? []).filter;
-                                                          ^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:1069:5
-   1069|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ type_guard.js:3:3
 
 Cannot cast `y` to empty because `number` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1284,4 +1269,4 @@ References:
 
 
 
-Found 91 errors
+Found 90 errors

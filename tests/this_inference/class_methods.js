@@ -3,14 +3,14 @@ class A {
     x() : number { return this.prop; }
 }
 
-let _1 = {prop : "", method : (new A()).x }.method(); // method-unbinding, this type becomes any, so no more this typing errors
+let _1 = {prop : "", method : (new A()).x }.method(); // error: object literal is not an A receiver
 
 class B {
     prop : number
     x() : number { return 3; }
 }
 
-let _2 = {prop : "", method : (new B()).x }.method(); // method-unbinding, this type becomes any, so no more this typing errors
+let _2 = {prop : "", method : (new B()).x }.method(); // error: object literal is not a B receiver
 
 class C {
     prop : number
@@ -18,15 +18,15 @@ class C {
 }
 
 let c = new C();
-c.x = (new A).x; // method-unbinding
-(c.x()); // method-unbinding above, this type becomes any, so no more this typing errors
+c.x = (new A).x; // error: A receiver is incompatible with C.x's receiver
+(c.x()); // error: C is incompatible with the preserved A receiver
 
 class D {
     x : number
     m(): number { return this.x }
     n() {
-        let m = this.m; // method-unbinding
-        let z = m(); // method-unbinding above, this type becomes any, so no more this typing errors
+        let m = this.m; // ok: receiver type is preserved
+        let z = m(); // error: the preserved receiver is missing
     }
 }
 

@@ -12,4 +12,4 @@ let o2 = { foo : bar, y : 3}
 
 let x = true ? o1 : o2;
 
-x.foo();
+x.foo(); // unfortunate error, but makes sense: the union receiver is incompatible with both branches

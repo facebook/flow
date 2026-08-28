@@ -560,7 +560,10 @@
           "params":[{"name":null,"type":{"$ref":2}}],
           "rest_param":null,
           "return_t":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:71-77: `unknown`"},
-          "this_t":{"status":{"kind":"This_Function"},"type":{"kind":"Any"}},
+          "this_t":{
+            "status":{"kind":"This_Function"},
+            "type":{"def":{"kind":"Mixed"},"kind":"Def","reason":"bound `this` in method"}
+          },
           "type_guard":null
         },
         "kind":"Fun",
@@ -638,7 +641,10 @@
           "params":[{"name":null,"type":{"$ref":5}}],
           "rest_param":null,
           "return_t":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:71-77: `unknown`"},
-          "this_t":{"status":{"kind":"This_Function"},"type":{"kind":"Any"}},
+          "this_t":{
+            "status":{"kind":"This_Function"},
+            "type":{"def":{"kind":"Mixed"},"kind":"Def","reason":"bound `this` in method"}
+          },
           "type_guard":null
         },
         "kind":"Fun",
@@ -1759,7 +1765,7 @@
     "22":{"def":{"kind":"StrGeneral"},"kind":"Def","reason":"test.js:7:60-65: string"},
     "23":{"kind":"Maybe","type":{"$ref":22}},
     "24":{"kind":"Union","members":[{"$ref":18},{"$ref":19},{"$ref":21},{"$ref":23}]},
-    "25":{"kind":"Any"},
+    "25":{"def":{"kind":"Mixed"},"kind":"Def","reason":"bound `this` in method"},
     "26":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:71-77: `unknown`"},
     "27":{
       "def":{
@@ -1834,7 +1840,7 @@
       "kind":"Def",
       "reason":"test.js:3:1-23: function"
     },
-    "40":{"kind":"Any"},
+    "40":{"def":{"kind":"Mixed"},"kind":"Def","reason":"bound `this` in method"},
     "41":{"def":{"kind":"Mixed"},"kind":"Def","reason":"test.js:7:71-77: `unknown`"},
     "42":{
       "def":{

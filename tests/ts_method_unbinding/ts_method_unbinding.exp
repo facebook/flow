@@ -1,102 +1,165 @@
-Error ------------------------------------------------------------------------------------------------- consumer.js:6:25
+Error ----------------------------------------------------------------------------------------------------- test.ts:25:1
 
-Cannot get `imported.method` because property `method` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot cast `a.m` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
+[incompatible-type]
 
-   consumer.js:6:25
-   6| const method = imported.method; // ERROR: the consumer is .js
-                              ^^^^^^ [1]
+   test.ts:25:1
+   25| a.m satisfies () => void; // ERROR: `A` receiver is not satisfied by `unknown`
+       ^^^
 
 References:
-   lib.ts:9:3
-   9|   method(): void;
-        ^^^^^^^^^^^^^^ [2]
+   test.ts:8:7
+    8| class A {
+             ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.ts:24:1
+Error ----------------------------------------------------------------------------------------------------- test.ts:26:1
 
 Cannot cast `a.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   test.ts:24:1
-   24| a.m satisfies empty; // ERROR: proves type is not any
+   test.ts:26:1
+   26| a.m satisfies empty; // ERROR: proves type is not any
        ^^^
 
 References:
    test.ts:9:3
     9|   m(): void {}
          ^^^^^^^^^^^^ [1]
-   test.ts:24:15
-   24| a.m satisfies empty; // ERROR: proves type is not any
+   test.ts:26:15
+   26| a.m satisfies empty; // ERROR: proves type is not any
                      ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.ts:28:1
+Error ----------------------------------------------------------------------------------------------------- test.ts:29:1
+
+Cannot cast `m` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
+[incompatible-type]
+
+   test.ts:29:1
+   29| m satisfies () => void; // ERROR: `A` receiver is not satisfied by `unknown`
+       ^
+
+References:
+   test.ts:8:7
+    8| class A {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:30:1
 
 Cannot cast `m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   test.ts:28:1
-   28| m satisfies empty; // ERROR: proves type is not any
+   test.ts:30:1
+   30| m satisfies empty; // ERROR: proves type is not any
        ^
 
 References:
    test.ts:9:3
     9|   m(): void {}
          ^^^^^^^^^^^^ [1]
-   test.ts:28:13
-   28| m satisfies empty; // ERROR: proves type is not any
+   test.ts:30:13
+   30| m satisfies empty; // ERROR: proves type is not any
                    ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.ts:35:1
+Error ----------------------------------------------------------------------------------------------------- test.ts:37:1
 
 Cannot cast `i.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   test.ts:35:1
-   35| i.m satisfies empty; // ERROR: proves type is not any
+   test.ts:37:1
+   37| i.m satisfies empty; // ERROR: proves type is not any
        ^^^
 
 References:
    test.ts:14:3
    14|   m(): void;
          ^^^^^^^^^ [1]
-   test.ts:35:15
-   35| i.m satisfies empty; // ERROR: proves type is not any
+   test.ts:37:15
+   37| i.m satisfies empty; // ERROR: proves type is not any
                      ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.ts:39:1
+Error ----------------------------------------------------------------------------------------------------- test.ts:41:1
 
 Cannot cast `im` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   test.ts:39:1
-   39| im satisfies empty; // ERROR: proves type is not any
+   test.ts:41:1
+   41| im satisfies empty; // ERROR: proves type is not any
        ^^
 
 References:
    test.ts:14:3
    14|   m(): void;
          ^^^^^^^^^ [1]
-   test.ts:39:14
-   39| im satisfies empty; // ERROR: proves type is not any
+   test.ts:41:14
+   41| im satisfies empty; // ERROR: proves type is not any
                     ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.ts:48:1
+Error ----------------------------------------------------------------------------------------------------- test.ts:50:1
 
-Cannot cast `self` to empty because `() => B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `self` to function type because in the `this` parameter: `B` [1] is incompatible with `string` [2].
+[incompatible-type]
 
-   test.ts:48:1
-   48| self satisfies empty; // ERROR: function type is not empty
+   test.ts:50:1
+   50| self satisfies (this: string) => B; // ERROR: the receiver type is still B
        ^^^^
 
 References:
-   test.ts:43:3
-   43|   self(): this { return this; }
+   test.ts:44:7
+   44| class B {
+             ^ [1]
+   test.ts:50:23
+   50| self satisfies (this: string) => B; // ERROR: the receiver type is still B
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:51:1
+
+Cannot cast `self` to empty because `() => B` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   test.ts:51:1
+   51| self satisfies empty; // ERROR: function type is not empty
+       ^^^^
+
+References:
+   test.ts:45:3
+   45|   self(): this { return this; }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.ts:48:16
-   48| self satisfies empty; // ERROR: function type is not empty
+   test.ts:51:16
+   51| self satisfies empty; // ERROR: function type is not empty
                       ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.ts:55:1
 
-Found 6 errors
+Cannot call `f` as a standalone function because its `this` parameter requires `A` [1] as the receiver. Call it as a
+method, or bind it to its receiver before calling it. [incompatible-type]
+
+   test.ts:55:1
+   55| f(); // ERROR
+       ^
+
+References:
+   test.ts:8:7
+    8| class A {
+             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:58:1
+
+Cannot call `am` as a standalone function because its `this` parameter requires `A` [1] as the receiver. Call it as a
+method, or bind it to its receiver before calling it. [incompatible-type]
+
+   test.ts:58:1
+   58| am(); // ERROR
+       ^^
+
+References:
+   test.ts:8:7
+    8| class A {
+             ^ [1]
+
+
+
+Found 10 errors

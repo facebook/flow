@@ -376,26 +376,6 @@ Invalid trivially recursive definition of `T`.  [recursive-definition]
                ^
 
 
-Error ---------------------------------------------------------------------------------------------------- test5.js:8:27
-
-Cannot get `Array.prototype.concat` because property `concat` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
-
-   test5.js:8:27
-     8|     arr = Array.prototype.concat.apply([], arr);
-                                  ^^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:747:5
-            v------
-   747|     concat<
-   748|       // $FlowFixMe[incompatible-variance]
-   749|       S = T
-   750|       // $FlowFixMe[incompatible-variance]
-   751|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
-            -----------------------------------------------------^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------- this_subst.js:1:53
 
 Cannot extend `InstrumentedContainer` [1] with `container` because `void` [2] is not inheritable. [incompatible-use]
@@ -459,4 +439,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 31 errors
+Found 30 errors

@@ -7,4 +7,4 @@ class B extends A {
 }
 
 const b = new B(); // OK
-const f = b.m; // ERROR
+const f = b.m; // OK: extracting a method preserves its receiver type
