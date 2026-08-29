@@ -11,7 +11,7 @@ class Foo2 {
   bar(
     baz: Readonly<this>,
   ): Readonly<this> { // ok
-    baz.bar(baz); // ERROR: Readonly<this> is a plain object, not `this`
+    baz.bar(baz); // OK: this is a direct method call, so `baz` remains the receiver
     return this
   }
 }

@@ -650,14 +650,6 @@ Unexpected use of `this` type. [illegal-this]
                                       ^^^^
 
 
-Error ---------------------------------------------------------------------------------------------- interface.js:157:41
-
-Unexpected use of `this` type. [illegal-this]
-
-   157|   readonly nested: interface { clone(): this }; // ERROR
-                                                ^^^^
-
-
 Error ---------------------------------------------------------------------------------------------- interface.js:161:31
 
 Unexpected use of `this` type. [illegal-this]
@@ -947,22 +939,5 @@ Unexpected use of `this` type. [illegal-this]
                            ^^^^
 
 
-Error --------------------------------------------------------------------------------------------- utility-type.js:14:5
 
-Cannot call `baz.bar` because `interface {}` [1] is incompatible with `this` [2]. [incompatible-type]
-
-   utility-type.js:14:5
-   14|     baz.bar(baz); // ERROR: Readonly<this> is a plain object, not `this`
-           ^^^
-
-References:
-   utility-type.js:12:19
-   12|     baz: Readonly<this>,
-                         ^^^^ [1]
-   utility-type.js:10:7
-   10| class Foo2 {
-             ^^^^ [2]
-
-
-
-Found 69 errors
+Found 67 errors

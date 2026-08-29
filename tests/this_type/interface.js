@@ -146,15 +146,15 @@ dict['k'] as Dict; // OK — indexer value rebound to Dict
 interface Holder<T> { value: T }
 interface BadExtends extends Holder<this> { } // ERROR: this not in scope here
 
-// `this` inside a nested inline object/interface type within an interface
-// body is NOT in scope — matches both TS (TS2526) and Flow's existing
-// behavior in classes (which errors with [incompatible-variance] on the
-// same shape). All of the following should error.
+// `this` inside a nested object type within an interface body is NOT in scope,
+// matching Flow's behavior for the same shape in classes. An inline interface
+// introduces its own `this` binding, so `OuterNestedInterface` is valid while
+// the other nested object types below should still error.
 interface OuterNestedObject {
   readonly nested: { clone(): this }; // ERROR: `this` not in scope inside nested type
 }
 interface OuterNestedInterface {
-  readonly nested: interface { clone(): this }; // ERROR
+  readonly nested: interface { clone(): this }; // OK: this belongs to the inner inline interface
 }
 interface OuterWithThisAndNestedObject {
   self(): this; // OK — top-level `this` is fine
