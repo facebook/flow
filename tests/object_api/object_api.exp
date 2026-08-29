@@ -602,21 +602,6 @@ References:
                      ^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:26:32
-
-Cannot assign `a.toString` to `aToString` because in the `this` parameter: `Object` [1] is incompatible with `unknown`.
-[incompatible-type]
-
-   object_prototype.js:26:32
-   26| var aToString : () => string = a.toString; // error: receiver is not preserved by the annotation
-                                      ^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:96:15
-   96| declare class Object {
-                     ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------- object_prototype.js:31:3
 
 Cannot assign function to `b.toString` because property `toString` is missing in object literal [1]. [prop-missing]
@@ -744,21 +729,6 @@ References:
                              ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_prototype.js:63:51
-
-Cannot assign `a.hasOwnProperty` to `aHasOwnProperty` because in the `this` parameter: `Object` [1] is incompatible with
-`unknown`. [incompatible-type]
-
-   object_prototype.js:63:51
-   63| var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty; // error: receiver is not preserved by the annotation
-                                                         ^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:96:15
-   96| declare class Object {
-                     ^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------- object_prototype.js:68:3
 
 Cannot assign function to `b.hasOwnProperty` because property `hasOwnProperty` is missing in object literal [1].
@@ -841,21 +811,6 @@ References:
    object_prototype.js:76:23
     76| var yHasOwnProperty : number = y.hasOwnProperty; // error
                               ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- object_prototype.js:88:57
-
-Cannot assign `a.propertyIsEnumerable` to `aPropertyIsEnumerable` because in the `this` parameter: `Object` [1] is
-incompatible with `unknown`. [incompatible-type]
-
-   object_prototype.js:88:57
-   88| var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable; // error: receiver is not preserved by the annotation
-                                                               ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:96:15
-   96| declare class Object {
-                     ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:93:3
@@ -990,21 +945,6 @@ References:
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
                        ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------- object_prototype.js:142:38
-
-Cannot assign `a.toLocaleString` to `aToLocaleString` because in the `this` parameter: `Object` [1] is incompatible with
-`unknown`. [incompatible-type]
-
-   object_prototype.js:142:38
-   142| var aToLocaleString : () => string = a.toLocaleString; // error: receiver is not preserved by the annotation
-                                             ^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:96:15
-    96| declare class Object {
-                      ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:147:3
@@ -1391,4 +1331,4 @@ References:
 
 
 
-Found 78 errors
+Found 74 errors

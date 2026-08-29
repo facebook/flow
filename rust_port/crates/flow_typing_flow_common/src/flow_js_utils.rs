@@ -6478,10 +6478,10 @@ pub fn method_property_for_read(
     use flow_typing_type::type_::properties;
 
     match p.deref() {
-        PropertyInner::Method { key_loc, type_: t } if !method_accessible => {
+        PropertyInner::Method { key_loc, type_: t } => {
             flow_typing_type::type_::Property::new(PropertyInner::Method {
                 key_loc: key_loc.dupe(),
-                type_: properties::method_to_function(t),
+                type_: properties::method_to_function(t, method_accessible),
             })
         }
         _ => p,

@@ -6222,7 +6222,13 @@ fn __flow_impl<'cx>(
                 match property {
                     Some((p, target_kind)) => {
                         let p = if cx.new_this_typing() {
-                            flow_js_utils::method_property_for_read(*method_accessible, p)
+                            if !*method_accessible
+                                || matches!(action.as_ref(), LookupAction::ReadProp(_))
+                            {
+                                flow_js_utils::method_property_for_read(*method_accessible, p)
+                            } else {
+                                p
+                            }
                         } else {
                             flow_js_utils::check_method_unbinding(
                                 cx,

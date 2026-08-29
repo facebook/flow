@@ -6949,7 +6949,7 @@ pub mod properties {
 
                     if matches!(prop.deref(), PropertyInner::Method { .. }) {
                         type_ = if new_this_typing {
-                            method_to_function(&type_)
+                            method_to_function(&type_, false)
                         } else {
                             unbind_this_method(&type_)
                         };
@@ -6999,14 +6999,21 @@ pub mod properties {
 
     pub type Map = FlowOrdMap<Id, PropertiesMap>;
 
-    pub fn method_to_function(t: &Type) -> Type {
+    pub fn method_to_function(t: &Type, use_mixed_this: bool) -> Type {
         match &**t {
             TypeInner::DefT(r, def_t) => match &**def_t {
                 DefTInner::FunT(static_, ft)
                     if matches!(&ft.this_t, (_, ThisStatus::ThisMethod { .. })) =>
                 {
                     let mut new_ft = (**ft).clone();
-                    new_ft.this_t.1 = ThisStatus::ThisFunction;
+                    new_ft.this_t = (
+                        if use_mixed_this {
+                            implicit_mixed_this(r.dupe())
+                        } else {
+                            new_ft.this_t.0.dupe()
+                        },
+                        ThisStatus::ThisFunction,
+                    );
                     Type::new(TypeInner::DefT(
                         r.dupe(),
                         DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(new_ft))),
@@ -7019,7 +7026,7 @@ pub mod properties {
                     id,
                     strictness_kind,
                 }) => {
-                    let new_t_out = method_to_function(t_out);
+                    let new_t_out = method_to_function(t_out, use_mixed_this);
                     if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
                         t.dupe()
                     } else {
@@ -7038,7 +7045,7 @@ pub mod properties {
                 _ => t.dupe(),
             },
             TypeInner::IntersectionT(r, rep) => {
-                let new_rep = rep.map(method_to_function);
+                let new_rep = rep.map(|t| method_to_function(t, use_mixed_this));
                 if new_rep
                     .members_iter()
                     .zip(rep.members_iter())

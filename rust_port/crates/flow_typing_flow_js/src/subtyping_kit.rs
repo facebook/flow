@@ -215,7 +215,7 @@ fn property_type_for_subtyping(
     match prop.deref() {
         PropertyInner::Method { type_, .. } if strictness_kind.is_typescript_loose() => {
             let get_type = if new_this_typing {
-                properties::method_to_function(type_)
+                properties::method_to_function(type_, false)
             } else {
                 properties::unbind_this_method(type_)
             };

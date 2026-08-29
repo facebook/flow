@@ -7,9 +7,9 @@ class A {
 
 {
   declare const a: A;
-  const m: A['m'] = a.m; // OK - the extracted function retains `this: A`
+  const m: A['m'] = a.m; // ERROR - the indexed access has `this: mixed`
   m as A['m']; // OK
-  m(); // ERROR - the receiver is missing
+  m(); // OK - the indexed access has `this: mixed`
 
   const y = a.m.bind(a);
   y('value') as number; // OK

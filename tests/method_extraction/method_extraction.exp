@@ -1,16 +1,22 @@
-Error ---------------------------------------------------------------------------------------------- destructors.js:12:3
+Error --------------------------------------------------------------------------------------------- destructors.js:10:21
 
-Cannot call `m` as a standalone function because its `this` parameter requires `A` [1] as the receiver. Call it as a
-method, or bind it to its receiver before calling it. [incompatible-type]
+Cannot assign `a.m` to `m` because in the `this` parameter: `A` [1] is incompatible with `unknown` [2].
+[incompatible-type]
 
-   destructors.js:12:3
-   12|   m(); // ERROR - the receiver is missing
-         ^
+   destructors.js:10:21
+   10|   const m: A['m'] = a.m; // ERROR - the indexed access has `this: mixed`
+                           ^^^
 
 References:
    destructors.js:1:7
     1| class A {
              ^ [1]
+   destructors.js:2:3
+         v--------------------------
+    2|   m(value?: string): number {
+    3|     return 0;
+    4|   }
+         ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:16:5
