@@ -802,19 +802,21 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     Option<Type>,
     Option<Type>,
 ) {
-    // To determine the default `this` parameter for a method without `this` annotation, we
-    // default to the instance/static `this` type
+    let receiver_this = || {
+        type_util::mod_reason_of_t(
+            &|r: Reason| r.update_desc(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc))),
+            &this,
+        )
+    };
     let this_default = |x: &func_class_sig_types::func::Func<C>| -> Type {
-        match (&x.body, super_) {
-            // We can use mixed for declared class methods here for two reasons:
-            // 1) They can never be unbound
-            // 2) They have no body
-            (None, class_types::Super::Class(_)) => implicit_mixed_this(x.reason.dupe()),
-            (Some(_), class_types::Super::Class(_)) => type_util::mod_reason_of_t(
-                &|r: Reason| r.update_desc(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc))),
-                &this,
-            ),
-            (_, class_types::Super::Interface(_)) => implicit_mixed_this(x.reason.dupe()),
+        if cx.new_this_typing() {
+            receiver_this()
+        } else {
+            match (&x.body, super_) {
+                (None, class_types::Super::Class(_)) => implicit_mixed_this(x.reason.dupe()),
+                (Some(_), class_types::Super::Class(_)) => receiver_this(),
+                (_, class_types::Super::Interface(_)) => implicit_mixed_this(x.reason.dupe()),
+            }
         }
     };
     // If this is an overloaded method, create an intersection, attributed
@@ -1444,12 +1446,24 @@ pub fn thistype<'a, C: crate::func_params_intf::Config>(
     let (reason, instance_t) = this_instance_type(cx, None, x);
     match &x.super_ {
         class_types::Super::Interface(iface) if iface.this_tparam.is_some() => {
-            Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
-                reason,
-                instance: instance_t,
-                is_this: false,
-                subst_name: SubstName::name(FlowSmolStr::new_inline("this")),
-            })))
+            let this_name = SubstName::name(FlowSmolStr::new_inline("this"));
+            if iface.inline {
+                flow_js_utils::fix_this_instance(
+                    cx,
+                    reason.dupe(),
+                    reason,
+                    &instance_t,
+                    false,
+                    this_name,
+                )
+            } else {
+                Type::new(TypeInner::ThisInstanceT(Box::new(ThisInstanceTData {
+                    reason,
+                    instance: instance_t,
+                    is_this: false,
+                    subst_name: this_name,
+                })))
+            }
         }
         _ => Type::new(TypeInner::DefT(
             reason,

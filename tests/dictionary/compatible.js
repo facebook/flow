@@ -4,7 +4,7 @@ function foo0(x: Array<{[key: string]: unknown}>): Array<{[key: string]: unknown
   // this adds a fooBar property to the param type, which should NOT cause
   // an error in the return type because it is a dictionary.
   x[0].fooBar = 'foobar';
-  return x;
+  return x; // error: `Object.prototype.toString` requires an `Object` receiver
 }
 
 function foo2(

@@ -3516,6 +3516,7 @@ fn merge_class_prop<'cx>(
     cx: &Context<'cx>,
     file: &File<'cx>,
     prop: &ObjValueProp<ALoc, Pack::Packed<ALoc>>,
+    is_static: bool,
 ) -> type_::Property {
     match prop {
         ObjValueProp::ObjValueField(box (id_loc, t, polarity)) => {
@@ -3539,7 +3540,7 @@ fn merge_class_prop<'cx>(
                  }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
                     let statics = type_::dummy_static(reason.dupe());
-                    merge_fun(env, cx, file, reason, def, statics, true, false)
+                    merge_fun(env, cx, file, reason, def, statics, true, is_static)
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
         }
@@ -3969,9 +3970,10 @@ fn merge_interface<'cx>(
             proto,
         )
     };
-    // Top-level interfaces get a polymorphic [this] type; inline interfaces
-    // don't (they don't introduce a fresh [this] binding).
-    let bind_this = !inline;
+    // Under new `this` typing, inline interfaces use the same polymorphic
+    // receiver as named interfaces. Their outward representation is fixed
+    // below so they remain ordinary inline instance types.
+    let bind_this = !inline || cx.new_this_typing();
     let build = |env: &MergeEnv,
                  targs: Vec<(SubstName, Reason, Type, Polarity)>|
      -> (type_::InstType, Box<dyn FnOnce(Option<Type>) -> Type + 'cx>) {
@@ -4169,21 +4171,26 @@ fn merge_interface<'cx>(
         env.tps.insert(FlowSmolStr::new("this"), this.dupe());
         let (inst, make_super) = build(&env, targs);
         let super_ = make_super(Some(this));
+        let instance = type_::InstanceT::new(type_::InstanceTInner {
+            inst,
+            static_,
+            super_,
+            implements: vec![].into(),
+        });
         let result = Type::new(type_::TypeInner::ThisInstanceT(Box::new(
             ThisInstanceTData {
-                reason,
-                instance: type_::InstanceT::new(type_::InstanceTInner {
-                    inst,
-                    static_,
-                    super_,
-                    implements: vec![].into(),
-                }),
+                reason: reason.dupe(),
+                instance: instance.dupe(),
                 is_this: false,
-                subst_name: this_name,
+                subst_name: this_name.dupe(),
             },
         )));
         *result_cell.borrow_mut() = Some(result.dupe());
-        result
+        if inline {
+            flow_js_utils::fix_this_instance(cx, reason.dupe(), reason, &instance, false, this_name)
+        } else {
+            result
+        }
     } else {
         let (inst, make_super) = build(env, targs);
         let super_ = make_super(None);
@@ -4378,13 +4385,13 @@ fn merge_this_class_t<'cx>(
             let mut props_map: BTreeMap<Name, type_::Property> = static_props
                 .iter()
                 .map(|(k, prop)| {
-                    let p = merge_class_prop(&env, cx, file, prop);
+                    let p = merge_class_prop(&env, cx, file, prop, true);
                     (Name::new(k.dupe()), p)
                 })
                 .collect();
             for (key, prop) in &computed_static_props {
                 if let Some(name) = resolve_computed_key(&env, cx, file, key) {
-                    let p = merge_class_prop(&env, cx, file, prop);
+                    let p = merge_class_prop(&env, cx, file, prop, true);
                     match props_map.entry(name) {
                         std::collections::btree_map::Entry::Vacant(e) => {
                             e.insert(p);
@@ -4411,12 +4418,12 @@ fn merge_this_class_t<'cx>(
         };
         let mut own_props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
         for (k, prop) in own_props {
-            let p = merge_class_prop(&env, cx, file, &prop);
+            let p = merge_class_prop(&env, cx, file, &prop, false);
             own_props_map.insert(Name::new(k.dupe()), p);
         }
         for (key, prop) in &computed_own_props {
             if let Some(name) = resolve_computed_key(&env, cx, file, key) {
-                let p = merge_class_prop(&env, cx, file, prop);
+                let p = merge_class_prop(&env, cx, file, prop, false);
                 match own_props_map.entry(name) {
                     std::collections::btree_map::Entry::Vacant(e) => {
                         e.insert(p);
@@ -4430,12 +4437,12 @@ fn merge_this_class_t<'cx>(
         }
         let mut proto_props_map: BTreeMap<Name, type_::Property> = BTreeMap::new();
         for (k, prop) in proto_props {
-            let p = merge_class_prop(&env, cx, file, &prop);
+            let p = merge_class_prop(&env, cx, file, &prop, false);
             proto_props_map.insert(Name::new(k.dupe()), p);
         }
         for (key, prop) in &computed_proto_props {
             if let Some(name) = resolve_computed_key(&env, cx, file, key) {
-                let p = merge_class_prop(&env, cx, file, prop);
+                let p = merge_class_prop(&env, cx, file, prop, false);
                 match proto_props_map.entry(name) {
                     std::collections::btree_map::Entry::Vacant(e) => {
                         e.insert(p);
@@ -4710,7 +4717,20 @@ fn merge_fun<'cx>(
         });
         let this_t = match &def_ref.this_param {
             None => {
-                if is_method || cx.new_this_typing() {
+                if cx.new_this_typing()
+                    && is_method
+                    && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
+                {
+                    let this = if is_static {
+                        type_util::class_type(this.dupe(), false, None)
+                    } else {
+                        this.dupe()
+                    };
+                    type_util::mod_reason_of_t(
+                        &|r: Reason| r.update_desc(|desc| RImplicitThis(Arc::new(desc))),
+                        &this,
+                    )
+                } else if is_method || cx.new_this_typing() {
                     type_::implicit_mixed_this(reason2.dupe())
                 } else {
                     type_::bound_function_dummy_this(reason2.loc().dupe())

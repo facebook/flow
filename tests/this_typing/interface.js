@@ -6,14 +6,16 @@ interface A {
   propUnboundNonMethod: (this: interface {prop: number}) => string;
 }
 
+export type InlineI = interface {m(): void};
+
 declare const AImpl: A;
 
 // All ok - {prop: 123} is a subtype of {prop: number}
 let _1 = {prop : 123, method : AImpl.method }.method();
 
-let _2 = {prop : true, method : AImpl.method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
+let _2 = {prop : true, method : AImpl.method }.method(); // error: boolean is incompatible with number
 
-let _3 = {method : AImpl.method }.method(); // method-unbinding, this type becomes any, so no more this typing errors
+let _3 = {method : AImpl.method }.method(); // error: prop is missing
 
 // All ok - {prop: 123} is a subtype of {prop: number}
 let _4 = {prop : 123, method : AImpl.propUnboundNonMethod }.method();

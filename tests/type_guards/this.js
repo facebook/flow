@@ -87,8 +87,8 @@ function test1() {
   }
 
   function unbind(x: A) {
-    const isB = x.isB // error method-unbinding
-    isB as () => boolean; // okay (isB still shows as a type guard)
+    const isB = x.isB // okay: receiver type is preserved
+    isB as () => boolean; // error: `A` receiver is not satisfied by `unknown`
   }
 }
 
@@ -234,8 +234,8 @@ function test5() {
   }
 
   function unbind(x: AImported) {
-    const isB = x.isB // error method-unbinding
-    isB as () => boolean; // okay (isB still shows as a type guard)
+    const isB = x.isB // okay: receiver type is preserved
+    isB as () => boolean; // error: `AImported` receiver is not satisfied by `unknown`
   }
 
   declare const e: EImported;

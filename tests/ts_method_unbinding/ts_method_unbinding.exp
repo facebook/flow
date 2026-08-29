@@ -1,3 +1,18 @@
+Error -------------------------------------------------------------------------------------------------- consumer.js:7:1
+
+Cannot call `method` as a standalone function because its `this` parameter requires `ImportedClass` [1] as the receiver.
+Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
+
+   consumer.js:7:1
+   7| method(); // ERROR: a standalone call does not provide the required receiver
+      ^^^^^^
+
+References:
+   lib.ts:8:22
+   8| export declare class ImportedClass {
+                           ^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.ts:25:1
 
 Cannot cast `a.m` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
@@ -62,6 +77,21 @@ References:
                    ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.ts:36:1
+
+Cannot cast `i.m` to function type because in the `this` parameter: `I` [1] is incompatible with `unknown`.
+[incompatible-type]
+
+   test.ts:36:1
+   36| i.m satisfies () => void; // ERROR: `I` receiver is not satisfied by `unknown`
+       ^^^
+
+References:
+   test.ts:13:11
+   13| interface I {
+                 ^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.ts:37:1
 
 Cannot cast `i.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -77,6 +107,21 @@ References:
    test.ts:37:15
    37| i.m satisfies empty; // ERROR: proves type is not any
                      ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.ts:40:1
+
+Cannot cast `im` to function type because in the `this` parameter: `I` [1] is incompatible with `unknown`.
+[incompatible-type]
+
+   test.ts:40:1
+   40| im satisfies () => void; // ERROR: `I` receiver is not satisfied by `unknown`
+       ^^
+
+References:
+   test.ts:13:11
+   13| interface I {
+                 ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:41:1
@@ -162,4 +207,4 @@ References:
 
 
 
-Found 10 errors
+Found 13 errors

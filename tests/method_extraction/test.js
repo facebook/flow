@@ -114,7 +114,7 @@ type T = {
 import X from './lib.js';
 
 const ob : T = {
-    f: X.method,
+    f: X.method, // error: `Class<X>` receiver is not satisfied by `unknown`
 };
 
 // Assignment to a method remains read-only.

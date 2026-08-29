@@ -308,8 +308,8 @@ function structural() {
   }
 
   function unbind(x: A) {
-    const isB = x.isB; // error method-unbinding
-    isB as () => boolean; // okay (isB still shows as a type guard)
+    const isB = x.isB; // okay: receiver type is preserved
+    isB as () => boolean; // error: `A` receiver is not satisfied by `unknown`
   }
 }
 

@@ -33,5 +33,20 @@ Cannot import `T2` because there is no `T2` export in `./cjs_spreading_type_expo
                         ^^
 
 
+Error ------------------------------------------------------------------------------- use_unsound_extract_exports.js:2:1
 
-Found 3 errors
+Cannot call `foo` as a standalone function because its `this` parameter requires `Foo` [1] as the receiver. Call it as a
+method, or bind it to its receiver before calling it. [incompatible-type]
+
+   use_unsound_extract_exports.js:2:1
+   2| foo(); // error: the imported method retains its receiver
+      ^^^
+
+References:
+   unsound_extract_exports.js:1:7
+   1| class Foo {
+            ^^^ [1]
+
+
+
+Found 4 errors

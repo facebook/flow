@@ -23,7 +23,7 @@ takesAString(a.toString());
 d.toString(); // ok, even though dict specifies strings, this is a function
 
 // get
-var aToString : () => string = a.toString;
+var aToString : () => string = a.toString; // error: receiver is not preserved by the annotation
 var aToString2 = a.toString;
 takesAString(aToString2());
 
@@ -60,7 +60,7 @@ takesAString(y.toString());
 takesABool(a.hasOwnProperty('foo'));
 
 // get
-var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty;
+var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty; // error: receiver is not preserved by the annotation
 var aHasOwnProperty2 = a.hasOwnProperty;
 takesABool(aHasOwnProperty2('bar'));
 
@@ -85,7 +85,7 @@ takesABool(y.hasOwnProperty('foo'));
 takesABool(a.propertyIsEnumerable('foo'));
 
 // get
-var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable;
+var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable; // error: receiver is not preserved by the annotation
 var aPropertyIsEnumerable2 = a.propertyIsEnumerable;
 takesABool(aPropertyIsEnumerable2('bar'));
 
@@ -139,7 +139,7 @@ var boolValueOf : boolean = (true).valueOf();
 takesAString(a.toLocaleString());
 
 // get
-var aToLocaleString : () => string = a.toLocaleString;
+var aToLocaleString : () => string = a.toLocaleString; // error: receiver is not preserved by the annotation
 var aToLocaleString2 = a.toLocaleString;
 takesAString(aToLocaleString2());
 

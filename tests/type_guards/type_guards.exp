@@ -3195,19 +3195,19 @@ References:
                 ^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- this.js:90:19
+Error ----------------------------------------------------------------------------------------------------- this.js:91:5
 
-Cannot get `x.isB` because property `isB` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot cast `isB` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
+[incompatible-type]
 
-   this.js:90:19
-   90|     const isB = x.isB // error method-unbinding
-                         ^^^ [1]
+   this.js:91:5
+   91|     isB as () => boolean; // error: `A` receiver is not satisfied by `unknown`
+           ^^^
 
 References:
-   this.js:15:5
-   15|     isB(): this is B; // okay
-           ^^^^^^^^^^^^^^^^ [2]
+   this.js:14:17
+   14|   declare class A {
+                       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:98:29
@@ -3509,19 +3509,19 @@ References:
                          ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- this.js:237:19
+Error ---------------------------------------------------------------------------------------------------- this.js:238:5
 
-Cannot get `x.isB` because property `isB` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot cast `isB` to function type because in the `this` parameter: `AImported` [1] is incompatible with `unknown`.
+[incompatible-type]
 
-   this.js:237:19
-   237|     const isB = x.isB // error method-unbinding
-                          ^^^ [1]
+   this.js:238:5
+   238|     isB as () => boolean; // error: `AImported` receiver is not satisfied by `unknown`
+            ^^^
 
 References:
-   this_exports.js:2:3
-     2|   isB(): this is B;
-          ^^^^^^^^^^^^^^^^ [2]
+   this_exports.js:1:22
+     1| declare export class A {
+                             ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:246:5
@@ -4192,22 +4192,19 @@ References:
             ^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------- this_classes.js:311:19
+Error -------------------------------------------------------------------------------------------- this_classes.js:312:5
 
-Cannot get `x.isB` because property `isB` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot cast `isB` to function type because in the `this` parameter: `A` [1] is incompatible with `unknown`.
+[incompatible-type]
 
-   this_classes.js:311:19
-   311|     const isB = x.isB; // error method-unbinding
-                          ^^^ [1]
+   this_classes.js:312:5
+   312|     isB as () => boolean; // error: `A` receiver is not satisfied by `unknown`
+            ^^^
 
 References:
-   this_classes.js:275:5
-            v-----------------
-   275|     isB(): this is B {
-   276|       return this instanceof B;
-   277|     }
-            ^ [2]
+   this_classes.js:274:9
+   274|   class A {
+                ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:328:14

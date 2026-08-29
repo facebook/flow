@@ -6854,14 +6854,26 @@ fn mk_inline_interface_type<'a>(
 > {
     let id = cx.make_aloc_id(loc);
     let (extends_types, extends_binding_kinds): (Vec<_>, Vec<_>) = extends.into_iter().unzip();
+    let (this_tparam, this) = if cx.new_this_typing() {
+        let (this_tparam, this) =
+            class_sig::mk_this(type_::implicit_mixed_this(reason.dupe()), cx, reason.dupe());
+        env.tparams_map.insert(
+            SubstName::name(FlowSmolStr::new_inline("this")),
+            this.dupe(),
+        );
+        (Some(this_tparam), this)
+    } else {
+        (None, type_::implicit_mixed_this(reason.dupe()))
+    };
+    let this_t = this_tparam.as_ref().map(|_| this.dupe());
     let super_ = func_class_sig_types::class::Super::Interface(
         func_class_sig_types::class::InterfaceSuper {
             inline: true,
             extends: extends_types,
             extends_binding_kinds,
             function_like: is_function_like(properties),
-            this_tparam: None,
-            this_t: None,
+            this_tparam,
+            this_t,
         },
     );
     let iface_sig = class_sig::empty(
@@ -6876,7 +6888,6 @@ fn mk_inline_interface_type<'a>(
             .collect(),
         super_,
     );
-    let this = type_::implicit_mixed_this(reason.dupe());
     let (iface_sig, property_asts) = add_interface_properties(
         cx,
         env,

@@ -12,6 +12,6 @@ declare function test_arg(arg: (x: any) => void): void;
 declare function test(arg: () => void): void;
 
 const instance = new Foo();
-test_arg(instance.i); // OK
-test(instance.m); // OK
-test(instance.p); // OK
+test_arg(instance.i); // ERROR: `Foo` receiver is not satisfied by `unknown`
+test(instance.m); // ERROR: `Foo` receiver is not satisfied by `unknown`
+test(instance.p); // ERROR: `Foo` receiver is not satisfied by `unknown`

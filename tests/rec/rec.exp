@@ -376,6 +376,22 @@ Invalid trivially recursive definition of `T`.  [recursive-definition]
                ^
 
 
+Error ---------------------------------------------------------------------------------------------------- test5.js:8:34
+
+Cannot use `apply` because its first argument must be the exact same value as the receiver `Array.prototype` [1] the
+method was read from. `Function.prototype.apply` may not rebind a method to a different receiver. See
+https://flow.org/en/docs/types/classes/#toc-this-rebinding [invalid-this-arg]
+
+   test5.js:8:34
+   8|     arr = Array.prototype.concat.apply([], arr); // error: apply cannot rebind the method receiver
+                                       ^^^^^
+
+References:
+   test5.js:8:11
+   8|     arr = Array.prototype.concat.apply([], arr); // error: apply cannot rebind the method receiver
+                ^^^^^^^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- this_subst.js:1:53
 
 Cannot extend `InstrumentedContainer` [1] with `container` because `void` [2] is not inheritable. [incompatible-use]
@@ -439,4 +455,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 30 errors
+Found 31 errors

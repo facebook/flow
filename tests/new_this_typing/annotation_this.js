@@ -17,15 +17,14 @@ c.m as (this: C) => void; // ok
 c.m as (this: empty) => void; // ok
 c.m as (this: unknown) => void; // error
 
-// An interface method has an implicit top-typed `this`, so it is
-// receiver-agnostic and goes anywhere.
+// An interface method retains the interface receiver when extracted.
 interface I {
   m(): void;
 }
 declare const i: I;
 
-i.m as () => void; // ok
-i.m as (this: unknown) => void; // ok
+i.m as () => void; // error
+i.m as (this: unknown) => void; // error
 i.m as (this: I) => void; // ok
 
 // Plain functions and arrow values already have a top-typed receiver.

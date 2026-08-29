@@ -77,7 +77,7 @@ function object_prototype(o: {[k: string]: number}): {
   toString(): string,
 } {
   o.toString() as boolean; // error: string ~> boolean
-  return o; // ok
+  return o; // error: `Object.prototype.toString` requires an `Object` receiver
 }
 
 function unsound_string_conversion_alias_declared_prop(o: {

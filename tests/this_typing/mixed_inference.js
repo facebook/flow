@@ -1,3 +1,5 @@
+import type {InlineI} from './interface';
+
 function bar() {}
 
 let o = { m() {}, n : function() {} }
@@ -49,13 +51,30 @@ interface I {
 
 declare const i : I;
 
-foo as typeof i.m; // method-unbinding, this type becomes any, so no more this typing errors
+foo as typeof i.m; // error: number receiver is incompatible with I
 
-//$FlowExpectedError[method-unbinding]
-i.m as () => void; // ok
+i.m as () => void; // error: I receiver is not satisfied by unknown
 
-//$FlowExpectedError[method-unbinding]
-i.m as (this : unknown) => void; // ok
+i.m as (this : unknown) => void; // error: I receiver is not satisfied by unknown
 
-//$FlowExpectedError[method-unbinding]
 i.m as (this : empty) => void; // ok
+
+class IImpl implements I {
+    x: number = 0;
+
+    m(): void {
+        this.x;
+    }
+}
+
+const iImpl: I = new IImpl();
+const unboundM = iImpl.m;
+unboundM(); // error: a standalone call does not provide the required I receiver
+
+declare const inlineI: interface {m(): void};
+const unboundInlineM = inlineI.m;
+unboundInlineM(); // error: a standalone call does not provide the required receiver
+
+declare const importedInlineI: InlineI;
+const unboundImportedInlineM = importedInlineI.m;
+unboundImportedInlineM(); // error: imported inline interfaces preserve their receiver too

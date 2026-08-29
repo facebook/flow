@@ -31,13 +31,13 @@ m satisfies empty; // ERROR: proves type is not any
 
 if (a.m) {} // OK
 
-// Extracting interface methods is allowed too.
+// Extracting interface methods preserves their receiver too.
 i.m; // OK
-i.m satisfies () => void; // OK
+i.m satisfies () => void; // ERROR: `I` receiver is not satisfied by `unknown`
 i.m satisfies empty; // ERROR: proves type is not any
 
 const {m: im} = i; // OK
-im satisfies () => void; // OK
+im satisfies () => void; // ERROR: `I` receiver is not satisfied by `unknown`
 im satisfies empty; // ERROR: proves type is not any
 
 // The original `this` type is preserved.

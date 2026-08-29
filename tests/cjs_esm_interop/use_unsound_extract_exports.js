@@ -1,2 +1,2 @@
-import {foo} from './unsound_extract_exports'; // TODO unsound: named extraction loses the method receiver
-foo();
+import {foo} from './unsound_extract_exports';
+foo(); // error: the imported method retains its receiver

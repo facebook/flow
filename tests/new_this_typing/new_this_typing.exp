@@ -31,18 +31,51 @@ References:
                      ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ annotation_this.js:42:1
+Error ------------------------------------------------------------------------------------------ annotation_this.js:26:1
+
+Cannot cast `i.m` to function type because in the `this` parameter: `I` [1] is incompatible with `unknown`.
+[incompatible-type]
+
+   annotation_this.js:26:1
+   26| i.m as () => void; // error
+       ^^^
+
+References:
+   annotation_this.js:21:11
+   21| interface I {
+                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ annotation_this.js:27:1
+
+Cannot cast `i.m` to function type because in the `this` parameter: `I` [1] is incompatible with `unknown` [2].
+[incompatible-type]
+
+   annotation_this.js:27:1
+   27| i.m as (this: unknown) => void; // error
+       ^^^
+
+References:
+   annotation_this.js:21:11
+   21| interface I {
+                 ^ [1]
+   annotation_this.js:27:15
+   27| i.m as (this: unknown) => void; // error
+                     ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ annotation_this.js:41:1
 
 Cannot cast `withThis` to function type because in the `this` parameter: `C` [1] is incompatible with `unknown`.
 [incompatible-type]
 
-   annotation_this.js:42:1
-   42| withThis as () => void; // error
+   annotation_this.js:41:1
+   41| withThis as () => void; // error
        ^^^^^^^^
 
 References:
-   annotation_this.js:40:25
-   40| function withThis(this: C): void {}
+   annotation_this.js:39:25
+   39| function withThis(this: C): void {}
                                ^ [1]
 
 
@@ -111,4 +144,4 @@ References:
 
 
 
-Found 7 errors
+Found 9 errors

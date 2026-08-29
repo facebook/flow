@@ -53,11 +53,11 @@ cft as I_Function_mixed; // error, contravariant
 cft as I_Method_mixed; // error, contravariant
 cft as I_Function_empty; // ok
 
-cmt as I_Function_this; // error, unbound method
+cmt as I_Function_this; // error, contravariant
 cmt as I_Method_this; // ok
-cmt as I_Function_mixed; // error, unbound method
+cmt as I_Function_mixed; // error, contravariant
 cmt as I_Method_mixed; // ok
-cmt as I_Function_empty; // error, unbound method
+cmt as I_Function_empty; // ok
 
 cfm as I_Function_this; // ok
 cfm as I_Method_this; // ok
@@ -65,11 +65,11 @@ cfm as I_Function_mixed; // ok
 cfm as I_Method_mixed; // ok
 cfm as I_Function_empty; // ok
 
-cmm as I_Function_this; // error, unbound method
+cmm as I_Function_this; // ok
 cmm as I_Method_this; // ok
-cmm as I_Function_mixed; // error, unbound method
+cmm as I_Function_mixed; // ok
 cmm as I_Method_mixed; // ok
-cmm as I_Function_empty; // error, unbound method
+cmm as I_Function_empty; // ok
 
 cfe as I_Function_this; // error, contravariant
 cfe as I_Method_this; // error, contravariant

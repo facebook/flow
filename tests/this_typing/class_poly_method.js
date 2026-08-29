@@ -20,8 +20,8 @@ n.method() as string; // error (number incompatible with string)
 s.method() as string;
 s.method() as number; // error (number incompatible with string)
 
-n.method.bind(s); // TODO: error (number incompatible with string)
-s.method.bind(n); //  TODO: error (number incompatible with string)
+n.method.bind(s); // errors: type argument and receiver mismatch
+s.method.bind(n); // errors: type argument and receiver mismatch
 
 
 declare class B<T> {
