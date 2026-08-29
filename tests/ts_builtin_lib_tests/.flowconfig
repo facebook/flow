@@ -1,3 +1,4 @@
 [options]
 all=true
 builtin_lib=experimental.tslib
+experimental.new_this_typing=true

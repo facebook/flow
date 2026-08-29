@@ -215,7 +215,7 @@ fn property_type_for_subtyping(
     match prop.deref() {
         PropertyInner::Method { type_, .. } if strictness_kind.is_typescript_loose() => {
             let get_type = if new_this_typing {
-                properties::method_to_function(type_, false)
+                properties::method_to_function(type_, true)
             } else {
                 properties::unbind_this_method(type_)
             };
@@ -257,6 +257,14 @@ fn rec_flow_p_inner<'cx>(
     {
         return Ok(vec![]);
     }
+    let normalized_lp = if cx.new_this_typing() && strictness_kind.is_typescript_loose() {
+        lower_upper_property.map(|(lower_property, _)| {
+            property_type_for_subtyping(lower_property, strictness_kind, true)
+        })
+    } else {
+        None
+    };
+    let lp = normalized_lp.as_ref().unwrap_or(lp);
     match (lp, up) {
         // unification cases
         (
