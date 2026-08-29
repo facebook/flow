@@ -11,6 +11,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use dupe::Dupe;
+use dupe::IterDupedExt;
 use flow_common::docblock::Docblock;
 use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
@@ -397,6 +398,41 @@ pub fn does_content_match_file_hash(
 ) -> bool {
     let content_hash = hash_content(content.as_bytes());
     content_hash_matches_file_hash(transaction, file, content_hash)
+}
+
+pub fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
+    match std::fs::read_to_string(file.to_absolute()).ok() {
+        None => true,
+        Some(content) => !does_content_match_file_hash(transaction, file, &content),
+    }
+}
+
+/// The declaration files among `files` whose bytes on disk no longer match the parse the
+/// heap holds for them. Any one of them can move the global scope — it may have become a
+/// global libdef, stopped being one, or changed the declarations it contributes — and
+/// which of those it did is only knowable by parsing it. What to do about that is the
+/// caller's: reparse them to rebuild the global scope, or refuse to reuse the one the heap
+/// was built with.
+///
+/// Configured libs are excluded: a change to one of those is reported separately, as a
+/// modified lib file.
+pub fn changed_declaration_files<'a>(
+    options: &Options,
+    transaction: &Transaction,
+    files: impl IntoIterator<Item = &'a FileKey>,
+) -> FlowOrdSet<FileKey> {
+    if !options.typescript_global_library_definition_discovery {
+        return FlowOrdSet::new();
+    }
+    files
+        .into_iter()
+        .filter(|file| {
+            !files::is_configured_lib_file(&options.file_options, file.as_str())
+                && flow_parser::file_key::has_dts_ext(file.as_str())
+                && did_content_change(transaction, file)
+        })
+        .duped()
+        .collect()
 }
 
 fn fold_failed(

@@ -9,7 +9,6 @@ use std::collections::BTreeSet;
 use std::path::Path;
 
 use dupe::Dupe;
-use dupe::IterDupedExt;
 use flow_common::files;
 use flow_common::files::FileOptions;
 use flow_common::flow_version;
@@ -177,15 +176,6 @@ fn check_for_package_json_changes(
     }
 }
 
-fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
-    match std::fs::read_to_string(file.to_absolute()).ok() {
-        None => true,
-        Some(content) => {
-            !parsing_service::does_content_match_file_hash(transaction, file, &content)
-        }
-    }
-}
-
 fn check_for_lib_changes(
     options: &Options,
     transaction: &Transaction,
@@ -200,26 +190,15 @@ fn check_for_lib_changes(
     let is_changed_lib = |filename: &String| -> bool {
         let is_lib = files::is_configured_lib_file(&options.file_options, filename)
             || *filename == flow_typed_path;
-        is_lib && did_content_change(transaction, &files::lib_file_key(filename))
+        is_lib && parsing_service::did_content_change(transaction, &files::lib_file_key(filename))
     };
     let libs: BTreeSet<String> = updates
         .iter()
         .filter(|f| is_changed_lib(f))
         .cloned()
         .collect();
-    let changed_declaration_files = if options.typescript_global_library_definition_discovery {
-        filtered_updates
-            .iter()
-            .filter(|file| {
-                !files::is_configured_lib_file(&options.file_options, file.as_str())
-                    && flow_parser::file_key::has_dts_ext(file.as_str())
-                    && did_content_change(transaction, file)
-            })
-            .duped()
-            .collect()
-    } else {
-        FlowOrdSet::new()
-    };
+    let changed_declaration_files =
+        parsing_service::changed_declaration_files(options, transaction, filtered_updates.iter());
     if !skip_incompatible && (!libs.is_empty() || !changed_declaration_files.is_empty()) {
         let messages = libs
             .iter()

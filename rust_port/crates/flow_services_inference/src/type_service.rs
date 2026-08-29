@@ -46,6 +46,7 @@ use flow_heap::parsing_heaps::Transaction;
 use flow_parser::ast::Program;
 use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::has_dts_ext;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 use flow_parsing::parsing_service;
@@ -2527,16 +2528,6 @@ fn assert_compatible_flowconfig_change(options: &Options, config_path: &str) -> 
     }
 }
 
-fn did_content_change(transaction: &Transaction, filename: &str) -> bool {
-    let file = files::lib_file_key(filename);
-    match std::fs::read_to_string(filename).ok() {
-        None => true,
-        Some(content) => {
-            !parsing_service::does_content_match_file_hash(transaction, &file, &content)
-        }
-    }
-}
-
 fn filter_saved_state_updates(
     file_options: &FileOptions,
     sroot: &str,
@@ -2557,9 +2548,54 @@ fn filter_saved_state_updates(
     acc
 }
 
+/// This function tries to find out d.ts changes that should invalidate the libdef.
+/// Two additional tricky cases compared to baseline libdef change:
+///
+/// 1. previous d.ts global libdef files become modules due to addition of import/export.
+///    Handled in this function by comparing content
+/// 2. previous d.ts module files become libdefs due to removal of import/export.
+///    Handled in this function by parsing with an ad-hoc transaction to figure out that it happened.
+fn global_scope_changes(
+    pool: &ThreadPool,
+    committed_heap: &Arc<CommittedHeap>,
+    options: &Arc<Options>,
+    saved_discovered: &BTreeSet<FileKey>,
+    updates: &FlowOrdSet<FileKey>,
+) -> BTreeSet<FileKey> {
+    if !options.typescript_global_library_definition_discovery {
+        return BTreeSet::new();
+    }
+    let mut moved: BTreeSet<FileKey> = updates
+        .iter()
+        .filter(|file| saved_discovered.contains(*file))
+        .duped()
+        .collect();
+    let unclassified: Vec<FileKey> = updates
+        .iter()
+        .filter(|file| {
+            !moved.contains(*file)
+                && has_dts_ext(file.as_str())
+                && !files::is_configured_lib_file(&options.file_options, file.as_str())
+        })
+        .duped()
+        .collect();
+    if !unclassified.is_empty() {
+        let scratch = ActiveTransaction::new(committed_heap.dupe());
+        let next: parsing_service::Next = {
+            let mut files = Some(unclassified);
+            Box::new(move || files.take())
+        };
+        moved.extend(parse(pool, &scratch.handle(), options, next).discovered_global_libdefs());
+    }
+    moved
+}
+
 fn process_saved_state_updates(
-    options: &Options,
+    pool: &ThreadPool,
+    committed_heap: &Arc<CommittedHeap>,
+    options: &Arc<Options>,
     transaction: &Transaction,
+    saved_discovered: &BTreeSet<FileKey>,
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, String> {
     let file_options = &options.file_options;
@@ -2592,7 +2628,8 @@ fn process_saved_state_updates(
         .filter(|filename| {
             let is_lib = files::is_configured_lib_file(file_options, filename)
                 || **filename == flow_typed_path;
-            is_lib && did_content_change(transaction, filename)
+            is_lib
+                && parsing_service::did_content_change(transaction, &files::lib_file_key(filename))
         })
         .cloned()
         .collect();
@@ -2609,12 +2646,32 @@ fn process_saved_state_updates(
         ));
     }
 
-    Ok(filter_saved_state_updates(
-        file_options,
-        &sroot,
-        &want,
-        updates,
-    ))
+    let filtered_updates = filter_saved_state_updates(file_options, &sroot, &want, updates);
+
+    // Restoring over a moved global scope would put every file in the repo under a set of
+    // globals the saved state was never built with, and nothing short of a whole-repo parse
+    // can rebuild that set. Refuse the state instead and let the caller start from scratch.
+    let global_scope_changes = global_scope_changes(
+        pool,
+        committed_heap,
+        options,
+        saved_discovered,
+        &filtered_updates,
+    );
+    if !global_scope_changes.is_empty() {
+        let messages = global_scope_changes
+            .iter()
+            .rev()
+            .map(|file| format!("Modified global library definition: {}", file.as_str()))
+            .collect::<Vec<_>>()
+            .join("\n");
+        return Err(format!(
+            "{}\nGlobal library definitions changed in an incompatible way",
+            messages
+        ));
+    }
+
+    Ok(filtered_updates)
 }
 
 fn saved_duplicate_providers_from_direct_state(
@@ -2670,7 +2727,7 @@ fn init_with_initial_state(
     restore_dependency_info: impl FnOnce() -> Arc<EnvCell<DependencyInfo>>,
     saved_duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     saved_export_index: Option<ExportIndex>,
-    _saved_discovered_global_libdefs: BTreeSet<FileKey>,
+    saved_discovered_global_libdefs: BTreeSet<FileKey>,
     env: Option<&Env>,
     parsed: FlowOrdSet<FileKey>,
     unparsed: FlowOrdSet<FileKey>,
@@ -2695,6 +2752,7 @@ fn init_with_initial_state(
     let additional_lib_files: Vec<FileKey> = ordered_libs
         .iter()
         .map(|name| files::lib_file_key(name))
+        .chain(saved_discovered_global_libdefs)
         .collect();
     let next: parsing_service::Next = {
         let mut files = Some(additional_lib_files);
@@ -2885,10 +2943,9 @@ pub fn init_from_saved_state(
         dependency_info,
         duplicate_providers,
         export_index,
+        global_lib_files,
         ..
     } = saved_state;
-    // Saved state does not record discovered globals yet.
-    let discovered_global_libdefs: BTreeSet<FileKey> = BTreeSet::new();
     flow_hh_logger::info!("Processing saved state file sets");
     monitor_rpc::status_update(server_status::Event::RestoringHeapsStart);
     // The heap dump was bulk-loaded into a heap of its own during the load step, so all file data
@@ -2925,7 +2982,7 @@ pub fn init_from_saved_state(
     }
     let local_errors = saved_local_errors;
 
-    let (env, libs_ok) = init_with_initial_state(
+    init_with_initial_state(
         pool,
         transaction,
         options,
@@ -2936,15 +2993,14 @@ pub fn init_from_saved_state(
         } else {
             None
         },
-        discovered_global_libdefs,
+        global_lib_files.discovered,
         env,
         parsed,
         unparsed,
         package_json_files,
         dirty_modules,
         local_errors,
-    );
-    (env, libs_ok)
+    )
 }
 
 pub fn handle_updates_since_saved_state(
@@ -3246,6 +3302,7 @@ pub fn exit_if_no_fallback(msg: Option<&str>, options: &Options) {
 // call, not this function's. (Staging a whole heap through a transaction overlay instead would
 // mean two serial passes over every entry and dependency edge.)
 pub fn load_saved_state(
+    pool: &ThreadPool,
     options: &Arc<Options>,
 ) -> Result<
     (
@@ -3306,7 +3363,14 @@ pub fn load_saved_state(
             // The saved state arrives as a heap of its own, so everything from here runs against
             // that heap, and nothing publishes it until the orchestrator adopts it.
             let transaction = ActiveTransaction::new(loaded_heap.dupe());
-            let updates = match process_saved_state_updates(options, &transaction, &changed_files) {
+            let updates = match process_saved_state_updates(
+                pool,
+                &loaded_heap,
+                options,
+                &transaction,
+                &saved_state.global_lib_files.discovered,
+                &changed_files,
+            ) {
                 Ok(updates) => updates,
                 Err(msg) => {
                     flow_hh_logger::error!(
@@ -3344,7 +3408,7 @@ pub fn init(
     focus_targets: Option<FlowOrdSet<FileKey>>,
 ) -> Result<(Env, Arc<CommittedHeap>, Option<String>), RecheckError> {
     let start_time = Instant::now();
-    let loaded = load_saved_state(options);
+    let loaded = load_saved_state(pool, options);
     // Init works on the heap the saved state brought, when there was one, so point memory sampling
     // at that heap: its timers should measure the heap being built, not the empty one the
     // orchestrator still has in force.
@@ -3396,7 +3460,7 @@ pub fn init(
             (env, None)
         } else if options.lazy_mode {
             match focus_targets {
-                None => libdef_check_for_lazy_init(
+                None => configured_libdef_check_for_lazy_init(
                     orchestrator,
                     options,
                     pool,
@@ -3439,7 +3503,7 @@ fn reinit(
     PreparedRecheck,
 )> {
     let (transaction, loaded_heap, saved_state, updates_since_saved_state) =
-        match load_saved_state(options) {
+        match load_saved_state(pool, options) {
             Ok(result) => result,
             Err(msg) => {
                 // Either there is no saved state or we failed to load it for some reason
@@ -4025,19 +4089,40 @@ pub fn check_files_for_init(
     })
 }
 
-pub fn libdef_check_for_lazy_init(
+fn lazy_libdef_file_keys(
+    configured_libs: &BTreeSet<FlowSmolStr>,
+    discovered_globals: impl IntoIterator<Item = FileKey>,
+) -> FlowOrdSet<FileKey> {
+    configured_libs
+        .iter()
+        .map(|path| FileKey::lib_file_of_absolute(path))
+        .chain(discovered_globals)
+        .collect()
+}
+
+fn configured_libdef_check_for_lazy_init(
     orchestrator: Option<&ServerOrchestratorHandle>,
     options: &Arc<Options>,
     pool: &ThreadPool,
     transaction: &Arc<Transaction>,
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
-    let parsed: FlowOrdSet<FileKey> = env
-        .global_lib_files
-        .configured()
-        .iter()
-        .map(|n| files::lib_file_key(n))
-        .collect();
+    let configured_libs = env.configured_libs();
+    let parsed = lazy_libdef_file_keys(
+        &configured_libs,
+        env.discovered_global_libdefs().iter().duped(),
+    );
+    libdef_check_for_lazy_init(orchestrator, options, pool, transaction, parsed, env)
+}
+
+pub fn libdef_check_for_lazy_init(
+    orchestrator: Option<&ServerOrchestratorHandle>,
+    options: &Arc<Options>,
+    pool: &ThreadPool,
+    transaction: &Arc<Transaction>,
+    parsed: FlowOrdSet<FileKey>,
+    env: Env,
+) -> Result<(Env, Option<String>), RecheckError> {
     check_files_for_init(
         orchestrator,
         options,
@@ -4058,7 +4143,7 @@ pub fn focus_check_for_init(
     env: Env,
 ) -> Result<(Env, Option<String>), RecheckError> {
     let (env, first_internal_error) =
-        libdef_check_for_lazy_init(orchestrator, options, pool, transaction, env)?;
+        configured_libdef_check_for_lazy_init(orchestrator, options, pool, transaction, env)?;
     let files_to_force = {
         let mut checked_set = CheckedSet::empty();
         checked_set.add(Some(focus_targets), None, None);
@@ -4123,9 +4208,13 @@ pub fn check_once(
     let env = if libs_ok {
         let (env, _first_internal_error) = if options.lazy_mode {
             match focus_targets {
-                None => {
-                    libdef_check_for_lazy_init(None, &options, pool, &transaction.handle(), env)
-                }
+                None => configured_libdef_check_for_lazy_init(
+                    None,
+                    &options,
+                    pool,
+                    &transaction.handle(),
+                    env,
+                ),
                 Some(focus_targets) => focus_check_for_init(
                     None,
                     &options,

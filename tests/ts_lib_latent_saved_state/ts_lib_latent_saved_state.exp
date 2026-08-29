@@ -1,0 +1,1907 @@
+======generate saved state======
+
+
+======a changed source file reuses saved state======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:8:26
+   8| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches a changed source file======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:8:26
+   8| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======case 1: non-global becomes global rejects saved state======
+
+======case 1: non-global becomes global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------ saved-use.js:3:33
+
+Cannot import `./saved-external` because `saved-external.d.ts` is a global library definition file, so it is not a
+module. Its declarations are already available in global scope; remove this import and reference them directly.
+[cannot-resolve-module]
+
+   3| import {persistedExternal} from "./saved-external";
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:8:26
+   8| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches case 1: non-global becomes global======
+Error ------------------------------------------------------------------------------------------------ saved-use.js:3:33
+
+Cannot import `./saved-external` because `saved-external.d.ts` is a global library definition file, so it is not a
+module. Its declarations are already available in global scope; remove this import and reference them directly.
+[cannot-resolve-module]
+
+   3| import {persistedExternal} from "./saved-external";
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:8:26
+   8| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======case 2: global becomes non-global rejects saved state======
+
+======case 2: global becomes non-global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches case 2: global becomes non-global======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======case 3: global remains global after content change rejects saved state======
+
+======case 3: global remains global after content change falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+======cold scratch matches case 3: global remains global after content change======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+
+======case 4: non-global remains non-global after content change reuses saved state======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:3:9
+
+Cannot import `persistedExternal` because there is no `persistedExternal` export in `./saved-external`. [missing-export]
+
+   3| import {persistedExternal} from "./saved-external";
+              ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches case 4: non-global remains non-global after content change======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:3:9
+
+Cannot import `persistedExternal` because there is no `persistedExternal` export in `./saved-external`. [missing-export]
+
+   3| import {persistedExternal} from "./saved-external";
+              ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======a newly created external declaration reuses saved state======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:5:1
+
+Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:5:1
+   5| addedExternal as empty;
+      ^^^^^^^^^^^^^
+
+References:
+   created-external.d.ts:1:37
+   1| export declare const addedExternal: string;
+                                          ^^^^^^ [1]
+   use.js:5:18
+   5| addedExternal as empty;
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches a newly created external declaration======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:5:1
+
+Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:5:1
+   5| addedExternal as empty;
+      ^^^^^^^^^^^^^
+
+References:
+   created-external.d.ts:1:37
+   1| export declare const addedExternal: string;
+                                          ^^^^^^ [1]
+   use.js:5:18
+   5| addedExternal as empty;
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======a newly created invalid declaration reuses saved state======
+Error ---------------------------------------------------------------------------------------- created-invalid.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors
+
+======cold scratch matches a newly created invalid declaration======
+Error ---------------------------------------------------------------------------------------- created-invalid.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors
+
+
+======a known global named by the delta rejects saved state======
+
+======a known global named by the delta falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches a known global named by the delta======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======a known global becoming invalid rejects saved state======
+
+======a known global becoming invalid falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- global.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors
+
+======cold scratch matches a known global becoming invalid======
+Error ------------------------------------------------------------------------------------------------- global.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors
+
+
+======a deleted known global rejects saved state======
+
+======a deleted known global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches a deleted known global======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======a renamed known global rejects saved state======
+
+======a renamed known global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   renamed-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+======cold scratch matches a renamed known global======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   renamed-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+
+======a newly created global rejects saved state======
+
+======a newly created global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   created-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+======cold scratch matches a newly created global======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   created-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+
+======a created global with a removed provider rejects saved state======
+
+======a created global with a removed provider falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------ saved-use.js:3:33
+
+Cannot resolve module `./saved-external`. [cannot-resolve-module]
+
+   3| import {persistedExternal} from "./saved-external";
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   created-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+======cold scratch matches a created global with a removed provider======
+Error ------------------------------------------------------------------------------------------------ saved-use.js:3:33
+
+Cannot resolve module `./saved-external`. [cannot-resolve-module]
+
+   3| import {persistedExternal} from "./saved-external";
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   created-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 4 errors
+
+
+======an invalid global with a removed provider rejects saved state======
+
+======an invalid global with a removed provider falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- global.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+Error ------------------------------------------------------------------------------------------------ saved-use.js:3:33
+
+Cannot resolve module `./saved-external`. [cannot-resolve-module]
+
+   3| import {persistedExternal} from "./saved-external";
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors
+
+======cold scratch matches an invalid global with a removed provider======
+Error ------------------------------------------------------------------------------------------------- global.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+Error ------------------------------------------------------------------------------------------------ saved-use.js:3:33
+
+Cannot resolve module `./saved-external`. [cannot-resolve-module]
+
+   3| import {persistedExternal} from "./saved-external";
+                                      ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot resolve name `savedGlobal`. [cannot-resolve-name]
+
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors
+
+
+======lazy external declaration reuses saved state======
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 2/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error ------------------------------------------------------------------------------------------------------- use.js:5:1
+
+Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:5:1
+   5| addedExternal as empty;
+      ^^^^^^^^^^^^^
+
+References:
+   created-external.d.ts:1:37
+   1| export declare const addedExternal: string;
+                                          ^^^^^^ [1]
+   use.js:5:18
+   5| addedExternal as empty;
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 errors
+
+The Flow server is currently in lazy mode and is only checking 3/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+======cold scratch lazy matches external declaration======
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 2/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error ------------------------------------------------------------------------------------------------------- use.js:5:1
+
+Cannot cast `addedExternal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:5:1
+   5| addedExternal as empty;
+      ^^^^^^^^^^^^^
+
+References:
+   created-external.d.ts:1:37
+   1| export declare const addedExternal: string;
+                                          ^^^^^^ [1]
+   use.js:5:18
+   5| addedExternal as empty;
+                       ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 errors
+
+The Flow server is currently in lazy mode and is only checking 3/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+======lazy invalid declaration reuses saved state======
+Error ---------------------------------------------------------------------------------------- created-invalid.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 2/5 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+======cold scratch lazy matches invalid declaration======
+Error ---------------------------------------------------------------------------------------- created-invalid.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 2/5 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+======lazy created global rejects saved state======
+
+======lazy created global falls back to a scratch check======
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 3/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   created-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 3 errors
+
+The Flow server is currently in lazy mode and is only checking 4/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+======cold scratch lazy matches created global======
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 3/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot cast `renamedSavedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:7:1
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   created-global.d.ts:1:33
+   1| declare var renamedSavedGlobal: string;
+                                      ^^^^^^ [1]
+   use.js:7:23
+   7| renamedSavedGlobal as empty;
+                            ^^^^^ [2]
+
+
+
+Found 3 errors
+
+The Flow server is currently in lazy mode and is only checking 4/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+======lazy changed known global rejects saved state======
+
+======lazy changed known global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- global.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 1/4 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+======cold scratch lazy matches changed known global======
+Error ------------------------------------------------------------------------------------------------- global.d.ts:1:26
+
+Unexpected token `;`, expected a type [ParseError]
+
+   1| declare var savedGlobal: ;
+                               ^
+
+
+
+Found 1 error
+
+The Flow server is currently in lazy mode and is only checking 1/4 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+======regenerate saved state with an invalid global======
+
+
+======a fixed global rejects saved state======
+
+======a fixed global falls back to a scratch check======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+======cold scratch matches a fixed global======
+Error ------------------------------------------------------------------------------------------------- saved-use.js:5:1
+
+Cannot cast `persistedExternal` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   saved-use.js:5:1
+   5| persistedExternal as number;
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   saved-external.d.ts:8:41
+   8| export declare const persistedExternal: string;
+                                              ^^^^^^ [1]
+   saved-use.js:5:22
+   5| persistedExternal as number;
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:3:29
+
+Cannot resolve module `./created-external`. [cannot-resolve-module]
+
+   3| import {addedExternal} from "./created-external";
+                                  ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:6:1
+
+Cannot cast `savedGlobal` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   use.js:6:1
+   6| savedGlobal as empty;
+      ^^^^^^^^^^^
+
+References:
+   global.d.ts:1:26
+   1| declare var savedGlobal: string;
+                               ^^^^^^ [1]
+   use.js:6:16
+   6| savedGlobal as empty;
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:7:1
+
+Cannot resolve name `renamedSavedGlobal`. [cannot-resolve-name]
+
+   7| renamedSavedGlobal as empty;
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors
+
+
+======declaration-support option mismatch rejects saved state======
+

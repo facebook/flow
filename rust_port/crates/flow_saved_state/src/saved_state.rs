@@ -37,6 +37,19 @@ use flow_typing_errors::flow_error::ErrorSet;
 const SAVED_STATE_FILE_TABLE_MAGIC: u64 = 0x464C4F5753465431; // "FLOWSFT1"
 const SAVED_STATE_RAW_BLOCK_MAGIC: u64 = 0x464C4F5752415731; // "FLOWRAW1"
 
+/// The saved-state counterpart of `server_env::GlobalLibFiles`, with the same split: the
+/// paths a `[libs]` stanza named, and the source files discovery classified as global
+/// TypeScript declaration libraries.
+///
+/// Not quite the same contents, though, hence the name: unlike the env's `configured`, the
+/// builtin flowlibs are left out, because the server which loads the saved state extracts
+/// and typechecks its own copy of those.
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+pub struct SavedGlobalLibFiles {
+    pub non_flowlib_configured: BTreeSet<FlowSmolStr>,
+    pub discovered: BTreeSet<FileKey>,
+}
+
 // The committed heap is dumped directly to disk via CommittedHeap.save_heap. This type holds only
 // lightweight env-level metadata (file sets, dependency graph, etc.); the per-file data lives in
 // the heap dump itself. On load, CommittedHeap.from_heap_dump builds a whole heap out of it, so no
@@ -47,7 +60,7 @@ pub struct SavedStateEnvData {
     pub parsed_files: FlowOrdSet<FileKey>,
     pub unparsed_files: FlowOrdSet<FileKey>,
     pub package_json_files: FlowOrdSet<FileKey>,
-    pub non_flowlib_libs: BTreeSet<FlowSmolStr>,
+    pub global_lib_files: SavedGlobalLibFiles,
     pub local_errors: BTreeMap<FileKey, ErrorSet>,
     pub node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     pub dependency_info: DependencyInfo,
@@ -60,7 +73,7 @@ struct SavedStateEnvDataForSerialization {
     parsed_files: FlowOrdSet<FileKey>,
     unparsed_files: FlowOrdSet<FileKey>,
     package_json_files: FlowOrdSet<FileKey>,
-    non_flowlib_libs: BTreeSet<FlowSmolStr>,
+    global_lib_files: SavedGlobalLibFiles,
     local_errors: BTreeMap<FileKey, ErrorSet>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
@@ -78,7 +91,8 @@ struct SavedStateEnvBaseData {
     parsed_files: Vec<u32>,
     unparsed_files: Vec<u32>,
     package_json_files: Vec<u32>,
-    non_flowlib_libs: BTreeSet<FlowSmolStr>,
+    non_flowlib_configured: BTreeSet<FlowSmolStr>,
+    discovered: Vec<u32>,
     local_errors: Vec<(u32, ErrorSet)>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     duplicate_providers: BTreeMap<FlowSmolStr, (u32, Vec<u32>)>,
@@ -115,7 +129,7 @@ struct DeserializedSavedStateEnvBaseData {
     parsed_files: FlowOrdSet<FileKey>,
     unparsed_files: FlowOrdSet<FileKey>,
     package_json_files: FlowOrdSet<FileKey>,
-    non_flowlib_libs: BTreeSet<FlowSmolStr>,
+    global_lib_files: SavedGlobalLibFiles,
     local_errors: BTreeMap<FileKey, ErrorSet>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
@@ -255,7 +269,22 @@ fn verify_flowconfig_hash(
     }
 }
 
-fn collect_non_flowlib_libs(env: &Env, options: &Options) -> BTreeSet<FlowSmolStr> {
+/// Configured libs are left out of the saved state because the loading server extracts and
+/// parses its own copy of them. That reasoning does not extend to discovered globals, which
+/// are ordinary source files in the repo: those are saved like any other file, so a restored
+/// heap can answer what they hashed and classified as when the state was written.
+fn is_configured_lib(env: &Env, file: &FileKey) -> bool {
+    files::is_lib_file(&env.configured_libs(), file)
+}
+
+fn collect_global_lib_files(env: &Env, options: &Options) -> SavedGlobalLibFiles {
+    SavedGlobalLibFiles {
+        non_flowlib_configured: collect_non_flowlib_configured_libs(env, options),
+        discovered: env.discovered_global_libdefs().clone(),
+    }
+}
+
+fn collect_non_flowlib_configured_libs(env: &Env, options: &Options) -> BTreeSet<FlowSmolStr> {
     let flowlib_root = options
         .file_options
         .default_lib_dir
@@ -265,8 +294,7 @@ fn collect_non_flowlib_libs(env: &Env, options: &Options) -> BTreeSet<FlowSmolSt
             | flow_common::files::LibDir::Flowlib(path)
             | flow_common::files::LibDir::Tslib(path) => path.clone(),
         });
-    env.global_lib_files
-        .configured()
+    env.configured_libs()
         .iter()
         .filter(|lib| {
             flowlib_root
@@ -320,17 +348,17 @@ fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDa
         parsed_files: env
             .files
             .iter()
-            .filter(|f| !env.is_lib_file(f))
+            .filter(|f| !is_configured_lib(env, f))
             .cloned()
             .collect(),
         unparsed_files: env
             .unparsed
             .iter()
-            .filter(|f| !env.is_lib_file(f))
+            .filter(|f| !is_configured_lib(env, f))
             .cloned()
             .collect(),
         package_json_files: env.package_json_files.iter().cloned().collect(),
-        non_flowlib_libs: collect_non_flowlib_libs(env, options),
+        global_lib_files: collect_global_lib_files(env, options),
         local_errors: errors.local_errors.clone(),
         node_modules_containers,
         duplicate_providers,
@@ -672,6 +700,7 @@ fn serialize_saved_state_env_data(
     file_keys.extend(data.parsed_files.iter().duped());
     file_keys.extend(data.unparsed_files.iter().duped());
     file_keys.extend(data.package_json_files.iter().duped());
+    file_keys.extend(data.global_lib_files.discovered.iter().duped());
     file_keys.extend(data.local_errors.keys().duped());
     for (leader, others) in data.duplicate_providers.values() {
         file_keys.insert(leader.dupe());
@@ -705,7 +734,7 @@ fn serialize_saved_state_env_data(
         parsed_files,
         unparsed_files,
         package_json_files,
-        non_flowlib_libs,
+        global_lib_files,
         local_errors,
         node_modules_containers,
         duplicate_providers,
@@ -718,7 +747,12 @@ fn serialize_saved_state_env_data(
             parsed_files: file_set_to_indices(parsed_files, &file_to_index),
             unparsed_files: file_set_to_indices(unparsed_files, &file_to_index),
             package_json_files: file_set_to_indices(package_json_files, &file_to_index),
-            non_flowlib_libs,
+            non_flowlib_configured: global_lib_files.non_flowlib_configured,
+            discovered: global_lib_files
+                .discovered
+                .iter()
+                .map(|file| file_index(&file_to_index, file))
+                .collect(),
             local_errors: local_errors
                 .into_iter()
                 .map(|(file, errors)| (file_index(&file_to_index, &file), errors))
@@ -755,18 +789,25 @@ fn deserialize_saved_state_base_data(
         parsed_files,
         unparsed_files,
         package_json_files,
-        non_flowlib_libs,
+        non_flowlib_configured,
+        discovered,
         local_errors,
         node_modules_containers,
         duplicate_providers,
         export_index,
     } = data;
-    Ok(DeserializedSavedStateEnvBaseData {
+    let result = DeserializedSavedStateEnvBaseData {
         flowconfig_hash,
         parsed_files: indices_to_file_set(parsed_files, files)?,
         unparsed_files: indices_to_file_set(unparsed_files, files)?,
         package_json_files: indices_to_file_set(package_json_files, files)?,
-        non_flowlib_libs,
+        global_lib_files: SavedGlobalLibFiles {
+            non_flowlib_configured,
+            discovered: discovered
+                .into_iter()
+                .map(|file| file_from_index(files, file))
+                .collect::<Result<BTreeSet<_>, InvalidReason>>()?,
+        },
         local_errors: local_errors
             .into_iter()
             .map(|(file, errors)| Ok((file_from_index(files, file)?, errors)))
@@ -788,7 +829,8 @@ fn deserialize_saved_state_base_data(
             })
             .collect::<Result<BTreeMap<_, _>, InvalidReason>>()?,
         export_index: export_index_from_serialized(export_index, files)?,
-    })
+    };
+    Ok(result)
 }
 
 fn join_saved_state_env_data(
@@ -801,7 +843,7 @@ fn join_saved_state_env_data(
         parsed_files,
         unparsed_files,
         package_json_files,
-        non_flowlib_libs,
+        global_lib_files,
         local_errors,
         node_modules_containers,
         duplicate_providers,
@@ -812,7 +854,7 @@ fn join_saved_state_env_data(
         parsed_files,
         unparsed_files,
         package_json_files,
-        non_flowlib_libs,
+        global_lib_files,
         local_errors,
         node_modules_containers,
         dependency_info: DependencyInfo::from_graphs(
@@ -1031,25 +1073,16 @@ pub fn save(
 
 fn denormalize_paths(
     options: &Options,
-    non_flowlib_libs: &mut BTreeSet<FlowSmolStr>,
+    non_flowlib_configured: &mut BTreeSet<FlowSmolStr>,
     node_modules_containers: &mut BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
 ) {
     // Raw string paths still need the root prepended
-    // let root = Options.root options |> File_path.to_string in
     let root = options.root.as_path();
-    // let prepend_root path = Files.absolute_path root path in
     let prepend_root = |path: &str| files::absolute_path(root, path);
-    // let non_flowlib_libs = SSet.map prepend_root non_flowlib_libs in
-    *non_flowlib_libs = non_flowlib_libs
+    *non_flowlib_configured = non_flowlib_configured
         .iter()
         .map(|path| FlowSmolStr::new(prepend_root(path.as_str())))
         .collect();
-    // let node_modules_containers =
-    //   SMap.fold
-    //     (fun key value acc -> SMap.add (prepend_root key) value acc)
-    //     node_modules_containers
-    //     SMap.empty
-    // in
     *node_modules_containers = node_modules_containers
         .iter()
         .map(|(key, value)| (FlowSmolStr::new(prepend_root(key.as_str())), value.clone()))
@@ -1078,7 +1111,7 @@ fn denormalize_direct_data(
     verify_flowconfig_hash(options, &data.flowconfig_hash)?;
     denormalize_paths(
         options,
-        &mut data.non_flowlib_libs,
+        &mut data.global_lib_files.non_flowlib_configured,
         &mut data.node_modules_containers,
     );
     Ok(data)

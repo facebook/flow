@@ -11,6 +11,7 @@ pub use flow_saved_state_fetcher::saved_state_fetcher::FetchResult;
 pub use flow_saved_state_fetcher::saved_state_scm_fetcher::output_filename;
 pub use saved_state::InvalidReason;
 pub use saved_state::InvalidSavedState;
+pub use saved_state::SavedGlobalLibFiles;
 pub use saved_state::SavedStateEnvData;
 pub use saved_state::load;
 pub use saved_state::save;
