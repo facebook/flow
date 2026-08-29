@@ -466,6 +466,7 @@ fn mk_fun(
     fun_return: ty::ReturnT<ALoc>,
 ) -> ty::FunT<ALoc> {
     ty::FunT {
+        fun_this_param: None,
         fun_params: params.unwrap_or_default().into(),
         fun_rest_param,
         fun_return,
@@ -1643,6 +1644,10 @@ mod type_converter {
     ) -> Result<ty::FunT<ALoc>, Error> {
         use flow_typing_type::type_::ReactEffectType;
         let fun_static = type__::<I>(env, state, None, static_)?;
+        let fun_this_param = match type__::<I>(env, state, None, &f.this_t.0)? {
+            t if matches!(t.as_ref(), ty::Ty::Top | ty::Ty::Any(_)) => None,
+            t => Some(t),
+        };
         let fun_effect = match &f.effect_ {
             ReactEffectType::HookAnnot | ReactEffectType::HookDecl(_) => ty::FunEffect::Hook,
             ReactEffectType::ArbitraryEffect | ReactEffectType::AnyEffect => {
@@ -1665,6 +1670,7 @@ mod type_converter {
             }
         };
         Ok(ty::FunT {
+            fun_this_param,
             fun_params: fun_params.into(),
             fun_rest_param,
             fun_return,

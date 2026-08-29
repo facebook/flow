@@ -66,13 +66,13 @@ Flags: --pretty
     {"name":"bar","type":"string"},
     {
       "name":"apply",
-      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, args?: A) => R"
+      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
     {
       "name":"call",
-      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, ...args: A) => R"
+      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R"
     },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
@@ -555,9 +555,9 @@ override.js:10:16
 Flags: --pretty
 {
   "result":[
-    {"name":"bar","type":"() => void"},
-    {"name":"foo","type":"() => string"},
-    {"name":"override","type":"() => string"}
+    {"name":"bar","type":"(this: this) => void"},
+    {"name":"foo","type":"(this: this) => string"},
+    {"name":"override","type":"(this: this) => string"}
   ]
 }
 

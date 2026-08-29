@@ -209,8 +209,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- shape_mismatch.js:25:3
 
-Cannot extend `Base` [1] with `B` because in property `f`: `() => number` [2] is incompatible with `number` [3].
-[incompatible-type]
+Cannot extend `Base` [1] with `B` because in property `f`: `(this: this) => number` [2] is incompatible with
+`number` [3]. [incompatible-type]
 
    shape_mismatch.js:25:3
          v------------------------------

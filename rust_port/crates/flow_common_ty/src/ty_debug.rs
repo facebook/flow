@@ -302,9 +302,14 @@ fn dump_type_params<L: Debug + Clone + Dupe>(depth: i32, tps: Option<&[TypeParam
 
 fn dump_fun_t<L: Debug + Clone + Dupe>(depth: i32, f: &FunT<L>) -> String {
     let params: Vec<String> = f
-        .fun_params
+        .fun_this_param
         .iter()
-        .map(|(name, t, p)| dump_param(depth, name, t, p))
+        .map(|t| format!("this: {}", dump_t(depth, t)))
+        .chain(
+            f.fun_params
+                .iter()
+                .map(|(name, t, p)| dump_param(depth, name, t, p)),
+        )
         .collect();
     format!(
         "Fun({}, {}, {}, {}, out: {}, hook: {})",
@@ -1043,7 +1048,7 @@ fn json_of_fun_t<L: Debug + Clone + Dupe>(
             Json::Object(serde_json::Map::from_iter(obj))
         }
     };
-    vec![
+    let mut result = vec![
         (
             "typeParams".to_string(),
             json_of_type_params(converter, f.fun_type_params.as_deref(), strip_root),
@@ -1063,7 +1068,11 @@ fn json_of_fun_t<L: Debug + Clone + Dupe>(
             "functionHook".to_string(),
             Json::Bool(f.fun_effect == FunEffect::Hook),
         ),
-    ]
+    ];
+    if let Some(t) = &f.fun_this_param {
+        result.push(("thisType".to_string(), json_of_t(converter, t, strip_root)));
+    }
+    result
 }
 
 fn json_of_dict<L: Debug + Clone + Dupe>(

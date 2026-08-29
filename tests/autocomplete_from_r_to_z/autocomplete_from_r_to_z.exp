@@ -1024,7 +1024,7 @@ Flags: --pretty
 
 super_member.js:9:11
 Flags: --pretty
-{"result":[{"name":"foo","type":"() => void"}]}
+{"result":[{"name":"foo","type":"(this: this) => void"}]}
 
 switch.js:6:8
 Flags: --pretty
@@ -1136,9 +1136,9 @@ this.js:8:10
 Flags: --pretty
 {
   "result":[
-    {"name":"bar","type":"() => void"},
+    {"name":"bar","type":"(this: this) => void"},
     {"name":"baz","type":"string"},
-    {"name":"hello","type":"() => void"}
+    {"name":"hello","type":"(this: this) => void"}
   ]
 }
 

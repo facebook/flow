@@ -473,25 +473,52 @@ fn type_function<L: Dupe>(
     size: &mut usize,
 ) -> LayoutNode {
     let mut params = Vec::new();
-    for param in func.fun_params.iter() {
+    let mut limit_reached = false;
+    if let Some(t) = &func.fun_this_param {
+        if *size == 0 {
+            params.push(crop_atom());
+            limit_reached = true;
+        } else {
+            params.push(type_function_param(
+                opts,
+                depth,
+                Some("this"),
+                t,
+                &FunParam {
+                    prm_optional: false,
+                },
+                size,
+            ));
+        }
+    }
+
+    for (name, t, fun_param) in func.fun_params.iter() {
+        if limit_reached {
+            break;
+        }
         if *size == 0 {
             params.push(crop_atom());
             break;
         }
-        params.push(type_function_param(opts, depth, param, size));
+        params.push(type_function_param(
+            opts,
+            depth,
+            name.as_ref().map(|name| name.as_str()),
+            t,
+            fun_param,
+            size,
+        ));
     }
 
     if let Some((name, t)) = &func.fun_rest_param {
         let rest_param = type_function_param(
             opts,
             depth,
-            &(
-                name.dupe(),
-                t.dupe(),
-                FunParam {
-                    prm_optional: false,
-                },
-            ),
+            name.as_ref().map(|name| name.as_str()),
+            t,
+            &FunParam {
+                prm_optional: false,
+            },
             size,
         );
         params.push(layout::fuse(vec![
@@ -539,11 +566,11 @@ fn type_function<L: Dupe>(
 fn type_function_param<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
-    param: &(Option<FlowSmolStr>, std::sync::Arc<Ty<L>>, FunParam),
+    name: Option<&str>,
+    annot: &std::sync::Arc<Ty<L>>,
+    fun_param: &FunParam,
     size: &mut usize,
 ) -> LayoutNode {
-    let (name, annot, fun_param) = param;
-
     let name_part = match name {
         Some(id) => layout::fuse(vec![
             LayoutNode::atom(id.to_string()),

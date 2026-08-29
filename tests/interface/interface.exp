@@ -59,8 +59,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:21:1
 
-Cannot cast `build` to interface type because `() => S` [1] is incompatible with `interface {foo: boolean}` [2].
-[incompatible-type]
+Cannot cast `build` to interface type because `(this: Class<S>) => S` [1] is incompatible with
+`interface {foo: boolean}` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -324,7 +324,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:145:3
 
-Cannot cast `x['foo']` to empty because `() => null` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `x['foo']` to empty because `(this: D) => null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    indexer.js:145:3
    145|   x['foo'] as empty; // ERROR
@@ -1344,7 +1344,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test5.js:12:1
 
-Cannot cast `a.x` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a.x` to empty because `(this: A) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test5.js:12:1
    12| a.x as empty; // error: function ~> empty

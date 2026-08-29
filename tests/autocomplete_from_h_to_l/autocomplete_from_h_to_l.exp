@@ -2458,7 +2458,7 @@ Flags: --pretty
     {"name":"?.entries","type":"void | (() => Iterator<[number, T]>)"},
     {
       "name":"?.every",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
     },
     {
       "name":"?.fill",
@@ -2466,32 +2466,32 @@ Flags: --pretty
     },
     {
       "name":"?.filter",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>)"
     },
     {
       "name":"?.find",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void)"
     },
     {
       "name":"?.findIndex",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number)"
     },
     {
       "name":"?.findLast",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void)"
     },
     {
       "name":"?.findLastIndex",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number)"
     },
     {"name":"?.flat","type":"void | ((depth: number) => Array<unknown>)"},
     {
       "name":"?.flatMap",
-      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
+      "type":"void | (<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void)"
     },
     {
       "name":"?.includes",
@@ -2510,7 +2510,7 @@ Flags: --pretty
     {"name":"?.length","type":"void | number"},
     {
       "name":"?.map",
-      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>)"
+      "type":"void | (<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>)"
     },
     {"name":"?.pop","type":"void | (() => T | void)"},
     {"name":"?.push","type":"void | ((...items: Array<T>) => number)"},
@@ -2527,7 +2527,7 @@ Flags: --pretty
     {"name":"?.slice","type":"void | ((start?: number, end?: number) => Array<T>)"},
     {
       "name":"?.some",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
+      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
     },
     {
       "name":"?.sort",
@@ -2570,37 +2570,37 @@ Flags: --pretty
     {"name":"entries","type":"() => Iterator<[number, T]>"},
     {
       "name":"every",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
     },
     {"name":"fill","type":"(value: T, begin?: number, end?: number) => Array<T>"},
     {
       "name":"filter",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>"
     },
     {
       "name":"find",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void"
     },
     {
       "name":"findIndex",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number"
     },
     {
       "name":"findLast",
-      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void"
     },
     {
       "name":"findLastIndex",
-      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number"
     },
     {"name":"flat","type":"(depth: number) => Array<unknown>"},
     {
       "name":"flatMap",
-      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
+      "type":"<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
     },
     {
       "name":"forEach",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void"
     },
     {
       "name":"includes",
@@ -2616,7 +2616,7 @@ Flags: --pretty
     {"name":"length","type":"number"},
     {
       "name":"map",
-      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>"
+      "type":"<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>"
     },
     {"name":"pop","type":"() => T | void"},
     {"name":"push","type":"(...items: Array<T>) => number"},
@@ -2633,7 +2633,7 @@ Flags: --pretty
     {"name":"slice","type":"(start?: number, end?: number) => Array<T>"},
     {
       "name":"some",
-      "type":"<This>(callbackfn: (value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
+      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
     },
     {"name":"sort","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
     {
@@ -2678,7 +2678,7 @@ Flags: --pretty
 {
   "result":[
     {"name":"extended","type":"string"},
-    {"name":"method","type":"() => void"},
+    {"name":"method","type":"(this: this) => void"},
     {"name":"prop","type":"number"}
   ]
 }

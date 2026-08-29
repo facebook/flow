@@ -167,3 +167,11 @@ assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root --pretty
 # this.js
 printf "this.js:5:13 "
 assert_ok "$FLOW" type-at-pos this.js 5 13 --strip-root
+
+# function_this.js
+printf "function_this.js:2:1 "
+assert_ok "$FLOW" type-at-pos function_this.js 2 1 --strip-root --pretty
+printf "function_this.js:5:1 "
+assert_ok "$FLOW" type-at-pos function_this.js 5 1 --strip-root --pretty
+printf "function_this.js:8:1 "
+assert_ok "$FLOW" type-at-pos function_this.js 8 1 --strip-root --pretty

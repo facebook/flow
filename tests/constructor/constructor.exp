@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- assign.js:4:19
 
-Cannot assign `1` to `obj.constructor` because `1` [1] is incompatible with `(...empty) => any` [2]. [incompatible-type]
+Cannot assign `1` to `obj.constructor` because `1` [1] is incompatible with
+`(this: typeof Object.prototype, ...empty) => any` [2]. [incompatible-type]
 
    assign.js:4:19
    4| obj.constructor = 1; // error number ~> function
@@ -14,8 +15,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- assign.js:5:19
 
-Cannot assign `null` to `obj.constructor` because `null` [1] is incompatible with `(...empty) => any` [2].
-[incompatible-type]
+Cannot assign `null` to `obj.constructor` because `null` [1] is incompatible with
+`(this: typeof Object.prototype, ...empty) => any` [2]. [incompatible-type]
 
    assign.js:5:19
    5| obj.constructor = null; // error null ~> function

@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------------------- B.js:6:1
 
-Cannot cast `b.foo` to number because `(x: number) => void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `b.foo` to number because `(this: B, x: number) => void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    B.js:6:1
    6| b.foo as number; // error, number !~> function
@@ -35,7 +36,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:8:1
 
-Cannot cast `c.foo` to number because `(x: string) => void` [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot cast `c.foo` to number because `(this: C, x: string) => void` [1] is incompatible with `number` [2].
+[incompatible-type]
 
    C.js:8:1
    8| c.foo as number; // error, number !~> function
@@ -270,7 +272,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:20:1
 
-Cannot cast `Dup1.x` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `Dup1.x` to empty because `(this: Class<Dup1>) => void` [1] is incompatible with `empty` [2].
+[incompatible-type]
 
    statics.js:20:1
    20| Dup1.x as empty; // function ~> empty

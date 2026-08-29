@@ -502,7 +502,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- rejected.js:26:1
 
 Cannot call `f.call` because in the `this` parameter: `{x: number, ...}` [1] is incompatible with
-`(y: number) => void` [2]. [incompatible-type]
+`(this: {x: number, ...}, y: number) => void` [2]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 

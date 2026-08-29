@@ -6428,7 +6428,7 @@ b.te
                     title: '',
                   },
                   detail:
-                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, args?: A) => R',
+                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R',
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'apply',
@@ -6537,7 +6537,7 @@ b.te
                     title: '',
                   },
                   detail:
-                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, ...args: A) => R',
+                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R',
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'call',
@@ -6895,7 +6895,7 @@ b.te
                     title: '',
                   },
                   detail:
-                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, args?: A) => R',
+                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R',
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'apply',
@@ -7004,7 +7004,7 @@ b.te
                     title: '',
                   },
                   detail:
-                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(thisArg: T, ...args: A) => R',
+                    '<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R',
                   insertTextFormat: 1,
                   kind: 3,
                   label: 'call',

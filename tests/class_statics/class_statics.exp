@@ -315,7 +315,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:3
 
-Cannot cast `A.s` to `typeof Boolean` because `() => void` [1] is incompatible with class `Boolean` [2].
+Cannot cast `A.s` to `typeof Boolean` because `(this: Class<A>) => void` [1] is incompatible with class `Boolean` [2].
 [incompatible-type]
 
    test.js:83:3

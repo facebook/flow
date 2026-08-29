@@ -148,6 +148,7 @@ mod tests {
     #[test]
     fn test_type_param_bound_and_variance() {
         let func = Ty::<ALoc>::Fun(Box::new(FunT {
+            fun_this_param: None,
             fun_params: vec![].into(),
             fun_rest_param: None,
             fun_return: ReturnT::ReturnType(Arc::new(Ty::Void)),
@@ -167,5 +168,21 @@ mod tests {
         let opts = test_options();
         let result = string_of_t(&func, &opts);
         assert_eq!(result, "<out T extends unknown>() => void");
+    }
+
+    #[test]
+    fn test_function_this_param() {
+        let func = Ty::<ALoc>::Fun(Box::new(FunT {
+            fun_this_param: Some(Arc::new(Ty::Str)),
+            fun_params: vec![].into(),
+            fun_rest_param: None,
+            fun_return: ReturnT::ReturnType(Arc::new(Ty::Void)),
+            fun_type_params: None,
+            fun_static: Arc::new(Ty::Top),
+            fun_effect: FunEffect::Arbitrary,
+        }));
+        let opts = test_options();
+        let result = string_of_t(&func, &opts);
+        assert_eq!(result, "(this: string) => void");
     }
 }

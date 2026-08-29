@@ -932,11 +932,17 @@ At unions.js:28:3
 unions.js:28:1,28:3
 
 At unions.js:48:4
-(() => number) | (() => string)
+((this: G<number>) => number) | ((this: G<string>) => string)
+
+'G' defined at unions.js:31:6
+
 unions.js:48:3,48:7
 
 At unions.js:50:4
-((x: number) => void) | ((x: string) => void)
+((this: G<number>, x: number) => void) | ((this: G<string>, x: string) => void)
+
+'G' defined at unions.js:31:6
+
 unions.js:50:3,50:7
 
 At unions.js:56:3

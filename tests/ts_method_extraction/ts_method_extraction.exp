@@ -30,7 +30,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:26:1
 
-Cannot cast `a.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `a.m` to empty because `(this: A) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:26:1
    26| a.m satisfies empty; // ERROR: proves type is not any
@@ -62,7 +62,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:30:1
 
-Cannot cast `m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `m` to empty because `(this: A) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:30:1
    30| m satisfies empty; // ERROR: proves type is not any
@@ -94,7 +94,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:37:1
 
-Cannot cast `i.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `i.m` to empty because `(this: I) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:37:1
    37| i.m satisfies empty; // ERROR: proves type is not any
@@ -126,7 +126,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:41:1
 
-Cannot cast `im` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `im` to empty because `(this: I) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:41:1
    41| im satisfies empty; // ERROR: proves type is not any
@@ -161,7 +161,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.ts:51:1
 
-Cannot cast `self` to empty because `() => B` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `self` to empty because `(this: B) => B` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    test.ts:51:1
    51| self satisfies empty; // ERROR: function type is not empty

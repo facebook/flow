@@ -244,6 +244,7 @@ pub enum FunEffect {
     serde::Deserialize
 )]
 pub struct FunT<L> {
+    pub fun_this_param: Option<Arc<Ty<L>>>,
     pub fun_params: Arc<[(Option<FlowSmolStr>, Arc<Ty<L>>, FunParam)]>,
     pub fun_rest_param: Option<(Option<FlowSmolStr>, Arc<Ty<L>>)>,
     pub fun_return: ReturnT<L>,
@@ -1362,6 +1363,9 @@ where
     }
 
     fn on_fun_t(&mut self, env: &Env, f: &FunT<L>) {
+        if let Some(ty) = &f.fun_this_param {
+            self.on_t(env, ty);
+        }
         for (name_opt, ty, _param) in f.fun_params.iter() {
             if let Some(_name) = name_opt {}
             self.on_t(env, ty);
@@ -1963,6 +1967,12 @@ where
         f1: &FunT<L>,
         f2: &FunT<L>,
     ) -> Result<(), StructuralMismatch> {
+        self.on_option(
+            |s, e, t1, t2| s.on_t(e, t1, t2),
+            env,
+            &f1.fun_this_param,
+            &f2.fun_this_param,
+        )?;
         self.on_list(
             |s, e, (n1, ty1, fp1), (n2, ty2, fp2)| {
                 s.on_option(|s, e, n1, n2| s.on_string(e, n1, n2), e, n1, n2)?;
@@ -2895,6 +2905,9 @@ where
 
     fn on_fun_t(&mut self, env: &Env, f: &FunT<L>) -> Self::Acc {
         let mut acc = Self::Acc::zero();
+        if let Some(ty) = &f.fun_this_param {
+            acc = Self::Acc::plus(acc, self.on_t(env, ty));
+        }
         for (_, ty, _) in f.fun_params.iter() {
             acc = Self::Acc::plus(acc, self.on_t(env, ty));
         }
@@ -3484,6 +3497,7 @@ where
     }
 
     fn on_fun_t(&mut self, env: &Env, f: FunT<L>) -> FunT<L> {
+        let fun_this_param_new = f.fun_this_param.map(|ty| self.on_t(env, ty));
         let fun_params_new: Arc<[_]> = f
             .fun_params
             .iter()
@@ -3507,6 +3521,7 @@ where
         let fun_static_new = self.on_t(env, f.fun_static);
         let fun_effect_new = self.on_fun_effect(env, f.fun_effect);
         FunT {
+            fun_this_param: fun_this_param_new,
             fun_params: fun_params_new,
             fun_rest_param: fun_rest_param_new,
             fun_return: fun_return_new,
@@ -4487,6 +4502,10 @@ impl<L: Dupe> FunT<L> {
         M: Dupe,
     {
         FunT {
+            fun_this_param: self
+                .fun_this_param
+                .as_ref()
+                .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
             fun_params: self
                 .fun_params
                 .iter()

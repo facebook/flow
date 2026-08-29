@@ -19,7 +19,7 @@ Found exact match 'instance' defined at basic.js:30:7,30:14 with type `MyClass`
 where
 'MyClass' is defined at basic.js:18:7-13
 
-Found exact match 'methodName' defined at basic.js:25:3,25:12 with type `() => number` 
+Found exact match 'methodName' defined at basic.js:25:3,25:12 with type `(this: this) => number` 
 
 === Type aliases ===
 Found exact match 'MyType' defined at basic.js:33:6,33:11 with type `type MyType = {bar: number, foo: string}` 
@@ -881,8 +881,11 @@ Found exact match 'BasicComponent.title' defined at react.js:7:26,7:30 with type
 Found exact match 'BasicComponent.count' defined at react.js:7:41,7:45 with type `number` 
 Found exact match 'myObject.x' defined at basic.js:8:18,8:18 with type `number` 
 Found exact match 'myObject.y' defined at basic.js:8:29,8:29 with type `string` 
-Found exact match 'MyClass.methodName' defined at basic.js:25:3,25:12 with type `() => number` 
-Found exact match 'instance.methodName' defined at basic.js:25:3,25:12 with type `() => number` 
+Found exact match 'MyClass.methodName' defined at basic.js:25:3,25:12 with type `(this: this) => number` 
+Found exact match 'instance.methodName' defined at basic.js:25:3,25:12 with type `(this: MyClass) => number` 
+where
+'MyClass' is defined at basic.js:18:7-13
+
 Found exact match 'UserCardProps.name' defined at types.js:5:3,5:6 with type `string` 
 Found exact match 'BasicComponent.title' defined at react.js:7:26,7:30 with type `string` 
 

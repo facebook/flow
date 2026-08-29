@@ -521,7 +521,11 @@ impl Serializer {
 
     fn function_<L: Dupe>(&self, f: &FunT<L>) -> AstFunction {
         let return_ = self.fun_return_t(&f.fun_return);
-        let params = self.fun_params(&f.fun_params, f.fun_rest_param.as_ref());
+        let params = self.fun_params(
+            f.fun_this_param.as_ref(),
+            &f.fun_params,
+            f.fun_rest_param.as_ref(),
+        );
         let tparams = f.fun_type_params.as_ref().map(|tps| self.type_params(tps));
         let effect = match f.fun_effect {
             FunEffect::Arbitrary => ast::function::Effect::Arbitrary,
@@ -538,9 +542,18 @@ impl Serializer {
 
     fn fun_params<L: Dupe>(
         &self,
+        this_param: Option<&Arc<Ty<L>>>,
         params: &[(Option<FlowSmolStr>, Arc<Ty<L>>, FunParam)],
         rest_param: Option<&(Option<FlowSmolStr>, Arc<Ty<L>>)>,
     ) -> ast::types::function::Params<Loc, Loc> {
+        let this = this_param.map(|t| ast::types::function::ThisParam {
+            loc: LOC_NONE,
+            annot: ast::types::Annotation {
+                loc: LOC_NONE,
+                annotation: self.type_(t),
+            },
+            comments: None,
+        });
         let params: Vec<ast::types::function::Param<Loc, Loc>> = params
             .iter()
             .map(|(name, t, prm)| self.fun_param(name.as_ref(), t, prm))
@@ -548,8 +561,7 @@ impl Serializer {
         let rest = rest_param.map(|(name, t)| self.fun_rest_param(name.as_ref(), t));
         ast::types::function::Params {
             loc: LOC_NONE,
-            // TODO: handle `this` constraints
-            this: None,
+            this,
             params: params.into(),
             rest,
             comments: None,

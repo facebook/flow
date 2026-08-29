@@ -462,8 +462,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test7.js:5:19
 
-Cannot call `arr[0]` because in array element: `() => number` [1] is not exactly the same as `() => number` [2].
-[incompatible-type]
+Cannot call `arr[0]` because in array element: `(this: Array<() => number>) => number` [1] is not exactly the same as
+`() => number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either annotate array literal [3] with `Array<() => number>` [4]
