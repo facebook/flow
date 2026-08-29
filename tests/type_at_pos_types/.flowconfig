@@ -9,5 +9,6 @@
 [options]
 all=true
 no_flowlib=false
+experimental.new_this_typing=true
 
 [strict]

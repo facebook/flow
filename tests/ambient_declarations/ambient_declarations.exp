@@ -24,7 +24,7 @@ Declare methods in classes are not supported. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------- declare_methods.js.flow:10:3
 
-Cannot shadow proto property `foo` [1] because `string` [2] is incompatible with `(x: number) => void` [3].
+Cannot shadow proto property `foo` [1] because `string` [2] is incompatible with `(this: this, x: number) => void` [3].
 [incompatible-type]
 
    declare_methods.js.flow:10:3

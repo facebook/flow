@@ -161,7 +161,7 @@ class-2.js:9:9 = {
   "path":"class-2.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"(this: A) => A"}}
 }
 class-2.js:10:9 = {
   "end":9,
@@ -176,7 +176,7 @@ class-2.js:10:9 = {
   "path":"class-2.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"(this: B) => A"}}
 }
 class-2.js:12:7 = {
   "end":7,
@@ -236,7 +236,7 @@ class-3.js:9:9 = {
   "path":"class-3.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => A"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"(this: A) => A"}}
 }
 class-3.js:10:9 = {
   "end":9,
@@ -251,7 +251,7 @@ class-3.js:10:9 = {
   "path":"class-3.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => B"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"(this: B) => B"}}
 }
 class-4.js:9:6 = {
   "end":9,
@@ -446,7 +446,7 @@ class-poly-1.js:9:11 = {
   "path":"class-poly-1.js",
   "reasons":[],
   "start":11,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: A<number>) => number"}}
+  "types":{"evaluated":null,"unevaluated":{"type":"() => number"}}
 }
 class-statics.js:4:10 = {
   "end":10,

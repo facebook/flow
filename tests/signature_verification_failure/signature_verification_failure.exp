@@ -184,8 +184,8 @@ spread in array: [signature-verification-failure]
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:7:22
 
-In property `@@iterator`: `number` [1] is incompatible with `() => $IteratorProtocol<empty, any, any>` [2].
-[incompatible-type]
+In property `@@iterator`: `number` [1] is incompatible with
+`(this: $Iterable<empty, any, any>) => $IteratorProtocol<empty, any, any>` [2]. [incompatible-type]
 
    misc.js:7:22
       7| export const d = [...c];

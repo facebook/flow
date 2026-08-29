@@ -77,7 +77,7 @@ Flags: --pretty
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
     {"name":"name","type":"string"},
-    {"name":"toString","type":"() => string"}
+    {"name":"toString","type":"(this: Function) => string"}
   ]
 }
 
@@ -398,7 +398,7 @@ Flags: --pretty
     {"name":"ReferenceError","type":"typeof ReferenceError"},
     {
       "name":"Reflect",
-      "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (o: $NotNullOrVoid) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (target: any, prototype: {[any]: any} | null) => boolean, ...}"
+      "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (this: Class<Object>, o: $NotNullOrVoid) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (target: any, prototype: {[any]: any} | null) => boolean, ...}"
     },
     {"name":"RegExp","type":"typeof RegExp"},
     {
@@ -461,15 +461,18 @@ num.js:4:5
 Flags: --pretty
 {
   "result":[
-    {"name":"toExponential","type":"(fractionDigits?: number) => string"},
-    {"name":"toFixed","type":"(fractionDigits?: number) => string"},
+    {
+      "name":"toExponential",
+      "type":"(this: Number, fractionDigits?: number) => string"
+    },
+    {"name":"toFixed","type":"(this: Number, fractionDigits?: number) => string"},
     {
       "name":"toLocaleString",
-      "type":"(locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
+      "type":"(this: Number, locales?: string | Array<string>, options?: Intl$NumberFormatOptions) => string"
     },
-    {"name":"toPrecision","type":"(precision?: number) => string"},
-    {"name":"toString","type":"(radix?: number) => string"},
-    {"name":"valueOf","type":"() => number"}
+    {"name":"toPrecision","type":"(this: Number, precision?: number) => string"},
+    {"name":"toString","type":"(this: Number, radix?: number) => string"},
+    {"name":"valueOf","type":"(this: Number) => number"}
   ]
 }
 

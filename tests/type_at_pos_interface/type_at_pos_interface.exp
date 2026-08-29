@@ -89,7 +89,7 @@ interface.js:57:7,57:12
 
 interface.js:59:7
 Flags:
-() => Box<number>
+(this: Box<number>) => Box<number>
 
 'Box' defined at interface.js:49:10
 

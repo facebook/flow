@@ -49,84 +49,99 @@ if.js:3:7
 Flags: --pretty
 {
   "result":[
-    {"name":"[Symbol.iterator]","type":"() => Iterator<string>"},
-    {"name":"anchor","type":"(name: string) => string"},
-    {"name":"at","type":"(index: number) => string | void"},
-    {"name":"charAt","type":"(pos: number) => string"},
-    {"name":"charCodeAt","type":"(index: number) => number"},
-    {"name":"codePointAt","type":"(index: number) => number | void"},
-    {"name":"concat","type":"(...strings: Array<string>) => string"},
+    {"name":"[Symbol.iterator]","type":"(this: String) => Iterator<string>"},
+    {"name":"anchor","type":"(this: String, name: string) => string"},
+    {"name":"at","type":"(this: String, index: number) => string | void"},
+    {"name":"charAt","type":"(this: String, pos: number) => string"},
+    {"name":"charCodeAt","type":"(this: String, index: number) => number"},
+    {"name":"codePointAt","type":"(this: String, index: number) => number | void"},
+    {"name":"concat","type":"(this: String, ...strings: Array<string>) => string"},
     {
       "name":"endsWith",
-      "type":"(searchString: string, position?: number) => boolean"
+      "type":"(this: String, searchString: string, position?: number) => boolean"
     },
     {
       "name":"includes",
-      "type":"(searchString: string, position?: number) => boolean"
+      "type":"(this: String, searchString: string, position?: number) => boolean"
     },
-    {"name":"indexOf","type":"(searchString: string, position?: number) => number"},
+    {
+      "name":"indexOf",
+      "type":"(this: String, searchString: string, position?: number) => number"
+    },
     {
       "name":"lastIndexOf",
-      "type":"(searchString: string, position?: number) => number"
+      "type":"(this: String, searchString: string, position?: number) => number"
     },
     {"name":"length","type":"number"},
-    {"name":"link","type":"(href: string) => string"},
+    {"name":"link","type":"(this: String, href: string) => string"},
     {
       "name":"localeCompare",
-      "type":"(that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
+      "type":"(this: String, that: string, locales?: string | Array<string>, options?: Intl$CollatorOptions) => number"
     },
     {
       "name":"match",
-      "type":"(regexp: string | RegExp) => RegExp$matchResult | null"
+      "type":"(this: String, regexp: string | RegExp) => RegExp$matchResult | null"
     },
     {
       "name":"matchAll",
-      "type":"(regexp: string | RegExp) => Iterator<RegExp$matchResult>"
+      "type":"(this: String, regexp: string | RegExp) => Iterator<RegExp$matchResult>"
     },
-    {"name":"normalize","type":"(format?: string) => string"},
-    {"name":"padEnd","type":"(targetLength: number, padString?: string) => string"},
+    {"name":"normalize","type":"(this: String, format?: string) => string"},
+    {
+      "name":"padEnd",
+      "type":"(this: String, targetLength: number, padString?: string) => string"
+    },
     {
       "name":"padStart",
-      "type":"(targetLength: number, padString?: string) => string"
+      "type":"(this: String, targetLength: number, padString?: string) => string"
     },
-    {"name":"repeat","type":"(count: number) => string"},
+    {"name":"repeat","type":"(this: String, count: number) => string"},
     {
       "name":"replace",
-      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
+      "type":"(this: String, searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
     },
     {
       "name":"replaceAll",
-      "type":"(searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
+      "type":"(this: String, searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
     },
-    {"name":"search","type":"(regexp: string | RegExp) => number"},
-    {"name":"slice","type":"(start?: number, end?: number) => string"},
+    {"name":"search","type":"(this: String, regexp: string | RegExp) => number"},
+    {
+      "name":"slice",
+      "type":"(this: String, start?: number, end?: number) => string"
+    },
     {
       "name":"split",
-      "type":"(separator?: string | RegExp, limit?: number) => Array<string>"
+      "type":"(this: String, separator?: string | RegExp, limit?: number) => Array<string>"
     },
     {
       "name":"startsWith",
-      "type":"(searchString: string, position?: number) => boolean"
+      "type":"(this: String, searchString: string, position?: number) => boolean"
     },
-    {"name":"substr","type":"(from: number, length?: number) => string"},
-    {"name":"substring","type":"(start: number, end?: number) => string"},
+    {
+      "name":"substr",
+      "type":"(this: String, from: number, length?: number) => string"
+    },
+    {
+      "name":"substring",
+      "type":"(this: String, start: number, end?: number) => string"
+    },
     {
       "name":"toLocaleLowerCase",
-      "type":"(locale?: string | Array<string>) => string"
+      "type":"(this: String, locale?: string | Array<string>) => string"
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"(locale?: string | Array<string>) => string"
+      "type":"(this: String, locale?: string | Array<string>) => string"
     },
-    {"name":"toLowerCase","type":"() => string"},
-    {"name":"toString","type":"() => string"},
-    {"name":"toUpperCase","type":"() => string"},
-    {"name":"trim","type":"() => string"},
-    {"name":"trimEnd","type":"() => string"},
-    {"name":"trimLeft","type":"() => string"},
-    {"name":"trimRight","type":"() => string"},
-    {"name":"trimStart","type":"() => string"},
-    {"name":"valueOf","type":"() => string"}
+    {"name":"toLowerCase","type":"(this: String) => string"},
+    {"name":"toString","type":"(this: String) => string"},
+    {"name":"toUpperCase","type":"(this: String) => string"},
+    {"name":"trim","type":"(this: String) => string"},
+    {"name":"trimEnd","type":"(this: String) => string"},
+    {"name":"trimLeft","type":"(this: String) => string"},
+    {"name":"trimRight","type":"(this: String) => string"},
+    {"name":"trimStart","type":"(this: String) => string"},
+    {"name":"valueOf","type":"(this: String) => string"}
   ]
 }
 
@@ -2445,111 +2460,123 @@ indirect_array.js:5:3
 Flags: --pretty
 {
   "result":[
-    {"name":"?.[Symbol.iterator]","type":"void | (() => Iterator<T>)"},
-    {"name":"?.at","type":"void | ((index: number) => T | void)"},
+    {"name":"?.[Symbol.iterator]","type":"void | ((this: this) => Iterator<T>)"},
+    {"name":"?.at","type":"void | ((this: this, index: number) => T | void)"},
     {
       "name":"?.concat",
-      "type":"void | (<S = T>(...items: Array<ReadonlyArray<S> | S>) => Array<T | S>)"
+      "type":"void | (<S = T>(this: this, ...items: Array<ReadonlyArray<S> | S>) => Array<T | S>)"
     },
     {
       "name":"?.copyWithin",
-      "type":"void | ((target: number, start: number, end?: number) => Array<T>)"
+      "type":"void | ((this: this, target: number, start: number, end?: number) => Array<T>)"
     },
-    {"name":"?.entries","type":"void | (() => Iterator<[number, T]>)"},
+    {"name":"?.entries","type":"void | ((this: this) => Iterator<[number, T]>)"},
     {
       "name":"?.every",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
     },
     {
       "name":"?.fill",
-      "type":"void | ((value: T, begin?: number, end?: number) => Array<T>)"
+      "type":"void | ((this: this, value: T, begin?: number, end?: number) => Array<T>)"
     },
     {
       "name":"?.filter",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>)"
     },
     {
       "name":"?.find",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void)"
     },
     {
       "name":"?.findIndex",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number)"
     },
     {
       "name":"?.findLast",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void)"
     },
     {
       "name":"?.findLastIndex",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number)"
     },
-    {"name":"?.flat","type":"void | ((depth: number) => Array<unknown>)"},
+    {
+      "name":"?.flat",
+      "type":"void | ((this: this, depth: number) => Array<unknown>)"
+    },
     {
       "name":"?.flatMap",
-      "type":"void | (<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
+      "type":"void | (<U, This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void)"
     },
     {
       "name":"?.includes",
-      "type":"void | ((searchElement: T, fromIndex?: number) => implies searchElement is T)"
+      "type":"void | ((this: this, searchElement: T, fromIndex?: number) => implies searchElement is T)"
     },
     {
       "name":"?.indexOf",
-      "type":"void | ((searchElement: T, fromIndex?: number) => number)"
+      "type":"void | ((this: this, searchElement: T, fromIndex?: number) => number)"
     },
-    {"name":"?.join","type":"void | ((separator?: string) => string)"},
-    {"name":"?.keys","type":"void | (() => Iterator<number>)"},
+    {"name":"?.join","type":"void | ((this: this, separator?: string) => string)"},
+    {"name":"?.keys","type":"void | ((this: this) => Iterator<number>)"},
     {
       "name":"?.lastIndexOf",
-      "type":"void | ((searchElement: T, fromIndex?: number) => number)"
+      "type":"void | ((this: this, searchElement: T, fromIndex?: number) => number)"
     },
     {"name":"?.length","type":"void | number"},
     {
       "name":"?.map",
-      "type":"void | (<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>)"
+      "type":"void | (<U, This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>)"
     },
-    {"name":"?.pop","type":"void | (() => T | void)"},
-    {"name":"?.push","type":"void | ((...items: Array<T>) => number)"},
+    {"name":"?.pop","type":"void | ((this: this) => T | void)"},
+    {"name":"?.push","type":"void | ((this: this, ...items: Array<T>) => number)"},
     {
       "name":"?.reduce",
-      "type":"void | (<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)"
+      "type":"void | (<U>(this: this, callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)"
     },
     {
       "name":"?.reduceRight",
-      "type":"void | (<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)"
+      "type":"void | (<U>(this: this, callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U)"
     },
-    {"name":"?.reverse","type":"void | (() => Array<T>)"},
-    {"name":"?.shift","type":"void | (() => T | void)"},
-    {"name":"?.slice","type":"void | ((start?: number, end?: number) => Array<T>)"},
+    {"name":"?.reverse","type":"void | ((this: this) => Array<T>)"},
+    {"name":"?.shift","type":"void | ((this: this) => T | void)"},
+    {
+      "name":"?.slice",
+      "type":"void | ((this: this, start?: number, end?: number) => Array<T>)"
+    },
     {
       "name":"?.some",
-      "type":"void | (<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
+      "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
     },
     {
       "name":"?.sort",
-      "type":"void | ((compareFn?: (a: T, b: T) => number) => Array<T>)"
+      "type":"void | ((this: this, compareFn?: (a: T, b: T) => number) => Array<T>)"
     },
     {
       "name":"?.splice",
-      "type":"void | ((start: number, deleteCount?: number, ...items: Array<T>) => Array<T>)"
+      "type":"void | ((this: this, start: number, deleteCount?: number, ...items: Array<T>) => Array<T>)"
     },
-    {"name":"?.toLocaleString","type":"void | (() => string)"},
-    {"name":"?.toReversed","type":"void | (() => Array<T>)"},
+    {"name":"?.toLocaleString","type":"void | ((this: this) => string)"},
+    {"name":"?.toReversed","type":"void | ((this: this) => Array<T>)"},
     {
       "name":"?.toSorted",
-      "type":"void | ((compareFn?: (a: T, b: T) => number) => Array<T>)"
+      "type":"void | ((this: this, compareFn?: (a: T, b: T) => number) => Array<T>)"
     },
     {
       "name":"?.toSpliced",
-      "type":"void | (<S>(start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>)"
+      "type":"void | (<S>(this: this, start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>)"
     },
-    {"name":"?.unshift","type":"void | ((...items: Array<T>) => number)"},
-    {"name":"?.values","type":"void | (() => Iterator<T>)"},
-    {"name":"?.with","type":"void | ((index: number, value: T) => Array<T>)"}
+    {
+      "name":"?.unshift",
+      "type":"void | ((this: this, ...items: Array<T>) => number)"
+    },
+    {"name":"?.values","type":"void | ((this: this) => Iterator<T>)"},
+    {
+      "name":"?.with",
+      "type":"void | ((this: this, index: number, value: T) => Array<T>)"
+    }
   ]
 }
 
@@ -2557,99 +2584,114 @@ indirect_array.js:11:3
 Flags: --pretty
 {
   "result":[
-    {"name":"[Symbol.iterator]","type":"() => Iterator<T>"},
-    {"name":"at","type":"(index: number) => T | void"},
+    {"name":"[Symbol.iterator]","type":"(this: this) => Iterator<T>"},
+    {"name":"at","type":"(this: this, index: number) => T | void"},
     {
       "name":"concat",
-      "type":"<S = T>(...items: Array<ReadonlyArray<S> | S>) => Array<T | S>"
+      "type":"<S = T>(this: this, ...items: Array<ReadonlyArray<S> | S>) => Array<T | S>"
     },
     {
       "name":"copyWithin",
-      "type":"(target: number, start: number, end?: number) => Array<T>"
+      "type":"(this: this, target: number, start: number, end?: number) => Array<T>"
     },
-    {"name":"entries","type":"() => Iterator<[number, T]>"},
+    {"name":"entries","type":"(this: this) => Iterator<[number, T]>"},
     {
       "name":"every",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
     },
-    {"name":"fill","type":"(value: T, begin?: number, end?: number) => Array<T>"},
+    {
+      "name":"fill",
+      "type":"(this: this, value: T, begin?: number, end?: number) => Array<T>"
+    },
     {
       "name":"filter",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => Array<T>"
     },
     {
       "name":"find",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => T | void"
     },
     {
       "name":"findIndex",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => number"
     },
     {
       "name":"findLast",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => T | void"
     },
     {
       "name":"findLastIndex",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => unknown, thisArg: This) => number"
     },
-    {"name":"flat","type":"(depth: number) => Array<unknown>"},
+    {"name":"flat","type":"(this: this, depth: number) => Array<unknown>"},
     {
       "name":"flatMap",
-      "type":"<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
+      "type":"<U, This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
     },
     {
       "name":"forEach",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => void"
     },
     {
       "name":"includes",
-      "type":"(searchElement: T, fromIndex?: number) => implies searchElement is T"
+      "type":"(this: this, searchElement: T, fromIndex?: number) => implies searchElement is T"
     },
-    {"name":"indexOf","type":"(searchElement: T, fromIndex?: number) => number"},
-    {"name":"join","type":"(separator?: string) => string"},
-    {"name":"keys","type":"() => Iterator<number>"},
+    {
+      "name":"indexOf",
+      "type":"(this: this, searchElement: T, fromIndex?: number) => number"
+    },
+    {"name":"join","type":"(this: this, separator?: string) => string"},
+    {"name":"keys","type":"(this: this) => Iterator<number>"},
     {
       "name":"lastIndexOf",
-      "type":"(searchElement: T, fromIndex?: number) => number"
+      "type":"(this: this, searchElement: T, fromIndex?: number) => number"
     },
     {"name":"length","type":"number"},
     {
       "name":"map",
-      "type":"<U, This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>"
+      "type":"<U, This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => U, thisArg: This) => Array<U>"
     },
-    {"name":"pop","type":"() => T | void"},
-    {"name":"push","type":"(...items: Array<T>) => number"},
+    {"name":"pop","type":"(this: this) => T | void"},
+    {"name":"push","type":"(this: this, ...items: Array<T>) => number"},
     {
       "name":"reduce",
-      "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U"
+      "type":"<U>(this: this, callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U"
     },
     {
       "name":"reduceRight",
-      "type":"<U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U"
+      "type":"<U>(this: this, callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: Array<T>) => U, initialValue: U) => U"
     },
-    {"name":"reverse","type":"() => Array<T>"},
-    {"name":"shift","type":"() => T | void"},
-    {"name":"slice","type":"(start?: number, end?: number) => Array<T>"},
+    {"name":"reverse","type":"(this: this) => Array<T>"},
+    {"name":"shift","type":"(this: this) => T | void"},
+    {
+      "name":"slice",
+      "type":"(this: this, start?: number, end?: number) => Array<T>"
+    },
     {
       "name":"some",
-      "type":"<This>(callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
+      "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
     },
-    {"name":"sort","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
+    {
+      "name":"sort",
+      "type":"(this: this, compareFn?: (a: T, b: T) => number) => Array<T>"
+    },
     {
       "name":"splice",
-      "type":"(start: number, deleteCount?: number, ...items: Array<T>) => Array<T>"
+      "type":"(this: this, start: number, deleteCount?: number, ...items: Array<T>) => Array<T>"
     },
-    {"name":"toLocaleString","type":"() => string"},
-    {"name":"toReversed","type":"() => Array<T>"},
-    {"name":"toSorted","type":"(compareFn?: (a: T, b: T) => number) => Array<T>"},
+    {"name":"toLocaleString","type":"(this: this) => string"},
+    {"name":"toReversed","type":"(this: this) => Array<T>"},
+    {
+      "name":"toSorted",
+      "type":"(this: this, compareFn?: (a: T, b: T) => number) => Array<T>"
+    },
     {
       "name":"toSpliced",
-      "type":"<S>(start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>"
+      "type":"<S>(this: this, start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>"
     },
-    {"name":"unshift","type":"(...items: Array<T>) => number"},
-    {"name":"values","type":"() => Iterator<T>"},
-    {"name":"with","type":"(index: number, value: T) => Array<T>"}
+    {"name":"unshift","type":"(this: this, ...items: Array<T>) => number"},
+    {"name":"values","type":"(this: this) => Iterator<T>"},
+    {"name":"with","type":"(this: this, index: number, value: T) => Array<T>"}
   ]
 }
 
@@ -3016,11 +3058,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"() => Iterator<[number, string]>",
+  "detail":"(this: Map<number, string>) => Iterator<[number, string]>",
   "insertTextFormat":1,
   "kind":3,
   "label":"[Symbol.iterator]",
-  "labelDetails":{"detail":": () => Iterator<[number, string]>"},
+  "labelDetails":{"detail":": (this: Map<number, string>) => Iterator<[number, string]>"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"[Symbol.iterator]",
@@ -3076,11 +3118,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"() => Iterator<[number, string]>",
+  "detail":"(this: Map<number, string>) => Iterator<[number, string]>",
   "insertTextFormat":1,
   "kind":3,
   "label":"[Symbol.iterator]",
-  "labelDetails":{"detail":": () => Iterator<[number, string]>"},
+  "labelDetails":{"detail":": (this: Map<number, string>) => Iterator<[number, string]>"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"[Symbol.iterator]",

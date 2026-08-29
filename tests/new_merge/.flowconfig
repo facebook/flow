@@ -11,5 +11,6 @@ all=false
 no_flowlib=false
 include_warnings=true
 enums=true
+experimental.new_this_typing=true
 
 [strict]

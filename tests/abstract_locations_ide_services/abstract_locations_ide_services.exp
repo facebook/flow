@@ -3,7 +3,7 @@ Get-def imported class:
 Get-def class member:
 {"end":5,"endline":4,"line":4,"path":"foo.js","start":3}
 Autocomplete class property:
-{"result":[{"name":"foo","type":"() => void"}]}
+{"result":[{"name":"foo","type":"(this: Foo) => void"}]}
 dump types:
 [
   {

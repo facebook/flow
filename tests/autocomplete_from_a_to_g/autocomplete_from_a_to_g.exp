@@ -6,8 +6,8 @@ bool.js:3:6
 Flags: --pretty
 {
   "result":[
-    {"name":"toString","type":"() => string"},
-    {"name":"valueOf","type":"() => boolean"}
+    {"name":"toString","type":"(this: Boolean) => string"},
+    {"name":"valueOf","type":"(this: Boolean) => boolean"}
   ]
 }
 
@@ -496,7 +496,7 @@ Flags: --pretty
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
     {"name":"name","type":"string"},
-    {"name":"toString","type":"() => string"}
+    {"name":"toString","type":"(this: Function) => string"}
   ]
 }
 
@@ -521,7 +521,7 @@ Flags: --pretty
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
     {"name":"name","type":"string"},
-    {"name":"toString","type":"() => string"}
+    {"name":"toString","type":"(this: Function) => string"}
   ]
 }
 
