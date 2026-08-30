@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`flowDefToTSDef export/module-exports/declare 1`] = `
+exports[`flowDefToTSDef export/module-exports/typeof/function 1`] = `
 "/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -11,7 +11,8 @@ exports[`flowDefToTSDef export/module-exports/declare 1`] = `
  * @format
  */
 
-declare const $$MODULE_EXPORTS$$: () => void;
+declare function foo(): void;
+declare const $$MODULE_EXPORTS$$: typeof foo;
 declare type $$MODULE_EXPORTS$$ = typeof $$MODULE_EXPORTS$$;
 export = $$MODULE_EXPORTS$$;
 "

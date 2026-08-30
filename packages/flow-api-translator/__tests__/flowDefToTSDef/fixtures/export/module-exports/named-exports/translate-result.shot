@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`flowDefToTSDef export/module-exports/named-exports 1`] = `
+[ExpectedTranslationError: 
+> 12 | declare module.exports: {bar: number};
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ CommonJS exports cannot be combined with ES module exports.]
+`;
