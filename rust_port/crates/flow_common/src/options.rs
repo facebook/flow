@@ -19,6 +19,7 @@ use regex::Regex;
 
 use crate::files::FileOptions;
 use crate::flow_projects::ProjectsOptions;
+use crate::path_matcher::RootedGlob;
 use crate::slow_to_check_logging::SlowToCheckLogging;
 use crate::verbose::Verbose;
 
@@ -178,6 +179,7 @@ pub struct Options {
     pub modules_are_use_strict: bool,
     pub munge_underscores: bool,
     pub new_this_typing: bool,
+    pub new_this_typing_includes: Arc<[RootedGlob]>,
     pub no_implicit_override: bool,
     pub no_unchecked_indexed_access: bool,
     pub node_modules_errors: bool,

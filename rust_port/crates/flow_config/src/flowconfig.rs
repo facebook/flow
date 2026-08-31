@@ -212,6 +212,7 @@ pub mod opts {
         pub munge_underscores: bool,
         pub builtin_lib: BuiltinLib,
         pub new_this_typing: Option<bool>,
+        pub new_this_typing_includes: Vec<FlowconfigGlobPattern>,
         pub no_implicit_override: bool,
         pub no_unchecked_indexed_access: bool,
         pub node_modules_errors: bool,
@@ -373,6 +374,7 @@ pub mod opts {
             munge_underscores: false,
             builtin_lib: BuiltinLib::Flowlib,
             new_this_typing: None,
+            new_this_typing_includes: Vec::new(),
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
             node_modules_errors: false,
@@ -2267,6 +2269,23 @@ pub mod opts {
                     config,
                 )
             }),
+            ("experimental.new_this_typing.includes", |values, config| {
+                fn init_fn(opts: &mut Opts) {
+                    opts.new_this_typing_includes = Vec::new();
+                }
+                parse_string(
+                    |opts, v| {
+                        let pattern = FlowconfigGlobPattern::try_new(v, false)
+                            .map_err(|error| error.message())?;
+                        opts.new_this_typing_includes.push(pattern);
+                        Ok(())
+                    },
+                    Some(init_fn),
+                    true,
+                    values,
+                    config,
+                )
+            }),
             (
                 "experimental.opaque_type_new_bound_syntax",
                 |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
@@ -3755,6 +3774,42 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![("../shared/**/src/*.js", "../shared/**/src/*.js")]
         );
+    }
+
+    #[test]
+    fn new_this_typing_includes_are_project_relative_globs() {
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (
+                    2,
+                    "experimental.new_this_typing.includes=src/**/*.{js,jsx}".to_owned(),
+                ),
+            ],
+            true,
+        );
+
+        assert!(result.is_ok());
+        assert_eq!(
+            config.options.new_this_typing_includes[0].pattern(),
+            "src/**/*.{js,jsx}"
+        );
+
+        let mut config = empty_config();
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (
+                    2,
+                    "experimental.new_this_typing.includes=<PROJECT_ROOT>/src/**".to_owned(),
+                ),
+            ],
+            true,
+        );
+        assert!(matches!(result, Err(Error(2, _))));
     }
 
     #[test]

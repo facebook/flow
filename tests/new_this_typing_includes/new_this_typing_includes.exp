@@ -1,0 +1,35 @@
+Error ------------------------------------------------------------------------------------------- disabled/test.js:11:31
+
+Cannot assign `Disabled.noThis` to `extracted` because in the `this` parameter: function [1] cannot be unbound from the
+context [2] where it was defined. [method-unbinding]
+
+   disabled/test.js:11:31
+   11| const extracted: () => void = Disabled.noThis; // error: legacy method unbinding
+                                     ^^^^^^^^^^^^^^^
+
+References:
+   disabled/test.js:4:3
+    4|   static noThis(): void {}
+         ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   disabled/test.js:3:7
+    3| class Disabled {
+             ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- enabled/test.js:11:31
+
+Cannot assign `Enabled.noThis` to `extracted` because in the `this` parameter: `Class<Enabled>` [1] is incompatible with
+`unknown`. [incompatible-type]
+
+   enabled/test.js:11:31
+   11| const extracted: () => void = Enabled.noThis; // error
+                                     ^^^^^^^^^^^^^^
+
+References:
+   enabled/test.js:3:7
+    3| class Enabled {
+             ^^^^^^^ [1]
+
+
+
+Found 2 errors
