@@ -564,7 +564,7 @@ object-resolution.js:10:2 = {
   "start":1,
   "types":{
     "evaluated":{"type":"Omit<O2, \"p\">"},
-    "unevaluated":{"type":"Omit<O2, keyof O1>"}
+    "unevaluated":{"type":"Omit<O2, \"p\">"}
   }
 }
 object-resolution.js:13:5 = {

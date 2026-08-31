@@ -37,6 +37,10 @@ pub enum EvaluateTypeDestructorsMode {
     EvaluateNone,
     EvaluateAll,
     EvaluateSome,
+    /// Decide destructor by destructor, so that one normalization pass yields the
+    /// single form a hover should show, rather than normalizing twice and picking
+    /// between the results. See `should_evaluate_for_hover`.
+    EvaluateForHover,
     EvaluateCustom(Rc<dyn Fn(&Destructor) -> bool>),
 }
 

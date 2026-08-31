@@ -54,6 +54,7 @@ use flow_typing_type::type_::DestructorSpreadTupleTypeData;
 use flow_typing_type::type_::DestructorSpreadTypeData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::OptionalIndexedAccessIndex;
 use flow_typing_type::type_::PolyTData;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ResolvedArgData;
@@ -612,6 +613,7 @@ fn should_eval_skip_aliases<'cx>(env: &mut Env<'_, 'cx>) -> bool {
         EvaluateTypeDestructorsMode::EvaluateNone => false,
         EvaluateTypeDestructorsMode::EvaluateSome => false,
         EvaluateTypeDestructorsMode::EvaluateCustom(_) => false,
+        EvaluateTypeDestructorsMode::EvaluateForHover => false,
         EvaluateTypeDestructorsMode::EvaluateAll => true,
     }
 }
@@ -716,6 +718,67 @@ fn should_force_eval_to_avoid_giant_types<'cx>(
     }
 }
 
+/// Whether the operand still mentions type parameters, in the same sense that
+/// [`type_subst`] means it: a destructor over one of these cannot reduce to
+/// anything the reader has not already been shown, so evaluating it is pure cost.
+///
+/// [`type_subst`]: flow_typing_flow_common::type_subst
+fn operand_is_generic<'cx>(env: &mut Env<'_, 'cx>, t: &Type) -> bool {
+    !flow_typing_flow_common::type_subst::free_var_finder(env.genv.cx, None, t).is_empty()
+}
+
+/// The policy behind [`EvaluateTypeDestructorsMode::EvaluateForHover`].
+///
+/// A hover shows one form, and this picks it while normalizing rather than by
+/// comparing two finished normalizations. Reducing earns its place only when it
+/// turns a question into an answer -- `AdAccount['account_id']` into
+/// `AdAccountID`. For the operators that restate a property set it does not:
+/// `Readonly<Props>` says more than the properties it expands to, and shorter.
+fn should_evaluate_for_hover<'cx>(env: &mut Env<'_, 'cx>, t: &Type, d: &Destructor) -> bool {
+    use flow_typing_type::type_::Destructor as D;
+
+    match d {
+        // An indexed access reduces only if the key is known too: `M[K]` for a
+        // type parameter `K` has no answer beyond the union of every value type,
+        // which is longer than the question and says less.
+        D::ElementType { index_type } => {
+            !operand_is_generic(env, t) && !operand_is_generic(env, index_type)
+        }
+        D::OptionalIndexedAccessNonMaybeType { index } => {
+            !operand_is_generic(env, t)
+                && match index {
+                    OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(_) => true,
+                    OptionalIndexedAccessIndex::OptionalIndexedAccessTypeIndex(index_type) => {
+                        !operand_is_generic(env, index_type)
+                    }
+                }
+        }
+        // The answer is one property or one branch, so its size is unrelated to
+        // the operand's.
+        D::PropertyType { .. }
+        | D::OptionalIndexedAccessResultType { .. }
+        | D::NonMaybeType
+        | D::ConditionalType(..) => !operand_is_generic(env, t),
+        D::ValuesType | D::MappedType(box DestructorMappedTypeData { .. }) => {
+            !operand_is_generic(env, t)
+        }
+        // The written spelling is the one a reader wants, whatever the operand
+        // looks like.
+        D::ReadOnlyType
+        | D::PartialType
+        | D::RequiredType
+        | D::RestType(..)
+        | D::ExactType
+        | D::SpreadType(..)
+        | D::SpreadTupleType(..)
+        | D::TypeMap(..)
+        | D::EnumType
+        | D::ReactCheckComponentConfig { .. }
+        | D::ReactDRO(..)
+        | D::ReactElementConfigType => false,
+    }
+}
+
 fn should_evaluate_destructor<'cx>(
     env: &mut Env<'_, 'cx>,
     force_eval: bool,
@@ -757,6 +820,7 @@ fn should_evaluate_destructor<'cx>(
                 | D::EnumType
                 | D::ReactElementConfigType => false,
             },
+            EvaluateTypeDestructorsMode::EvaluateForHover => should_evaluate_for_hover(env, t, d),
             EvaluateTypeDestructorsMode::EvaluateCustom(f) => f(d),
             EvaluateTypeDestructorsMode::EvaluateAll => match d {
                 D::ReactDRO(..) => false,
@@ -966,10 +1030,13 @@ fn keys_t<'cx, I: NormalizerInput>(
     let cx = env.genv.cx;
     state.found_computed_type = true;
     let should_evaluate = force_eval
-        || !matches!(
-            env.evaluate_type_destructors(),
-            EvaluateTypeDestructorsMode::EvaluateNone
-        );
+        || match env.evaluate_type_destructors() {
+            EvaluateTypeDestructorsMode::EvaluateNone => false,
+            EvaluateTypeDestructorsMode::EvaluateForHover => !operand_is_generic(env, t),
+            EvaluateTypeDestructorsMode::EvaluateAll
+            | EvaluateTypeDestructorsMode::EvaluateSome
+            | EvaluateTypeDestructorsMode::EvaluateCustom(_) => true,
+        };
     I::keys(
         cx,
         env,
@@ -2765,8 +2832,25 @@ mod type_converter {
         match bound.deref() {
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::MixedT(_)) => Ok(None),
             _ => {
-                let t = type__::<I>(env, state, None, bound)?;
-                Ok(Some(t))
+                // A bound is a constraint the author wrote about a parameter that
+                // is generic by construction, so reducing it answers a question
+                // nobody asked -- `keyof EventMap` becomes every key. TypeScript
+                // prints a bound from its declared type node for the same reason.
+                let restore = matches!(
+                    env.evaluate_type_destructors(),
+                    EvaluateTypeDestructorsMode::EvaluateForHover
+                )
+                .then(|| {
+                    std::mem::replace(
+                        &mut env.genv.options.evaluate_type_destructors,
+                        EvaluateTypeDestructorsMode::EvaluateNone,
+                    )
+                });
+                let t = type__::<I>(env, state, None, bound);
+                if let Some(mode) = restore {
+                    env.genv.options.evaluate_type_destructors = mode;
+                }
+                Ok(Some(t?))
             }
         }
     }

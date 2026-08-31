@@ -58,17 +58,10 @@ component.js:13:6,13:31
 
 component.js:15:11
 Flags:
-type ConcretizedPolyComponent = Poly<string> extends React$RendersExactly<
-  infer C,
->
-  ? C
-  : empty
-= typeof Poly
+type ConcretizedPolyComponent = typeof Poly
 
-'C' defined at component.js:15:80
 'ConcretizedPolyComponent' defined at component.js:15:5
 'Poly' defined at component.js:9:0
-'React$RendersExactly' defined at (lib) react.js:73:20
 
 component.js:15:6,15:29
 

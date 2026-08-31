@@ -1,7 +1,6 @@
 conditional-types.js:1:6
 Flags:
-type T1 = "1" extends string ? number : boolean
-= number
+type T1 = number
 
 'T1' defined at conditional-types.js:1:5
 
@@ -9,8 +8,7 @@ conditional-types.js:1:6,1:7
 
 conditional-types.js:4:6
 Flags:
-type T2 = 1 extends number ? string : boolean
-= string
+type T2 = string
 
 'T2' defined at conditional-types.js:4:5
 
@@ -18,63 +16,40 @@ conditional-types.js:4:6,4:7
 
 conditional-types.js:7:6
 Flags:
-type T3 = Array<string> extends ReadonlyArray<infer X> ? X : empty
-= string
+type T3 = string
 
 'T3' defined at conditional-types.js:7:5
-'X' defined at conditional-types.js:7:52
 
 conditional-types.js:7:6,7:7
 
 conditional-types.js:11:6
 Flags:
-type T4_1 = string extends (infer X extends infer X extends string
-  ? string
-  : number)
-  ? string
-  : number
-= string
+type T4_1 = string
 
 'T4_1' defined at conditional-types.js:11:5
-'X' defined at conditional-types.js:11:34
-'X' defined at conditional-types.js:11:51
 
 conditional-types.js:11:6,11:9
 
 conditional-types.js:13:6
 Flags:
-type T4_2 = string extends (infer X extends infer Y extends string
-  ? string
-  : number)
-  ? string
-  : number
-= string
+type T4_2 = string
 
 'T4_2' defined at conditional-types.js:13:5
-'X' defined at conditional-types.js:13:34
-'Y' defined at conditional-types.js:13:51
 
 conditional-types.js:13:6,13:9
 
 conditional-types.js:17:6
 Flags:
-type T5 = string extends {bar: String, foo: infer String, ...} ? string : number
-= number
+type T5 = number
 
-'String' defined at conditional-types.js:17:37
-'String' defined at (lib) core.js:1302:14
 'T5' defined at conditional-types.js:17:5
 
 conditional-types.js:17:6,17:7
 
 conditional-types.js:21:6
 Flags:
-type T6 = string extends {bar: <T>(T) => void, foo: infer T, ...}
-  ? string
-  : number
-= number
+type T6 = number
 
-'T' defined at conditional-types.js:21:37
 'T6' defined at conditional-types.js:21:5
 
 conditional-types.js:21:6,21:7
@@ -511,8 +486,7 @@ spread.js:70:6,70:10
 
 type-destructor.js:20:6
 Flags:
-type Country = keyof {FR: string, IT: string, US: string}
-= "FR" | "IT" | "US"
+type Country = "FR" | "IT" | "US"
 
 'Country' defined at type-destructor.js:20:5
 
@@ -528,18 +502,15 @@ type-destructor.js:23:6,23:13
 
 type-destructor.js:27:6
 Flags:
-type Prop$Values = Values<Props>
-= number | string
+type Prop$Values = number | string
 
 'Prop$Values' defined at type-destructor.js:27:5
-'Props' defined at type-destructor.js:3:5
 
 type-destructor.js:27:6,27:16
 
 type-destructor.js:31:6
 Flags:
-type ValuesOfFrozenObject = Values<{readonly A: "a", readonly B: "b"}>
-= "a" | "b"
+type ValuesOfFrozenObject = "a" | "b"
 
 'ValuesOfFrozenObject' defined at type-destructor.js:31:5
 
@@ -573,11 +544,9 @@ type-destructor.js:41:6,41:16
 
 type-destructor.js:50:6
 Flags:
-type ElementTypeProps = Props["name"]
-= string
+type ElementTypeProps = string
 
 'ElementTypeProps' defined at type-destructor.js:50:5
-'Props' defined at type-destructor.js:3:5
 
 type-destructor.js:50:6,50:21
 
@@ -611,8 +580,7 @@ type-destructor.js:56:6,56:37
 
 type-destructor.js:60:6
 Flags:
-type NonMaybeTypeNumber = NonNullable<?number>
-= number
+type NonMaybeTypeNumber = number
 
 'NonMaybeTypeNumber' defined at type-destructor.js:60:5
 
@@ -629,11 +597,9 @@ type-destructor.js:62:6,62:25
 
 type-destructor.js:66:6
 Flags:
-type MappedTypeProps = {[K in keyof Props]: Array<Props[K]>}
-= {age: Array<number>, name: Array<string>, ...}
+type MappedTypeProps = {age: Array<number>, name: Array<string>, ...}
 
 'MappedTypeProps' defined at type-destructor.js:66:5
-'Props' defined at type-destructor.js:3:5
 
 type-destructor.js:66:6,66:20
 
@@ -651,53 +617,28 @@ type-destructor.js:69:6,69:19
 type-destructor.js:73:6
 Flags:
 type MappedTypeFnReturnTypes = {
-  [K in keyof FnObj]: {
-    k: K,
-    v: FnObj[K] extends (() => infer V) ? V : empty,
-    ...
-  }
-}
-= {
   getAge: {k: "getAge", v: number, ...},
   getName: {k: "getName", v: string, ...},
   ...
 }
 
-'FnObj' defined at type-destructor.js:72:5
 'MappedTypeFnReturnTypes' defined at type-destructor.js:73:5
-'V' defined at type-destructor.js:73:92
 
 type-destructor.js:73:6,73:28
 
 type-destructor.js:79:6
 Flags:
-type ConditionalExtractPropType = PropObj extends {prop: infer T, ...}
-  ? T
-  : empty
-= number
+type ConditionalExtractPropType = number
 
 'ConditionalExtractPropType' defined at type-destructor.js:79:5
-'PropObj' defined at type-destructor.js:78:5
-'T' defined at type-destructor.js:79:64
 
 type-destructor.js:79:6,79:31
 
 type-destructor.js:92:6
 Flags:
-type ConditionalNestedObjType = NestedObj extends {
-  readonly data: ?ReadonlyArray<{
-    readonly foo: ?{readonly bar: ?infer T, ...},
-    ...
-  }>,
-  ...
-}
-  ? T
-  : empty
-= number
+type ConditionalNestedObjType = number
 
 'ConditionalNestedObjType' defined at type-destructor.js:92:5
-'NestedObj' defined at type-destructor.js:82:5
-'T' defined at type-destructor.js:96:27
 
 type-destructor.js:92:6,92:29
 
@@ -747,8 +688,7 @@ type-destructor.js:115:18,115:28
 
 type-destructor.js:119:6
 Flags:
-type RecursiveTypeDestructor = {f: {g: RecursiveTypeDestructor["f"]}}
-= {f: {g: {g: any}}}
+type RecursiveTypeDestructor = {f: {g: {g: any}}}
 
 'RecursiveTypeDestructor' defined at type-destructor.js:119:5
 
@@ -792,91 +732,78 @@ type-destructor.js:155:9,155:14
 
 mapped-type.js:7:6
 Flags:
-type MappedObj1 = {[key in keyof O]: number}
-= {bar: number, foo: number}
+type MappedObj1 = {bar: number, foo: number}
 
 'MappedObj1' defined at mapped-type.js:7:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:7:6,7:15
 
 mapped-type.js:9:6
 Flags:
-type MappedObj2 = {[key in keyof O]: O[key]}
-= {bar: string, foo: number}
+type MappedObj2 = {bar: string, foo: number}
 
 'MappedObj2' defined at mapped-type.js:9:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:9:6,9:15
 
 mapped-type.js:11:6
 Flags:
-type MappedObj3 = {writeonly [key in keyof O]: O[key]}
-= {writeonly bar: string, writeonly foo: number}
+type MappedObj3 = {writeonly bar: string, writeonly foo: number}
 
 'MappedObj3' defined at mapped-type.js:11:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:11:6,11:15
 
 mapped-type.js:13:6
 Flags:
-type MappedObj4 = {readonly [key in keyof O]: O[key]}
-= {readonly bar: string, readonly foo: number}
+type MappedObj4 = {readonly bar: string, readonly foo: number}
 
 'MappedObj4' defined at mapped-type.js:13:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:13:6,13:15
 
 mapped-type.js:15:6
 Flags:
-type MappedObj5 = {[key in keyof O]?: O[key]}
-= {bar?: string, foo?: number}
+type MappedObj5 = {bar?: string, foo?: number}
 
 'MappedObj5' defined at mapped-type.js:15:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:15:6,15:15
 
 mapped-type.js:17:6
 Flags:
-type MappedObj6 = {readonly [key in keyof O]?: O[key]}
-= {readonly bar?: string, readonly foo?: number}
+type MappedObj6 = {readonly bar?: string, readonly foo?: number}
 
 'MappedObj6' defined at mapped-type.js:17:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:17:6,17:15
 
 mapped-type.js:19:6
 Flags:
-type MappedObj7 = {writeonly [key in keyof O]?: O[key]}
-= {writeonly bar?: string, writeonly foo?: number}
+type MappedObj7 = {writeonly bar?: string, writeonly foo?: number}
 
 'MappedObj7' defined at mapped-type.js:19:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:19:6,19:15
 
 mapped-type.js:23:6
 Flags:
-type MappedObj8 = {[key in keyof DifferingModifiers]: number}
-= {writeonly bar: number, readonly baz: number, foo?: number, ...}
+type MappedObj8 = {
+  writeonly bar: number,
+  readonly baz: number,
+  foo?: number,
+  ...
+}
 
-'DifferingModifiers' defined at mapped-type.js:21:5
 'MappedObj8' defined at mapped-type.js:23:5
 
 mapped-type.js:23:6,23:15
 
 mapped-type.js:25:6
 Flags:
-type MappedObj9 = {[key in keyof O]-?: number}
-= {bar: number, foo: number}
+type MappedObj9 = {bar: number, foo: number}
 
 'MappedObj9' defined at mapped-type.js:25:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:25:6,25:15
 
@@ -935,77 +862,57 @@ mapped-type.js:43:4,43:4
 
 mapped-type.js:50:6
 Flags:
-type MappedObjNonHomomorphic1 = {[key in Keys]: number}
-= {bar: number, foo: number}
+type MappedObjNonHomomorphic1 = {bar: number, foo: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic1' defined at mapped-type.js:50:5
 
 mapped-type.js:50:6,50:29
 
 mapped-type.js:52:6
 Flags:
-type MappedObjNonHomomorphic2 = {[key in Keys]: O[key]}
-= {bar: string, foo: number}
+type MappedObjNonHomomorphic2 = {bar: string, foo: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic2' defined at mapped-type.js:52:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:52:6,52:29
 
 mapped-type.js:54:6
 Flags:
-type MappedObjNonHomomorphic3 = {writeonly [key in Keys]: O[key]}
-= {writeonly bar: string, writeonly foo: number}
+type MappedObjNonHomomorphic3 = {writeonly bar: string, writeonly foo: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic3' defined at mapped-type.js:54:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:54:6,54:29
 
 mapped-type.js:56:6
 Flags:
-type MappedObjNonHomomorphic4 = {readonly [key in Keys]: O[key]}
-= {readonly bar: string, readonly foo: number}
+type MappedObjNonHomomorphic4 = {readonly bar: string, readonly foo: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic4' defined at mapped-type.js:56:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:56:6,56:29
 
 mapped-type.js:58:6
 Flags:
-type MappedObjNonHomomorphic5 = {[key in Keys]?: O[key]}
-= {bar?: string, foo?: number}
+type MappedObjNonHomomorphic5 = {bar?: string, foo?: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic5' defined at mapped-type.js:58:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:58:6,58:29
 
 mapped-type.js:60:6
 Flags:
-type MappedObjNonHomomorphic6 = {readonly [key in Keys]?: O[key]}
-= {readonly bar?: string, readonly foo?: number}
+type MappedObjNonHomomorphic6 = {readonly bar?: string, readonly foo?: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic6' defined at mapped-type.js:60:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:60:6,60:29
 
 mapped-type.js:62:6
 Flags:
-type MappedObjNonHomomorphic7 = {writeonly [key in Keys]?: O[key]}
-= {writeonly bar?: string, writeonly foo?: number}
+type MappedObjNonHomomorphic7 = {writeonly bar?: string, writeonly foo?: number}
 
-'Keys' defined at mapped-type.js:46:5
 'MappedObjNonHomomorphic7' defined at mapped-type.js:62:5
-'O' defined at mapped-type.js:3:5
 
 mapped-type.js:62:6,62:29
 
@@ -1050,8 +957,7 @@ mapped-type.js:99:11,99:15
 
 evaluated-size-limit.js:6:6
 Flags:
-type ObjSmall = {p1: {[key in Keys]: string}, ...}
-= {
+type ObjSmall = {
   p1: {
     a: string,
     b: string,
@@ -1083,7 +989,6 @@ type ObjSmall = {p1: {[key in Keys]: string}, ...}
   ...
 }
 
-'Keys' defined at evaluated-size-limit.js:3:5
 'ObjSmall' defined at evaluated-size-limit.js:6:5
 
 evaluated-size-limit.js:6:6,6:13
@@ -1091,61 +996,518 @@ evaluated-size-limit.js:6:6,6:13
 evaluated-size-limit.js:12:6
 Flags:
 type ObjBig = {
-  p1: {[key in Keys]: string},
-  p2: {[key in Keys]: string},
-  p3: {[key in Keys]: string},
-  p4: {[key in Keys]: string},
+  p1: {
+    a: string,
+    b: string,
+    c: string,
+    d: string,
+    e: string,
+    f: string,
+    g: string,
+    h: string,
+    i: string,
+    j: string,
+    k: string,
+    l: string,
+    m: string,
+    n: string,
+    o: string,
+    p: string,
+    q: string,
+    r: string,
+    s: string,
+    t: string,
+    u: string,
+    v: string,
+    w: string,
+    x: string,
+    y: string,
+    z: string
+  },
+  p2: {
+    a: string,
+    b: string,
+    c: string,
+    d: string,
+    e: string,
+    f: string,
+    g: string,
+    h: string,
+    i: string,
+    j: string,
+    k: string,
+    l: string,
+    m: string,
+    n: string,
+    o: string,
+    p: string,
+    q: string,
+    r: string,
+    s: string,
+    t: string,
+    u: string,
+    v: string,
+    w: string,
+    x: string,
+    y: string,
+    z: string
+  },
+  p3: {
+    a: string,
+    b: string,
+    c: string,
+    d: string,
+    e: string,
+    f: string,
+    g: string,
+    h: string,
+    i: string,
+    j: string,
+    k: string,
+    l: string,
+    m: string,
+    n: string,
+    o: string,
+    p: string,
+    q: string,
+    r: string,
+    s: string,
+    t: string,
+    u: string,
+    v: string,
+    w: string,
+    x: string,
+    y: string,
+    z: string
+  },
+  p4: {
+    a: string,
+    b: string,
+    c: string,
+    d: string,
+    e: string,
+    f: string,
+    g: string,
+    h: string,
+    i: string,
+    j: string,
+    k: string,
+    l: string,
+    m: string,
+    n: string,
+    o: string,
+    p: string,
+    q: string,
+    r: string,
+    s: string,
+    t: string,
+    u: string,
+    v: string,
+    w: string,
+    x: string,
+    y: string,
+    z: string
+  },
   ...
 }
 
-'Keys' defined at evaluated-size-limit.js:3:5
 'ObjBig' defined at evaluated-size-limit.js:12:5
 
 evaluated-size-limit.js:12:6,12:11
 
 unestimable-operand.js:12:6
 Flags:
-type FromMapped = keyof Mapped
+type FromMapped = "k000"
+| "k001"
+| "k002"
+| "k003"
+| "k004"
+| "k005"
+| "k006"
+| "k007"
+| "k008"
+| "k009"
+| "k010"
+| "k011"
+| "k012"
+| "k013"
+| "k014"
+| "k015"
+| "k016"
+| "k017"
+| "k018"
+| "k019"
+| "k020"
+| "k021"
+| "k022"
+| "k023"
+| "k024"
+| "k025"
+| "k026"
+| "k027"
+| "k028"
+| "k029"
+| "k030"
+| "k031"
+| "k032"
+| "k033"
+| "k034"
+| "k035"
+| "k036"
+| "k037"
+| "k038"
+| "k039"
+| "k040"
+| "k041"
+| "k042"
+| "k043"
+| "k044"
+| "k045"
+| "k046"
+| "k047"
+| "k048"
+| "k049"
+| "k050"
+| "k051"
+| "k052"
+| "k053"
+| "k054"
+| "k055"
+| "k056"
+| "k057"
+| "k058"
+| "k059"
+| "k060"
+| "k061"
+| "k062"
+| "k063"
+| "k064"
+| "k065"
+| "k066"
+| "k067"
+| "k068"
+| "k069"
+| "k070"
+| "k071"
+| "k072"
+| "k073"
+| "k074"
+| "k075"
+| "k076"
+| "k077"
+| "k078"
+| "k079"
+| "k080"
+| "k081"
+| "k082"
+| "k083"
+| "k084"
+| "k085"
+| "k086"
+| "k087"
+| "k088"
+| "k089"
+| "k090"
+| "k091"
+| "k092"
+| "k093"
+| "k094"
+| "k095"
+| "k096"
+| "k097"
+| "k098"
+| "k099"
+| "k100"
+| "k101"
+| "k102"
+| "k103"
+| "k104"
+| "k105"
+| "k106"
+| "k107"
+| "k108"
+| "k109"
+| "k110"
+| "k111"
+| "k112"
+| "k113"
+| "k114"
+| "k115"
+| "k116"
+| "k117"
+| "k118"
+| "k119"
 
 'FromMapped' defined at unestimable-operand.js:12:5
-'Mapped' defined at unestimable-operand.js:10:5
 
 unestimable-operand.js:12:6,12:15
 
 unestimable-operand.js:17:6
 Flags:
-type FromIntersected = keyof Intersected
+type FromIntersected = "k000"
+| "k001"
+| "k002"
+| "k003"
+| "k004"
+| "k005"
+| "k006"
+| "k007"
+| "k008"
+| "k009"
+| "k010"
+| "k011"
+| "k012"
+| "k013"
+| "k014"
+| "k015"
+| "k016"
+| "k017"
+| "k018"
+| "k019"
+| "k020"
+| "k021"
+| "k022"
+| "k023"
+| "k024"
+| "k025"
+| "k026"
+| "k027"
+| "k028"
+| "k029"
+| "k030"
+| "k031"
+| "k032"
+| "k033"
+| "k034"
+| "k035"
+| "k036"
+| "k037"
+| "k038"
+| "k039"
+| "k040"
+| "k041"
+| "k042"
+| "k043"
+| "k044"
+| "k045"
+| "k046"
+| "k047"
+| "k048"
+| "k049"
+| "k050"
+| "k051"
+| "k052"
+| "k053"
+| "k054"
+| "k055"
+| "k056"
+| "k057"
+| "k058"
+| "k059"
+| "k060"
+| "k061"
+| "k062"
+| "k063"
+| "k064"
+| "k065"
+| "k066"
+| "k067"
+| "k068"
+| "k069"
+| "k070"
+| "k071"
+| "k072"
+| "k073"
+| "k074"
+| "k075"
+| "k076"
+| "k077"
+| "k078"
+| "k079"
+| "k080"
+| "k081"
+| "k082"
+| "k083"
+| "k084"
+| "k085"
+| "k086"
+| "k087"
+| "k088"
+| "k089"
+| "k090"
+| "k091"
+| "k092"
+| "k093"
+| "k094"
+| "k095"
+| "k096"
+| "k097"
+| "k098"
+| "k099"
+| "k100"
+| "k101"
+| "k102"
+| "k103"
+| "k104"
+| "k105"
+| "k106"
+| "k107"
+| "k108"
+| "k109"
+| "k110"
+| "k111"
+| "k112"
+| "k113"
+| "k114"
+| "k115"
+| "k116"
+| "k117"
+| "k118"
+| "k119"
 
 'FromIntersected' defined at unestimable-operand.js:17:5
-'Intersected' defined at unestimable-operand.js:15:5
 
 unestimable-operand.js:17:6,17:20
 
 unestimable-operand.js:143:6
 Flags:
-type FromIface = keyof Iface
+type FromIface = "k000"
+| "k001"
+| "k002"
+| "k003"
+| "k004"
+| "k005"
+| "k006"
+| "k007"
+| "k008"
+| "k009"
+| "k010"
+| "k011"
+| "k012"
+| "k013"
+| "k014"
+| "k015"
+| "k016"
+| "k017"
+| "k018"
+| "k019"
+| "k020"
+| "k021"
+| "k022"
+| "k023"
+| "k024"
+| "k025"
+| "k026"
+| "k027"
+| "k028"
+| "k029"
+| "k030"
+| "k031"
+| "k032"
+| "k033"
+| "k034"
+| "k035"
+| "k036"
+| "k037"
+| "k038"
+| "k039"
+| "k040"
+| "k041"
+| "k042"
+| "k043"
+| "k044"
+| "k045"
+| "k046"
+| "k047"
+| "k048"
+| "k049"
+| "k050"
+| "k051"
+| "k052"
+| "k053"
+| "k054"
+| "k055"
+| "k056"
+| "k057"
+| "k058"
+| "k059"
+| "k060"
+| "k061"
+| "k062"
+| "k063"
+| "k064"
+| "k065"
+| "k066"
+| "k067"
+| "k068"
+| "k069"
+| "k070"
+| "k071"
+| "k072"
+| "k073"
+| "k074"
+| "k075"
+| "k076"
+| "k077"
+| "k078"
+| "k079"
+| "k080"
+| "k081"
+| "k082"
+| "k083"
+| "k084"
+| "k085"
+| "k086"
+| "k087"
+| "k088"
+| "k089"
+| "k090"
+| "k091"
+| "k092"
+| "k093"
+| "k094"
+| "k095"
+| "k096"
+| "k097"
+| "k098"
+| "k099"
+| "k100"
+| "k101"
+| "k102"
+| "k103"
+| "k104"
+| "k105"
+| "k106"
+| "k107"
+| "k108"
+| "k109"
+| "k110"
+| "k111"
+| "k112"
+| "k113"
+| "k114"
+| "k115"
+| "k116"
+| "k117"
+| "k118"
+| "k119"
 
 'FromIface' defined at unestimable-operand.js:143:5
-'Iface' defined at unestimable-operand.js:20:10
 
 unestimable-operand.js:143:6,143:14
 
 unestimable-operand.js:149:6
 Flags:
-type FromPlain = keyof Plain
-= "a" | "b"
+type FromPlain = "a" | "b"
 
 'FromPlain' defined at unestimable-operand.js:149:5
-'Plain' defined at unestimable-operand.js:147:5
 
 unestimable-operand.js:149:6,149:14
 
 unions.js:12:6
 Flags:
-type ABCDType = ABCD["type"]
-= "a" | "b" | "c" | "d"
+type ABCDType = "a" | "b" | "c" | "d"
 
-'ABCD' defined at unions.js:11:5
 'ABCDType' defined at unions.js:12:5
 
 unions.js:12:6,12:13

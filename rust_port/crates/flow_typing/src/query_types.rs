@@ -139,8 +139,16 @@ pub fn type_at_pos_type<'a>(
                         ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig.dupe());
                     ty_normalizer_flow::from_type_with_found_computed_type(&genv, &t)
                 };
-                let (unevaluated, found_computed_type) =
-                    from_type(EvaluateTypeDestructorsMode::EvaluateNone);
+                // This pass can evaluate destructors, so it has to leave the
+                // server's caches and error set as it found them: that state
+                // outlives the request, and a hover must not change how the
+                // next one behaves.
+                let (unevaluated, found_computed_type) = cx.run_and_rolled_back_cache(|| {
+                    let errors = cx.errors();
+                    let result = from_type(EvaluateTypeDestructorsMode::EvaluateForHover);
+                    cx.reset_errors(errors);
+                    result
+                });
                 let evaluated = if found_computed_type {
                     // We need to roll back caches and errors, because server state persists
                     // through IDE requests. If evaluation results in new errors, future
