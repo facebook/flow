@@ -48,3 +48,8 @@ const j = E.cast('A') ?? E.A;
 
 const k = true ? E : 1;
 //    ^
+
+// An enum's own methods live in the same object as its members, but are not
+// members of it.
+E.cast('A');
+//^

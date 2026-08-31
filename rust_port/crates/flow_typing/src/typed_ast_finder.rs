@@ -225,6 +225,11 @@ pub mod type_at_pos {
         Binder(Binder),
         /// The target is a bare identifier; resolve it to the binding it references.
         IdentifierRef,
+        /// The target is the `p` of a `o.p` access; resolve `p` in the type of `o`.
+        MemberRef {
+            name: FlowSmolStr,
+            object_type: Type,
+        },
     }
 
     pub enum TypeAtPosResult {
@@ -503,6 +508,33 @@ pub mod type_at_pos {
             } else {
                 ast_visitor::identifier_default(self, id)
             }
+        }
+
+        /// Intercepts `o.p` before the walk reaches `p`'s own identifier, which
+        /// carries no link back to `o`. Optional chains route through here too:
+        /// `optional_member_default` delegates to this hook.
+        fn member(
+            &mut self,
+            loc: &'ast (ALoc, Type),
+            expr: &'ast ast::expression::Member<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            use ast::expression::member::Property;
+            if let Property::PropertyIdentifier(id) = &expr.property
+                && let (id_loc, t) = &id.loc
+                && self.covers_target(id_loc)
+            {
+                let (_, object_type) = expr.object.loc();
+                return self.find_loc(
+                    id_loc,
+                    t,
+                    false,
+                    Some(Framing::MemberRef {
+                        name: id.name.dupe(),
+                        object_type: object_type.dupe(),
+                    }),
+                );
+            }
+            ast_visitor::member_default(self, loc, expr)
         }
 
         fn type_identifier_reference(

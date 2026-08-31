@@ -1,20 +1,20 @@
-test.ts:6:6
+test.ts:10:6
 Flags:
 1 | 2
-test.ts:6:6,6:10
+test.ts:10:6,10:10
 
-test.ts:12:17
+test.ts:16:17
 Flags:
-1
-test.ts:12:17,12:19
+(property) Red: 1
+test.ts:16:17,16:19
 
-test.ts:15:10
+test.ts:19:10
 Flags:
 1 | 2
-test.ts:15:10,15:14
+test.ts:19:10,19:14
 
-test.ts:18:16
+test.ts:22:16
 Flags:
 1
-test.ts:18:16,18:18
+test.ts:22:16,22:18
 

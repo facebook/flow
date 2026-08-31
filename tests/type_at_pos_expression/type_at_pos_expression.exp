@@ -902,12 +902,12 @@ object.js:40:7,40:19
 
 object.js:43:5
 Flags:
-(this: typeof Object.prototype, ...empty) => any
+(method) constructor(this: typeof Object.prototype, ...empty): any (implicit)
 object.js:43:5,43:15
 
 object.js:46:5
 Flags:
-(this: typeof Object.prototype, ...empty) => any
+(method) constructor(this: typeof Object.prototype, ...empty): any (implicit)
 object.js:46:5,46:15
 
 optional_chaining.js:16:7 = {

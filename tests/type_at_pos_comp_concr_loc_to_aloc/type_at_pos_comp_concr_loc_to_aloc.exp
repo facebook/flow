@@ -1,5 +1,5 @@
 a.js:12:18
 Flags:
-(() => Array<any>) | (() => Array<T>)
+(method) B.getValues: (() => Array<any>) | (() => Array<T>)
 a.js:12:18,12:26
 

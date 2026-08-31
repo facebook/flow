@@ -1,4 +1,4 @@
-dro.js:2:9 = (compareFn?: (a: number, b: number) => number) => Array<number>
+dro.js:2:9 = (method) sort(compareFn?: (a: number, b: number) => number): Array<number>
 dro.js:2:9,2:12
 lazy_ref.js:14:9 = const x: {
   default: component(
@@ -40,7 +40,7 @@ class Component<Props, State = void>
 'Component' defined at (lib) react.js:968:18
 
 react_component.js:13:29,13:37
-react_component.js:18:17 = State
+react_component.js:18:17 = (property) state: State
 
 'State' defined at react_component.js:9:5
 
@@ -141,7 +141,7 @@ Flags:
  It serves as an alternative to writing JSX.
 
 **@see**  https://react.dev/reference/react/createElement
-React$CreateElement
+(property) React.createElement: React$CreateElement
 
 'React$CreateElement' defined at (lib) react.js:318:20
 

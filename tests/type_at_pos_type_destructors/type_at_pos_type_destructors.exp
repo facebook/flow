@@ -913,7 +913,7 @@ mapped-type.js:78:4,78:4
 
 mapped-type.js:99:12
 Flags:
-Id<string>
+(property) prop0: Id<string>
 
 'Id' defined at mapped-type.js:81:20
 

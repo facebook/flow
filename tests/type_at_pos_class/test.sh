@@ -191,3 +191,61 @@ assert_ok "$FLOW" type-at-pos FluxStore.js 5 3 --strip-root
 # A constructor is reported as its class, so it gets no member framing.
 printf "constructor.js:4:7 (framed) = "
 assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root
+
+# member_reference.js
+# A reference to a member is framed as the declaration it resolves to, which
+# takes expanding the receiver's type: the property's own type looks the same
+# whether it was declared as a field, a method, or an accessor.
+printf "member_reference.js:14:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 14 3 --strip-root
+printf "member_reference.js:15:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 15 3 --strip-root
+printf "member_reference.js:16:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 16 3 --strip-root
+printf "member_reference.js:17:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 17 3 --strip-root
+printf "member_reference.js:18:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 18 3 --strip-root
+printf "member_reference.js:19:9 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 19 9 --strip-root
+printf "member_reference.js:23:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 23 3 --strip-root
+printf "member_reference.js:24:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 24 3 --strip-root
+printf "member_reference.js:25:3 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference.js 25 3 --strip-root
+
+# member_reference_eval.js
+# The receiver of a member access can itself be a type destructor. Expanding its
+# members forces evaluation, so the property's kind is still recovered; the
+# qualifier comes off the unevaluated receiver.
+printf "member_reference_eval.js:18:9 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 18 9 --strip-root
+printf "member_reference_eval.js:19:9 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 19 9 --strip-root
+printf "member_reference_eval.js:23:7 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 23 7 --strip-root
+printf "member_reference_eval.js:24:7 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 24 7 --strip-root
+printf "member_reference_eval.js:27:10 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 27 10 --strip-root
+printf "member_reference_eval.js:28:10 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 28 10 --strip-root
+printf "member_reference_eval.js:31:10 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 31 10 --strip-root
+printf "member_reference_eval.js:32:10 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 32 10 --strip-root
+printf "member_reference_eval.js:33:10 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 33 10 --strip-root
+printf "member_reference_eval.js:34:10 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 34 10 --strip-root
+printf "member_reference_eval.js:37:8 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 37 8 --strip-root
+printf "member_reference_eval.js:38:8 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 38 8 --strip-root
+printf "member_reference_eval.js:41:8 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 41 8 --strip-root
+printf "member_reference_eval.js:44:13 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 44 13 --strip-root
+printf "member_reference_eval.js:45:13 (framed) = "
+assert_ok "$FLOW" type-at-pos member_reference_eval.js 45 13 --strip-root

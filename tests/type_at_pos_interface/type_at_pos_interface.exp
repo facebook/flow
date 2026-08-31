@@ -24,17 +24,17 @@ interface.js:12:5,12:6
 
 interface.js:15:5
 Flags:
-(x: string) => string
+(method) IA.mm(x: string): string
 interface.js:15:5,15:6
 
 interface.js:17:5
 Flags:
-(x: number) => number
+(method) IA.mm(x: number): number
 interface.js:17:5,17:6
 
 interface.js:20:5
 Flags:
-(x: string) => string
+(property) IA.mf: (x: string) => string
 interface.js:20:5,20:6
 
 interface.js:25:7

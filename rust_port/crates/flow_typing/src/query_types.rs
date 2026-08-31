@@ -10,12 +10,16 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_analysis::bindings;
+use flow_common::reason::Name;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::Binder;
 use flow_common_ty::ty::BinderKind;
 use flow_common_ty::ty::Decl;
 use flow_common_ty::ty::DeclModuleDeclData;
 use flow_common_ty::ty::Elt;
+use flow_common_ty::ty::NamedProp;
+use flow_common_ty::ty::Prop;
+use flow_common_ty::ty::Ty;
 use flow_common_ty::ty::TypeAtPosResult;
 use flow_common_ty::ty::symbols_of_elt;
 use flow_common_ty::ty_symbol::Provenance;
@@ -64,6 +68,9 @@ fn result_of_normalizer_error<A>(loc: Loc, t: Type, err: Error) -> QueryResult<A
     QueryResult::FailureUnparseable(loc, t, msg)
 }
 
+/// Matches the depth member extraction uses elsewhere (autocomplete).
+const MAX_DEPTH_OF_MEMBER_LOOKUP: u32 = 40;
+
 /// The declaration form of a binding, for the kinds whose hover reads better as a
 /// declaration than as a bare type. Kinds that already print a head of their own
 /// (`class A`, `type X = …`) and kinds that need more than a name and a type
@@ -101,6 +108,135 @@ fn binder_of_identifier_reference(cx: &Context<'_>, loc: &ALoc) -> Option<Binder
         kind,
         name: def.actual_name.dupe(),
         owner: None,
+    })
+}
+
+/// The first constituent of a union or intersection that has the property is
+/// enough, since only the property's kind is read off the result, not its type.
+fn named_prop_of_ty<'a>(ty: &'a Ty<ALoc>, name: &Name) -> Option<&'a NamedProp<ALoc>> {
+    match ty {
+        Ty::Obj(obj) => obj.obj_props.iter().find_map(|p| match p {
+            Prop::NamedProp {
+                name: prop_name,
+                prop,
+                ..
+            } if prop_name == name => Some(prop),
+            Prop::SpreadProp(t) => named_prop_of_ty(t, name),
+            _ => None,
+        }),
+        Ty::Fun(fun) => named_prop_of_ty(&fun.fun_static, name),
+        Ty::Union(_, t1, t2, ts) | Ty::Inter(t1, t2, ts) => [t1, t2]
+            .into_iter()
+            .chain(ts.iter())
+            .find_map(|t| named_prop_of_ty(t, name)),
+        _ => None,
+    }
+}
+
+fn name_of_symbol(symbol: &Symbol<ALoc>) -> Option<FlowSmolStr> {
+    if symbol.sym_anonymous {
+        None
+    } else {
+        Some(FlowSmolStr::new(symbol.sym_name.as_str()))
+    }
+}
+
+/// The name to qualify a member binder with: the `A` in `(property) A.p`.
+fn owner_of_receiver_ty(ty: &Ty<ALoc>) -> Option<FlowSmolStr> {
+    match ty {
+        Ty::Generic(generic) => {
+            let (symbol, _, _) = generic.as_ref();
+            name_of_symbol(symbol)
+        }
+        Ty::Union(_, t1, t2, ts) => [t1, t2]
+            .into_iter()
+            .chain(ts.iter())
+            .filter(|t| !matches!(t.as_ref(), Ty::Null | Ty::Void))
+            .map(|t| owner_of_receiver_ty(t))
+            .reduce(|a, b| if a == b { a } else { None })
+            .flatten(),
+        _ => None,
+    }
+}
+
+/// The receiver's qualifying name, and whether the receiver is an enum.
+fn owner_of_receiver_elt(elt: &Elt<ALoc>) -> (Option<FlowSmolStr>, bool) {
+    match elt {
+        Elt::Type(ty) => (owner_of_receiver_ty(ty), false),
+        Elt::Decl(decl) => match decl {
+            Decl::ClassDecl(data) => (name_of_symbol(&data.0), false),
+            Decl::InterfaceDecl(data) => (name_of_symbol(&data.0), false),
+            Decl::RecordDecl(data) => (name_of_symbol(&data.0), false),
+            Decl::EnumDecl(data) => (name_of_symbol(&data.name), true),
+            Decl::NamespaceDecl(data) => (data.name.as_ref().and_then(name_of_symbol), false),
+            Decl::VariableDecl(_)
+            | Decl::TypeAliasDecl(_)
+            | Decl::NominalComponentDecl(_)
+            | Decl::ModuleDecl(_) => (None, false),
+        },
+    }
+}
+
+/// The declaration a `o.p` access refers to, so that hovering it prints
+/// `(property) A.p: T` or `(method) A.m(): T`. The object's type has to be expanded
+/// to tell which, since the property's own type looks the same either way.
+fn binder_of_member_reference(
+    cx: &Context<'_>,
+    file_sig: Arc<FileSig>,
+    typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
+    object_type: &Type,
+    name: &FlowSmolStr,
+) -> Option<Binder> {
+    let prop_name = Name::new(name.dupe());
+    // Expanding members flows types, which can raise errors. Server state persists
+    // across IDE requests, so they are rolled back rather than left behind.
+    let (expanded, object_ty) = cx.run_and_rolled_back_cache(|| {
+        let errors = cx.errors();
+        let genv = ty_normalizer_flow::mk_genv(
+            Options {
+                expand_internal_types: true,
+                expand_enum_members: false,
+                evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateNone,
+                optimize_types: false,
+                omit_targ_defaults_option: false,
+                merge_bot_and_any_kinds: true,
+                verbose_normalizer: false,
+                max_depth: Some(MAX_DEPTH_OF_MEMBER_LOOKUP),
+                toplevel_is_type_identifier_reference: false,
+            },
+            cx,
+            typed_ast_opt,
+            file_sig,
+        );
+        let expanded = ty_normalizer_flow::expand_members(
+            false,
+            Some(vec![prop_name.dupe()]),
+            &genv,
+            object_type,
+        );
+        let object_ty = ty_normalizer_flow::from_type(&genv, object_type);
+        cx.reset_errors(errors);
+        (expanded, object_ty)
+    });
+    let expanded = expanded.ok()?;
+    let named_prop = named_prop_of_ty(&expanded, &prop_name)?;
+    let (owner, receiver_is_enum) = match &object_ty {
+        Ok(elt) => owner_of_receiver_elt(elt),
+        Err(_) => (None, false),
+    };
+    let kind = match named_prop {
+        // An enum's own methods (`cast`, `members`, …) share the object its members
+        // are expanded into, so being a field is what separates the two.
+        NamedProp::Field { .. } if receiver_is_enum => BinderKind::EnumMember,
+        NamedProp::Field { .. } => BinderKind::Property,
+        NamedProp::Method(_) => BinderKind::Method,
+        NamedProp::Get(_) => BinderKind::Getter,
+        NamedProp::Set(_) => BinderKind::Setter,
+    };
+    Some(Binder {
+        kind,
+        name: name.dupe(),
+        owner,
     })
 }
 pub fn dump_type_at_pos(
@@ -171,6 +307,13 @@ pub fn type_at_pos_type<'a>(
                     Some(Framing::IdentifierRef) => {
                         binder_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
                     }
+                    Some(Framing::MemberRef { name, object_type }) => binder_of_member_reference(
+                        cx,
+                        file_sig.dupe(),
+                        typed_ast_opt,
+                        &object_type,
+                        &name,
+                    ),
                 };
                 let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
                     expand_internal_types: false,

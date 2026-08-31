@@ -16,7 +16,7 @@ test.js:7:4,7:4
 
 test.js:9:4
 Flags:
-number
+(property) S.a: number
 test.js:9:4,9:4
 
 test.js:11:4
