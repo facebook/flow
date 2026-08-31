@@ -11,7 +11,7 @@ annot_t.js:9:23 = {
   "path":"annot_t.js",
   "reasons":[],
   "start":22,
-  "types":{"evaluated":null,"unevaluated":{"type":"class KeyedSeq<K, out V>"}}
+  "types":{"type":"class KeyedSeq<K, out V>"}
 }
 class-0.js:3:7 = {
   "end":7,
@@ -26,7 +26,7 @@ class-0.js:3:7 = {
   "path":"class-0.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"class A"}}
+  "types":{"type":"class A"}
 }
 class-0.js:4:3 = {
   "end":3,
@@ -41,7 +41,7 @@ class-0.js:4:3 = {
   "path":"class-0.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: this) => void"}}
+  "types":{"type":"(this: this) => void"}
 }
 class-0.js:4:10 = {
   "end":12,
@@ -56,7 +56,7 @@ class-0.js:4:10 = {
   "path":"class-0.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"this"}}
+  "types":{"type":"this"}
 }
 class-0.js:12:5 = {
   "end":5,
@@ -71,7 +71,7 @@ class-0.js:12:5 = {
   "path":"class-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<unknown>"}}
+  "types":{"type":"Class<unknown>"}
 }
 class-0.js:21:5 = {
   "end":5,
@@ -86,7 +86,7 @@ class-0.js:21:5 = {
   "path":"class-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<C1 & C2>"}}
+  "types":{"type":"Class<C1 & C2>"}
 }
 class-0.js:24:5 = {
   "end":5,
@@ -101,7 +101,7 @@ class-0.js:24:5 = {
   "path":"class-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<C1 | C2>"}}
+  "types":{"type":"Class<C1 | C2>"}
 }
 class-1.js:4:3 = {
   "end":3,
@@ -116,7 +116,7 @@ class-1.js:4:3 = {
   "path":"class-1.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: this) => void"}}
+  "types":{"type":"(this: this) => void"}
 }
 class-1.js:8:3 = {
   "end":3,
@@ -131,7 +131,7 @@ class-1.js:8:3 = {
   "path":"class-1.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: this) => number"}}
+  "types":{"type":"(this: this) => number"}
 }
 class-2.js:4:3 = {
   "end":3,
@@ -146,7 +146,7 @@ class-2.js:4:3 = {
   "path":"class-2.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: this) => A"}}
+  "types":{"type":"(this: this) => A"}
 }
 class-2.js:9:9 = {
   "end":9,
@@ -161,7 +161,7 @@ class-2.js:9:9 = {
   "path":"class-2.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: A) => A"}}
+  "types":{"type":"(this: A) => A"}
 }
 class-2.js:10:9 = {
   "end":9,
@@ -176,7 +176,7 @@ class-2.js:10:9 = {
   "path":"class-2.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: B) => A"}}
+  "types":{"type":"(this: B) => A"}
 }
 class-2.js:12:7 = {
   "end":7,
@@ -191,7 +191,7 @@ class-2.js:12:7 = {
   "path":"class-2.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"A"}}
+  "types":{"type":"A"}
 }
 class-2.js:13:7 = {
   "end":7,
@@ -206,7 +206,7 @@ class-2.js:13:7 = {
   "path":"class-2.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"A"}}
+  "types":{"type":"A"}
 }
 class-3.js:4:3 = {
   "end":3,
@@ -221,7 +221,7 @@ class-3.js:4:3 = {
   "path":"class-3.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => this"}}
+  "types":{"type":"() => this"}
 }
 class-3.js:9:9 = {
   "end":9,
@@ -236,7 +236,7 @@ class-3.js:9:9 = {
   "path":"class-3.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: A) => A"}}
+  "types":{"type":"(this: A) => A"}
 }
 class-3.js:10:9 = {
   "end":9,
@@ -251,7 +251,7 @@ class-3.js:10:9 = {
   "path":"class-3.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: B) => B"}}
+  "types":{"type":"(this: B) => B"}
 }
 class-4.js:9:6 = {
   "end":9,
@@ -266,7 +266,7 @@ class-4.js:9:6 = {
   "path":"class-4.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Y"}}
+  "types":{"type":"Y"}
 }
 class-bound.js:4:6 = {
   "end":6,
@@ -281,7 +281,7 @@ class-bound.js:4:6 = {
   "path":"class-bound.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type C<T extends R<any>> = Class<T>"}}
+  "types":{"type":"type C<T extends R<any>> = Class<T>"}
 }
 class-getters-setters.js:6:7 = {
   "end":7,
@@ -296,7 +296,7 @@ class-getters-setters.js:6:7 = {
   "path":"class-getters-setters.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 class-getters-setters.js:9:7 = {
   "end":7,
@@ -311,7 +311,7 @@ class-getters-setters.js:9:7 = {
   "path":"class-getters-setters.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"?string"}}
+  "types":{"type":"?string"}
 }
 class-poly-0.js:5:7 = {
   "end":7,
@@ -326,7 +326,7 @@ class-poly-0.js:5:7 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"class A<X extends Base>"}}
+  "types":{"type":"class A<X extends Base>"}
 }
 class-poly-0.js:5:9 = {
   "end":9,
@@ -341,7 +341,7 @@ class-poly-0.js:5:9 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"X"}}
+  "types":{"type":"X"}
 }
 class-poly-0.js:10:33 = {
   "end":33,
@@ -356,7 +356,7 @@ class-poly-0.js:10:33 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":33,
-  "types":{"evaluated":null,"unevaluated":{"type":"class A<X extends Base>"}}
+  "types":{"type":"class A<X extends Base>"}
 }
 class-poly-0.js:12:7 = {
   "end":9,
@@ -371,7 +371,7 @@ class-poly-0.js:12:7 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"A<X>"}}
+  "types":{"type":"A<X>"}
 }
 class-poly-0.js:16:7 = {
   "end":8,
@@ -386,7 +386,7 @@ class-poly-0.js:16:7 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"this"}}
+  "types":{"type":"this"}
 }
 class-poly-0.js:16:10 = {
   "end":10,
@@ -401,7 +401,7 @@ class-poly-0.js:16:10 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"X"}}
+  "types":{"type":"X"}
 }
 class-poly-0.js:17:7 = {
   "end":9,
@@ -416,7 +416,7 @@ class-poly-0.js:17:7 = {
   "path":"class-poly-0.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"A<X>"}}
+  "types":{"type":"A<X>"}
 }
 class-poly-1.js:9:5 = {
   "end":5,
@@ -431,7 +431,7 @@ class-poly-1.js:9:5 = {
   "path":"class-poly-1.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 class-poly-1.js:9:11 = {
   "end":11,
@@ -446,7 +446,7 @@ class-poly-1.js:9:11 = {
   "path":"class-poly-1.js",
   "reasons":[],
   "start":11,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => number"}}
+  "types":{"type":"() => number"}
 }
 class-statics.js:4:10 = {
   "end":10,
@@ -461,7 +461,7 @@ class-statics.js:4:10 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: Class<this>) => void"}}
+  "types":{"type":"(this: Class<this>) => void"}
 }
 class-statics.js:8:10 = {
   "end":10,
@@ -476,7 +476,7 @@ class-statics.js:8:10 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: Class<this>) => Class<this>"}}
+  "types":{"type":"(this: Class<this>) => Class<this>"}
 }
 class-statics.js:9:7 = {
   "end":8,
@@ -491,7 +491,7 @@ class-statics.js:9:7 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<this>"}}
+  "types":{"type":"Class<this>"}
 }
 class-statics.js:11:8 = {
   "end":9,
@@ -506,7 +506,7 @@ class-statics.js:11:8 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<A>"}}
+  "types":{"type":"Class<A>"}
 }
 class-statics.js:16:5 = {
   "end":9,
@@ -521,7 +521,7 @@ class-statics.js:16:5 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<B>"}}
+  "types":{"type":"Class<B>"}
 }
 class-statics.js:17:5 = {
   "end":5,
@@ -536,7 +536,7 @@ class-statics.js:17:5 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"B"}}
+  "types":{"type":"B"}
 }
 class-statics.js:20:19 = {
   "end":19,
@@ -551,7 +551,7 @@ class-statics.js:20:19 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":19,
-  "types":{"evaluated":null,"unevaluated":{"type":"this"}}
+  "types":{"type":"this"}
 }
 class-statics-poly.js:4:10 = {
   "end":10,
@@ -566,7 +566,7 @@ class-statics-poly.js:4:10 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: Class<this>) => void"}}
+  "types":{"type":"(this: Class<this>) => void"}
 }
 class-statics-poly.js:8:10 = {
   "end":10,
@@ -581,7 +581,7 @@ class-statics-poly.js:8:10 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: Class<this>) => Class<B<T>>"}}
+  "types":{"type":"(this: Class<this>) => Class<B<T>>"}
 }
 class-statics-poly.js:9:7 = {
   "end":8,
@@ -596,7 +596,7 @@ class-statics-poly.js:9:7 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<this>"}}
+  "types":{"type":"Class<this>"}
 }
 class-statics-poly.js:11:8 = {
   "end":9,
@@ -611,7 +611,7 @@ class-statics-poly.js:11:8 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<A<T>>"}}
+  "types":{"type":"Class<A<T>>"}
 }
 class-statics-poly.js:16:5 = {
   "end":9,
@@ -626,7 +626,7 @@ class-statics-poly.js:16:5 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<B<empty>>"}}
+  "types":{"type":"Class<B<empty>>"}
 }
 class-statics-poly.js:17:5 = {
   "end":5,
@@ -641,7 +641,7 @@ class-statics-poly.js:17:5 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"B<empty>"}}
+  "types":{"type":"B<empty>"}
 }
 declare_class.js:3:15 = class C
 
@@ -676,7 +676,7 @@ FluxStore.js:14:5 = {
   "path":"FluxStore.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<FluxStore<any>>"}}
+  "types":{"type":"Class<FluxStore<any>>"}
 }
 implements.js:7:8 = {
   "end":24,
@@ -691,7 +691,7 @@ implements.js:7:8 = {
   "path":"implements.js",
   "reasons":[],
   "start":23,
-  "types":{"evaluated":null,"unevaluated":{"type":"interface IA<T>"}}
+  "types":{"type":"interface IA<T>"}
 }
 multi-inheritance.js:6:7 = {
   "end":11,
@@ -706,7 +706,7 @@ multi-inheritance.js:6:7 = {
   "path":"multi-inheritance.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<A> | Class<B>"}}
+  "types":{"type":"Class<A> | Class<B>"}
 }
 type-utils.js:5:15 {
   "end":22,
@@ -722,15 +722,12 @@ type-utils.js:5:15 {
   "reasons":[],
   "start":15,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "expanded":{
-        "kind":"ClassDecl",
-        "name":{"name":"C","provenance":{"kind":"Local","loc":"type-utils.js:3:15"}},
-        "typeParams":[{"bound":null,"const":false,"name":"P","polarity":"Neutral"}]
-      },
-      "type":"class C<P>"
-    }
+    "expanded":{
+      "kind":"ClassDecl",
+      "name":{"name":"C","provenance":{"kind":"Local","loc":"type-utils.js:3:15"}},
+      "typeParams":[{"bound":null,"const":false,"name":"P","polarity":"Neutral"}]
+    },
+    "type":"class C<P>"
   }
 }
 type-utils.js:6:15 {
@@ -747,22 +744,19 @@ type-utils.js:6:15 {
   "reasons":[],
   "start":15,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "expanded":{
-        "kind":"Utility",
-        "kind":"Class",
-        "typeArgs":[
-          {
-            "generic_kind":"class",
-            "kind":"Generic",
-            "type":{"name":"C","provenance":{"kind":"Local","loc":"type-utils.js:3:15"}},
-            "typeArgs":[{"kind":"Num"}]
-          }
-        ]
-      },
-      "type":"Class<C<number>>"
-    }
+    "expanded":{
+      "kind":"Utility",
+      "kind":"Class",
+      "typeArgs":[
+        {
+          "generic_kind":"class",
+          "kind":"Generic",
+          "type":{"name":"C","provenance":{"kind":"Local","loc":"type-utils.js:3:15"}},
+          "typeArgs":[{"kind":"Num"}]
+        }
+      ]
+    },
+    "type":"Class<C<number>>"
   }
 }
 type-utils.js:10:15 {
@@ -778,7 +772,7 @@ type-utils.js:10:15 {
   "path":"type-utils.js",
   "reasons":[],
   "start":15,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<A>"}}
+  "types":{"type":"Class<A>"}
 }
 type-utils.js:11:15 {
   "end":27,
@@ -793,7 +787,7 @@ type-utils.js:11:15 {
   "path":"type-utils.js",
   "reasons":[],
   "start":15,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<Class<A>>"}}
+  "types":{"type":"Class<Class<A>>"}
 }
 type-utils.js:12:15 {
   "end":33,
@@ -808,7 +802,7 @@ type-utils.js:12:15 {
   "path":"type-utils.js",
   "reasons":[],
   "start":15,
-  "types":{"evaluated":null,"unevaluated":{"type":"Class<Class<Class<A>>>"}}
+  "types":{"type":"Class<Class<Class<A>>>"}
 }
 default.js:4:17 {
   "end":17,
@@ -823,7 +817,7 @@ default.js:4:17 {
   "path":"default.js",
   "reasons":[],
   "start":17,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 default.js:5:18 {
   "end":18,
@@ -838,7 +832,7 @@ default.js:5:18 {
   "path":"default.js",
   "reasons":[],
   "start":18,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 constructor.js:4:7 {
   "end":13,
@@ -853,7 +847,7 @@ constructor.js:4:7 {
   "path":"constructor.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(x: string) => void"}}
+  "types":{"type":"(x: string) => void"}
 }
 this.js:5:13 Readonly<this>
 this.js:5:13,5:15
@@ -870,10 +864,7 @@ function_this.js:2:1 {
   "path":"function_this.js",
   "reasons":[],
   "start":1,
-  "types":{
-    "evaluated":null,
-    "unevaluated":{"type":"(this: {value: number}, x: string) => void"}
-  }
+  "types":{"type":"(this: {value: number}, x: string) => void"}
 }
 function_this.js:5:1 {
   "end":9,
@@ -888,7 +879,7 @@ function_this.js:5:1 {
   "path":"function_this.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"(x: string) => void"}}
+  "types":{"type":"(x: string) => void"}
 }
 function_this.js:8:1 {
   "end":7,
@@ -903,5 +894,5 @@ function_this.js:8:1 {
   "path":"function_this.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"(x: string) => void"}}
+  "types":{"type":"(x: string) => void"}
 }

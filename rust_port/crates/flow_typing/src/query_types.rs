@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use dupe::Dupe;
@@ -18,7 +17,6 @@ use flow_common_ty::ty::TypeAtPosResult;
 use flow_common_ty::ty::symbols_of_elt;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
-use flow_common_ty::ty_utils;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
@@ -62,8 +60,6 @@ fn result_of_normalizer_error<A>(loc: Loc, t: Type, err: Error) -> QueryResult<A
     QueryResult::FailureUnparseable(loc, t, msg)
 }
 
-const MAX_SIZE_OF_EVALUATED_TYPE: usize = 100;
-
 pub fn dump_type_at_pos(
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -101,19 +97,12 @@ pub fn type_at_pos_type<'a>(
                     sym_anonymous: false,
                     sym_def_loc: ALoc::of_loc(loc.dupe()),
                 };
-                let unevaluated = Elt::Decl(Decl::ModuleDecl(Box::new(DeclModuleDeclData {
+                let ty = Elt::Decl(Decl::ModuleDecl(Box::new(DeclModuleDeclData {
                     name: Some(module_symbol),
                     exports: Arc::from([]),
                     default: None,
                 })));
-                QueryResult::Success(
-                    loc,
-                    TypeAtPosResult {
-                        unevaluated,
-                        evaluated: None,
-                        refs: None,
-                    },
-                )
+                QueryResult::Success(loc, TypeAtPosResult { ty, refs: None })
             }
             FinderResult::TypeResult(loc, toplevel_is_type_identifier_reference, t) => {
                 let typed_ast_opt = if no_typed_ast_for_imports {
@@ -139,72 +128,21 @@ pub fn type_at_pos_type<'a>(
                         ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig.dupe());
                     ty_normalizer_flow::from_type_with_found_computed_type(&genv, &t)
                 };
-                // This pass can evaluate destructors, so it has to leave the
-                // server's caches and error set as it found them: that state
-                // outlives the request, and a hover must not change how the
-                // next one behaves.
-                let (unevaluated, found_computed_type) = cx.run_and_rolled_back_cache(|| {
+                // This pass evaluates the destructors it judges worth evaluating, so
+                // it has to leave the server's caches and error set as it found them:
+                // that state outlives the request, and a hover must not change how the
+                // next one behaves. Its result is kept whatever the errors say -- there
+                // is no second form to fall back on.
+                let (ty, _) = cx.run_and_rolled_back_cache(|| {
                     let errors = cx.errors();
                     let result = from_type(EvaluateTypeDestructorsMode::EvaluateForHover);
                     cx.reset_errors(errors);
                     result
                 });
-                let evaluated = if found_computed_type {
-                    // We need to roll back caches and errors, because server state persists
-                    // through IDE requests. If evaluation results in new errors, future
-                    // requests at the same location should also result in "new" errors.
-                    cx.run_and_rolled_back_cache(|| {
-                        let errors = cx.errors();
-                        let (evaluated, _) = from_type(EvaluateTypeDestructorsMode::EvaluateAll);
-                        let errors_prime = cx.errors();
-                        cx.reset_errors(errors.dupe());
-                        if errors == errors_prime {
-                            Some(evaluated)
-                        } else {
-                            None
-                        }
-                    })
-                } else {
-                    None
-                };
-                let refs = |unevaluated: &ALocElt,
-                            evaluated: &Option<ALocElt>|
-                 -> Option<BTreeSet<Symbol<Loc>>> {
-                    match &include_refs {
-                        None => None,
-                        Some(loc_of_aloc) => {
-                            let syms = symbols_of_elt(*loc_of_aloc, unevaluated);
-                            Some(match evaluated {
-                                None => syms,
-                                Some(e) => {
-                                    let other_syms = symbols_of_elt(*loc_of_aloc, e);
-                                    &syms | &other_syms
-                                }
-                            })
-                        }
-                    }
-                };
-                let tys = match (&unevaluated, &evaluated) {
-                    (Ok(uneval), Some(Ok(eval))) => {
-                        match ty_utils::size_of_elt(Some(MAX_SIZE_OF_EVALUATED_TYPE), eval) {
-                            Some(_) => Ok((uneval.clone(), Some(eval.clone()))),
-                            None => Ok((uneval.clone(), None)),
-                        }
-                    }
-                    (Ok(uneval), _) => Ok((uneval.clone(), None)),
-                    (Err(err), _) => Err(err.clone()),
-                };
-                match tys {
-                    Ok((unevaluated, evaluated)) => {
-                        let refs = refs(&unevaluated, &evaluated);
-                        QueryResult::Success(
-                            loc,
-                            TypeAtPosResult {
-                                unevaluated,
-                                evaluated,
-                                refs,
-                            },
-                        )
+                match ty {
+                    Ok(ty) => {
+                        let refs = include_refs.map(|loc_of_aloc| symbols_of_elt(loc_of_aloc, &ty));
+                        QueryResult::Success(loc, TypeAtPosResult { ty, refs })
                     }
                     Err(err) => result_of_normalizer_error(loc, t, err),
                 }

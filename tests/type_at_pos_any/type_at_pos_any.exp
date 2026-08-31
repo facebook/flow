@@ -11,7 +11,7 @@ typed.js:2:7 = {
   "path":"typed.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:4:5 = {
   "end":5,
@@ -26,7 +26,7 @@ typed.js:4:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:5:5 = {
   "end":5,
@@ -41,7 +41,7 @@ typed.js:5:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:5:9 = {
   "end":16,
@@ -56,7 +56,7 @@ typed.js:5:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:6:5 = {
   "end":5,
@@ -71,7 +71,7 @@ typed.js:6:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:6:9 = {
   "end":14,
@@ -86,7 +86,7 @@ typed.js:6:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:8:5 = {
   "end":5,
@@ -101,7 +101,7 @@ typed.js:8:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:8:9 = {
   "end":9,
@@ -116,7 +116,7 @@ typed.js:8:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:9:5 = {
   "end":5,
@@ -131,7 +131,7 @@ typed.js:9:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:9:9 = {
   "end":9,
@@ -146,7 +146,7 @@ typed.js:9:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:9:12 = {
   "end":12,
@@ -161,7 +161,7 @@ typed.js:9:12 = {
   "path":"typed.js",
   "reasons":[],
   "start":11,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:10:5 = {
   "end":5,
@@ -176,7 +176,7 @@ typed.js:10:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:10:9 = {
   "end":9,
@@ -191,7 +191,7 @@ typed.js:10:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (explicit)"}}
+  "types":{"type":"any (explicit)"}
 }
 typed.js:12:5 = {
   "end":5,
@@ -206,7 +206,7 @@ typed.js:12:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:12:9 = {
   "end":15,
@@ -221,7 +221,7 @@ typed.js:12:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:12:17 = {
   "end":18,
@@ -236,7 +236,7 @@ typed.js:12:17 = {
   "path":"typed.js",
   "reasons":[],
   "start":17,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:13:5 = {
   "end":5,
@@ -251,7 +251,7 @@ typed.js:13:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:13:9 = {
   "end":15,
@@ -266,7 +266,7 @@ typed.js:13:9 = {
   "path":"typed.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:15:5 = {
   "end":12,
@@ -281,7 +281,7 @@ typed.js:15:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:15:27 = {
   "end":37,
@@ -296,7 +296,7 @@ typed.js:15:27 = {
   "path":"typed.js",
   "reasons":[],
   "start":27,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:16:5 = {
   "end":12,
@@ -311,7 +311,7 @@ typed.js:16:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":{"type":"any (implicit)"},"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 typed.js:18:5 = {
   "end":7,
@@ -326,7 +326,7 @@ typed.js:18:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 typed.js:20:5 = {
   "end":7,
@@ -341,7 +341,7 @@ typed.js:20:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 typed.js:21:5 = {
   "end":5,
@@ -356,7 +356,7 @@ typed.js:21:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 typed.js:23:5 = {
   "end":7,
@@ -371,7 +371,7 @@ typed.js:23:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Array<any>"}}
+  "types":{"type":"Array<any>"}
 }
 typed.js:24:5 = {
   "end":8,
@@ -386,7 +386,7 @@ typed.js:24:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"Array<any>"}}
+  "types":{"type":"Array<any>"}
 }
 typed.js:27:5 = {
   "end":7,
@@ -401,7 +401,7 @@ typed.js:27:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"(any) => void"}}
+  "types":{"type":"(any) => void"}
 }
 typed.js:28:5 = {
   "end":7,
@@ -416,5 +416,5 @@ typed.js:28:5 = {
   "path":"typed.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"(any) => void"}}
+  "types":{"type":"(any) => void"}
 }

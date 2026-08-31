@@ -8,12 +8,6 @@ type SurfaceEntryPoint<TRoute extends Route<>> = Readonly<
     ...
   },
 >
-= {
-  readonly getComponent: () => JSResourceReference<Module<TRoute>>,
-  readonly getNavigationOptions: () => number,
-  readonly getRoute: () => Class<TRoute>,
-  ...
-}
 
 'JSResourceReference' defined at JSResourceReference.js:3:17
 'Module' defined at main.js:5:5

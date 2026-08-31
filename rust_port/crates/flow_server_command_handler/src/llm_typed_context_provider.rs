@@ -11,7 +11,6 @@ use std::sync::Arc;
 use flow_aloc::ALoc;
 use flow_common::reason;
 use flow_common_ty::ty;
-use flow_common_ty::ty::Elt;
 use flow_common_ty::ty_printer;
 use flow_common_ty::ty_printer::PrinterOptions;
 use flow_common_ty::ty_symbol::Symbol;
@@ -72,12 +71,8 @@ fn normalize_type(
             let refs: BTreeSet<Symbol<Loc>> = ty::symbols_of_elt(loc_of_aloc, &elt);
             let refs_some = Some(refs);
             let opts = PrinterOptions::default();
-            let (type_str, refs) = ty_printer::string_of_type_at_pos_result::<Loc>(
-                &elt,
-                &None::<Elt<ALoc>>,
-                &refs_some,
-                &opts,
-            );
+            let (type_str, refs) =
+                ty_printer::string_of_type_at_pos_result::<Loc>(&elt, &refs_some, &opts);
             (type_str, refs)
         }
         Err(_) => ("<unknown>".to_string(), None),

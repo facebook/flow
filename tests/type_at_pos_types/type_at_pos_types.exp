@@ -722,7 +722,6 @@ type-alias.js:9:6,9:6
 
 At type-alias.js:11:6
 type E = $Exact<D>
-= {x: number}
 
 'D' defined at type-alias.js:9:5
 'E' defined at type-alias.js:11:5
@@ -867,7 +866,6 @@ tuple.js:3:6,3:6
 
 At tuple.js:6:6
 type S = [0, ...T, d?: void | 4]
-= [0, 1, b: 2, c?: 3, d?: 4]
 
 'S' defined at tuple.js:6:5
 'T' defined at tuple.js:3:5
@@ -876,7 +874,6 @@ tuple.js:6:6,6:6
 
 At tuple.js:10:6
 type R = Readonly<Tup>
-= Readonly<[a: number, string, boolean]>
 
 'R' defined at tuple.js:10:5
 'Tup' defined at tuple.js:9:5
@@ -885,7 +882,6 @@ tuple.js:10:6,10:6
 
 At tuple.js:13:6
 type P = Partial<Tup>
-= [a?: number, _1?: string, _2?: boolean]
 
 'P' defined at tuple.js:13:5
 'Tup' defined at tuple.js:9:5
@@ -894,7 +890,6 @@ tuple.js:13:6,13:6
 
 At tuple.js:16:6
 type Q = Partial<R>
-= Readonly<[a?: number, _1?: string, _2?: boolean]>
 
 'Q' defined at tuple.js:16:5
 'R' defined at tuple.js:10:5
@@ -903,7 +898,6 @@ tuple.js:16:6,16:6
 
 At tuple.js:20:6
 type ROM = Readonly<M>
-= Readonly<[1, 2, 3]>
 
 'M' defined at tuple.js:19:5
 'ROM' defined at tuple.js:20:5
@@ -912,7 +906,6 @@ tuple.js:20:6,20:8
 
 At tuple.js:23:6
 type Spread = [1, 2, ...[3, 4]]
-= [1, 2, 3, 4]
 
 'Spread' defined at tuple.js:23:5
 

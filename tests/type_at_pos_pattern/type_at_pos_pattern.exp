@@ -11,7 +11,7 @@ object.js:11:3 = {
   "path":"object.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"O"}}
+  "types":{"type":"O"}
 }
 object.js:12:3 = {
   "end":3,
@@ -26,7 +26,7 @@ object.js:12:3 = {
   "path":"object.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"O"}}
+  "types":{"type":"O"}
 }
 object.js:13:3 = {
   "end":3,
@@ -41,7 +41,7 @@ object.js:13:3 = {
   "path":"object.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"O"}}
+  "types":{"type":"O"}
 }
 object.js:14:3 = {
   "end":3,
@@ -56,7 +56,7 @@ object.js:14:3 = {
   "path":"object.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"O"}}
+  "types":{"type":"O"}
 }
 object.js:15:4 = {
   "end":4,
@@ -71,5 +71,5 @@ object.js:15:4 = {
   "path":"object.js",
   "reasons":[],
   "start":4,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }

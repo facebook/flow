@@ -11,7 +11,7 @@
   "path":"test.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"ID"}}
+  "types":{"type":"ID"}
 }
 {
   "end":12,
@@ -26,7 +26,7 @@
   "path":"importtest.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"ID"}}
+  "types":{"type":"ID"}
 }
 {
   "end":12,
@@ -41,5 +41,5 @@
   "path":"importtest.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"LDefId"}}
+  "types":{"type":"LDefId"}
 }

@@ -1573,11 +1573,6 @@ fn infer_type_to_response(
             #[serde(rename = "type")]
             type_: String,
         }
-        #[derive(serde::Serialize)]
-        struct TypesPayload {
-            evaluated: Option<InnerType>,
-            unevaluated: InnerType,
-        }
         let json_string: String = match &tys {
             Some(result) => {
                 let type_json = |elt: &flow_common_ty::ty::ALocElt| -> InnerType {
@@ -1597,11 +1592,8 @@ fn infer_type_to_response(
                         ),
                     }
                 };
-                let payload = TypesPayload {
-                    evaluated: result.evaluated.as_ref().map(&type_json),
-                    unevaluated: type_json(&result.unevaluated),
-                };
-                serde_json::to_string(&payload).expect("infer_type: serialize TypesPayload")
+                serde_json::to_string(&type_json(&result.ty))
+                    .expect("infer_type: serialize InnerType")
             }
             None => "null".to_string(),
         };
@@ -1609,8 +1601,7 @@ fn infer_type_to_response(
     } else {
         server_prot::response::infer_type::Payload::Friendly(tys.map(|r| {
             let (type_str, refs) = flow_common_ty::ty_printer::string_of_type_at_pos_result(
-                &r.unevaluated,
-                &r.evaluated,
+                &r.ty,
                 &r.refs,
                 &printer_opts,
             );
@@ -2010,8 +2001,7 @@ fn inlay_hint(
                         let tys = tys.map(|r| {
                             let (type_str, refs) =
                                 flow_common_ty::ty_printer::string_of_type_at_pos_result(
-                                    &r.unevaluated,
-                                    &r.evaluated,
+                                    &r.ty,
                                     &r.refs,
                                     &flow_common_ty::ty_printer::PrinterOptions::default(),
                                 );

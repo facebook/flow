@@ -5,7 +5,6 @@ lazy_ref.js:14:9 = {
     ...{...empty, readonly ref?: RefSetter<{moo(x: string): void}>}
   ) renders null
 }
-= {default: component(...empty) renders null}
 
 'RefSetter' defined at (lib) react.js:1361:9
 
@@ -61,80 +60,41 @@ react_component.js:31:7 = {
   "reasons":[],
   "start":7,
   "types":{
-    "evaluated":{
-      "expanded":{
-        "isType":false,
-        "kind":"NominalComponentDecl",
-        "name":{
-          "name":"Fragment",
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:1073:5,1075:22"}
-        },
-        "regularProps":{
-          "inexact":false,
-          "kind":"flattened",
-          "types":[{"name":"children","optional":true,"type":{"bound":"Renders","kind":"Bound"}}]
-        },
-        "renders":{
-          "argument":{"bound":"Renders","kind":"Bound"},
-          "kind":"Renders",
-          "variant":"normal"
-        },
-        "typeParams":[
-          {
-            "bound":{
-              "generic_kind":"type alias",
-              "kind":"Generic",
-              "type":{
-                "name":"React$Node",
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"}
-              }
-            },
-            "const":false,
-            "default":{"kind":"Void"},
-            "name":"Renders",
-            "polarity":"Neutral"
-          }
-        ]
+    "expanded":{
+      "isType":false,
+      "kind":"NominalComponentDecl",
+      "name":{
+        "name":"Fragment",
+        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:1073:5,1075:22"}
       },
-      "type":"component Fragment<Renders extends React$Node = void>(children?: Renders) renders Renders"
+      "regularProps":{
+        "inexact":false,
+        "kind":"flattened",
+        "types":[{"name":"children","optional":true,"type":{"bound":"Renders","kind":"Bound"}}]
+      },
+      "renders":{
+        "argument":{"bound":"Renders","kind":"Bound"},
+        "kind":"Renders",
+        "variant":"normal"
+      },
+      "typeParams":[
+        {
+          "bound":{
+            "generic_kind":"type alias",
+            "kind":"Generic",
+            "type":{
+              "name":"React$Node",
+              "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"}
+            }
+          },
+          "const":false,
+          "default":{"kind":"Void"},
+          "name":"Renders",
+          "polarity":"Neutral"
+        }
+      ]
     },
-    "unevaluated":{
-      "expanded":{
-        "isType":false,
-        "kind":"NominalComponentDecl",
-        "name":{
-          "name":"Fragment",
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:1073:5,1075:22"}
-        },
-        "regularProps":{
-          "inexact":false,
-          "kind":"flattened",
-          "types":[{"name":"children","optional":true,"type":{"bound":"Renders","kind":"Bound"}}]
-        },
-        "renders":{
-          "argument":{"bound":"Renders","kind":"Bound"},
-          "kind":"Renders",
-          "variant":"normal"
-        },
-        "typeParams":[
-          {
-            "bound":{
-              "generic_kind":"type alias",
-              "kind":"Generic",
-              "type":{
-                "name":"React$Node",
-                "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:15:14-23"}
-              }
-            },
-            "const":false,
-            "default":{"kind":"Void"},
-            "name":"Renders",
-            "polarity":"Neutral"
-          }
-        ]
-      },
-      "type":"component Fragment<Renders extends React$Node = void>(children?: Renders) renders Renders"
-    }
+    "type":"component Fragment<Renders extends React$Node = void>(children?: Renders) renders Renders"
   }
 }
 react_component.js:32:15 = {
@@ -151,22 +111,12 @@ react_component.js:32:15 = {
   "reasons":[],
   "start":15,
   "types":{
-    "evaluated":{
-      "expanded":{
-        "kind":"Component",
-        "regularProps":{"kind":"unflattened","type":{"any":"implicit","kind":"Implicit Any"}},
-        "renders":null
-      },
-      "type":"component(...any)"
+    "expanded":{
+      "kind":"Component",
+      "regularProps":{"kind":"unflattened","type":{"kind":"Num"}},
+      "renders":null
     },
-    "unevaluated":{
-      "expanded":{
-        "kind":"Component",
-        "regularProps":{"kind":"unflattened","type":{"kind":"Num"}},
-        "renders":null
-      },
-      "type":"component(...number)"
-    }
+    "type":"component(...number)"
   }
 }
 react_component.js:32:31 = {
@@ -198,7 +148,6 @@ React$CreateElement
 react.js:4:7,4:19
 
 react_abstract_component.js:3:15 = component(...any)
-= component(...any)
 react_abstract_component.js:3:15,3:15
 react_abstract_component.js:8:15 = type RendersFoo = renders Foo
 

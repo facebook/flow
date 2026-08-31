@@ -68,7 +68,6 @@ jsx_instantiation.js:20:6,20:9
 jsx_instantiation.js:26:13
 Flags:
 component Bar<1 | any>(...Readonly<{n: 1 | any}>)
-= component Bar<1 | any>(n: 1 | any)
 
 'Bar' defined at jsx_instantiation.js:25:4
 
@@ -77,7 +76,6 @@ jsx_instantiation.js:26:13,26:15
 jsx_instantiation.js:41:17
 Flags:
 component Foo<any (explicit)>(...Props<any>)
-= component Foo<any (explicit)>(f: (any) => void)
 
 'Foo' defined at jsx_instantiation.js:37:4
 'Props' defined at jsx_instantiation.js:33:9

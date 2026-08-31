@@ -218,23 +218,20 @@ render_types.js:8:7 = {
   "reasons":[],
   "start":6,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "expanded":{
-        "body":{
-          "argument":{
-            "generic_kind":"component",
-            "kind":"Generic",
-            "type":{"name":"Foo","provenance":{"kind":"Local","loc":"render_types.js:5:11-13"}}
-          },
-          "kind":"Renders",
-          "variant":"normal"
+    "expanded":{
+      "body":{
+        "argument":{
+          "generic_kind":"component",
+          "kind":"Generic",
+          "type":{"name":"Foo","provenance":{"kind":"Local","loc":"render_types.js:5:11-13"}}
         },
-        "kind":"TypeAlias",
-        "name":{"name":"Z","provenance":{"kind":"Local","loc":"render_types.js:8:6"}},
-        "typeParams":null
+        "kind":"Renders",
+        "variant":"normal"
       },
-      "type":"type Z = renders Foo"
-    }
+      "kind":"TypeAlias",
+      "name":{"name":"Z","provenance":{"kind":"Local","loc":"render_types.js:8:6"}},
+      "typeParams":null
+    },
+    "type":"type Z = renders Foo"
   }
 }

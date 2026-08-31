@@ -19,7 +19,6 @@ use flow_parser_utils_output::pretty_printer;
 
 use crate::ty::*;
 use crate::ty_symbol::*;
-use crate::ty_utils;
 
 /***********
  * Utils   *
@@ -1656,50 +1655,11 @@ pub fn string_of_symbol_set<L: Clone + Ord>(
 }
 
 pub fn string_of_type_at_pos_result<R: Clone + Ord>(
-    unevaluated: &Elt<ALoc>,
-    evaluated: &Option<Elt<ALoc>>,
+    ty: &Elt<ALoc>,
     refs: &Option<std::collections::BTreeSet<Symbol<R>>>,
     opts: &PrinterOptions,
 ) -> (String, Option<Vec<(String, R)>>) {
-    let layout = layout_of_type_at_pos_types(opts, unevaluated, evaluated);
-    let type_str = pretty_printer::print(true, &layout).contents();
+    let type_str = pretty_printer::print(true, &layout_of_elt(opts, ty)).contents();
     let refs = refs.as_ref().map(|r| string_of_symbol_set(r));
     (type_str, refs)
-}
-
-fn layout_of_type_at_pos_types(
-    opts: &PrinterOptions,
-    unevaluated: &Elt<ALoc>,
-    evaluated: &Option<Elt<ALoc>>,
-) -> LayoutNode {
-    let layout_unevaluated = layout_of_elt(opts, unevaluated);
-
-    match (unevaluated, evaluated) {
-        (_, None) => layout_unevaluated,
-        (unevaluated_elt, Some(evaluated_elt))
-            if ty_utils::elt_equal(unevaluated_elt, evaluated_elt) =>
-        {
-            layout_unevaluated
-        }
-        (_, Some(evaluated_elt)) => {
-            // Unwrap TypeAliasDecl to show the underlying type
-            let evaluated_to_print = match evaluated_elt {
-                Elt::Decl(Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
-                    type_: Some(t),
-                    ..
-                })) => Elt::Type(t.clone()),
-                x => x.clone(),
-            };
-
-            let layout_evaluated = layout_of_elt(opts, &evaluated_to_print);
-
-            layout::fuse(vec![
-                layout_unevaluated,
-                layout::hardline(),
-                LayoutNode::atom("=".to_string()),
-                layout::space(),
-                layout_evaluated,
-            ])
-        }
-    }
 }

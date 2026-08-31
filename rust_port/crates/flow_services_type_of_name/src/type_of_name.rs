@@ -388,8 +388,7 @@ fn format_ty_elt_response(
 ) -> response::infer_type_of_name::T {
     let refs = ty::symbols_of_elt(|aloc| reader.loc_of_aloc(aloc), &ty_elt);
     let opts = PrinterOptions::default();
-    let (type_str, refs) =
-        ty_printer::string_of_type_at_pos_result(&ty_elt, &None, &Some(refs), &opts);
+    let (type_str, refs) = ty_printer::string_of_type_at_pos_result(&ty_elt, &Some(refs), &opts);
     let refs = augment_refs_with_summaries(genv, ref_type_bodies_tbl, &refs);
     let prop_docs = extract_prop_docs(reader, ast, &ty_elt);
     response::infer_type_of_name::T {

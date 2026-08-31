@@ -14,7 +14,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 variable_declaration.js:11:4
@@ -33,7 +33,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 variable_declaration.js:19:4
@@ -52,7 +52,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
+  "types":{"type":"void"}
 }
 
 variable_declaration.js:27:4
@@ -71,7 +71,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
+  "types":{"type":"void"}
 }
 
 variable_declaration.js:35:5
@@ -90,7 +90,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 variable_declaration.js:43:4
@@ -109,7 +109,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
+  "types":{"type":"void"}
 }
 
 variable_declaration.js:48:4
@@ -128,7 +128,7 @@ Flags: --strip-root --pretty
   "path":"variable_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 class_declaration.js:8:14
@@ -147,7 +147,7 @@ Flags: --strip-root --pretty
   "path":"class_declaration.js",
   "reasons":[],
   "start":13,
-  "types":{"evaluated":null,"unevaluated":{"type":"class Foo"}}
+  "types":{"type":"class Foo"}
 }
 
 function_declaration.js:8:4
@@ -166,7 +166,7 @@ Flags: --strip-root --pretty
   "path":"function_declaration.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 declare.js:8:4
@@ -185,7 +185,7 @@ Flags: --strip-root --pretty
   "path":"declare.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"empty"}}
+  "types":{"type":"empty"}
 }
 
 declare.js:16:6
@@ -204,7 +204,7 @@ Flags: --strip-root --pretty
   "path":"declare.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"class Bar"}}
+  "types":{"type":"class Bar"}
 }
 
 declare.js:24:4
@@ -223,7 +223,7 @@ Flags: --strip-root --pretty
   "path":"declare.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(x: any) => any"}}
+  "types":{"type":"(x: any) => any"}
 }
 
 objects-requires.js:18:6
@@ -242,7 +242,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
+  "types":{"type":"1"}
 }
 
 objects-requires.js:20:6
@@ -261,7 +261,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
+  "types":{"type":"2"}
 }
 
 objects-requires.js:22:6
@@ -280,7 +280,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
+  "types":{"type":"3"}
 }
 
 objects-requires.js:24:6
@@ -299,7 +299,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"4"}}
+  "types":{"type":"4"}
 }
 
 objects-requires.js:30:6
@@ -318,7 +318,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
+  "types":{"type":"1"}
 }
 
 objects-requires.js:32:6
@@ -337,7 +337,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
+  "types":{"type":"2"}
 }
 
 objects-requires.js:34:6
@@ -356,7 +356,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
+  "types":{"type":"3"}
 }
 
 objects-requires.js:36:6
@@ -375,7 +375,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"4"}}
+  "types":{"type":"4"}
 }
 
 objects-requires.js:41:6
@@ -394,7 +394,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
+  "types":{"type":"1"}
 }
 
 objects-requires.js:43:6
@@ -413,7 +413,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
+  "types":{"type":"2"}
 }
 
 objects-requires.js:45:6
@@ -432,7 +432,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
+  "types":{"type":"3"}
 }
 
 objects-requires.js:47:6
@@ -451,7 +451,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"4"}}
+  "types":{"type":"4"}
 }
 
 objects-requires.js:51:7
@@ -470,7 +470,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"1"}}
+  "types":{"type":"1"}
 }
 
 objects-requires.js:53:7
@@ -489,7 +489,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"(this: Class<Foo>) => void"}}
+  "types":{"type":"(this: Class<Foo>) => void"}
 }
 
 objects-requires.js:56:12
@@ -508,7 +508,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"2"}}
+  "types":{"type":"2"}
 }
 
 objects-requires.js:58:12
@@ -527,7 +527,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 objects-requires.js:60:12
@@ -546,7 +546,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":9,
-  "types":{"evaluated":null,"unevaluated":{"type":"3"}}
+  "types":{"type":"3"}
 }
 
 objects-requires.js:63:8
@@ -565,7 +565,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"enum DefaultedStringEnum"}}
+  "types":{"type":"enum DefaultedStringEnum"}
 }
 
 objects-requires.js:65:23
@@ -584,7 +584,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":21,
-  "types":{"evaluated":null,"unevaluated":{"type":"DefaultedStringEnum"}}
+  "types":{"type":"DefaultedStringEnum"}
 }
 
 objects-requires.js:67:23
@@ -603,7 +603,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":21,
-  "types":{"evaluated":null,"unevaluated":{"type":"DefaultedStringEnum"}}
+  "types":{"type":"DefaultedStringEnum"}
 }
 
 objects-requires.js:69:8
@@ -622,7 +622,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"enum InitializedStringEnum"}}
+  "types":{"type":"enum InitializedStringEnum"}
 }
 
 objects-requires.js:71:25
@@ -641,7 +641,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":23,
-  "types":{"evaluated":null,"unevaluated":{"type":"InitializedStringEnum"}}
+  "types":{"type":"InitializedStringEnum"}
 }
 
 objects-requires.js:73:25
@@ -660,7 +660,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":23,
-  "types":{"evaluated":null,"unevaluated":{"type":"InitializedStringEnum"}}
+  "types":{"type":"InitializedStringEnum"}
 }
 
 objects-requires.js:75:6
@@ -679,7 +679,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"enum NumberEnum"}}
+  "types":{"type":"enum NumberEnum"}
 }
 
 objects-requires.js:77:14
@@ -698,7 +698,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"NumberEnum"}}
+  "types":{"type":"NumberEnum"}
 }
 
 objects-requires.js:79:14
@@ -717,7 +717,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"NumberEnum"}}
+  "types":{"type":"NumberEnum"}
 }
 
 objects-requires.js:81:7
@@ -736,7 +736,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"enum BooleanEnum"}}
+  "types":{"type":"enum BooleanEnum"}
 }
 
 objects-requires.js:83:15
@@ -755,7 +755,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":13,
-  "types":{"evaluated":null,"unevaluated":{"type":"BooleanEnum"}}
+  "types":{"type":"BooleanEnum"}
 }
 
 objects-requires.js:85:15
@@ -774,7 +774,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":13,
-  "types":{"evaluated":null,"unevaluated":{"type":"BooleanEnum"}}
+  "types":{"type":"BooleanEnum"}
 }
 
 objects-requires.js:87:6
@@ -793,7 +793,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":1,
-  "types":{"evaluated":null,"unevaluated":{"type":"enum SymbolEnum"}}
+  "types":{"type":"enum SymbolEnum"}
 }
 
 objects-requires.js:89:15
@@ -812,7 +812,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"SymbolEnum"}}
+  "types":{"type":"SymbolEnum"}
 }
 
 objects-requires.js:91:15
@@ -831,7 +831,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":12,
-  "types":{"evaluated":null,"unevaluated":{"type":"SymbolEnum"}}
+  "types":{"type":"SymbolEnum"}
 }
 
 objects.js:58:5
@@ -945,7 +945,7 @@ Flags: --strip-root --pretty
   "path":"objects.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 objects.js:170:5
@@ -964,7 +964,7 @@ Flags: --strip-root --pretty
   "path":"objects.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 objects.js:172:5
@@ -983,7 +983,7 @@ Flags: --strip-root --pretty
   "path":"objects.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 objects.js:174:5
@@ -1002,7 +1002,7 @@ Flags: --strip-root --pretty
   "path":"objects.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 objects.js:178:5
@@ -1021,7 +1021,7 @@ Flags: --strip-root --pretty
   "path":"objects.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 objects.js:180:5
@@ -1040,7 +1040,7 @@ Flags: --strip-root --pretty
   "path":"objects.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => Promise<void>"}}
+  "types":{"type":"() => Promise<void>"}
 }
 
 requires.js:5:4
@@ -1059,7 +1059,7 @@ Flags: --strip-root --pretty
   "path":"requires.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(x: number, y: number) => number"}}
+  "types":{"type":"(x: number, y: number) => number"}
 }
 
 requires.js:7:4
@@ -1078,7 +1078,7 @@ Flags: --strip-root --pretty
   "path":"requires.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"class Bar"}}
+  "types":{"type":"class Bar"}
 }
 
 requires.js:9:4
@@ -1097,7 +1097,7 @@ Flags: --strip-root --pretty
   "path":"requires.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 imports.js:7:4
@@ -1116,7 +1116,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"(x: number, y: number) => number"}}
+  "types":{"type":"(x: number, y: number) => number"}
 }
 
 imports.js:9:4
@@ -1135,7 +1135,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"class Bar"}}
+  "types":{"type":"class Bar"}
 }
 
 imports.js:11:4
@@ -1154,7 +1154,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 imports.js:13:4
@@ -1173,7 +1173,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 imports.js:15:4
@@ -1192,7 +1192,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"class Beta"}}
+  "types":{"type":"class Beta"}
 }
 
 imports.js:17:4
@@ -1211,7 +1211,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 imports.js:19:4
@@ -1230,7 +1230,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 imports.js:21:4
@@ -1249,7 +1249,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 imports.js:23:4
@@ -1268,10 +1268,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{
-    "evaluated":{"type":"component Epsilon()"},
-    "unevaluated":{"type":"component Epsilon()"}
-  }
+  "types":{"type":"component Epsilon()"}
 }
 
 imports.js:25:4
@@ -1290,7 +1287,7 @@ Flags: --strip-root --pretty
   "path":"imports.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 unrecognized_tags.js:14:4
@@ -1309,7 +1306,7 @@ Flags: --strip-root --pretty
   "path":"unrecognized_tags.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }
 
 parse_error.js:6:5
@@ -1328,7 +1325,7 @@ Flags: --strip-root --pretty
   "path":"parse_error.js",
   "reasons":[],
   "start":4,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 
 types.js:16:7
@@ -1347,7 +1344,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type myFoo = number"}}
+  "types":{"type":"type myFoo = number"}
 }
 
 types.js:18:7
@@ -1366,7 +1363,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type myBar<T> = ?T"}}
+  "types":{"type":"type myBar<T> = ?T"}
 }
 
 types.js:20:7
@@ -1385,7 +1382,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type myOpaque<T> = [T, T]"}}
+  "types":{"type":"type myOpaque<T> = [T, T]"}
 }
 
 types.js:22:7
@@ -1404,7 +1401,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"class myClass"}}
+  "types":{"type":"class myClass"}
 }
 
 types.js:24:7
@@ -1423,7 +1420,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"interface myInterface"}}
+  "types":{"type":"interface myInterface"}
 }
 
 types.js:26:7
@@ -1442,7 +1439,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type ExportFoo = number"}}
+  "types":{"type":"type ExportFoo = number"}
 }
 
 types.js:28:7
@@ -1461,7 +1458,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type ExportBar<T> = ?T"}}
+  "types":{"type":"type ExportBar<T> = ?T"}
 }
 
 types.js:30:7
@@ -1480,7 +1477,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type ExportOpaque<T>"}}
+  "types":{"type":"type ExportOpaque<T>"}
 }
 
 types.js:32:7
@@ -1499,7 +1496,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"class ExportClass"}}
+  "types":{"type":"class ExportClass"}
 }
 
 types.js:34:7
@@ -1518,7 +1515,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"interface ExportInterface"}}
+  "types":{"type":"interface ExportInterface"}
 }
 
 types.js:38:7
@@ -1537,7 +1534,7 @@ Flags: --strip-root --pretty
   "path":"types.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"type exportValue = 1"}}
+  "types":{"type":"type exportValue = 1"}
 }
 
 react_api.js:3:10
@@ -1557,12 +1554,7 @@ Flags: --strip-root --pretty
   "reasons":[],
   "start":7,
   "types":{
-    "evaluated":{
-      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (this: This, child: T, index: number) => unknown, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (this: This, child: T, index: number) => U, thisArg: This): Array<U>, only<T>(children: ChildrenArray<T>): T, toArray<T>(children: ChildrenArray<T>): Array<T>, ...}"
-    },
-    "unevaluated":{
-      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (this: This, child: T, index: number) => unknown, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (this: This, child: NonNullable<T>, index: number) => U, thisArg: This): Array<NonNullable<U>>, only<T>(children: ChildrenArray<T>): NonNullable<T>, toArray<T>(children: ChildrenArray<T>): Array<NonNullable<T>>, ...}"
-    }
+    "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (this: This, child: T, index: number) => unknown, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (this: This, child: NonNullable<T>, index: number) => U, thisArg: This): Array<NonNullable<U>>, only<T>(children: ChildrenArray<T>): NonNullable<T>, toArray<T>(children: ChildrenArray<T>): Array<NonNullable<T>>, ...}"
   }
 }
 
@@ -1582,7 +1574,7 @@ Flags: --strip-root --pretty
   "path":"react_api.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"React$CloneElement"}}
+  "types":{"type":"React$CloneElement"}
 }
 
 react_api.js:7:10
@@ -1601,10 +1593,7 @@ Flags: --strip-root --pretty
   "path":"react_api.js",
   "reasons":[],
   "start":7,
-  "types":{
-    "evaluated":null,
-    "unevaluated":{"type":"class Component<Props, State = void>"}
-  }
+  "types":{"type":"class Component<Props, State = void>"}
 }
 
 react_api.js:9:10
@@ -1622,7 +1611,7 @@ Flags: --strip-root --pretty
   "path":"react_api.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
+  "types":{"type":"void"}
 }
 
 react_api.js:11:10
@@ -1642,10 +1631,7 @@ Flags: --strip-root --pretty
   "reasons":[],
   "start":7,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "type":"<T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => Context<T>"
-    }
+    "type":"<T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => Context<T>"
   }
 }
 
@@ -1665,7 +1651,7 @@ Flags: --strip-root --pretty
   "path":"react_api.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"React$CreateElement"}}
+  "types":{"type":"React$CreateElement"}
 }
 
 react_api.js:15:10
@@ -1684,7 +1670,7 @@ Flags: --strip-root --pretty
   "path":"react_api.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"<T>() => React$RefObject<T | null>"}}
+  "types":{"type":"<T>() => React$RefObject<T | null>"}
 }
 
 react_api.js:17:10
@@ -1704,10 +1690,7 @@ Flags: --strip-root --pretty
   "reasons":[],
   "start":7,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "type":"<Config extends {...}, Instance, Renders extends React$Node = React$Node>(render: (props: Config, ref: RefSetter<Instance>) => Renders) => component(...{...Config, readonly ref?: RefSetter<Instance>}) renders Renders"
-    }
+    "type":"<Config extends {...}, Instance, Renders extends React$Node = React$Node>(render: (props: Config, ref: RefSetter<Instance>) => Renders) => component(...{...Config, readonly ref?: RefSetter<Instance>}) renders Renders"
   }
 }
 
@@ -1728,10 +1711,7 @@ Flags: --strip-root --pretty
   "reasons":[],
   "start":7,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
-    }
+    "type":"hook <S>(initialState: (() => S) | S) => [S, ReactSetStateFunction<S>]"
   }
 }
 
@@ -1752,10 +1732,7 @@ Flags: --strip-root --pretty
   "reasons":[],
   "start":7,
   "types":{
-    "evaluated":null,
-    "unevaluated":{
-      "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
-    }
+    "type":"(hook <S, A>(reducer: (S, A) => S, initialState: S) => [S, Dispatch<A>]) & (hook <S, A>(reducer: (S, A) => S, initialState: S, init: void) => [S, Dispatch<A>]) & (hook <S, A, I>(reducer: (S, A) => S, initialArg: I, init: (I) => S) => [S, Dispatch<A>])"
   }
 }
 
@@ -1775,10 +1752,7 @@ Flags: --strip-root --pretty
   "path":"redeclare_import.js",
   "reasons":[],
   "start":1,
-  "types":{
-    "evaluated":null,
-    "unevaluated":{"type":"((x: number) => number) & ((x: string) => string)"}
-  }
+  "types":{"type":"((x: number) => number) & ((x: string) => string)"}
 }
 
 components.js:10:4
@@ -1797,7 +1771,7 @@ Flags: --strip-root --pretty
   "path":"components.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":{"type":"string"},"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 
 components.js:13:7
@@ -1816,7 +1790,7 @@ Flags: --strip-root --pretty
   "path":"components.js",
   "reasons":[],
   "start":6,
-  "types":{"evaluated":null,"unevaluated":{"type":"{baz: string}"}}
+  "types":{"type":"{baz: string}"}
 }
 
 components.js:16:6
@@ -1835,7 +1809,7 @@ Flags: --strip-root --pretty
   "path":"components.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 
 components.js:25:4
@@ -1854,10 +1828,7 @@ Flags: --strip-root --pretty
   "path":"components.js",
   "reasons":[],
   "start":3,
-  "types":{
-    "evaluated":{"type":"component Foo(bar: string, baz: string)"},
-    "unevaluated":{"type":"component Foo(baz: string, bar: string)"}
-  }
+  "types":{"type":"component Foo(baz: string, bar: string)"}
 }
 
 components.js:29:4
@@ -1876,7 +1847,7 @@ Flags: --strip-root --pretty
   "path":"components.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 
 components.js:31:4
@@ -1895,7 +1866,7 @@ Flags: --strip-root --pretty
   "path":"components.js",
   "reasons":[],
   "start":3,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 
 render_types.js:1:12

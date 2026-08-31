@@ -15,7 +15,6 @@ use flow_parser::loc_sig::LocSig;
 use crate::ty::ALocTy;
 use crate::ty::BotKind;
 use crate::ty::BuiltinOrSymbol;
-use crate::ty::ComparatorTy;
 use crate::ty::Decl;
 use crate::ty::DeclEnumDeclData;
 use crate::ty::DeclNominalComponentDeclData;
@@ -801,11 +800,6 @@ pub fn unmaybe_ty(t: ALocTy) -> ALocTy {
         }
         _ => t,
     }
-}
-
-pub fn elt_equal(elt1: &Elt<ALoc>, elt2: &Elt<ALoc>) -> bool {
-    let mut comparator = ComparatorTy::<()>::new();
-    comparator.compare_elt(&(), elt1, elt2) == 0
 }
 
 /// Utility useful for codemods/type insertion. When the element we infered is a

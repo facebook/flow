@@ -11,7 +11,7 @@ predicates.js - undefined: {
   "path":"predicates.js",
   "reasons":[],
   "start":10,
-  "types":{"evaluated":null,"unevaluated":{"type":"void"}}
+  "types":{"type":"void"}
 }
 predicates.js - Array: {
   "end":9,
@@ -26,7 +26,7 @@ predicates.js - Array: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"class Array<T>"}}
+  "types":{"type":"class Array<T>"}
 }
 predicates.js - isArray: {
   "end":17,
@@ -41,7 +41,7 @@ predicates.js - isArray: {
   "path":"predicates.js",
   "reasons":[],
   "start":11,
-  "types":{"evaluated":null,"unevaluated":{"type":"any (implicit)"}}
+  "types":{"type":"any (implicit)"}
 }
 predicates.js - y (refined obj): {
   "end":5,
@@ -56,7 +56,7 @@ predicates.js - y (refined obj): {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
+  "types":{"type":"{FOO: string}"}
 }
 predicates.js - if (y.FOO) obj: {
   "end":5,
@@ -71,7 +71,7 @@ predicates.js - if (y.FOO) obj: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
+  "types":{"type":"{FOO: string}"}
 }
 predicates.js - if (y.FOO) prop: {
   "end":9,
@@ -86,7 +86,7 @@ predicates.js - if (y.FOO) prop: {
   "path":"predicates.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 predicates.js - if (y.FOO == '') obj: {
   "end":5,
@@ -101,7 +101,7 @@ predicates.js - if (y.FOO == '') obj: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
+  "types":{"type":"{FOO: string}"}
 }
 predicates.js - if (y.FOO == '') prop: {
   "end":9,
@@ -116,7 +116,7 @@ predicates.js - if (y.FOO == '') prop: {
   "path":"predicates.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 predicates.js - if (y.FOO === '') obj: {
   "end":5,
@@ -131,7 +131,7 @@ predicates.js - if (y.FOO === '') obj: {
   "path":"predicates.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"{FOO: string}"}}
+  "types":{"type":"{FOO: string}"}
 }
 predicates.js - if (y.FOO === '') prop: {
   "end":9,
@@ -146,7 +146,7 @@ predicates.js - if (y.FOO === '') prop: {
   "path":"predicates.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 predicates.js - if (y.FOO == null) prop: {
   "end":9,
@@ -161,7 +161,7 @@ predicates.js - if (y.FOO == null) prop: {
   "path":"predicates.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 predicates.js - if (y.FOO == undefined) prop: {
   "end":9,
@@ -176,7 +176,7 @@ predicates.js - if (y.FOO == undefined) prop: {
   "path":"predicates.js",
   "reasons":[],
   "start":7,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 predicates.js - if (Array.isArray(y.FOO)): {
   "end":23,
@@ -191,7 +191,7 @@ predicates.js - if (Array.isArray(y.FOO)): {
   "path":"predicates.js",
   "reasons":[],
   "start":21,
-  "types":{"evaluated":null,"unevaluated":{"type":"string"}}
+  "types":{"type":"string"}
 }
 refinement.js:7:25 = {
   "end":26,
@@ -206,7 +206,7 @@ refinement.js:7:25 = {
   "path":"refinement.js",
   "reasons":[],
   "start":24,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }
 refinement.js:8:25 = {
   "end":26,
@@ -221,5 +221,5 @@ refinement.js:8:25 = {
   "path":"refinement.js",
   "reasons":[],
   "start":24,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }

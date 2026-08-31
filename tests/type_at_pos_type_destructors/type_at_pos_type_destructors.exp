@@ -57,7 +57,6 @@ conditional-types.js:21:6,21:7
 conditional-types.js:25:6
 Flags:
 type T7<T> = T extends infer T ? string : number
-= string
 
 'T' defined at conditional-types.js:25:29
 'T7' defined at conditional-types.js:25:5
@@ -83,7 +82,6 @@ conditional-types.js:34:5,34:5
 exact.js:4:6
 Flags:
 type B = $Exact<A>
-= {x: number}
 
 'A' defined at exact.js:3:5
 'B' defined at exact.js:4:5
@@ -93,7 +91,6 @@ exact.js:4:6,4:6
 exact.js:6:15
 Flags:
 $Exact<A>
-= {x: number}
 
 'A' defined at exact.js:3:5
 
@@ -102,7 +99,6 @@ exact.js:6:15,6:15
 exact.js:8:15
 Flags:
 $Exact<B>
-= {x: number}
 
 'B' defined at exact.js:4:5
 
@@ -111,7 +107,6 @@ exact.js:8:15,8:15
 exact.js:10:15
 Flags:
 $Exact<{p: number, ...}>
-= {p: number}
 exact.js:10:15,10:15
 
 exact.js:13:17
@@ -127,7 +122,6 @@ exact.js:15:7,15:7
 exact.js:19:15
 Flags:
 $Exact<$Exact<A>>
-= {x: number}
 
 'A' defined at exact.js:3:5
 
@@ -136,7 +130,6 @@ exact.js:19:15,19:15
 exact.js:23:15
 Flags:
 $Exact<Class<C>>
-= {name: string}
 
 'C' defined at exact.js:22:6
 
@@ -145,7 +138,6 @@ exact.js:23:15,23:15
 exact.js:26:6
 Flags:
 type P<X> = $Exact<{m: (x: X) => void, ...}>
-= {m: (x: X) => void}
 
 'P' defined at exact.js:26:5
 
@@ -154,7 +146,6 @@ exact.js:26:6,26:6
 exact.js:28:6
 Flags:
 type Q<X> = $Exact<P<X>>
-= {m: (x: X) => void}
 
 'P' defined at exact.js:26:5
 'Q' defined at exact.js:28:5
@@ -195,7 +186,6 @@ Flags:
   y: {m<T>(x: NonNullable<T>): T, ...},
   ...
 }
-= {x: {m<T>(x: T): T, ...}, y: {m<T>(x: T): T, ...}, ...}
 react-component.js:20:15,20:15
 
 spread.js:12:6
@@ -210,7 +200,6 @@ spread.js:12:6,12:10
 spread.js:14:6
 Flags:
 type C1 = {...C, o: O, ...}
-= {f: O, o: O, ...}
 
 'C' defined at spread.js:5:5
 'C1' defined at spread.js:14:5
@@ -221,7 +210,6 @@ spread.js:14:6,14:7
 spread.js:16:6
 Flags:
 type C2 = {o: O, ...C, ...}
-= {f: O, o: O, ...}
 
 'C' defined at spread.js:5:5
 'C2' defined at spread.js:16:5
@@ -232,7 +220,6 @@ spread.js:16:6,16:7
 spread.js:18:6
 Flags:
 type EC1 = {...$Exact<C>, o: O}
-= {f: O, o: O}
 
 'C' defined at spread.js:5:5
 'EC1' defined at spread.js:18:5
@@ -243,7 +230,6 @@ spread.js:18:6,18:8
 spread.js:20:6
 Flags:
 type EC2 = {o: O, ...C}
-= {f: O, o: O}
 
 'C' defined at spread.js:5:5
 'EC2' defined at spread.js:20:5
@@ -254,7 +240,6 @@ spread.js:20:6,20:8
 spread.js:22:6
 Flags:
 type Ctor1 = {...Ctor, o: O, ...}
-= {name: string, o: O, ...}
 
 'Ctor' defined at spread.js:8:5
 'Ctor1' defined at spread.js:22:5
@@ -265,7 +250,6 @@ spread.js:22:6,22:10
 spread.js:24:6
 Flags:
 type P1<T> = {...P<T>, o: O, ...}
-= {o: O, p: T, ...}
 
 'O' defined at spread.js:3:20
 'P' defined at spread.js:6:6
@@ -276,7 +260,6 @@ spread.js:24:6,24:7
 spread.js:26:6
 Flags:
 type Rec = {o: O, ...Rec, ...}
-= any (implicit)
 
 'O' defined at spread.js:3:20
 'Rec' defined at spread.js:26:5
@@ -286,7 +269,6 @@ spread.js:26:6,26:8
 spread.js:30:6
 Flags:
 type B1<T extends {...}, S extends {...}> = {...T, ...S, o: O, ...}
-= {...T, ...S, o: O, ...}
 
 'B1' defined at spread.js:30:5
 'O' defined at spread.js:3:20
@@ -296,7 +278,6 @@ spread.js:30:6,30:7
 spread.js:32:6
 Flags:
 type B2<T extends {...}> = {...T, o: O, ...}
-= {...T, o: O, ...}
 
 'B2' defined at spread.js:32:5
 'O' defined at spread.js:3:20
@@ -387,10 +368,8 @@ spread.js:50:6,50:9
 spread.js:52:6
 Flags:
 type PTA2<T extends {...}> = {...T, ...B2<T>, ...}
-= {...T, o: O, ...}
 
 'B2' defined at spread.js:32:5
-'O' defined at spread.js:3:20
 'PTA2' defined at spread.js:52:5
 
 spread.js:52:6,52:9
@@ -418,7 +397,6 @@ spread.js:56:6,56:8
 spread.js:58:6
 Flags:
 type ECtor1 = {...Ctor, o: O}
-= {name: string, o: O}
 
 'Ctor' defined at spread.js:8:5
 'ECtor1' defined at spread.js:58:5
@@ -429,7 +407,6 @@ spread.js:58:6,58:11
 spread.js:60:6
 Flags:
 type ECtor2 = {o: O, ...Ctor}
-= any (implicit)
 
 'Ctor' defined at spread.js:8:5
 'ECtor2' defined at spread.js:60:5
@@ -440,7 +417,6 @@ spread.js:60:6,60:11
 spread.js:62:6
 Flags:
 type PRec<X> = {o: O, ...PRec<X>, ...}
-= empty
 
 'O' defined at spread.js:3:20
 'PRec' defined at spread.js:62:5
@@ -460,7 +436,6 @@ spread.js:64:6,64:8
 spread.js:66:6
 Flags:
 type Nest1<T extends {...}> = {...T, ...}
-= {...T, ...}
 
 'Nest1' defined at spread.js:66:5
 
@@ -469,7 +444,6 @@ spread.js:66:6,66:10
 spread.js:68:6
 Flags:
 type Nest2<T extends {...}> = {...T, ...}
-= {...T, ...}
 
 'Nest2' defined at spread.js:68:5
 
@@ -478,7 +452,6 @@ spread.js:68:6,68:10
 spread.js:70:6
 Flags:
 type UNest<T extends {...}> = {...T, ...}
-= {...T, ...} | {...T, ...} | {...T, ...}
 
 'UNest' defined at spread.js:70:5
 
@@ -527,7 +500,6 @@ type-destructor.js:34:6,34:15
 type-destructor.js:37:6
 Flags:
 type ValuesPolyBound<X extends {f: number, ...}> = Values<X>
-= number
 
 'ValuesPolyBound' defined at type-destructor.js:37:5
 
@@ -536,7 +508,6 @@ type-destructor.js:37:6,37:20
 type-destructor.js:41:6
 Flags:
 type ReadOnlyObj = Readonly<{key: any, ...}>
-= {readonly key: any, ...}
 
 'ReadOnlyObj' defined at type-destructor.js:41:5
 
@@ -562,7 +533,6 @@ type-destructor.js:52:6,52:25
 type-destructor.js:54:6
 Flags:
 type ElementTypePropsPolyBounded<K extends "name" | "age"> = Props[K]
-= string | number
 
 'ElementTypePropsPolyBounded' defined at type-destructor.js:54:5
 'Props' defined at type-destructor.js:3:5
@@ -589,7 +559,6 @@ type-destructor.js:60:6,60:23
 type-destructor.js:62:6
 Flags:
 type NonMaybeTypeAbstract<X> = NonNullable<X>
-= X
 
 'NonMaybeTypeAbstract' defined at type-destructor.js:62:5
 
@@ -608,7 +577,6 @@ Flags:
 type MappedTypePoly<X, Y> = {
   [K in keyof {a: X, b?: Y, ...}]: Array<{a: X, b?: Y, ...}[K]>
 }
-= {a: Array<X>, b?: Array<void | Y>, ...}
 
 'MappedTypePoly' defined at type-destructor.js:69:5
 
@@ -645,7 +613,6 @@ type-destructor.js:92:6,92:29
 type-destructor.js:101:6
 Flags:
 type ConditionalIdPoly<R> = R extends infer N ? N : empty
-= R
 
 'ConditionalIdPoly' defined at type-destructor.js:101:5
 'N' defined at type-destructor.js:101:44
@@ -660,7 +627,6 @@ type ConditionalExtractPropTypePoly<P> = PropObjPoly<P> extends {
 }
   ? T
   : empty
-= P
 
 'ConditionalExtractPropTypePoly' defined at type-destructor.js:105:5
 'PropObjPoly' defined at type-destructor.js:104:5
@@ -699,7 +665,6 @@ Flags:
 type RecursiveTypeDestructorPoly<X> = {
   f: {h: RecursiveTypeDestructorPoly<X>["f"]} | X
 }
-= {f: {h: {h: {h: any} | X} | X} | X}
 
 'RecursiveTypeDestructorPoly' defined at type-destructor.js:126:5
 
@@ -708,7 +673,6 @@ type-destructor.js:126:6,126:32
 type-destructor.js:132:6
 Flags:
 type $Pick<O extends {...}, K extends keyof O> = NonNullable<O>[K]
-= empty
 
 '$Pick' defined at type-destructor.js:132:5
 
@@ -1515,6 +1479,5 @@ unions.js:12:6,12:13
 unions.js:15:30
 Flags:
 T["type"]
-= "a" | "b" | "c" | "d"
 unions.js:15:30,15:30
 

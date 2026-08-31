@@ -840,8 +840,7 @@ pub type ALocComponentProps = ComponentProps<ALoc>;
 pub type ALocGenericT = GenericT<ALoc>;
 
 pub struct TypeAtPosResult {
-    pub unevaluated: ALocElt,
-    pub evaluated: Option<ALocElt>,
+    pub ty: ALocElt,
     pub refs: Option<BTreeSet<Symbol<Loc>>>,
 }
 

@@ -231,5 +231,5 @@ type-at-pos:
   "path":"bar.js",
   "reasons":[],
   "start":5,
-  "types":{"evaluated":null,"unevaluated":{"type":"() => void"}}
+  "types":{"type":"() => void"}
 }

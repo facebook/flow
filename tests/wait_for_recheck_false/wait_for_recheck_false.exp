@@ -66,5 +66,5 @@ type-at-pos without --wait-for-recheck runs immediately:
   "path":"focused.js",
   "reasons":[],
   "start":17,
-  "types":{"evaluated":null,"unevaluated":{"type":"number"}}
+  "types":{"type":"number"}
 }

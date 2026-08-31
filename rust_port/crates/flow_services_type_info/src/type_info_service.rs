@@ -72,19 +72,6 @@ fn json_data_of_type(
     acc
 }
 
-fn json_data_of_type_opt(
-    key: &str,
-    str_opt: &Option<String>,
-    mut acc: Vec<(String, serde_json::Value)>,
-) -> Vec<(String, serde_json::Value)> {
-    let value = match str_opt {
-        Some(s) => serde_json::Value::String(s.clone()),
-        None => serde_json::Value::Null,
-    };
-    acc.push((key.to_string(), value));
-    acc
-}
-
 fn json_data_of_locs_opt(
     key: &str,
     locs: &[Loc],
@@ -190,14 +177,9 @@ pub fn type_at_pos<'a>(
             let json_data = json_data_of_loc(&loc, json_data);
             let json_data = json_data_of_type(
                 "type",
-                &ty_printer::string_of_elt(&tys.unevaluated, &opts),
+                &ty_printer::string_of_elt(&tys.ty, &opts),
                 json_data,
             );
-            let evaluated_str = tys
-                .evaluated
-                .as_ref()
-                .map(|e| ty_printer::string_of_elt(e, &opts));
-            let json_data = json_data_of_type_opt("type_evaluated", &evaluated_str, json_data);
             let json_data = json_data_of_locs_opt("refining_locs", &refining_locs, json_data);
             let invalidated_locs: Vec<Loc> = refinement_invalidated
                 .iter()
