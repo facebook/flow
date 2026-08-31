@@ -270,8 +270,8 @@ pub mod type_at_pos {
         cx: &'a Context<'cx>,
         target_loc: Loc,
         rev_bound_tparams: Vec<TypeParam>,
-        /// Name of the class, declared class or record being visited, so that a
-        /// member binder can qualify itself as `A.m`.
+        /// Name of the class, declared class, record or interface whose own body
+        /// is being visited, so that a member binder can qualify itself as `A.m`.
         enclosing_nominal: Option<FlowSmolStr>,
     }
 
@@ -325,6 +325,32 @@ pub mod type_at_pos {
                     owner,
                 })),
             })
+        }
+
+        /// The name and type of a property key, when the target is on the key
+        /// itself. Literal keys are named by their source text
+        /// (`(property) 'str-key': number`). Computed and private keys have no name
+        /// to print.
+        fn key_binder<'ast>(
+            &self,
+            key: &'ast ast::expression::object::Key<ALoc, (ALoc, Type)>,
+        ) -> Option<(&'ast ALoc, &'ast Type, FlowSmolStr)> {
+            use ast::expression::object::Key;
+            let (loc, t, name) = match key {
+                Key::Identifier(id) => {
+                    let (loc, t) = &id.loc;
+                    (loc, t, id.name.dupe())
+                }
+                Key::StringLiteral(((loc, t), lit)) => (loc, t, lit.raw.dupe()),
+                Key::NumberLiteral(((loc, t), lit)) => (loc, t, lit.raw.dupe()),
+                Key::BigIntLiteral(((loc, t), lit)) => (loc, t, lit.raw.dupe()),
+                Key::PrivateName(_) | Key::Computed(_) => return None,
+            };
+            if self.covers_target(loc) {
+                Some((loc, t, name))
+            } else {
+                None
+            }
         }
 
         /// The binder for a `Pattern`, when it binds a single name. Destructuring
@@ -487,6 +513,78 @@ pub mod type_at_pos {
         }
     }
 
+    /// Walks the members of a body that has a name to qualify them with — an
+    /// interface's or a declared class's. Routing them through `object_type`
+    /// instead would clear the qualifier, since a bare object type is anonymous.
+    fn named_object_body<'ast>(
+        searcher: &mut TypeAtPosSearcher<'_, '_>,
+        name: FlowSmolStr,
+        obj_type: &'ast ast::types::Object<ALoc, (ALoc, Type)>,
+    ) -> Result<(), FoundResult> {
+        searcher.in_nominal(Some(name), |this| {
+            for property in obj_type.properties.iter() {
+                this.object_type_property(property)?;
+            }
+            this.syntax_opt(obj_type.comments.as_ref())
+        })
+    }
+
+    /// `declare_class_default`'s walk, with the body's members qualified by the
+    /// class name. Keep the visit order in step with the parser's.
+    fn declare_class_members<'ast>(
+        searcher: &mut TypeAtPosSearcher<'_, '_>,
+        decl: &'ast ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
+    ) -> Result<(), FoundResult> {
+        let ast::statement::DeclareClass {
+            id,
+            tparams,
+            body,
+            extends,
+            mixins,
+            implements,
+            abstract_: _,
+            comments,
+        } = decl;
+        searcher.class_identifier(id)?;
+        if let Some(tparams) = tparams {
+            searcher.type_params(&TypeParamsContext::DeclareClass, tparams)?;
+        }
+        let (_loc, obj_type) = body;
+        named_object_body(searcher, id.name.dupe(), obj_type)?;
+        if let Some((_loc, ext)) = extends {
+            declare_class_extends(searcher, ext)?;
+        }
+        for (_loc, generic) in mixins.iter() {
+            searcher.generic_type(generic)?;
+        }
+        if let Some(implements) = implements {
+            searcher.class_implements(implements)?;
+        }
+        searcher.syntax_opt(comments.as_ref())?;
+        Ok(())
+    }
+
+    /// The `extends` clause of a declared class, which nests through
+    /// `extends mixin(Base)` calls. The parser's own walk of this is private.
+    fn declare_class_extends<'ast>(
+        searcher: &mut TypeAtPosSearcher<'_, '_>,
+        ext: &'ast ast::statement::DeclareClassExtends<ALoc, (ALoc, Type)>,
+    ) -> Result<(), FoundResult> {
+        match ext {
+            ast::statement::DeclareClassExtends::ExtendsIdent(generic) => {
+                searcher.generic_type(generic)?;
+            }
+            ast::statement::DeclareClassExtends::ExtendsCall {
+                callee: (_callee_loc, callee),
+                arg,
+            } => {
+                searcher.generic_type(callee)?;
+                declare_class_extends(searcher, &arg.1)?;
+            }
+        }
+        Ok(())
+    }
+
     impl<'ast, 'a, 'cx> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundResult>
         for TypeAtPosSearcher<'a, 'cx>
     {
@@ -605,18 +703,19 @@ pub mod type_at_pos {
             res
         }
 
+        /// Names the declared class for its own body only, the way `interface`
+        /// does. Its body is an object type, so the walk is spelled out here
+        /// rather than deferred to `declare_class_default`, which would route the
+        /// members through `object_type` and lose the name.
         fn declare_class(
             &mut self,
-            loc: &'ast ALoc,
+            _loc: &'ast ALoc,
             decl: &'ast ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
             let this_tparam = self.make_declare_class_this(decl);
             let originally_bound_tparams = self.rev_bound_tparams.clone();
             self.rev_bound_tparams.push(this_tparam);
-            let name = Some(decl.id.name.dupe());
-            let res = self.in_nominal(name, |this| {
-                ast_visitor::declare_class_default(this, loc, decl)
-            });
+            let res = declare_class_members(self, decl);
             self.rev_bound_tparams = originally_bound_tparams;
             res
         }
@@ -846,6 +945,90 @@ pub mod type_at_pos {
                 return self.find_binder(loc, t, BinderKind::Property, &id.name);
             }
             ast_visitor::class_property_default(self, prop)
+        }
+
+        /// An object literal is not the class it may be written inside, so its
+        /// members carry no qualifier.
+        fn object(
+            &mut self,
+            loc: &'ast ALoc,
+            expr: &'ast ast::expression::Object<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_nominal(None, |this| ast_visitor::object_default(this, loc, expr))
+        }
+
+        /// A member of an object literal.
+        fn object_property(
+            &mut self,
+            prop: &'ast ast::expression::object::NormalProperty<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            use ast::expression::object::NormalProperty;
+            let (key, kind) = match prop {
+                NormalProperty::Init { key, .. } => (key, BinderKind::Property),
+                NormalProperty::Method { key, .. } => (key, BinderKind::Method),
+                NormalProperty::Get { key, .. } => (key, BinderKind::Getter),
+                NormalProperty::Set { key, .. } => (key, BinderKind::Setter),
+            };
+            if let Some((loc, t, name)) = self.key_binder(key) {
+                return self.find_binder(loc, t, kind, &name);
+            }
+            ast_visitor::object_property_default(self, prop)
+        }
+
+        /// A member of an object type, an interface body or a declared class
+        /// body.
+        fn object_property_type(
+            &mut self,
+            prop: &'ast ast::types::object::NormalProperty<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            use ast::types::object::PropertyValue;
+            let kind = match (&prop.value, prop.method) {
+                (PropertyValue::Get(..), _) => BinderKind::Getter,
+                (PropertyValue::Set(..), _) => BinderKind::Setter,
+                (PropertyValue::Init(_), true) => BinderKind::Method,
+                (PropertyValue::Init(_), false) => BinderKind::Property,
+            };
+            if let Some((loc, t, name)) = self.key_binder(&prop.key) {
+                return self.find_binder(loc, t, kind, &name);
+            }
+            ast_visitor::object_property_type_default(self, prop)
+        }
+
+        /// An object type is anonymous, so its members are unqualified. The bodies
+        /// of a named interface and of a declared class do not come through here —
+        /// those walk their members directly, so that they keep the name.
+        fn object_type(
+            &mut self,
+            ot: &'ast ast::types::Object<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_nominal(None, |this| ast_visitor::object_type_default(this, ot))
+        }
+
+        /// Names the interface for its own body only: the extends clause and type
+        /// parameters are walked outside that scope.
+        fn interface(
+            &mut self,
+            _loc: &'ast ALoc,
+            iface: &'ast ast::statement::Interface<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let ast::statement::Interface {
+                id,
+                tparams,
+                extends,
+                body,
+                comments,
+            } = iface;
+            self.binding_type_identifier(id)?;
+            if let Some(tparams) = tparams {
+                self.type_params(&TypeParamsContext::Interface, tparams)?;
+            }
+            for (_loc, generic) in extends.iter() {
+                self.generic_type(generic)?;
+            }
+            let (_loc, obj_type) = body;
+            named_object_body(self, id.name.dupe(), obj_type)?;
+            self.syntax_opt(comments.as_ref())?;
+            Ok(())
         }
 
         fn function_param(

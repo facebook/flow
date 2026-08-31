@@ -192,6 +192,22 @@ assert_ok "$FLOW" type-at-pos FluxStore.js 5 3 --strip-root
 printf "constructor.js:4:7 (framed) = "
 assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root
 
+# declare_class_members.js
+printf "declare_class_members.js:8:3 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 8 3 --strip-root
+printf "declare_class_members.js:9:3 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 9 3 --strip-root
+printf "declare_class_members.js:10:7 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 10 7 --strip-root
+printf "declare_class_members.js:11:7 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 11 7 --strip-root
+printf "declare_class_members.js:12:10 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 12 10 --strip-root
+printf "declare_class_members.js:13:3 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 13 3 --strip-root
+printf "declare_class_members.js:13:12 (framed) = "
+assert_ok "$FLOW" type-at-pos declare_class_members.js 13 12 --strip-root
+
 # member_reference.js
 # A reference to a member is framed as the declaration it resolves to, which
 # takes expanding the receiver's type: the property's own type looks the same

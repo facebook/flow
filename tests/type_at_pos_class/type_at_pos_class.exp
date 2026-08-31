@@ -908,6 +908,20 @@ FluxStore.js:5:3 (framed) = (property) FluxStore.p: string
 FluxStore.js:5:3,5:3
 constructor.js:4:7 (framed) = (x: string) => void
 constructor.js:4:3,4:13
+declare_class_members.js:8:3 (framed) = (property) D.p: number
+declare_class_members.js:8:3,8:3
+declare_class_members.js:9:3 (framed) = (method) D.m(): void
+declare_class_members.js:9:3,9:3
+declare_class_members.js:10:7 (framed) = (getter) D.g: string
+declare_class_members.js:10:7,10:7
+declare_class_members.js:11:7 (framed) = (setter) D.s: number
+declare_class_members.js:11:7,11:7
+declare_class_members.js:12:10 (framed) = (property) D.sp: number
+declare_class_members.js:12:10,12:11
+declare_class_members.js:13:3 (framed) = (property) D.nested: {inner: number}
+declare_class_members.js:13:3,13:8
+declare_class_members.js:13:12 (framed) = (property) inner: number
+declare_class_members.js:13:12,13:16
 member_reference.js:14:3 (framed) = (property) A.p: number
 member_reference.js:14:3,14:3
 member_reference.js:15:3 (framed) = (method) A.m(): string

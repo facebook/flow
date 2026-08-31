@@ -151,3 +151,5 @@ assert_ok "$FLOW" type-at-pos optional_chaining.js 16 24 --strip-root --pretty
 queries_in_file "type-at-pos" "identifier.js"
 queries_in_file "type-at-pos" "reduce_recursive.js"
 queries_in_file "type-at-pos" "spread.js"
+
+queries_in_file "type-at-pos" "object_members.js"

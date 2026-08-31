@@ -39,12 +39,12 @@ interface.js:20:5,20:6
 
 interface.js:25:7
 Flags:
-string
+(getter) I.y: string
 interface.js:25:7,25:7
 
 interface.js:27:7
 Flags:
-number
+(setter) I.y: number
 interface.js:27:7,27:7
 
 interface.js:31:11
@@ -102,4 +102,44 @@ const cls: Class<Box<number>>
 'Box' defined at interface.js:49:10
 
 interface.js:62:15,62:17
+
+object_members.js:7:3
+Flags:
+(property) Named.p: number
+object_members.js:7:3,7:3
+
+object_members.js:9:3
+Flags:
+(method) Named.m(this: this): void
+object_members.js:9:3,9:3
+
+object_members.js:11:12
+Flags:
+(property) Named.rp: number
+object_members.js:11:12,11:13
+
+object_members.js:13:3
+Flags:
+(property) Named.op: void | number
+object_members.js:13:3,13:4
+
+object_members.js:15:12
+Flags:
+(property) inner: number
+object_members.js:15:12,15:16
+
+object_members.js:19:14
+Flags:
+(property) a: number
+object_members.js:19:14,19:14
+
+object_members.js:22:21
+Flags:
+(property) c: 1
+object_members.js:22:21,22:21
+
+object_members.js:26:40
+Flags:
+(property) outer: number
+object_members.js:26:40,26:44
 

@@ -1018,3 +1018,43 @@ Flags:
 const z: {...T, ...S, prop: number}
 spread.js:4:11,4:11
 
+object_members.js:7:3
+Flags:
+(property) p: number
+object_members.js:7:3,7:3
+
+object_members.js:9:3
+Flags:
+(method) m(): number
+object_members.js:9:3,9:3
+
+object_members.js:13:7
+Flags:
+(getter) g: number
+object_members.js:13:7,13:7
+
+object_members.js:17:7
+Flags:
+(setter) s: number
+object_members.js:17:7,17:7
+
+object_members.js:19:3
+Flags:
+(property) 'quoted': number
+object_members.js:19:3,19:10
+
+object_members.js:21:3
+Flags:
+(property) 3: string
+object_members.js:21:3,21:3
+
+object_members.js:23:7
+Flags:
+(property) spread: number
+object_members.js:23:7,23:12
+
+object_members.js:28:29
+Flags:
+(property) inner: 1
+object_members.js:28:29,28:33
+
