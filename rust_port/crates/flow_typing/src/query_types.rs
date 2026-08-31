@@ -36,6 +36,7 @@ use serde_json::Value as Json;
 
 use crate::ty_normalizer_flow;
 use crate::typed_ast_finder;
+use crate::typed_ast_finder::type_at_pos::Framing;
 use crate::typed_ast_finder::type_at_pos::TypeAtPosResult as FinderResult;
 
 pub enum QueryResult<A> {
@@ -69,8 +70,8 @@ pub fn dump_type_at_pos(
         match typed_ast_finder::find_type_at_pos_annotation(cx, typed_ast, loc)? {
             FinderResult::NoResult => None,
             FinderResult::HardcodedModuleResult(loc, _) => Some((loc, "ModuleT".to_string())),
-            FinderResult::TypeResult(loc, _, t) => {
-                Some((loc, flow_typing_debug::dump_t(Some(10), cx, &t)))
+            FinderResult::TypeResult { loc, type_, .. } => {
+                Some((loc, flow_typing_debug::dump_t(Some(10), cx, &type_)))
             }
         },
     )
@@ -102,14 +103,27 @@ pub fn type_at_pos_type<'a>(
                     exports: Arc::from([]),
                     default: None,
                 })));
-                QueryResult::Success(loc, TypeAtPosResult { ty, refs: None })
+                QueryResult::Success(
+                    loc,
+                    TypeAtPosResult {
+                        ty,
+                        refs: None,
+                        binder: None,
+                    },
+                )
             }
-            FinderResult::TypeResult(loc, toplevel_is_type_identifier_reference, t) => {
+            FinderResult::TypeResult {
+                loc,
+                is_type_identifier_reference: toplevel_is_type_identifier_reference,
+                type_: t,
+                framing,
+            } => {
                 let typed_ast_opt = if no_typed_ast_for_imports {
                     None
                 } else {
                     Some(typed_ast)
                 };
+                let binder = framing.map(|Framing::Binder(binder)| binder);
                 let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
                     expand_internal_types: false,
                     expand_enum_members: false,
@@ -142,7 +156,7 @@ pub fn type_at_pos_type<'a>(
                 match ty {
                     Ok(ty) => {
                         let refs = include_refs.map(|loc_of_aloc| symbols_of_elt(loc_of_aloc, &ty));
-                        QueryResult::Success(loc, TypeAtPosResult { ty, refs })
+                        QueryResult::Success(loc, TypeAtPosResult { ty, refs, binder })
                     }
                     Err(err) => result_of_normalizer_error(loc, t, err),
                 }

@@ -648,7 +648,7 @@ declare_class.js:3:15 = class C
 'C' defined at declare_class.js:3:14
 
 declare_class.js:3:15,3:15
-declare_class.js:4:5 = {C: typeof C}
+declare_class.js:4:5 = var c: {C: typeof C}
 
 'C' defined at declare_class.js:3:14
 
@@ -658,7 +658,7 @@ declare_class.js:6:15 = class P<X>
 'P' defined at declare_class.js:6:14
 
 declare_class.js:6:15,6:15
-declare_class.js:7:5 = {P: typeof P}
+declare_class.js:7:5 = var p: {P: typeof P}
 
 'P' defined at declare_class.js:6:14
 
@@ -896,3 +896,15 @@ function_this.js:8:1 {
   "start":1,
   "types":{"type":"(x: string) => void"}
 }
+class-0.js:4:3 (framed) = (method) A.m(this: this): void
+class-0.js:4:3,4:3
+class-statics.js:4:10 (framed) = (method) A.m(this: Class<this>): void
+class-statics.js:4:10,4:10
+class-getters-setters.js:6:7 (framed) = (getter) A.x: string
+class-getters-setters.js:6:7,6:7
+class-getters-setters.js:9:7 (framed) = (setter) A.x: ?string
+class-getters-setters.js:9:7,9:7
+FluxStore.js:5:3 (framed) = (property) FluxStore.p: string
+FluxStore.js:5:3,5:3
+constructor.js:4:7 (framed) = (x: string) => void
+constructor.js:4:3,4:13

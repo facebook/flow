@@ -68,12 +68,14 @@ fn normalize_type(
     match ty_normalizer_flow::from_type(&genv, t) {
         Ok(elt) => {
             let loc_of_aloc = |aloc: &ALoc| transaction.loc_of_aloc(aloc);
-            let refs: BTreeSet<Symbol<Loc>> = ty::symbols_of_elt(loc_of_aloc, &elt);
-            let refs_some = Some(refs);
+            let symbols: BTreeSet<Symbol<Loc>> = ty::symbols_of_elt(loc_of_aloc, &elt);
             let opts = PrinterOptions::default();
             let (type_str, refs) = ty_printer::string_of_type_at_pos_result::<Loc>(
-                &elt,
-                &refs_some,
+                ty_printer::TypeAtPosPrint {
+                    ty: &elt,
+                    refs: Some(&symbols),
+                    binder: None,
+                },
                 &loc_of_aloc,
                 &opts,
             );

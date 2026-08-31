@@ -1798,16 +1798,35 @@ pub fn string_of_symbol_set<L: Clone + Ord>(
         .collect()
 }
 
+/// What to print for a `type-at-pos` hit. `binder` is set only when the target is
+/// a value binding's own name, in which case the type is framed as a declaration.
+pub struct TypeAtPosPrint<'a, R> {
+    pub ty: &'a Elt<ALoc>,
+    pub refs: Option<&'a std::collections::BTreeSet<Symbol<R>>>,
+    pub binder: Option<&'a Binder>,
+}
+
 pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
-    ty: &Elt<ALoc>,
-    refs: &Option<std::collections::BTreeSet<Symbol<R>>>,
+    result: TypeAtPosPrint<'_, R>,
     loc_of_aloc: &dyn Fn(&ALoc) -> R,
     opts: &PrinterOptions,
 ) -> (String, Option<Vec<(String, R)>>) {
-    let (layout, printed_symbols, truncated) = layout_of_elt_with_state(opts, ty, true);
+    let mut state = PrintState {
+        remaining: opts.size,
+        printed_symbols: Some(Vec::new()),
+        truncated: false,
+    };
+    let layout = match (result.binder, result.ty) {
+        // A `Decl` already prints a declaration of its own (`class A`, `type X = …`),
+        // so framing it again would double the head.
+        (Some(binder), Elt::Type(t)) => layout_of_binder(opts, binder, t, &mut state),
+        (_, Elt::Type(t)) => type_(opts, 0, t, &mut state),
+        (_, Elt::Decl(d)) => decl(opts, 0, d, &mut state),
+    };
+    let printed_symbols = state.printed_symbols.unwrap_or_default();
     let type_str = pretty_printer::print(true, &layout).contents();
-    let refs = refs.as_ref().map(|refs| {
-        if !truncated {
+    let refs = result.refs.map(|refs| {
+        if !state.truncated {
             return string_of_symbol_set(refs);
         }
 
@@ -1819,4 +1838,56 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
         string_of_symbol_set(&visible_refs)
     });
     (type_str, refs)
+}
+
+/// The declaration head hover shows before the type. Kinds with no JavaScript
+/// keyword of their own are parenthesized.
+fn layout_of_binder_head(binder: &Binder) -> LayoutNode {
+    let prefix = match binder.kind {
+        BinderKind::Var => "var",
+        BinderKind::Let => "let",
+        BinderKind::Const => "const",
+        BinderKind::Function => "function",
+        BinderKind::Method => "(method)",
+        BinderKind::Getter => "(getter)",
+        BinderKind::Setter => "(setter)",
+        BinderKind::Property => "(property)",
+        BinderKind::EnumMember => "(enum member)",
+        BinderKind::Parameter => "(parameter)",
+    };
+    let name = match &binder.owner {
+        Some(owner) => format!("{}.{}", owner, binder.name),
+        None => binder.name.to_string(),
+    };
+    layout::fuse(vec![
+        LayoutNode::atom(prefix.to_string()),
+        layout::space(),
+        LayoutNode::atom(name),
+    ])
+}
+
+/// Frames `t` as the declaration of `binder`: `const a: A`. A callable bound by
+/// `function` or a method is spliced into a signature (`function f(): void`)
+/// rather than annotated with an arrow type.
+fn layout_of_binder(
+    opts: &PrinterOptions,
+    binder: &Binder,
+    t: &Ty<ALoc>,
+    state: &mut PrintState<ALoc>,
+) -> LayoutNode {
+    let head = layout_of_binder_head(binder);
+    match t {
+        Ty::Fun(func) if matches!(binder.kind, BinderKind::Function | BinderKind::Method) => {
+            layout::fuse(vec![
+                head,
+                type_function(opts, 0, &LayoutNode::atom(":".to_string()), func, state),
+            ])
+        }
+        _ => layout::fuse(vec![
+            head,
+            LayoutNode::atom(":".to_string()),
+            layout::pretty_space(),
+            type_(opts, 0, t, state),
+        ]),
+    }
 }

@@ -839,9 +839,35 @@ pub type ALocComponentProps = ComponentProps<ALoc>;
 
 pub type ALocGenericT = GenericT<ALoc>;
 
+/// The syntactic form that introduced a value binding, when the hover target is
+/// the binding's own name. Hover uses it to print a declaration (`const a: A`,
+/// `(method) A.m(): void`) where it would otherwise print a bare type.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq)]
+pub enum BinderKind {
+    Var,
+    Let,
+    Const,
+    Function,
+    Method,
+    Getter,
+    Setter,
+    Property,
+    EnumMember,
+    Parameter,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq)]
+pub struct Binder {
+    pub kind: BinderKind,
+    pub name: FlowSmolStr,
+    /// Enclosing class or record, for members: the `A` in `(method) A.m()`.
+    pub owner: Option<FlowSmolStr>,
+}
+
 pub struct TypeAtPosResult {
     pub ty: ALocElt,
     pub refs: Option<BTreeSet<Symbol<Loc>>>,
+    pub binder: Option<Binder>,
 }
 
 /* Type destructors */

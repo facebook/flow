@@ -1,6 +1,6 @@
 dro.js:2:9 = (compareFn?: (a: number, b: number) => number) => Array<number>
 dro.js:2:9,2:12
-lazy_ref.js:14:9 = {
+lazy_ref.js:14:9 = const x: {
   default: component(
     ...{...empty, readonly ref?: RefSetter<{moo(x: string): void}>}
   ) renders null
@@ -9,7 +9,7 @@ lazy_ref.js:14:9 = {
 'RefSetter' defined at (lib) react.js:1361:9
 
 lazy_ref.js:14:9,14:9
-lazy_ref.js:19:9 = Promise<
+lazy_ref.js:19:9 = const x: Promise<
   {
     readonly default: (x: Props) => ExactReactElement_DEPRECATED<
       (x: Props) => Node,
@@ -147,7 +147,7 @@ React$CreateElement
 
 react.js:4:7,4:19
 
-react_abstract_component.js:3:15 = component(...any)
+react_abstract_component.js:3:15 = (parameter) x: component(...any)
 react_abstract_component.js:3:15,3:15
 react_abstract_component.js:8:15 = type RendersFoo = renders Foo
 

@@ -32,6 +32,7 @@ mod tests {
     use crate::ty::Ty;
     use crate::ty::TypeParam;
     use crate::ty_printer::PrinterOptions;
+    use crate::ty_printer::TypeAtPosPrint;
     use crate::ty_printer::string_of_t;
     use crate::ty_printer::string_of_type_at_pos_result;
     use crate::ty_symbol::Provenance;
@@ -282,8 +283,15 @@ mod tests {
             ..test_options()
         };
 
-        let (type_str, refs) =
-            string_of_type_at_pos_result(&obj, &Some(refs), &|_| Loc::none(), &opts);
+        let (type_str, refs) = string_of_type_at_pos_result(
+            TypeAtPosPrint {
+                ty: &obj,
+                refs: Some(&refs),
+                binder: None,
+            },
+            &|_| Loc::none(),
+            &opts,
+        );
 
         assert_eq!(type_str, "{visible: Visible, ... 1 more property ...}");
         assert_eq!(refs, Some(vec![("Visible".to_string(), Loc::none())]));

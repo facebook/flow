@@ -167,7 +167,6 @@ assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root --pretty
 # this.js
 printf "this.js:5:13 "
 assert_ok "$FLOW" type-at-pos this.js 5 13 --strip-root
-
 # function_this.js
 printf "function_this.js:2:1 "
 assert_ok "$FLOW" type-at-pos function_this.js 2 1 --strip-root --pretty
@@ -175,3 +174,20 @@ printf "function_this.js:5:1 "
 assert_ok "$FLOW" type-at-pos function_this.js 5 1 --strip-root --pretty
 printf "function_this.js:8:1 "
 assert_ok "$FLOW" type-at-pos function_this.js 8 1 --strip-root --pretty
+
+# Declaration framing. The queries above ask for `--pretty`, whose JSON payload
+# is a bare type by design, so these repeat a few member positions in friendly
+# mode where the declaration head is rendered.
+printf "class-0.js:4:3 (framed) = "
+assert_ok "$FLOW" type-at-pos class-0.js 4 3 --strip-root
+printf "class-statics.js:4:10 (framed) = "
+assert_ok "$FLOW" type-at-pos class-statics.js 4 10 --strip-root
+printf "class-getters-setters.js:6:7 (framed) = "
+assert_ok "$FLOW" type-at-pos class-getters-setters.js 6 7 --strip-root
+printf "class-getters-setters.js:9:7 (framed) = "
+assert_ok "$FLOW" type-at-pos class-getters-setters.js 9 7 --strip-root
+printf "FluxStore.js:5:3 (framed) = "
+assert_ok "$FLOW" type-at-pos FluxStore.js 5 3 --strip-root
+# A constructor is reported as its class, so it gets no member framing.
+printf "constructor.js:4:7 (framed) = "
+assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root

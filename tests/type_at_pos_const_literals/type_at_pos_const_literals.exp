@@ -1,76 +1,76 @@
 file.js:5:14
 Flags:
-{readonly f: 1, m(): void}
+const obj1: {readonly f: 1, m(): void}
 file.js:5:14,5:17
 
 file.js:7:14
 Flags:
-{readonly f: 1, m(): void}
+const obj2: {readonly f: 1, m(): void}
 file.js:7:14,7:17
 
 file.js:9:14
 Flags:
-{readonly f: {p: number}}
+const obj3: {readonly f: {p: number}}
 file.js:9:14,9:17
 
 file.js:11:14
 Flags:
-{readonly f: {readonly g: 1}}
+const obj4: {readonly f: {readonly g: 1}}
 file.js:11:14,11:17
 
 file.js:13:14
 Flags:
-{readonly p: number}
+const obj5: {readonly p: number}
 file.js:13:14,13:17
 
 file.js:15:14
 Flags:
-{readonly [string]: string}
+const obj6: {readonly [string]: string}
 file.js:15:14,15:17
 
 file.js:17:14
 Flags:
-{m(): void}
+const obj7: {m(): void}
 file.js:17:14,17:17
 
 file.js:24:14
 Flags:
-Readonly<[1, 2, 3]>
+const arr1: Readonly<[1, 2, 3]>
 file.js:24:14,24:17
 
 file.js:26:14
 Flags:
-Readonly<[number]>
+const arr2: Readonly<[number]>
 file.js:26:14,26:17
 
 file.js:28:7
 Flags:
-Readonly<[1, 2, 3]>
+const arr3: Readonly<[1, 2, 3]>
 file.js:28:7,28:10
 
 file.js:30:7
 Flags:
-Readonly<[1, 2, 3]>
+const arr4: Readonly<[1, 2, 3]>
 file.js:30:7,30:10
 
 file.js:32:7
 Flags:
-ReadonlyArray<number>
+const arr5: ReadonlyArray<number>
 file.js:32:7,32:10
 
 file.js:34:14
 Flags:
-Readonly<[{readonly f: 1}]>
+const arr6: Readonly<[{readonly f: 1}]>
 file.js:34:14,34:17
 
 file.js:36:7
 Flags:
-Readonly<[1, 2, 3]>
+const arr7: Readonly<[1, 2, 3]>
 file.js:36:7,36:10
 
 file.js:38:14
 Flags:
-Readonly<[]>
+const arr9: Readonly<[]>
 file.js:38:14,38:17
 
 import.js:2:5

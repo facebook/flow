@@ -1,6 +1,6 @@
 included.js:1:8
 Flags:
-3
+const fooBar: 3
 included.js:1:7,1:12
 
 excluded.js:1:8

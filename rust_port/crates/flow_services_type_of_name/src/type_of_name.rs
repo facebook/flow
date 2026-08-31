@@ -389,8 +389,11 @@ fn format_ty_elt_response(
     let refs = ty::symbols_of_elt(|aloc| reader.loc_of_aloc(aloc), &ty_elt);
     let opts = PrinterOptions::default();
     let (type_str, refs) = ty_printer::string_of_type_at_pos_result(
-        &ty_elt,
-        &Some(refs),
+        ty_printer::TypeAtPosPrint {
+            ty: &ty_elt,
+            refs: Some(&refs),
+            binder: None,
+        },
         &|aloc| reader.loc_of_aloc(aloc),
         &opts,
     );

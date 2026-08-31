@@ -76,7 +76,7 @@ conditional-types.js:29:6,29:7
 
 conditional-types.js:34:5
 Flags:
-string | number
+let x: string | number
 conditional-types.js:34:5,34:5
 
 exact.js:4:6
@@ -90,7 +90,7 @@ exact.js:4:6,4:6
 
 exact.js:6:15
 Flags:
-$Exact<A>
+const a: $Exact<A>
 
 'A' defined at exact.js:3:5
 
@@ -98,7 +98,7 @@ exact.js:6:15,6:15
 
 exact.js:8:15
 Flags:
-$Exact<B>
+const b: $Exact<B>
 
 'B' defined at exact.js:4:5
 
@@ -106,22 +106,22 @@ exact.js:8:15,8:15
 
 exact.js:10:15
 Flags:
-$Exact<{p: number, ...}>
+const c: $Exact<{p: number, ...}>
 exact.js:10:15,10:15
 
 exact.js:13:17
 Flags:
-$Exact<X>
+(parameter) x: $Exact<X>
 exact.js:13:17,13:17
 
 exact.js:15:7
 Flags:
-$Exact<X>
+var y: $Exact<X>
 exact.js:15:7,15:7
 
 exact.js:19:15
 Flags:
-$Exact<$Exact<A>>
+const e: $Exact<$Exact<A>>
 
 'A' defined at exact.js:3:5
 
@@ -129,7 +129,7 @@ exact.js:19:15,19:15
 
 exact.js:23:15
 Flags:
-$Exact<Class<C>>
+const f: $Exact<Class<C>>
 
 'C' defined at exact.js:22:6
 
@@ -181,7 +181,7 @@ react-component.js:14:6,14:12
 
 react-component.js:20:15
 Flags:
-{
+const b: {
   x: {m<T>(x: NonNullable<T>): T, ...},
   y: {m<T>(x: NonNullable<T>): T, ...},
   ...
@@ -644,12 +644,12 @@ type-destructor.js:109:6,109:13
 
 type-destructor.js:113:18
 Flags:
-<T extends {...}, K extends T>() => T[K]
+function right_order<T extends {...}, K extends T>(): T[K]
 type-destructor.js:113:18,113:28
 
 type-destructor.js:115:18
 Flags:
-<K extends T, T extends {...}>() => T[K]
+function wrong_order<K extends T, T extends {...}>(): T[K]
 type-destructor.js:115:18,115:28
 
 type-destructor.js:119:6
@@ -688,7 +688,7 @@ type-destructor.js:137:14,137:14
 
 type-destructor.js:155:9
 Flags:
-{prop: R, type: "blah", ...}
+const spread: {prop: R, type: "blah", ...}
 
 'R' defined at type-destructor.js:147:7
 
@@ -1410,6 +1410,6 @@ unions.js:12:6,12:13
 
 unions.js:15:30
 Flags:
-T["type"]
+(parameter) x: T["type"]
 unions.js:15:30,15:30
 

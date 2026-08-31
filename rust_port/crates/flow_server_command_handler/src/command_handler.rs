@@ -1607,8 +1607,11 @@ fn infer_type_to_response(
     } else {
         server_prot::response::infer_type::Payload::Friendly(tys.map(|r| {
             let (type_str, refs) = flow_common_ty::ty_printer::string_of_type_at_pos_result(
-                &r.ty,
-                &r.refs,
+                flow_common_ty::ty_printer::TypeAtPosPrint {
+                    ty: &r.ty,
+                    refs: r.refs.as_ref(),
+                    binder: r.binder.as_ref(),
+                },
                 loc_of_aloc,
                 &printer_opts,
             );
@@ -2008,8 +2011,14 @@ fn inlay_hint(
                         let tys = tys.map(|r| {
                             let (type_str, refs) =
                                 flow_common_ty::ty_printer::string_of_type_at_pos_result(
-                                    &r.ty,
-                                    &r.refs,
+                                    flow_common_ty::ty_printer::TypeAtPosPrint {
+                                        ty: &r.ty,
+                                        refs: r.refs.as_ref(),
+                                        // An inlay hint renders as the annotation
+                                        // that would be inserted after the name,
+                                        // so it must stay a bare type.
+                                        binder: None,
+                                    },
                                     &loc_of_aloc,
                                     &PrinterOptions {
                                         size: MAX_TYPE_AT_POS_PRINT_SIZE,

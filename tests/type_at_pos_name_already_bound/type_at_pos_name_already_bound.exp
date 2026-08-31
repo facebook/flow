@@ -1,5 +1,5 @@
 file.js:4:7
 Flags:
-empty
+const x: empty
 file.js:4:7,4:7
 

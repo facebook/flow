@@ -892,12 +892,12 @@ object.js:35:1 = {
 }
 object.js:37:7
 Flags:
-{readonly A: "a", readonly B: "b"}
+const frozenObject1: {readonly A: "a", readonly B: "b"}
 object.js:37:7,37:19
 
 object.js:40:7
 Flags:
-{readonly A: "a", readonly B: {C: string}}
+const frozenObject2: {readonly A: "a", readonly B: {C: string}}
 object.js:40:7,40:19
 
 object.js:43:5
@@ -1007,7 +1007,7 @@ identifier.js:14:4,14:9
 
 reduce_recursive.js:16:25
 Flags:
-Obj
+(parameter) row: Obj
 
 'Obj' defined at reduce_recursive.js:6:12
 
@@ -1015,6 +1015,6 @@ reduce_recursive.js:16:25,16:27
 
 spread.js:4:11
 Flags:
-{...T, ...S, prop: number}
+const z: {...T, ...S, prop: number}
 spread.js:4:11,4:11
 

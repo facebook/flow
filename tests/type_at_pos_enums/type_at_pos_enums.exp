@@ -49,7 +49,7 @@ test.js:18:14,18:14
 
 test.js:20:15
 Flags:
-F
+const f: F
 
 'F' defined at export.js:3:12
 
@@ -73,7 +73,7 @@ test.js:25:13,25:13
 
 test.js:27:15
 Flags:
-G
+const g: G
 
 'G' defined at export.js:8:20
 
@@ -97,7 +97,7 @@ test.js:32:8,32:8
 
 test.js:34:15
 Flags:
-G
+const h: G
 
 'G' defined at export.js:8:20
 
@@ -122,7 +122,7 @@ test.js:39:14,39:18
 
 test.js:41:15
 Flags:
-FType
+const i: FType
 
 'FType' defined at export.js:13:12
 
@@ -139,7 +139,7 @@ test.js:43:19,43:23
 
 test.js:46:7
 Flags:
-E
+const j: E
 
 'E' defined at test.js:3:5
 
@@ -147,7 +147,7 @@ test.js:46:7,46:7
 
 test.js:49:7
 Flags:
-typeof E | 1
+const k: typeof E | 1
 
 'E' defined at test.js:3:5
 

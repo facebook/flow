@@ -1,16 +1,16 @@
 nothing
 with file
 with file and config
-number
+let y: number
 no-config/d2.js:3:5,3:5
 with bad root directory
-number
+let y: number
 -:3:5,3:5
 with bad root directory, and file
-number
+let y: number
 no-config/d2.js:3:5,3:5
 with bad root directory, and file
-number
+let y: number
 no-config/d2.js:3:5,3:5
 with file batch coverage
 

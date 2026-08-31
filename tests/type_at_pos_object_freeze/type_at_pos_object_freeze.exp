@@ -1,46 +1,51 @@
 export_const.js:3:14
 Flags:
-{readonly f: "a"}
+const obj1: {readonly f: "a"}
 export_const.js:3:14,3:17
 
 export_const.js:5:14
 Flags:
-{readonly f: {g: string}}
+const obj2: {readonly f: {g: string}}
 export_const.js:5:14,5:17
 
 export_const.js:7:14
 Flags:
-{readonly f: "a"}
+const obj3: {readonly f: "a"}
 export_const.js:7:14,7:17
 
 export_const.js:9:14
 Flags:
-{readonly f: "a"}
+const obj4: {readonly f: "a"}
 export_const.js:9:14,9:17
 
 export_const.js:11:14
 Flags:
-{readonly a: "a", readonly b: "b", readonly c: {d: string}, readonly e: "e"}
+const obj5: {
+  readonly a: "a",
+  readonly b: "b",
+  readonly c: {d: string},
+  readonly e: "e"
+}
 export_const.js:11:14,11:17
 
 export_const.js:13:14
 Flags:
-{prop: {readonly f: "a"}}
+const obj6: {prop: {readonly f: "a"}}
 export_const.js:13:14,13:17
 
 export_const.js:16:14
 Flags:
-{readonly f: string}
+const obj7: {readonly f: string}
 export_const.js:16:14,16:17
 
 export_const.js:18:14
 Flags:
-{readonly f: 1, readonly g: 1, readonly h: 1}
+const obj8: {readonly f: 1, readonly g: 1, readonly h: 1}
 export_const.js:18:14,18:17
 
 export_const.js:20:14
 Flags:
-{readonly f: -1}
+const obj9: {readonly f: -1}
 export_const.js:20:14,20:17
 
 file.js:4:5

@@ -1,6 +1,6 @@
 test.js:3:5
 Flags:
-number
+var x: number
 test.js:3:5,3:5
 
 test.js:5:3
@@ -25,7 +25,7 @@ test.js:14:3,14:3
 
 test.js:16:5
 Flags:
-number
+var z: number
 test.js:16:5,16:5
 
 test.js:18:3

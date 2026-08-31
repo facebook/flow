@@ -195,6 +195,8 @@ pub mod type_at_pos {
     use flow_common::reason::Name;
     use flow_common::reason::VirtualReasonDesc;
     use flow_common::subst_name::SubstName;
+    use flow_common_ty::ty::Binder;
+    use flow_common_ty::ty::BinderKind;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_parser::ast;
     use flow_parser::ast_visitor;
@@ -214,14 +216,33 @@ pub mod type_at_pos {
 
     use super::mk_bound_t;
 
+    /// How the declaration to frame a hover as is determined. A binding site is
+    /// resolved by the finder, which is walking the declaration that introduced the
+    /// name; a reference carries no such context, so the finder only records what
+    /// kind of reference it is and leaves the lookup to the caller.
+    pub enum Framing {
+        /// The target is a binding's own name.
+        Binder(Binder),
+    }
+
     pub enum TypeAtPosResult {
-        TypeResult(Loc, bool, Type),
+        TypeResult {
+            loc: Loc,
+            is_type_identifier_reference: bool,
+            type_: Type,
+            framing: Option<Framing>,
+        },
         HardcodedModuleResult(Loc, FlowSmolStr),
         NoResult,
     }
 
     enum FoundResult {
-        FoundType(ALoc, bool, Type),
+        FoundType {
+            loc: ALoc,
+            is_type_identifier_reference: bool,
+            type_: Type,
+            framing: Option<Framing>,
+        },
         FoundHardcodedModule(ALoc, FlowSmolStr),
         Canceled(flow_utils_concurrency::job_error::JobError),
     }
@@ -242,6 +263,9 @@ pub mod type_at_pos {
         cx: &'a Context<'cx>,
         target_loc: Loc,
         rev_bound_tparams: Vec<TypeParam>,
+        /// Name of the class, declared class or record being visited, so that a
+        /// member binder can qualify itself as `A.m`.
+        enclosing_nominal: Option<FlowSmolStr>,
     }
 
     impl<'a, 'cx> TypeAtPosSearcher<'a, 'cx> {
@@ -259,11 +283,108 @@ pub mod type_at_pos {
             t: &Type,
             is_type_identifier: bool,
         ) -> Result<(), FoundResult> {
-            Err(FoundResult::FoundType(
-                loc.dupe(),
-                is_type_identifier,
-                t.dupe(),
-            ))
+            Err(FoundResult::FoundType {
+                loc: loc.dupe(),
+                is_type_identifier_reference: is_type_identifier,
+                type_: t.dupe(),
+                framing: None,
+            })
+        }
+
+        /// Like `find_loc`, but records that the target is the declaration site of
+        /// `binder` rather than a reference to it.
+        fn find_binder(
+            &self,
+            loc: &ALoc,
+            t: &Type,
+            kind: BinderKind,
+            name: &FlowSmolStr,
+        ) -> Result<(), FoundResult> {
+            let owner = match kind {
+                BinderKind::Method
+                | BinderKind::Getter
+                | BinderKind::Setter
+                | BinderKind::Property => self.enclosing_nominal.dupe(),
+                _ => None,
+            };
+            Err(FoundResult::FoundType {
+                loc: loc.dupe(),
+                is_type_identifier_reference: false,
+                type_: t.dupe(),
+                framing: Some(Framing::Binder(Binder {
+                    kind,
+                    name: name.dupe(),
+                    owner,
+                })),
+            })
+        }
+
+        /// The binder for a `Pattern`, when it binds a single name. Destructuring
+        /// patterns bind through nested `pattern_identifier`s that this does not
+        /// reach; those reach `identifier` instead and are framed by resolving the
+        /// name to its binding.
+        fn simple_pattern_binder<'ast>(
+            pattern: &'ast ast::pattern::Pattern<ALoc, (ALoc, Type)>,
+        ) -> Option<&'ast ast::Identifier<ALoc, (ALoc, Type)>> {
+            match pattern {
+                ast::pattern::Pattern::Identifier { inner, .. } => Some(&inner.name),
+                _ => None,
+            }
+        }
+
+        fn binder_kind_of_variable_kind(kind: ast::VariableKind) -> BinderKind {
+            match kind {
+                ast::VariableKind::Var => BinderKind::Var,
+                ast::VariableKind::Let => BinderKind::Let,
+                ast::VariableKind::Const => BinderKind::Const,
+            }
+        }
+
+        /// The name a declarator binds, shared by the `declare` form and the
+        /// ordinary one.
+        fn variable_binder(
+            &self,
+            kind: ast::VariableKind,
+            declarator: &ast::statement::variable::Declarator<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let Some(id) = Self::simple_pattern_binder(&declarator.id)
+                && let (loc, t) = &id.loc
+                && self.covers_target(loc)
+            {
+                return self.find_binder(
+                    loc,
+                    t,
+                    Self::binder_kind_of_variable_kind(kind),
+                    &id.name,
+                );
+            }
+            Ok(())
+        }
+
+        /// The name a function declaration binds. A function expression has no
+        /// binding of its own, so its name is left to `identifier`.
+        fn function_binder(
+            &self,
+            id: Option<&ast::Identifier<ALoc, (ALoc, Type)>>,
+        ) -> Result<(), FoundResult> {
+            let Some(id) = id else { return Ok(()) };
+            let (loc, t) = &id.loc;
+            if self.covers_target(loc) {
+                return self.find_binder(loc, t, BinderKind::Function, &id.name);
+            }
+            Ok(())
+        }
+
+        /// Visits `f` with `enclosing_nominal` set, restoring it afterwards.
+        fn in_nominal<R>(
+            &mut self,
+            name: Option<FlowSmolStr>,
+            f: impl FnOnce(&mut Self) -> R,
+        ) -> R {
+            let outer = std::mem::replace(&mut self.enclosing_nominal, name);
+            let res = f(self);
+            self.enclosing_nominal = outer;
+            res
         }
 
         fn make_typeparam(&self, tparam: &ast::types::TypeParam<ALoc, (ALoc, Type)>) -> TypeParam {
@@ -443,7 +564,8 @@ pub mod type_at_pos {
             let this_tparam = self.make_class_this(cls);
             let originally_bound_tparams = self.rev_bound_tparams.clone();
             self.rev_bound_tparams.push(this_tparam);
-            let res = ast_visitor::class_default(self, loc, cls);
+            let name = cls.id.as_ref().map(|id| id.name.dupe());
+            let res = self.in_nominal(name, |this| ast_visitor::class_default(this, loc, cls));
             self.rev_bound_tparams = originally_bound_tparams;
             res
         }
@@ -456,7 +578,10 @@ pub mod type_at_pos {
             let this_tparam = self.make_declare_class_this(decl);
             let originally_bound_tparams = self.rev_bound_tparams.clone();
             self.rev_bound_tparams.push(this_tparam);
-            let res = ast_visitor::declare_class_default(self, loc, decl);
+            let name = Some(decl.id.name.dupe());
+            let res = self.in_nominal(name, |this| {
+                ast_visitor::declare_class_default(this, loc, decl)
+            });
             self.rev_bound_tparams = originally_bound_tparams;
             res
         }
@@ -469,7 +594,10 @@ pub mod type_at_pos {
             let this_tparam = self.make_record_this(record);
             let originally_bound_tparams = self.rev_bound_tparams.clone();
             self.rev_bound_tparams.push(this_tparam);
-            let res = ast_visitor::record_declaration_default(self, loc, record);
+            let name = Some(record.id.name.dupe());
+            let res = self.in_nominal(name, |this| {
+                ast_visitor::record_declaration_default(this, loc, record)
+            });
             self.rev_bound_tparams = originally_bound_tparams;
             res
         }
@@ -607,6 +735,98 @@ pub mod type_at_pos {
             }
         }
 
+        // The hooks below fire when the target is a binding's own name, so that
+        // hover can frame the type as a declaration. Each checks the bound
+        // identifier directly and falls through to the default walk otherwise, so a
+        // target anywhere else inside the declaration is unaffected.
+        // TODO: also frame `import` specifiers as `(alias)` and enum members as
+        // `const e: E.A`, both of which need more than the bound name and its type.
+
+        fn variable_declarator(
+            &mut self,
+            kind: ast::VariableKind,
+            declarator: &'ast ast::statement::variable::Declarator<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.variable_binder(kind, declarator)?;
+            ast_visitor::variable_declarator_default(self, kind, declarator)
+        }
+
+        fn declare_variable_declarator(
+            &mut self,
+            kind: ast::VariableKind,
+            declarator: &'ast ast::statement::variable::Declarator<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.variable_binder(kind, declarator)?;
+            ast_visitor::declare_variable_declarator_default(self, kind, declarator)
+        }
+
+        fn function_declaration(
+            &mut self,
+            loc: &'ast ALoc,
+            func: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.function_binder(func.id.as_ref())?;
+            ast_visitor::function_declaration_default(self, loc, func)
+        }
+
+        fn declare_function(
+            &mut self,
+            loc: &'ast ALoc,
+            decl: &'ast ast::statement::DeclareFunction<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.function_binder(decl.id.as_ref())?;
+            ast_visitor::declare_function_default(self, loc, decl)
+        }
+
+        fn class_method(
+            &mut self,
+            method: &'ast ast::class::Method<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            use ast::class::MethodKind;
+            let kind = match method.kind {
+                MethodKind::Method => Some(BinderKind::Method),
+                MethodKind::Get => Some(BinderKind::Getter),
+                MethodKind::Set => Some(BinderKind::Setter),
+                // A constructor is reported as its class, not as a member.
+                MethodKind::Constructor => None,
+            };
+            if let Some(kind) = kind
+                && let ast::expression::object::Key::Identifier(id) = &method.key
+                && let (loc, t) = &id.loc
+                && self.covers_target(loc)
+            {
+                return self.find_binder(loc, t, kind, &id.name);
+            }
+            ast_visitor::class_method_default(self, method)
+        }
+
+        fn class_property(
+            &mut self,
+            prop: &'ast ast::class::Property<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let ast::expression::object::Key::Identifier(id) = &prop.key
+                && let (loc, t) = &id.loc
+                && self.covers_target(loc)
+            {
+                return self.find_binder(loc, t, BinderKind::Property, &id.name);
+            }
+            ast_visitor::class_property_default(self, prop)
+        }
+
+        fn function_param(
+            &mut self,
+            param: &'ast ast::function::Param<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let ast::function::Param::RegularParam { argument, .. } = param
+                && let Some(id) = Self::simple_pattern_binder(argument)
+                && let (loc, t) = &id.loc
+                && self.covers_target(loc)
+            {
+                return self.find_binder(loc, t, BinderKind::Parameter, &id.name);
+            }
+            ast_visitor::function_param_default(self, param)
+        }
+
         fn call_type_arg(
             &mut self,
             t: &'ast ast::expression::CallTypeArg<ALoc, (ALoc, Type)>,
@@ -635,12 +855,21 @@ pub mod type_at_pos {
             cx,
             target_loc: loc,
             rev_bound_tparams: Vec::new(),
+            enclosing_nominal: None,
         };
         match searcher.program(typed_ast) {
             Ok(()) => Ok(TypeAtPosResult::NoResult),
-            Err(FoundResult::FoundType(loc, is_type_id, scheme)) => Ok(
-                TypeAtPosResult::TypeResult(loc.to_loc_exn().dupe(), is_type_id, scheme),
-            ),
+            Err(FoundResult::FoundType {
+                loc,
+                is_type_identifier_reference,
+                type_,
+                framing,
+            }) => Ok(TypeAtPosResult::TypeResult {
+                loc: loc.to_loc_exn().dupe(),
+                is_type_identifier_reference,
+                type_,
+                framing,
+            }),
             Err(FoundResult::FoundHardcodedModule(loc, name)) => Ok(
                 TypeAtPosResult::HardcodedModuleResult(loc.to_loc_exn().dupe(), name),
             ),

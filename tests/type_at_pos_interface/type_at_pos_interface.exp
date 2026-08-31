@@ -8,7 +8,7 @@ interface.js:3:11,3:12
 
 interface.js:10:15
 Flags:
-IA
+const i_a: IA
 
 'IA' defined at interface.js:3:10
 
@@ -49,7 +49,7 @@ interface.js:27:7,27:7
 
 interface.js:31:11
 Flags:
-() => Generator<number, void, number>
+function gen(): Generator<number, void, number>
 
 'Generator' defined at (lib) prelude.js:56:10
 
@@ -57,7 +57,7 @@ interface.js:31:11,31:13
 
 interface.js:43:15
 Flags:
-PolyAnonAlias<number>
+const polyAnonAlias: PolyAnonAlias<number>
 
 'PolyAnonAlias' defined at interface.js:39:5
 
@@ -73,7 +73,7 @@ interface.js:49:11,49:13
 
 interface.js:55:15
 Flags:
-Box<number>
+const box: Box<number>
 
 'Box' defined at interface.js:49:10
 
@@ -81,7 +81,7 @@ interface.js:55:15,55:17
 
 interface.js:57:7
 Flags:
-Box<number>
+const cloned: Box<number>
 
 'Box' defined at interface.js:49:10
 
@@ -89,7 +89,7 @@ interface.js:57:7,57:12
 
 interface.js:59:7
 Flags:
-(this: Box<number>) => Box<number>
+const cloneFn: (this: Box<number>) => Box<number>
 
 'Box' defined at interface.js:49:10
 
@@ -97,7 +97,7 @@ interface.js:59:7,59:13
 
 interface.js:62:15
 Flags:
-Class<Box<number>>
+const cls: Class<Box<number>>
 
 'Box' defined at interface.js:49:10
 
