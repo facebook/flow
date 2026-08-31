@@ -1,3 +1,14 @@
+### 0.330.0
+
+Likely to cause new Flow errors:
+* Flow will now restrict the allowed syntax forms of `.call/apply/bind` calls. Only expressions of the form `<expr>.m.call(<expr>, ...)`, `<expr>.m.apply(<expr>, ...)` and `<expr>.m.bind(<expr>, ...)` are allowed.
+* `[untyped]` section of flowconfig will use the glob system. See https://flow.org/en/docs/config/untyped/
+
+Notable bug fixes:
+* Fixed https://github.com/facebook/flow/issues/9407.
+* Support `instanceof` refinement of constructor objects.
+* Operations like `Partial` no longer strip readonly-ness of dictionaries. ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgXqxyo2AABDo9LyYMRkLzgMKIKK9CooAhmQBuAA6sGIvIpvIAClRItwADzATxsZq0XkAbSSUqk2QQAF1RYkUukoMyAHzy3kAeg9vMGRTgEDivOUlHpvF5qTSvIgSWVXNwPP50EFmEooq1lB1uH1huNZotvOl1rtvIdEedbt5ypTpoA5BgazbeQBeXkAZndXp9LD9AZIUaSYYjQeo9OVMRARWUJH9UEC4T0yhAzKAA))
+
 ### 0.329.0
 
 Likely to cause new Flow errors:
