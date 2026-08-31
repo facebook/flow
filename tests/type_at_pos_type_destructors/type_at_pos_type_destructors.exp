@@ -1103,6 +1103,43 @@ type ObjBig = {
 
 evaluated-size-limit.js:12:6,12:11
 
+unestimable-operand.js:12:6
+Flags:
+type FromMapped = keyof Mapped
+
+'FromMapped' defined at unestimable-operand.js:12:5
+'Mapped' defined at unestimable-operand.js:10:5
+
+unestimable-operand.js:12:6,12:15
+
+unestimable-operand.js:17:6
+Flags:
+type FromIntersected = keyof Intersected
+
+'FromIntersected' defined at unestimable-operand.js:17:5
+'Intersected' defined at unestimable-operand.js:15:5
+
+unestimable-operand.js:17:6,17:20
+
+unestimable-operand.js:143:6
+Flags:
+type FromIface = keyof Iface
+
+'FromIface' defined at unestimable-operand.js:143:5
+'Iface' defined at unestimable-operand.js:20:10
+
+unestimable-operand.js:143:6,143:14
+
+unestimable-operand.js:149:6
+Flags:
+type FromPlain = keyof Plain
+= "a" | "b"
+
+'FromPlain' defined at unestimable-operand.js:149:5
+'Plain' defined at unestimable-operand.js:147:5
+
+unestimable-operand.js:149:6,149:14
+
 unions.js:12:6
 Flags:
 type ABCDType = ABCD["type"]

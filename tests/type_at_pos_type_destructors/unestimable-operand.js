@@ -1,0 +1,150 @@
+// @flow
+
+// The check in front of an expansion works by counting the operand's members,
+// and these are the operands it cannot count: one that is itself an
+// unevaluated destructor, an intersection, an interface. Each has to be caught
+// after the fact by the node budget instead. None of the three should expand.
+
+type Keys = 'k000' | 'k001' | 'k002' | 'k003' | 'k004' | 'k005' | 'k006' | 'k007' | 'k008' | 'k009' | 'k010' | 'k011' | 'k012' | 'k013' | 'k014' | 'k015' | 'k016' | 'k017' | 'k018' | 'k019' | 'k020' | 'k021' | 'k022' | 'k023' | 'k024' | 'k025' | 'k026' | 'k027' | 'k028' | 'k029' | 'k030' | 'k031' | 'k032' | 'k033' | 'k034' | 'k035' | 'k036' | 'k037' | 'k038' | 'k039' | 'k040' | 'k041' | 'k042' | 'k043' | 'k044' | 'k045' | 'k046' | 'k047' | 'k048' | 'k049' | 'k050' | 'k051' | 'k052' | 'k053' | 'k054' | 'k055' | 'k056' | 'k057' | 'k058' | 'k059' | 'k060' | 'k061' | 'k062' | 'k063' | 'k064' | 'k065' | 'k066' | 'k067' | 'k068' | 'k069' | 'k070' | 'k071' | 'k072' | 'k073' | 'k074' | 'k075' | 'k076' | 'k077' | 'k078' | 'k079' | 'k080' | 'k081' | 'k082' | 'k083' | 'k084' | 'k085' | 'k086' | 'k087' | 'k088' | 'k089' | 'k090' | 'k091' | 'k092' | 'k093' | 'k094' | 'k095' | 'k096' | 'k097' | 'k098' | 'k099' | 'k100' | 'k101' | 'k102' | 'k103' | 'k104' | 'k105' | 'k106' | 'k107' | 'k108' | 'k109' | 'k110' | 'k111' | 'k112' | 'k113' | 'k114' | 'k115' | 'k116' | 'k117' | 'k118' | 'k119';
+
+type Mapped = {[key in Keys]: string};
+
+type FromMapped = $Keys<Mapped>;
+//   ^
+
+type Intersected = Mapped & {zz: string};
+
+type FromIntersected = $Keys<Intersected>;
+//   ^
+
+interface Iface {
+  k000: string,
+  k001: string,
+  k002: string,
+  k003: string,
+  k004: string,
+  k005: string,
+  k006: string,
+  k007: string,
+  k008: string,
+  k009: string,
+  k010: string,
+  k011: string,
+  k012: string,
+  k013: string,
+  k014: string,
+  k015: string,
+  k016: string,
+  k017: string,
+  k018: string,
+  k019: string,
+  k020: string,
+  k021: string,
+  k022: string,
+  k023: string,
+  k024: string,
+  k025: string,
+  k026: string,
+  k027: string,
+  k028: string,
+  k029: string,
+  k030: string,
+  k031: string,
+  k032: string,
+  k033: string,
+  k034: string,
+  k035: string,
+  k036: string,
+  k037: string,
+  k038: string,
+  k039: string,
+  k040: string,
+  k041: string,
+  k042: string,
+  k043: string,
+  k044: string,
+  k045: string,
+  k046: string,
+  k047: string,
+  k048: string,
+  k049: string,
+  k050: string,
+  k051: string,
+  k052: string,
+  k053: string,
+  k054: string,
+  k055: string,
+  k056: string,
+  k057: string,
+  k058: string,
+  k059: string,
+  k060: string,
+  k061: string,
+  k062: string,
+  k063: string,
+  k064: string,
+  k065: string,
+  k066: string,
+  k067: string,
+  k068: string,
+  k069: string,
+  k070: string,
+  k071: string,
+  k072: string,
+  k073: string,
+  k074: string,
+  k075: string,
+  k076: string,
+  k077: string,
+  k078: string,
+  k079: string,
+  k080: string,
+  k081: string,
+  k082: string,
+  k083: string,
+  k084: string,
+  k085: string,
+  k086: string,
+  k087: string,
+  k088: string,
+  k089: string,
+  k090: string,
+  k091: string,
+  k092: string,
+  k093: string,
+  k094: string,
+  k095: string,
+  k096: string,
+  k097: string,
+  k098: string,
+  k099: string,
+  k100: string,
+  k101: string,
+  k102: string,
+  k103: string,
+  k104: string,
+  k105: string,
+  k106: string,
+  k107: string,
+  k108: string,
+  k109: string,
+  k110: string,
+  k111: string,
+  k112: string,
+  k113: string,
+  k114: string,
+  k115: string,
+  k116: string,
+  k117: string,
+  k118: string,
+  k119: string,
+}
+
+type FromIface = $Keys<Iface>;
+//   ^
+
+// Countable and small: this one still expands.
+type Plain = {a: string, b: string};
+
+type FromPlain = $Keys<Plain>;
+//   ^
