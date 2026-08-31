@@ -154,7 +154,7 @@ exact.js:28:6,28:6
 
 exact.js:34:15
 Flags:
-R
+(parameter) d: R
 
 'R' defined at exact.js:31:5
 
@@ -680,7 +680,7 @@ type-destructor.js:132:6,132:10
 
 type-destructor.js:137:14
 Flags:
-ReadOnlyObj
+(parameter) x: ReadOnlyObj
 
 'ReadOnlyObj' defined at type-destructor.js:41:5
 
@@ -821,7 +821,7 @@ mapped-type.js:39:6,39:17
 
 mapped-type.js:43:4
 Flags:
-{bar: string, foo: number}
+const x: {bar: string, foo: number}
 mapped-type.js:43:4,43:4
 
 mapped-type.js:50:6
@@ -890,7 +890,7 @@ mapped-type.js:66:6,66:30
 
 mapped-type.js:70:4
 Flags:
-{bar: string, foo: number}
+const x: {bar: string, foo: number}
 mapped-type.js:70:4,70:4
 
 mapped-type.js:75:6
@@ -905,7 +905,7 @@ mapped-type.js:75:6,75:20
 
 mapped-type.js:78:4
 Flags:
-SemiHomomorphic<{foo: number, ...}, "foo">
+const z: SemiHomomorphic<{foo: number, ...}, "foo">
 
 'SemiHomomorphic' defined at mapped-type.js:75:5
 

@@ -849,7 +849,7 @@ constructor.js:4:7 {
   "start":3,
   "types":{"type":"(x: string) => void"}
 }
-this.js:5:13 Readonly<this>
+this.js:5:13 (parameter) baz: Readonly<this>
 this.js:5:13,5:15
 function_this.js:2:1 {
   "end":12,

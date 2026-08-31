@@ -21,7 +21,7 @@ type BinaryExpression = {
 'Expression' defined at types.js:140:12
 
 printBinaryExpression.js:15:9,15:24
-BinaryExpression
+(parameter) node: BinaryExpression
 
 'BinaryExpression' defined at types.js:3156:12
 

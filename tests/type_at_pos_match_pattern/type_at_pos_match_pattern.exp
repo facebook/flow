@@ -1,31 +1,31 @@
 test.js:8:11
 Flags:
-number
+const a: number
 test.js:8:11,8:11
 
 test.js:17:15
 Flags:
-string
+const a: string
 test.js:17:15,17:15
 
 test.js:26:12
 Flags:
-number
+const a: number
 test.js:26:12,26:12
 
 test.js:36:5
 Flags:
-1
+const foo: 1
 test.js:36:5,36:7
 
 test.js:46:6
 Flags:
-1
+const foo: 1
 test.js:46:6,46:8
 
 test.js:57:5
 Flags:
-{bar: 1, foo: 1}
+const O: {bar: 1, foo: 1}
 test.js:57:5,57:5
 
 test.js:59:7
@@ -35,7 +35,7 @@ test.js:59:7,59:9
 
 test.js:69:6
 Flags:
-{bar: 1, foo: 1}
+const O: {bar: 1, foo: 1}
 test.js:69:6,69:6
 
 test.js:71:8
@@ -45,11 +45,11 @@ test.js:71:8,71:10
 
 test.js:79:16
 Flags:
-Readonly<[1, 2]>
+const a: Readonly<[1, 2]>
 test.js:79:16,79:16
 
 test.js:90:16
 Flags:
-Readonly<[number, number]>
+const a: Readonly<[number, number]>
 test.js:90:16,90:16
 

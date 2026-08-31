@@ -433,3 +433,5 @@ function-poly-6.js:7:6 = {
   "start":6,
   "types":null
 }
+function.js:21:18 (framed) = (parameter) xs: Array<string>
+function.js:21:18,21:19

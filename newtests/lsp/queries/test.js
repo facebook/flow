@@ -102,9 +102,18 @@ module.exports = suite(
       lspStartAndConnect(),
       lspRequestAndWaitUntilResponse('textDocument/hover', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover.js'},
-        position: {line: 6, character: 1}, // over a function use
+        // Over a function use. A reference is framed as the declaration it
+        // resolves to, so this reads the same as hovering the name itself.
+        position: {line: 6, character: 1},
       }).verifyAllLSPMessagesInStep(
-        [['textDocument/hover', '{() => number}']],
+        [['textDocument/hover', '{function fred(): number}']],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+      lspRequestAndWaitUntilResponse('textDocument/hover', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL>/hover.js'},
+        position: {line: 2, character: 9}, // over the function's own name
+      }).verifyAllLSPMessagesInStep(
+        [['textDocument/hover', '{function fred(): number}']],
         [...lspIgnoreStatusAndCancellation],
       ),
       lspRequestAndWaitUntilResponse('textDocument/hover', {

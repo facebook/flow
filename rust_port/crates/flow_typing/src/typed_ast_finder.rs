@@ -223,6 +223,8 @@ pub mod type_at_pos {
     pub enum Framing {
         /// The target is a binding's own name.
         Binder(Binder),
+        /// The target is a bare identifier; resolve it to the binding it references.
+        IdentifierRef,
     }
 
     pub enum TypeAtPosResult {
@@ -282,12 +284,13 @@ pub mod type_at_pos {
             loc: &ALoc,
             t: &Type,
             is_type_identifier: bool,
+            framing: Option<Framing>,
         ) -> Result<(), FoundResult> {
             Err(FoundResult::FoundType {
                 loc: loc.dupe(),
                 is_type_identifier_reference: is_type_identifier,
                 type_: t.dupe(),
-                framing: None,
+                framing,
             })
         }
 
@@ -496,7 +499,7 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let (loc, t) = &id.loc;
             if self.covers_target(loc) {
-                self.find_loc(loc, t, false)
+                self.find_loc(loc, t, false, Some(Framing::IdentifierRef))
             } else {
                 ast_visitor::identifier_default(self, id)
             }
@@ -508,7 +511,7 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let (loc, t) = &id.loc;
             if self.covers_target(loc) {
-                self.find_loc(loc, t, true)
+                self.find_loc(loc, t, true, None)
             } else {
                 ast_visitor::identifier_default(self, id)
             }
@@ -520,7 +523,7 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let (loc, t) = &ident.loc;
             if self.covers_target(loc) {
-                self.find_loc(loc, t, false)
+                self.find_loc(loc, t, false, None)
             } else {
                 ast_visitor::jsx_identifier_default(self, ident)
             }
@@ -536,7 +539,7 @@ pub mod type_at_pos {
                 let tp = self.make_typeparam(tparam);
                 self.rev_bound_tparams.push(tp.dupe());
                 let t = mk_bound_t(self.cx, &tp);
-                self.find_loc(loc, &t, false)
+                self.find_loc(loc, &t, false, None)
             } else {
                 let res = ast_visitor::type_param_default(self, kind, tparam);
                 let tp = self.make_typeparam(tparam);
@@ -613,7 +616,7 @@ pub mod type_at_pos {
                 | Key::BigIntLiteral(((loc, t), _))
                     if self.covers_target(loc) =>
                 {
-                    self.find_loc(loc, t, false)
+                    self.find_loc(loc, t, false, None)
                 }
                 _ => ast_visitor::object_key_default(self, key),
             }
@@ -630,19 +633,19 @@ pub mod type_at_pos {
                 | ExpressionInner::Super { loc: (loc, t), .. }
                     if self.covers_target(loc) =>
                 {
-                    self.find_loc(loc, t, false)
+                    self.find_loc(loc, t, false, None)
                 }
                 ExpressionInner::Member { loc: (_, t), inner }
                     if let member::Property::PropertyPrivateName(pn) = &inner.property
                         && self.covers_target(&pn.loc) =>
                 {
-                    self.find_loc(&pn.loc, t, false)
+                    self.find_loc(&pn.loc, t, false, None)
                 }
                 ExpressionInner::OptionalMember { loc: (_, t), inner }
                     if let member::Property::PropertyPrivateName(pn) = &inner.member.property
                         && self.covers_target(&pn.loc) =>
                 {
-                    self.find_loc(&pn.loc, t, false)
+                    self.find_loc(&pn.loc, t, false, None)
                 }
                 _ => ast_visitor::expression_default(self, expr),
             }
@@ -665,7 +668,7 @@ pub mod type_at_pos {
             let new_loc = Loc::between(&expr_start_loc, &callee_start_loc);
             if self.covers_target_loc(&new_loc) {
                 match self.cx.get_ctor_callee(expr_loc) {
-                    Some(t) => self.find_loc(callee_loc, &t, false),
+                    Some(t) => self.find_loc(callee_loc, &t, false, None),
                     None => ast_visitor::new_default(self, loc, expr),
                 }
             } else {
@@ -688,7 +691,7 @@ pub mod type_at_pos {
                 // Split with_hint to avoid double &mut self borrow in closures
                 let hint_t = type_hint::with_hint(Some, || None, hint_result);
                 match hint_t {
-                    Some(t) => self.find_loc(loc, &t, false),
+                    Some(t) => self.find_loc(loc, &t, false, None),
                     None => ast_visitor::jsx_attribute_name_identifier_default(self, ident),
                 }
             } else {
@@ -836,7 +839,7 @@ pub mod type_at_pos {
                 CallTypeArg::Implicit(implicit) => {
                     let (loc, ty) = &implicit.loc;
                     if self.covers_target(loc) {
-                        self.find_loc(loc, ty, false)
+                        self.find_loc(loc, ty, false, None)
                     } else {
                         ast_visitor::call_type_arg_default(self, t)
                     }

@@ -139,7 +139,7 @@ module.exports = suite(
         position: {line: 6, character: 1}, // over a function use
       })
         .verifyAllLSPMessagesInStep(
-          [['textDocument/hover', '{() => number}']],
+          [['textDocument/hover', '{function fred(): number}']],
           [...lspIgnoreStatusAndCancellation],
         )
         .timeout(2000),

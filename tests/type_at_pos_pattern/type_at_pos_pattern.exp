@@ -73,3 +73,13 @@ object.js:15:4 = {
   "start":4,
   "types":{"type":"string"}
 }
+object.js:11:3 (framed) = var a: O
+
+'O' defined at object.js:3:20
+
+object.js:11:3,11:3
+object.js:12:6 (framed) = var b1: O
+
+'O' defined at object.js:3:20
+
+object.js:12:6,12:7

@@ -987,22 +987,22 @@ optional_chaining.js:16:24 = {
 }
 identifier.js:5:4
 Flags:
-number
+const fooBar: number
 identifier.js:5:4,5:9
 
 identifier.js:8:9
 Flags:
-number
+const fooBar: number
 identifier.js:8:4,8:9
 
 identifier.js:11:10
 Flags:
-number
+const fooBar: number
 identifier.js:11:4,11:9
 
 identifier.js:14:10
 Flags:
-number
+const fooBar: number
 identifier.js:14:4,14:9
 
 reduce_recursive.js:16:25

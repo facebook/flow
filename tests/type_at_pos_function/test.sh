@@ -79,3 +79,8 @@ assert_ok "$FLOW" type-at-pos function-poly-5.js 3 10 --strip-root --pretty
 # function-poly-6.js
 printf "function-poly-6.js:7:6 = "
 assert_ok "$FLOW" type-at-pos function-poly-6.js 7 6 --strip-root --pretty
+
+# function.js
+# Friendly mode: `--pretty` above yields a bare type by design.
+printf "function.js:21:18 (framed) = "
+assert_ok "$FLOW" type-at-pos function.js 21 18 --strip-root

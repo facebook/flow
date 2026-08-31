@@ -9,7 +9,10 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_analysis::bindings;
 use flow_common_ty::ty::ALocElt;
+use flow_common_ty::ty::Binder;
+use flow_common_ty::ty::BinderKind;
 use flow_common_ty::ty::Decl;
 use flow_common_ty::ty::DeclModuleDeclData;
 use flow_common_ty::ty::Elt;
@@ -61,6 +64,45 @@ fn result_of_normalizer_error<A>(loc: Loc, t: Type, err: Error) -> QueryResult<A
     QueryResult::FailureUnparseable(loc, t, msg)
 }
 
+/// The declaration form of a binding, for the kinds whose hover reads better as a
+/// declaration than as a bare type. Kinds that already print a head of their own
+/// (`class A`, `type X = …`) and kinds that need more than a name and a type
+/// (imports, which name a declaration in another module) are left unframed.
+fn binder_kind_of_binding_kind(kind: bindings::Kind) -> Option<BinderKind> {
+    match kind {
+        bindings::Kind::Var | bindings::Kind::DeclaredVar => Some(BinderKind::Var),
+        bindings::Kind::Let | bindings::Kind::DeclaredLet => Some(BinderKind::Let),
+        bindings::Kind::Const | bindings::Kind::DeclaredConst => Some(BinderKind::Const),
+        bindings::Kind::Function | bindings::Kind::DeclaredFunction => Some(BinderKind::Function),
+        bindings::Kind::Parameter
+        | bindings::Kind::CatchParameter
+        | bindings::Kind::ComponentParameter => Some(BinderKind::Parameter),
+        bindings::Kind::ThisAnnot
+        | bindings::Kind::Type { .. }
+        | bindings::Kind::TypeParam
+        | bindings::Kind::Interface { .. }
+        | bindings::Kind::Enum
+        | bindings::Kind::Class
+        | bindings::Kind::DeclaredClass
+        | bindings::Kind::DeclaredNamespace
+        | bindings::Kind::Import { .. }
+        | bindings::Kind::TsImport
+        | bindings::Kind::Internal
+        | bindings::Kind::GeneratorNext
+        | bindings::Kind::Component
+        | bindings::Kind::Record => None,
+    }
+}
+
+fn binder_of_identifier_reference(cx: &Context<'_>, loc: &ALoc) -> Option<Binder> {
+    let env = cx.environment();
+    let def = env.var_info.scopes.def_of_use_opt(loc)?;
+    binder_kind_of_binding_kind(def.kind).map(|kind| Binder {
+        kind,
+        name: def.actual_name.dupe(),
+        owner: None,
+    })
+}
 pub fn dump_type_at_pos(
     cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -123,7 +165,13 @@ pub fn type_at_pos_type<'a>(
                 } else {
                     Some(typed_ast)
                 };
-                let binder = framing.map(|Framing::Binder(binder)| binder);
+                let binder = match framing {
+                    None => None,
+                    Some(Framing::Binder(binder)) => Some(binder),
+                    Some(Framing::IdentifierRef) => {
+                        binder_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
+                    }
+                };
                 let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
                     expand_internal_types: false,
                     expand_enum_members: false,
