@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -313,6 +314,44 @@ pub(super) fn inst_structural_subtype<'cx>(
                 }
             }
             _ => {}
+        }
+
+        if cx.interface_dictionary_typing_fix() {
+            let indexer_subtyping = subtyping_kit::PropsToIndexerContext {
+                cx,
+                env,
+                trace,
+                use_op: use_op.dupe(),
+                lreason: lreason.dupe(),
+                ureason: reason_struct.dupe(),
+                strictness_kind,
+                lit: false,
+                lower_upper_subtyping_obj_ts: None,
+            };
+            let mut lowers = vec![lower.dupe()];
+            let mut seen = BTreeSet::new();
+            while let Some(lower) = lowers.pop() {
+                for lower in helpers::possible_concrete_types_for_inspection(
+                    cx,
+                    env,
+                    reason_of_t(&lower),
+                    &lower,
+                )? {
+                    if let TypeInner::DefT(_, def_t) = lower.deref()
+                        && let DefTInner::InstanceT(inst_t) = def_t.deref()
+                    {
+                        if !seen.insert(inst_t.inst.class_id.dupe()) {
+                            continue;
+                        }
+                        indexer_subtyping.flow_props_to_indexer(
+                            &cx.find_props(inst_t.inst.own_props.dupe()),
+                            &[&own_props, &proto_props],
+                            dict,
+                        )?;
+                        lowers.push(inst_t.super_.dupe());
+                    }
+                }
+            }
         }
     }
     for (name, p) in own_props.iter() {

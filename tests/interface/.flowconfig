@@ -1,4 +1,5 @@
 [options]
 all=true
+experimental.interface_dictionary_typing_fix=true
 experimental.new_this_typing=true
 no_flowlib=false

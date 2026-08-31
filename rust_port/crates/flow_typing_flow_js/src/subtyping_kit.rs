@@ -1330,6 +1330,177 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
     }
 }
 
+pub(super) struct PropsToIndexerContext<'a, 'cx> {
+    pub(super) cx: &'a Context<'cx>,
+    pub(super) env: &'a FlowJsEnv,
+    pub(super) trace: DepthTrace,
+    pub(super) use_op: UseOp,
+    pub(super) lreason: Reason,
+    pub(super) ureason: Reason,
+    pub(super) strictness_kind: TypeStrictnessKind,
+    pub(super) lit: bool,
+    pub(super) lower_upper_subtyping_obj_ts: Option<(Type, Type)>,
+}
+
+impl PropsToIndexerContext<'_, '_> {
+    pub(super) fn flow_props_to_indexer(
+        &self,
+        lower_props: &properties::PropertiesMap,
+        upper_props: &[&properties::PropertiesMap],
+        upper_dict: &DictType,
+    ) -> Result<(), FlowJsException> {
+        let cx = self.cx;
+        let env = self.env;
+        let trace = self.trace;
+        let use_op = &self.use_op;
+        let lreason = &self.lreason;
+        let ureason = &self.ureason;
+        let strictness_kind = self.strictness_kind;
+        let lit = self.lit;
+        let DictType {
+            key,
+            value,
+            dict_polarity,
+            ..
+        } = upper_dict;
+        let flow_prop_to_indexer = |lp: &Property, name: &Name| -> Result<(), FlowJsException> {
+            let use_op = VirtualUseOp::Frame(
+                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                    PropertyCompatibilityData {
+                        prop: Some(name.dupe()),
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                    },
+                ))),
+                Arc::new(use_op.dupe()),
+            );
+            let lp_type = match lp.deref() {
+                PropertyInner::Field(fd)
+                    if let TypeInner::OptionalT { type_: lt, .. } = fd.type_.deref() =>
+                {
+                    PropertyType::OrdinaryField {
+                        type_: lt.dupe(),
+                        polarity: fd.polarity,
+                    }
+                }
+                _ => property_type_for_subtyping(lp, strictness_kind, cx.new_this_typing()),
+            };
+            let up_type = PropertyType::OrdinaryField {
+                type_: value.dupe(),
+                polarity: *dict_polarity,
+            };
+            if lit {
+                match (
+                    property::read_t_of_property_type(&lp_type),
+                    property::read_t_of_property_type(&up_type),
+                ) {
+                    (Some(lt), Some(ut)) => {
+                        FlowJs::rec_flow_with_env(
+                            cx,
+                            env,
+                            trace,
+                            &lt,
+                            &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                        )?;
+                    }
+                    _ => {}
+                }
+            } else {
+                let propref = type_util::mk_named_prop(
+                    lreason
+                        .dupe()
+                        .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
+                    false,
+                    name.dupe(),
+                );
+                let lower_upper_subtyping_obj_ts = self
+                    .lower_upper_subtyping_obj_ts
+                    .as_ref()
+                    .map(|(lower, upper)| (lower, upper));
+                let errs = rec_flow_p_inner(
+                    cx,
+                    env,
+                    Some(trace),
+                    use_op.dupe(),
+                    None,
+                    lower_upper_subtyping_obj_ts,
+                    strictness_kind,
+                    ureason,
+                    true,
+                    &propref,
+                    &lp_type,
+                    &up_type,
+                )?;
+                add_output_prop_polarity_mismatch(
+                    cx,
+                    env,
+                    use_op,
+                    lreason,
+                    ureason,
+                    errs,
+                    strictness_kind,
+                )?;
+            }
+            Ok(())
+        };
+        if !env.in_implicit_instantiation() {
+            for (name, lp) in lower_props.iter() {
+                if upper_props.iter().any(|props| props.contains_key(name)) {
+                    continue;
+                }
+                let key_type = flow_js_utils::type_of_key_name_with_env(env, name.dupe(), lreason);
+                if FlowJs::speculative_subtyping_succeeds_with_flow_errors(cx, env, &key_type, key)?
+                {
+                    flow_prop_to_indexer(lp, name)?;
+                } else {
+                    flow_js_utils::add_output_with_env(
+                        cx,
+                        env,
+                        ErrorMessage::EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
+                            prop_name: name.dupe(),
+                            reason_lower: ureason.dupe(),
+                            reason_upper: lreason.dupe(),
+                            reason_indexer: type_util::reason_of_t(key).dupe(),
+                            use_op: use_op.dupe(),
+                        })),
+                    )?;
+                }
+            }
+        } else {
+            let mut keys_list = Vec::new();
+            for (name, lp) in lower_props.iter() {
+                if upper_props.iter().any(|props| props.contains_key(name)) {
+                    continue;
+                }
+                flow_prop_to_indexer(lp, name)?;
+                keys_list.push(flow_js_utils::type_of_key_name_with_env(
+                    env,
+                    name.dupe(),
+                    lreason,
+                ));
+            }
+            let keys = type_util::union_of_ts(lreason.dupe(), keys_list, None);
+            FlowJs::rec_flow_with_env(
+                cx,
+                env,
+                trace,
+                &keys,
+                &UseT::new(UseTInner::UseT(
+                    VirtualUseOp::Frame(
+                        Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
+                            lower: lreason.dupe(),
+                            upper: ureason.dupe(),
+                        }),
+                        Arc::new(use_op.dupe()),
+                    ),
+                    key.dupe(),
+                )),
+            )?;
+        }
+        Ok(())
+    }
+}
+
 fn flow_obj_to_obj<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -2201,159 +2372,30 @@ fn flow_obj_to_obj<'cx>(
     match &udict {
         None => {}
         Some(ud) => {
-            let DictType {
-                key,
-                value,
-                dict_polarity,
-                ..
-            } = *ud;
-            let flow_prop_to_indexer =
-                |lp: &Property, name: &Name| -> Result<(), FlowJsException> {
-                    let use_op = VirtualUseOp::Frame(
-                        Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
-                            PropertyCompatibilityData {
-                                prop: Some(name.dupe()),
-                                lower: lreason.dupe(),
-                                upper: ureason.dupe(),
-                            },
-                        ))),
-                        Arc::new(use_op.dupe()),
-                    );
-                    let lp_type = match lp.deref() {
-                        PropertyInner::Field(fd)
-                            if let TypeInner::OptionalT { type_: lt, .. } = fd.type_.deref() =>
-                        {
-                            PropertyType::OrdinaryField {
-                                type_: lt.dupe(),
-                                polarity: fd.polarity,
-                            }
-                        }
-                        _ => property_type_for_subtyping(lp, strictness_kind, cx.new_this_typing()),
-                    };
-                    let up_type = PropertyType::OrdinaryField {
-                        type_: value.dupe(),
-                        polarity: *dict_polarity,
-                    };
-                    if lit {
-                        match (
-                            property::read_t_of_property_type(&lp_type),
-                            property::read_t_of_property_type(&up_type),
-                        ) {
-                            (Some(lt), Some(ut)) => {
-                                FlowJs::rec_flow_with_env(
-                                    cx,
-                                    env,
-                                    trace,
-                                    &lt,
-                                    &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
-                                )?;
-                            }
-                            _ => {}
-                        }
-                    } else {
-                        let propref = type_util::mk_named_prop(
-                            lreason
-                                .dupe()
-                                .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe()))),
-                            false,
-                            name.dupe(),
-                        );
-                        let l_t = Type::new(TypeInner::DefT(
-                            lreason.dupe(),
-                            DefT::new(DefTInner::ObjT(l_obj.dupe())),
-                        ));
-                        let u_t = Type::new(TypeInner::DefT(
-                            ureason.dupe(),
-                            DefT::new(DefTInner::ObjT(u_obj.dupe())),
-                        ));
-                        let errs = rec_flow_p_inner(
-                            cx,
-                            env,
-                            Some(trace),
-                            use_op.dupe(),
-                            None,
-                            Some((&l_t, &u_t)),
-                            strictness_kind,
-                            ureason,
-                            true,
-                            &propref,
-                            &lp_type,
-                            &up_type,
-                        )?;
-                        add_output_prop_polarity_mismatch(
-                            cx,
-                            env,
-                            use_op,
-                            lreason,
-                            ureason,
-                            errs,
-                            l_obj.strictness_kind.join(u_obj.strictness_kind),
-                        )?;
-                    }
-                    Ok(())
-                };
-            // If we are in implicit instantiation then we should always flow missing keys & value types to the
-            // upper dictionary because that information may be useful to infer a type. Outside of implicit instantiation,
-            // flowing both can cause redundant errors when the key is already not a valid indexer key, so we avoid the
-            // value flows when that does not pass
-            if !env.in_implicit_instantiation() {
-                for (name, lp) in cx.find_props(lflds.dupe()).iter() {
-                    if !cx.has_prop(uflds.dupe(), name) {
-                        let key_type =
-                            flow_js_utils::type_of_key_name_with_env(env, name.dupe(), lreason);
-                        if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
-                            cx, env, &key_type, key,
-                        )? {
-                            flow_prop_to_indexer(lp, name)?;
-                        } else {
-                            flow_js_utils::add_output_with_env(
-                                cx,
-                                env,
-                                ErrorMessage::EIndexerCheckFailed(Box::new(
-                                    EIndexerCheckFailedData {
-                                        prop_name: name.dupe(),
-                                        // Lower and upper are reversed in this case since
-                                        // the lower object is the one requiring the prop.
-                                        reason_lower: ureason.dupe(),
-                                        reason_upper: lreason.dupe(),
-                                        reason_indexer: type_util::reason_of_t(key).dupe(),
-                                        use_op: use_op.dupe(),
-                                    },
-                                )),
-                            )?;
-                        }
-                    }
-                }
-            } else {
-                let mut keys_list: Vec<Type> = vec![];
-                for (name, lp) in cx.find_props(lflds.dupe()).iter() {
-                    if !cx.has_prop(uflds.dupe(), name) {
-                        flow_prop_to_indexer(lp, name)?;
-                        keys_list.push(flow_js_utils::type_of_key_name_with_env(
-                            env,
-                            name.dupe(),
-                            lreason,
-                        ));
-                    }
-                }
-                let keys = type_util::union_of_ts(lreason.dupe(), keys_list, None);
-                FlowJs::rec_flow_with_env(
-                    cx,
-                    env,
-                    trace,
-                    &keys,
-                    &UseT::new(UseTInner::UseT(
-                        VirtualUseOp::Frame(
-                            Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                                lower: lreason.dupe(),
-                                upper: ureason.dupe(),
-                            }),
-                            Arc::new(use_op.dupe()),
-                        ),
-                        key.dupe(),
-                    )),
-                )?;
+            let lower = Type::new(TypeInner::DefT(
+                lreason.dupe(),
+                DefT::new(DefTInner::ObjT(l_obj.dupe())),
+            ));
+            let upper = Type::new(TypeInner::DefT(
+                ureason.dupe(),
+                DefT::new(DefTInner::ObjT(u_obj.dupe())),
+            ));
+            PropsToIndexerContext {
+                cx,
+                env,
+                trace,
+                use_op: use_op.dupe(),
+                lreason: lreason.dupe(),
+                ureason: ureason.dupe(),
+                strictness_kind,
+                lit,
+                lower_upper_subtyping_obj_ts: Some((lower, upper)),
             }
+            .flow_props_to_indexer(
+                &cx.find_props(lflds.dupe()),
+                &[&cx.find_props(uflds.dupe())],
+                ud,
+            )?;
             // If the left is inexact and the right is indexed, Flow mixed to the indexer
             // value. Mixed represents the possibly unknown properties on the inexact object
             match &lflags.obj_kind {
@@ -2368,7 +2410,7 @@ fn flow_obj_to_obj<'cx>(
                         r,
                         DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
                     ));
-                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &mixed, value)?;
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &mixed, &ud.value)?;
                 }
                 _ => {}
             }
@@ -2402,8 +2444,8 @@ fn flow_obj_to_obj<'cx>(
                         polarity: Polarity::Positive,
                     };
                     let up_type = PropertyType::OrdinaryField {
-                        type_: value.dupe(),
-                        polarity: *dict_polarity,
+                        type_: ud.value.dupe(),
+                        polarity: ud.dict_polarity,
                     };
                     if lit {
                         match (

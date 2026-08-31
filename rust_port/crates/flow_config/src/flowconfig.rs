@@ -185,6 +185,7 @@ pub mod opts {
         pub hook_compatibility_excludes: Vec<String>,
         pub ignore_non_literal_requires: bool,
         pub include_warnings: bool,
+        pub interface_dictionary_typing_fix: Option<bool>,
         pub jest_integration: bool,
         pub lazy_mode: Option<LazyMode>,
         pub llm_context_include_imports: bool,
@@ -345,6 +346,7 @@ pub mod opts {
             hook_compatibility_excludes: Vec::new(),
             ignore_non_literal_requires: false,
             include_warnings: false,
+            interface_dictionary_typing_fix: None,
             jest_integration: false,
             lazy_mode: None,
             llm_context_include_imports: false,
@@ -2202,6 +2204,19 @@ pub mod opts {
             (
                 "experimental.importable_global_libdefs",
                 |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
+            ),
+            (
+                "experimental.interface_dictionary_typing_fix",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.interface_dictionary_typing_fix = Some(v);
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
             ),
             (
                 "experimental.llm_context.include_imports",

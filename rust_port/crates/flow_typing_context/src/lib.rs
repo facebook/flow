@@ -178,6 +178,7 @@ pub struct FrozenMetadata {
     pub hook_compatibility_excludes: Arc<[Regex]>,
     pub hook_compatibility_includes: Arc<[Regex]>,
     pub ignore_non_literal_requires: bool,
+    pub interface_dictionary_typing_fix: bool,
     pub records_includes: Arc<[Regex]>,
     pub max_workers: i32,
     pub missing_module_generators: Arc<[(Regex, String)]>,
@@ -241,6 +242,7 @@ impl Default for FrozenMetadata {
             hook_compatibility_excludes: Arc::from([]),
             hook_compatibility_includes: Arc::from([]),
             ignore_non_literal_requires: false,
+            interface_dictionary_typing_fix: false,
             records_includes: Arc::from([]),
             max_workers: 0,
             missing_module_generators: Arc::from([]),
@@ -640,6 +642,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             file_options: options.file_options.dupe(),
             global_libdefs,
             ignore_non_literal_requires: options.ignore_non_literal_requires,
+            interface_dictionary_typing_fix: options.interface_dictionary_typing_fix,
             max_workers: options.max_workers,
             missing_module_generators: options.missing_module_generators.dupe(),
             new_this_typing: options.new_this_typing,
@@ -1410,6 +1413,10 @@ impl<'cx> Context<'cx> {
                 .iter()
                 .any(|glob| glob.is_match(&filename))
         }
+    }
+
+    pub fn interface_dictionary_typing_fix(&self) -> bool {
+        self.0.metadata.frozen.interface_dictionary_typing_fix
     }
 
     pub fn is_colon_extends_deprecated(&self) -> bool {
