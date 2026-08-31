@@ -1,9 +1,9 @@
 // @flow
 
 // These operands have different internal representations: an unevaluated
-// destructor, an intersection, and an interface. The hover evaluation policy
-// treats all three alike, without inspecting those representations; each
-// produces the same 120-key union.
+// destructor, an intersection, and an interface. The output budget is applied
+// after normalization without inspecting those representations; each result
+// is truncated in the same way.
 
 type Keys = 'k000' | 'k001' | 'k002' | 'k003' | 'k004' | 'k005' | 'k006' | 'k007' | 'k008' | 'k009' | 'k010' | 'k011' | 'k012' | 'k013' | 'k014' | 'k015' | 'k016' | 'k017' | 'k018' | 'k019' | 'k020' | 'k021' | 'k022' | 'k023' | 'k024' | 'k025' | 'k026' | 'k027' | 'k028' | 'k029' | 'k030' | 'k031' | 'k032' | 'k033' | 'k034' | 'k035' | 'k036' | 'k037' | 'k038' | 'k039' | 'k040' | 'k041' | 'k042' | 'k043' | 'k044' | 'k045' | 'k046' | 'k047' | 'k048' | 'k049' | 'k050' | 'k051' | 'k052' | 'k053' | 'k054' | 'k055' | 'k056' | 'k057' | 'k058' | 'k059' | 'k060' | 'k061' | 'k062' | 'k063' | 'k064' | 'k065' | 'k066' | 'k067' | 'k068' | 'k069' | 'k070' | 'k071' | 'k072' | 'k073' | 'k074' | 'k075' | 'k076' | 'k077' | 'k078' | 'k079' | 'k080' | 'k081' | 'k082' | 'k083' | 'k084' | 'k085' | 'k086' | 'k087' | 'k088' | 'k089' | 'k090' | 'k091' | 'k092' | 'k093' | 'k094' | 'k095' | 'k096' | 'k097' | 'k098' | 'k099' | 'k100' | 'k101' | 'k102' | 'k103' | 'k104' | 'k105' | 'k106' | 'k107' | 'k108' | 'k109' | 'k110' | 'k111' | 'k112' | 'k113' | 'k114' | 'k115' | 'k116' | 'k117' | 'k118' | 'k119';
 

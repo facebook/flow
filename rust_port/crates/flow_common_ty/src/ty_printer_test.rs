@@ -7,15 +7,20 @@
 
 #[cfg(test)]
 mod tests {
+    use std::collections::BTreeSet;
     use std::sync::Arc;
 
     use flow_aloc::ALoc;
     use flow_common::reason::Name;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+    use flow_parser::loc::Loc;
+    use flow_parser::loc_sig::LocSig;
 
     use crate::ty::Dict;
+    use crate::ty::Elt;
     use crate::ty::FunEffect;
     use crate::ty::FunT;
+    use crate::ty::GenKind;
     use crate::ty::NamedProp;
     use crate::ty::ObjKind;
     use crate::ty::ObjT;
@@ -28,6 +33,9 @@ mod tests {
     use crate::ty::TypeParam;
     use crate::ty_printer::PrinterOptions;
     use crate::ty_printer::string_of_t;
+    use crate::ty_printer::string_of_type_at_pos_result;
+    use crate::ty_symbol::Provenance;
+    use crate::ty_symbol::Symbol;
 
     fn test_options() -> PrinterOptions {
         PrinterOptions {
@@ -169,7 +177,6 @@ mod tests {
         let result = string_of_t(&func, &opts);
         assert_eq!(result, "<out T extends unknown>() => void");
     }
-
     #[test]
     fn test_function_this_param() {
         let func = Ty::<ALoc>::Fun(Box::new(FunT {
@@ -184,5 +191,101 @@ mod tests {
         let opts = test_options();
         let result = string_of_t(&func, &opts);
         assert_eq!(result, "(this: string) => void");
+    }
+
+    #[test]
+    fn test_truncated_object_reports_omitted_properties() {
+        let field = |name: &str| Prop::NamedProp {
+            name: Name::new(name),
+            prop: NamedProp::Field {
+                t: Arc::new(Ty::Str),
+                polarity: Polarity::Neutral,
+                optional: false,
+            },
+            inherited: false,
+            source: PropSource::Other,
+            def_locs: vec![].into(),
+        };
+        let obj = Ty::<ALoc>::Obj(Box::new(ObjT {
+            obj_kind: ObjKind::ExactObj,
+            obj_def_loc: None,
+            obj_props: vec![field("a"), field("b"), field("c"), field("d")].into(),
+        }));
+        let opts = PrinterOptions {
+            size: 3,
+            ..test_options()
+        };
+
+        let result = string_of_t(&obj, &opts);
+
+        assert_eq!(result, "{a: string, b: string, ... 2 more properties ...}");
+    }
+
+    #[test]
+    fn test_truncated_union_reports_omitted_members() {
+        let union = Ty::<ALoc>::Union(
+            false,
+            Arc::new(Ty::Num),
+            Arc::new(Ty::Str),
+            vec![Arc::new(Ty::Bool)].into(),
+        );
+        let opts = PrinterOptions {
+            size: 3,
+            ..test_options()
+        };
+
+        let result = string_of_t(&union, &opts);
+
+        assert_eq!(result, "number | string | ... 1 more union member ...");
+    }
+
+    #[test]
+    fn test_truncated_type_omits_hidden_refs() {
+        let symbol = |name: &str| Symbol {
+            sym_provenance: Provenance::Local,
+            sym_def_loc: ALoc::none(),
+            sym_name: FlowSmolStr::new(name),
+            sym_anonymous: false,
+        };
+        let visible = symbol("Visible");
+        let hidden = symbol("Hidden");
+        let field = |name: &str, symbol: Symbol<ALoc>| Prop::NamedProp {
+            name: Name::new(name),
+            prop: NamedProp::Field {
+                t: Arc::new(Ty::Generic(Box::new((
+                    symbol,
+                    GenKind::TypeAliasKind,
+                    None,
+                )))),
+                polarity: Polarity::Neutral,
+                optional: false,
+            },
+            inherited: false,
+            source: PropSource::Other,
+            def_locs: vec![].into(),
+        };
+        let obj = Elt::Type(Arc::new(Ty::Obj(Box::new(ObjT {
+            obj_kind: ObjKind::ExactObj,
+            obj_def_loc: None,
+            obj_props: vec![
+                field("visible", visible.clone()),
+                field("hidden", hidden.clone()),
+            ]
+            .into(),
+        }))));
+        let refs: BTreeSet<_> = [visible, hidden]
+            .into_iter()
+            .map(|symbol| symbol.map_locs(&|_| Loc::none()))
+            .collect();
+        let opts = PrinterOptions {
+            size: 2,
+            ..test_options()
+        };
+
+        let (type_str, refs) =
+            string_of_type_at_pos_result(&obj, &Some(refs), &|_| Loc::none(), &opts);
+
+        assert_eq!(type_str, "{visible: Visible, ... 1 more property ...}");
+        assert_eq!(refs, Some(vec![("Visible".to_string(), Loc::none())]));
     }
 }

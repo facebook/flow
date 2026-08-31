@@ -26,6 +26,12 @@ use crate::ty_symbol::*;
 
 const CROP_SYMBOL: &str = "...";
 
+struct PrintState<L> {
+    remaining: usize,
+    printed_symbols: Option<Vec<Symbol<L>>>,
+    truncated: bool,
+}
+
 pub fn better_quote(prefer_single_quotes: bool, s: &str) -> String {
     let single_quotes = s.chars().filter(|&c| c == '\'').count();
     let double_quotes = s.chars().filter(|&c| c == '"').count();
@@ -117,8 +123,31 @@ pub fn variance_string(p: Polarity) -> &'static str {
     }
 }
 
-fn crop_atom() -> LayoutNode {
+fn crop_atom<L>(state: &mut PrintState<L>) -> LayoutNode {
+    state.truncated = true;
     LayoutNode::atom(CROP_SYMBOL.to_string())
+}
+
+fn crop_atom_with_count<L>(
+    state: &mut PrintState<L>,
+    remaining: usize,
+    singular: &str,
+    plural: &str,
+) -> LayoutNode {
+    state.truncated = true;
+    let item = if remaining == 1 { singular } else { plural };
+    LayoutNode::atom(format!("... {remaining} more {item} ..."))
+}
+
+fn record_symbol<L: Clone>(state: &mut PrintState<L>, symbol: &Symbol<L>) {
+    if let Some(symbols) = &mut state.printed_symbols {
+        symbols.push(symbol.clone());
+    }
+}
+
+fn symbol_identifier<L: Dupe>(state: &mut PrintState<L>, symbol: &Symbol<L>) -> LayoutNode {
+    record_symbol(state, symbol);
+    identifier(&local_name_of_symbol(symbol))
 }
 
 fn in_quotes(prefer_single_quotes: bool, s: &str) -> Vec<LayoutNode> {
@@ -179,12 +208,13 @@ fn local_name_of_symbol<L>(symbol: &Symbol<L>) -> FlowSmolStr {
     }
 }
 
-fn builtin_value<L: Dupe>(pv: &BuiltinOrSymbol<L>) -> LayoutNode {
+fn builtin_value<L: Dupe>(pv: &BuiltinOrSymbol<L>, state: &mut PrintState<L>) -> LayoutNode {
     match pv {
         BuiltinOrSymbol::FunProto => LayoutNode::atom("Function.prototype".to_string()),
         BuiltinOrSymbol::ObjProto => LayoutNode::atom("Object.prototype".to_string()),
         BuiltinOrSymbol::FunProtoBind => LayoutNode::atom("Function.prototype.bind".to_string()),
         BuiltinOrSymbol::TSymbol(symbol) => {
+            record_symbol(state, symbol);
             LayoutNode::atom(local_name_of_symbol(symbol).to_string())
         }
     }
@@ -204,22 +234,44 @@ where
 (* Main Transformation   *)
 (*************************/
 
+fn layout_of_elt_with_state<L: Dupe>(
+    opts: &PrinterOptions,
+    elt: &Elt<L>,
+    collect_symbols: bool,
+) -> (LayoutNode, Vec<Symbol<L>>, bool) {
+    let mut state = PrintState {
+        remaining: opts.size,
+        printed_symbols: collect_symbols.then(Vec::new),
+        truncated: false,
+    };
+    let layout = match elt {
+        Elt::Type(t) => type_(opts, 0, t, &mut state),
+        Elt::Decl(d) => decl(opts, 0, d, &mut state),
+    };
+    (
+        layout,
+        state.printed_symbols.unwrap_or_default(),
+        state.truncated,
+    )
+}
+
 fn layout_of_elt<L: Dupe>(opts: &PrinterOptions, elt: &Elt<L>) -> LayoutNode {
-    let mut size = opts.size;
-    match elt {
-        Elt::Type(t) => type_(opts, 0, t, &mut size),
-        Elt::Decl(d) => decl(opts, 0, d, &mut size),
-    }
+    layout_of_elt_with_state(opts, elt, false).0
 }
 
 // The depth parameter is useful for formatting unions: Top-level does not
 // get parentheses.
-fn type_<L: Dupe>(opts: &PrinterOptions, depth: usize, t: &Ty<L>, size: &mut usize) -> LayoutNode {
+fn type_<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    t: &Ty<L>,
+    size: &mut PrintState<L>,
+) -> LayoutNode {
     let depth = depth + 1;
-    if *size == 0 {
-        crop_atom()
+    if size.remaining == 0 {
+        crop_atom(size)
     } else {
-        *size -= 1;
+        size.remaining -= 1;
         type_impl(opts, depth, t, size)
     }
 }
@@ -228,7 +280,7 @@ fn type_impl<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     match t {
         Ty::Bound(data) => {
@@ -297,8 +349,13 @@ fn type_impl<L: Dupe>(
         Ty::Tup { elements, inexact } => {
             let mut elts_rev = Vec::new();
             for (idx, elem) in elements.iter().enumerate() {
-                if *size == 0 {
-                    elts_rev.push(crop_atom());
+                if size.remaining == 0 {
+                    elts_rev.push(crop_atom_with_count(
+                        size,
+                        elements.len() - idx,
+                        "tuple element",
+                        "tuple elements",
+                    ));
                     break;
                 }
                 elts_rev.push(tuple_element(opts, depth, idx, elem, size));
@@ -334,7 +391,7 @@ fn type_impl<L: Dupe>(
             layout::fuse(vec![
                 LayoutNode::atom("typeof".to_string()),
                 layout::space(),
-                builtin_value(pv),
+                builtin_value(pv, size),
                 option(|args| type_args(opts, depth, args, size), targs),
             ])
         }
@@ -366,6 +423,7 @@ fn type_impl<L: Dupe>(
 
         Ty::Infer(data) => {
             let (symbol, bound) = data.as_ref();
+            record_symbol(size, symbol);
             layout::fuse(vec![
                 LayoutNode::atom("infer".to_string()),
                 layout::space(),
@@ -469,13 +527,18 @@ fn type_function<L: Dupe>(
     depth: usize,
     sep: &LayoutNode,
     func: &FunT<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let mut params = Vec::new();
     let mut limit_reached = false;
     if let Some(t) = &func.fun_this_param {
-        if *size == 0 {
-            params.push(crop_atom());
+        if size.remaining == 0 {
+            params.push(crop_atom_with_count(
+                size,
+                1 + func.fun_params.len(),
+                "parameter",
+                "parameters",
+            ));
             limit_reached = true;
         } else {
             params.push(type_function_param(
@@ -491,12 +554,17 @@ fn type_function<L: Dupe>(
         }
     }
 
-    for (name, t, fun_param) in func.fun_params.iter() {
+    for (idx, (name, t, fun_param)) in func.fun_params.iter().enumerate() {
         if limit_reached {
             break;
         }
-        if *size == 0 {
-            params.push(crop_atom());
+        if size.remaining == 0 {
+            params.push(crop_atom_with_count(
+                size,
+                func.fun_params.len() - idx,
+                "parameter",
+                "parameters",
+            ));
             break;
         }
         params.push(type_function_param(
@@ -568,7 +636,7 @@ fn type_function_param<L: Dupe>(
     name: Option<&str>,
     annot: &std::sync::Arc<Ty<L>>,
     fun_param: &FunParam,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let name_part = match name {
         Some(id) => layout::fuse(vec![
@@ -591,7 +659,7 @@ fn return_t<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     ret: &ReturnT<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     match ret {
         ReturnT::ReturnType(t) => type_(opts, depth, t.as_ref(), size),
@@ -612,12 +680,17 @@ fn type_parameter<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     params: &[TypeParam<L>],
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let mut elements = Vec::new();
-    for param in params.iter() {
-        if *size == 0 {
-            elements.push(crop_atom());
+    for (idx, param) in params.iter().enumerate() {
+        if size.remaining == 0 {
+            elements.push(crop_atom_with_count(
+                size,
+                params.len() - idx,
+                "type parameter",
+                "type parameters",
+            ));
             break;
         }
         elements.push(type_param(opts, depth, param, size));
@@ -641,7 +714,7 @@ fn type_param<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     param: &TypeParam<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let const_prefix = if param.tp_const {
         layout::fuse(vec![LayoutNode::atom("const".to_string()), layout::space()])
@@ -677,7 +750,7 @@ fn type_param_bound<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     layout::fuse(vec![
         layout::pretty_space(),
@@ -691,12 +764,17 @@ fn type_object<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     obj: &ObjT<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let mut props = Vec::new();
-    for prop in obj.obj_props.iter() {
-        if *size == 0 {
-            props.push(crop_atom());
+    for (idx, prop) in obj.obj_props.iter().enumerate() {
+        if size.remaining == 0 {
+            props.push(crop_atom_with_count(
+                size,
+                obj.obj_props.len() - idx,
+                "property",
+                "properties",
+            ));
             break;
         }
         props.push(type_object_property(opts, depth, prop, size));
@@ -730,7 +808,7 @@ fn type_object_property<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     prop: &Prop<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let to_key = |name: &Name| -> LayoutNode {
         // A symbol key is rendered TypeScript-style as a bracketed computed key
@@ -871,7 +949,7 @@ fn type_dict<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     dict: &Dict<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let name_part = match &dict.dict_name {
         Some(id) => layout::fuse(vec![
@@ -900,15 +978,20 @@ fn type_interface<L: Dupe>(
     extends: &[GenericT<L>],
     props: &[Prop<L>],
     dict: &Option<Dict<L>>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let extends_node = if extends.is_empty() {
         LayoutNode::empty()
     } else {
         let mut extend_list = Vec::new();
-        for g in extends.iter() {
-            if *size == 0 {
-                extend_list.push(crop_atom());
+        for (idx, g) in extends.iter().enumerate() {
+            if size.remaining == 0 {
+                extend_list.push(crop_atom_with_count(
+                    size,
+                    extends.len() - idx,
+                    "parent type",
+                    "parent types",
+                ));
                 break;
             }
             extend_list.push(type_generic(opts, depth, g, size));
@@ -928,9 +1011,14 @@ fn type_interface<L: Dupe>(
     };
 
     let mut properties = Vec::new();
-    for prop in props.iter() {
-        if *size == 0 {
-            properties.push(crop_atom());
+    for (idx, prop) in props.iter().enumerate() {
+        if size.remaining == 0 {
+            properties.push(crop_atom_with_count(
+                size,
+                props.len() - idx,
+                "property",
+                "properties",
+            ));
             break;
         }
         properties.push(type_object_property(opts, depth, prop, size));
@@ -965,7 +1053,7 @@ fn type_component_sig<L: Dupe>(
     depth: usize,
     regular_props: &ComponentProps<L>,
     renders: Option<&Arc<Ty<L>>>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let to_key = |name: &Name| -> LayoutNode {
         let name_str = name.to_string();
@@ -990,9 +1078,14 @@ fn type_component_sig<L: Dupe>(
         }
         ComponentProps::FlattenedComponentProps { props, inexact } => {
             let mut params_list = Vec::new();
-            for prop in props.iter() {
-                if *size == 0 {
-                    params_list.push(crop_atom());
+            for (idx, prop) in props.iter().enumerate() {
+                if size.remaining == 0 {
+                    params_list.push(crop_atom_with_count(
+                        size,
+                        props.len() - idx,
+                        "component parameter",
+                        "component parameters",
+                    ));
                     break;
                 }
                 let FlattenedComponentProp::FlattenedComponentProp {
@@ -1054,7 +1147,7 @@ fn tuple_element<L: Dupe>(
     depth: usize,
     idx: usize,
     elem: &TupleElement<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     match elem {
         TupleElement::TupleElement {
@@ -1113,7 +1206,7 @@ fn utility<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     u: &Utility<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     use crate::ty::string_of_utility_ctor;
     use crate::ty::types_of_utility;
@@ -1148,7 +1241,7 @@ fn type_array<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     arr: &ArrT<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let arr_name = if arr.arr_readonly {
         "ReadonlyArray"
@@ -1167,10 +1260,10 @@ fn type_generic<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     g: &GenericT<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let (symbol, _, targs) = g;
-    let name = identifier(&local_name_of_symbol(symbol));
+    let name = symbol_identifier(size, symbol);
     type_reference(opts, depth, name, targs.as_deref(), size)
 }
 
@@ -1179,7 +1272,7 @@ fn type_reference<L: Dupe>(
     depth: usize,
     name: LayoutNode,
     targs: Option<&[std::sync::Arc<Ty<L>>]>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let targs_layout = match targs {
         Some(args) => type_args(opts, depth, args, size),
@@ -1192,12 +1285,17 @@ fn type_args<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     targs: &[std::sync::Arc<Ty<L>>],
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let mut elements = Vec::new();
-    for arg in targs.iter() {
-        if *size == 0 {
-            elements.push(crop_atom());
+    for (idx, arg) in targs.iter().enumerate() {
+        if size.remaining == 0 {
+            elements.push(crop_atom_with_count(
+                size,
+                targs.len() - idx,
+                "type argument",
+                "type arguments",
+            ));
             break;
         }
         elements.push(type_(opts, depth, arg.as_ref(), size));
@@ -1220,7 +1318,7 @@ fn type_union<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     types: &[&Ty<L>],
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     let has_null = types.iter().any(|t| matches!(t, Ty::Null));
     let has_void = types.iter().any(|t| matches!(t, Ty::Void));
@@ -1242,7 +1340,15 @@ fn type_union<L: Dupe>(
             (LayoutNode::empty(), types.to_vec())
         };
 
-    let elements = intersperse_pretty_line(opts, depth, "|", &filtered_types, size);
+    let elements = intersperse_pretty_line(
+        opts,
+        depth,
+        "|",
+        "union member",
+        "union members",
+        &filtered_types,
+        size,
+    );
     layout::group(vec![layout::fuse(
         std::iter::once(prefix).chain(elements).collect(),
     )])
@@ -1252,9 +1358,17 @@ fn type_intersection<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     types: &[&Ty<L>],
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let elements = intersperse_pretty_line(opts, depth, "&", types, size);
+    let elements = intersperse_pretty_line(
+        opts,
+        depth,
+        "&",
+        "intersection member",
+        "intersection members",
+        types,
+        size,
+    );
     layout::group(vec![layout::fuse(elements)])
 }
 
@@ -1262,13 +1376,24 @@ fn intersperse_pretty_line<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     sep: &str,
+    singular: &str,
+    plural: &str,
     types: &[&Ty<L>],
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> Vec<LayoutNode> {
     let mut elts = Vec::new();
     for (i, t) in types.iter().enumerate() {
-        if *size == 0 {
-            elts.push(crop_atom());
+        if size.remaining == 0 {
+            let crop = crop_atom_with_count(size, types.len() - i, singular, plural);
+            if i == 0 {
+                elts.push(crop);
+            } else {
+                elts.push(layout::fuse(vec![
+                    LayoutNode::atom(sep.to_string()),
+                    layout::space(),
+                    crop,
+                ]));
+            }
             break;
         }
         let typ = type_with_parens(opts, depth, t, size);
@@ -1303,7 +1428,7 @@ fn type_with_parens<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     t: &Ty<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     match t {
         Ty::Fun(_) | Ty::Union(_, _, _, _) | Ty::Inter(_, _, _) | Ty::Conditional { .. } => {
@@ -1318,12 +1443,13 @@ fn class_decl<L: Dupe>(
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
+    let name = symbol_identifier(size, s);
     layout::fuse(vec![
         LayoutNode::atom("class".to_string()),
         layout::space(),
-        identifier(&local_name_of_symbol(s)),
+        name,
         option(
             |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
             type_parameters,
@@ -1336,12 +1462,13 @@ fn interface_decl<L: Dupe>(
     depth: usize,
     s: &Symbol<L>,
     type_parameters: &Option<Arc<[TypeParam<L>]>>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
+    let name = symbol_identifier(size, s);
     layout::fuse(vec![
         LayoutNode::atom("interface".to_string()),
         layout::space(),
-        identifier(&local_name_of_symbol(s)),
+        name,
         option(
             |tparams: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tparams, size),
             type_parameters,
@@ -1354,12 +1481,13 @@ fn record_decl<L: Dupe>(
     depth: usize,
     s: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
+    let name = symbol_identifier(size, s);
     layout::fuse(vec![
         LayoutNode::atom("record".to_string()),
         layout::space(),
-        identifier(&local_name_of_symbol(s)),
+        name,
         option(
             |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
             tparams,
@@ -1376,8 +1504,9 @@ fn nominal_component_decl<L: Dupe>(
     regular_props: &ComponentProps<L>,
     renders: &Option<Ty<L>>,
     is_type: bool,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
+    let name = symbol_identifier(size, s);
     if is_type {
         // Prefer displaying type arguments if they exist
         let type_args_or_params = match targs {
@@ -1403,7 +1532,7 @@ fn nominal_component_decl<L: Dupe>(
                 vec![layout::fuse(vec![
                     LayoutNode::atom("typeof".to_string()),
                     layout::space(),
-                    identifier(&local_name_of_symbol(s)),
+                    name,
                     type_args_or_params,
                 ])],
             ),
@@ -1422,7 +1551,7 @@ fn nominal_component_decl<L: Dupe>(
         layout::fuse(vec![
             LayoutNode::atom("component".to_string()),
             layout::space(),
-            identifier(&local_name_of_symbol(s)),
+            name,
             type_args_or_params,
             type_component_sig(
                 opts,
@@ -1441,9 +1570,9 @@ fn type_alias<L: Dupe>(
     name: &Symbol<L>,
     tparams: &Option<Arc<[TypeParam<L>]>>,
     t_opt: &Option<Arc<Ty<L>>>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
-    let name_str = &local_name_of_symbol(name);
+    let name = symbol_identifier(size, name);
     let tparams_node = option(
         |tp: &Arc<[TypeParam<L>]>| type_parameter(opts, depth, tp, size),
         tparams,
@@ -1461,7 +1590,7 @@ fn type_alias<L: Dupe>(
     layout::fuse(vec![
         LayoutNode::atom("type".to_string()),
         layout::space(),
-        identifier(name_str),
+        name,
         tparams_node,
         body,
     ])
@@ -1472,7 +1601,7 @@ fn variable_decl<L: Dupe>(
     depth: usize,
     name: &Name,
     t: &Ty<L>,
-    size: &mut usize,
+    size: &mut PrintState<L>,
 ) -> LayoutNode {
     layout::fuse(vec![
         LayoutNode::atom("declare".to_string()),
@@ -1491,11 +1620,12 @@ fn enum_decl<L: Dupe>(
     members: &Option<Arc<[FlowSmolStr]>>,
     has_unknown_members: bool,
     truncated_members_count: i64,
+    state: &mut PrintState<L>,
 ) -> LayoutNode {
     let base = layout::fuse(vec![
         LayoutNode::atom("enum".to_string()),
         layout::space(),
-        identifier(&local_name_of_symbol(s)),
+        symbol_identifier(state, s),
     ]);
     match members {
         None => base,
@@ -1532,21 +1662,29 @@ fn enum_decl<L: Dupe>(
     }
 }
 
-fn namespace<L: Dupe>(name: &Option<Symbol<L>>) -> LayoutNode {
+fn namespace<L: Dupe>(name: &Option<Symbol<L>>, state: &mut PrintState<L>) -> LayoutNode {
     let name_node = match name {
-        Some(sym) => layout::fuse(vec![
-            layout::space(),
-            LayoutNode::atom(sym.sym_name.to_string()),
-        ]),
+        Some(sym) => {
+            record_symbol(state, sym);
+            layout::fuse(vec![
+                layout::space(),
+                LayoutNode::atom(sym.sym_name.to_string()),
+            ])
+        }
         None => LayoutNode::empty(),
     };
 
     layout::fuse(vec![LayoutNode::atom("namespace".to_string()), name_node])
 }
 
-fn module_<L: Dupe>(opts: &PrinterOptions, name: &Option<Symbol<L>>) -> LayoutNode {
+fn module_<L: Dupe>(
+    opts: &PrinterOptions,
+    name: &Option<Symbol<L>>,
+    state: &mut PrintState<L>,
+) -> LayoutNode {
     let name_node = match name {
         Some(sym) => {
+            record_symbol(state, sym);
             let name_str = sym.sym_name.to_string();
             layout::fuse(vec![
                 layout::space(),
@@ -1559,7 +1697,12 @@ fn module_<L: Dupe>(opts: &PrinterOptions, name: &Option<Symbol<L>>) -> LayoutNo
     layout::fuse(vec![LayoutNode::atom("module".to_string()), name_node])
 }
 
-fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>, size: &mut usize) -> LayoutNode {
+fn decl<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    d: &Decl<L>,
+    size: &mut PrintState<L>,
+) -> LayoutNode {
     match d {
         Decl::VariableDecl(box (name, t)) => variable_decl(opts, depth, name, t, size),
         Decl::TypeAliasDecl(box DeclTypeAliasDeclData {
@@ -1581,6 +1724,7 @@ fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>, size: &mut us
             members,
             *has_unknown_members,
             *truncated_members_count,
+            size,
         ),
         Decl::NominalComponentDecl(box DeclNominalComponentDeclData {
             name,
@@ -1592,8 +1736,8 @@ fn decl<L: Dupe>(opts: &PrinterOptions, depth: usize, d: &Decl<L>, size: &mut us
         }) => nominal_component_decl(
             opts, depth, name, tparams, targs, props, renders, *is_type, size,
         ),
-        Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => namespace(name),
-        Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => module_(opts, name),
+        Decl::NamespaceDecl(box DeclNamespaceDeclData { name, .. }) => namespace(name, size),
+        Decl::ModuleDecl(box DeclModuleDeclData { name, .. }) => module_(opts, name, size),
     }
 }
 
@@ -1654,12 +1798,25 @@ pub fn string_of_symbol_set<L: Clone + Ord>(
         .collect()
 }
 
-pub fn string_of_type_at_pos_result<R: Clone + Ord>(
+pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
     ty: &Elt<ALoc>,
     refs: &Option<std::collections::BTreeSet<Symbol<R>>>,
+    loc_of_aloc: &dyn Fn(&ALoc) -> R,
     opts: &PrinterOptions,
 ) -> (String, Option<Vec<(String, R)>>) {
-    let type_str = pretty_printer::print(true, &layout_of_elt(opts, ty)).contents();
-    let refs = refs.as_ref().map(|r| string_of_symbol_set(r));
+    let (layout, printed_symbols, truncated) = layout_of_elt_with_state(opts, ty, true);
+    let type_str = pretty_printer::print(true, &layout).contents();
+    let refs = refs.as_ref().map(|refs| {
+        if !truncated {
+            return string_of_symbol_set(refs);
+        }
+
+        let printed_refs: std::collections::BTreeSet<_> = printed_symbols
+            .iter()
+            .map(|symbol| symbol.map_locs(&|aloc| loc_of_aloc(aloc)))
+            .collect();
+        let visible_refs = refs.intersection(&printed_refs).cloned().collect();
+        string_of_symbol_set(&visible_refs)
+    });
     (type_str, refs)
 }

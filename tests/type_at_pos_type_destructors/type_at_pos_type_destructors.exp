@@ -1062,15 +1062,7 @@ type ObjBig = {
     o: string,
     p: string,
     q: string,
-    r: string,
-    s: string,
-    t: string,
-    u: string,
-    v: string,
-    w: string,
-    x: string,
-    y: string,
-    z: string
+    ... 9 more properties ...
   },
   ...
 }
@@ -1180,27 +1172,7 @@ type FromMapped = "k000"
 | "k096"
 | "k097"
 | "k098"
-| "k099"
-| "k100"
-| "k101"
-| "k102"
-| "k103"
-| "k104"
-| "k105"
-| "k106"
-| "k107"
-| "k108"
-| "k109"
-| "k110"
-| "k111"
-| "k112"
-| "k113"
-| "k114"
-| "k115"
-| "k116"
-| "k117"
-| "k118"
-| "k119"
+| ... 21 more union members ...
 
 'FromMapped' defined at unestimable-operand.js:12:5
 
@@ -1307,27 +1279,7 @@ type FromIntersected = "k000"
 | "k096"
 | "k097"
 | "k098"
-| "k099"
-| "k100"
-| "k101"
-| "k102"
-| "k103"
-| "k104"
-| "k105"
-| "k106"
-| "k107"
-| "k108"
-| "k109"
-| "k110"
-| "k111"
-| "k112"
-| "k113"
-| "k114"
-| "k115"
-| "k116"
-| "k117"
-| "k118"
-| "k119"
+| ... 21 more union members ...
 
 'FromIntersected' defined at unestimable-operand.js:17:5
 
@@ -1434,27 +1386,7 @@ type FromIface = "k000"
 | "k096"
 | "k097"
 | "k098"
-| "k099"
-| "k100"
-| "k101"
-| "k102"
-| "k103"
-| "k104"
-| "k105"
-| "k106"
-| "k107"
-| "k108"
-| "k109"
-| "k110"
-| "k111"
-| "k112"
-| "k113"
-| "k114"
-| "k115"
-| "k116"
-| "k117"
-| "k118"
-| "k119"
+| ... 21 more union members ...
 
 'FromIface' defined at unestimable-operand.js:143:5
 

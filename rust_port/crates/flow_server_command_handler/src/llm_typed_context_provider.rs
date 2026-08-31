@@ -71,8 +71,12 @@ fn normalize_type(
             let refs: BTreeSet<Symbol<Loc>> = ty::symbols_of_elt(loc_of_aloc, &elt);
             let refs_some = Some(refs);
             let opts = PrinterOptions::default();
-            let (type_str, refs) =
-                ty_printer::string_of_type_at_pos_result::<Loc>(&elt, &refs_some, &opts);
+            let (type_str, refs) = ty_printer::string_of_type_at_pos_result::<Loc>(
+                &elt,
+                &refs_some,
+                &loc_of_aloc,
+                &opts,
+            );
             (type_str, refs)
         }
         Err(_) => ("<unknown>".to_string(), None),

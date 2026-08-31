@@ -20,6 +20,7 @@ use flow_common::sys_utils::normalize_filename_dir_sep;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
+use flow_common_ty::ty_printer::PrinterOptions;
 use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::ActiveTransaction;
@@ -91,6 +92,8 @@ type AutocompleteResponse = Result<
 >;
 
 pub const CHECKED_DEPENDENCIES_RETRY_SENTINEL: &str = "__flow_checked_dependencies_retry__";
+
+const MAX_TYPE_AT_POS_PRINT_SIZE: usize = 100;
 
 #[derive(Debug)]
 pub struct WorkloadCanceled;
@@ -1560,7 +1563,10 @@ fn infer_type_to_response(
     loc_of_aloc: &dyn Fn(&flow_aloc::ALoc) -> flow_parser::loc::Loc,
 ) -> server_prot::response::infer_type::T {
     let converter = flow_common_ty::ty_debug::AlocToLocFn::new(loc_of_aloc);
-    let printer_opts = flow_common_ty::ty_printer::PrinterOptions::default();
+    let printer_opts = PrinterOptions {
+        size: MAX_TYPE_AT_POS_PRINT_SIZE,
+        ..Default::default()
+    };
     let tys = if json {
         // The "expanded" field carries `Hh_json` output that may contain duplicate
         // keys (`json_of_utility` adds a second `"kind"` to the outer wrapper).
@@ -1603,6 +1609,7 @@ fn infer_type_to_response(
             let (type_str, refs) = flow_common_ty::ty_printer::string_of_type_at_pos_result(
                 &r.ty,
                 &r.refs,
+                loc_of_aloc,
                 &printer_opts,
             );
             server_prot::response::infer_type::FriendlyResponse { type_str, refs }
@@ -2003,7 +2010,11 @@ fn inlay_hint(
                                 flow_common_ty::ty_printer::string_of_type_at_pos_result(
                                     &r.ty,
                                     &r.refs,
-                                    &flow_common_ty::ty_printer::PrinterOptions::default(),
+                                    &loc_of_aloc,
+                                    &PrinterOptions {
+                                        size: MAX_TYPE_AT_POS_PRINT_SIZE,
+                                        ..Default::default()
+                                    },
                                 );
                             server_prot::response::infer_type::FriendlyResponse { type_str, refs }
                         });
