@@ -12,6 +12,6 @@ declare function test_arg(arg: (x: any) => void): void;
 declare function test(arg: () => void): void;
 
 const instance = new Foo();
-test_arg(instance.i); // error method-unbinding should only be reported once
-test(instance.m); // error method-unbinding should only be reported once
-test(instance.p); // error method-unbinding should only be reported once
+test_arg(instance.i); // ok
+test(instance.m); // ok
+test(instance.p); // ok

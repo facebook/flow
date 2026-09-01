@@ -4,6 +4,6 @@ class A {
 
 
 {
-  declare const m: A['m']; // OK - this does not actually unbind anything at runtime
+  declare const m: A['m']; // OK - this does not extract anything at runtime
   m as A['m']; // OK
 }

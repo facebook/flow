@@ -1855,12 +1855,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: Class<this>) => void",
+  "detail":"() => void",
   "documentation":{"kind":"markdown","value":"this is a static method"},
   "insertTextFormat":1,
   "kind":3,
   "label":"staticMethod",
-  "labelDetails":{"detail":": (this: Class<this>) => void"},
+  "labelDetails":{"detail":": () => void"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"staticMethod",

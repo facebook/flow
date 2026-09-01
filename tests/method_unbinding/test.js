@@ -30,33 +30,33 @@ declare const o  : O;
 
 /* tests */
 
-a.m; // err
+a.m; // ok
 a.n; // ok
 
-b.m; // err
+b.m; // ok
 b.n; // ok
-b.x; // err
+b.x; // ok
 
-i.m; // err
+i.m; // ok
 i.n; // ok
 
-j.m; // err
+j.m; // ok
 j.n; // ok
 
 o.m; // ok
 o.n; // ok
 
-let {m : mb} = b; // err
-let {x : xb} = b; // err
+let {m : mb} = b; // ok
+let {x : xb} = b; // ok
 let {n : nb} = b; // ok
 
-let {m : ma} = a; // err
+let {m : ma} = a; // ok
 let {n : na} = a; // ok
 
-let {m : mi} = i; // err
+let {m : mi} = i; // ok
 let {n : ni} = i; // ok
 
-let {m : mj} = j; // err
+let {m : mj} = j; // ok
 let {n : nj} = j; // ok
 
 let {m : mo} = o; // ok
@@ -84,17 +84,17 @@ let x3 = {...i}; // cannot spread interface
 let x4 = {...j}; // cannot spread interface
 let x5 = {...o}; // ok
 
-if (a.m) {} // err
+if (a.m) {} // ok
 if (a.n) {} // ok
 
-if (b.m) {} // err
+if (b.m) {} // ok
 if (b.n) {} // ok
-if (b.x) {} // err
+if (b.x) {} // ok
 
-if (j.m) {} // err
+if (j.m) {} // ok
 if (j.n) {} // ok
 
-if (i.m) {} // err
+if (i.m) {} // ok
 if (i.n) {} // ok
 
 
@@ -108,7 +108,10 @@ const ob : T = {
     f: X.method,
 };
 
-// Assignment does not produce method-unbinding errors (only 'cannot-write')
+const staticMethod = X.method;
+staticMethod(); // ok
+
+// Assignment to a method remains read-only.
 {
   class A {
      m(): void {}

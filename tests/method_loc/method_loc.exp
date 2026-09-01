@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- class.js:5:1
 
-Cannot cast `C.m` to empty because `(this: Class<C>) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `C.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    class.js:5:1
    5| C.m as empty; //err
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- class_dep.js:2:1
 
-Cannot cast `C.m` to empty because `(this: Class<C>) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `C.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    class_dep.js:2:1
    2| C.m as empty; //err
@@ -68,7 +68,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declare_class.js:5:1
 
-Cannot cast `C.m` to empty because `(this: Class<C>) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `C.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class.js:5:1
    5| C.m as empty; //err
@@ -102,7 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- declare_class_dep.js:2:1
 
-Cannot cast `C.m` to empty because `(this: Class<C>) => void` [1] is incompatible with `empty` [2]. [incompatible-type]
+Cannot cast `C.m` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    declare_class_dep.js:2:1
    2| C.m as empty; //err

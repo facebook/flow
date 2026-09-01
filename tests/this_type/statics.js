@@ -1,7 +1,7 @@
 // supporting `this` type in statics
 
 class A {
-  static make(): this { // factory method, whose return type `this` (still)
+  static make(this: Class<this>): this { // factory method, whose return type `this` (still)
                         // describes instances of A or subclasses of A: the
                         // meaning of the `this` type is not changed simply by
                         // switching into a static context

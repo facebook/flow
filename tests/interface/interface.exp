@@ -59,8 +59,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:21:1
 
-Cannot cast `build` to interface type because `(this: Class<S>) => S` [1] is incompatible with
-`interface {foo: boolean}` [2]. [incompatible-type]
+Cannot cast `build` to interface type because `() => S` [1] is incompatible with `interface {foo: boolean}` [2].
+[incompatible-type]
 
 Functions without statics are not compatible with objects.
 

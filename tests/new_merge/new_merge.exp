@@ -106,8 +106,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:29:1
 
-Cannot cast `y5` to empty because `(this: Class<P<unknown>>) => void` [1] is incompatible with `empty` [2].
-[incompatible-type]
+Cannot cast `y5` to empty because `() => void` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    main.js:29:1
    29| y5 as empty; // error function type ~> empty

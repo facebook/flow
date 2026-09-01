@@ -1,336 +1,48 @@
-Error -------------------------------------------------------------------------------------------- complex_types.js:12:3
+Error -------------------------------------------------------------------------------------- no_duplicate_error.js:15:10
 
-Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot call `test_arg` with `instance.i` bound to `arg` because: [incompatible-type]
+ - Either in the `this` parameter: `Foo` [1] is incompatible with `unknown`.
+ - Or in the `this` parameter: `Foo` [1] is incompatible with `unknown`.
+ - Or in the `this` parameter: `Foo` [1] is incompatible with `unknown`.
 
-   complex_types.js:12:3
-   12| a.m; // err
-         ^ [1]
-
-References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:13:3
-
-Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   complex_types.js:13:3
-   13| b.m; // err
-         ^ [1]
+   no_duplicate_error.js:15:10
+   15| test_arg(instance.i); // ok
+                ^^^^^^^^^^
 
 References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
+   no_duplicate_error.js:1:15
+    1| declare class Foo {
+                     ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- complex_types.js:13:3
+Error --------------------------------------------------------------------------------------- no_duplicate_error.js:16:6
 
-Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot call `test` with `instance.m` bound to `arg` because in the `this` parameter: `Foo` [1] is incompatible with
+`unknown`. [incompatible-type]
 
-   complex_types.js:13:3
-   13| b.m; // err
-         ^ [1]
-
-References:
-   complex_types.js:6:5
-    6|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:14:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   complex_types.js:14:6
-   14| let {m : ma} = a; // err
-            ^ [1]
+   no_duplicate_error.js:16:6
+   16| test(instance.m); // ok
+            ^^^^^^^^^^
 
 References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
+   no_duplicate_error.js:1:15
+    1| declare class Foo {
+                     ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- complex_types.js:15:6
+Error --------------------------------------------------------------------------------------- no_duplicate_error.js:17:6
 
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot call `test` with `instance.p` bound to `arg` because in the `this` parameter: `Foo` [1] is incompatible with
+`unknown`. [incompatible-type]
 
-   complex_types.js:15:6
-   15| let {m : mb} = b; // err
-            ^ [1]
-
-References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:15:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   complex_types.js:15:6
-   15| let {m : mb} = b; // err
-            ^ [1]
+   no_duplicate_error.js:17:6
+   17| test(instance.p); // ok
+            ^^^^^^^^^^
 
 References:
-   complex_types.js:6:5
-    6|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:25:3
-
-Cannot get `c.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   complex_types.js:25:3
-   25| c.m; // error -- picking I.m
-         ^ [1]
-
-References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:27:3
-
-Cannot get `d.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   complex_types.js:27:3
-   27| d.m; // err
-         ^ [1]
-
-References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:29:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   complex_types.js:29:6
-   29| let {m : mc} = c; // err -- picking I.m
-            ^ [1]
-
-References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- complex_types.js:31:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   complex_types.js:31:6
-   31| let {m : md} = d; // err
-            ^ [1]
-
-References:
-   complex_types.js:2:5
-    2|     m() : void
-           ^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- no_duplicate_error.js:15:19
-
-Cannot get `instance.i` because property `i` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   no_duplicate_error.js:15:19
-   15| test_arg(instance.i); // error method-unbinding should only be reported once
-                         ^ [1]
-
-References:
-   no_duplicate_error.js:2:3
-    2|   i(x: number): void;
-         ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- no_duplicate_error.js:16:15
-
-Cannot get `instance.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   no_duplicate_error.js:16:15
-   16| test(instance.m); // error method-unbinding should only be reported once
-                     ^ [1]
-
-References:
-   no_duplicate_error.js:6:3
-    6|   m():void;
-         ^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------- no_duplicate_error.js:17:15
-
-Cannot get `instance.p` because property `p` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   no_duplicate_error.js:17:15
-   17| test(instance.p); // error method-unbinding should only be reported once
-                     ^ [1]
-
-References:
-   no_duplicate_error.js:8:3
-    8|   p<T>(x: T): void;
-         ^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:33:3
-
-Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:33:3
-   33| a.m; // err
-         ^ [1]
-
-References:
-   test.js:2:5
-    2|     m() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:36:3
-
-Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:36:3
-   36| b.m; // err
-         ^ [1]
-
-References:
-   test.js:2:5
-    2|     m() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:38:3
-
-Cannot get `b.x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:38:3
-   38| b.x; // err
-         ^ [1]
-
-References:
-   test.js:7:5
-    7|     x() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:40:3
-
-Cannot get `i.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:40:3
-   40| i.m; // err
-         ^ [1]
-
-References:
-   test.js:11:5
-   11|     m() : void;
-           ^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:43:3
-
-Cannot get `j.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:43:3
-   43| j.m; // err
-         ^ [1]
-
-References:
-   test.js:16:5
-   16|     m() : void;
-           ^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:49:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   test.js:49:6
-   49| let {m : mb} = b; // err
-            ^ [1]
-
-References:
-   test.js:2:5
-    2|     m() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:50:6
-
-property `x` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   test.js:50:6
-   50| let {x : xb} = b; // err
-            ^ [1]
-
-References:
-   test.js:7:5
-    7|     x() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:53:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   test.js:53:6
-   53| let {m : ma} = a; // err
-            ^ [1]
-
-References:
-   test.js:2:5
-    2|     m() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:56:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   test.js:56:6
-   56| let {m : mi} = i; // err
-            ^ [1]
-
-References:
-   test.js:11:5
-   11|     m() : void;
-           ^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:59:6
-
-property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
-
-   test.js:59:6
-   59| let {m : mj} = j; // err
-            ^ [1]
-
-References:
-   test.js:16:5
-   16|     m() : void;
-           ^^^^^^^^^^ [2]
+   no_duplicate_error.js:1:15
+    1| declare class Foo {
+                     ^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:83:10
@@ -365,103 +77,13 @@ References:
                          ^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:87:7
-
-Cannot get `a.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:87:7
-   87| if (a.m) {} // err
-             ^ [1]
-
-References:
-   test.js:2:5
-    2|     m() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:90:7
-
-Cannot get `b.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:90:7
-   90| if (b.m) {} // err
-             ^ [1]
-
-References:
-   test.js:2:5
-    2|     m() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:92:7
-
-Cannot get `b.x` because property `x` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:92:7
-   92| if (b.x) {} // err
-             ^ [1]
-
-References:
-   test.js:7:5
-    7|     x() {}
-           ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:94:7
-
-Cannot get `j.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:94:7
-   94| if (j.m) {} // err
-             ^ [1]
-
-References:
-   test.js:16:5
-   16|     m() : void;
-           ^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:97:7
-
-Cannot get `i.m` because property `m` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
-
-   test.js:97:7
-   97| if (i.m) {} // err
-             ^ [1]
-
-References:
-   test.js:11:5
-   11|     m() : void;
-           ^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:108:8
-
-Cannot assign object literal to `ob` because in property `f` > the `this` parameter: function [1] cannot be unbound from
-the context [1] where it was defined. [method-unbinding]
-
-   test.js:108:8
-   108|     f: X.method,
-               ^^^^^^^^
-
-References:
-   lib.js:12:3
-    12|   static method(): void {}
-          ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:119:5
+Error ---------------------------------------------------------------------------------------------------- test.js:122:5
 
 Cannot assign function to `b.m` because property `m` is not writable. [cannot-write]
 
-   119|   b.m = () => {}; // ERROR: cannot-write
+   122|   b.m = () => {}; // ERROR: cannot-write
             ^
 
 
 
-Found 32 errors
+Found 6 errors

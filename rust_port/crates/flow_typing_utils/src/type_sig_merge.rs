@@ -4719,16 +4719,12 @@ fn merge_fun<'cx>(
             None => {
                 if cx.new_this_typing()
                     && is_method
+                    && !is_static
                     && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
                 {
-                    let this = if is_static {
-                        type_util::class_type(this.dupe(), false, None)
-                    } else {
-                        this.dupe()
-                    };
                     type_util::mod_reason_of_t(
                         &|r: Reason| r.update_desc(|desc| RImplicitThis(Arc::new(desc))),
-                        &this,
+                        this,
                     )
                 } else if is_method || cx.new_this_typing() {
                     type_::implicit_mixed_this(reason2.dupe())

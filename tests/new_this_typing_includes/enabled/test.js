@@ -3,9 +3,9 @@
 class Enabled {
   static noThis(): void {}
 
-  static usesThis(): typeof Enabled { // ok
+  static usesThis(): typeof Enabled { // error: need to annotate this
     return this;
   }
 }
 
-const extracted: () => void = Enabled.noThis; // error
+const extracted: () => void = Enabled.noThis; // ok

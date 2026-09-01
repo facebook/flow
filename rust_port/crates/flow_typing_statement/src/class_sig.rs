@@ -1027,7 +1027,13 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
 ) -> (FlowOrdSet<Name>, ObjType) {
     let s = &x.static_;
     let loc = x.static_.reason.loc().dupe();
-    let this = type_util::class_type(this_or_mixed(loc, x), false, None);
+    let this = if cx.new_this_typing() {
+        // Static methods without an explicit `this` parameter are extractable.
+        // Statement checking requires an annotation before their bodies use `this`.
+        implicit_mixed_this(s.reason.dupe())
+    } else {
+        type_util::class_type(this_or_mixed(loc, x), false, None)
+    };
     let (inited_fields, fields, methods, call, _construct) = elements(cx, this, None, s, &x.super_);
     let props: properties::PropertiesMap = {
         let mut seen = std::collections::BTreeSet::new();
@@ -1659,7 +1665,11 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
         &x.super_,
     );
     let static_ = {
-        let this = type_util::class_type(this_or_mixed(inst_loc, x), false, None);
+        let this = if cx.new_this_typing() {
+            implicit_mixed_this(x.static_.reason.dupe())
+        } else {
+            type_util::class_type(this_or_mixed(inst_loc, x), false, None)
+        };
         // NOTE: The own, proto maps are disjoint by construction.
         let (_, own, proto, _call, _construct) = elements(cx, this, None, &x.static_, &x.super_);
         let mut merged = own;

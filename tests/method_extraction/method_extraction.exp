@@ -160,29 +160,19 @@ References:
         ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:117:8
+Error --------------------------------------------------------------------------------------------------- test.js:126:18
 
-Cannot assign object literal to `ob` because in property `f` > the `this` parameter: `Class<X>` [1] is incompatible with
-`unknown` [2]. [incompatible-type]
+Missing an annotation on implicit `this` parameter of method `implicit`. [missing-this-annot]
 
-   test.js:117:8
-   117|     f: X.method, // error: `Class<X>` receiver is not satisfied by `unknown`
-               ^^^^^^^^
-
-References:
-   lib.js:11:22
-    11| export default class X {
-                             ^ [1]
-   test.js:111:6
-   111|   f: string => void,
-             ^^^^^^ [2]
+   126|   static implicit(): number { // error: implicit `this` needs an annotation
+                         ^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:128:5
+Error ---------------------------------------------------------------------------------------------------- test.js:143:5
 
 Cannot assign function to `b.m` because property `m` is not writable. [cannot-write]
 
-   128|   b.m = () => {}; // ERROR: cannot-write
+   143|   b.m = () => {}; // ERROR: cannot-write
             ^
 
 

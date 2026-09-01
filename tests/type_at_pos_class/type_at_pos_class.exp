@@ -461,7 +461,7 @@ class-statics.js:4:10 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":10,
-  "types":{"type":"(this: Class<this>) => void"}
+  "types":{"type":"() => void"}
 }
 class-statics.js:8:10 = {
   "end":10,
@@ -476,7 +476,7 @@ class-statics.js:8:10 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":10,
-  "types":{"type":"(this: Class<this>) => Class<this>"}
+  "types":{"type":"() => Class<this>"}
 }
 class-statics.js:9:7 = {
   "end":8,
@@ -566,7 +566,7 @@ class-statics-poly.js:4:10 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":10,
-  "types":{"type":"(this: Class<this>) => void"}
+  "types":{"type":"() => void"}
 }
 class-statics-poly.js:8:10 = {
   "end":10,
@@ -581,7 +581,7 @@ class-statics-poly.js:8:10 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":10,
-  "types":{"type":"(this: Class<this>) => Class<B<T>>"}
+  "types":{"type":"() => Class<B<T>>"}
 }
 class-statics-poly.js:9:7 = {
   "end":8,

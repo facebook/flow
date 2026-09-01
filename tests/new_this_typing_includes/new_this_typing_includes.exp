@@ -16,19 +16,12 @@ References:
              ^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- enabled/test.js:11:31
+Error --------------------------------------------------------------------------------------------- enabled/test.js:6:18
 
-Cannot assign `Enabled.noThis` to `extracted` because in the `this` parameter: `Class<Enabled>` [1] is incompatible with
-`unknown`. [incompatible-type]
+Missing an annotation on implicit `this` parameter of method `usesThis`. [missing-this-annot]
 
-   enabled/test.js:11:31
-   11| const extracted: () => void = Enabled.noThis; // error
-                                     ^^^^^^^^^^^^^^
-
-References:
-   enabled/test.js:3:7
-    3| class Enabled {
-             ^^^^^^^ [1]
+   6|   static usesThis(): typeof Enabled { // error: need to annotate this
+                       ^^
 
 
 

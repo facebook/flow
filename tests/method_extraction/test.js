@@ -114,8 +114,23 @@ type T = {
 import X from './lib.js';
 
 const ob : T = {
-    f: X.method, // error: `Class<X>` receiver is not satisfied by `unknown`
+    f: X.method, // ok: static methods without an explicit `this` can be unbound
 };
+
+const staticMethod = X.method;
+staticMethod(); // ok
+
+class StaticWithThis {
+  static value: number;
+
+  static implicit(): number { // error: implicit `this` needs an annotation
+    return this.value;
+  }
+
+  static explicit(this: typeof StaticWithThis): number {
+    return this.value;
+  }
+}
 
 // Assignment to a method remains read-only.
 {

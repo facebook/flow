@@ -202,37 +202,31 @@ At file.js:116:19
 file.js:116:19,116:21
 
 At file.js:127:16
-(this: Class<a>, x: number) => O1
+(x: number) => O1
 
 'O1' defined at file.js:1:20
-'a' defined at file.js:121:16
 
 file.js:127:16,127:18
 
 At file.js:129:16
-(this: Class<a>, x: Array<string>) => O1
+(x: Array<string>) => O1
 
 'O1' defined at file.js:1:20
-'a' defined at file.js:121:16
 
 file.js:129:16,129:18
 
 At file.js:131:16
-(this: Class<a>, x: string) => O2
+(x: string) => O2
 
 'O2' defined at file.js:2:20
-'a' defined at file.js:121:16
 
 file.js:131:16,131:18
 
 At file.js:133:19
-((this: Class<a>, x: number) => O1)
-& (<A>(this: Class<a>, x: Array<A>) => O1)
-& ((this: Class<a>, x: string) => O2)
+((x: number) => O1) & (<A>(x: Array<A>) => O1) & ((x: string) => O2)
 
 'O1' defined at file.js:1:20
 'O2' defined at file.js:2:20
-'a' defined at file.js:121:16
 
 file.js:133:19,133:21
 

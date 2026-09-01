@@ -489,7 +489,7 @@ Flags: --strip-root --pretty
   "path":"objects-requires.js",
   "reasons":[],
   "start":5,
-  "types":{"type":"(this: Class<Foo>) => void"}
+  "types":{"type":"() => void"}
 }
 
 objects-requires.js:56:12
