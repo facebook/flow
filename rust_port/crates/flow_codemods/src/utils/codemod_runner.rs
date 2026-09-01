@@ -94,6 +94,25 @@ fn profiling_start(label: &str, _should_print_summary: bool) {
     tracing::info!("Starting profiling: {}", label);
 }
 
+fn with_memory_timer<T>(options: &Options, timer: &str, f: impl FnOnce() -> T) -> T {
+    flow_profiling::memory_utils::with_memory_timer(options.profile && !options.quiet, timer, f)
+}
+
+async fn with_timer_async<T>(
+    options: &Options,
+    timer: &str,
+    future: impl std::future::Future<Output = T>,
+) -> T {
+    match flow_profiling::profiling_js::current() {
+        Some(profiling) => {
+            profiling
+                .with_timer_async(options.profile && !options.quiet, timer, future)
+                .await
+        }
+        None => future.await,
+    }
+}
+
 #[allow(dead_code)]
 fn state_reader_create() {}
 
@@ -753,27 +772,29 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
         let mutator = ();
         flow_hh_logger::info!("Merging {} files", files_to_merge.len());
         if let Some(pool) = _workers {
-            let _merge_results = flow_services_inference::merge_service::merge_runner(
-                pool,
-                &reader,
-                _options,
-                false, // for_find_all_refs
-                _dependency_info.sig_dependency_graph(),
-                _components,
-                &files_to_merge,
-                move |_transaction: &flow_heap::parsing_heaps::Transaction,
-                      _opts: &Options,
-                      _for_find_all_refs: bool,
-                      _component: vec1::Vec1<FileKey>| {
-                    Ok(merge_job(
-                        &mutator,
-                        _opts,
-                        _for_find_all_refs,
-                        _transaction,
-                        _component,
-                    ))
-                },
-            )?;
+            let _merge_results = with_memory_timer(_options, "Merge", || {
+                flow_services_inference::merge_service::merge_runner(
+                    pool,
+                    &reader,
+                    _options,
+                    false, // for_find_all_refs
+                    _dependency_info.sig_dependency_graph(),
+                    _components,
+                    &files_to_merge,
+                    move |_transaction: &flow_heap::parsing_heaps::Transaction,
+                          _opts: &Options,
+                          _for_find_all_refs: bool,
+                          _component: vec1::Vec1<FileKey>| {
+                        Ok(merge_job(
+                            &mutator,
+                            _opts,
+                            _for_find_all_refs,
+                            _transaction,
+                            _component,
+                        ))
+                    },
+                )
+            })?;
         }
         flow_hh_logger::info!("Merging done.");
         flow_hh_logger::info!("Checking {} files", _roots.len());
@@ -798,15 +819,17 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 inner(file.clone()),
             )
         };
-        let result = check_all_files(
-            _workers,
-            &options,
-            files,
-            &reader,
-            &_env.master_cx,
-            _env.configured_libs(),
-            wrap,
-        )?;
+        let result = with_memory_timer(&options, "Check", || {
+            check_all_files(
+                _workers,
+                &options,
+                files,
+                &reader,
+                &_env.master_cx,
+                _env.configured_libs(),
+                wrap,
+            )
+        })?;
         flow_hh_logger::info!("Done");
         Ok(result)
     }
@@ -895,21 +918,23 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         let mutator = ();
         flow_hh_logger::info!("Merging {} files", files_to_merge.len());
         if let Some(pool) = _workers {
-            let _merge_results = flow_services_inference::merge_service::merge_runner(
-                pool,
-                &reader,
-                _options,
-                false,
-                _dependency_info.sig_dependency_graph(),
-                _components,
-                &files_to_merge,
-                move |_sm: &flow_heap::parsing_heaps::Transaction,
-                      _o: &Options,
-                      _f: bool,
-                      _c: vec1::Vec1<FileKey>| {
-                    Ok(merge_job(&mutator, _o, _f, _sm, _c))
-                },
-            )?;
+            let _merge_results = with_memory_timer(_options, "Merge", || {
+                flow_services_inference::merge_service::merge_runner(
+                    pool,
+                    &reader,
+                    _options,
+                    false,
+                    _dependency_info.sig_dependency_graph(),
+                    _components,
+                    &files_to_merge,
+                    move |_sm: &flow_heap::parsing_heaps::Transaction,
+                          _o: &Options,
+                          _f: bool,
+                          _c: vec1::Vec1<FileKey>| {
+                        Ok(merge_job(&mutator, _o, _f, _sm, _c))
+                    },
+                )
+            })?;
         }
         flow_hh_logger::info!("Merging done.");
         flow_hh_logger::info!("Checking {} files", _roots.len());
@@ -934,15 +959,17 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 inner(file.clone()),
             )
         };
-        let initial_run_result = check_all_files(
-            _workers,
-            &options,
-            files,
-            &reader,
-            &_env.master_cx,
-            _env.configured_libs(),
-            wrap,
-        )?;
+        let initial_run_result = with_memory_timer(&options, "Check", || {
+            check_all_files(
+                _workers,
+                &options,
+                files,
+                &reader,
+                &_env.master_cx,
+                _env.configured_libs(),
+                wrap,
+            )
+        })?;
         flow_hh_logger::info!("Initial run done");
         let second_run_roots: BTreeSet<FileKey> = initial_run_result.iter().fold(
             BTreeSet::<FileKey>::new(),
@@ -980,21 +1007,23 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
         let mutator2 = ();
         flow_hh_logger::info!("Merging {} files", files_to_merge2.len());
         if let Some(pool) = _workers {
-            let _merge_results = flow_services_inference::merge_service::merge_runner(
-                pool,
-                &reader,
-                _options,
-                false,
-                _dependency_info2.sig_dependency_graph(),
-                _components2,
-                &files_to_merge2,
-                move |_sm: &flow_heap::parsing_heaps::Transaction,
-                      _o: &Options,
-                      _f: bool,
-                      _c: vec1::Vec1<FileKey>| {
-                    Ok(merge_job(&mutator2, _o, _f, _sm, _c))
-                },
-            )?;
+            let _merge_results = with_memory_timer(_options, "Merge", || {
+                flow_services_inference::merge_service::merge_runner(
+                    pool,
+                    &reader,
+                    _options,
+                    false,
+                    _dependency_info2.sig_dependency_graph(),
+                    _components2,
+                    &files_to_merge2,
+                    move |_sm: &flow_heap::parsing_heaps::Transaction,
+                          _o: &Options,
+                          _f: bool,
+                          _c: vec1::Vec1<FileKey>| {
+                        Ok(merge_job(&mutator2, _o, _f, _sm, _c))
+                    },
+                )
+            })?;
         }
         flow_hh_logger::info!("Merging done.");
         let files2: Vec<FileKey> = second_run_roots.iter().cloned().collect();
@@ -1009,15 +1038,17 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 inner(file.clone()),
             )
         };
-        let job_results2 = check_all_files(
-            _workers,
-            &options,
-            files2,
-            &reader,
-            &_env.master_cx,
-            _env.configured_libs(),
-            wrap2,
-        )?;
+        let job_results2 = with_memory_timer(&options, "Check", || {
+            check_all_files(
+                _workers,
+                &options,
+                files2,
+                &reader,
+                &_env.master_cx,
+                _env.configured_libs(),
+                wrap2,
+            )
+        })?;
         let mut result: ResultList<Self::Accumulator> = initial_run_result;
         result.extend(job_results2);
         flow_hh_logger::info!("Pruned-deps run done");
@@ -1222,10 +1253,14 @@ where
         let workers = &_genv.workers;
         let should_print_summary = options.profile;
         let profiling = profiling_start("Codemod", should_print_summary);
-        extract_flowlibs_or_exit(options);
-        let heap_transaction = ActiveTransaction::new(heap.clone());
-        let transaction = heap_transaction.handle();
-        let options_arc = Arc::new(options.clone());
+        let (heap_transaction, transaction, options_arc) =
+            with_memory_timer(options, "CodemodInit", || {
+                extract_flowlibs_or_exit(options);
+                let heap_transaction = ActiveTransaction::new(heap.clone());
+                let transaction = heap_transaction.handle();
+                let options_arc = Arc::new(options.clone());
+                (heap_transaction, transaction, options_arc)
+            });
         let pool = workers.as_ref().expect("workers required for init");
         let root = &options.root;
         // let%lwt (_libs_ok, env) = Types_js.init ~profiling ~workers options in
@@ -1236,18 +1271,23 @@ where
             root,
             None,
         );
-        let file_options = &options.file_options;
-        let all = options.all;
-        let roots = get_target_filename_set(file_options, all, _roots);
-        let roots = TRC::expand_roots(&env, options, roots);
-        let env_files: BTreeSet<FileKey> = env.files.iter().cloned().collect();
-        let roots: BTreeSet<FileKey> = roots.intersection(&env_files).cloned().collect();
-        log_input_files(&roots);
+        let roots = with_memory_timer(options, "CodemodTargets", || {
+            let file_options = &options.file_options;
+            let all = options.all;
+            let roots = get_target_filename_set(file_options, all, _roots);
+            let roots = TRC::expand_roots(&env, options, roots);
+            let env_files: BTreeSet<FileKey> = env.files.iter().cloned().collect();
+            let roots = roots.intersection(&env_files).cloned().collect();
+            log_input_files(&roots);
+            roots
+        });
         let results =
             TRC::merge_and_check(&env, workers, options, &profiling, roots, 0, &transaction)
                 .await?;
-        drop(transaction);
-        heap_transaction.commit();
+        with_memory_timer(options, "CodemodCommit", || {
+            drop(transaction);
+            heap_transaction.commit();
+        });
         Ok(((), (env, results)))
     }
 
@@ -1626,7 +1666,12 @@ where
                     let (_, (new_env, results)) =
                         SR::recheck_run(genv, heap, env, iteration, roots).await?;
                     env = new_env;
-                    changed_files = Self::post_run(options, write, results).await;
+                    changed_files = with_timer_async(
+                        options,
+                        "CodemodReport",
+                        Self::post_run(options, write, results),
+                    )
+                    .await;
                     iteration += 1;
                 }
             }
@@ -1656,7 +1701,12 @@ where
             }
         };
         let options = &*genv.options;
-        let changed_files = Self::post_run(options, write, results).await;
+        let changed_files = with_timer_async(
+            options,
+            "CodemodReport",
+            Self::post_run(options, write, results),
+        )
+        .await;
         if repeat
             && Self::loop_run(genv, heap, env, 1, options, write, changed_files)
                 .await

@@ -7,6 +7,7 @@
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::future::Future;
 use std::rc::Rc;
 use std::sync::LazyLock;
 use std::time::SystemTime;
@@ -256,9 +257,11 @@ impl TimingRunning {
         }
     }
 
-    fn with_timer<T>(&mut self, should_print: bool, timer: &str, f: impl FnOnce() -> T) -> T {
+    fn push_timer(&mut self, timer: &str) {
         self.stack.push(start_timer(timer));
-        let ret = f();
+    }
+
+    fn pop_timer(&mut self, should_print: bool) {
         let running_timer = self
             .stack
             .pop()
@@ -270,11 +273,17 @@ impl TimingRunning {
         if should_print {
             flow_hh_logger::info!(
                 "TimingEvent `{}`: start_wall_age: {}; wall_duration: {}",
-                timer,
+                finished_timer.timer_name,
                 finished_timer.wall.start_age,
                 finished_timer.wall.duration
             );
         }
+    }
+
+    fn with_timer<T>(&mut self, should_print: bool, timer: &str, f: impl FnOnce() -> T) -> T {
+        self.push_timer(timer);
+        let ret = f();
+        self.pop_timer(should_print);
         ret
     }
 
@@ -406,6 +415,19 @@ impl Running {
         self.running_timing
             .borrow_mut()
             .with_timer(should_print, timer, f)
+    }
+
+    /// Times a future while allowing nested profiling timers to remain attached to this profile.
+    pub async fn with_timer_async<T>(
+        &self,
+        should_print: bool,
+        timer: &str,
+        future: impl Future<Output = T>,
+    ) -> T {
+        self.running_timing.borrow_mut().push_timer(timer);
+        let ret = future.await;
+        self.running_timing.borrow_mut().pop_timer(should_print);
+        ret
     }
 
     pub fn legacy_sample_memory(&self, metric: &str, value: f64) {

@@ -26,6 +26,7 @@ flow_parser = { path = "../flow_parser" }
 flow_parser_utils = { path = "../flow_parser_utils" }
 flow_parser_utils_output = { path = "../flow_parser_utils_output" }
 flow_parsing = { path = "../flow_parsing" }
+flow_profiling = { path = "../flow_profiling" }
 flow_server = { path = "../flow_server" }
 flow_server_env = { path = "../flow_server_env" }
 flow_server_utils = { path = "../flow_server_utils" }

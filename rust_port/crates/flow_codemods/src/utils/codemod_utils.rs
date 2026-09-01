@@ -136,13 +136,29 @@ impl<Runner: super::codemod_runner::Runnable> MakeMain<Runner> {
         log_level: Option<flow_hh_logger::Level>,
         roots: BTreeSet<FileKey>,
     ) {
-        initialize_logs(options);
-        if let Some(log_level) = log_level {
-            flow_hh_logger::level::set_min_level(log_level);
-        }
-        let committed_heap = committed_heap_init();
-        let genv = make_genv(options);
-        let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
+        let (committed_heap, genv, rt) = flow_profiling::memory_utils::with_memory_timer(
+            options.profile && !options.quiet,
+            "CodemodSetup",
+            || {
+                initialize_logs(options);
+                if let Some(log_level) = log_level {
+                    flow_hh_logger::level::set_min_level(log_level);
+                }
+                let committed_heap = committed_heap_init();
+                let genv = make_genv(options);
+                let rt = tokio::runtime::Runtime::new().expect("Failed to create tokio runtime");
+                (committed_heap, genv, rt)
+            },
+        );
         rt.block_on(Runner::run(&genv, &committed_heap, write, repeat, roots));
+        flow_profiling::memory_utils::with_memory_timer(
+            options.profile && !options.quiet,
+            "CodemodTeardown",
+            || {
+                drop(rt);
+                drop(genv);
+                drop(committed_heap);
+            },
+        );
     }
 }
