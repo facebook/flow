@@ -49,12 +49,35 @@ export default function App(): typeof Widget {
         position: {line: 2, character: 8},
       }).verifyAllLSPMessagesInStep(
         [
-          [
-            'textDocument/hover',
-            '{component Widget(id: number, name: string)}',
-          ],
+          {
+            method: 'textDocument/hover',
+            result: {
+              contents: [
+                {
+                  language: 'flow',
+                  value: 'component Widget(...Props)',
+                },
+                '`Props` defined at [`b.js:3:12`](<PLACEHOLDER_PROJECT_URL>/b.js#L3,13)',
+                '`Widget` defined at [`a.js:4:15`](<PLACEHOLDER_PROJECT_URL>/a.js#L4,16)',
+              ],
+              range: {
+                end: {
+                  character: 13,
+                  line: 2,
+                },
+                start: {
+                  character: 7,
+                  line: 2,
+                },
+              },
+            },
+          },
         ],
-        [...lspIgnoreStatusAndCancellation, 'textDocument/publishDiagnostics'],
+        [
+          'window/showStatus',
+          '$/cancelRequest',
+          'textDocument/publishDiagnostics',
+        ],
       ),
     ]),
   ],

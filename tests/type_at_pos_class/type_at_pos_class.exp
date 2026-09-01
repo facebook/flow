@@ -898,7 +898,7 @@ function_this.js:8:1 {
 }
 class-0.js:4:3 (framed) = (method) A.m(this: this): void
 class-0.js:4:3,4:3
-class-statics.js:4:10 (framed) = (method) A.m(this: Class<this>): void
+class-statics.js:4:10 (framed) = (method) A.m(): void
 class-statics.js:4:10,4:10
 class-getters-setters.js:6:7 (framed) = (getter) A.x: string
 class-getters-setters.js:6:7,6:7
