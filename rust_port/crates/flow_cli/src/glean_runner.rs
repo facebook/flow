@@ -90,6 +90,7 @@ use crate::glean_schema::type_declaration_info;
 use crate::glean_schema::type_declaration_reference;
 use crate::glean_schema::type_export;
 use crate::glean_schema::type_import_declaration;
+use crate::offset_cache::OffsetCache;
 
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
@@ -1766,12 +1767,17 @@ fn file_of_string_modules(
     })]
 }
 
-fn file_liness(root: &str, write_root: &str, file_key: &FileKey) -> Vec<Value> {
+fn file_liness(
+    root: &str,
+    write_root: &str,
+    file_key: &FileKey,
+    offset_cache: &OffsetCache,
+) -> Vec<Value> {
     let file = match module_::of_file_key(root, write_root, file_key) {
         module_::T::File(file) => file,
         _ => return vec![],
     };
-    let info = match crate::offset_cache::info_of_file_key(file_key) {
+    let info = match offset_cache.info_of_file_key(file_key) {
         Some(info) => info,
         None => return vec![],
     };
@@ -1787,14 +1793,10 @@ fn file_liness(root: &str, write_root: &str, file_key: &FileKey) -> Vec<Value> {
         *first -= 1;
     }
     let has_unicode_or_tabs = info.offsets.contains_multibyte_character();
-    let ends_in_newline = match crate::offset_cache::ends_in_newline_of_file_key(file_key) {
-        Some(v) => v,
-        None => return vec![],
-    };
     vec![src::file_lines::to_json(&src::file_lines::T {
         file,
         lengths,
-        ends_in_newline,
+        ends_in_newline: info.ends_in_newline,
         has_unicode_or_tabs,
     })]
 }
@@ -1896,6 +1898,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             let root = &root;
             let reader = &cctx.reader;
             let loc_of_aloc = make_loc_of_aloc(cctx.reader.dupe());
+            let offset_cache = OffsetCache::default();
             let resolved_modules = reader.get_resolved_modules_unsafe(file);
             let log = |msg: &str| {
                 if config.glean_log {
@@ -1916,7 +1919,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             let scope_info = scope_builder::program(options.enums, false, ast);
             log("module documentations");
             let offset_table_of_file_key = |file_key: &FileKey| -> Option<Arc<OffsetTable>> {
-                crate::offset_cache::offset_table_of_file_key(file_key)
+                offset_cache.offset_table_of_file_key(file_key)
             };
             let module_documentation = module_documentations(
                 root,
@@ -2009,7 +2012,7 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
             log("file of string module");
             let file_of_string_module =
                 file_of_string_modules(root, &config.write_root, options, file);
-            let file_lines = file_liness(root, &config.write_root, file);
+            let file_lines = file_liness(root, &config.write_root, file, &offset_cache);
             let json_filenames = match &config.output_dir {
                 None => BTreeSet::new(),
                 Some(output_dir) => {
