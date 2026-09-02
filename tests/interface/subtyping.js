@@ -101,3 +101,16 @@ class SelfIndexed extends SelfIndexer {
 declare const selfIndexed: SelfIndexed;
 
 selfIndexed as interface {[string]: number};
+
+declare const uint8Array: Uint8Array;
+uint8Array as $ArrayLike<number>;
+
+declare class NamedPropertyOnly {
+  foo: string;
+}
+new NamedPropertyOnly() as interface {[number]: number};
+
+declare class NumericProperty {
+  0: string;
+}
+new NumericProperty() as interface {[number]: number}; // error

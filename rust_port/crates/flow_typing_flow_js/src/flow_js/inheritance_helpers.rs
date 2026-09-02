@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -343,8 +344,26 @@ pub(super) fn inst_structural_subtype<'cx>(
                         if !seen.insert(inst_t.inst.class_id.dupe()) {
                             continue;
                         }
+                        let lower_props = cx.find_props(inst_t.inst.own_props.dupe());
+                        let matching_props = lower_props.iter().try_fold(
+                            BTreeMap::new(),
+                            |mut matching_props, (name, prop)| {
+                                let key_type = flow_js_utils::type_of_key_name_with_env(
+                                    env,
+                                    name.dupe(),
+                                    lreason,
+                                );
+                                if helpers::speculative_subtyping_succeeds(
+                                    cx, env, &key_type, &dict.key,
+                                )? {
+                                    matching_props.insert(name.dupe(), prop.dupe());
+                                }
+                                Ok::<_, FlowJsException>(matching_props)
+                            },
+                        )?;
+                        let lower_props = properties::PropertiesMap::from_btree_map(matching_props);
                         indexer_subtyping.flow_props_to_indexer(
-                            &cx.find_props(inst_t.inst.own_props.dupe()),
+                            &lower_props,
                             &[&own_props, &proto_props],
                             dict,
                         )?;
