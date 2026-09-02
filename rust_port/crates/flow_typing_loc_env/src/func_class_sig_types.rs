@@ -279,6 +279,7 @@ pub mod class {
     pub struct FuncInfo<C: ConfigTypes> {
         pub id_loc: Option<ALoc>,
         pub this_write_loc: Option<ALoc>,
+        pub uses_this: bool,
         pub func_sig: FuncSig<C>,
         pub set_asts: SetAsts<C>,
         pub set_type: SetType,
@@ -289,6 +290,7 @@ pub mod class {
             FuncInfo {
                 id_loc: self.id_loc.clone(),
                 this_write_loc: self.this_write_loc.clone(),
+                uses_this: self.uses_this,
                 func_sig: self.func_sig.clone(),
                 set_asts: self.set_asts.clone(),
                 set_type: self.set_type.clone(),

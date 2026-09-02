@@ -160,19 +160,27 @@ References:
         ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:126:18
+Error ---------------------------------------------------------------------------------------------------- test.js:137:1
 
-Missing an annotation on implicit `this` parameter of method `implicit`. [missing-this-annot]
+Cannot call `unboundImplicit` as a standalone function because its `this` parameter requires implicit `this` parameter
+of class `this` type [1] as the receiver. Call it as a method, or bind it to its receiver before calling it.
+[incompatible-type]
 
-   126|   static implicit(): number { // error: implicit `this` needs an annotation
-                         ^^
+   test.js:137:1
+   137| unboundImplicit(); // error: the class receiver is missing
+        ^^^^^^^^^^^^^^^
+
+References:
+   test.js:123:7
+   123| class StaticWithThis {
+              ^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:143:5
+Error ---------------------------------------------------------------------------------------------------- test.js:147:5
 
 Cannot assign function to `b.m` because property `m` is not writable. [cannot-write]
 
-   143|   b.m = () => {}; // ERROR: cannot-write
+   147|   b.m = () => {}; // ERROR: cannot-write
             ^
 
 

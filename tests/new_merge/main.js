@@ -175,3 +175,6 @@ instance_computed as empty; // OK (export is error)
 
 import {x as t29} from './union';
 t29 as empty; // okay - this is already an error at the definition site
+
+import {z as z5} from './get_prop_class';
+z5 as empty; // error function type with receiver ~> empty

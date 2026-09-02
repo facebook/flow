@@ -476,7 +476,7 @@ class-statics.js:8:10 = {
   "path":"class-statics.js",
   "reasons":[],
   "start":10,
-  "types":{"type":"() => Class<this>"}
+  "types":{"type":"(this: Class<this>) => Class<this>"}
 }
 class-statics.js:9:7 = {
   "end":8,
@@ -581,7 +581,7 @@ class-statics-poly.js:8:10 = {
   "path":"class-statics-poly.js",
   "reasons":[],
   "start":10,
-  "types":{"type":"() => Class<B<T>>"}
+  "types":{"type":"(this: Class<this>) => Class<B<T>>"}
 }
 class-statics-poly.js:9:7 = {
   "end":8,

@@ -204,6 +204,7 @@ pub fn add_private_method<C: ConfigTypes>(
     name: FlowSmolStr,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
+    uses_this: bool,
     func_sig_: func_class_sig_types::func::Func<C>,
     set_asts: class_types::SetAsts<C>,
     set_type: class_types::SetType,
@@ -212,6 +213,7 @@ pub fn add_private_method<C: ConfigTypes>(
     let func_info = class_types::FuncInfo {
         id_loc: Some(id_loc.dupe()),
         this_write_loc,
+        uses_this,
         func_sig: func_sig_,
         set_asts,
         set_type,
@@ -266,6 +268,7 @@ pub fn add_constructor<C: ConfigTypes>(
     s.constructor = vec![class_types::FuncInfo {
         id_loc,
         this_write_loc: None,
+        uses_this: false,
         func_sig: func_sig::to_ctor_sig(func_sig_),
         set_asts,
         set_type,
@@ -289,6 +292,7 @@ pub fn append_constructor<C: ConfigTypes>(
     s.constructor.push(class_types::FuncInfo {
         id_loc,
         this_write_loc: None,
+        uses_this: false,
         func_sig: func_sig::to_ctor_sig(func_sig_),
         set_asts,
         set_type,
@@ -457,6 +461,7 @@ pub fn add_method<C: ConfigTypes>(
     name: Name,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
+    uses_this: bool,
     func_sig_: func_class_sig_types::func::Func<C>,
     set_asts: Option<class_types::SetAsts<C>>,
     set_type: Option<class_types::SetType>,
@@ -468,6 +473,7 @@ pub fn add_method<C: ConfigTypes>(
     let func_info = class_types::FuncInfo {
         id_loc: Some(id_loc.dupe()),
         this_write_loc,
+        uses_this,
         func_sig: func_sig_,
         set_asts,
         set_type,
@@ -501,6 +507,7 @@ pub fn append_method<C: ConfigTypes>(
     name: Name,
     id_loc: ALoc,
     this_write_loc: Option<ALoc>,
+    uses_this: bool,
     func_sig_: func_class_sig_types::func::Func<C>,
     set_asts: Option<class_types::SetAsts<C>>,
     set_type: Option<class_types::SetType>,
@@ -512,6 +519,7 @@ pub fn append_method<C: ConfigTypes>(
     let func_info = class_types::FuncInfo {
         id_loc: Some(id_loc.dupe()),
         this_write_loc,
+        uses_this,
         func_sig: func_sig_,
         set_asts,
         set_type,
@@ -583,6 +591,7 @@ pub fn add_getter<C: ConfigTypes>(
     let func_info = class_types::FuncInfo {
         id_loc: Some(id_loc.dupe()),
         this_write_loc,
+        uses_this: false,
         func_sig: func_sig_,
         set_asts,
         set_type,
@@ -623,6 +632,7 @@ pub fn add_setter<C: ConfigTypes>(
     let func_info = class_types::FuncInfo {
         id_loc: Some(id_loc.dupe()),
         this_write_loc,
+        uses_this: false,
         func_sig: func_sig_,
         set_asts,
         set_type,
@@ -780,11 +790,19 @@ pub(crate) fn fields_to_prop_map<'a, C: ConfigTypes, K: AsPropName>(
 fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     this_default: &Type,
+    static_this: Option<&Type>,
     methods: &BTreeMap<FlowSmolStr, class_types::FuncInfo<C>>,
 ) -> properties::Id {
     let pmap: properties::PropertiesMap = methods
         .iter()
-        .map(|(name, info)| (Name::new(name.dupe()), to_method(cx, this_default, info)))
+        .map(|(name, info)| {
+            let this_default = if cx.new_this_typing() && info.uses_this {
+                static_this.unwrap_or(this_default)
+            } else {
+                this_default
+            };
+            (Name::new(name.dupe()), to_method(cx, this_default, info))
+        })
         .collect();
     cx.generate_property_map(pmap)
 }
@@ -792,6 +810,7 @@ fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
 fn elements<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     this: Type,
+    static_: bool,
     constructor: Option<(Option<ALoc>, Type)>,
     s: &class_types::Signature<C>,
     super_: &class_types::Super,
@@ -808,8 +827,10 @@ fn elements<'a, C: crate::func_params_intf::Config>(
             &this,
         )
     };
-    let this_default = |x: &func_class_sig_types::func::Func<C>| -> Type {
-        if cx.new_this_typing() {
+    let this_default = |x: &func_class_sig_types::func::Func<C>, uses_this: bool| -> Type {
+        if cx.new_this_typing() && static_ && !uses_this {
+            implicit_mixed_this(x.reason.dupe())
+        } else if cx.new_this_typing() {
             receiver_this()
         } else {
             match (&x.body, super_) {
@@ -824,13 +845,14 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     // function signature for this method, simply return the method type.
     let mut methods: BTreeMap<Name, (Option<ALoc>, Type)> = BTreeMap::new();
     for (name, xs) in &s.methods {
+        let uses_this = xs.iter().any(|fi| fi.uses_this);
         let ms: Vec<(Option<ALoc>, Type, &class_types::SetType)> = xs
             .iter()
             .map(|fi| {
                 let t = func_sig::methodtype(
                     cx,
                     fi.this_write_loc.dupe(),
-                    this_default(&fi.func_sig),
+                    this_default(&fi.func_sig, uses_this),
                     &fi.func_sig,
                 );
                 (fi.id_loc.dupe(), t, &fi.set_type)
@@ -859,18 +881,22 @@ fn elements<'a, C: crate::func_params_intf::Config>(
         };
         methods.insert(name.dupe(), result);
     }
-    let private_this_default = |x: &func_class_sig_types::func::Func<C>| -> Type {
-        any_t::make(
-            AnySource::Unsound(UnsoundnessKind::BoundFunctionThis),
-            x.reason.dupe(),
-        )
+    let private_this_default = |fi: &class_types::FuncInfo<C>| -> Type {
+        if cx.new_this_typing() && static_ && fi.uses_this {
+            receiver_this()
+        } else {
+            any_t::make(
+                AnySource::Unsound(UnsoundnessKind::BoundFunctionThis),
+                fi.func_sig.reason.dupe(),
+            )
+        }
     };
     for func_info in s.private_methods.values() {
         if func_info.id_loc.is_some() {
             let t = func_sig::methodtype(
                 cx,
                 func_info.this_write_loc.dupe(),
-                private_this_default(&func_info.func_sig),
+                private_this_default(func_info),
                 &func_info.func_sig,
             );
             (func_info.set_type)(t);
@@ -1027,14 +1053,9 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
 ) -> (FlowOrdSet<Name>, ObjType) {
     let s = &x.static_;
     let loc = x.static_.reason.loc().dupe();
-    let this = if cx.new_this_typing() {
-        // Static methods without an explicit `this` parameter are extractable.
-        // Statement checking requires an annotation before their bodies use `this`.
-        implicit_mixed_this(s.reason.dupe())
-    } else {
-        type_util::class_type(this_or_mixed(loc, x), false, None)
-    };
-    let (inited_fields, fields, methods, call, _construct) = elements(cx, this, None, s, &x.super_);
+    let this = type_util::class_type(this_or_mixed(loc, x), false, None);
+    let (inited_fields, fields, methods, call, _construct) =
+        elements(cx, this, true, None, s, &x.super_);
     let props: properties::PropertiesMap = {
         let mut seen = std::collections::BTreeSet::new();
         fields
@@ -1129,7 +1150,8 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
     let loc = s.instance.reason.loc().dupe();
     let (initialized_fields, fields, methods, call, construct) = elements(
         cx,
-        this_or_mixed(loc, s),
+        this_or_mixed(loc.dupe(), s),
+        false,
         constructor,
         &s.instance,
         &s.super_,
@@ -1140,6 +1162,7 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             sig_.reason.dupe(),
         )
     };
+    let private_static_this = type_util::class_type(this_or_mixed(loc, s), false, None);
     let own_pmap: properties::PropertiesMap = fields
         .iter()
         .map(|(name, prop)| (name.dupe(), prop.dupe()))
@@ -1167,11 +1190,13 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
         class_private_methods: methods_to_prop_map(
             cx,
             &private_this_type(&s.instance),
+            None,
             &s.instance.private_methods,
         ),
         class_private_static_methods: methods_to_prop_map(
             cx,
             &private_this_type(&s.static_),
+            Some(&private_static_this),
             &s.static_.private_methods,
         ),
         inst_abstract: s.abstract_,
@@ -1660,18 +1685,16 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     let (_, own, proto, _call, _construct) = elements(
         cx,
         this_or_mixed(inst_loc.dupe(), x),
+        false,
         None,
         &x.instance,
         &x.super_,
     );
     let static_ = {
-        let this = if cx.new_this_typing() {
-            implicit_mixed_this(x.static_.reason.dupe())
-        } else {
-            type_util::class_type(this_or_mixed(inst_loc, x), false, None)
-        };
+        let this = type_util::class_type(this_or_mixed(inst_loc, x), false, None);
         // NOTE: The own, proto maps are disjoint by construction.
-        let (_, own, proto, _call, _construct) = elements(cx, this, None, &x.static_, &x.super_);
+        let (_, own, proto, _call, _construct) =
+            elements(cx, this, true, None, &x.static_, &x.super_);
         let mut merged = own;
         for (k, v) in proto {
             merged.insert(k, v);

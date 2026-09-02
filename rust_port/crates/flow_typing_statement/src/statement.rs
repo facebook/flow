@@ -840,24 +840,6 @@ pub fn convert_call_targs_opt_prime<'a>(
 
 type ALocThisFinder = flow_parser_utils::this_finder::Finder<ALoc>;
 
-fn function_uses_this(func: &ast::function::Function<ALoc, ALoc>) -> bool {
-    use flow_parser::ast_visitor::AstVisitor;
-
-    let mut finder = ALocThisFinder::new();
-    let Ok(()) = finder.function_body_any(&func.body);
-    if !finder
-        .acc
-        .values()
-        .any(|kind| matches!(kind, flow_parser_utils::this_finder::Kind::This))
-    {
-        let Ok(()) = finder.function_params(&func.params);
-    }
-    finder
-        .acc
-        .values()
-        .any(|kind| matches!(kind, flow_parser_utils::this_finder::Kind::This))
-}
-
 fn error_on_this_uses_in_object_methods<'a>(
     cx: &Context<'a>,
     properties: &[expression::object::Property<ALoc, ALoc>],
@@ -16075,27 +16057,9 @@ pub fn mk_class_sig<'a>(
                         _ => {}
                     }
                     let method_reason = func_reason(func.async_, func.generator, method_loc.dupe());
-                    if cx.new_this_typing()
-                        && matches!(
-                            type_annotation::method_kind_of_class_method(kind, static_),
-                            type_annotation::MethodKind::MethodKind { is_static: true }
-                        )
-                        && func.params.this_.is_none()
-                        && function_uses_this(func)
-                    {
-                        let reason = mk_reason(
-                            RImplicitThis(Arc::new(RMethod(Some(name.display_smol_str())))),
-                            func.params.loc.dupe(),
-                        );
-                        flow_js::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EMissingLocalAnnotation {
-                                reason: reason.to_error_reference(),
-                                hint_available: false,
-                                from_generic_function: false,
-                            },
-                        );
-                    }
+                    let uses_this = static_
+                        && matches!(kind, ast::class::MethodKind::Method)
+                        && flow_parser_utils::this_finder::function_uses_this(func);
                     let (method_sig, reconstruct_func, deferred_tg_check) = mk_method(
                         cx,
                         type_annotation::method_kind_of_class_method(kind, static_),
@@ -16193,6 +16157,7 @@ pub fn mk_class_sig<'a>(
                                     private_name.dupe(),
                                     id_loc.dupe(),
                                     Some(func_loc.dupe()),
+                                    uses_this,
                                     method_sig,
                                     set_asts,
                                     set_type,
@@ -16206,6 +16171,7 @@ pub fn mk_class_sig<'a>(
                                     name.dupe(),
                                     id_loc.dupe(),
                                     Some(func_loc.dupe()),
+                                    uses_this,
                                     method_sig,
                                     Some(set_asts),
                                     Some(set_type),
@@ -17592,6 +17558,7 @@ pub fn mk_class_sig<'a>(
                                                     Name::new(name.dupe()),
                                                     id_loc.dupe(),
                                                     None,
+                                                    false,
                                                     func_sig,
                                                     None,
                                                     Some(set_type),
@@ -17801,6 +17768,7 @@ pub fn mk_class_sig<'a>(
                                             Name::new(name.dupe()),
                                             id_loc.dupe(),
                                             None,
+                                            false,
                                             func_sig,
                                             None,
                                             None,
@@ -18905,6 +18873,10 @@ pub fn mk_record_sig<'a>(
                                             Name::new(name),
                                             method_id_loc,
                                             Some(func_loc),
+                                            static_
+                                                && flow_parser_utils::this_finder::function_uses_this(
+                                                    func,
+                                                ),
                                             method_sig,
                                             Some(set_asts),
                                             Some(set_type),

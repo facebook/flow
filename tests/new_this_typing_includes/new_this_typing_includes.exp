@@ -16,12 +16,20 @@ References:
              ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- enabled/test.js:6:18
+Error --------------------------------------------------------------------------------------------- enabled/test.js:13:1
 
-Missing an annotation on implicit `this` parameter of method `usesThis`. [missing-this-annot]
+Cannot call `unboundUsesThis` as a standalone function because its `this` parameter requires implicit `this` parameter
+of class `this` type [1] as the receiver. Call it as a method, or bind it to its receiver before calling it.
+[incompatible-type]
 
-   6|   static usesThis(): typeof Enabled { // error: need to annotate this
-                       ^^
+   enabled/test.js:13:1
+   13| unboundUsesThis(); // error: the class receiver is missing
+       ^^^^^^^^^^^^^^^
+
+References:
+   enabled/test.js:3:7
+    3| class Enabled {
+             ^^^^^^^ [1]
 
 
 

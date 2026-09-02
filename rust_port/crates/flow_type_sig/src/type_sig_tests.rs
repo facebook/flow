@@ -2514,6 +2514,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -2649,6 +2650,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -2788,6 +2790,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -2923,6 +2926,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -3109,6 +3113,7 @@ Module {
                                     fn_loc: 9,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -3297,6 +3302,7 @@ Module {
                                     fn_loc: 6,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -3489,6 +3495,7 @@ Module {
                                     fn_loc: 6,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -3679,6 +3686,7 @@ Module {
                                     fn_loc: 6,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -3873,6 +3881,7 @@ Module {
                                     fn_loc: 6,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -4023,6 +4032,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -4173,6 +4183,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -5111,6 +5122,7 @@ Module {
                                     fn_loc: 6,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -5289,6 +5301,7 @@ Module {
                                     fn_loc: 3,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [
@@ -6496,6 +6509,7 @@ Module {
                                     fn_loc: 1,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [],
@@ -11888,6 +11902,7 @@ Module {
                                     fn_loc: 1,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [],
@@ -14985,6 +15000,7 @@ Module {
                                     fn_loc: 1,
                                     async_: false,
                                     generator: false,
+                                    uses_this: false,
                                     def: FunSig {
                                         tparams: Mono,
                                         params: [],

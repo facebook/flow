@@ -90,3 +90,12 @@ impl<Loc: Dupe + Ord> AstVisitor<'_, Loc> for Finder<Loc> {
         Ok(())
     }
 }
+
+pub fn function_uses_this<Loc: Dupe + Ord>(func: &ast::function::Function<Loc, Loc>) -> bool {
+    let mut finder = Finder::new();
+    let Ok(()) = finder.function_body_any(&func.body);
+    if !finder.acc.values().any(|kind| matches!(kind, Kind::This)) {
+        let Ok(()) = finder.function_params(&func.params);
+    }
+    finder.acc.values().any(|kind| matches!(kind, Kind::This))
+}

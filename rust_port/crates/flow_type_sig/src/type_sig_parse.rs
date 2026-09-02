@@ -2656,12 +2656,14 @@ pub(super) mod scope {
                              fn_loc,
                              async_,
                              generator,
+                             uses_this,
                              def,
                          }| ObjValueMethodData {
                             id_loc: id_loc.dupe(),
                             fn_loc: fn_loc.dupe(),
                             async_: *async_,
                             generator: *generator,
+                            uses_this: *uses_this,
                             def: rename_tparams_in_fun_sig(rename_map, def),
                         },
                     )))
@@ -5838,6 +5840,7 @@ mod class_acc {
             fn_loc: LocNode<'arena>,
             async_: bool,
             generator: bool,
+            uses_this: bool,
             def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         ) {
             let m = ObjValueMethodData {
@@ -5845,6 +5848,7 @@ mod class_acc {
                 fn_loc,
                 async_,
                 generator,
+                uses_this,
                 def,
             };
             let map = if static_ {
@@ -5935,6 +5939,7 @@ mod class_acc {
             fn_loc: LocNode<'arena>,
             async_: bool,
             generator: bool,
+            uses_this: bool,
             def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
         ) {
             let prop = ObjValueProp::ObjValueMethod(Box::new(Vec1::new(ObjValueMethodData {
@@ -5942,6 +5947,7 @@ mod class_acc {
                 fn_loc,
                 async_,
                 generator,
+                uses_this,
                 def,
             })));
             if static_ {
@@ -6434,6 +6440,7 @@ mod object_literal_acc {
                 fn_loc,
                 async_,
                 generator,
+                uses_this: false,
                 def,
             };
             self.props
@@ -11282,6 +11289,9 @@ fn class_def<'arena: 'ast, 'ast>(
                     let id_loc = tbls.push_loc(id.loc.dupe());
                     let async_ = fn_val.async_;
                     let generator = fn_val.generator;
+                    let uses_this = *is_static
+                        && *kind == class::MethodKind::Method
+                        && flow_parser_utils::this_finder::function_uses_this(fn_val);
                     match kind {
                         class::MethodKind::Method => {
                             let def = function_def(
@@ -11300,6 +11310,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                 fn_loc_node,
                                 async_,
                                 generator,
+                                uses_this,
                                 def,
                             );
                         }
@@ -11320,6 +11331,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                 fn_loc_node,
                                 async_,
                                 generator,
+                                uses_this,
                                 def,
                             );
                         }
@@ -11342,6 +11354,8 @@ fn class_def<'arena: 'ast, 'ast>(
                     if *kind == class::MethodKind::Method && !is_ts_private(ts_accessibility) {
                         let async_ = fn_val.async_;
                         let generator = fn_val.generator;
+                        let uses_this = *is_static
+                            && flow_parser_utils::this_finder::function_uses_this(fn_val);
                         match ck.expression.deref() {
                             // Computed keys are never munged: the name-munging
                             // transform only rewrites non-computed identifier keys, so
@@ -11365,6 +11379,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                     fn_loc_node,
                                     async_,
                                     generator,
+                                    uses_this,
                                     def,
                                 );
                             }
@@ -11392,6 +11407,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                     fn_loc_node,
                                     async_,
                                     generator,
+                                    uses_this,
                                     def,
                                 );
                             }
@@ -11416,6 +11432,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                     fn_loc_node,
                                     async_,
                                     generator,
+                                    uses_this,
                                     def,
                                 );
                             }
@@ -11446,6 +11463,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                     fn_loc_node,
                                     async_,
                                     generator,
+                                    uses_this,
                                     def,
                                 );
                             }
@@ -11710,6 +11728,7 @@ fn class_def<'arena: 'ast, 'ast>(
                                     fn_loc_node,
                                     false,
                                     false,
+                                    false,
                                     def,
                                 );
                             }
@@ -11736,7 +11755,7 @@ fn class_def<'arena: 'ast, 'ast>(
                 let id_loc = tbls.push_loc(id.loc.dupe());
                 let fn_loc = tbls.push_loc(fn_loc.dupe());
                 let def = function_type(true, opts, scope, scopes, tbls, &mut xs, f);
-                acc.add_method(false, name.dupe(), id_loc, fn_loc, false, false, def);
+                acc.add_method(false, name.dupe(), id_loc, fn_loc, false, false, false, def);
                 acc.add_abstract_name(name);
             }
             class::BodyElement::AbstractMethod(_) => {
@@ -12773,7 +12792,16 @@ fn record_def<'arena: 'ast, 'ast>(
                         fn_loc_node.dupe(),
                         fn_val,
                     );
-                    acc.add_method(static_, name, id_loc, fn_loc_node, async_, generator, def);
+                    acc.add_method(
+                        static_,
+                        name,
+                        id_loc,
+                        fn_loc_node,
+                        async_,
+                        generator,
+                        static_ && flow_parser_utils::this_finder::function_uses_this(fn_val),
+                        def,
+                    );
                 }
             }
             record_declaration::BodyElement::StaticProperty(

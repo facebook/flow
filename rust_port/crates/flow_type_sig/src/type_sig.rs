@@ -529,6 +529,7 @@ pub struct ObjValueMethodData<Loc, T> {
     pub fn_loc: Loc,
     pub async_: bool,
     pub generator: bool,
+    pub uses_this: bool,
     pub def: FunSig<Loc, T>,
 }
 
@@ -558,6 +559,7 @@ impl<Loc, T> ObjValueProp<Loc, T> {
                     fn_loc,
                     async_: _,
                     generator: _,
+                    uses_this: _,
                     def,
                 } in ms.iter()
                 {
@@ -589,12 +591,14 @@ impl<Loc, T> ObjValueProp<Loc, T> {
                          fn_loc,
                          async_,
                          generator,
+                         uses_this,
                          def,
                      }| ObjValueMethodData {
                         id_loc: f_loc(cx, id_loc),
                         fn_loc: f_loc(cx, fn_loc),
                         async_: *async_,
                         generator: *generator,
+                        uses_this: *uses_this,
                         def: def.map(cx, &f_loc, &f_t),
                     },
                 )))

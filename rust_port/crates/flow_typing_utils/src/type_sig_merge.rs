@@ -2578,7 +2578,7 @@ fn merge_annot<'cx>(
         Annot::FunAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RFunctionType, loc.dupe());
             let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-            merge_fun(env, cx, file, reason, def, statics, false, false)
+            merge_fun(env, cx, file, reason, def, statics, false, false, false)
         }
         Annot::ComponentAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RComponentType, loc.dupe());
@@ -3002,7 +3002,7 @@ fn merge_value<'cx>(
             } = inner.as_ref();
             let reason = reason::func_reason(*async_, *generator, loc.dupe());
             let statics_t = merge_fun_statics(env, cx, file, reason.dupe(), statics);
-            merge_fun(env, cx, file, reason, def, statics_t, false, false)
+            merge_fun(env, cx, file, reason, def, statics_t, false, false, false)
         }
         Value::StringVal(box loc) => {
             let reason = reason::mk_reason(RString, loc.dupe());
@@ -3500,11 +3500,12 @@ fn merge_obj_value_prop<'cx>(
                      fn_loc,
                      async_,
                      generator,
+                     uses_this: _,
                      def,
                  }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
                     let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-                    merge_fun(env, cx, file, reason, def, statics, false, false)
+                    merge_fun(env, cx, file, reason, def, statics, false, false, false)
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
         }
@@ -3530,17 +3531,21 @@ fn merge_class_prop<'cx>(
         }
         ObjValueProp::ObjValueAccess(box x) => merge_accessor(env, cx, file, x),
         ObjValueProp::ObjValueMethod(box ms) => {
+            let uses_this = ms.iter().any(|m| m.uses_this);
             let merge_one =
                 |ObjValueMethodData {
                      id_loc: _,
                      fn_loc,
                      async_,
                      generator,
+                     uses_this: _,
                      def,
                  }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
                     let statics = type_::dummy_static(reason.dupe());
-                    merge_fun(env, cx, file, reason, def, statics, true, is_static)
+                    merge_fun(
+                        env, cx, file, reason, def, statics, true, is_static, uses_this,
+                    )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
         }
@@ -3572,7 +3577,7 @@ fn merge_obj_annot_prop<'cx>(
         }) => {
             let reason = reason::mk_annot_reason(RFunctionType, fn_loc.dupe());
             let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-            let type_ = merge_fun(env, cx, file, reason, def, statics, false, false);
+            let type_ = merge_fun(env, cx, file, reason, def, statics, false, false, false);
             type_::Property::new(type_::PropertyInner::Method {
                 key_loc: Some(id_loc.dupe()),
                 type_,
@@ -3604,7 +3609,7 @@ fn merge_interface_prop<'cx>(
             let merge_one = |(_, fn_loc, def): &(ALoc, ALoc, FunSig<ALoc, Pack::Packed<ALoc>>)| {
                 let reason = reason::mk_reason(RFunctionType, fn_loc.dupe());
                 let statics = type_::dummy_static(reason.dupe());
-                merge_fun(env, cx, file, reason, def, statics, true, is_static)
+                merge_fun(env, cx, file, reason, def, statics, true, is_static, false)
             };
             merge_overloaded_methods(ms, merge_one, |(id_loc, _, _)| id_loc)
         }
@@ -4693,6 +4698,7 @@ fn merge_fun<'cx>(
     statics: Type,
     is_method: bool,
     is_static: bool,
+    uses_this: bool,
 ) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     use flow_type_sig::type_sig;
@@ -4719,12 +4725,17 @@ fn merge_fun<'cx>(
             None => {
                 if cx.new_this_typing()
                     && is_method
-                    && !is_static
+                    && (!is_static || uses_this)
                     && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
                 {
+                    let this = if is_static {
+                        type_util::class_type(this.dupe(), false, None)
+                    } else {
+                        this.dupe()
+                    };
                     type_util::mod_reason_of_t(
                         &|r: Reason| r.update_desc(|desc| RImplicitThis(Arc::new(desc))),
-                        this,
+                        &this,
                     )
                 } else if is_method || cx.new_this_typing() {
                     type_::implicit_mixed_this(reason2.dupe())
@@ -5338,7 +5349,17 @@ fn merge_declare_fun<'cx>(
         .iter()
         .map(|(_, fn_loc, def)| {
             let reason = reason::mk_reason(RFunctionType, fn_loc.dupe());
-            merge_fun(&env, cx, file, reason, def, statics_t.dupe(), false, false)
+            merge_fun(
+                &env,
+                cx,
+                file,
+                reason,
+                def,
+                statics_t.dupe(),
+                false,
+                false,
+                false,
+            )
         })
         .collect();
     let function_t = match ts.len() {
@@ -5490,6 +5511,7 @@ pub fn merge_def<'cx>(
                 reason.dupe(),
                 &inner.def,
                 statics_t,
+                false,
                 false,
                 false,
             );

@@ -123,7 +123,7 @@ staticMethod(); // ok
 class StaticWithThis {
   static value: number;
 
-  static implicit(): number { // error: implicit `this` needs an annotation
+  static implicit(): number { // ok: implicit `this` is inferred from its use
     return this.value;
   }
 
@@ -131,6 +131,10 @@ class StaticWithThis {
     return this.value;
   }
 }
+
+StaticWithThis.implicit(); // ok
+const unboundImplicit = StaticWithThis.implicit;
+unboundImplicit(); // error: the class receiver is missing
 
 // Assignment to a method remains read-only.
 {
@@ -142,3 +146,12 @@ class StaticWithThis {
   declare const b: B;
   b.m = () => {}; // ERROR: cannot-write
 }
+
+class C<T> {
+  static y: T;
+  static foo(): void {
+    this.y;
+  }
+}
+
+C.foo();

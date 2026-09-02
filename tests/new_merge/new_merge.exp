@@ -855,6 +855,27 @@ References:
                           ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- main.js:180:1
+
+Cannot cast `z5` to empty because `(this: Class<P<unknown>>) => typeof P` [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   main.js:180:1
+   180| z5 as empty; // error function type with receiver ~> empty
+        ^^
+
+References:
+   get_prop_class.js:12:3
+          v----------------------------
+    12|   static usesThis(): typeof P {
+    13|     return this;
+    14|   }
+          ^ [1]
+   main.js:180:7
+   180| z5 as empty; // error function type with receiver ~> empty
+              ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- union.js:13:25
 
 Cannot use `c` as a type. A name can be used as a type only if it refers to a type, interface, class, or enum
@@ -865,4 +886,4 @@ definition. To get the type of a non-class value, use `typeof`. [value-as-type]
 
 
 
-Found 54 errors
+Found 55 errors
