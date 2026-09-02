@@ -864,8 +864,8 @@ Cannot cast `props` to empty because `{foo: string}` [1] is incompatible with `e
             ^^^^^
 
 References:
-   <BUILTINS>/react.js:422:68
-   422|   declare export type ComponentType<in P extends {...}> = component(...P);
+   <BUILTINS>/react.js:426:68
+   426|   declare export type ComponentType<in P extends {...}> = component(...P);
                                                                            ^^^^^^ [1]
    react_tests.js:19:14
     19|     props as empty; // error

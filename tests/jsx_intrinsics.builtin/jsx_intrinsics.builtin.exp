@@ -88,8 +88,8 @@ References:
    <BUILTINS>/react.js:58:54
     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
                                                              ^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:968:29
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:29
+   972|     declare class Component<Props, State = void> {
                                     ^^^^^ [2]
    main.js:10:59
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string, ...}, void>>> =
@@ -112,8 +112,8 @@ References:
    <BUILTINS>/react.js:58:54
     58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
                                                              ^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:968:29
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:29
+   972|     declare class Component<Props, State = void> {
                                     ^^^^^ [2]
    main.js:3:47
      3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}

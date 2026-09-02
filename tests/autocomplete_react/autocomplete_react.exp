@@ -281,7 +281,7 @@ Flags: --pretty
     },
     {
       "name":"ReactElement",
-      "type":"type ReactElement<P = any, T = any> = ExactReactElement_DEPRECATED<any>"
+      "type":"type ReactElement<P = unknown, T = React$ElementType> = ExactReactElement_DEPRECATED<T, P>"
     },
     {"name":"ReactInstance","type":"type ReactInstance = any"},
     {"name":"ReactNode","type":"type ReactNode = React$Node"},

@@ -11,41 +11,41 @@ Cannot call `React.cloneElement` because: [incompatible-type]
               ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:321:6
+   <BUILTINS>/react.js:325:6
              v---------------------------------------------------------------------------
-   321|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
-   322|     element: E,
-   323|     props?: ?Partial<$JSXIntrinsics[C]['props']>,
-   324|     ...children: ReadonlyArray<React$Node>
-   325|   ) => E)
+   325|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
+   326|     element: E,
+   327|     props?: ?Partial<$JSXIntrinsics[C]['props']>,
+   328|     ...children: ReadonlyArray<React$Node>
+   329|   ) => E)
           -----^ [1]
    test.js:19:1
     19| React.cloneElement(); // Error: Needs a minimum of two arguments.
         ^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:326:6
-             v------------------------------------------------------------------------------------
-   326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-   327|     element: E,
-   328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
-   329|   ) => E)
-          -----^ [3]
    <BUILTINS>/react.js:330:6
              v------------------------------------------------------------------------------------
    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
    331|     element: E,
-   332|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
-   333|     children: NoInfer<Props>['children']
-   334|   ) => E)
-          -----^ [4]
-   <BUILTINS>/react.js:335:6
+   332|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+   333|   ) => E)
+          -----^ [3]
+   <BUILTINS>/react.js:334:6
              v------------------------------------------------------------------------------------
-   335|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-   336|     element: E,
-   337|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
-   338|     firstChild: NoInfer<Props>['children'][0],
-   339|     secondChild: NoInfer<Props>['children'][1],
-   340|     ...restChildren: NoInfer<Props>['children'] extends [readonly first: unknown, readonly second: unknown, ...infer Rest] ? Rest : NoInfer<Props>['children']
-   341|   ) => E);
+   334|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+   335|     element: E,
+   336|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+   337|     children: NoInfer<Props>['children']
+   338|   ) => E)
+          -----^ [4]
+   <BUILTINS>/react.js:339:6
+             v------------------------------------------------------------------------------------
+   339|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+   340|     element: E,
+   341|     props: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+   342|     firstChild: NoInfer<Props>['children'][0],
+   343|     secondChild: NoInfer<Props>['children'][1],
+   344|     ...restChildren: NoInfer<Props>['children'] extends [readonly first: unknown, readonly second: unknown, ...infer Rest] ? Rest : NoInfer<Props>['children']
+   345|   ) => E);
           -----^ [5]
 
 
@@ -65,17 +65,17 @@ References:
    test.js:20:20
     20| React.cloneElement('nope'); // Error: Not a valid element type.
                            ^^^^^^ [1]
-   <BUILTINS>/react.js:321:49
-   321|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
+   <BUILTINS>/react.js:325:49
+   325|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:326:24
-   326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:330:24
    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:334:24
+   334|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:335:24
-   335|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+   <BUILTINS>/react.js:339:24
+   339|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -95,17 +95,17 @@ References:
    test.js:21:20
     21| React.cloneElement({ type: any }); // Error: Not a valid element type.
                            ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:321:49
-   321|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
+   <BUILTINS>/react.js:325:49
+   325|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:326:24
-   326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:330:24
    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:334:24
+   334|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:335:24
-   335|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+   <BUILTINS>/react.js:339:24
+   339|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -151,14 +151,14 @@ References:
    test.js:13:47
      13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:31:23
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
                                ^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:328:31
-    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+   <BUILTINS>/react.js:332:31
+    332|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -182,8 +182,8 @@ References:
    test.js:13:47
      13| declare const a: ExactReactElement_DEPRECATED<Class<A>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:32:29
      32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
@@ -213,8 +213,8 @@ References:
    test.js:14:47
      14| declare const b: ExactReactElement_DEPRECATED<Class<B>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:38:29
      38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
@@ -244,8 +244,8 @@ References:
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:44:34
      44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
@@ -275,15 +275,15 @@ References:
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
-   <BUILTINS>/react.js:326:6
+   <BUILTINS>/react.js:330:6
               v------------------------------------------------------------------------------------
-    326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-    327|     element: E,
-    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
-    329|   ) => E)
+    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+    331|     element: E,
+    332|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+    333|   ) => E)
            -----^ [4]
 
 
@@ -307,15 +307,15 @@ References:
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
-   <BUILTINS>/react.js:326:6
+   <BUILTINS>/react.js:330:6
               v------------------------------------------------------------------------------------
-    326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-    327|     element: E,
-    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
-    329|   ) => E)
+    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+    331|     element: E,
+    332|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+    333|   ) => E)
            -----^ [4]
 
 
@@ -339,15 +339,15 @@ References:
    test.js:15:47
      15| declare const c: ExactReactElement_DEPRECATED<Class<C>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
-   <BUILTINS>/react.js:326:6
+   <BUILTINS>/react.js:330:6
               v------------------------------------------------------------------------------------
-    326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-    327|     element: E,
-    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
-    329|   ) => E)
+    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+    331|     element: E,
+    332|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+    333|   ) => E)
            -----^ [4]
 
 
@@ -371,8 +371,8 @@ References:
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:54:34
      54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
@@ -402,8 +402,8 @@ References:
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:56:27
      56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
@@ -433,8 +433,8 @@ References:
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:57:34
      57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
@@ -464,8 +464,8 @@ References:
    test.js:16:47
      16| declare const d: ExactReactElement_DEPRECATED<Class<D>>;
                                                        ^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:58:29
      58| React.cloneElement(d, null, 42); // Error: `children` is an array.
@@ -495,8 +495,8 @@ References:
    test.js:69:1
      69| function SFC(props: { p: number, ... }) { return null };
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:70:40
      70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
@@ -527,14 +527,14 @@ References:
    test.js:74:51
      74| declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
                                                            ^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:1547:4
-   1547|   [string]: {
+   <BUILTINS>/react.js:1559:4
+   1559|   [string]: {
             ^^^^^^ [3]
    test.js:76:27
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
                                    ^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:328:31
-    328|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
+   <BUILTINS>/react.js:332:31
+    332|     props?: ?Partial<Readonly<{...$Exact<NoInfer<Props>>, key: React$Key}>>,
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -554,17 +554,17 @@ References:
    test.js:98:21
     98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:321:49
-   321|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
+   <BUILTINS>/react.js:325:49
+   325|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:326:24
-   326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:330:24
    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:334:24
+   334|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:335:24
-   335|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+   <BUILTINS>/react.js:339:24
+   339|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -584,17 +584,17 @@ References:
    test.js:98:21
     98|   declare const el: React.Node;
                             ^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:321:49
-   321|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
+   <BUILTINS>/react.js:325:49
+   325|   & (<C extends keyof $JSXIntrinsics, E extends ExactReactElement_DEPRECATED<C>>(
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:326:24
-   326|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:330:24
    330|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:334:24
+   334|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:335:24
-   335|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
+   <BUILTINS>/react.js:339:24
+   339|   & (<Props, E extends ExactReactElement_DEPRECATED<component(...empty) | string, Props>>(
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 

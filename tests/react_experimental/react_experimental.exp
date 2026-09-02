@@ -7,8 +7,8 @@ Cannot call `React.startTransition` because function [1] requires another argume
                ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1281:37
-   1281|     declare function startTransition(callback: () => void | Promise<void>): void;
+   <BUILTINS>/react.js:1285:37
+   1285|     declare function startTransition(callback: () => void | Promise<void>): void;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -21,8 +21,8 @@ Cannot call `React.useTransition` because no arguments are expected by function 
                              ^^
 
 References:
-   <BUILTINS>/react.js:1274:31
-   1274|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
+   <BUILTINS>/react.js:1278:31
+   1278|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -36,8 +36,8 @@ Cannot cast `isPending` to function type because `boolean` [1] is incompatible w
          ^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1274:36
-   1274|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
+   <BUILTINS>/react.js:1278:36
+   1278|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
                                             ^^^^^^^ [1]
    useTransition_hook.js:12:14
      12| isPending as (() => void) => void; // Error: boolean is incompatible with function type
@@ -54,8 +54,8 @@ Cannot cast `startTransition` to boolean because `(() => void | Promise<void>) =
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1274:45
-   1274|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
+   <BUILTINS>/react.js:1278:45
+   1278|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    useTransition_hook.js:13:20
      13| startTransition as boolean; // Error: function type is incompatible with boolean
@@ -71,8 +71,8 @@ Cannot call `startTransition` because function [1] requires another argument. [i
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:1274:45
-   1274|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
+   <BUILTINS>/react.js:1278:45
+   1278|     declare hook useTransition(): [boolean, (() => void | Promise<void>) => void];
                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

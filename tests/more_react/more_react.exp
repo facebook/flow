@@ -140,8 +140,8 @@ References:
    <BUILTINS>/react.js:43:5
     43|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:968:19
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:19
+   972|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [3]
 
 
@@ -157,8 +157,8 @@ References:
    subclassComponent.js:21:15
     21| declare class D extends React$Component2<Props2, void> {}
                       ^ [1]
-   <BUILTINS>/react.js:968:19
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:19
+   972|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
 
 
@@ -196,8 +196,8 @@ References:
    <BUILTINS>/react.js:43:5
     43|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:968:19
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:19
+   972|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [3]
 
 
@@ -213,8 +213,8 @@ References:
    subclassComponent.js:23:15
     23| declare class E extends D {}
                       ^ [1]
-   <BUILTINS>/react.js:968:19
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:19
+   972|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
 
 
@@ -252,8 +252,8 @@ References:
    <BUILTINS>/react.js:43:5
     43|   | string
             ^^^^^^ [2]
-   <BUILTINS>/react.js:968:19
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:19
+   972|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [3]
 
 
@@ -269,8 +269,8 @@ References:
    subclassComponent.js:25:15
     25| declare class F {
                       ^ [1]
-   <BUILTINS>/react.js:968:19
-   968|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:972:19
+   972|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
 
 

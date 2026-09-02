@@ -6,7 +6,7 @@ lazy_ref.js:14:9 = const x: {
   ) renders null
 }
 
-'RefSetter' defined at (lib) react.js:1361:9
+'RefSetter' defined at (lib) react.js:1365:9
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = const x: Promise<
@@ -18,7 +18,7 @@ lazy_ref.js:19:9 = const x: Promise<
 >
 
 'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
-'Node' defined at (lib) react.js:439:22
+'Node' defined at (lib) react.js:443:22
 'Promise' defined at (lib) core.js:2298:14
 'Props' defined at exports-component.js:5:5
 
@@ -37,7 +37,7 @@ react_component.js:13:33 =
 **@see**  https://react.dev/reference/react/Component
 class Component<Props, State = void>
 
-'Component' defined at (lib) react.js:968:18
+'Component' defined at (lib) react.js:972:18
 
 react_component.js:13:29,13:37
 react_component.js:18:17 = (property) state: State
@@ -65,7 +65,7 @@ react_component.js:31:7 = {
       "kind":"NominalComponentDecl",
       "name":{
         "name":"Fragment",
-        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:1073:5,1075:22"}
+        "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:1077:5,1079:22"}
       },
       "regularProps":{
         "inexact":false,
@@ -143,7 +143,7 @@ Flags:
 **@see**  https://react.dev/reference/react/createElement
 (property) React.createElement: React$CreateElement
 
-'React$CreateElement' defined at (lib) react.js:318:20
+'React$CreateElement' defined at (lib) react.js:322:20
 
 react.js:4:7,4:19
 
