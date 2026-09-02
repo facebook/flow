@@ -1234,6 +1234,7 @@ dependencies = [
  "flow_data_structure_wrapper",
  "flow_parser",
  "flow_parser_utils",
+ "flow_parser_utils_output",
  "prettyplease 0.3.0",
  "proc-macro2",
  "quote",

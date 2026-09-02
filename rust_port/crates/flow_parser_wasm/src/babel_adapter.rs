@@ -14,6 +14,9 @@ mod match_lowering;
 mod record_lowering;
 mod strip_flow;
 
+#[cfg(test)]
+mod tests;
+
 pub use enum_lowering::EnumRuntime;
 pub use error::BabelLoweringError;
 use flow_parser::ast;

@@ -15,3 +15,6 @@ proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
 syn = { version = "3", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
 thiserror = "2.0.20"
+
+[dev-dependencies]
+flow_parser_utils_output = { path = "../flow_parser_utils_output" }
