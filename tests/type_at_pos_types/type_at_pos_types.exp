@@ -1173,47 +1173,47 @@ tparam_defaults.js:41:5,41:5
 type_params.js
 type_params.js:7:12
 Flags:
-(type parameter) A
+(type parameter) A in type Alias<A, B = string>
 type_params.js:7:12,7:12
 
 type_params.js:9:22
 Flags:
-(type parameter) B
+(type parameter) B in type AliasDefault<A, B = string>
 type_params.js:9:22,9:22
 
 type_params.js:11:20
 Flags:
-(type parameter) A
+(type parameter) A in type AliasUse<A>
 type_params.js:11:20,11:20
 
 type_params.js:14:14
 Flags:
-(type parameter) A
+(type parameter) A in type Bounded<A extends number>
 type_params.js:14:14,14:14
 
 type_params.js:16:42
 Flags:
-(type parameter) A
+(type parameter) A in type InBound<A extends number, B extends A>
 type_params.js:16:42,16:42
 
 type_params.js:18:19
 Flags:
-(type parameter) A
+(type parameter) A in type Variance<out A>
 type_params.js:18:19,18:19
 
 type_params.js:21:13
 Flags:
-(type parameter) Z
+(type parameter) Z in function fn<Z>(z: Z): Z
 type_params.js:21:13,21:13
 
 type_params.js:26:11
 Flags:
-(type parameter) C
+(type parameter) C in class Cls<C>
 type_params.js:26:11,26:11
 
 type_params.js:33:17
 Flags:
-(type parameter) I
+(type parameter) I in interface Iface<I>
 type_params.js:33:17,33:17
 
 type_params.js:38:37
@@ -1251,6 +1251,41 @@ type_params.js:52:37,52:37
 
 type_params.js:55:16
 Flags:
-(type parameter) P
+(type parameter) P in component Comp<P>(p: P)
 type_params.js:55:16,55:16
+
+type_params.js:61:18
+Flags:
+(type parameter) Inner in function inner<Inner>(innerValue: Inner): Outer
+type_params.js:61:18,61:22
+
+type_params.js:63:24
+Flags:
+(type parameter) Inner in function inner<Inner>(innerValue: Inner): Outer
+type_params.js:63:24,63:28
+
+type_params.js:65:24
+Flags:
+(type parameter) Outer in function outer<Outer>(value: Outer): Outer
+type_params.js:65:24,65:28
+
+type_params.js:70:39
+Flags:
+(type parameter) Outer in function shadow<Outer>(shadowValue: Outer): Outer
+type_params.js:70:39,70:43
+
+type_params.js:78:25
+Flags:
+(type parameter) T
+type_params.js:78:25,78:25
+
+type_params.js:83:25
+Flags:
+(type parameter) AnonFn
+type_params.js:83:25,83:30
+
+type_params.js:87:20
+Flags:
+(type parameter) AnonArrow
+type_params.js:87:20,87:28
 

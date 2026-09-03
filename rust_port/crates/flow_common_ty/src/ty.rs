@@ -864,6 +864,13 @@ pub struct Binder {
     pub name: FlowSmolStr,
     /// Enclosing class or record, for members: the `A` in `(method) A.m()`.
     pub owner: Option<FlowSmolStr>,
+    pub type_parameter_context: Option<Arc<TypeParameterContext<ALocElt>>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TypeParameterContext<T> {
+    pub name: FlowSmolStr,
+    pub declaration: T,
 }
 
 /// Which statement introduced an alias, for the line hover prints under it.

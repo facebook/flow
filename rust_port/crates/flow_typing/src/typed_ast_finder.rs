@@ -187,6 +187,7 @@ pub fn find_exact_match_annotation(
 /// Find identifier under location
 pub mod type_at_pos {
     use std::ops::Deref;
+    use std::rc::Rc;
 
     use dupe::Dupe;
     use flow_aloc::ALoc;
@@ -198,6 +199,7 @@ pub mod type_at_pos {
     use flow_common_ty::ty::AliasKind;
     use flow_common_ty::ty::Binder;
     use flow_common_ty::ty::BinderKind;
+    use flow_common_ty::ty::TypeParameterContext;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_parser::ast;
     use flow_parser::ast::types::TypeInner;
@@ -210,6 +212,7 @@ pub mod type_at_pos {
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeParam;
     use flow_typing_type::type_::TypeParamInner;
+    use flow_typing_type::type_util;
     use flow_typing_utils::type_env;
     use flow_typing_utils::type_hint;
     use flow_typing_utils::typed_ast_utils;
@@ -222,7 +225,10 @@ pub mod type_at_pos {
     /// kind of reference it is and leaves the lookup to the caller.
     pub enum Framing {
         /// The target is a binding's own name.
-        Binder(Binder),
+        Binder {
+            binder: Binder,
+            type_parameter_context: Option<Rc<TypeParameterContext<Type>>>,
+        },
         /// The target is a bare identifier; resolve it to the binding it references.
         IdentifierRef,
         /// The target is the remote name in `import {a as b}`. Its definition is
@@ -233,7 +239,9 @@ pub mod type_at_pos {
         },
         /// The target is a type name. A type declaration prints a head of its own,
         /// so the binding is resolved only far enough to say whether it is imported.
-        TypeIdentifierRef,
+        TypeIdentifierRef {
+            type_parameter_context: Option<Rc<TypeParameterContext<Type>>>,
+        },
         /// The target is the `b` of `export {a as b}`, which binds nothing of its
         /// own. Resolve `a` instead, and print its declaration under the name this
         /// module exports it as.
@@ -262,7 +270,7 @@ pub mod type_at_pos {
             loc: ALoc,
             is_type_identifier_reference: bool,
             type_: Type,
-            framing: Option<Framing>,
+            framing: Option<Box<Framing>>,
             alias: Option<Alias>,
         },
         FoundHardcodedModule(ALoc, FlowSmolStr),
@@ -316,6 +324,22 @@ pub mod type_at_pos {
             reason::in_range(&self.target_loc, loc)
         }
 
+        fn type_parameter_context(&self, t: &Type) -> Option<Rc<TypeParameterContext<Type>>> {
+            let def_loc = type_util::def_loc_of_t(t);
+            self.enclosing_tparams
+                .iter()
+                .rev()
+                .find(|(tparam, _)| tparam.reason.loc() == def_loc)
+                .map(|(_, declaration)| *declaration)
+                .map(|id| {
+                    let (_, declaration) = &id.loc;
+                    Rc::new(TypeParameterContext {
+                        name: id.name.dupe(),
+                        declaration: declaration.dupe(),
+                    })
+                })
+        }
+
         fn find_loc(
             &self,
             loc: &ALoc,
@@ -327,7 +351,7 @@ pub mod type_at_pos {
                 loc: loc.dupe(),
                 is_type_identifier_reference: is_type_identifier,
                 type_: t.dupe(),
-                framing,
+                framing: framing.map(Box::new),
                 alias: None,
             })
         }
@@ -347,7 +371,7 @@ pub mod type_at_pos {
                 loc: loc.dupe(),
                 is_type_identifier_reference: false,
                 type_: t.dupe(),
-                framing: Some(framing),
+                framing: Some(Box::new(framing)),
                 alias: Some(Alias {
                     kind,
                     name: name.dupe(),
@@ -376,10 +400,16 @@ pub mod type_at_pos {
                 loc: loc.dupe(),
                 is_type_identifier_reference: false,
                 type_: t.dupe(),
-                framing: Some(Framing::Binder(Binder {
-                    kind,
-                    name: name.dupe(),
-                    owner,
+                framing: Some(Box::new(Framing::Binder {
+                    binder: Binder {
+                        kind,
+                        name: name.dupe(),
+                        owner,
+                        type_parameter_context: None,
+                    },
+                    type_parameter_context: (kind == BinderKind::TypeParameter)
+                        .then(|| self.type_parameter_context(t))
+                        .flatten(),
                 })),
                 alias: None,
             })
@@ -661,7 +691,14 @@ pub mod type_at_pos {
                 if self.infer_tparams.contains(&id.name) {
                     return self.find_binder(loc, t, BinderKind::TypeParameter, &id.name);
                 }
-                self.find_loc(loc, t, true, Some(Framing::TypeIdentifierRef))
+                self.find_loc(
+                    loc,
+                    t,
+                    true,
+                    Some(Framing::TypeIdentifierRef {
+                        type_parameter_context: self.type_parameter_context(t),
+                    }),
+                )
             } else {
                 ast_visitor::identifier_default(self, id)
             }
@@ -1310,7 +1347,7 @@ pub mod type_at_pos {
                 loc: loc.to_loc_exn().dupe(),
                 is_type_identifier_reference,
                 type_,
-                framing,
+                framing: framing.map(|framing| *framing),
                 alias,
             }),
             Err(FoundResult::FoundHardcodedModule(loc, name)) => Ok(

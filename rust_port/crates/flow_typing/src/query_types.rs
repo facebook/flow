@@ -25,6 +25,7 @@ use flow_common_ty::ty::NamedProp;
 use flow_common_ty::ty::Prop;
 use flow_common_ty::ty::Ty;
 use flow_common_ty::ty::TypeAtPosResult;
+use flow_common_ty::ty::TypeParameterContext;
 use flow_common_ty::ty::symbols_of_elt;
 use flow_common_ty::ty_symbol::ImportMode;
 use flow_common_ty::ty_symbol::Provenance;
@@ -215,6 +216,7 @@ fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &AL
         kind,
         name: def.actual_name.dupe(),
         owner: None,
+        type_parameter_context: None,
     });
     let alias = is_imported_binding_kind(def.kind).then(|| Alias {
         kind: AliasKind::Import,
@@ -350,6 +352,7 @@ fn binder_of_member_reference(
         kind,
         name: name.dupe(),
         owner,
+        type_parameter_context: None,
     })
 }
 pub fn dump_type_at_pos(
@@ -417,9 +420,19 @@ pub fn type_at_pos_type<'a>(
                 } else {
                     Some(typed_ast)
                 };
-                let Framed { binder, alias } = match framing {
+                let type_parameter_context = match &framing {
+                    Some(Framing::Binder {
+                        type_parameter_context,
+                        ..
+                    })
+                    | Some(Framing::TypeIdentifierRef {
+                        type_parameter_context,
+                    }) => type_parameter_context.dupe(),
+                    _ => None,
+                };
+                let Framed { mut binder, alias } = match framing {
                     None => Framed::default(),
-                    Some(Framing::Binder(binder)) => Framed {
+                    Some(Framing::Binder { binder, .. }) => Framed {
                         binder: Some(binder),
                         alias: None,
                     },
@@ -434,6 +447,7 @@ pub fn type_at_pos_type<'a>(
                                 kind,
                                 name,
                                 owner: None,
+                                type_parameter_context: None,
                             }),
                         alias: None,
                     },
@@ -444,7 +458,7 @@ pub fn type_at_pos_type<'a>(
                         }
                         framed
                     }
-                    Some(Framing::TypeIdentifierRef) => {
+                    Some(Framing::TypeIdentifierRef { .. }) => {
                         let framed = framed_of_identifier_reference(
                             cx,
                             &file_sig,
@@ -501,25 +515,48 @@ pub fn type_at_pos_type<'a>(
                     toplevel_is_type_identifier_reference,
                 };
 
-                let from_type = |evaluate_type_destructors: EvaluateTypeDestructorsMode| {
+                let from_type = |t: &Type, evaluate_type_destructors| {
                     let options = options(evaluate_type_destructors);
                     let genv =
                         ty_normalizer_flow::mk_genv(options, cx, typed_ast_opt, file_sig.dupe());
-                    ty_normalizer_flow::from_type_with_found_computed_type(&genv, &t)
+                    ty_normalizer_flow::from_type_with_found_computed_type(&genv, t)
                 };
                 // This pass evaluates the destructors it judges worth evaluating, so
                 // it has to leave the server's caches and error set as it found them:
                 // that state outlives the request, and a hover must not change how the
                 // next one behaves. Its result is kept whatever the errors say -- there
                 // is no second form to fall back on.
-                let (ty, _) = cx.run_and_rolled_back_cache(|| {
+                let (ty, type_parameter_context) = cx.run_and_rolled_back_cache(|| {
                     let errors = cx.errors();
-                    let result = from_type(EvaluateTypeDestructorsMode::EvaluateForHover);
+                    let (ty, _) = from_type(&t, EvaluateTypeDestructorsMode::EvaluateForHover);
+                    let type_parameter_context = match type_parameter_context.as_ref() {
+                        None => Ok(None),
+                        Some(context) => {
+                            let (declaration, _) = from_type(
+                                &context.declaration,
+                                EvaluateTypeDestructorsMode::EvaluateForHover,
+                            );
+                            declaration.map(|declaration| {
+                                Some(Arc::new(TypeParameterContext {
+                                    name: context.name.dupe(),
+                                    declaration,
+                                }))
+                            })
+                        }
+                    };
                     cx.reset_errors(errors);
-                    result
+                    (ty, type_parameter_context)
                 });
-                match ty {
-                    Ok(ty) => {
+                match ty.and_then(|ty| {
+                    type_parameter_context
+                        .map(|type_parameter_context| (ty, type_parameter_context))
+                }) {
+                    Ok((ty, type_parameter_context)) => {
+                        if let Some(binder) = binder.as_mut()
+                            && binder.kind == BinderKind::TypeParameter
+                        {
+                            binder.type_parameter_context = type_parameter_context;
+                        }
                         let refs = include_refs.map(|loc_of_aloc| symbols_of_elt(loc_of_aloc, &ty));
                         // An aliased callable is headed `function f(…)`. A
                         // non-callable value import is headed `const x: T`, since
@@ -539,6 +576,7 @@ pub fn type_at_pos_type<'a>(
                                 kind,
                                 name: alias.name.dupe(),
                                 owner: None,
+                                type_parameter_context: None,
                             })
                         });
                         QueryResult::Success(

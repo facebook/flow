@@ -56,3 +56,33 @@ component Comp<P>(p: P) {
 //             ^
   return null;
 }
+
+function outer<Outer>(value: Outer): Outer {
+  function inner<Inner>(innerValue: Inner): Outer {
+//               ^
+    const innerResult: Inner = innerValue;
+//                     ^
+    const outerResult: Outer = value;
+//                     ^
+    return outerResult;
+  }
+
+  function shadow<Outer>(shadowValue: Outer): Outer {
+//                                    ^
+    return shadowValue;
+  }
+
+  return shadow(inner((value as any)));
+}
+
+type GenericFunction = <T>(value: T) => T;
+//                      ^
+
+// Anonymous declarations have no name for an `in ...` clause, so their
+// parameters stay contextless.
+const anonFn = function<AnonFn>(value: AnonFn): AnonFn {
+//                      ^
+  return value;
+};
+const anonArrow = <AnonArrow>(value: AnonArrow): AnonArrow => value;
+//                 ^

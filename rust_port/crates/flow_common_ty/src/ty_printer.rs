@@ -1892,8 +1892,37 @@ fn layout_of_binder(
     let head = layout_of_binder_head(binder);
     match t {
         // A type parameter stands for whatever it is instantiated with, so there is
-        // no type to annotate it with: its own name is all hover has to say.
-        _ if binder.kind == BinderKind::TypeParameter => head,
+        // no type to annotate it with. When its declaration is available, identify
+        // the generic construct that introduced it instead.
+        _ if binder.kind == BinderKind::TypeParameter => {
+            let Some(context) = &binder.type_parameter_context else {
+                return head;
+            };
+            let declaration = match &context.declaration {
+                Elt::Type(t) => layout_of_binder(
+                    opts,
+                    &Binder {
+                        kind: BinderKind::Function,
+                        name: context.name.dupe(),
+                        owner: None,
+                        type_parameter_context: None,
+                    },
+                    t,
+                    state,
+                ),
+                Elt::Decl(Decl::TypeAliasDecl(data)) => {
+                    type_alias(opts, 0, &data.name, &data.tparams, &None, state)
+                }
+                Elt::Decl(d) => decl(opts, 0, d, state),
+            };
+            layout::fuse(vec![
+                head,
+                layout::space(),
+                LayoutNode::atom("in".to_string()),
+                layout::space(),
+                declaration,
+            ])
+        }
         Ty::Fun(func) if matches!(binder.kind, BinderKind::Function | BinderKind::Method) => {
             layout::fuse(vec![
                 head,
