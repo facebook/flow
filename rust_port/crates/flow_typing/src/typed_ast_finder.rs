@@ -190,7 +190,6 @@ pub mod type_at_pos {
 
     use dupe::Dupe;
     use flow_aloc::ALoc;
-    use flow_common::polarity::Polarity;
     use flow_common::reason;
     use flow_common::reason::Name;
     use flow_common::reason::VirtualReasonDesc;
@@ -201,6 +200,7 @@ pub mod type_at_pos {
     use flow_common_ty::ty::BinderKind;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_parser::ast;
+    use flow_parser::ast::types::TypeInner;
     use flow_parser::ast_visitor;
     use flow_parser::ast_visitor::AstVisitor;
     use flow_parser::ast_visitor::TypeParamsContext;
@@ -210,8 +210,6 @@ pub mod type_at_pos {
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeParam;
     use flow_typing_type::type_::TypeParamInner;
-    use flow_typing_type::type_::mixed_t;
-    use flow_typing_type::type_util;
     use flow_typing_utils::type_env;
     use flow_typing_utils::type_hint;
     use flow_typing_utils::typed_ast_utils;
@@ -283,10 +281,22 @@ pub mod type_at_pos {
     // - literal object keys      (handled in object_key)
     // - `this`, `super`          (handled in expression)
     // - private property names   (handled in expression)
+    type TypeParameterDeclaration<'a> = &'a ast::Identifier<ALoc, (ALoc, Type)>;
+
     struct TypeAtPosSearcher<'a, 'cx> {
         cx: &'a Context<'cx>,
         target_loc: Loc,
-        rev_bound_tparams: Vec<TypeParam>,
+        /// Type parameters in scope at the current visit position, each paired
+        /// with the declaration that introduced it. Entries live only for the
+        /// duration of their declaration's visit (see
+        /// `in_type_parameter_scope`), so a lookup by definition location
+        /// always finds the innermost owner and never a sibling that has
+        /// already been exited.
+        ///
+        /// Anonymous declarations record nothing: there is no name to
+        /// associate their parameters with. The synthetic `this` parameter
+        /// of classes and records is likewise not recorded.
+        enclosing_tparams: Vec<(TypeParam, TypeParameterDeclaration<'a>)>,
         /// Name of the class, declared class, record or interface whose own body
         /// is being visited, so that a member binder can qualify itself as `A.m`.
         enclosing_nominal: Option<FlowSmolStr>,
@@ -373,6 +383,29 @@ pub mod type_at_pos {
                 })),
                 alias: None,
             })
+        }
+
+        /// Records a declaration's type parameters while `f` runs, then drops
+        /// them, so parameters of already-exited sibling declarations do not
+        /// linger for the rest of the traversal.
+        fn in_type_parameter_scope<R>(
+            &mut self,
+            id: Option<TypeParameterDeclaration<'a>>,
+            tparams: Option<&'a ast::types::TypeParams<ALoc, (ALoc, Type)>>,
+            f: impl FnOnce(&mut Self) -> R,
+        ) -> R {
+            let saved_len = self.enclosing_tparams.len();
+            if let (Some(id), Some(tparams)) = (id, tparams) {
+                self.enclosing_tparams.extend(
+                    tparams
+                        .params
+                        .iter()
+                        .map(|tparam| (Self::make_typeparam(tparam), id)),
+                );
+            }
+            let res = f(self);
+            self.enclosing_tparams.truncate(saved_len);
+            res
         }
 
         /// The name and type of a property key, when the target is on the key
@@ -469,7 +502,7 @@ pub mod type_at_pos {
             res
         }
 
-        fn make_typeparam(&self, tparam: &ast::types::TypeParam<ALoc, (ALoc, Type)>) -> TypeParam {
+        fn make_typeparam(tparam: &ast::types::TypeParam<ALoc, (ALoc, Type)>) -> TypeParam {
             let (name_loc, _) = &tparam.name.loc;
             let name = &tparam.name.name;
             let reason =
@@ -495,77 +528,13 @@ pub mod type_at_pos {
                 is_const: tparam.const_.is_some(),
             })
         }
-
-        fn make_class_this(&self, cls: &ast::class::Class<ALoc, (ALoc, Type)>) -> TypeParam {
-            let body_loc = &cls.body.loc;
-            let bound = match &cls.id {
-                Some(id) => {
-                    let (_, t) = &id.loc;
-                    t.dupe()
-                }
-                None => {
-                    let reason = reason::mk_reason(
-                        VirtualReasonDesc::RCustom(FlowSmolStr::new("<<anonymous class>>")),
-                        body_loc.dupe(),
-                    );
-                    mixed_t::make(reason)
-                }
-            };
-            TypeParam::new(TypeParamInner {
-                name: SubstName::name(FlowSmolStr::new("this")),
-                reason: type_util::reason_of_t(&bound)
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RThisType),
-                bound,
-                polarity: Polarity::Positive,
-                default: None,
-                is_this: true,
-                is_const: false,
-            })
-        }
-
-        fn make_declare_class_this(
-            &self,
-            decl: &ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
-        ) -> TypeParam {
-            let (_, bound) = &decl.id.loc;
-            TypeParam::new(TypeParamInner {
-                name: SubstName::name(FlowSmolStr::new("this")),
-                reason: type_util::reason_of_t(bound)
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RThisType),
-                bound: bound.dupe(),
-                polarity: Polarity::Positive,
-                default: None,
-                is_this: true,
-                is_const: false,
-            })
-        }
-
-        fn make_record_this(
-            &self,
-            record: &ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>,
-        ) -> TypeParam {
-            let (_, t) = &record.id.loc;
-            TypeParam::new(TypeParamInner {
-                name: SubstName::name(FlowSmolStr::new("this")),
-                reason: type_util::reason_of_t(t)
-                    .dupe()
-                    .replace_desc(VirtualReasonDesc::RThisType),
-                bound: t.dupe(),
-                polarity: Polarity::Positive,
-                default: None,
-                is_this: true,
-                is_const: false,
-            })
-        }
     }
 
     /// Walks the members of a body that has a name to qualify them with — an
     /// interface's or a declared class's. Routing them through `object_type`
     /// instead would clear the qualifier, since a bare object type is anonymous.
     fn named_object_body<'ast>(
-        searcher: &mut TypeAtPosSearcher<'_, '_>,
+        searcher: &mut TypeAtPosSearcher<'ast, '_>,
         name: FlowSmolStr,
         obj_type: &'ast ast::types::Object<ALoc, (ALoc, Type)>,
     ) -> Result<(), FoundResult> {
@@ -580,7 +549,7 @@ pub mod type_at_pos {
     /// `declare_class_default`'s walk, with the body's members qualified by the
     /// class name. Keep the visit order in step with the parser's.
     fn declare_class_members<'ast>(
-        searcher: &mut TypeAtPosSearcher<'_, '_>,
+        searcher: &mut TypeAtPosSearcher<'ast, '_>,
         decl: &'ast ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
     ) -> Result<(), FoundResult> {
         let ast::statement::DeclareClass {
@@ -615,7 +584,7 @@ pub mod type_at_pos {
     /// The `extends` clause of a declared class, which nests through
     /// `extends mixin(Base)` calls. The parser's own walk of this is private.
     fn declare_class_extends<'ast>(
-        searcher: &mut TypeAtPosSearcher<'_, '_>,
+        searcher: &mut TypeAtPosSearcher<'ast, '_>,
         ext: &'ast ast::statement::DeclareClassExtends<ALoc, (ALoc, Type)>,
     ) -> Result<(), FoundResult> {
         match ext {
@@ -633,8 +602,8 @@ pub mod type_at_pos {
         Ok(())
     }
 
-    impl<'ast, 'a, 'cx> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundResult>
-        for TypeAtPosSearcher<'a, 'cx>
+    impl<'ast, 'cx> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundResult>
+        for TypeAtPosSearcher<'ast, 'cx>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
@@ -717,14 +686,11 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let (loc, _) = &tparam.name.loc;
             if self.covers_target(loc) {
-                let tp = self.make_typeparam(tparam);
-                self.rev_bound_tparams.push(tp.dupe());
+                let tp = Self::make_typeparam(tparam);
                 let t = mk_bound_t(self.cx, &tp);
                 self.find_binder(loc, &t, BinderKind::TypeParameter, &tparam.name.name)
             } else {
                 let res = ast_visitor::type_param_default(self, kind, tparam);
-                let tp = self.make_typeparam(tparam);
-                self.rev_bound_tparams.push(tp);
                 if matches!(kind, TypeParamsContext::Infer) {
                     self.infer_tparams.push(tparam.name.name.dupe());
                 }
@@ -759,29 +725,15 @@ pub mod type_at_pos {
             Ok(())
         }
 
-        fn type_params(
-            &mut self,
-            kind: &TypeParamsContext,
-            tparams: &'ast ast::types::TypeParams<ALoc, (ALoc, Type)>,
-        ) -> Result<(), FoundResult> {
-            let originally_bound_tparams = self.rev_bound_tparams.clone();
-            let res = ast_visitor::type_params_default(self, kind, tparams);
-            self.rev_bound_tparams = originally_bound_tparams;
-            res
-        }
-
         fn class_(
             &mut self,
             loc: &'ast ALoc,
             cls: &'ast ast::class::Class<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
-            let this_tparam = self.make_class_this(cls);
-            let originally_bound_tparams = self.rev_bound_tparams.clone();
-            self.rev_bound_tparams.push(this_tparam);
             let name = cls.id.as_ref().map(|id| id.name.dupe());
-            let res = self.in_nominal(name, |this| ast_visitor::class_default(this, loc, cls));
-            self.rev_bound_tparams = originally_bound_tparams;
-            res
+            self.in_type_parameter_scope(cls.id.as_ref(), cls.tparams.as_ref(), |searcher| {
+                searcher.in_nominal(name, |this| ast_visitor::class_default(this, loc, cls))
+            })
         }
 
         /// Names the declared class for its own body only, the way `interface`
@@ -793,12 +745,9 @@ pub mod type_at_pos {
             _loc: &'ast ALoc,
             decl: &'ast ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
-            let this_tparam = self.make_declare_class_this(decl);
-            let originally_bound_tparams = self.rev_bound_tparams.clone();
-            self.rev_bound_tparams.push(this_tparam);
-            let res = declare_class_members(self, decl);
-            self.rev_bound_tparams = originally_bound_tparams;
-            res
+            self.in_type_parameter_scope(Some(&decl.id), decl.tparams.as_ref(), |searcher| {
+                declare_class_members(searcher, decl)
+            })
         }
 
         fn record_declaration(
@@ -806,15 +755,12 @@ pub mod type_at_pos {
             loc: &'ast ALoc,
             record: &'ast ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
-            let this_tparam = self.make_record_this(record);
-            let originally_bound_tparams = self.rev_bound_tparams.clone();
-            self.rev_bound_tparams.push(this_tparam);
             let name = Some(record.id.name.dupe());
-            let res = self.in_nominal(name, |this| {
-                ast_visitor::record_declaration_default(this, loc, record)
-            });
-            self.rev_bound_tparams = originally_bound_tparams;
-            res
+            self.in_type_parameter_scope(Some(&record.id), record.tparams.as_ref(), |searcher| {
+                searcher.in_nominal(name, |this| {
+                    ast_visitor::record_declaration_default(this, loc, record)
+                })
+            })
         }
 
         fn object_key(
@@ -975,6 +921,16 @@ pub mod type_at_pos {
             ast_visitor::declare_variable_declarator_default(self, kind, declarator)
         }
 
+        fn function_(
+            &mut self,
+            loc: &'ast ALoc,
+            func: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_type_parameter_scope(func.id.as_ref(), func.tparams.as_ref(), |searcher| {
+                ast_visitor::function_default(searcher, loc, func)
+            })
+        }
+
         fn function_declaration(
             &mut self,
             loc: &'ast ALoc,
@@ -990,7 +946,18 @@ pub mod type_at_pos {
             decl: &'ast ast::statement::DeclareFunction<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
             self.function_binder(decl.id.as_ref())?;
-            ast_visitor::declare_function_default(self, loc, decl)
+            let tparams = match decl.annot.annotation.deref() {
+                TypeInner::Function { inner, .. } | TypeInner::ConstructorType { inner, .. } => {
+                    inner.tparams.as_ref()
+                }
+                // Any other annotation shape records nothing: the parameters
+                // stay contextless rather than inheriting an unrelated
+                // enclosing declaration.
+                _ => None,
+            };
+            self.in_type_parameter_scope(decl.id.as_ref(), tparams, |searcher| {
+                ast_visitor::declare_function_default(searcher, loc, decl)
+            })
         }
 
         fn class_method(
@@ -1213,6 +1180,50 @@ pub mod type_at_pos {
             self.in_nominal(None, |this| ast_visitor::object_type_default(this, ot))
         }
 
+        fn type_alias(
+            &mut self,
+            loc: &'ast ALoc,
+            alias: &'ast ast::statement::TypeAlias<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_type_parameter_scope(Some(&alias.id), alias.tparams.as_ref(), |searcher| {
+                ast_visitor::type_alias_default(searcher, loc, alias)
+            })
+        }
+
+        fn opaque_type(
+            &mut self,
+            loc: &'ast ALoc,
+            opaque: &'ast ast::statement::OpaqueType<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_type_parameter_scope(Some(&opaque.id), opaque.tparams.as_ref(), |searcher| {
+                ast_visitor::opaque_type_default(searcher, loc, opaque)
+            })
+        }
+
+        fn component_declaration(
+            &mut self,
+            loc: &'ast ALoc,
+            component: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_type_parameter_scope(
+                Some(&component.id),
+                component.tparams.as_ref(),
+                |searcher| ast_visitor::component_declaration_default(searcher, loc, component),
+            )
+        }
+
+        fn declare_component(
+            &mut self,
+            loc: &'ast ALoc,
+            component: &'ast ast::statement::DeclareComponent<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.in_type_parameter_scope(
+                Some(&component.id),
+                component.tparams.as_ref(),
+                |searcher| ast_visitor::declare_component_default(searcher, loc, component),
+            )
+        }
+
         /// Names the interface for its own body only: the extends clause and type
         /// parameters are walked outside that scope.
         fn interface(
@@ -1220,24 +1231,26 @@ pub mod type_at_pos {
             _loc: &'ast ALoc,
             iface: &'ast ast::statement::Interface<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
-            let ast::statement::Interface {
-                id,
-                tparams,
-                extends,
-                body,
-                comments,
-            } = iface;
-            self.binding_type_identifier(id)?;
-            if let Some(tparams) = tparams {
-                self.type_params(&TypeParamsContext::Interface, tparams)?;
-            }
-            for (_loc, generic) in extends.iter() {
-                self.generic_type(generic)?;
-            }
-            let (_loc, obj_type) = body;
-            named_object_body(self, id.name.dupe(), obj_type)?;
-            self.syntax_opt(comments.as_ref())?;
-            Ok(())
+            self.in_type_parameter_scope(Some(&iface.id), iface.tparams.as_ref(), |searcher| {
+                let ast::statement::Interface {
+                    id,
+                    tparams,
+                    extends,
+                    body,
+                    comments,
+                } = iface;
+                searcher.binding_type_identifier(id)?;
+                if let Some(tparams) = tparams {
+                    searcher.type_params(&TypeParamsContext::Interface, tparams)?;
+                }
+                for (_loc, generic) in extends.iter() {
+                    searcher.generic_type(generic)?;
+                }
+                let (_loc, obj_type) = body;
+                named_object_body(searcher, id.name.dupe(), obj_type)?;
+                searcher.syntax_opt(comments.as_ref())?;
+                Ok(())
+            })
         }
 
         fn function_param(
@@ -1281,7 +1294,7 @@ pub mod type_at_pos {
         let mut searcher = TypeAtPosSearcher {
             cx,
             target_loc: loc,
-            rev_bound_tparams: Vec::new(),
+            enclosing_tparams: Vec::new(),
             enclosing_nominal: None,
             infer_tparams: Vec::new(),
         };
