@@ -10,22 +10,9 @@ set +x # don't print the secrets!
 # only run on tags
 if [[ "$GITHUB_REF_NAME" = "" ]]; then exit 0; fi
 
-FLOW_BOT_NAME="flow-bot"
 VERSION="${GITHUB_REF_NAME#v}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-BUILD_DIR=$(mktemp -d -t flow-bin-XXXXXXXXXX)
-trap 'rm -rf "$BUILD_DIR"' EXIT
-
-pushd "$BUILD_DIR"
-git clone "https://${FLOW_BOT_NAME}:${FLOW_BOT_TOKEN}@github.com/flow/flow-bin.git"
-
-pushd flow-bin
-
-git config user.name "$FLOW_BOT_NAME"
-git config user.email "$FLOW_BOT_EMAIL"
-
-make push publish VERSION="$VERSION" NPM_TOKEN="$NPM_TOKEN"
-
-popd > /dev/null
-
+pushd "$SCRIPT_DIR/../packages/flow-bin"
+make publish VERSION="$VERSION" NPM_TOKEN="$NPM_TOKEN"
 popd > /dev/null

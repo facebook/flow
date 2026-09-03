@@ -1,0 +1,47 @@
+{
+  "name": "flow-bin",
+  "version": "0.330.0",
+  "description": "Binary wrapper for Flow - A static type checker for JavaScript",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "bin": {
+    "flow": "cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: Run 'make test' instead.\" && exit 1",
+    "verify": "shasum -c SHASUM256.txt"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "files": [
+    "flow-linux64-v*/flow",
+    "flow-linux-arm64-v*/flow",
+    "flow-osx-arm64-v*/flow",
+    "flow-win64-v*/flow.exe",
+    "vendor",
+    "cli.js",
+    "index.js",
+    "SHASUM256.txt",
+    "SHASUM256.txt.sign",
+    "signing.pem"
+  ],
+  "keywords": [
+    "cli-app",
+    "cli",
+    "bin",
+    "binary",
+    "flow",
+    "facebook",
+    "type",
+    "inference",
+    "check",
+    "checker",
+    "javascript",
+    "js",
+    "wrapper"
+  ]
+}

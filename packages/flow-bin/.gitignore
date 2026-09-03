@@ -1,0 +1,7 @@
+.npmrc
+node_modules
+/flow-*-v*/
+*.swp
+/SHASUM256.txt
+/SHASUM256.txt.sign
+/signing.key
