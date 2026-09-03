@@ -60,7 +60,7 @@ const n: number = foo.x; // Works!
 ```
 
 :::info TypeScript comparison
-TypeScript types classes structurally, while Flow types them [nominally](../flow-vs-typescript.md#toc-classes-nominal) — two distinct classes with the same shape are different types. Flow also rejects [method unbinding](../flow-vs-typescript.md#toc-method-unbinding) (`const f = c.m`) because the extracted method would lose its `this`, while TS lets the same extraction through silently. And several TS-only [class syntax extensions](../flow-vs-typescript.md#toc-class-extensions) — parameter properties, access modifiers — are not adopted in Flow, write the equivalent JS instead.
+TypeScript types classes structurally, while Flow types them [nominally](../flow-vs-typescript.md#toc-classes-nominal) — two distinct classes with the same shape are different types. Flow also [preserves an instance method's receiver requirement](../flow-vs-typescript.md#toc-method-extraction) when the method is extracted, while TypeScript drops it. And several TS-only [class syntax extensions](../flow-vs-typescript.md#toc-class-extensions) — parameter properties, access modifiers — are not adopted in Flow, write the equivalent JS instead.
 :::
 
 ## When to use this {#toc-when-to-use}
@@ -85,9 +85,10 @@ class MyClass {
 ```
 
 Also just like regular functions, class methods may have `this` annotations as well.
-However, if one is not provided, Flow will infer the class instance type (or the class type for static methods)
-instead of `mixed`. When an explicit `this` parameter is provided, it must be a [supertype](../lang/subtypes.md) of
-the class instance type (or class type for static methods).
+For instance methods without one, Flow infers the class instance type instead of `unknown`. For static methods,
+Flow infers the class type when the method body uses `this`; otherwise it uses `unknown`, which lets the static
+method be extracted and called without a receiver. When an explicit `this` parameter is provided, it must be a
+[supertype](../lang/subtypes.md) of the class instance type (or class type for static methods).
 
 ```js flow-check
 class MyClass {
@@ -394,9 +395,9 @@ to refer to the type of the class in an annotation.
 
 ## Common Issues {#toc-common-issues}
 
-### Method unbinding {#toc-method-unbinding}
+### Extracting methods {#toc-method-extraction}
 
-Flow tracks the `this` binding on methods: extracting `obj.method` without calling it would produce a function that has lost its `this`, and calling that function would invoke the method body with `this` undefined, so any `this.field` access would crash at runtime. Flow rejects the extraction with `[method-unbinding]` ("Cannot get `a.method` because property `method` cannot be unbound from the context where it was defined"):
+Flow allows you to extract an instance method as a function value, but preserves the method's receiver requirement. Calling the extracted function without a receiver is therefore an error: at runtime `this` would be `undefined`, so any `this.field` access would crash.
 
 ```js flow-check
 class Counter {
@@ -404,20 +405,24 @@ class Counter {
   increment(): number { return ++this.count; }
 }
 const counter = new Counter();
-const tick: () => number = counter.increment; // ERROR: [method-unbinding]
+const tick = counter.increment; // Works: `tick` retains its receiver requirement
+tick(); // ERROR: the required receiver is missing
 ```
 
-Destructuring is blocked for the same reason:
+Destructuring behaves the same way:
 
 ```js flow-check
 class MyClass { method() {} }
 const a = new MyClass();
-const {method} = a; // Error!
+const {method} = a; // Works!
+method(); // Error: the required receiver is missing
 ```
 
-The fixes are either to keep the call bound (`counter.increment()` directly) or to wrap with an arrow that captures `this` (`const tick = () => counter.increment()`).
+Keep the call bound (`counter.increment()`), bind the method to its original receiver (`counter.increment.bind(counter)`), or wrap it with an arrow (`const tick = () => counter.increment()`).
 
-This is a class-instance rule: method-shorthand on a plain [object type](./objects.md#toc-object-methods) doesn't carry a `this` context to lose (usage of `this` in object literals is banned), so extracting an object method is allowed.
+Instance methods retain a receiver requirement even when their bodies do not reference `this`. An unannotated static method retains one only when its body uses `this`; an explicit `this` parameter always applies.
+
+Method shorthand on a plain [object type](./objects.md#toc-object-methods) has no implicit receiver type because usage of `this` in object literals is banned. Such methods can be extracted and called directly unless they declare an explicit `this` parameter.
 
 ### Rebinding `this` with `call`, `apply` and `bind` {#toc-this-rebinding}
 
@@ -438,7 +443,7 @@ const x: X = new Y(); // Fine: Y is a subtype of X
 x.foo.call(new X()); // Would run Y.prototype.foo with an X as this
 ```
 
-At runtime, `x.foo` is `Y.prototype.foo`, so rebinding it to `new X()` would evaluate `this.y` on an object with no `y`. Flow therefore only lets `call`, `apply` and `bind` re-supply the receiver from which the method was read. The class-instance example is rejected earlier by [method unbinding](#toc-method-unbinding); in cases where the method read itself is valid, a different receiver reports `invalid-this-arg`:
+At runtime, `x.foo` is `Y.prototype.foo`, so rebinding it to `new X()` would evaluate `this.y` on an object with no `y`. Flow therefore only lets `call`, `apply` and `bind` re-supply the receiver from which the method was read. A different receiver reports `invalid-this-arg`:
 
 ```js flow-check
 type Counter = {

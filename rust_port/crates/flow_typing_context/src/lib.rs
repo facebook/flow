@@ -244,7 +244,7 @@ impl Default for FrozenMetadata {
             records_includes: Arc::from([]),
             max_workers: 0,
             missing_module_generators: Arc::from([]),
-            new_this_typing: false,
+            new_this_typing: true,
             new_this_typing_includes: Arc::from([]),
             no_implicit_override: false,
             no_unchecked_indexed_access: false,

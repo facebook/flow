@@ -275,36 +275,37 @@ References:
 Found 1 error
 
 === block 27 ===
-Error ------------------------------------------------------------------------------ -:7:36
+Error ------------------------------------------------------------------------------- -:8:1
 
-Cannot get `counter.increment` because property `increment` [1] cannot be unbound from the context [2] where it was
-defined. [method-unbinding]
+Cannot call `tick` as a standalone function because its `this` parameter requires `Counter` [1] as the receiver. Call it
+as a method, or bind it to its receiver before calling it. [incompatible-type]
 
-   -:7:36
-   7| const tick: () => number = counter.increment; // ERROR: [method-unbinding]
-                                         ^^^^^^^^^ [1]
+   -:8:1
+   8| tick(); // ERROR: the required receiver is missing
+      ^^^^
 
 References:
-   -:4:3
-   4|   increment(): number { return ++this.count; }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   -:2:7
+   2| class Counter {
+            ^^^^^^^ [1]
 
 
 Found 1 error
 
 === block 28 ===
-Error ------------------------------------------------------------------------------- -:4:8
+Error ------------------------------------------------------------------------------- -:5:1
 
-property `method` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+Cannot call `method` as a standalone function because its `this` parameter requires `MyClass` [1] as the receiver. Call
+it as a method, or bind it to its receiver before calling it. [incompatible-type]
 
-   -:4:8
-   4| const {method} = a; // Error!
-             ^^^^^^ [1]
+   -:5:1
+   5| method(); // Error: the required receiver is missing
+      ^^^^^^
 
 References:
-   -:2:17
+   -:2:7
    2| class MyClass { method() {} }
-                      ^^^^^^^^^^^ [2]
+            ^^^^^^^ [1]
 
 
 Found 1 error

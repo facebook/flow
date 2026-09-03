@@ -429,19 +429,17 @@ Found 1 error
 === block 29 ===
 Error ----------------------------------------------------------------------------- -:7:1
 
-Cannot call `hasThisParam` because global object [1] is incompatible with `number` [2]. [incompatible-type]
+Cannot call `hasThisParam` as a standalone function because its `this` parameter requires number [1] as the receiver.
+Call it as a method, or bind it to its receiver before calling it. [incompatible-type]
 
    -:7:1
    7| hasThisParam(''); // error: global object is not number
       ^^^^^^^^^^^^
 
 References:
-   -:7:1
-   7| hasThisParam(''); // error: global object is not number
-      ^^^^^^^^^^^^^^^^ [1]
    -:2:31
    2| type HasThisParamFun = (this: number, bar: string) => void;
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [1]
 
 
 Found 1 error

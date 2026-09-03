@@ -10,7 +10,7 @@ export default class A {
   static foo(p: K): boolean {
     return false;
   }
-  static bar(p: I & K): boolean {
+  static bar(this: typeof A, p: I & K): boolean {
     return this.foo(p);
   }
 }

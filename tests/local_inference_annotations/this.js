@@ -5,7 +5,7 @@ class A {
     x : number;
     static y : number;
     foo() {return this.x;} // Error: missing return annot
-    static bar() {return this.y;} // Error: missing return annot
+    static bar(this: typeof A) {return this.y;} // Error: missing return annot
 }
 
 let z = () => { return this };

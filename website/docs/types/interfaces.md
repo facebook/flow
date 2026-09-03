@@ -57,7 +57,7 @@ acceptsObj(o); // Works!
 acceptsObj(foo); // Error!
 ```
 
-The underlying reason is [method unbinding](./classes.md#toc-method-unbinding): Flow tracks `this` on class methods, and letting a class instance flow into an object type would be a backdoor around that rule — extract `obj.method` through the object-type alias and call it without a receiver. Interfaces have the same hazard, so an interface-typed value also can't flow into an object type. Plain object literals carry no `this` binding to lose, which is why they flow into object types freely.
+The underlying reason is receiver safety: Flow preserves the receiver requirement of class instance and interface methods when they are extracted. Letting a class or interface value flow into an object type would erase that requirement, since object-type methods have no implicit receiver requirement. Plain object-literal methods carry no implicit receiver requirement because Flow bans `this` references in their bodies.
 
 So three kinds of values relate to the two structural type shapes asymmetrically:
 
@@ -142,7 +142,7 @@ interface MyInterface {
 }
 ```
 
-Also like [class methods](./classes.md#toc-class-methods), interface methods must also remain bound to the interface on which they were defined.
+Also like [class methods](./classes.md#toc-method-extraction), extracted interface methods retain their receiver requirement, so calling one without a compatible receiver is an error.
 
 You can define [overloaded methods](./intersections.md#declaring-overloaded-functions) by declaring the same method name multiple times with different type signatures:
 

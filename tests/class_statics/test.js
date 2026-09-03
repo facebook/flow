@@ -18,11 +18,11 @@ class B extends A {
     B.bar(0); // error
     B.qux(0); // error
   }
-  static create(): A {
+  static create(this: typeof B): A {
     return new this();
   }
 
-  static badCreate(): number {
+  static badCreate(this: typeof B): number {
     return new this(); // error B ~> number
   }
 }
@@ -30,7 +30,7 @@ class B extends A {
 class C<X> {
   static x: X;
   static bar(x: X) { }
-  static create(): C<any> {
+  static create(this: Class<C<any>>): C<any> {
     return new this();
   }
 }
@@ -49,7 +49,7 @@ B as typeof A;
 
 class E {
   static x: number;
-  static foo(): string {
+  static foo(this: typeof E): string {
     this.bar(); // error
     return this.x; // error
   }

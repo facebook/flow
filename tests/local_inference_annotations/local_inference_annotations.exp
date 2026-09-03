@@ -1021,12 +1021,12 @@ Missing an annotation on return. [missing-local-annot]
                
 
 
-Error ----------------------------------------------------------------------------------------------------- this.js:8:17
+Error ----------------------------------------------------------------------------------------------------- this.js:8:31
 
 Missing an annotation on return. [missing-local-annot]
 
-   8|     static bar() {return this.y;} // Error: missing return annot
-                      
+   8|     static bar(this: typeof A) {return this.y;} // Error: missing return annot
+                                    
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:18:18

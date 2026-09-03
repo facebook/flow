@@ -104,7 +104,7 @@ How Flow types objects, classes, and interfaces: the exact-by-default object rul
 | [`implements` / `extends` clauses](#toc-implements-extends-rhs) | Can target object-shaped utility types like `Pick<T, K>` or `Omit<T, K>`. | Must name an interface or class, not an object type alias. |
 | [Primitives vs. interfaces](#toc-primitives-interfaces) | Primitives satisfy object/interface shapes that exist on the boxed prototype. | Primitives are not subtypes of object types or interfaces. |
 | [Object combination](#toc-type-spread) | Intersections are the standard way to combine object types. | Use object type spread (`{...A, ...B}`); intersections, while supported for inexact objects, don't work for exact objects. |
-| [`this` bindings](#toc-method-unbinding) | Method extraction unsafely loses `this`; `this` in object literals is allowed. | Class method extraction is rejected; `this` in object literals is banned. |
+| [`this` bindings](#toc-method-extraction) | An implicit method receiver is lost when the method is extracted; `this` in object literals is allowed. | Extracted class instance and interface methods retain their receiver requirement; `this` in object literals is banned. |
 | [Tuple spread after an optional element](#toc-tuple-spread-optional) | Allowed; the resulting tuple type doesn't match the runtime layout when the optional element is absent. | Rejected when the source tuple's arity isn't statically fixed. |
 
 #### Object exactness {#toc-object-exactness}
@@ -249,7 +249,7 @@ acceptsObj(someI);           // ERROR: same [class-object-subtyping] code
 
 The standard fix when you hit this in Flow is to switch the parameter type from object type to interface.
 
-A further consequence of the kind distinction: object types don't allow `this` (Flow rejects `this` in object literals with `[object-this-reference]`), so they describe plain data, not `this`-aware behavior. This is why [`implements`/`extends`](#toc-implements-extends-rhs) needs a class or interface and why [method extraction](#toc-method-unbinding) is safe on object types but not on class instances.
+A further consequence of the kind distinction concerns `this`: Flow rejects `this` inside object-literal methods with `[object-this-reference]`, so those methods have no implicit receiver requirement. Class instance and interface methods do have one, and an extracted method [preserves it](#toc-method-extraction). Allowing a class or interface value to flow into an object type would erase that requirement, so Flow keeps the kinds distinct.
 
 One more note: TypeScript's structural treatment of classes is *almost* total: `const c: C = {x: 1}` type-checks in TS even though `c` is annotated as a class instance. TS has a handful of nominal carve-outs on top of the structural default: ECMAScript `#private` fields, the `private` / `protected` access modifiers (both of which block assignability across distinct declarations), and `unique symbol` - but they're exceptions to an otherwise structural model. Flow's class nominalism is total: no nominal opt-in is *required* because the class identity itself is the nominal channel. This is why Flow's class/object error is a frequent surprise for TS users.
 
@@ -349,13 +349,14 @@ declare const c: Counter;
 const o = {...c}; // ERROR: [cannot-spread-interface]
 ```
 
-#### `this` is bound on class methods and banned in object literals {#toc-method-unbinding}
+#### Extracted methods retain `this`; object literals ban it {#toc-method-extraction}
 
-Flow's two `this`-related rules both head off the same runtime crash: a method body running with `this` undefined. The class case rejects the *extraction* so the call stays bound to its receiver; the object-literal case rejects the *construct* so there's no `this`-aware method on a plain object to extract in the first place.
+Flow's `this`-related rules head off the same runtime crash: a method body running with `this` undefined. Flow allows extracting class instance and interface methods, but preserves their receiver requirement so an unsafe call fails. For object literals, Flow rejects `this` references so there is no implicit receiver requirement to preserve.
 
 |   | `this` usage | Method extraction |
 |---|---|---|
-| **Classes** | Allowed | *Banned* |
+| **Class instance methods** | Allowed | Allowed; receiver requirement retained |
+| **Class static methods** | Allowed | Allowed; receiver retained only when the method uses `this` or declares it explicitly |
 | **Object literals** | *Banned* | Allowed |
 
 **• Method extraction from a class instance.** TypeScript treats methods as plain function values and lets them be extracted silently: calling the extracted version runs the method body with `this` undefined, and any access through `this.field` crashes.
@@ -373,7 +374,7 @@ const tick = counter.incr;
 tick(); // Runtime crash! `this` is undefined, so `++this.count` throws
 ```
 
-Flow rejects the extraction with `[method-unbinding]` ("Cannot get `counter.incr` because property `incr` cannot be unbound from the context where it was defined.") because it tracks the `this` binding on method-shorthand properties of a *class*:
+Flow also tracks the `this` binding on method-shorthand properties of a class, but retains that requirement on the extracted function instead of rejecting the extraction:
 
 ```js flow-check
 // Flow:
@@ -384,13 +385,16 @@ class Counter {
   }
 }
 const counter = new Counter();
-const tick = counter.incr; // ERROR: [method-unbinding]
+const tick = counter.incr; // OK: `tick` retains its receiver requirement
+tick(); // ERROR: the required receiver is missing
 const tickFixed = () =>
   counter.incr(); // OK - arrow captures `this`
 tickFixed(); // OK
 ```
 
-The Flow rewrite is to wrap with an arrow function that captures `this`, as shown by `tickFixed` above.
+Keep the call bound, bind the method to the original receiver, or wrap it with an arrow function as shown by `tickFixed` above.
+
+Instance methods retain a receiver requirement even when their bodies do not reference `this`. An unannotated static method retains one only when its body uses `this`; an explicit `this` parameter always applies.
 
 **• `this` inside an object literal.** TypeScript allows `this` references inside object-literal methods (TS infers `this` as the enclosing literal's type); the same extraction hazard then applies at the call site.
 
@@ -1585,8 +1589,8 @@ The closest Flow equivalent is a type guard combined with an explicit `throw` at
 
 TypeScript's `ThisType<T>` is a marker used inside a contextual type to rewire `this` to `T` within the methods of an object literal. Flow does not implement that rewiring. The two language differences that make `ThisType<T>` useful in TypeScript are absent in Flow:
 
-- Object literals [reject `this` references](#toc-method-unbinding) outright, so there is no object-literal method body whose `this` Flow could rewire.
-- Class and interface methods have a [fixed `this` binding](#toc-method-unbinding) tied to their declaring type, which cannot be reassigned by an external marker.
+- Object literals [reject `this` references](#toc-method-extraction) outright, so there is no object-literal method body whose `this` Flow could rewire.
+- Class instance and interface methods retain their [`this` requirement](#toc-method-extraction) when extracted, which cannot be reassigned by an external marker.
 
 ### Expressions with type arguments {#toc-expression-type-args}
 

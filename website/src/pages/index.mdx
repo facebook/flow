@@ -229,7 +229,7 @@ Object.values(prices).map(price =>
 
 <ShowcaseText>
 
-Pulling `counter.incr` off the instance detaches the method from `counter`, so the later `tick()` runs with `this` undefined and `++this.count` throws. TypeScript types the extracted method as a plain function and waves the call through. Flow rejects the unbound method extraction at the point where `this` is lost. [More safety differences from TypeScript<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/flow-vs-typescript#toc-shared-concepts-different-rules)
+Pulling `counter.incr` off the instance detaches the method from `counter`, so a later `tick()` would run with `this` undefined and `++this.count` would throw. TypeScript drops the implicit receiver constraint. Flow preserves it and rejects the unsafe call. [More safety differences from TypeScript<span className="ctaArrow" aria-hidden="true">→</span>](/en/docs/flow-vs-typescript#toc-shared-concepts-different-rules)
 
 </ShowcaseText>
 
@@ -244,8 +244,8 @@ class Counter {
   }
 }
 const counter = new Counter();
-const tick = counter.incr; // ERROR: unsafe method extraction
-tick(); // Runtime crash! Invalid `this` inside `incr`
+const tick = counter.incr; // OK: receiver requirement retained
+tick(); // ERROR: missing required receiver
 ```
 
 </CodeDesktop>
@@ -259,10 +259,10 @@ class Counter {
   }
 }
 const counter = new Counter();
-// Unsafe method extraction:
-const tick = counter.incr; // ERROR
-// Invalid `this` inside `incr`:
-tick(); // Runtime crash!
+// Receiver requirement retained:
+const tick = counter.incr; // OK
+// Required receiver is missing:
+tick(); // ERROR
 ```
 
 </CodeMobile>

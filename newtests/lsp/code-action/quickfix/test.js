@@ -126,21 +126,6 @@ module.exports = suite(
     ]),
 
     test(
-      'provide codeAction for MethodUnbinding errors',
-      generateSimpleTests(
-        'quickfix',
-        {
-          addFile,
-          lspIgnoreStatusAndCancellation,
-          lspStartAndConnect,
-          lspRequestAndWaitUntilResponse,
-        },
-        __dirname,
-        'method-unbinding.js',
-        'quickfix-method-unbinding',
-      ),
-    ),
-    test(
       'provide quickfix for unused promise errors',
       generateSimpleTests(
         'quickfix',

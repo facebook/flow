@@ -170,9 +170,9 @@ Cannot return `new this()` because `B` [1] is incompatible with `number` [2]. [i
                   ^^^^^^^^^^ [1]
 
 References:
-   test.js:25:23
-   25|   static badCreate(): number {
-                             ^^^^^^ [2]
+   test.js:25:37
+   25|   static badCreate(this: typeof B): number {
+                                           ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:7
@@ -226,9 +226,9 @@ Cannot call `this.bar` because property `bar` is missing in statics of `E` [1]. 
                 ^^^
 
 References:
-   test.js:50:7
-   50| class E {
-             ^ [1]
+   test.js:52:20
+   52|   static foo(this: typeof E): string {
+                          ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:12
@@ -243,9 +243,9 @@ References:
    test.js:51:13
    51|   static x: number;
                    ^^^^^^ [1]
-   test.js:52:17
-   52|   static foo(): string {
-                       ^^^^^^ [2]
+   test.js:52:31
+   52|   static foo(this: typeof E): string {
+                                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:1
@@ -315,7 +315,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:83:3
 
-Cannot cast `A.s` to `typeof Boolean` because `(this: Class<A>) => void` [1] is incompatible with class `Boolean` [2].
+Cannot cast `A.s` to `typeof Boolean` because `() => void` [1] is incompatible with class `Boolean` [2].
 [incompatible-type]
 
    test.js:83:3

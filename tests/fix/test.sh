@@ -6,5 +6,3 @@
 
 printf "flow codemod fix-errors\n"
 assert_ok "$FLOW" codemod fix-errors --strip-root
-printf "flow codemod fix-errors --error-codes method-unbinding\n"
-assert_ok "$FLOW" codemod fix-errors --error-codes method-unbinding --strip-root

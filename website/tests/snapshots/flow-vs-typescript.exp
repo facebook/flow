@@ -204,22 +204,19 @@ References:
 Found 1 error
 
 === block 11 ===
-Error ------------------------------------------------------------------------ -:10:22
+Error ------------------------------------------------------------------------- -:11:1
 
-Cannot get `counter.incr` because property `incr` [1] cannot be unbound from the context [2] where it was defined.
-[method-unbinding]
+Cannot call `tick` as a standalone function because its `this` parameter requires `Counter` [1] as the receiver. Call it
+as a method, or bind it to its receiver before calling it. [incompatible-type]
 
-   -:10:22
-   10| const tick = counter.incr; // ERROR: [method-unbinding]
-                            ^^^^ [1]
+   -:11:1
+   11| tick(); // ERROR: the required receiver is missing
+       ^^^^
 
 References:
-   -:5:3
-         v---------------
-    5|   incr(): number {
-    6|     return ++this.count;
-    7|   }
-         ^ [2]
+   -:3:7
+    3| class Counter {
+             ^^^^^^^ [1]
 
 
 Found 1 error

@@ -2232,7 +2232,7 @@ pub fn make_options(
     } = flowconfig;
 
     let ts_syntax = ts_syntax.unwrap_or(false);
-    let new_this_typing = new_this_typing.unwrap_or(false);
+    let new_this_typing = new_this_typing.unwrap_or(true);
     let new_this_typing_includes: Arc<[RootedGlob]> = new_this_typing_includes
         .into_iter()
         .map(|pattern| {
