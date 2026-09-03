@@ -76,66 +76,66 @@ file.js:38:14,38:17
 import.js:2:5
 Flags:
 (alias) const obj1: {readonly f: 1, m(): void}
-import obj1
+import {obj1} from "./file"
 import.js:2:5,2:8
 
 import.js:4:5
 Flags:
 (alias) const obj2: {readonly f: 1, m(): void}
-import obj2
+import {obj2} from "./file"
 import.js:4:5,4:8
 
 import.js:6:5
 Flags:
 (alias) const obj3: {readonly f: {p: number}}
-import obj3
+import {obj3} from "./file"
 import.js:6:5,6:8
 
 import.js:8:5
 Flags:
 (alias) const obj4: {readonly f: {readonly g: 1}}
-import obj4
+import {obj4} from "./file"
 import.js:8:5,8:8
 
 import.js:10:5
 Flags:
 (alias) const obj5: {readonly p: number}
-import obj5
+import {obj5} from "./file"
 import.js:10:5,10:8
 
 import.js:12:5
 Flags:
 (alias) const obj6: {readonly [string]: string}
-import obj6
+import {obj6} from "./file"
 import.js:12:5,12:8
 
 import.js:14:5
 Flags:
 (alias) const obj7: {m(): void}
-import obj7
+import {obj7} from "./file"
 import.js:14:5,14:8
 
 import.js:16:5
 Flags:
 (alias) const arr1: Readonly<[1, 2, 3]>
-import arr1
+import {arr1} from "./file"
 import.js:16:5,16:8
 
 import.js:18:5
 Flags:
 (alias) const arr2: Readonly<[number]>
-import arr2
+import {arr2} from "./file"
 import.js:18:5,18:8
 
 import.js:20:5
 Flags:
 (alias) const arr6: Readonly<[{readonly f: 1}]>
-import arr6
+import {arr6} from "./file"
 import.js:20:5,20:8
 
 import.js:22:5
 Flags:
 (alias) const arr9: Readonly<[]>
-import arr9
+import {arr9} from "./file"
 import.js:22:5,22:8
 

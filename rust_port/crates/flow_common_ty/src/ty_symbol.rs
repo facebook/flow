@@ -14,6 +14,7 @@ use flow_parser::loc_sig::LocSig;
     Debug,
     Clone,
     Copy,
+    Dupe,
     PartialEq,
     Eq,
     PartialOrd,

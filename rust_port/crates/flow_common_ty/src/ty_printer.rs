@@ -1835,7 +1835,7 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
     };
     let layout = match result.alias {
         None => body,
-        Some(alias) => layout::fuse(vec![body, layout_of_alias_statement(alias)]),
+        Some(alias) => layout::fuse(vec![body, layout_of_alias_statement(opts, alias)]),
     };
     let type_str = pretty_printer::print(true, &layout).contents();
     let refs = result.refs.map(|refs| {
@@ -1904,9 +1904,58 @@ fn layout_of_binder(
         ]),
     }
 }
-/// The statement an alias came from, printed under the declaration it aliases:
-/// `import mf`, `export mr`.
-fn layout_of_alias_statement(alias: &Alias) -> LayoutNode {
+/// The statement an alias came from, printed under the declaration it aliases.
+fn layout_of_alias_statement(opts: &PrinterOptions, alias: &Alias) -> LayoutNode {
+    if let Some(import) = &alias.import {
+        let mode = match import.mode {
+            ImportMode::ValueMode => LayoutNode::empty(),
+            ImportMode::TypeMode => {
+                layout::fuse(vec![LayoutNode::atom("type".to_string()), layout::space()])
+            }
+            ImportMode::TypeofMode => layout::fuse(vec![
+                LayoutNode::atom("typeof".to_string()),
+                layout::space(),
+            ]),
+        };
+        let specifier = match &import.specifier {
+            ImportSpecifier::Default => LayoutNode::atom(alias.name.to_string()),
+            ImportSpecifier::Named { remote_name } => {
+                let renamed = (remote_name != &alias.name).then(|| {
+                    layout::fuse(vec![
+                        layout::space(),
+                        LayoutNode::atom("as".to_string()),
+                        layout::space(),
+                        LayoutNode::atom(alias.name.to_string()),
+                    ])
+                });
+                layout::fuse(vec![
+                    LayoutNode::atom("{".to_string()),
+                    LayoutNode::atom(remote_name.to_string()),
+                    renamed.unwrap_or_else(LayoutNode::empty),
+                    LayoutNode::atom("}".to_string()),
+                ])
+            }
+            ImportSpecifier::Namespace => layout::fuse(vec![
+                LayoutNode::atom("*".to_string()),
+                layout::space(),
+                LayoutNode::atom("as".to_string()),
+                layout::space(),
+                LayoutNode::atom(alias.name.to_string()),
+            ]),
+        };
+        return layout::fuse(vec![
+            layout::hardline(),
+            LayoutNode::atom("import".to_string()),
+            layout::space(),
+            mode,
+            specifier,
+            layout::space(),
+            LayoutNode::atom("from".to_string()),
+            layout::space(),
+            layout::fuse(in_quotes(opts.prefer_single_quotes, &import.source)),
+        ]);
+    }
+
     let keyword = match alias.kind {
         AliasKind::Import => "import",
         AliasKind::Export => "export",

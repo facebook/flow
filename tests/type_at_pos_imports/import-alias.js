@@ -46,3 +46,6 @@ export {local};
 //      ^
 export {local as localRenamed};
 //               ^
+
+import DefaultValue from './exports-default-class';
+//     ^

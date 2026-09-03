@@ -15,6 +15,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 
+use crate::ty_symbol::ImportMode;
 use crate::ty_symbol::Symbol;
 
 #[derive(
@@ -871,6 +872,23 @@ pub enum AliasKind {
     Export,
 }
 
+/// The specifier that introduces an imported binding.
+#[derive(Debug, Clone, Dupe, PartialEq, Eq)]
+pub enum ImportSpecifier {
+    Default,
+    Named { remote_name: FlowSmolStr },
+    Namespace,
+}
+
+/// The import declaration information that is not recoverable from its local
+/// binding alone.
+#[derive(Debug, Clone, Dupe, PartialEq, Eq)]
+pub struct ImportProvenance {
+    pub mode: ImportMode,
+    pub specifier: ImportSpecifier,
+    pub source: FlowSmolStr,
+}
+
 /// An imported or exported name stands for a declaration elsewhere. Hover frames
 /// that declaration under an `(alias)` head and names the statement below it.
 #[derive(Debug, Clone, Dupe, PartialEq, Eq)]
@@ -878,6 +896,7 @@ pub struct Alias {
     pub kind: AliasKind,
     /// The local name, as the import or export statement writes it.
     pub name: FlowSmolStr,
+    pub import: Option<ImportProvenance>,
 }
 
 pub struct TypeAtPosResult {

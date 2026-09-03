@@ -14,7 +14,7 @@
   trailingComments: ?Array<Comment>,
   type: "BinaryExpression"
 }
-import BinaryExpression
+import type {BinaryExpression} from "./types"
 
 'BinaryExpression' defined at types.js:3156:12
 'BinaryOperator' defined at types.js:3132:5

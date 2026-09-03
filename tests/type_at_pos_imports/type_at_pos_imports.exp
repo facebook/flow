@@ -1104,7 +1104,7 @@ Flags: --pretty --expand-json-output
 import-hooklike-regression.js:5:18
 Flags:
 (alias) type useA = {}
-import useA
+import type {useA} from "./exports-hooklike-regresssion"
 
 'useA' defined at exports-hooklike-regresssion.js:3:12
 
@@ -1113,7 +1113,7 @@ import-hooklike-regression.js:5:18,5:21
 import-alias.js:8:9
 Flags:
 (alias) class AC
-import AC
+import {AC} from "./exports-alias"
 
 'AC' defined at exports-alias.js:3:13
 
@@ -1122,7 +1122,7 @@ import-alias.js:8:9,8:10
 import-alias.js:10:9
 Flags:
 (alias) enum AE
-import AE
+import {AE} from "./exports-alias"
 
 'AE' defined at exports-alias.js:5:12
 
@@ -1131,13 +1131,13 @@ import-alias.js:10:9,10:10
 import-alias.js:12:9
 Flags:
 (alias) const AV: number
-import AV
+import {AV} from "./exports-alias"
 import-alias.js:12:9,12:10
 
 import-alias.js:14:9
 Flags:
 (alias) const AS: "--"
-import AS
+import {AS} from "./exports-alias"
 import-alias.js:14:9,14:10
 
 import-alias.js:16:9
@@ -1158,13 +1158,13 @@ import-alias.js:20:9,20:12
 import-alias.js:22:9
 Flags:
 (alias) function AF(x: number): string
-import AF
+import {AF} from "./exports-alias"
 import-alias.js:22:9,22:10
 
 import-alias.js:24:14
 Flags:
 (alias) interface AI
-import AI
+import type {AI} from "./exports-alias"
 
 'AI' defined at exports-alias.js:4:17
 
@@ -1173,7 +1173,7 @@ import-alias.js:24:14,24:15
 import-alias.js:26:14
 Flags:
 (alias) type AT = number
-import AT
+import type {AT} from "./exports-alias"
 
 'AT' defined at exports-alias.js:6:12
 
@@ -1182,7 +1182,7 @@ import-alias.js:26:14,26:15
 import-alias.js:30:14
 Flags:
 (alias) type AD = number
-import AD
+import type {AD} from "./exports-alias-evaluated"
 
 'AD' defined at exports-alias-evaluated.js:6:12
 
@@ -1191,7 +1191,7 @@ import-alias.js:30:14,30:15
 import-alias.js:32:15
 Flags:
 (alias) class AC
-import ACRenamed
+import {AC as ACRenamed} from "./exports-alias"
 
 'AC' defined at exports-alias.js:3:13
 
@@ -1200,7 +1200,7 @@ import-alias.js:32:15,32:23
 import-alias.js:34:13
 Flags:
 (alias) module "./exports-alias"
-import ANS
+import * as ANS from "./exports-alias"
 
 './exports-alias' defined at import-alias.js:34:12
 
@@ -1209,7 +1209,7 @@ import-alias.js:34:13,34:15
 import-alias.js:37:14
 Flags:
 (alias) type AT = number
-import AT
+import type {AT} from "./exports-alias"
 
 'AT' defined at exports-alias.js:6:12
 
@@ -1218,7 +1218,7 @@ import-alias.js:37:14,37:15
 import-alias.js:39:14
 Flags:
 (alias) interface AI
-import AI
+import type {AI} from "./exports-alias"
 
 'AI' defined at exports-alias.js:4:17
 
@@ -1227,7 +1227,7 @@ import-alias.js:39:14,39:15
 import-alias.js:41:23
 Flags:
 (alias) const AV: number
-import AV
+import {AV} from "./exports-alias"
 import-alias.js:41:23,41:24
 
 import-alias.js:45:9
@@ -1241,6 +1241,15 @@ Flags:
 (alias) const localRenamed: number
 export localRenamed
 import-alias.js:47:18,47:29
+
+import-alias.js:50:8
+Flags:
+(alias) class DefaultValue
+import DefaultValue from "./exports-default-class"
+
+'DefaultValue' defined at exports-default-class.js:4:6
+
+import-alias.js:50:8,50:19
 
 exports-class-cjs.js:3:23
 Flags: --do_not_use_typed_AST_for_imports --pretty
@@ -2348,7 +2357,7 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
 import-hooklike-regression.js:5:18
 Flags: --do_not_use_typed_AST_for_imports
 (alias) type useA = {}
-import useA
+import type {useA} from "./exports-hooklike-regresssion"
 
 'useA' defined at exports-hooklike-regresssion.js:3:12
 
@@ -2357,7 +2366,7 @@ import-hooklike-regression.js:5:18,5:21
 import-alias.js:8:9
 Flags: --do_not_use_typed_AST_for_imports
 (alias) class AC
-import AC
+import {AC} from "./exports-alias"
 
 'AC' defined at exports-alias.js:3:13
 
@@ -2366,7 +2375,7 @@ import-alias.js:8:9,8:10
 import-alias.js:10:9
 Flags: --do_not_use_typed_AST_for_imports
 (alias) enum AE
-import AE
+import {AE} from "./exports-alias"
 
 'AE' defined at exports-alias.js:5:12
 
@@ -2375,13 +2384,13 @@ import-alias.js:10:9,10:10
 import-alias.js:12:9
 Flags: --do_not_use_typed_AST_for_imports
 (alias) const AV: number
-import AV
+import {AV} from "./exports-alias"
 import-alias.js:12:9,12:10
 
 import-alias.js:14:9
 Flags: --do_not_use_typed_AST_for_imports
 (alias) const AS: "--"
-import AS
+import {AS} from "./exports-alias"
 import-alias.js:14:9,14:10
 
 import-alias.js:16:9
@@ -2402,13 +2411,13 @@ import-alias.js:20:9,20:12
 import-alias.js:22:9
 Flags: --do_not_use_typed_AST_for_imports
 (alias) function AF(x: number): string
-import AF
+import {AF} from "./exports-alias"
 import-alias.js:22:9,22:10
 
 import-alias.js:24:14
 Flags: --do_not_use_typed_AST_for_imports
 (alias) interface AI
-import AI
+import type {AI} from "./exports-alias"
 
 'AI' defined at exports-alias.js:4:17
 
@@ -2417,7 +2426,7 @@ import-alias.js:24:14,24:15
 import-alias.js:26:14
 Flags: --do_not_use_typed_AST_for_imports
 (alias) type AT = number
-import AT
+import type {AT} from "./exports-alias"
 
 'AT' defined at exports-alias.js:6:12
 
@@ -2426,7 +2435,7 @@ import-alias.js:26:14,26:15
 import-alias.js:30:14
 Flags: --do_not_use_typed_AST_for_imports
 (alias) type AD = number
-import AD
+import type {AD} from "./exports-alias-evaluated"
 
 'AD' defined at exports-alias-evaluated.js:6:12
 
@@ -2435,7 +2444,7 @@ import-alias.js:30:14,30:15
 import-alias.js:32:15
 Flags: --do_not_use_typed_AST_for_imports
 (alias) class AC
-import ACRenamed
+import {AC as ACRenamed} from "./exports-alias"
 
 'AC' defined at exports-alias.js:3:13
 
@@ -2444,7 +2453,7 @@ import-alias.js:32:15,32:23
 import-alias.js:34:13
 Flags: --do_not_use_typed_AST_for_imports
 (alias) module "./exports-alias"
-import ANS
+import * as ANS from "./exports-alias"
 
 './exports-alias' defined at import-alias.js:34:12
 
@@ -2453,7 +2462,7 @@ import-alias.js:34:13,34:15
 import-alias.js:37:14
 Flags: --do_not_use_typed_AST_for_imports
 (alias) type AT = number
-import AT
+import type {AT} from "./exports-alias"
 
 'AT' defined at exports-alias.js:6:12
 
@@ -2462,7 +2471,7 @@ import-alias.js:37:14,37:15
 import-alias.js:39:14
 Flags: --do_not_use_typed_AST_for_imports
 (alias) interface AI
-import AI
+import type {AI} from "./exports-alias"
 
 'AI' defined at exports-alias.js:4:17
 
@@ -2471,7 +2480,7 @@ import-alias.js:39:14,39:15
 import-alias.js:41:23
 Flags: --do_not_use_typed_AST_for_imports
 (alias) const AV: number
-import AV
+import {AV} from "./exports-alias"
 import-alias.js:41:23,41:24
 
 import-alias.js:45:9
@@ -2485,4 +2494,13 @@ Flags: --do_not_use_typed_AST_for_imports
 (alias) const localRenamed: number
 export localRenamed
 import-alias.js:47:18,47:29
+
+import-alias.js:50:8
+Flags: --do_not_use_typed_AST_for_imports
+(alias) class DefaultValue
+import DefaultValue from "./exports-default-class"
+
+'DefaultValue' defined at exports-default-class.js:4:6
+
+import-alias.js:50:8,50:19
 

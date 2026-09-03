@@ -42,7 +42,7 @@ test.js:15:6,15:6
 test.js:18:14
 Flags:
 (alias) enum F
-import F
+import type {F} from "./export.js"
 
 'F' defined at export.js:3:12
 
@@ -59,7 +59,7 @@ test.js:20:15,20:15
 test.js:22:19
 Flags:
 (alias) enum F
-import F
+import type {F} from "./export.js"
 
 'F' defined at export.js:3:12
 
@@ -68,7 +68,7 @@ test.js:22:19,22:19
 test.js:25:13
 Flags:
 (alias) enum G
-import G
+import type G from "./export.js"
 
 'G' defined at export.js:8:20
 
@@ -85,7 +85,7 @@ test.js:27:15,27:15
 test.js:29:19
 Flags:
 (alias) enum G
-import G
+import type G from "./export.js"
 
 'G' defined at export.js:8:20
 
@@ -94,7 +94,7 @@ test.js:29:19,29:19
 test.js:32:8
 Flags:
 (alias) enum G
-import H
+import H from "./export.js"
 
 'G' defined at export.js:8:20
 
@@ -111,7 +111,7 @@ test.js:34:15,34:15
 test.js:36:19
 Flags:
 (alias) enum G
-import H
+import H from "./export.js"
 
 'G' defined at export.js:8:20
 
@@ -120,7 +120,7 @@ test.js:36:19,36:19
 test.js:39:14
 Flags:
 (alias) type FType = F
-import FType
+import type {FType} from "./export.js"
 
 'F' defined at export.js:3:12
 'FType' defined at export.js:13:12
@@ -138,7 +138,7 @@ test.js:41:15,41:15
 test.js:43:19
 Flags:
 (alias) type FType = F
-import FType
+import type {FType} from "./export.js"
 
 'F' defined at export.js:3:12
 'FType' defined at export.js:13:12

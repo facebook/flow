@@ -19,17 +19,21 @@ use flow_common_ty::ty::BinderKind;
 use flow_common_ty::ty::Decl;
 use flow_common_ty::ty::DeclModuleDeclData;
 use flow_common_ty::ty::Elt;
+use flow_common_ty::ty::ImportProvenance;
+use flow_common_ty::ty::ImportSpecifier;
 use flow_common_ty::ty::NamedProp;
 use flow_common_ty::ty::Prop;
 use flow_common_ty::ty::Ty;
 use flow_common_ty::ty::TypeAtPosResult;
 use flow_common_ty::ty::symbols_of_elt;
+use flow_common_ty::ty_symbol::ImportMode;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::Require;
 use flow_typing_context::Context;
 use flow_typing_debug;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -145,7 +149,64 @@ struct Framed {
     alias: Option<Alias>,
 }
 
-fn framed_of_identifier_reference(cx: &Context<'_>, loc: &ALoc) -> Framed {
+fn import_provenance(file_sig: &FileSig, local_name: &FlowSmolStr) -> Option<ImportProvenance> {
+    file_sig.requires().iter().find_map(|require| {
+        let Require::Import {
+            source,
+            named,
+            ns,
+            types,
+            typesof,
+            typesof_ns,
+            type_ns,
+            ..
+        } = require
+        else {
+            return None;
+        };
+        let named = [
+            (ImportMode::ValueMode, named),
+            (ImportMode::TypeMode, types),
+            (ImportMode::TypeofMode, typesof),
+        ]
+        .into_iter()
+        .find_map(|(mode, imports)| {
+            imports.iter().find_map(|(remote_name, locals)| {
+                locals.contains_key(local_name).then(|| {
+                    let specifier = if remote_name.as_str() == "default" {
+                        ImportSpecifier::Default
+                    } else {
+                        ImportSpecifier::Named {
+                            remote_name: remote_name.dupe(),
+                        }
+                    };
+                    (mode, specifier)
+                })
+            })
+        });
+        let namespace = [
+            (ImportMode::ValueMode, ns),
+            (ImportMode::TypeMode, type_ns),
+            (ImportMode::TypeofMode, typesof_ns),
+        ]
+        .into_iter()
+        .find_map(|(mode, namespace)| {
+            namespace
+                .as_ref()
+                .is_some_and(|namespace| &namespace.1 == local_name)
+                .then_some((mode, ImportSpecifier::Namespace))
+        });
+        named
+            .or(namespace)
+            .map(|(mode, specifier)| ImportProvenance {
+                mode,
+                specifier,
+                source: source.name().dupe(),
+            })
+    })
+}
+
+fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &ALoc) -> Framed {
     let env = cx.environment();
     let Some(def) = env.var_info.scopes.def_of_use_opt(loc) else {
         return Framed::default();
@@ -158,6 +219,7 @@ fn framed_of_identifier_reference(cx: &Context<'_>, loc: &ALoc) -> Framed {
     let alias = is_imported_binding_kind(def.kind).then(|| Alias {
         kind: AliasKind::Import,
         name: def.actual_name.dupe(),
+        import: import_provenance(file_sig, &def.actual_name),
     });
     Framed { binder, alias }
 }
@@ -362,7 +424,7 @@ pub fn type_at_pos_type<'a>(
                         alias: None,
                     },
                     Some(Framing::IdentifierRef) => {
-                        framed_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
+                        framed_of_identifier_reference(cx, &file_sig, &ALoc::of_loc(loc.dupe()))
                     }
                     Some(Framing::RemoteIdentifierRef { def_loc, name }) => Framed {
                         binder: def_loc
@@ -376,7 +438,7 @@ pub fn type_at_pos_type<'a>(
                         alias: None,
                     },
                     Some(Framing::RenamedExportRef { local, name }) => {
-                        let mut framed = framed_of_identifier_reference(cx, &local);
+                        let mut framed = framed_of_identifier_reference(cx, &file_sig, &local);
                         if let Some(binder) = framed.binder.as_mut() {
                             binder.name = name;
                         }
@@ -386,7 +448,7 @@ pub fn type_at_pos_type<'a>(
                         // A type declaration prints a head of its own, so the
                         // binding is consulted only for the alias.
                         binder: None,
-                        ..framed_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
+                        ..framed_of_identifier_reference(cx, &file_sig, &ALoc::of_loc(loc.dupe()))
                     },
                     Some(Framing::MemberRef { name, object_type }) => Framed {
                         binder: binder_of_member_reference(
@@ -402,7 +464,22 @@ pub fn type_at_pos_type<'a>(
                 // The finder saw the statement itself, so it knows whether the
                 // alias is an import or an export and what name it writes; the
                 // binding lookup can only ever report an import.
-                let alias = found_alias.or(alias);
+                let found_alias = found_alias.map(|mut found| {
+                    if found.kind == AliasKind::Import {
+                        found.import = import_provenance(&file_sig, &found.name);
+                    }
+                    found
+                });
+                let alias = match (found_alias, alias) {
+                    (Some(mut found), Some(resolved)) => {
+                        if found.kind == AliasKind::Import {
+                            found.import = resolved.import;
+                        }
+                        Some(found)
+                    }
+                    (Some(found), None) => Some(found),
+                    (None, resolved) => resolved,
+                };
                 let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
                     expand_internal_types: false,
                     expand_enum_members: false,

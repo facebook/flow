@@ -336,6 +336,7 @@ pub mod type_at_pos {
                 alias: Some(Alias {
                     kind,
                     name: name.dupe(),
+                    import: None,
                 }),
             })
         }
