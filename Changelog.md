@@ -1,3 +1,17 @@
+### 0.331.0
+
+Likely to cause new Flow errors:
+* Fixed unsound subtyping of instances against indexer in interfaces ([example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgXqxyo2AABNyvryAGLEXnAXmYSjIXl6FRQBC85kAbgAOkdoHpeTBRQBeXk3NLC4gACgAlKrYKKKbzsvCuGA+cAANpJaWy7IIAC60rQxBOUGVvIA9EH9RBecpKPSJdhtSxeBHqNHUmk1TEQEVlCQ4NBAkUAAyaADMRcL+ZAzKAA)).
+* Flow will no longer emit `method-unbinding` errors and instead perform stricter this-type checking ([example](https://flow.org/try/?fbclid=IwY2xjawUGknpwZG9mA2V4dG4DYWVtAjExAGJyaWQRMXN4dWFRdEN4c0RkRDFMYlBzcnRjBmFwcF9pZAEwAAEeMSGTzT2DFoEa38osZQ3wNnAikRq8kJRJFv_rTctJA4iYeWGisqquP3bCM3w_aem_yffePSXvBRLunq68HFKcYw#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sAD0bZKcEYIncAdJCgkJ+RlQxjO3PgMXLV6rRJINaUDfMnTZIFhjATN0p9ZQQDCEJCBEMCTgwEH4hMnwhKABrKAgAdyh8OEywCLAAC3wANyo4LFxscWQuHnc2bCL8aFxaTQlaJXwWZlNa-nrmbFyJbDYAWnalXvMSJOwJAtox4VxcafdZ+cXl0RxKddioMAqqCY7sA5BEqCHKkiol7JKVDCdL69uSe8oliEZI6DcMYFDDZd66DAwbBjBDzEaUEhjMgSeFVGrmRJxUZjZhhOBkS4KJQqNROLQYL7KfR-ZQRCD7apmbAAX34kHqgWOFJIAAIAGLEHnAAA6UB54p5mEoAAoAJRC5mixVQUU6PSSqg8gC8PJuaX5xDlmilAG4eQB6c08wZFOAQOItHlqCT5CDjRJobJsbIIHnKSj03i69LBv3UekkUVSuVmy3Wli2+0kR2pMMByhB1L6-0R0VRzUUnly7UAPh5RQgcDYsatNrtDtooZzGeD2fDlB5bBkPNCPL0Km8yh7+XxPY6Pp5opiICKyhIdqggXCemUIGZQA)).
+
+IDE:
+* Improve the primary type displayed by hover
+* Show a single type in `type-at-pos` and hover
+* Truncate oversized hover types and their reference lists
+
+Library Definitions:
+* `React.ReactElement` now matches latest type in `@types/react`. Added missing `React.JSX.Element` that makes the type in `@types/react `.
+
 ### 0.330.0
 
 Likely to cause new Flow errors:
