@@ -55,7 +55,8 @@ export default function App(): typeof Widget {
               contents: [
                 {
                   language: 'flow',
-                  value: 'component Widget(...Props)',
+                  value:
+                    '(alias) component Widget(...Props)\nimport Widget from "./a"',
                 },
                 '`Props` defined at [`b.js:3:12`](<PLACEHOLDER_PROJECT_URL>/b.js#L3,13)',
                 '`Widget` defined at [`a.js:4:15`](<PLACEHOLDER_PROJECT_URL>/a.js#L4,16)',
