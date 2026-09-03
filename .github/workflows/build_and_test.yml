@@ -459,7 +459,17 @@ jobs:
       run: .circleci/deploy_npm.sh
   website_deploy:
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     needs:
     - build_and_test
     - build_flow_js
@@ -493,11 +503,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       run: PATH=${{ github.workspace }}/bin/rust-port-linux:$PATH .circleci/build_website.sh
-    - name: Publish website to GitHub Pages
-      run: |-
-        cd website
-        yarn add gh-pages
-        yarn gh-pages -d build -u "flow-bot <flow-bot@users.noreply.github.com>" --repo https://${FLOW_BOT_TOKEN}@github.com/facebook/flow.git --no-history
+    - name: Configure GitHub Pages
+      uses: actions/configure-pages@v5
+    - name: Upload GitHub Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: website/build
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
   # Deploy jobs
   github_upload:
     if: contains(github.event_name, 'push') && startsWith( github.ref, 'refs/tags/v' )
