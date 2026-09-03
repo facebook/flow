@@ -840,8 +840,8 @@ pub type ALocComponentProps = ComponentProps<ALoc>;
 
 pub type ALocGenericT = GenericT<ALoc>;
 
-/// The syntactic form that introduced a value binding, when the hover target is
-/// the binding's own name. Hover uses it to print a declaration (`const a: A`,
+/// The syntactic form that introduced a binding, when the hover target is the
+/// binding's own name. Hover uses it to print a declaration (`const a: A`,
 /// `(method) A.m(): void`) where it would otherwise print a bare type.
 #[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq)]
 pub enum BinderKind {
@@ -855,6 +855,7 @@ pub enum BinderKind {
     Property,
     EnumMember,
     Parameter,
+    TypeParameter,
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq)]

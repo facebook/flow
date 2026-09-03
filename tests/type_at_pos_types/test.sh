@@ -60,3 +60,6 @@ printf "unions.js\n"
 
 printf "tparam_defaults.js\n"
 "$FLOW" inlay-hint_unstable_exposed_for_testing --strip-root tparam_defaults.js --omit-typearg-defaults
+
+printf "type_params.js\n"
+queries_in_file "type-at-pos" "type_params.js"

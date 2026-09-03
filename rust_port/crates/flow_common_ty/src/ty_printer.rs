@@ -1867,6 +1867,7 @@ fn layout_of_binder_head(binder: &Binder) -> LayoutNode {
         BinderKind::Property => "(property)",
         BinderKind::EnumMember => "(enum member)",
         BinderKind::Parameter => "(parameter)",
+        BinderKind::TypeParameter => "(type parameter)",
     };
     let name = match &binder.owner {
         Some(owner) => format!("{}.{}", owner, binder.name),
@@ -1890,6 +1891,9 @@ fn layout_of_binder(
 ) -> LayoutNode {
     let head = layout_of_binder_head(binder);
     match t {
+        // A type parameter stands for whatever it is instantiated with, so there is
+        // no type to annotate it with: its own name is all hover has to say.
+        _ if binder.kind == BinderKind::TypeParameter => head,
         Ty::Fun(func) if matches!(binder.kind, BinderKind::Function | BinderKind::Method) => {
             layout::fuse(vec![
                 head,

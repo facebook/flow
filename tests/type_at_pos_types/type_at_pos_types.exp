@@ -1170,3 +1170,87 @@ C<C<any>>
 
 tparam_defaults.js:41:5,41:5
 
+type_params.js
+type_params.js:7:12
+Flags:
+(type parameter) A
+type_params.js:7:12,7:12
+
+type_params.js:9:22
+Flags:
+(type parameter) B
+type_params.js:9:22,9:22
+
+type_params.js:11:20
+Flags:
+(type parameter) A
+type_params.js:11:20,11:20
+
+type_params.js:14:14
+Flags:
+(type parameter) A
+type_params.js:14:14,14:14
+
+type_params.js:16:42
+Flags:
+(type parameter) A
+type_params.js:16:42,16:42
+
+type_params.js:18:19
+Flags:
+(type parameter) A
+type_params.js:18:19,18:19
+
+type_params.js:21:13
+Flags:
+(type parameter) Z
+type_params.js:21:13,21:13
+
+type_params.js:26:11
+Flags:
+(type parameter) C
+type_params.js:26:11,26:11
+
+type_params.js:33:17
+Flags:
+(type parameter) I
+type_params.js:33:17,33:17
+
+type_params.js:38:37
+Flags:
+(type parameter) Y
+type_params.js:38:37,38:37
+
+type_params.js:40:45
+Flags:
+(type parameter) Y
+type_params.js:40:45,40:45
+
+type_params.js:42:60
+Flags:
+(type parameter) A
+type_params.js:42:60,42:60
+
+type_params.js:48:55
+Flags:
+type Y = string
+
+'Y' defined at type_params.js:47:5
+
+type_params.js:48:55,48:55
+
+type_params.js:50:17
+Flags:
+(type parameter) K
+type_params.js:50:17,50:17
+
+type_params.js:52:37
+Flags:
+(type parameter) K
+type_params.js:52:37,52:37
+
+type_params.js:55:16
+Flags:
+(type parameter) P
+type_params.js:55:16,55:16
+

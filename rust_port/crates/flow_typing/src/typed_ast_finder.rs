@@ -290,6 +290,11 @@ pub mod type_at_pos {
         /// Name of the class, declared class, record or interface whose own body
         /// is being visited, so that a member binder can qualify itself as `A.m`.
         enclosing_nominal: Option<FlowSmolStr>,
+        /// Names bound by `infer` and in scope at the current position. The scope
+        /// builder records these as ordinary type bindings, indistinguishable from
+        /// a type alias, so the syntax that bound them is the only thing that says
+        /// a reference to one is a reference to a type parameter.
+        infer_tparams: Vec<FlowSmolStr>,
     }
 
     impl<'a, 'cx> TypeAtPosSearcher<'a, 'cx> {
@@ -684,6 +689,9 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let (loc, t) = &id.loc;
             if self.covers_target(loc) {
+                if self.infer_tparams.contains(&id.name) {
+                    return self.find_binder(loc, t, BinderKind::TypeParameter, &id.name);
+                }
                 self.find_loc(loc, t, true, Some(Framing::TypeIdentifierRef))
             } else {
                 ast_visitor::identifier_default(self, id)
@@ -712,13 +720,43 @@ pub mod type_at_pos {
                 let tp = self.make_typeparam(tparam);
                 self.rev_bound_tparams.push(tp.dupe());
                 let t = mk_bound_t(self.cx, &tp);
-                self.find_loc(loc, &t, false, None)
+                self.find_binder(loc, &t, BinderKind::TypeParameter, &tparam.name.name)
             } else {
                 let res = ast_visitor::type_param_default(self, kind, tparam);
                 let tp = self.make_typeparam(tparam);
                 self.rev_bound_tparams.push(tp);
+                if matches!(kind, TypeParamsContext::Infer) {
+                    self.infer_tparams.push(tparam.name.name.dupe());
+                }
                 res
             }
+        }
+
+        /// An `infer` binding is written in the extends clause but is in scope only
+        /// in the true branch, so the names it binds are dropped before the false
+        /// branch is walked.
+        fn conditional_type(
+            &mut self,
+            conditional: &'ast ast::types::Conditional<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let ast::types::Conditional {
+                check_type,
+                extends_type,
+                true_type,
+                false_type,
+                comments,
+            } = conditional;
+            let outer_infer_tparams = self.infer_tparams.clone();
+            let res = (|this: &mut Self| {
+                this.type_(check_type)?;
+                this.type_(extends_type)?;
+                this.type_(true_type)
+            })(self);
+            self.infer_tparams = outer_infer_tparams;
+            res?;
+            self.type_(false_type)?;
+            self.syntax_opt(comments.as_ref())?;
+            Ok(())
         }
 
         fn type_params(
@@ -1245,6 +1283,7 @@ pub mod type_at_pos {
             target_loc: loc,
             rev_bound_tparams: Vec::new(),
             enclosing_nominal: None,
+            infer_tparams: Vec::new(),
         };
         match searcher.program(typed_ast) {
             Ok(()) => Ok(TypeAtPosResult::NoResult),

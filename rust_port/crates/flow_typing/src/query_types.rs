@@ -90,9 +90,9 @@ pub fn binder_kind_of_binding_kind(kind: bindings::Kind) -> Option<BinderKind> {
         bindings::Kind::Parameter
         | bindings::Kind::CatchParameter
         | bindings::Kind::ComponentParameter => Some(BinderKind::Parameter),
+        bindings::Kind::TypeParam => Some(BinderKind::TypeParameter),
         bindings::Kind::ThisAnnot
         | bindings::Kind::Type { .. }
-        | bindings::Kind::TypeParam
         | bindings::Kind::Interface { .. }
         | bindings::Kind::Enum
         | bindings::Kind::Class
@@ -444,12 +444,21 @@ pub fn type_at_pos_type<'a>(
                         }
                         framed
                     }
-                    Some(Framing::TypeIdentifierRef) => Framed {
-                        // A type declaration prints a head of its own, so the
-                        // binding is consulted only for the alias.
-                        binder: None,
-                        ..framed_of_identifier_reference(cx, &file_sig, &ALoc::of_loc(loc.dupe()))
-                    },
+                    Some(Framing::TypeIdentifierRef) => {
+                        let framed = framed_of_identifier_reference(
+                            cx,
+                            &file_sig,
+                            &ALoc::of_loc(loc.dupe()),
+                        );
+                        Framed {
+                            // Every other kind of type name prints a declaration of
+                            // its own, so framing it again would double the head.
+                            binder: framed
+                                .binder
+                                .filter(|b| b.kind == BinderKind::TypeParameter),
+                            alias: framed.alias,
+                        }
+                    }
                     Some(Framing::MemberRef { name, object_type }) => Framed {
                         binder: binder_of_member_reference(
                             cx,
