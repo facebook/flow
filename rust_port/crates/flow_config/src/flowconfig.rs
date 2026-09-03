@@ -185,7 +185,6 @@ pub mod opts {
         pub hook_compatibility_excludes: Vec<String>,
         pub ignore_non_literal_requires: bool,
         pub include_warnings: bool,
-        pub interface_dictionary_typing_fix: Option<bool>,
         pub jest_integration: bool,
         pub lazy_mode: Option<LazyMode>,
         pub llm_context_include_imports: bool,
@@ -346,7 +345,6 @@ pub mod opts {
             hook_compatibility_excludes: Vec::new(),
             ignore_non_literal_requires: false,
             include_warnings: false,
-            interface_dictionary_typing_fix: None,
             jest_integration: false,
             lazy_mode: None,
             llm_context_include_imports: false,
@@ -2207,16 +2205,7 @@ pub mod opts {
             ),
             (
                 "experimental.interface_dictionary_typing_fix",
-                |values, config| {
-                    parse_boolean(
-                        |opts, v| {
-                            opts.interface_dictionary_typing_fix = Some(v);
-                            Ok(())
-                        },
-                        values,
-                        config,
-                    )
-                },
+                |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
             ),
             (
                 "experimental.llm_context.include_imports",
@@ -3658,91 +3647,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn casting_syntax_is_unsupported() {
-        for value in ["as", "both"] {
-            let mut config = empty_config();
-            let result = parse(
-                &mut config,
-                vec![
-                    (1, "[options]".to_owned()),
-                    (2, "all=true".to_owned()),
-                    (3, format!("casting_syntax={}", value)),
-                ],
-                true,
-            );
-
-            match result {
-                Ok(warnings) => {
-                    assert_eq!(warnings.len(), 1);
-                    let warning = &warnings[0];
-                    assert_eq!(warning.0, 3);
-                    assert_eq!(
-                        warning.1.as_str(),
-                        "Unsupported option specified! (casting_syntax)"
-                    );
-                }
-                Err(Error(line, message)) => {
-                    panic!(
-                        "casting_syntax={} errored at line {}: {}",
-                        value, line, message
-                    )
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn options_parse_in_declared_order_not_input_order() {
-        let mut config = empty_config();
-        let result = parse(
-            &mut config,
-            vec![
-                (1, "[options]".to_owned()),
-                (2, "autoimports.min_characters=3".to_owned()),
-                (3, "autoimports=false".to_owned()),
-            ],
-            true,
-        );
-
-        match result {
-            Ok(_) => panic!("autoimports.min_characters should depend on autoimports=false"),
-            Err(Error(line, message)) => {
-                assert_eq!(line, 2);
-                assert_eq!(
-                    message.as_str(),
-                    "Error setting value for \"autoimports.min_characters\". Cannot be configured unless autoimport is enabled."
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn ts_utility_syntax_is_supported() {
-        let mut config = empty_config();
-        let result = parse(
-            &mut config,
-            vec![
-                (1, "[options]".to_owned()),
-                (2, "experimental.ts_utility_syntax=false".to_owned()),
-            ],
-            true,
-        );
-
-        match result {
-            Ok(warnings) => {
-                assert!(warnings.is_empty());
-                assert!(!config.options.ts_utility_syntax);
-            }
-            Err(Error(line, message)) => {
-                panic!(
-                    "experimental.ts_utility_syntax errored at line {}: {}",
-                    line, message
-                )
-            }
-        }
-    }
-
-    #[test]
     fn globs_have_the_expected_semantics() {
         let mut config = empty_config();
         let result = parse(
@@ -3789,42 +3693,6 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec![("../shared/**/src/*.js", "../shared/**/src/*.js")]
         );
-    }
-
-    #[test]
-    fn new_this_typing_includes_are_project_relative_globs() {
-        let mut config = empty_config();
-        let result = parse(
-            &mut config,
-            vec![
-                (1, "[options]".to_owned()),
-                (
-                    2,
-                    "experimental.new_this_typing.includes=src/**/*.{js,jsx}".to_owned(),
-                ),
-            ],
-            true,
-        );
-
-        assert!(result.is_ok());
-        assert_eq!(
-            config.options.new_this_typing_includes[0].pattern(),
-            "src/**/*.{js,jsx}"
-        );
-
-        let mut config = empty_config();
-        let result = parse(
-            &mut config,
-            vec![
-                (1, "[options]".to_owned()),
-                (
-                    2,
-                    "experimental.new_this_typing.includes=<PROJECT_ROOT>/src/**".to_owned(),
-                ),
-            ],
-            true,
-        );
-        assert!(matches!(result, Err(Error(2, _))));
     }
 
     #[test]

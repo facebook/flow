@@ -2149,7 +2149,6 @@ pub fn make_options(
                 hook_compatibility_excludes,
                 ignore_non_literal_requires,
                 include_warnings,
-                interface_dictionary_typing_fix,
                 jest_integration,
                 lazy_mode,
                 llm_context_include_imports,
@@ -2242,7 +2241,6 @@ pub fn make_options(
         })
         .collect::<Vec<_>>()
         .into();
-    let interface_dictionary_typing_fix = interface_dictionary_typing_fix.unwrap_or(false);
     let export_star_excludes_default = export_star_excludes_default.unwrap_or(false);
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
 
@@ -2547,7 +2545,6 @@ pub fn make_options(
         include_warnings: include_warnings_override
             || max_warnings_override.is_some()
             || include_warnings,
-        interface_dictionary_typing_fix,
         lazy_mode,
         llm_context_include_imports,
         log_per_error_typing_telemetry,

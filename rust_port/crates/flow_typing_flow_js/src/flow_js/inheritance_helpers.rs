@@ -317,58 +317,53 @@ pub(super) fn inst_structural_subtype<'cx>(
             _ => {}
         }
 
-        if cx.interface_dictionary_typing_fix() {
-            let indexer_subtyping = subtyping_kit::PropsToIndexerContext {
+        let indexer_subtyping = subtyping_kit::PropsToIndexerContext {
+            cx,
+            env,
+            trace,
+            use_op: use_op.dupe(),
+            lreason: lreason.dupe(),
+            ureason: reason_struct.dupe(),
+            strictness_kind,
+            lit: false,
+            lower_upper_subtyping_obj_ts: None,
+        };
+        let mut lowers = vec![lower.dupe()];
+        let mut seen = BTreeSet::new();
+        while let Some(lower) = lowers.pop() {
+            for lower in helpers::possible_concrete_types_for_inspection(
                 cx,
                 env,
-                trace,
-                use_op: use_op.dupe(),
-                lreason: lreason.dupe(),
-                ureason: reason_struct.dupe(),
-                strictness_kind,
-                lit: false,
-                lower_upper_subtyping_obj_ts: None,
-            };
-            let mut lowers = vec![lower.dupe()];
-            let mut seen = BTreeSet::new();
-            while let Some(lower) = lowers.pop() {
-                for lower in helpers::possible_concrete_types_for_inspection(
-                    cx,
-                    env,
-                    reason_of_t(&lower),
-                    &lower,
-                )? {
-                    if let TypeInner::DefT(_, def_t) = lower.deref()
-                        && let DefTInner::InstanceT(inst_t) = def_t.deref()
-                    {
-                        if !seen.insert(inst_t.inst.class_id.dupe()) {
-                            continue;
-                        }
-                        let lower_props = cx.find_props(inst_t.inst.own_props.dupe());
-                        let matching_props = lower_props.iter().try_fold(
-                            BTreeMap::new(),
-                            |mut matching_props, (name, prop)| {
-                                let key_type = flow_js_utils::type_of_key_name_with_env(
-                                    env,
-                                    name.dupe(),
-                                    lreason,
-                                );
-                                if helpers::speculative_subtyping_succeeds(
-                                    cx, env, &key_type, &dict.key,
-                                )? {
-                                    matching_props.insert(name.dupe(), prop.dupe());
-                                }
-                                Ok::<_, FlowJsException>(matching_props)
-                            },
-                        )?;
-                        let lower_props = properties::PropertiesMap::from_btree_map(matching_props);
-                        indexer_subtyping.flow_props_to_indexer(
-                            &lower_props,
-                            &[&own_props, &proto_props],
-                            dict,
-                        )?;
-                        lowers.push(inst_t.super_.dupe());
+                reason_of_t(&lower),
+                &lower,
+            )? {
+                if let TypeInner::DefT(_, def_t) = lower.deref()
+                    && let DefTInner::InstanceT(inst_t) = def_t.deref()
+                {
+                    if !seen.insert(inst_t.inst.class_id.dupe()) {
+                        continue;
                     }
+                    let lower_props = cx.find_props(inst_t.inst.own_props.dupe());
+                    let matching_props = lower_props.iter().try_fold(
+                        BTreeMap::new(),
+                        |mut matching_props, (name, prop)| {
+                            let key_type =
+                                flow_js_utils::type_of_key_name_with_env(env, name.dupe(), lreason);
+                            if helpers::speculative_subtyping_succeeds(
+                                cx, env, &key_type, &dict.key,
+                            )? {
+                                matching_props.insert(name.dupe(), prop.dupe());
+                            }
+                            Ok::<_, FlowJsException>(matching_props)
+                        },
+                    )?;
+                    let lower_props = properties::PropertiesMap::from_btree_map(matching_props);
+                    indexer_subtyping.flow_props_to_indexer(
+                        &lower_props,
+                        &[&own_props, &proto_props],
+                        dict,
+                    )?;
+                    lowers.push(inst_t.super_.dupe());
                 }
             }
         }
