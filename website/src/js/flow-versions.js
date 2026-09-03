@@ -14,8 +14,8 @@ const path = require('path');
 
 function getReleases() /*: Array<string> */ {
   // GitHub API Docs: https://docs.github.com/en/rest/releases/releases
-  const authHeader = process.env.FLOW_BOT_TOKEN
-    ? `-H "Authorization: Bearer ${process.env.FLOW_BOT_TOKEN}"`
+  const authHeader = process.env.GITHUB_TOKEN
+    ? `-H "Authorization: Bearer ${process.env.GITHUB_TOKEN}"`
     : '';
   const options =
     spawnSync('type', ['fwdproxy-config'], {shell: true, stdio: 'pipe'})

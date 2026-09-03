@@ -7,9 +7,10 @@
 SRC="$1"
 DST="$2"
 REPO="facebook/flow"
+: "${GITHUB_TOKEN:?GITHUB_TOKEN is required}"
 
 echo "Fetching from https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME"
-auth="Authorization: token $FLOW_BOT_TOKEN"
+auth="Authorization: Bearer $GITHUB_TOKEN"
 response=$(curl -sH "$auth" "https://api.github.com/repos/$REPO/releases/tags/$GITHUB_REF_NAME")
 echo "API Response:"
 printf "%s" "$response"

@@ -9,7 +9,7 @@ set +x
 
 REPO="${REPO:-${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}}"
 tag="${RELEASE_TAG:-${GITHUB_REF_NAME:-$(jq -r '.release.tag_name // empty' "$GITHUB_EVENT_PATH")}}"
-export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-${FLOW_BOT_TOKEN:-}}}"
+export GH_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
 
 if [[ -z "$GH_TOKEN" ]]; then
   echo "GH_TOKEN or GITHUB_TOKEN is required to update release notes" >&2
