@@ -11,7 +11,6 @@ on:
 env:
   FLOW_BIN_PRIVATE_KEY_BASE64: ${{ secrets.FLOW_BIN_PRIVATE_KEY_BASE64 }}
   FLOW_BOT_EMAIL: ${{ secrets.FLOW_BOT_EMAIL }}
-  FLOW_BOT_TOKEN: ${{ secrets.FLOW_BOT_TOKEN }}
   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
   RUST_TOOLCHAIN: nightly-2026-04-11
 jobs:
@@ -556,6 +555,8 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-22.04
+    env:
+      FLOW_BOT_TOKEN: ${{ secrets.FLOW_BOT_TOKEN }}
     needs:
     - github_upload
     steps:
