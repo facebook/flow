@@ -1,6 +1,7 @@
 main.js:14:5
 Flags:
-class CLocal
+(alias) class CLocal
+import CLocal
 
 'CLocal' defined at exports.js:3:13
 
@@ -8,7 +9,8 @@ main.js:14:5,14:10
 
 main.js:16:5
 Flags:
-type TLocal = CLocal
+(alias) type TLocal = CLocal
+import TLocal
 
 'CLocal' defined at exports.js:3:13
 'TLocal' defined at exports.js:5:12
@@ -17,7 +19,8 @@ main.js:16:5,16:10
 
 main.js:18:5
 Flags:
-interface ILocal
+(alias) interface ILocal
+import ILocal
 
 'ILocal' defined at exports.js:7:17
 
@@ -25,7 +28,8 @@ main.js:18:5,18:10
 
 main.js:20:5
 Flags:
-enum ELocal
+(alias) enum ELocal
+import ELocal
 
 'ELocal' defined at exports.js:9:12
 
@@ -33,7 +37,8 @@ main.js:20:5,20:10
 
 main.js:22:5
 Flags:
-React$RendersExactly<typeof CompLocal>
+(alias) React$RendersExactly<typeof CompLocal>
+import CompLocal
 
 'CompLocal' defined at exports.js:11:15
 

@@ -20,10 +20,12 @@ use flow_common::sys_utils::normalize_filename_dir_sep;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
+use flow_common_ty::ty::BinderKind;
 use flow_common_ty::ty_printer::PrinterOptions;
 use flow_common_utils::list_utils;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::ActiveTransaction;
+use flow_heap::parsing_heaps::Transaction;
 use flow_parser::loc_sig::LocSig;
 use flow_server_env::flow_clock;
 use flow_server_env::flow_lsp_conversions;
@@ -58,6 +60,8 @@ use flow_services_inference_types::AutocompleteArtifacts;
 use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypeContentsError;
+use flow_typing::query_types::binder_kind_of_binding_kind;
+use flow_typing_context::Context;
 use lsp_types::MessageType;
 
 type CheckResult<'cx> = FileArtifacts<'cx>;
@@ -94,6 +98,19 @@ type AutocompleteResponse = Result<
 pub const CHECKED_DEPENDENCIES_RETRY_SENTINEL: &str = "__flow_checked_dependencies_retry__";
 
 const MAX_TYPE_AT_POS_PRINT_SIZE: usize = 100;
+
+fn binder_kind_at_aloc(
+    transaction: &Transaction,
+    cx: &Context<'_>,
+    aloc: &flow_aloc::ALoc,
+) -> Option<BinderKind> {
+    let loc = transaction.loc_of_aloc(aloc);
+    let file = loc.source.as_ref()?;
+    let ast = transaction.get_ast(file)?;
+    let scope_info = flow_analysis::scope_builder::program(cx.enable_enums(), true, &ast);
+    let def = scope_info.def_of_use_opt(&loc)?;
+    binder_kind_of_binding_kind(def.kind)
+}
 
 #[derive(Debug)]
 pub struct WorkloadCanceled;
@@ -1611,6 +1628,7 @@ fn infer_type_to_response(
                     ty: &r.ty,
                     refs: r.refs.as_ref(),
                     binder: r.binder.as_ref(),
+                    alias: r.alias.as_ref(),
                 },
                 loc_of_aloc,
                 &printer_opts,
@@ -1755,6 +1773,9 @@ fn infer_type(
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
                         transaction.loc_of_aloc(aloc)
                     };
+                    let remote_binding_kind = |aloc: &flow_aloc::ALoc| {
+                        binder_kind_at_aloc(&transaction, &typecheck_artifacts.cx, aloc)
+                    };
                     let ((loc, tys, refining_locs, refinement_invalidated), type_at_pos_json_props) =
                         match flow_services_type_info::type_info_service::type_at_pos(
                             &typecheck_artifacts.cx,
@@ -1765,6 +1786,7 @@ fn infer_type(
                             verbose_normalizer,
                             no_typed_ast_for_imports,
                             Some(&loc_of_aloc),
+                            Some(&remote_binding_kind),
                             if include_refinement_info {
                                 Some(&loc_of_aloc)
                             } else {
@@ -1974,6 +1996,9 @@ fn inlay_hint(
                     let loc_of_aloc = |aloc: &flow_aloc::ALoc| -> flow_parser::loc::Loc {
                         transaction.loc_of_aloc(aloc)
                     };
+                    let remote_binding_kind = |aloc: &flow_aloc::ALoc| {
+                        binder_kind_at_aloc(&transaction, &typecheck_artifacts.cx, aloc)
+                    };
                     // LSP boundary: convert JobError (cancel/timeout) escaping
                     // batched_type_at_pos_from_special_comments into an empty
                     // inlay-hint response exactly once.
@@ -1987,6 +2012,7 @@ fn inlay_hint(
                             verbose_normalizer,
                             no_typed_ast_for_imports,
                             &loc_of_aloc,
+                            &remote_binding_kind,
                             file_key.dupe(),
                         ) {
                             Ok(tuple) => tuple,
@@ -2018,6 +2044,7 @@ fn inlay_hint(
                                         // that would be inserted after the name,
                                         // so it must stay a bare type.
                                         binder: None,
+                                        alias: None,
                                     },
                                     &loc_of_aloc,
                                     &PrinterOptions {

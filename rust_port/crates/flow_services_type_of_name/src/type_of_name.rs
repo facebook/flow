@@ -393,6 +393,7 @@ fn format_ty_elt_response(
             ty: &ty_elt,
             refs: Some(&refs),
             binder: None,
+            alias: None,
         },
         &|aloc| reader.loc_of_aloc(aloc),
         &opts,

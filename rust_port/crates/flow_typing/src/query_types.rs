@@ -12,6 +12,8 @@ use flow_aloc::ALoc;
 use flow_analysis::bindings;
 use flow_common::reason::Name;
 use flow_common_ty::ty::ALocElt;
+use flow_common_ty::ty::Alias;
+use flow_common_ty::ty::AliasKind;
 use flow_common_ty::ty::Binder;
 use flow_common_ty::ty::BinderKind;
 use flow_common_ty::ty::Decl;
@@ -75,7 +77,7 @@ const MAX_DEPTH_OF_MEMBER_LOOKUP: u32 = 40;
 /// declaration than as a bare type. Kinds that already print a head of their own
 /// (`class A`, `type X = …`) and kinds that need more than a name and a type
 /// (imports, which name a declaration in another module) are left unframed.
-fn binder_kind_of_binding_kind(kind: bindings::Kind) -> Option<BinderKind> {
+pub fn binder_kind_of_binding_kind(kind: bindings::Kind) -> Option<BinderKind> {
     match kind {
         bindings::Kind::Var | bindings::Kind::DeclaredVar => Some(BinderKind::Var),
         bindings::Kind::Let | bindings::Kind::DeclaredLet => Some(BinderKind::Let),
@@ -101,14 +103,63 @@ fn binder_kind_of_binding_kind(kind: bindings::Kind) -> Option<BinderKind> {
     }
 }
 
-fn binder_of_identifier_reference(cx: &Context<'_>, loc: &ALoc) -> Option<Binder> {
+/// True for the binding kinds that name something declared in another module, so
+/// that a use of an imported name is framed as an alias for it.
+fn is_imported_binding_kind(kind: bindings::Kind) -> bool {
+    match kind {
+        bindings::Kind::Import { .. } | bindings::Kind::TsImport => true,
+        bindings::Kind::Type { imported, .. } | bindings::Kind::Interface { imported, .. } => {
+            imported
+        }
+        bindings::Kind::Var
+        | bindings::Kind::DeclaredVar
+        | bindings::Kind::Let
+        | bindings::Kind::DeclaredLet
+        | bindings::Kind::Const
+        | bindings::Kind::DeclaredConst
+        | bindings::Kind::Function
+        | bindings::Kind::DeclaredFunction
+        | bindings::Kind::Parameter
+        | bindings::Kind::CatchParameter
+        | bindings::Kind::ComponentParameter
+        | bindings::Kind::ThisAnnot
+        | bindings::Kind::TypeParam
+        | bindings::Kind::Enum
+        | bindings::Kind::Class
+        | bindings::Kind::DeclaredClass
+        | bindings::Kind::DeclaredNamespace
+        | bindings::Kind::Internal
+        | bindings::Kind::GeneratorNext
+        | bindings::Kind::Component
+        | bindings::Kind::Record => false,
+    }
+}
+
+/// What a hover prints ahead of the type: a declaration head, and the `(alias)`
+/// marker with the statement that introduced the alias. The two are independent —
+/// an imported class has an alias but no binder of its own, an exported local
+/// `const` has both.
+#[derive(Default)]
+struct Framed {
+    binder: Option<Binder>,
+    alias: Option<Alias>,
+}
+
+fn framed_of_identifier_reference(cx: &Context<'_>, loc: &ALoc) -> Framed {
     let env = cx.environment();
-    let def = env.var_info.scopes.def_of_use_opt(loc)?;
-    binder_kind_of_binding_kind(def.kind).map(|kind| Binder {
+    let Some(def) = env.var_info.scopes.def_of_use_opt(loc) else {
+        return Framed::default();
+    };
+    let binder = binder_kind_of_binding_kind(def.kind).map(|kind| Binder {
         kind,
         name: def.actual_name.dupe(),
         owner: None,
-    })
+    });
+    let alias = is_imported_binding_kind(def.kind).then(|| Alias {
+        kind: AliasKind::Import,
+        name: def.actual_name.dupe(),
+    });
+    Framed { binder, alias }
 }
 
 /// The first constituent of a union or intersection that has the property is
@@ -264,6 +315,7 @@ pub fn type_at_pos_type<'a>(
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     no_typed_ast_for_imports: bool,
     include_refs: Option<&dyn Fn(&ALoc) -> Loc>,
+    remote_binding_kind: Option<&dyn Fn(&ALoc) -> Option<BinderKind>>,
     loc: Loc,
 ) -> Result<QueryResult<TypeAtPosResult>, flow_utils_concurrency::job_error::JobError> {
     Ok(
@@ -287,6 +339,7 @@ pub fn type_at_pos_type<'a>(
                         ty,
                         refs: None,
                         binder: None,
+                        alias: None,
                     },
                 )
             }
@@ -295,26 +348,61 @@ pub fn type_at_pos_type<'a>(
                 is_type_identifier_reference: toplevel_is_type_identifier_reference,
                 type_: t,
                 framing,
+                alias: found_alias,
             } => {
                 let typed_ast_opt = if no_typed_ast_for_imports {
                     None
                 } else {
                     Some(typed_ast)
                 };
-                let binder = match framing {
-                    None => None,
-                    Some(Framing::Binder(binder)) => Some(binder),
+                let Framed { binder, alias } = match framing {
+                    None => Framed::default(),
+                    Some(Framing::Binder(binder)) => Framed {
+                        binder: Some(binder),
+                        alias: None,
+                    },
                     Some(Framing::IdentifierRef) => {
-                        binder_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
+                        framed_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
                     }
-                    Some(Framing::MemberRef { name, object_type }) => binder_of_member_reference(
-                        cx,
-                        file_sig.dupe(),
-                        typed_ast_opt,
-                        &object_type,
-                        &name,
-                    ),
+                    Some(Framing::RemoteIdentifierRef { def_loc, name }) => Framed {
+                        binder: def_loc
+                            .as_ref()
+                            .and_then(|loc| remote_binding_kind.and_then(|resolve| resolve(loc)))
+                            .map(|kind| Binder {
+                                kind,
+                                name,
+                                owner: None,
+                            }),
+                        alias: None,
+                    },
+                    Some(Framing::RenamedExportRef { local, name }) => {
+                        let mut framed = framed_of_identifier_reference(cx, &local);
+                        if let Some(binder) = framed.binder.as_mut() {
+                            binder.name = name;
+                        }
+                        framed
+                    }
+                    Some(Framing::TypeIdentifierRef) => Framed {
+                        // A type declaration prints a head of its own, so the
+                        // binding is consulted only for the alias.
+                        binder: None,
+                        ..framed_of_identifier_reference(cx, &ALoc::of_loc(loc.dupe()))
+                    },
+                    Some(Framing::MemberRef { name, object_type }) => Framed {
+                        binder: binder_of_member_reference(
+                            cx,
+                            file_sig.dupe(),
+                            typed_ast_opt,
+                            &object_type,
+                            &name,
+                        ),
+                        alias: None,
+                    },
                 };
+                // The finder saw the statement itself, so it knows whether the
+                // alias is an import or an export and what name it writes; the
+                // binding lookup can only ever report an import.
+                let alias = found_alias.or(alias);
                 let options = |evaluate_type_destructors: EvaluateTypeDestructorsMode| Options {
                     expand_internal_types: false,
                     expand_enum_members: false,
@@ -347,7 +435,35 @@ pub fn type_at_pos_type<'a>(
                 match ty {
                     Ok(ty) => {
                         let refs = include_refs.map(|loc_of_aloc| symbols_of_elt(loc_of_aloc, &ty));
-                        QueryResult::Success(loc, TypeAtPosResult { ty, refs, binder })
+                        // An aliased callable is headed `function f(…)`. A
+                        // non-callable value import is headed `const x: T`, since
+                        // the local import binding cannot be reassigned. Declarations
+                        // such as classes and type aliases already print their own
+                        // heads.
+                        let binder = binder.or_else(|| {
+                            let alias = alias.as_ref()?;
+                            let kind = match &ty {
+                                Elt::Type(t) if matches!(&**t, Ty::Fun(_)) => BinderKind::Function,
+                                Elt::Type(_) if alias.kind == AliasKind::Import => {
+                                    BinderKind::Const
+                                }
+                                Elt::Type(_) | Elt::Decl(_) => return None,
+                            };
+                            Some(Binder {
+                                kind,
+                                name: alias.name.dupe(),
+                                owner: None,
+                            })
+                        });
+                        QueryResult::Success(
+                            loc,
+                            TypeAtPosResult {
+                                ty,
+                                refs,
+                                binder,
+                                alias,
+                            },
+                        )
                     }
                     Err(err) => result_of_normalizer_error(loc, t, err),
                 }

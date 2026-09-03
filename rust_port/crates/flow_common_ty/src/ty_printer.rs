@@ -1804,6 +1804,7 @@ pub struct TypeAtPosPrint<'a, R> {
     pub ty: &'a Elt<ALoc>,
     pub refs: Option<&'a std::collections::BTreeSet<Symbol<R>>>,
     pub binder: Option<&'a Binder>,
+    pub alias: Option<&'a Alias>,
 }
 
 pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
@@ -1816,7 +1817,7 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
         printed_symbols: Some(Vec::new()),
         truncated: false,
     };
-    let layout = match (result.binder, result.ty) {
+    let body = match (result.binder, result.ty) {
         // A `Decl` already prints a declaration of its own (`class A`, `type X = …`),
         // so framing it again would double the head.
         (Some(binder), Elt::Type(t)) => layout_of_binder(opts, binder, t, &mut state),
@@ -1824,6 +1825,18 @@ pub fn string_of_type_at_pos_result<R: Dupe + Ord>(
         (_, Elt::Decl(d)) => decl(opts, 0, d, &mut state),
     };
     let printed_symbols = state.printed_symbols.unwrap_or_default();
+    let body = match result.alias {
+        None => body,
+        Some(_) => layout::fuse(vec![
+            LayoutNode::atom("(alias)".to_string()),
+            layout::space(),
+            body,
+        ]),
+    };
+    let layout = match result.alias {
+        None => body,
+        Some(alias) => layout::fuse(vec![body, layout_of_alias_statement(alias)]),
+    };
     let type_str = pretty_printer::print(true, &layout).contents();
     let refs = result.refs.map(|refs| {
         if !state.truncated {
@@ -1890,4 +1903,18 @@ fn layout_of_binder(
             type_(opts, 0, t, state),
         ]),
     }
+}
+/// The statement an alias came from, printed under the declaration it aliases:
+/// `import mf`, `export mr`.
+fn layout_of_alias_statement(alias: &Alias) -> LayoutNode {
+    let keyword = match alias.kind {
+        AliasKind::Import => "import",
+        AliasKind::Export => "export",
+    };
+    layout::fuse(vec![
+        layout::hardline(),
+        LayoutNode::atom(keyword.to_string()),
+        layout::space(),
+        LayoutNode::atom(alias.name.to_string()),
+    ])
 }

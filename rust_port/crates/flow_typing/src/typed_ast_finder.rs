@@ -195,6 +195,8 @@ pub mod type_at_pos {
     use flow_common::reason::Name;
     use flow_common::reason::VirtualReasonDesc;
     use flow_common::subst_name::SubstName;
+    use flow_common_ty::ty::Alias;
+    use flow_common_ty::ty::AliasKind;
     use flow_common_ty::ty::Binder;
     use flow_common_ty::ty::BinderKind;
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -225,6 +227,19 @@ pub mod type_at_pos {
         Binder(Binder),
         /// The target is a bare identifier; resolve it to the binding it references.
         IdentifierRef,
+        /// The target is the remote name in `import {a as b}`. Its definition is
+        /// in another file, so the caller resolves the declaration kind there.
+        RemoteIdentifierRef {
+            def_loc: Option<ALoc>,
+            name: FlowSmolStr,
+        },
+        /// The target is a type name. A type declaration prints a head of its own,
+        /// so the binding is resolved only far enough to say whether it is imported.
+        TypeIdentifierRef,
+        /// The target is the `b` of `export {a as b}`, which binds nothing of its
+        /// own. Resolve `a` instead, and print its declaration under the name this
+        /// module exports it as.
+        RenamedExportRef { local: ALoc, name: FlowSmolStr },
         /// The target is the `p` of a `o.p` access; resolve `p` in the type of `o`.
         MemberRef {
             name: FlowSmolStr,
@@ -238,6 +253,7 @@ pub mod type_at_pos {
             is_type_identifier_reference: bool,
             type_: Type,
             framing: Option<Framing>,
+            alias: Option<Alias>,
         },
         HardcodedModuleResult(Loc, FlowSmolStr),
         NoResult,
@@ -249,6 +265,7 @@ pub mod type_at_pos {
             is_type_identifier_reference: bool,
             type_: Type,
             framing: Option<Framing>,
+            alias: Option<Alias>,
         },
         FoundHardcodedModule(ALoc, FlowSmolStr),
         Canceled(flow_utils_concurrency::job_error::JobError),
@@ -296,6 +313,30 @@ pub mod type_at_pos {
                 is_type_identifier_reference: is_type_identifier,
                 type_: t.dupe(),
                 framing,
+                alias: None,
+            })
+        }
+
+        /// The target is the name an `import` or `export` statement binds. The
+        /// binding is still resolved, via `framing`, so exporting a local `const`
+        /// keeps its `const x: T` head under the `(alias)` one.
+        fn find_alias(
+            &self,
+            loc: &ALoc,
+            t: &Type,
+            kind: AliasKind,
+            name: &FlowSmolStr,
+            framing: Framing,
+        ) -> Result<(), FoundResult> {
+            Err(FoundResult::FoundType {
+                loc: loc.dupe(),
+                is_type_identifier_reference: false,
+                type_: t.dupe(),
+                framing: Some(framing),
+                alias: Some(Alias {
+                    kind,
+                    name: name.dupe(),
+                }),
             })
         }
 
@@ -324,6 +365,7 @@ pub mod type_at_pos {
                     name: name.dupe(),
                     owner,
                 })),
+                alias: None,
             })
         }
 
@@ -641,7 +683,7 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let (loc, t) = &id.loc;
             if self.covers_target(loc) {
-                self.find_loc(loc, t, true, None)
+                self.find_loc(loc, t, true, Some(Framing::TypeIdentifierRef))
             } else {
                 ast_visitor::identifier_default(self, id)
             }
@@ -947,6 +989,134 @@ pub mod type_at_pos {
             ast_visitor::class_property_default(self, prop)
         }
 
+        /// `import {a}` / `import {a as b}`. An unrenamed import is an alias at its
+        /// only name. For a renamed import, the local name is the alias and the
+        /// remote name is framed as the declaration it references.
+        fn import_named_specifier(
+            &mut self,
+            import_kind: ast::statement::ImportKind,
+            spec: &'ast ast::statement::import_declaration::NamedSpecifier<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            match &spec.local {
+                None => {
+                    let (loc, t) = &spec.remote.loc;
+                    if self.covers_target(loc) {
+                        return self.find_alias(
+                            loc,
+                            t,
+                            AliasKind::Import,
+                            &spec.remote.name,
+                            Framing::IdentifierRef,
+                        );
+                    }
+                }
+                Some(local) => {
+                    let (local_loc, local_t) = &local.loc;
+                    if self.covers_target(local_loc) {
+                        return self.find_alias(
+                            local_loc,
+                            local_t,
+                            AliasKind::Import,
+                            &local.name,
+                            Framing::IdentifierRef,
+                        );
+                    }
+                    let (remote_loc, remote_t) = &spec.remote.loc;
+                    if self.covers_target(remote_loc) {
+                        return self.find_loc(
+                            remote_loc,
+                            remote_t,
+                            false,
+                            Some(Framing::RemoteIdentifierRef {
+                                def_loc: spec.remote_name_def_loc.dupe(),
+                                name: spec.remote.name.dupe(),
+                            }),
+                        );
+                    }
+                }
+            }
+            ast_visitor::import_named_specifier_default(self, import_kind, spec)
+        }
+
+        /// `import a from '…'`.
+        fn import_default_specifier(
+            &mut self,
+            import_kind: &'ast ast::statement::ImportKind,
+            id: &'ast ast::Identifier<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let (loc, t) = &id.loc;
+            if self.covers_target(loc) {
+                return self.find_alias(
+                    loc,
+                    t,
+                    AliasKind::Import,
+                    &id.name,
+                    Framing::IdentifierRef,
+                );
+            }
+            ast_visitor::import_default_specifier_default(self, import_kind, id)
+        }
+
+        /// `import * as ns from '…'`. The type is the module, so the head names
+        /// the module and the alias line names the binding this file introduced.
+        fn import_namespace_specifier(
+            &mut self,
+            import_kind: ast::statement::ImportKind,
+            spec_loc: &'ast ALoc,
+            id: &'ast ast::Identifier<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let (loc, t) = &id.loc;
+            if self.covers_target(loc) {
+                return self.find_alias(
+                    loc,
+                    t,
+                    AliasKind::Import,
+                    &id.name,
+                    Framing::IdentifierRef,
+                );
+            }
+            ast_visitor::import_namespace_specifier_default(self, import_kind, spec_loc, id)
+        }
+
+        /// `export {a}` / `export {a as b}`. Both names are aliases: `a` for the
+        /// local binding, `b` for the name other modules see. Only `a` is a use of
+        /// anything, so `b` borrows its declaration under `b`'s own name.
+        fn export_named_declaration_specifier(
+            &mut self,
+            spec: &'ast ast::statement::export_named_declaration::ExportSpecifier<
+                ALoc,
+                (ALoc, Type),
+            >,
+        ) -> Result<(), FoundResult> {
+            let (local_loc, _) = &spec.local.loc;
+            if self.covers_target(local_loc) {
+                let (loc, t) = &spec.local.loc;
+                return self.find_alias(
+                    loc,
+                    t,
+                    AliasKind::Export,
+                    &spec.local.name,
+                    Framing::IdentifierRef,
+                );
+            }
+            if let Some(exported) = &spec.exported {
+                let (loc, t) = &exported.loc;
+                if self.covers_target(loc) {
+                    return self.find_alias(
+                        loc,
+                        t,
+                        AliasKind::Export,
+                        &exported.name,
+                        Framing::RenamedExportRef {
+                            local: local_loc.dupe(),
+                            name: exported.name.dupe(),
+                        },
+                    );
+                }
+            }
+            ast_visitor::export_named_declaration_specifier_default(self, spec)
+        }
+
         /// An object literal is not the class it may be written inside, so its
         /// members carry no qualifier.
         fn object(
@@ -1082,11 +1252,13 @@ pub mod type_at_pos {
                 is_type_identifier_reference,
                 type_,
                 framing,
+                alias,
             }) => Ok(TypeAtPosResult::TypeResult {
                 loc: loc.to_loc_exn().dupe(),
                 is_type_identifier_reference,
                 type_,
                 framing,
+                alias,
             }),
             Err(FoundResult::FoundHardcodedModule(loc, name)) => Ok(
                 TypeAtPosResult::HardcodedModuleResult(loc.to_loc_exn().dupe(), name),

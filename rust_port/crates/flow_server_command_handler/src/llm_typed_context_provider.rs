@@ -75,6 +75,7 @@ fn normalize_type(
                     ty: &elt,
                     refs: Some(&symbols),
                     binder: None,
+                    alias: None,
                 },
                 &loc_of_aloc,
                 &opts,

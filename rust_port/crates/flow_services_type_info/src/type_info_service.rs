@@ -12,6 +12,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::refinement_invalidation;
 use flow_common::refinement_invalidation::RefinementInvalidation;
+use flow_common_ty::ty::BinderKind;
 use flow_common_ty::ty::TypeAtPosResult;
 use flow_common_ty::ty_printer;
 use flow_common_ty::ty_printer::PrinterOptions;
@@ -98,6 +99,7 @@ pub fn type_at_pos<'a>(
     verbose_normalizer: bool,
     no_typed_ast_for_imports: bool,
     include_refs: Option<&dyn Fn(&ALoc) -> Loc>,
+    remote_binding_kind: Option<&dyn Fn(&ALoc) -> Option<BinderKind>>,
     include_refinement_info: Option<&dyn Fn(&ALoc) -> Loc>,
     file: FileKey,
     line: i32,
@@ -154,6 +156,7 @@ pub fn type_at_pos<'a>(
         typed_ast,
         no_typed_ast_for_imports,
         include_refs,
+        remote_binding_kind,
         loc,
     )?;
     let (json_data, loc, ty) = match result {
@@ -205,6 +208,7 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
     verbose_normalizer: bool,
     no_typed_ast_for_imports: bool,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    remote_binding_kind: &dyn Fn(&ALoc) -> Option<BinderKind>,
     file: FileKey,
 ) -> Result<
     (
@@ -256,6 +260,7 @@ pub fn batched_type_at_pos_from_special_comments<'a>(
                 verbose_normalizer,
                 no_typed_ast_for_imports,
                 Some(loc_of_aloc),
+                Some(remote_binding_kind),
                 Some(loc_of_aloc),
                 file.dupe(),
                 line,

@@ -50,56 +50,72 @@ export_const.js:20:14,20:17
 
 file.js:4:5
 Flags:
-{readonly f: "a"}
+(alias) const obj1: {readonly f: "a"}
+import obj1
 file.js:4:5,4:8
 
 file.js:6:5
 Flags:
-{readonly f: {g: string}}
+(alias) const obj2: {readonly f: {g: string}}
+import obj2
 file.js:6:5,6:8
 
 file.js:8:5
 Flags:
-{readonly f: "a"}
+(alias) const obj3: {readonly f: "a"}
+import obj3
 file.js:8:5,8:8
 
 file.js:10:5
 Flags:
-{readonly f: "a"}
+(alias) const obj4: {readonly f: "a"}
+import obj4
 file.js:10:5,10:8
 
 file.js:12:5
 Flags:
-{readonly a: "a", readonly b: "b", readonly c: {d: string}, readonly e: "e"}
+(alias) const obj5: {
+  readonly a: "a",
+  readonly b: "b",
+  readonly c: {d: string},
+  readonly e: "e"
+}
+import obj5
 file.js:12:5,12:8
 
 file.js:14:5
 Flags:
-{prop: {readonly f: "a"}}
+(alias) const obj6: {prop: {readonly f: "a"}}
+import obj6
 file.js:14:5,14:8
 
 file.js:18:8
 Flags:
-{readonly f: "a"}
+(alias) const defaultObj: {readonly f: "a"}
+import defaultObj
 file.js:18:8,18:17
 
 file.js:21:8
 Flags:
-{readonly f: "a"}
+(alias) const moduleExports: {readonly f: "a"}
+import moduleExports
 file.js:21:8,21:20
 
 file.js:24:5
 Flags:
-{readonly f: string}
+(alias) const obj7: {readonly f: string}
+import obj7
 file.js:24:5,24:8
 
 file.js:26:5
 Flags:
-{readonly f: 1, readonly g: 1, readonly h: 1}
+(alias) const obj8: {readonly f: 1, readonly g: 1, readonly h: 1}
+import obj8
 file.js:26:5,26:8
 
 file.js:28:5
 Flags:
-{readonly f: -1}
+(alias) const obj9: {readonly f: -1}
+import obj9
 file.js:28:5,28:8
 

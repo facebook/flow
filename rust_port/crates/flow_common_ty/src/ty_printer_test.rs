@@ -288,6 +288,7 @@ mod tests {
                 ty: &obj,
                 refs: Some(&refs),
                 binder: None,
+                alias: None,
             },
             &|_| Loc::none(),
             &opts,

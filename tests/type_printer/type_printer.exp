@@ -1,4 +1,4 @@
-type BinaryExpression = {
+(alias) type BinaryExpression = {
   _BinaryExpression: void,
   end: number,
   innerComments: ?Array<Comment>,
@@ -14,6 +14,7 @@ type BinaryExpression = {
   trailingComments: ?Array<Comment>,
   type: "BinaryExpression"
 }
+import BinaryExpression
 
 'BinaryExpression' defined at types.js:3156:12
 'BinaryOperator' defined at types.js:3132:5

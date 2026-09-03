@@ -864,10 +864,27 @@ pub struct Binder {
     pub owner: Option<FlowSmolStr>,
 }
 
+/// Which statement introduced an alias, for the line hover prints under it.
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq)]
+pub enum AliasKind {
+    Import,
+    Export,
+}
+
+/// An imported or exported name stands for a declaration elsewhere. Hover frames
+/// that declaration under an `(alias)` head and names the statement below it.
+#[derive(Debug, Clone, Dupe, PartialEq, Eq)]
+pub struct Alias {
+    pub kind: AliasKind,
+    /// The local name, as the import or export statement writes it.
+    pub name: FlowSmolStr,
+}
+
 pub struct TypeAtPosResult {
     pub ty: ALocElt,
     pub refs: Option<BTreeSet<Symbol<Loc>>>,
     pub binder: Option<Binder>,
+    pub alias: Option<Alias>,
 }
 
 /* Type destructors */

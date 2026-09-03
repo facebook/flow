@@ -1079,6 +1079,7 @@ fn type_at_pos(params: &Value) -> Result<Value, String> {
         false,
         false,
         None,
+        None,
         Some(&|aloc: &ALoc| aloc.to_loc_exn().dupe()),
         checked.prepared.parsed.file_key.dupe(),
         line,

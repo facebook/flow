@@ -24,6 +24,7 @@ function run() {
   queries_in_file "type-at-pos" "import-type.js" "${args[@]}"
   queries_in_file "type-at-pos" "rtype-main.js" "${args[@]}"
   queries_in_file "type-at-pos" "import-hooklike-regression.js" "${args[@]}"
+  queries_in_file "type-at-pos" "import-alias.js" "${args[@]}"
 }
 
 # Run using typed AST for imports

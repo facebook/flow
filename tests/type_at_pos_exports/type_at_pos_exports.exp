@@ -20,12 +20,14 @@ cjs.js:7:1,7:7
 
 es_exports2.js:1:9
 Flags:
-"foo"
+(alias) "foo"
+export foo
 es_exports2.js:1:9,1:11
 
 es_exports2.js:4:16
 Flags:
-"foo"
+(alias) "foo"
+export foo2
 es_exports2.js:4:16,4:19
 
 es_exports2.js:7:13
