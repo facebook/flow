@@ -5,7 +5,7 @@ component Bar<T>() {return 0}
 declare function Baz(): React.Node;
 
 type RGood0 = renders 'svg'; // ok
-type RBadDeprecated = renders ExactReactElement_DEPRECATED<typeof Foo>; // error
+type RBadDeprecated = renders React.MixedElement; // error
 type RBadNumber = renders 1; // error
 type RBadNode = renders React.Node; // error
 type RBadError = renders Error; // error

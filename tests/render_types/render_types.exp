@@ -1566,8 +1566,8 @@ Error --------------------------------------------------------------------------
 
 Cannot use `ExactReactElement_DEPRECATED` [1] as the type argument of renders type. [invalid-render]
 
-   8| type RBadDeprecated = renders ExactReactElement_DEPRECATED<typeof Foo>; // error
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   8| type RBadDeprecated = renders React.MixedElement; // error
+                                    ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ validation/validation.js:9:27

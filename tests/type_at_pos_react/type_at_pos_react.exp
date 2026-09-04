@@ -9,16 +9,9 @@ lazy_ref.js:14:9 = const x: {
 'RefSetter' defined at (lib) react.js:1365:9
 
 lazy_ref.js:14:9,14:9
-lazy_ref.js:19:9 = const x: Promise<
-  {
-    readonly default: (x: Props) => ExactReactElement_DEPRECATED<
-      (x: Props) => Node,
-    >
-  },
->
+lazy_ref.js:19:9 = const x: Promise<{readonly default: (x: Props) => MixedElement}>
 
-'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
-'Node' defined at (lib) react.js:443:22
+'MixedElement' defined at (lib) react.js:430:22
 'Promise' defined at (lib) core.js:2298:14
 'Props' defined at exports-component.js:5:5
 
