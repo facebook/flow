@@ -86,10 +86,6 @@ declare const rendersBazOrBaz: renders (
     | Baz
   ); // OK
   rendersFooOrBar as renders (
-    | ExactReactElement_DEPRECATED<typeof Foo>
-    | Bar
-  ); // OK
-  rendersFooOrBar as renders (
     | Foo
     | Baz
   ); // ERROR
@@ -100,8 +96,6 @@ declare const rendersBazOrBaz: renders (
   null as renders null; // type checks, but invalid-render
   Foo as renders Foo; // ERROR
   3 as renders (null | number); // type checks, but invalid-render
-  declare const x: ExactReactElement_DEPRECATED<() => React.Node>;
-  x as renders typeof x; // type checks, but invalid-render
   declare const mixedElement: React.MixedElement;
   // The test below ensures repositioning does not hit unsoundness in speculation
   mixedElement as renders (

@@ -9,7 +9,7 @@ undefined as renders* MenuItem; // OK
 true as renders* MenuItem; // ERROR
 
 <MenuItem /> as renders* MenuItem; // OK
-declare const menuItemChildrenArray: React.ChildrenArray<ExactReactElement_DEPRECATED<typeof MenuItem>>;
+declare const menuItemChildrenArray: React.ChildrenArray<renders MenuItem>;
 menuItemChildrenArray as renders* MenuItem; // OK
 
 component BlueMenuItem() renders MenuItem { return <MenuItem />; }

@@ -1,7 +1,6 @@
 function Foo() { return null }
 declare const x: {readonly type: typeof Foo};
 x as ExactReactElement_DEPRECATED<typeof Foo>; // ERROR!
-x as renders ExactReactElement_DEPRECATED<typeof Foo>; // invalid-render makes RHS any
 
 component Bar() { return null }
 declare const y: {readonly type: typeof Bar};

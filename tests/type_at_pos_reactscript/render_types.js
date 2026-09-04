@@ -18,9 +18,6 @@ type MaybeRenders = renders? Foo;
 type StarRenders = renders* Foo;
 //   ^
 
-type RendersElement = renders ExactReactElement_DEPRECATED<typeof Foo>;
-//   ^
-
 component Poly<T>() { return null }
 type PolyElement = renders Poly<number>;
 //   ^

@@ -8980,7 +8980,6 @@ pub mod render_types {
     use vec1::Vec1;
 
     use crate::flow_js_utils::add_output_non_speculating;
-    use crate::flow_js_utils::builtin_react_element_nominal_id;
     use crate::flow_js_utils::builtin_react_renders_exactly_nominal_id;
     use crate::type_subst;
     use crate::type_subst::Purpose;
@@ -9417,34 +9416,6 @@ pub mod render_types {
             } => {
                 let nominal_id = &nominal_type.nominal_id;
                 let nominal_type_args = &nominal_type.nominal_type_args;
-                // Check if this is React.Element
-                if builtin_react_element_nominal_id(normalization_cx.cx).as_ref()
-                    == Some(nominal_id)
-                {
-                    if let Some(upper_t) = &nominal_type.upper_t {
-                        if let TypeInner::DefT(_, obj_def) = &**upper_t {
-                            if let DefTInner::ObjT(obj_t) = &**obj_def {
-                                if let Some((_, _, component_t, _)) = nominal_type_args.first() {
-                                    let c = match normalization_cx
-                                        .cx
-                                        .find_monomorphized_component(obj_t.props_tmap.dupe())
-                                    {
-                                        Some(mono_component) => mono_component,
-                                        None => component_t.dupe(),
-                                    };
-                                    for concretized in (normalization_cx.concretize)(&c)? {
-                                        on_concretized_component_normalization(
-                                            normalization_cx,
-                                            element_r,
-                                            concretized,
-                                        )?;
-                                    }
-                                    return Ok(());
-                                }
-                            }
-                        }
-                    }
-                }
                 if builtin_react_renders_exactly_nominal_id(normalization_cx.cx).as_ref()
                     == Some(nominal_id)
                 {
