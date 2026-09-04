@@ -1138,6 +1138,7 @@ pub fn import_expr<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let ast::expression::Import {
         argument,
         options,
+        phase,
         comments,
     } = expr;
     let argument_ = expression(mapper, argument)?;
@@ -1148,6 +1149,7 @@ pub fn import_expr<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::Import {
         argument: argument_,
+        phase: *phase,
         options: options_,
         comments: comments_,
     })
@@ -4875,6 +4877,7 @@ pub fn import_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 ) -> Result<ast::statement::ImportDeclaration<N, U>, E> {
     let ast::statement::ImportDeclaration {
         import_kind,
+        phase,
         source,
         default,
         specifiers,
@@ -4920,6 +4923,7 @@ pub fn import_declaration<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::statement::ImportDeclaration {
         import_kind: *import_kind,
+        phase: *phase,
         source: source_,
         default: default_,
         specifiers: specifiers_,

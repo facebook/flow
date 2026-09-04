@@ -2065,6 +2065,10 @@ pub fn expression(
                 inner.comments.as_ref(),
                 fuse(vec![
                     atom("import"),
+                    match inner.phase {
+                        Some(ast::statement::ImportPhase::Defer) => atom(".defer"),
+                        None => LayoutNode::empty(),
+                    },
                     wrap_in_parens(
                         false,
                         match &inner.options {
@@ -3329,6 +3333,10 @@ fn import_declaration(
         import.comments.as_ref(),
         with_semicolon(fuse(vec![
             atom("import"),
+            match import.phase {
+                Some(ast::statement::ImportPhase::Defer) => fuse(vec![space(), atom("defer")]),
+                None => LayoutNode::empty(),
+            },
             match import.import_kind {
                 ast::statement::ImportKind::ImportType => fuse(vec![space(), atom("type")]),
                 ast::statement::ImportKind::ImportTypeof => fuse(vec![space(), atom("typeof")]),

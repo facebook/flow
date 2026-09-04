@@ -4288,6 +4288,7 @@ fn statement_<'a>(
                     specifiers: specifiers_ast,
                     default: default_ast,
                     import_kind: inner.import_kind,
+                    phase: inner.phase,
                     attributes: None,
                     comments: inner.comments.dupe(),
                 })
@@ -8102,6 +8103,7 @@ fn expression_<'a>(
                                 inner: lit.clone(),
                             }),
                             options: opts_prime,
+                            phase: inner.phase,
                             comments: inner.comments.dupe(),
                         }
                         .into(),
@@ -8130,6 +8132,7 @@ fn expression_<'a>(
                                 },
                             ),
                             options: opts_prime,
+                            phase: inner.phase,
                             comments: inner.comments.dupe(),
                         })
                         .into(),

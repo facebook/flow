@@ -322,6 +322,7 @@ fn update_import(
     match &**stmt {
         StatementInner::ImportDeclaration { loc: _, inner } => {
             let import_kind = inner.import_kind;
+            let phase = inner.phase;
             let source = &inner.source;
             let default = &inner.default;
             let specifiers = &inner.specifiers;
@@ -443,6 +444,7 @@ fn update_import(
                         loc: loc.dupe(),
                         inner: Arc::new(statement::ImportDeclaration {
                             import_kind,
+                            phase,
                             source: source.clone(),
                             default: default.clone(),
                             specifiers: new_specifiers_wrapped,
@@ -1031,6 +1033,9 @@ fn merge_imports(
             if a_inner.import_kind != b_inner.import_kind {
                 panic!("Can't merge imports of different kinds");
             }
+            if a_inner.phase != b_inner.phase {
+                panic!("Can't merge imports of different phases");
+            }
             let default = merge_defaults(&a_inner.default, &b_inner.default);
             let specifiers = merge_specifiers(&a_inner.specifiers, &b_inner.specifiers);
             let comments = merge_comments(&a_inner.comments, &b_inner.comments);
@@ -1038,6 +1043,7 @@ fn merge_imports(
                 loc: LOC_NONE,
                 inner: Arc::new(statement::ImportDeclaration {
                     import_kind: a_inner.import_kind,
+                    phase: a_inner.phase,
                     source: a_inner.source.clone(),
                     default,
                     specifiers,

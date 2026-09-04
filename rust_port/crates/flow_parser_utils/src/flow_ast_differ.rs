@@ -1354,6 +1354,7 @@ fn import_declaration(
 ) -> Option<Vec<NodeChange>> {
     let ast::statement::ImportDeclaration {
         import_kind: imprt_knd1,
+        phase: phase1,
         source: src1,
         default: dflt1,
         specifiers: spec1,
@@ -1362,13 +1363,14 @@ fn import_declaration(
     } = import1;
     let ast::statement::ImportDeclaration {
         import_kind: imprt_knd2,
+        phase: phase2,
         source: src2,
         default: dflt2,
         specifiers: spec2,
         comments: comments2,
         ..
     } = import2;
-    if imprt_knd1 != imprt_knd2 || src1 != src2 {
+    if imprt_knd1 != imprt_knd2 || phase1 != phase2 || src1 != src2 {
         None
     } else {
         let dflt_diff = import_default_specifier(dflt1, dflt2);
@@ -6004,13 +6006,20 @@ fn import_expression(
     let expression::Import {
         argument: argument1,
         options: options1,
+        phase: phase1,
         comments: comments1,
     } = import1;
     let expression::Import {
         argument: argument2,
         options: options2,
+        phase: phase2,
         comments: comments2,
     } = import2;
+    if phase1 != phase2 {
+        // No edit within the node can turn `import(x)` into
+        // `import.defer(x)`; the whole node has to be replaced.
+        return None;
+    }
     let parent = ExpressionNodeParent::ExpressionParentOfExpression(expression::Expression::new(
         ExpressionInner::Import {
             loc: loc.dupe(),

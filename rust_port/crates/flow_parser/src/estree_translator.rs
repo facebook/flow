@@ -1137,6 +1137,10 @@ fn statement(
                 ("importKind", string(import_kind_str)),
             ];
 
+            if let Some(phase) = inner.phase {
+                properties.push(("phase", string(phase.as_str())));
+            }
+
             if let Some((_, attrs)) = &inner.attributes {
                 properties.push((
                     "attributes",
@@ -1891,6 +1895,9 @@ pub fn expression(
             )];
             if let Some(opts) = &inner.options {
                 fields.push(("options", expression(offset_table, config, false, opts)));
+            }
+            if let Some(phase) = inner.phase {
+                fields.push(("phase", string(phase.as_str())));
             }
             node(
                 offset_table,

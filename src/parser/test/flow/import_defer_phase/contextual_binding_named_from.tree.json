@@ -1,0 +1,118 @@
+{
+  "body": [
+    {
+      "importKind": "value",
+      "loc": {
+        "end": {
+          "column": 32,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "phase": "defer",
+      "range": [
+        0,
+        32
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 31,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 1
+          }
+        },
+        "range": [
+          23,
+          31
+        ],
+        "raw": "\"module\"",
+        "type": "Literal",
+        "value": "module"
+      },
+      "specifiers": [
+        {
+          "loc": {
+            "end": {
+              "column": 17,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 13,
+              "line": 1
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 17,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 13,
+                "line": 1
+              }
+            },
+            "name": "from",
+            "optional": false,
+            "range": [
+              13,
+              17
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            13,
+            17
+          ],
+          "type": "ImportDefaultSpecifier"
+        }
+      ],
+      "type": "ImportDeclaration"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 17,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 13,
+          "line": 1
+        }
+      },
+      "message": "Only `import defer * as ns from \"module\"` is valid"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 32,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    32
+  ],
+  "type": "Program"
+}

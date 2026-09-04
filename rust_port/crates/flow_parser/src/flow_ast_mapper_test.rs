@@ -70,6 +70,7 @@ mod tests {
             loc: (),
             inner: Arc::new(statement::ImportDeclaration {
                 import_kind,
+                phase: None,
                 source,
                 default: None,
                 specifiers: Some(import_declaration::Specifier::ImportNamedSpecifiers(

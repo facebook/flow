@@ -1,0 +1,135 @@
+{
+  "body": [
+    {
+      "declarations": [
+        {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 7,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 6,
+                "line": 1
+              }
+            },
+            "name": "x",
+            "optional": false,
+            "range": [
+              6,
+              7
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "init": {
+            "loc": {
+              "end": {
+                "column": 32,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 1
+              }
+            },
+            "range": [
+              10,
+              32
+            ],
+            "source": {
+              "loc": {
+                "end": {
+                  "column": 31,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 24,
+                  "line": 1
+                }
+              },
+              "range": [
+                24,
+                31
+              ],
+              "raw": "\"./foo\"",
+              "type": "Literal",
+              "value": "./foo"
+            },
+            "type": "ImportExpression"
+          },
+          "loc": {
+            "end": {
+              "column": 32,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 6,
+              "line": 1
+            }
+          },
+          "range": [
+            6,
+            32
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        33
+      ],
+      "type": "VariableDeclaration"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 23,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 17,
+          "line": 1
+        }
+      },
+      "message": "The `source` import phase is not supported."
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 33,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    33
+  ],
+  "type": "Program"
+}

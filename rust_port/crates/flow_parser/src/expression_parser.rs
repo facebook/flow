@@ -1088,6 +1088,29 @@ fn import_expr(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc>, 
         expect::token(env, TokenKind::TImport)?;
 
         if eat::maybe(env, TokenKind::TPeriod)? {
+            // `import.defer(specifier)` — deferred eval of a dynamic import
+            if matches!(peek::token(env), TokenKind::TIdentifier { raw, .. } if raw == "defer") {
+                eat::token(env)?;
+                return import_call(env, leading, Some(statement::ImportPhase::Defer));
+            }
+            // `import.<phase>(...)` for a phase this parser does not
+            // implement. The call parens are what distinguish a phase from a
+            // mistyped `import.meta`, which still reports as such. Reported
+            // here rather than let through to the meta-property path, which
+            // would emit a MetaProperty and a misleading "expected the
+            // identifier `meta`".
+            let unsupported_phase = match peek::token(env) {
+                TokenKind::TIdentifier { raw, .. } if raw != "meta" => Some(raw.to_string()),
+                _ => None,
+            };
+            if let Some(phase) = unsupported_phase
+                && peek::token_after_current_is_lparen(env)
+            {
+                let phase_loc = peek::loc(env).dupe();
+                eat::token(env)?;
+                env.error_at(phase_loc, ParseError::ImportPhaseUnsupported(phase))?;
+                return import_call(env, leading, None);
+            }
             // import.meta
             let import_ident = Identifier::new(IdentifierInner {
                 loc: start_loc.dupe(),
@@ -1111,29 +1134,40 @@ fn import_expr(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc>, 
                 }),
             })
         } else {
-            let leading_arg = peek::comments(env);
-            expect::token(env, TokenKind::TLparen)?;
-            let argument =
-                add_comments(env.with_no_in(false, assignment)?, Some(leading_arg), None);
-            let options = if eat::maybe(env, TokenKind::TComma)? {
-                Some(env.with_no_in(false, assignment)?)
-            } else {
-                None
-            };
-            expect::token(env, TokenKind::TRparen)?;
-            let trailing = eat::trailing_comments(env);
-            Ok(ExpressionInner::Import {
-                loc: LOC_NONE,
-                inner: Arc::new(expression::Import {
-                    argument,
-                    options,
-                    comments: mk_comments_opt(Some(leading.into()), Some(trailing.into())),
-                }),
-            })
+            import_call(env, leading, None)
         }
     })?;
     *inner.loc_mut() = loc;
     Ok(expression::Expression::new(inner))
+}
+
+/// Parses the argument list of a dynamic import, from the opening paren. The
+/// caller has already consumed `import` and, for a phase-modified call, the
+/// `.defer` that follows it.
+fn import_call(
+    env: &mut ParserEnv,
+    leading: Vec<Comment<Loc>>,
+    phase: Option<statement::ImportPhase>,
+) -> Result<ExpressionInner<Loc, Loc>, Rollback> {
+    let leading_arg = peek::comments(env);
+    expect::token(env, TokenKind::TLparen)?;
+    let argument = add_comments(env.with_no_in(false, assignment)?, Some(leading_arg), None);
+    let options = if eat::maybe(env, TokenKind::TComma)? {
+        Some(env.with_no_in(false, assignment)?)
+    } else {
+        None
+    };
+    expect::token(env, TokenKind::TRparen)?;
+    let trailing = eat::trailing_comments(env);
+    Ok(ExpressionInner::Import {
+        loc: LOC_NONE,
+        inner: Arc::new(expression::Import {
+            argument,
+            options,
+            phase,
+            comments: mk_comments_opt(Some(leading.into()), Some(trailing.into())),
+        }),
+    })
 }
 
 pub(super) fn call_cover(

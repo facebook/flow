@@ -748,6 +748,7 @@ fn import_statement(loc: Loc, source: &str) -> Statement<Loc, Loc> {
         loc: loc.dupe(),
         inner: Arc::new(statement::ImportDeclaration {
             import_kind: statement::ImportKind::ImportValue,
+            phase: None,
             source: (
                 loc.dupe(),
                 ast::StringLiteral {
@@ -1112,6 +1113,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for InsertImportAndAnnotMapp
                 loc: Loc::none(),
                 inner: Arc::new(statement::ImportDeclaration {
                     import_kind: statement::ImportKind::ImportType,
+                    phase: None,
                     source: (
                         Loc::none(),
                         ast::StringLiteral {

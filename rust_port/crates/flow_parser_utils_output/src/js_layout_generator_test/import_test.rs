@@ -64,6 +64,29 @@ fn test_basic() {
 }
 
 #[test]
+fn test_defer_phase() {
+    assert_statement_string(false, None, r#"import defer *as a from"a";"#);
+    assert_statement_string(true, None, r#"import defer * as a from "a";"#);
+    assert_statement_string(
+        true,
+        None,
+        r#"import defer * as a from "a" with { type: "json" };"#,
+    );
+    // `defer` as an ordinary binding name still prints without the phase.
+    assert_statement_string(true, None, r#"import defer from "a";"#);
+    assert_statement_string(true, None, r#"import defer, { b } from "a";"#);
+    assert_statement_string(true, None, r#"import defer * as defer from "a";"#);
+    // Dynamic form.
+    assert_statement_string(true, None, r#"import.defer("a");"#);
+    assert_statement_string(
+        true,
+        None,
+        r#"import.defer("a", { with: { type: "json" } });"#,
+    );
+    assert_statement_string(true, None, r#"import("a");"#);
+}
+
+#[test]
 fn test_wrap_specifiers() {
     assert_statement_string(
         true,

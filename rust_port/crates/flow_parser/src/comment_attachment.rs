@@ -373,6 +373,7 @@ impl<'ast> AstVisitor<'ast, Loc, Loc, &'ast Loc, !> for TrailingCommentsRemover 
         expr: &'ast ast::expression::Import<Loc, Loc>,
     ) -> ast::expression::Import<Loc, Loc> {
         ast::expression::Import {
+            phase: expr.phase,
             argument: expr.argument.clone(),
             options: expr.options.clone(),
             comments: self.map_syntax_opt(expr.comments.as_ref()),
