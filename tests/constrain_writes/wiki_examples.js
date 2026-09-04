@@ -12,7 +12,7 @@ function ex1() {
   let Component = ({prop}: Props) => { return <>{prop}</> }
   // `Component` has type`React.ComponentType<Props>`
   let element = <Component {...props} />
-  // `element` has type `ExactReactElement_DEPRECATED<React.ComponentType<Props>>`
+  // `element` has type renders Fragment
 
   type OtherProps = { other_prop: string };
   declare const OtherComponent: (OtherProps) => React.Node;
