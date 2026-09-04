@@ -830,6 +830,83 @@ const getTransforms = (
     }
   };
 
+  /*
+  Flow can export a bare type, eg
+  ```
+  declare export default TypeName;
+  declare module.exports: TypeName;
+  ```
+  but TS can only export values, so declare a temporary variable to hold the
+  type and reference that in the export declaration:
+  ```
+  declare const SPECIFIER: TypeName;
+  declare type SPECIFIER = typeof SPECIFIER;
+  ```
+  */
+  const declareTypeAsVariable = (
+    specifier: string,
+    type: FlowESTree.TypeAnnotationType,
+  ): [TSESTree.VariableDeclaration, TSESTree.TSTypeAliasDeclaration] => [
+    {
+      type: 'VariableDeclaration',
+      loc: DUMMY_LOC,
+      declarations: [
+        {
+          type: 'VariableDeclarator',
+          loc: DUMMY_LOC,
+          id: {
+            type: 'Identifier',
+            loc: DUMMY_LOC,
+            name: specifier,
+            typeAnnotation: {
+              type: 'TSTypeAnnotation',
+              loc: DUMMY_LOC,
+              typeAnnotation: transformTypeAnnotationType(type),
+            },
+          },
+          init: null,
+        },
+      ],
+      declare: true,
+      kind: 'const',
+    },
+    {
+      type: 'TSTypeAliasDeclaration',
+      declare: true,
+      id: {
+        type: 'Identifier',
+        decorators: [],
+        name: specifier,
+        optional: false,
+        loc: DUMMY_LOC,
+      },
+      typeAnnotation: {
+        type: 'TSTypeQuery',
+        exprName: {
+          type: 'Identifier',
+          decorators: [],
+          name: specifier,
+          optional: false,
+          loc: DUMMY_LOC,
+        },
+        loc: DUMMY_LOC,
+      },
+      loc: DUMMY_LOC,
+    },
+  ];
+
+  // Whether `name` is bound at the top level by a class declaration, which is
+  // the one case where `typeof name` can be re-exported as `name` itself and
+  // keep both its value and its type meaning.
+  const isDeclaredClass = (name: string): boolean => {
+    const exportedVar = topScope.set.get(name);
+    return (
+      exportedVar != null &&
+      exportedVar.defs.length === 1 &&
+      exportedVar.defs[0].type === 'ClassName'
+    );
+  };
+
   const wellKnownSymbols = new Set([
     'iterator',
     'asyncIterator',
@@ -1332,97 +1409,30 @@ const getTransforms = (
           case 'TypeofTypeAnnotation': {
             if (
               declaration.type === 'TypeofTypeAnnotation' &&
-              declaration.argument.type === 'Identifier'
+              declaration.argument.type === 'Identifier' &&
+              isDeclaredClass(declaration.argument.name)
             ) {
-              const name = declaration.argument.name;
-              const exportedVar = topScope.set.get(name);
-              if (exportedVar != null && exportedVar.defs.length === 1) {
-                const def = exportedVar.defs[0];
-
-                switch (def.type) {
-                  case 'ClassName': {
-                    return {
-                      type: 'ExportDefaultDeclaration',
-                      declaration: {
-                        type: 'Identifier',
-                        decorators: [],
-                        name,
-                        optional: false,
-                        loc: DUMMY_LOC,
-                      },
-                      exportKind: 'value',
-                      loc: DUMMY_LOC,
-                    };
-                  }
-                }
-              }
+              return {
+                type: 'ExportDefaultDeclaration',
+                declaration: {
+                  type: 'Identifier',
+                  decorators: [],
+                  name: declaration.argument.name,
+                  optional: false,
+                  loc: DUMMY_LOC,
+                },
+                exportKind: 'value',
+                loc: DUMMY_LOC,
+              };
             }
 
             // intentional fallthrough to the "default" handling
           }
 
           default: {
-            /*
-            flow allows syntax like
-            ```
-            declare export default TypeName;
-            ```
-            but TS does not, so we have to declare a temporary variable to
-            reference in the export declaration:
-            ```
-            declare const $$EXPORT_DEFAULT_DECLARATION$$: TypeName;
-            export default $$EXPORT_DEFAULT_DECLARATION$$;
-            ```
-            */
             const SPECIFIER = '$$EXPORT_DEFAULT_DECLARATION$$';
             return [
-              {
-                type: 'VariableDeclaration',
-                loc: DUMMY_LOC,
-                declarations: [
-                  {
-                    type: 'VariableDeclarator',
-                    loc: DUMMY_LOC,
-                    id: {
-                      type: 'Identifier',
-                      loc: DUMMY_LOC,
-                      name: SPECIFIER,
-                      typeAnnotation: {
-                        type: 'TSTypeAnnotation',
-                        loc: DUMMY_LOC,
-                        typeAnnotation:
-                          transformTypeAnnotationType(declaration),
-                      },
-                    },
-                    init: null,
-                  },
-                ],
-                declare: true,
-                kind: 'const',
-              },
-              {
-                type: 'TSTypeAliasDeclaration',
-                declare: true,
-                id: {
-                  type: 'Identifier',
-                  decorators: [],
-                  name: SPECIFIER,
-                  optional: false,
-                  loc: DUMMY_LOC,
-                },
-                typeAnnotation: {
-                  type: 'TSTypeQuery',
-                  exprName: {
-                    type: 'Identifier',
-                    decorators: [],
-                    name: SPECIFIER,
-                    optional: false,
-                    loc: DUMMY_LOC,
-                  },
-                  loc: DUMMY_LOC,
-                },
-                loc: DUMMY_LOC,
-              },
+              ...declareTypeAsVariable(SPECIFIER, declaration),
               {
                 type: 'ExportDefaultDeclaration',
                 loc: DUMMY_LOC,
@@ -1974,8 +1984,65 @@ const getTransforms = (
     },
     DeclareModuleExports(
       node: FlowESTree.DeclareModuleExports,
-    ): TSESTree.TypeNode {
-      throw translationError(node, 'CommonJS exports are not supported.');
+    ):
+      | TSESTree.TSExportAssignment
+      | [
+          TSESTree.VariableDeclaration,
+          TSESTree.TSTypeAliasDeclaration,
+          TSESTree.TSExportAssignment,
+        ] {
+      // TS forbids `export = ` in a module that has any other export, so a
+      // module combining the two has no faithful translation.
+      if (
+        node.parent.type === 'Program' &&
+        node.parent.body.some(
+          statement =>
+            statement.type === 'DeclareExportAllDeclaration' ||
+            statement.type === 'DeclareExportDeclaration' ||
+            statement.type === 'ExportAllDeclaration' ||
+            statement.type === 'ExportDefaultDeclaration' ||
+            statement.type === 'ExportNamedDeclaration',
+        )
+      ) {
+        throw translationError(
+          node,
+          'CommonJS exports cannot be combined with ES module exports.',
+        );
+      }
+
+      // `declare module.exports: T` is TS's `export = <value>`, which - like
+      // `export default` - can only name a value.
+      const type = node.typeAnnotation.typeAnnotation;
+
+      if (
+        type.type === 'TypeofTypeAnnotation' &&
+        type.argument.type === 'Identifier' &&
+        isDeclaredClass(type.argument.name)
+      ) {
+        return {
+          type: 'TSExportAssignment',
+          loc: DUMMY_LOC,
+          expression: {
+            type: 'Identifier',
+            loc: DUMMY_LOC,
+            name: type.argument.name,
+          },
+        };
+      }
+
+      const SPECIFIER = '$$MODULE_EXPORTS$$';
+      return [
+        ...declareTypeAsVariable(SPECIFIER, type),
+        {
+          type: 'TSExportAssignment',
+          loc: DUMMY_LOC,
+          expression: {
+            type: 'Identifier',
+            loc: DUMMY_LOC,
+            name: SPECIFIER,
+          },
+        },
+      ];
     },
     ExistsTypeAnnotation(
       node: FlowESTree.ExistsTypeAnnotation,
