@@ -170,9 +170,9 @@ module.exports = suite(
                   language: 'flow',
                   value: 'type T = C | D',
                 },
-                '`C` defined at [`hover_refs.js:5:6`](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L5,7)',
-                '`D` defined at [`hover_refs_exports.js:3:13`](<PLACEHOLDER_PROJECT_URL>/hover_refs_exports.js#L3,14)',
-                '`T` defined at [`hover_refs.js:7:5`](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L7,6)',
+                'Go to [C](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L5,7) | ' +
+                  '[D](<PLACEHOLDER_PROJECT_URL>/hover_refs_exports.js#L3,14) | ' +
+                  '[T](<PLACEHOLDER_PROJECT_URL>/hover_refs.js#L7,6)',
               ],
               range: {
                 end: {
@@ -207,7 +207,7 @@ module.exports = suite(
                   language: 'flow',
                   value: 'type ValuesPoly<X> = Values<X>',
                 },
-                '`ValuesPoly` defined at [`cached_hover.js:3:5`](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
+                'Go to [ValuesPoly](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
               range: {
                 end: {
@@ -237,7 +237,7 @@ module.exports = suite(
                   language: 'flow',
                   value: 'type ValuesPoly<X> = Values<X>',
                 },
-                '`ValuesPoly` defined at [`cached_hover.js:3:5`](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
+                'Go to [ValuesPoly](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
               range: {
                 end: {

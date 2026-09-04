@@ -4862,37 +4862,51 @@ fn handle_persistent_get_def(
     }
 }
 
+/// A markdown link to `loc` displaying `label` as the link text.
+fn loc_to_vscode_link_in_markdown(
+    default_uri: &lsp_types::Uri,
+    loc: &flow_parser::loc::Loc,
+    label: &str,
+) -> Option<String> {
+    loc.source.as_ref()?;
+    // We'll use default_uri here as we don't expect this to fail
+    let location = flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri);
+    let fragment = loc.start_pos_to_string_for_vscode_loc_uri_fragment();
+    Some(format!(
+        "[{}]({}{})",
+        label,
+        location.uri.as_str(),
+        fragment,
+    ))
+}
+
+fn loc_is_in_lib_file(env: &server_env::Env, loc: &flow_parser::loc::Loc) -> bool {
+    loc.source
+        .as_ref()
+        .is_some_and(|file| env.is_lib_file(file))
+}
+
 fn loc_to_vscode_linked_location_in_markdown(
     env: &server_env::Env,
     default_uri: &lsp_types::Uri,
     loc: &flow_parser::loc::Loc,
 ) -> Option<String> {
-    let source = &loc.source;
-    let line = loc.start.line;
-    let column = loc.start.column;
-    match source {
-        None => None,
-        Some(file) => {
-            // We'll use default_uri here as we don't expect this to fail
-            let location = flow_lsp_conversions::loc_to_lsp_with_default(loc, default_uri);
-            let lib = if env.is_lib_file(file) { "(lib) " } else { "" };
-            let abs = file.to_absolute();
-            let basename = std::path::Path::new(&abs)
-                .file_name()
-                .map(|f| f.to_string_lossy().to_string())
-                .unwrap_or_else(|| abs.clone());
-            let fragment = loc.start_pos_to_string_for_vscode_loc_uri_fragment();
-            Some(format!(
-                "[`{}{}:{}:{}`]({}{})",
-                lib,
-                basename,
-                line,
-                column,
-                location.uri.as_str(),
-                fragment,
-            ))
-        }
-    }
+    let file = loc.source.as_ref()?;
+    let lib = if loc_is_in_lib_file(env, loc) {
+        "(lib) "
+    } else {
+        ""
+    };
+    let abs = file.to_absolute();
+    let basename = std::path::Path::new(&abs)
+        .file_name()
+        .map(|f| f.to_string_lossy().to_string())
+        .unwrap_or_else(|| abs.clone());
+    let label = format!(
+        "`{}{}:{}:{}`",
+        lib, basename, loc.start.line, loc.start.column
+    );
+    loc_to_vscode_link_in_markdown(default_uri, loc, &label)
 }
 
 fn handle_persistent_infer_type(
@@ -5006,22 +5020,33 @@ fn handle_persistent_infer_type(
                             value: friendly.type_str.clone(),
                         },
                     )];
-                    let refs = friendly
+                    // Clients draw a horizontal rule between `HoverContents::Array` entries,
+                    // so keep all definition links together in one Rust-style navigation row.
+                    let ref_links: Vec<String> = friendly
                         .refs
                         .as_ref()
                         .map(|refs| {
                             refs.iter()
                                 .filter_map(|(name, loc)| {
-                                    loc_to_vscode_linked_location_in_markdown(env, default_uri, loc)
-                                        .map(|loc_str| {
-                                            lsp_types::MarkedString::String(format!(
-                                                "`{name}` defined at {loc_str}"
-                                            ))
-                                        })
+                                    let lib = if loc_is_in_lib_file(env, loc) {
+                                        " (lib)"
+                                    } else {
+                                        ""
+                                    };
+                                    loc_to_vscode_link_in_markdown(default_uri, loc, name.as_str())
+                                        .map(|link| format!("{link}{lib}"))
                                 })
-                                .collect::<Vec<_>>()
+                                .collect()
                         })
                         .unwrap_or_default();
+                    let refs = if ref_links.is_empty() {
+                        vec![]
+                    } else {
+                        vec![lsp_types::MarkedString::String(format!(
+                            "Go to {}",
+                            ref_links.join(" | ")
+                        ))]
+                    };
                     let docs = infer_result
                         .documentation
                         .iter()
@@ -5031,9 +5056,9 @@ fn handle_persistent_infer_type(
                     let mut contents = Vec::new();
                     contents.extend(invalidation_info);
                     contents.extend(types);
+                    contents.extend(docs);
                     contents.extend(refs);
                     contents.extend(refinement_info);
-                    contents.extend(docs);
                     if contents.is_empty() {
                         vec![lsp_types::MarkedString::String("?".to_string())]
                     } else {
