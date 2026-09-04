@@ -970,3 +970,23 @@ member_reference_eval.js:44:13 (framed) = (property) Base.p: number
 member_reference_eval.js:44:13,44:13
 member_reference_eval.js:45:13 (framed) = (method) Base.m(): string
 member_reference_eval.js:45:13,45:13
+private_members.js:4:3 (framed) = (property) A.#f: number
+private_members.js:4:3,4:4
+private_members.js:5:3 (framed) = (method) A.#m(): void
+private_members.js:5:3,5:4
+private_members.js:6:7 (framed) = (getter) A.#g: string
+private_members.js:6:3,6:8
+private_members.js:7:10 (framed) = (property) A.#sf: boolean
+private_members.js:7:10,7:12
+private_members.js:10:10 (framed) = (method) A.#m(): void
+private_members.js:10:10,10:11
+private_members.js:11:10 (framed) = (property) A.#f: number
+private_members.js:11:10,11:11
+private_members.js:12:10 (framed) = (getter) A.#g: empty
+private_members.js:12:10,12:11
+private_members.js:13:7 (framed) = (property) A.#sf: boolean
+private_members.js:13:7,13:9
+private_members.js:18:3 (framed) = (property) B.#f: string
+private_members.js:18:3,18:4
+private_members.js:20:17 (framed) = (property) B.#f: string
+private_members.js:20:17,20:18

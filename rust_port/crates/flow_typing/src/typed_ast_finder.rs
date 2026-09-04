@@ -313,6 +313,12 @@ pub mod type_at_pos {
         /// a type alias, so the syntax that bound them is the only thing that says
         /// a reference to one is a reference to a type parameter.
         infer_tparams: Vec<FlowSmolStr>,
+        /// The private members the enclosing class declares, with the `#`. A
+        /// `this.#m` access carries no link back to the declaration that says
+        /// whether `#m` is a field or a method, and private names are visible only
+        /// inside the class body that declares them, so the body is scanned up
+        /// front.
+        enclosing_private_members: Vec<(FlowSmolStr, BinderKind)>,
     }
 
     impl<'a, 'cx> TypeAtPosSearcher<'a, 'cx> {
@@ -438,6 +444,25 @@ pub mod type_at_pos {
             res
         }
 
+        /// A `this.#m` access. Private members are not properties of the receiver's
+        /// type, so the usual member lookup cannot reach them; the enclosing class
+        /// body is the only place that says whether `#m` is a field or a method.
+        fn find_private_member_reference(
+            &self,
+            loc: &ALoc,
+            t: &Type,
+            pn: &ast::PrivateName<ALoc>,
+        ) -> Result<(), FoundResult> {
+            let name = Self::private_member_name(pn);
+            let kind = self
+                .enclosing_private_members
+                .iter()
+                .find(|(member, _)| *member == name)
+                .map(|(_, kind)| *kind)
+                .unwrap_or(BinderKind::Property);
+            self.find_binder(loc, t, kind, &name)
+        }
+
         /// The name and type of a property key, when the target is on the key
         /// itself. Literal keys are named by their source text
         /// (`(property) 'str-key': number`). Computed and private keys have no name
@@ -530,6 +555,71 @@ pub mod type_at_pos {
             let res = f(self);
             self.enclosing_nominal = outer;
             res
+        }
+
+        /// Visits `f` with the private members declared by `body` in scope,
+        /// restoring the outer scope afterwards. A private name is visible
+        /// only inside the body that declares it, so a nested class shadows
+        /// rather than extends the outer members.
+        fn in_class<R>(
+            &mut self,
+            name: Option<FlowSmolStr>,
+            body: &ast::class::Body<ALoc, (ALoc, Type)>,
+            f: impl FnOnce(&mut Self) -> R,
+        ) -> R {
+            let outer_private = std::mem::replace(
+                &mut self.enclosing_private_members,
+                Self::private_members_of_class_body(body),
+            );
+            let res = self.in_nominal(name, f);
+            self.enclosing_private_members = outer_private;
+            res
+        }
+
+        /// The name hover reports a private member under. The parser drops the `#`
+        /// from the name it records, but every rendering of the member keeps it.
+        fn private_member_name(pn: &ast::PrivateName<ALoc>) -> FlowSmolStr {
+            FlowSmolStr::new(format!("#{}", pn.name))
+        }
+
+        /// The private members declared directly in a class body, so that a
+        /// `this.#m` access can say whether it is reaching a field or a method.
+        fn private_members_of_class_body(
+            body: &ast::class::Body<ALoc, (ALoc, Type)>,
+        ) -> Vec<(FlowSmolStr, BinderKind)> {
+            use ast::class::BodyElement;
+            body.body
+                .iter()
+                .filter_map(|elem| match elem {
+                    BodyElement::PrivateField(pf) => {
+                        Some((Self::private_member_name(&pf.key), BinderKind::Property))
+                    }
+                    BodyElement::Method(method) => {
+                        let ast::expression::object::Key::PrivateName(pn) = &method.key else {
+                            return None;
+                        };
+                        Some((
+                            Self::private_member_name(pn),
+                            Self::binder_kind_of_method(method)?,
+                        ))
+                    }
+                    _ => None,
+                })
+                .collect()
+        }
+
+        /// A constructor is reported as its class, not as a member, so it has no
+        /// binder kind of its own.
+        fn binder_kind_of_method(
+            method: &ast::class::Method<ALoc, (ALoc, Type)>,
+        ) -> Option<BinderKind> {
+            use ast::class::MethodKind;
+            match method.kind {
+                MethodKind::Method => Some(BinderKind::Method),
+                MethodKind::Get => Some(BinderKind::Getter),
+                MethodKind::Set => Some(BinderKind::Setter),
+                MethodKind::Constructor => None,
+            }
         }
 
         fn make_typeparam(tparam: &ast::types::TypeParam<ALoc, (ALoc, Type)>) -> TypeParam {
@@ -769,7 +859,9 @@ pub mod type_at_pos {
         ) -> Result<(), FoundResult> {
             let name = cls.id.as_ref().map(|id| id.name.dupe());
             self.in_type_parameter_scope(cls.id.as_ref(), cls.tparams.as_ref(), |searcher| {
-                searcher.in_nominal(name, |this| ast_visitor::class_default(this, loc, cls))
+                searcher.in_class(name, &cls.body, |this| {
+                    ast_visitor::class_default(this, loc, cls)
+                })
             })
         }
 
@@ -834,13 +926,13 @@ pub mod type_at_pos {
                     if let member::Property::PropertyPrivateName(pn) = &inner.property
                         && self.covers_target(&pn.loc) =>
                 {
-                    self.find_loc(&pn.loc, t, false, None)
+                    self.find_private_member_reference(&pn.loc, t, pn)
                 }
                 ExpressionInner::OptionalMember { loc: (_, t), inner }
                     if let member::Property::PropertyPrivateName(pn) = &inner.member.property
                         && self.covers_target(&pn.loc) =>
                 {
-                    self.find_loc(&pn.loc, t, false, None)
+                    self.find_private_member_reference(&pn.loc, t, pn)
                 }
                 _ => ast_visitor::expression_default(self, expr),
             }
@@ -1001,20 +1093,21 @@ pub mod type_at_pos {
             &mut self,
             method: &'ast ast::class::Method<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
-            use ast::class::MethodKind;
-            let kind = match method.kind {
-                MethodKind::Method => Some(BinderKind::Method),
-                MethodKind::Get => Some(BinderKind::Getter),
-                MethodKind::Set => Some(BinderKind::Setter),
-                // A constructor is reported as its class, not as a member.
-                MethodKind::Constructor => None,
-            };
-            if let Some(kind) = kind
+            if let Some(kind) = Self::binder_kind_of_method(method)
                 && let ast::expression::object::Key::Identifier(id) = &method.key
                 && let (loc, t) = &id.loc
                 && self.covers_target(loc)
             {
                 return self.find_binder(loc, t, kind, &id.name);
+            }
+            // A private key carries no type of its own, so the method's
+            // stands in for it.
+            if let Some(kind) = Self::binder_kind_of_method(method)
+                && let ast::expression::object::Key::PrivateName(pn) = &method.key
+                && self.covers_target(&pn.loc)
+            {
+                let (_, t) = &method.loc;
+                return self.find_binder(&pn.loc, t, kind, &Self::private_member_name(pn));
             }
             ast_visitor::class_method_default(self, method)
         }
@@ -1030,6 +1123,24 @@ pub mod type_at_pos {
                 return self.find_binder(loc, t, BinderKind::Property, &id.name);
             }
             ast_visitor::class_property_default(self, prop)
+        }
+
+        /// `#p` is a `PrivateField` rather than a `Property`, and its key carries no
+        /// type of its own, so the field's stands in for it.
+        fn class_private_field(
+            &mut self,
+            prop: &'ast ast::class::PrivateField<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if self.covers_target(&prop.key.loc) {
+                let (_, t) = &prop.loc;
+                return self.find_binder(
+                    &prop.key.loc,
+                    t,
+                    BinderKind::Property,
+                    &Self::private_member_name(&prop.key),
+                );
+            }
+            ast_visitor::class_private_field_default(self, prop)
         }
 
         /// `import {a}` / `import {a as b}`. An unrenamed import is an alias at its
@@ -1334,6 +1445,7 @@ pub mod type_at_pos {
             enclosing_tparams: Vec::new(),
             enclosing_nominal: None,
             infer_tparams: Vec::new(),
+            enclosing_private_members: Vec::new(),
         };
         match searcher.program(typed_ast) {
             Ok(()) => Ok(TypeAtPosResult::NoResult),

@@ -265,3 +265,30 @@ printf "member_reference_eval.js:44:13 (framed) = "
 assert_ok "$FLOW" type-at-pos member_reference_eval.js 44 13 --strip-root
 printf "member_reference_eval.js:45:13 (framed) = "
 assert_ok "$FLOW" type-at-pos member_reference_eval.js 45 13 --strip-root
+
+# private_members.js
+# A private member is framed like any other, under the name it is written with:
+# the `#` is part of what hover reports, though the parser drops it from the
+# name it records. A reference resolves through the enclosing class body rather
+# than the receiver's type, which does not carry private members at all.
+printf "private_members.js:4:3 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 4 3 --strip-root
+printf "private_members.js:5:3 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 5 3 --strip-root
+printf "private_members.js:6:7 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 6 7 --strip-root
+printf "private_members.js:7:10 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 7 10 --strip-root
+printf "private_members.js:10:10 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 10 10 --strip-root
+printf "private_members.js:11:10 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 11 10 --strip-root
+printf "private_members.js:12:10 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 12 10 --strip-root
+printf "private_members.js:13:7 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 13 7 --strip-root
+# A second class reusing the name resolves to its own declaration.
+printf "private_members.js:18:3 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 18 3 --strip-root
+printf "private_members.js:20:17 (framed) = "
+assert_ok "$FLOW" type-at-pos private_members.js 20 17 --strip-root
