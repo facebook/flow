@@ -1,6 +1,5 @@
 [options]
 all=false
 no_flowlib=false
-experimental.new_this_typing=true
 module.file_ext=.ts
 module.file_ext=.js

@@ -13,7 +13,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
-use flow_common::error_ref::ErrorReference;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -30,7 +29,6 @@ use flow_typing_errors::error_message::EHookIncompatibleData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
-use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPrimitiveAsInterfaceData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropPolarityMismatchData;
@@ -210,17 +208,11 @@ fn polarity_error_content(
 fn property_type_for_subtyping(
     prop: &Property,
     strictness_kind: TypeStrictnessKind,
-    new_this_typing: bool,
 ) -> PropertyType {
     match prop.deref() {
         PropertyInner::Method { type_, .. } if strictness_kind.is_typescript_loose() => {
-            let get_type = if new_this_typing {
-                properties::method_to_function(type_, true)
-            } else {
-                properties::unbind_this_method(type_)
-            };
             PropertyType::SyntheticField {
-                get_type: Some(get_type),
+                get_type: Some(properties::method_to_function(type_, true)),
                 set_type: None,
             }
         }
@@ -257,10 +249,9 @@ fn rec_flow_p_inner<'cx>(
     {
         return Ok(vec![]);
     }
-    let normalized_lp = if cx.new_this_typing() && strictness_kind.is_typescript_loose() {
-        lower_upper_property.map(|(lower_property, _)| {
-            property_type_for_subtyping(lower_property, strictness_kind, true)
-        })
+    let normalized_lp = if strictness_kind.is_typescript_loose() {
+        lower_upper_property
+            .map(|(lower_property, _)| property_type_for_subtyping(lower_property, strictness_kind))
     } else {
         None
     };
@@ -472,34 +463,6 @@ fn funt_to_funt_check_this_contravariant<'cx>(
         // It would not compromise safety since after unbinding method,
         // ThisMethod is turned into ThisFunction.
         (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {}
-        // Lower bound method, upper bound function. Under the new this typing
-        // this is an ordinary contravariant receiver check. The legacy path
-        // bans it outright instead, because it would let methods be unbound
-        // through casting.
-        (ThisStatus::ThisMethod { unbound }, ThisStatus::ThisFunction) if !cx.new_this_typing() => {
-            if !unbound && !cx.type_strictness_kind().is_typescript_loose() {
-                flow_js_utils::add_output_with_env(
-                    cx,
-                    env,
-                    ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
-                        use_op: use_op.dupe(),
-                        reason_op: lreason.dupe(),
-                        reason_prop: ErrorReference::new(
-                            type_util::reason_of_t(this_param1).def_loc().dupe(),
-                            type_util::reason_of_t(this_param1).desc(false).clone(),
-                        ),
-                    })),
-                )?;
-            }
-            let sub_this1 = type_util::subtype_this_of_function(ft1);
-            FlowJs::rec_flow_with_env(
-                cx,
-                env,
-                trace,
-                this_param2,
-                &UseT::new(UseTInner::UseT(use_op, sub_this1)),
-            )?;
-        }
         (ThisStatus::ThisMethod { .. }, ThisStatus::ThisFunction)
         | (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
         | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
@@ -1383,7 +1346,7 @@ impl PropsToIndexerContext<'_, '_> {
                         polarity: fd.polarity,
                     }
                 }
-                _ => property_type_for_subtyping(lp, strictness_kind, cx.new_this_typing()),
+                _ => property_type_for_subtyping(lp, strictness_kind),
             };
             let up_type = PropertyType::OrdinaryField {
                 type_: value.dupe(),
@@ -1816,7 +1779,6 @@ fn flow_obj_to_obj<'cx>(
                                 property::read_t_of_property_type(&property_type_for_subtyping(
                                     &lp,
                                     strictness_kind,
-                                    cx.new_this_typing(),
                                 )),
                                 property::read_t(up),
                             ) {
@@ -1851,11 +1813,7 @@ fn flow_obj_to_obj<'cx>(
                             vec![]
                         } else {
                             match (
-                                property_type_for_subtyping(
-                                    &lp,
-                                    strictness_kind,
-                                    cx.new_this_typing(),
-                                ),
+                                property_type_for_subtyping(&lp, strictness_kind),
                                 property::property_type(up),
                             ) {
                                 (
@@ -5280,7 +5238,6 @@ pub fn rec_sub_t<'cx>(
                                 let lower_prop_type = property_type_for_subtyping(
                                     lp,
                                     strictness_kind,
-                                    cx.new_this_typing(),
                                 );
                                 let new_errs = rec_flow_p_inner(
                                     cx, env,

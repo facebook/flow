@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use flow_common::error_ref::ErrorReference;
-use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -304,35 +302,12 @@ pub(super) fn get_private_prop<'cx>(
                         };
                         let method_props = cx.find_props(method_maps);
                         match method_props.get(&name) {
-                            Some(p) if cx.new_this_typing() => do_lookup(property::property_type(
+                            Some(p) => do_lookup(property::property_type(
                                 &flow_js_utils::method_property_for_read(
                                     allow_method_access,
                                     p.dupe(),
                                 ),
                             )),
-                            Some(p) => {
-                                if let PropertyInner::Method { type_: t, .. } = p.deref() {
-                                    if !allow_method_access
-                                        && !cx.type_strictness_kind().is_typescript_loose()
-                                    {
-                                        flow_js_utils::add_output_with_env(
-                                            cx,
-                                            env,
-                                            ErrorMessage::EMethodUnbinding(Box::new(
-                                                EMethodUnbindingData {
-                                                    use_op: use_op.dupe(),
-                                                    reason_op: reason_op.dupe(),
-                                                    reason_prop: ErrorReference::new(
-                                                        reason_of_t(t).def_loc().dupe(),
-                                                        reason_of_t(t).desc(false).clone(),
-                                                    ),
-                                                },
-                                            )),
-                                        )?;
-                                    }
-                                }
-                                do_lookup(property::property_type(p))
-                            }
                             None => flow_js_utils::add_output_with_env(
                                 cx,
                                 env,

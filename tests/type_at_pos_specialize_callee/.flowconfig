@@ -8,6 +8,5 @@
 
 [options]
 all=true
-experimental.new_this_typing=true
 
 [strict]

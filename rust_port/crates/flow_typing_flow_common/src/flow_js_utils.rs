@@ -17,7 +17,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
-use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
@@ -31,7 +30,6 @@ use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EInvalidBinaryArithData;
-use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
@@ -5555,10 +5553,8 @@ pub mod cjs_extract_named_exports_t_kit {
                 )?;
                 //   Copy type exports
                 let type_props = cx.find_props(ns.types_tmap.dupe());
-                let type_exports: exports::T = type_props
-                    .extract_named_exports(cx.new_this_typing())
-                    .into_iter()
-                    .collect();
+                let type_exports: exports::T =
+                    type_props.extract_named_exports().into_iter().collect();
                 export_named_t_kit::mod_module_t(
                     cx,
                     exports::T::new(),
@@ -5579,10 +5575,8 @@ pub mod cjs_extract_named_exports_t_kit {
                         on_type(cx, concretize, reason.dupe(), local_module, proto_t.dupe())?;
                     // Copy own props
                     let own_props = cx.find_props(props_tmap);
-                    let own_exports: exports::T = own_props
-                        .extract_named_exports(cx.new_this_typing())
-                        .into_iter()
-                        .collect();
+                    let own_exports: exports::T =
+                        own_props.extract_named_exports().into_iter().collect();
                     export_named_t_kit::mod_module_t(
                         cx,
                         own_exports,
@@ -5608,10 +5602,7 @@ pub mod cjs_extract_named_exports_t_kit {
                             .filter(|(name, _)| !is_munged_prop_name(cx, name))
                             .map(|(name, prop)| (name.dupe(), prop.dupe()))
                             .collect();
-                        filtered
-                            .extract_named_exports(cx.new_this_typing())
-                            .into_iter()
-                            .collect()
+                        filtered.extract_named_exports().into_iter().collect()
                     };
 
                     // Copy own props
@@ -6488,98 +6479,6 @@ pub fn method_property_for_read(
     }
 }
 
-/// Legacy counterpart of [method_property_for_read], used when
-/// `experimental.new_this_typing` is off. Detaching a method from its receiver
-/// is an error here unless the hint says the result is only ever used as a
-/// `mixed`/`any`, in which case the method can never be called and the read is
-/// harmless.
-pub fn check_method_unbinding<'cx>(
-    cx: &Context<'cx>,
-    env: &FlowJsEnv,
-    use_op: &UseOp,
-    method_accessible: bool,
-    reason_op: &Reason,
-    propref: &flow_typing_type::type_::PropRef,
-    hint: &flow_typing_type::type_::LazyHintT<Context<'cx>>,
-    p: flow_typing_type::type_::Property,
-) -> Result<flow_typing_type::type_::Property, FlowJsException> {
-    use std::ops::Deref;
-
-    use flow_typing_type::type_::HintEvalResult;
-    use flow_typing_type::type_::PropertyInner;
-    use flow_typing_type::type_::constraint::Constraints;
-    use flow_typing_type::type_::properties;
-    use flow_typing_type::type_util::reason_of_propref;
-    use flow_typing_type::type_util::reason_of_t;
-
-    match p.deref() {
-        PropertyInner::Method { key_loc, type_: t } if !method_accessible => {
-            let hint_result = (hint.1)(cx, false, None, reason_op.dupe())?;
-
-            let valid_hint_t = match hint_result {
-                HintEvalResult::HintAvailable(hint_t, _) => {
-                    let hint_t = match hint_t.deref() {
-                        TypeInner::OpenT(tvar) => {
-                            let (_, constraints) = cx.find_constraints(tvar.id() as i32);
-                            match &constraints {
-                                Constraints::FullyResolved(state) => {
-                                    cx.force_fully_resolved_tvar(state)
-                                }
-                                Constraints::Resolved(t) => t.dupe(),
-                                Constraints::Unresolved(_) => hint_t.dupe(),
-                            }
-                        }
-                        _ => hint_t.dupe(),
-                    };
-                    match hint_t.deref() {
-                        TypeInner::DefT(_, def_t)
-                            if matches!(def_t.deref(), DefTInner::MixedT(_)) =>
-                        {
-                            Some(hint_t)
-                        }
-                        TypeInner::AnyT(_, _) => Some(hint_t),
-                        _ => None,
-                    }
-                }
-                _ => None,
-            };
-
-            match valid_hint_t {
-                Some(valid_t) => Ok(flow_typing_type::type_::Property::new(
-                    PropertyInner::Method {
-                        key_loc: key_loc.dupe(),
-                        type_: valid_t,
-                    },
-                )),
-                None => {
-                    if !cx.type_strictness_kind().is_typescript_loose() {
-                        let reason_op_from_propref = reason_of_propref(propref);
-                        add_output_with_env(
-                            cx,
-                            env,
-                            ErrorMessage::EMethodUnbinding(Box::new(EMethodUnbindingData {
-                                use_op: use_op.dupe(),
-                                reason_op: reason_op_from_propref.dupe(),
-                                reason_prop: ErrorReference::new(
-                                    reason_of_t(t).def_loc().dupe(),
-                                    reason_of_t(t).desc.clone(),
-                                ),
-                            })),
-                        )?;
-                    }
-                    Ok(flow_typing_type::type_::Property::new(
-                        PropertyInner::Method {
-                            key_loc: key_loc.dupe(),
-                            type_: properties::unbind_this_method(t),
-                        },
-                    ))
-                }
-            }
-        }
-        _ => Ok(p),
-    }
-}
-
 static INT_REGEX: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"^-?(0|[1-9][0-9]*)$").unwrap());
 
@@ -6848,7 +6747,6 @@ pub mod get_prop_t_kit {
     use super::FlowJsException;
     use super::GetPropHelper;
     use super::add_output_with_env;
-    use super::check_method_unbinding;
     use super::enum_proto;
     use super::is_dictionary_exempt;
     use super::is_exception_to_react_dro;
@@ -7128,7 +7026,7 @@ pub mod get_prop_t_kit {
         method_accessible: bool,
         super_t: Type,
         lookup_kind: LookupKind,
-        hint: &type_::LazyHintT<Context<'cx>>,
+        _hint: &type_::LazyHintT<Context<'cx>>,
         _skip_optional: bool,
         inst: &InstType,
         propref: &PropRef,
@@ -7152,20 +7050,7 @@ pub mod get_prop_t_kit {
             cx.test_prop_hit(id);
         }
         if let Some((p, _target_kind)) = property {
-            let p = if cx.new_this_typing() {
-                method_property_for_read(method_accessible, p)
-            } else {
-                check_method_unbinding(
-                    cx,
-                    env,
-                    use_op,
-                    method_accessible,
-                    reason_op,
-                    propref,
-                    hint,
-                    p,
-                )?
-            };
+            let p = method_property_for_read(method_accessible, p);
             return perform_read_prop_action::<F>(
                 cx,
                 env,

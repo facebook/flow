@@ -1,5 +1,4 @@
 [options]
 no_flowlib=false
 all=true
-experimental.new_this_typing=true
 experimental.tslib_syntax=true

@@ -3045,10 +3045,8 @@ fn convert_inner<'a>(
                 // A function type with no `this` param can be called with any
                 // receiver, so its implicit `this` is `mixed` and the
                 // contravariant check in `funt_to_funt_check_this_contravariant`
-                // rejects methods that need a real one. The legacy `any` makes
-                // that check vacuous.
-                None if cx.new_this_typing() => (type_::dummy_this(params_loc.dupe()), None),
-                None => (type_::bound_function_dummy_this(params_loc.dupe()), None),
+                // rejects methods that need a real one.
+                None => (type_::dummy_this(params_loc.dupe()), None),
                 Some(tp) => {
                     let this_loc = &tp.loc;
                     let annot = &tp.annot;
@@ -6854,25 +6852,20 @@ fn mk_inline_interface_type<'a>(
 > {
     let id = cx.make_aloc_id(loc);
     let (extends_types, extends_binding_kinds): (Vec<_>, Vec<_>) = extends.into_iter().unzip();
-    let (this_tparam, this) = if cx.new_this_typing() {
-        let (this_tparam, this) =
-            class_sig::mk_this(type_::implicit_mixed_this(reason.dupe()), cx, reason.dupe());
-        env.tparams_map.insert(
-            SubstName::name(FlowSmolStr::new_inline("this")),
-            this.dupe(),
-        );
-        (Some(this_tparam), this)
-    } else {
-        (None, type_::implicit_mixed_this(reason.dupe()))
-    };
-    let this_t = this_tparam.as_ref().map(|_| this.dupe());
+    let (this_tparam, this) =
+        class_sig::mk_this(type_::implicit_mixed_this(reason.dupe()), cx, reason.dupe());
+    env.tparams_map.insert(
+        SubstName::name(FlowSmolStr::new_inline("this")),
+        this.dupe(),
+    );
+    let this_t = Some(this.dupe());
     let super_ = func_class_sig_types::class::Super::Interface(
         func_class_sig_types::class::InterfaceSuper {
             inline: true,
             extends: extends_types,
             extends_binding_kinds,
             function_like: is_function_like(properties),
-            this_tparam,
+            this_tparam: Some(this_tparam),
             this_t,
         },
     );

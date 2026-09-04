@@ -3975,16 +3975,15 @@ fn merge_interface<'cx>(
             proto,
         )
     };
-    // Under new `this` typing, inline interfaces use the same polymorphic
-    // receiver as named interfaces. Their outward representation is fixed
-    // below so they remain ordinary inline instance types.
-    let bind_this = !inline || cx.new_this_typing();
+    // Inline interfaces use the same polymorphic receiver as named interfaces.
+    // Their outward representation is fixed below so they remain ordinary
+    // inline instance types.
     let build = |env: &MergeEnv,
                  targs: Vec<(SubstName, Reason, Type, Polarity)>|
      -> (type_::InstType, Box<dyn FnOnce(Option<Type>) -> Type + 'cx>) {
         let extends_resolved: Vec<(Type, bool, Option<Vec<Type>>)> = extends
             .iter()
-            .map(|t| merge_interface_extends(bind_this, env, cx, file, t))
+            .map(|t| merge_interface_extends(true, env, cx, file, t))
             .collect();
         let function_like = !calls.is_empty() || !constructs.is_empty();
         let reason_for_super = reason.dupe();
@@ -4150,66 +4149,50 @@ fn merge_interface<'cx>(
         });
         (inst, make_super)
     };
-    if bind_this {
-        let this_reason = reason.dupe().replace_desc(RThisType);
-        let this_name = SubstName::name(FlowSmolStr::new("this"));
-        let result_cell: Rc<RefCell<Option<Type>>> = Rc::new(RefCell::new(None));
-        let result_cell_c = result_cell.dupe();
-        let this_reason_c = this_reason.dupe();
-        let rec_type = flow_typing_tvar::mk_fully_resolved_lazy(
-            cx,
-            this_reason.dupe(),
-            false,
-            Box::new(move |_cx: &Context| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
-        );
-        let this_tp = type_::TypeParam::new(type_::TypeParamInner {
-            name: this_name.dupe(),
-            reason: this_reason_c,
-            bound: rec_type,
-            polarity: Polarity::Positive,
-            default: None,
-            is_this: true,
-            is_const: false,
-        });
-        let this = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &this_tp);
-        let mut env = env.dupe();
-        env.tps.insert(FlowSmolStr::new("this"), this.dupe());
-        let (inst, make_super) = build(&env, targs);
-        let super_ = make_super(Some(this));
-        let instance = type_::InstanceT::new(type_::InstanceTInner {
-            inst,
-            static_,
-            super_,
-            implements: vec![].into(),
-        });
-        let result = Type::new(type_::TypeInner::ThisInstanceT(Box::new(
-            ThisInstanceTData {
-                reason: reason.dupe(),
-                instance: instance.dupe(),
-                is_this: false,
-                subst_name: this_name.dupe(),
-            },
-        )));
-        *result_cell.borrow_mut() = Some(result.dupe());
-        if inline {
-            flow_js_utils::fix_this_instance(cx, reason.dupe(), reason, &instance, false, this_name)
-        } else {
-            result
-        }
+    let this_reason = reason.dupe().replace_desc(RThisType);
+    let this_name = SubstName::name(FlowSmolStr::new("this"));
+    let result_cell: Rc<RefCell<Option<Type>>> = Rc::new(RefCell::new(None));
+    let result_cell_c = result_cell.dupe();
+    let this_reason_c = this_reason.dupe();
+    let rec_type = flow_typing_tvar::mk_fully_resolved_lazy(
+        cx,
+        this_reason.dupe(),
+        false,
+        Box::new(move |_cx: &Context| Ok(result_cell_c.borrow().as_ref().unwrap().dupe())),
+    );
+    let this_tp = type_::TypeParam::new(type_::TypeParamInner {
+        name: this_name.dupe(),
+        reason: this_reason_c,
+        bound: rec_type,
+        polarity: Polarity::Positive,
+        default: None,
+        is_this: true,
+        is_const: false,
+    });
+    let this = flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), &this_tp);
+    let mut env = env.dupe();
+    env.tps.insert(FlowSmolStr::new("this"), this.dupe());
+    let (inst, make_super) = build(&env, targs);
+    let super_ = make_super(Some(this));
+    let instance = type_::InstanceT::new(type_::InstanceTInner {
+        inst,
+        static_,
+        super_,
+        implements: vec![].into(),
+    });
+    let result = Type::new(type_::TypeInner::ThisInstanceT(Box::new(
+        ThisInstanceTData {
+            reason: reason.dupe(),
+            instance: instance.dupe(),
+            is_this: false,
+            subst_name: this_name.dupe(),
+        },
+    )));
+    *result_cell.borrow_mut() = Some(result.dupe());
+    if inline {
+        flow_js_utils::fix_this_instance(cx, reason.dupe(), reason, &instance, false, this_name)
     } else {
-        let (inst, make_super) = build(env, targs);
-        let super_ = make_super(None);
-        Type::new(type_::TypeInner::DefT(
-            reason,
-            type_::DefT::new(type_::DefTInner::InstanceT(Rc::new(type_::InstanceT::new(
-                type_::InstanceTInner {
-                    inst,
-                    static_,
-                    super_,
-                    implements: vec![].into(),
-                },
-            )))),
-        ))
+        result
     }
 }
 
@@ -4723,8 +4706,7 @@ fn merge_fun<'cx>(
         });
         let this_t = match &def_ref.this_param {
             None => {
-                if cx.new_this_typing()
-                    && is_method
+                if is_method
                     && (!is_static || uses_this)
                     && let Some(this) = env.tps.get(&FlowSmolStr::new_inline("this"))
                 {
@@ -4737,10 +4719,8 @@ fn merge_fun<'cx>(
                         &|r: Reason| r.update_desc(|desc| RImplicitThis(Arc::new(desc))),
                         &this,
                     )
-                } else if is_method || cx.new_this_typing() {
-                    type_::implicit_mixed_this(reason2.dupe())
                 } else {
-                    type_::bound_function_dummy_this(reason2.loc().dupe())
+                    type_::implicit_mixed_this(reason2.dupe())
                 }
             }
             Some(t) => merge_impl(env, cx, file, t, false, false),

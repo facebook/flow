@@ -212,8 +212,6 @@ pub mod opts {
             Vec<(FlowSmolStr, Vec<FlowSmolStr>)>,
         pub munge_underscores: bool,
         pub builtin_lib: BuiltinLib,
-        pub new_this_typing: Option<bool>,
-        pub new_this_typing_includes: Vec<FlowconfigGlobPattern>,
         pub no_implicit_override: bool,
         pub no_unchecked_indexed_access: bool,
         pub node_modules_errors: bool,
@@ -375,8 +373,6 @@ pub mod opts {
             multi_platform_ambient_supports_platform_project_overrides: Vec::new(),
             munge_underscores: false,
             builtin_lib: BuiltinLib::Flowlib,
-            new_this_typing: None,
-            new_this_typing_includes: Vec::new(),
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
             node_modules_errors: false,
@@ -2276,31 +2272,7 @@ pub mod opts {
                 |values, config| multi_platform_extension_group_mapping_parser(values, config),
             ),
             ("experimental.new_this_typing", |values, config| {
-                parse_boolean(
-                    |opts, v| {
-                        opts.new_this_typing = Some(v);
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )
-            }),
-            ("experimental.new_this_typing.includes", |values, config| {
-                fn init_fn(opts: &mut Opts) {
-                    opts.new_this_typing_includes = Vec::new();
-                }
-                parse_string(
-                    |opts, v| {
-                        let pattern = FlowconfigGlobPattern::try_new(v, false)
-                            .map_err(|error| error.message())?;
-                        opts.new_this_typing_includes.push(pattern);
-                        Ok(())
-                    },
-                    Some(init_fn),
-                    true,
-                    values,
-                    config,
-                )
+                enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config)
             }),
             (
                 "experimental.opaque_type_new_bound_syntax",
@@ -3657,6 +3629,24 @@ pub fn get_with_ignored_version(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn new_this_typing_only_accepts_true() {
+        let parse_value = |value: &str| {
+            let mut config = empty_config();
+            parse(
+                &mut config,
+                vec![
+                    (1, "[options]".to_owned()),
+                    (2, format!("experimental.new_this_typing={value}")),
+                ],
+                true,
+            )
+        };
+
+        assert!(parse_value("true").is_ok());
+        assert!(matches!(parse_value("false"), Err(Error(2, _))));
+    }
 
     #[test]
     fn globs_have_the_expected_semantics() {

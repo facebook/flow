@@ -5074,7 +5074,7 @@ fn __flow_impl<'cx>(
                     TypeInner::AnyT(_, AnySource::Unsound(UnsoundnessKind::DummyStatic))
                 ) {
                 cx.record_fun_proto_method_lookup(reason_prop.loc().dupe());
-                cx.new_this_typing() && name.as_str_opt() == Some("bind")
+                name.as_str_opt() == Some("bind")
             } else {
                 false
             };
@@ -5300,9 +5300,7 @@ fn __flow_impl<'cx>(
             let t2 = &calltype.call_tout;
             let call_strict_arity = calltype.call_strict_arity;
             let call_specialized_callee = &calltype.call_specialized_callee;
-            let this_use_op = if cx.new_this_typing()
-                && let RootUseOp::FunCall(data) = root_of_use_op(use_op)
-            {
+            let this_use_op = if let RootUseOp::FunCall(data) = root_of_use_op(use_op) {
                 UseOp::Frame(
                     Arc::new(FrameUseOp::StandaloneCallThis(Box::new(
                         StandaloneCallThisData {
@@ -6221,25 +6219,12 @@ fn __flow_impl<'cx>(
                 }
                 match property {
                     Some((p, target_kind)) => {
-                        let p = if cx.new_this_typing() {
-                            if !*method_accessible
-                                || matches!(action.as_ref(), LookupAction::ReadProp(_))
-                            {
-                                flow_js_utils::method_property_for_read(*method_accessible, p)
-                            } else {
-                                p
-                            }
+                        let p = if !*method_accessible
+                            || matches!(action.as_ref(), LookupAction::ReadProp(_))
+                        {
+                            flow_js_utils::method_property_for_read(*method_accessible, p)
                         } else {
-                            flow_js_utils::check_method_unbinding(
-                                cx,
-                                env,
-                                &use_op,
-                                *method_accessible,
-                                reason_op,
-                                propref,
-                                &hint_unavailable(),
-                                p,
-                            )?
+                            p
                         };
                         let property_type = property::property_type(&p);
                         perform_lookup_action(

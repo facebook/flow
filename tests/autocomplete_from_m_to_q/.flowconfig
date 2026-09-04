@@ -11,5 +11,4 @@ enums=true
 format.single_quotes=true
 autoimports_ranked_by_usage=true
 component_syntax=true
-experimental.new_this_typing=true
 pattern_matching=false

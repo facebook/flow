@@ -42,7 +42,6 @@ use flow_common::options::JsxMode;
 use flow_common::options::Options;
 use flow_common::options::ReactRule;
 use flow_common::options::ReactRuntime;
-use flow_common::path_matcher::RootedGlob;
 use flow_common::platform_set::PlatformSet;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -182,8 +181,6 @@ pub struct FrozenMetadata {
     pub records_includes: Arc<[Regex]>,
     pub max_workers: i32,
     pub missing_module_generators: Arc<[(Regex, String)]>,
-    pub new_this_typing: bool,
-    pub new_this_typing_includes: Arc<[RootedGlob]>,
     pub no_implicit_override: bool,
     pub no_unchecked_indexed_access: bool,
     pub projects_options: Arc<ProjectsOptions>,
@@ -246,8 +243,6 @@ impl Default for FrozenMetadata {
             records_includes: Arc::from([]),
             max_workers: 0,
             missing_module_generators: Arc::from([]),
-            new_this_typing: true,
-            new_this_typing_includes: Arc::from([]),
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
             projects_options: Arc::new(ProjectsOptions::default()),
@@ -645,8 +640,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             ignore_non_literal_requires: options.ignore_non_literal_requires,
             max_workers: options.max_workers,
             missing_module_generators: options.missing_module_generators.dupe(),
-            new_this_typing: options.new_this_typing,
-            new_this_typing_includes: options.new_this_typing_includes.dupe(),
             no_implicit_override: options.no_implicit_override,
             no_unchecked_indexed_access: options.no_unchecked_indexed_access,
             projects_options: options.projects_options.dupe(),
@@ -1397,22 +1390,6 @@ impl<'cx> Context<'cx> {
 
     pub fn ts_syntax(&self) -> bool {
         self.0.metadata.frozen.ts_syntax
-    }
-
-    pub fn new_this_typing(&self) -> bool {
-        if self.0.metadata.frozen.new_this_typing {
-            true
-        } else if self.0.metadata.frozen.new_this_typing_includes.is_empty() {
-            false
-        } else {
-            let filename = self.0.file.to_absolute();
-            self.0
-                .metadata
-                .frozen
-                .new_this_typing_includes
-                .iter()
-                .any(|glob| glob.is_match(&filename))
-        }
     }
 
     pub fn is_colon_extends_deprecated(&self) -> bool {

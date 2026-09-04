@@ -796,7 +796,7 @@ fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
     let pmap: properties::PropertiesMap = methods
         .iter()
         .map(|(name, info)| {
-            let this_default = if cx.new_this_typing() && info.uses_this {
+            let this_default = if info.uses_this {
                 static_this.unwrap_or(this_default)
             } else {
                 this_default
@@ -813,7 +813,6 @@ fn elements<'a, C: crate::func_params_intf::Config>(
     static_: bool,
     constructor: Option<(Option<ALoc>, Type)>,
     s: &class_types::Signature<C>,
-    super_: &class_types::Super,
 ) -> (
     FlowOrdSet<Name>,
     BTreeMap<Name, Property>,
@@ -828,16 +827,10 @@ fn elements<'a, C: crate::func_params_intf::Config>(
         )
     };
     let this_default = |x: &func_class_sig_types::func::Func<C>, uses_this: bool| -> Type {
-        if cx.new_this_typing() && static_ && !uses_this {
+        if static_ && !uses_this {
             implicit_mixed_this(x.reason.dupe())
-        } else if cx.new_this_typing() {
-            receiver_this()
         } else {
-            match (&x.body, super_) {
-                (None, class_types::Super::Class(_)) => implicit_mixed_this(x.reason.dupe()),
-                (Some(_), class_types::Super::Class(_)) => receiver_this(),
-                (_, class_types::Super::Interface(_)) => implicit_mixed_this(x.reason.dupe()),
-            }
+            receiver_this()
         }
     };
     // If this is an overloaded method, create an intersection, attributed
@@ -882,7 +875,7 @@ fn elements<'a, C: crate::func_params_intf::Config>(
         methods.insert(name.dupe(), result);
     }
     let private_this_default = |fi: &class_types::FuncInfo<C>| -> Type {
-        if cx.new_this_typing() && static_ && fi.uses_this {
+        if static_ && fi.uses_this {
             receiver_this()
         } else {
             any_t::make(
@@ -1054,8 +1047,7 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
     let s = &x.static_;
     let loc = x.static_.reason.loc().dupe();
     let this = type_util::class_type(this_or_mixed(loc, x), false, None);
-    let (inited_fields, fields, methods, call, _construct) =
-        elements(cx, this, true, None, s, &x.super_);
+    let (inited_fields, fields, methods, call, _construct) = elements(cx, this, true, None, s);
     let props: properties::PropertiesMap = {
         let mut seen = std::collections::BTreeSet::new();
         fields
@@ -1154,7 +1146,6 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
         false,
         constructor,
         &s.instance,
-        &s.super_,
     );
     let private_this_type = |sig_: &class_types::Signature<C>| -> Type {
         any_t::make(
@@ -1688,13 +1679,11 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
         false,
         None,
         &x.instance,
-        &x.super_,
     );
     let static_ = {
         let this = type_util::class_type(this_or_mixed(inst_loc, x), false, None);
         // NOTE: The own, proto maps are disjoint by construction.
-        let (_, own, proto, _call, _construct) =
-            elements(cx, this, true, None, &x.static_, &x.super_);
+        let (_, own, proto, _call, _construct) = elements(cx, this, true, None, &x.static_);
         let mut merged = own;
         for (k, v) in proto {
             merged.insert(k, v);

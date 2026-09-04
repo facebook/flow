@@ -11,6 +11,5 @@ all=true
 no_flowlib=false
 enums=true
 component_syntax=true
-experimental.new_this_typing=true
 
 [strict]

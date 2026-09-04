@@ -2739,11 +2739,7 @@ pub fn mk_possibly_generic_render_type(
 // receiver, but keeping [ThisMethod] preserves the lenient method-to-method
 // subtyping behavior.
 //
-// The [unbound = true] matters on the legacy path (`experimental.new_this_typing`
-// off): it stops funtype subtyping in [subtyping_kit.rs] from firing
-// [EMethodUnbinding] when a class's method-bound `constructor` flows to a
-// normalized construct sig. Used by the construct-signature plumbing in
-// [type_annotation.rs] and [flow_js/].
+// Used by the construct-signature plumbing in [type_annotation.rs] and [flow_js/].
 pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type {
     use crate::type_::AnySource;
     use crate::type_::DefT;
