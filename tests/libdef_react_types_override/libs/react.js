@@ -4,5 +4,5 @@ declare type React$Node =  // intentional-libdef-override
   | boolean
   | number
   | string
-  | ExactReactElement_DEPRECATED<any>
+  | React.JSX.Element
   | Iterable<?React$Node>;

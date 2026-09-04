@@ -1735,7 +1735,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:32:4
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
+ - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [2].
  - Or object literal [1] is incompatible with `boolean` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1747,8 +1747,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
 
 References:
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [2]
    view.js:8:5
     8|   | boolean
            ^^^^^^^ [3]
@@ -1758,7 +1758,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either `"Hello, world!"` [1] is incompatible with `boolean` [2].
- - Or `"Hello, world!"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
+ - Or `"Hello, world!"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1772,15 +1772,15 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:36:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either `"Hello, world!"` [1] is incompatible with `boolean` [2].
- - Or `"Hello, world!"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
+ - Or `"Hello, world!"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1794,15 +1794,15 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:37:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either `42` [1] is incompatible with `boolean` [2].
- - Or `42` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
+ - Or `42` [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1816,15 +1816,15 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either in array element: `1` [1] is incompatible with `boolean` [2].
- - Or in array element: `1` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
+ - Or in array element: `1` [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1841,16 +1841,15 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:39:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either in array element: `"a"` [1] is incompatible with `boolean` [2].
- - Or in array element: `"a"` [1] is incompatible with
-   `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
+ - Or in array element: `"a"` [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1867,15 +1866,15 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- view.js:40:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
  - Either in array element: `1` [1] is incompatible with `boolean` [2].
- - Or in array element: `1` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [3].
+ - Or in array element: `1` [1] is incompatible with `ExactReactElement_DEPRECATED<any, any>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1892,8 +1891,8 @@ References:
     8|   | boolean
            ^^^^^^^ [2]
    view.js:9:5
-    9|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9|   | React.JSX.Element
+           ^^^^^^^^^^^^^^^^^ [3]
 
 
 

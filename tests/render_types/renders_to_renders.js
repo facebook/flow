@@ -102,7 +102,7 @@ declare const rendersBazOrBaz: renders (
     | Foo
     | Bar
   ); // ERROR
-  declare const anyElement: ExactReactElement_DEPRECATED<any>;
+  declare const anyElement: React.JSX.Element;
   anyElement as renders Foo; // ok
 }
 

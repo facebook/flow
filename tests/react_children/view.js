@@ -6,7 +6,7 @@ type ReactNodeWithoutString =
   | void
   | null
   | boolean
-  | ExactReactElement_DEPRECATED<any>
+  | React.JSX.Element
   | Array<ReactNodeWithoutString>; // NOTE: This is intentionally `Array<T>` and
                                    // not `Iterable<T>` because `strings` are
                                    // `Iterable<string>` which is then

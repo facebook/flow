@@ -5,7 +5,7 @@ type Node =
   | boolean
   | number
   | string
-  | ExactReactElement_DEPRECATED<any>
+  | React.JSX.Element
   | Iterable<?React.Node>;
 
 type Props = {

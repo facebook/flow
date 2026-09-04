@@ -12,7 +12,7 @@ declare type React$Node =
   | boolean
   | number
   | string
-  | ExactReactElement_DEPRECATED<any>
+  | React.JSX.Element
   | React$Portal
   | FbtElement
   | FbtString
