@@ -121,6 +121,7 @@ pub struct LogSaving {
 #[derive(Debug, Clone, Default)]
 pub struct Options {
     pub all: bool,
+    pub always_generalize_jsx: bool,
     pub assert_operator: AssertOperator,
     pub autoimports: bool,
     pub autoimports_min_characters: i32,

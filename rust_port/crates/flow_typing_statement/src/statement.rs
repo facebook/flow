@@ -7857,7 +7857,8 @@ fn expression_<'a>(
                 let has_hint = has_hint.dupe();
                 let loc = loc.dupe();
                 Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
-                    should_generalize_jsx(cx, &has_hint, as_const, loc)
+                    cx.always_generalize_jsx()
+                        || should_generalize_jsx(cx, &has_hint, as_const, loc)
                 })))
             };
             let (t, e) = jsx(cx, should_generalize, loc.dupe(), inner)?;
@@ -7872,7 +7873,8 @@ fn expression_<'a>(
                 let has_hint = has_hint.dupe();
                 let loc = loc.dupe();
                 Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
-                    should_generalize_jsx(cx, &has_hint, as_const, loc)
+                    cx.always_generalize_jsx()
+                        || should_generalize_jsx(cx, &has_hint, as_const, loc)
                 })))
             };
             let (t, f) = jsx_fragment(cx, should_generalize, loc.dupe(), inner)?;

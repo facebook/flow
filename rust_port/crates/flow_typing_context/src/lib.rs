@@ -151,6 +151,7 @@ pub struct FrozenMetadata {
     pub slow_to_check_logging: SlowToCheckLogging,
     pub verbose: Option<Arc<Verbose>>,
 
+    pub always_generalize_jsx: bool,
     pub assert_operator: AssertOperator,
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
@@ -214,6 +215,7 @@ impl Default for FrozenMetadata {
             include_suppressions: false,
             slow_to_check_logging: SlowToCheckLogging::default(),
             verbose: None,
+            always_generalize_jsx: false,
             assert_operator: AssertOperator::Disabled,
             automatic_require_default: false,
             babel_loose_array_spread: false,
@@ -608,6 +610,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             verbose: options.verbose.dupe(),
             slow_to_check_logging: options.slow_to_check_logging,
 
+            always_generalize_jsx: options.always_generalize_jsx,
             automatic_require_default: options.automatic_require_default,
             babel_loose_array_spread: options.babel_loose_array_spread,
             casting_syntax_only_support_as_excludes: options
@@ -1946,6 +1949,10 @@ impl<'cx> Context<'cx> {
 
     pub fn automatic_require_default(&self) -> bool {
         self.0.metadata.frozen.automatic_require_default
+    }
+
+    pub fn always_generalize_jsx(&self) -> bool {
+        self.0.metadata.frozen.always_generalize_jsx
     }
 
     pub fn pid_prefix(&self) -> String {

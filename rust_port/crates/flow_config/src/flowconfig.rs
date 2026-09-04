@@ -141,6 +141,7 @@ pub mod opts {
     #[derive(Debug, Clone)]
     pub struct Opts {
         pub all: Option<bool>,
+        pub always_generalize_jsx: bool,
         pub autoimports: Option<bool>,
         pub autoimports_min_characters: Option<u32>,
         pub autoimports_ranked_by_usage: bool,
@@ -300,6 +301,7 @@ pub mod opts {
 
         Opts {
             all: None,
+            always_generalize_jsx: false,
             autoimports: None,
             autoimports_min_characters: None,
             autoimports_ranked_by_usage: true,
@@ -2111,6 +2113,16 @@ pub mod opts {
                                     .to_string(),
                             )
                         }
+                    },
+                    values,
+                    config,
+                )
+            }),
+            ("experimental.always_generalize_jsx", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.always_generalize_jsx = v;
+                        Ok(())
                     },
                     values,
                     config,
