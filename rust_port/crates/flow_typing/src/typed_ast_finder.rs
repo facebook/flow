@@ -806,6 +806,46 @@ pub mod type_at_pos {
             }
         }
 
+        /// `<Comp />`, `</Comp>`, and the receiver of `<NS.Sub />`, all of which
+        /// name a value in scope. An intrinsic (`<div />`) is a name too, but not a
+        /// bound one, so the binding lookup finds nothing and it prints as before.
+        fn jsx_element_name_identifier(
+            &mut self,
+            ident: &'ast ast::jsx::Identifier<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let (loc, t) = &ident.loc;
+            if self.covers_target(loc) {
+                self.find_loc(loc, t, false, Some(Framing::IdentifierRef))
+            } else {
+                ast_visitor::jsx_element_name_identifier_default(self, ident)
+            }
+        }
+
+        /// The `Sub` of `<NS.Sub />`, which the walk would otherwise reach as a bare
+        /// identifier with no link back to `NS`. A deeper receiver (`<A.B.C />`) is
+        /// left alone: only an identifier object carries a type to resolve `C` in.
+        fn jsx_member_expression(
+            &mut self,
+            member: &'ast ast::jsx::MemberExpression<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let (loc, t) = &member.property.loc;
+            if self.covers_target(loc)
+                && let ast::jsx::member_expression::Object::Identifier(object) = &member.object
+            {
+                let (_, object_type) = &object.loc;
+                return self.find_loc(
+                    loc,
+                    t,
+                    false,
+                    Some(Framing::MemberRef {
+                        name: member.property.name.dupe(),
+                        object_type: object_type.dupe(),
+                    }),
+                );
+            }
+            ast_visitor::jsx_member_expression_default(self, member)
+        }
+
         fn type_param(
             &mut self,
             kind: &TypeParamsContext,
