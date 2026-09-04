@@ -29,13 +29,13 @@ printf "Status after check-contents a.js:\n"
 assert_ok "$FLOW" check-contents a.js < a.js
 
 printf "Status including warnings:\n"
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 # recheck a.js and dependents
 assert_ok "$FLOW" force-recheck --focus a.js
 
 printf "\nStatus after focusing a.js:\n"
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 # check-contents doesn't hit recheck opts
 printf "Status after check-contents type_error.js:\n"
@@ -43,7 +43,7 @@ assert_errors "$FLOW" check-contents type_error.js < type_error.js
 
 # should not notice the error in type_error because it's not focused
 printf "\nStatus including warnings:\n"
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 # focus dependents
 assert_ok "$FLOW" force-recheck --focus \
@@ -56,4 +56,4 @@ assert_ok "$FLOW" force-recheck --focus \
 
 # should notice the errors because they're focused
 printf "\nStatus after focusing dependents:\n"
-assert_errors "$FLOW" status --include-warnings
+assert_errors "$FLOW" status --show-lazy-status --include-warnings

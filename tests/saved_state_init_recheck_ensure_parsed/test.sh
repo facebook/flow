@@ -21,10 +21,10 @@ echo "$(pwd)/A.js" > ".flow.saved_state_file_changes"
 # the dependency graph, but does not trigger a recheck.
 printf "\\nLazy init with saved state does not trigger a recheck\\n"
 start_flow . --lazy --saved-state-fetcher "local" --saved-state-no-fallback
-assert_ok "$FLOW" status
+assert_ok "$FLOW" status --show-lazy-status
 
 printf "\\nFocusing A.js reveals the errors\\n"
 "$FLOW" force-recheck --focus --no-auto-start A.js
-assert_errors "$FLOW" status
+assert_errors "$FLOW" status --show-lazy-status
 
 assert_ok "$FLOW" stop

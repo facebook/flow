@@ -40,7 +40,7 @@ cp .flow.saved_state_a .flow.saved_state
 "$FLOW" start --file-watcher=none --saved-state-fetcher local --wait
 
 printf "Initial status (should have no errors):\n"
-assert_ok "$FLOW" status --strip-root
+assert_ok "$FLOW" status --show-lazy-status --strip-root
 
 # Phase 4: Swap to config B + saved state B, trigger reinit
 cp .flowconfig.orig .flowconfig
@@ -57,4 +57,4 @@ EOF
 "$FLOW" force-recheck --no-auto-start --focus test.js
 
 printf "After reinit (should have type error):\n"
-assert_errors "$FLOW" status --strip-root --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --strip-root --no-auto-start

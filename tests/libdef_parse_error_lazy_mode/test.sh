@@ -6,4 +6,4 @@
 
 assert_ok "$FLOW" stop
 assert_ok "$FLOW" start
-assert_errors "$FLOW" status
+assert_errors "$FLOW" status --show-lazy-status

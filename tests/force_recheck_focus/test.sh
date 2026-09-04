@@ -6,8 +6,8 @@
 
 printf "===== force-recheck of a unchanged file does nothing: =====\\n"
 assert_ok "$FLOW" force-recheck a.js
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 printf "\\n===== force-recheck --focus of a unchanged file does a recheck: =====\\n"
 assert_ok "$FLOW" force-recheck --focus a.js
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start

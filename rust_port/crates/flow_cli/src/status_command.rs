@@ -29,6 +29,7 @@ struct StatusArgs {
     pretty: bool,
     error_flags: cli_output::ErrorFlags,
     strip_root: bool,
+    show_lazy_status: bool,
 }
 
 fn spec(
@@ -46,6 +47,12 @@ fn spec(
     let spec = flow_command_utils::add_error_flags(spec);
     let spec = flow_command_utils::add_strip_root_flag(spec);
     let spec = flow_command_utils::add_from_flag(spec);
+    let spec = spec.flag(
+        "--show-lazy-status",
+        &arg_spec::truthy(),
+        "Show whether the server is in lazy mode",
+        None,
+    );
     let spec = if explicit {
         spec
     } else {
@@ -151,14 +158,16 @@ fn check_status(flowconfig_name: &str, args: &StatusArgs, connect_flags: &Connec
             .expect("failed to write json errors");
             out.flush().expect("failed to flush json errors");
         };
-    let lazy_msg = if lazy_stats.lazy_mode {
-        Some(format!(
-            "The Flow server is currently in lazy mode and is only checking {}/{} files.\nTo learn more, visit flow.org/en/docs/lang/lazy-modes",
-            lazy_stats.checked_files, lazy_stats.total_files
-        ))
-    } else {
-        None
-    };
+    let lazy_msg = args.show_lazy_status.then(|| {
+        if lazy_stats.lazy_mode {
+            format!(
+                "The Flow server is currently in lazy mode and is only checking {}/{} files.\nTo learn more, visit flow.org/en/docs/lang/lazy-modes",
+                lazy_stats.checked_files, lazy_stats.total_files
+            )
+        } else {
+            "The Flow server is not in lazy mode.".to_string()
+        }
+    });
     match response {
         server_prot::response::StatusResponse::ERRORS {
             errors,
@@ -310,6 +319,8 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
         error_flags_args.message_width,
     );
     let strip_root = flow_command_spec::get(args, "--strip-root", &arg_spec::truthy()).unwrap();
+    let show_lazy_status =
+        flow_command_spec::get(args, "--show-lazy-status", &arg_spec::truthy()).unwrap();
 
     let status_args = StatusArgs {
         root,
@@ -319,6 +330,7 @@ fn main(args: &arg_spec::Values, command_info: &[CommandInfo]) {
         pretty,
         error_flags,
         strip_root,
+        show_lazy_status,
     };
 
     check_status(&flowconfig_name, &status_args, &connect_flags)

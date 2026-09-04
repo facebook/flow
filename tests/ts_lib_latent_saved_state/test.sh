@@ -142,16 +142,16 @@ printf "\n\n======lazy external declaration reuses saved state======\n"
 cp external-template.d.ts.ignored created-external.d.ts
 changed created-external.d.ts
 start_flow . --lazy --saved-state-fetcher local --saved-state-no-fallback
-assert_ok "$FLOW" status .
+assert_ok "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" force-recheck --focus use.js
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 
 printf "\n======cold scratch lazy matches external declaration======\n"
 start_flow . --lazy --saved-state-fetcher none
-assert_ok "$FLOW" status .
+assert_ok "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" force-recheck --focus use.js
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 rm created-external.d.ts
 
@@ -159,12 +159,12 @@ printf "\n\n======lazy invalid declaration reuses saved state======\n"
 cp invalid-template.d.ts.ignored created-invalid.d.ts
 changed created-invalid.d.ts
 start_flow . --lazy --saved-state-fetcher local --saved-state-no-fallback
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 
 printf "\n======cold scratch lazy matches invalid declaration======\n"
 start_flow . --lazy --saved-state-fetcher none
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 rm created-invalid.d.ts
 
@@ -177,16 +177,16 @@ assert_ok "$FLOW" stop .
 
 printf "\n======lazy created global falls back to a scratch check======\n"
 start_flow . --lazy --saved-state-fetcher local
-assert_ok "$FLOW" status .
+assert_ok "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" force-recheck --focus use.js
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 
 printf "\n======cold scratch lazy matches created global======\n"
 start_flow . --lazy --saved-state-fetcher none
-assert_ok "$FLOW" status .
+assert_ok "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" force-recheck --focus use.js
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 rm created-global.d.ts
 
@@ -199,12 +199,12 @@ assert_ok "$FLOW" stop .
 
 printf "\n======lazy changed known global falls back to a scratch check======\n"
 start_flow . --lazy --saved-state-fetcher local
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 
 printf "\n======cold scratch lazy matches changed known global======\n"
 start_flow . --lazy --saved-state-fetcher none
-assert_errors "$FLOW" status .
+assert_errors "$FLOW" status --show-lazy-status .
 assert_ok "$FLOW" stop .
 cp original-template.d.ts.ignored global.d.ts
 

@@ -8,7 +8,7 @@
 # demonstrate the different behavior of ensure_parsed when saved state is not
 # used
 printf "==== No errors at start====\\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 cp B.js B.js.orig
 cp C.js C.js.orig
@@ -23,13 +23,13 @@ printf "\\n\\n==== Still don't notice the error ====\\n"
 # it will use the AST stored in shared memory. If we started up with saved state
 # we wouldn't have the AST in memory and would notice the error when we try to
 # read B.js from disk and parse it
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 assert_ok "$FLOW" force-recheck --focus B.js
 
 printf "\\n\\n==== Now we see the parse error ====\\n"
 # The parse error should now be noticed
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start
 
 
 # Reset the parse error
@@ -42,10 +42,10 @@ printf "\\n\\n==== We don't see the unknown module exception yet ====\\n"
 # it will use the AST stored in shared memory. If we started up with saved state
 # we wouldn't have the AST in memory and would notice the error when we try to
 # read C.js from disk, parse it, and recheck the changed file
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 assert_ok "$FLOW" force-recheck --focus C.js
 
 printf "\\n\\n==== Now we see the unknown module error ====\\n"
 # The error should now be noticed
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start

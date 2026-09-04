@@ -5,13 +5,13 @@
 # LICENSE file in the root directory of this source tree.
 
 echo "Should not find any warnings because of lazy mode:"
-assert_ok "$FLOW" status
+assert_ok "$FLOW" status --show-lazy-status
 
 echo
 echo "Should not find any warnings even when including warnings:"
-assert_ok "$FLOW" status --max-warnings 0
+assert_ok "$FLOW" status --show-lazy-status --max-warnings 0
 
 echo
 echo "Focusing test.sh should find the warnings"
 assert_ok "$FLOW" force-recheck --focus test.js
-assert_errors "$FLOW" status --max-warnings 0
+assert_errors "$FLOW" status --show-lazy-status --max-warnings 0

@@ -10,4 +10,4 @@ rm b.js
 
 assert_ok "$FLOW" force-recheck --focus b.js
 
-assert_errors "$FLOW" status --strip-root --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --strip-root --no-auto-start

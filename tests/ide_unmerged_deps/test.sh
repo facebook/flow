@@ -30,4 +30,4 @@ echo "$start_time $end_time" | awk '{ s=$1; e=$2; print ((e - s) < 5) ? "YES" : 
 
 # Then the slow recheck should restart and eventually finish.
 printf "\nOriginal recheck finished:\n"
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start

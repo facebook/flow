@@ -7,7 +7,7 @@
 # shellcheck disable=SC2094
 
 printf "==== No errors at start====\\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 # simulate a file watcher race condition by changing dependency.js without
 # a force-recheck.
@@ -27,7 +27,7 @@ assert_ok "$FLOW" force-recheck dependency.js
 # recheck dependency.js and its dependents, and find the error in
 # dependent.js
 printf "\\n==== force-recheck checks dependent ====\\n"
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start
 # 3 files (dependency.js and its dependents, dependent.js and file.js) should
 # be both merged and checked
 show_skipping_stats "$FLOW_LOG_FILE"

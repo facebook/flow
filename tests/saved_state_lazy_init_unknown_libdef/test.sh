@@ -27,7 +27,7 @@ echo "$(pwd)/a.js" > ".flow.saved_state_file_changes"
 
 printf "\\nLazy init from that saved state must not crash on the new libdef\\n"
 start_flow . --lazy --saved-state-fetcher "local" --saved-state-no-fallback
-assert_ok "$FLOW" status
+assert_ok "$FLOW" status --show-lazy-status
 
 printf "\\nThe new libdef's globals are usable once a file is focused\\n"
 cat > b.js <<'EOF'
@@ -37,4 +37,4 @@ const bad: string = MyOtherGlobal;
 module.exports = {y, bad};
 EOF
 assert_ok "$FLOW" force-recheck --focus --no-auto-start b.js
-assert_errors "$FLOW" status --strip-root
+assert_errors "$FLOW" status --show-lazy-status --strip-root

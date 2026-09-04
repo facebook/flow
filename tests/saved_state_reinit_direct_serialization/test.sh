@@ -19,7 +19,7 @@ echo "" > .flow.saved_state_file_changes
 "$FLOW" start --saved-state-fetcher local --wait
 
 printf "Initial status (should have no errors):\n"
-assert_ok "$FLOW" status --strip-root
+assert_ok "$FLOW" status --show-lazy-status --strip-root
 
 # Trigger reinit: mark test.js as changed and introduce a type error
 echo "test.js" > .flow.saved_state_file_changes
@@ -32,4 +32,4 @@ EOF
 "$FLOW" force-recheck --focus test.js --missed-changes --changed-mergebase
 
 printf "After reinit (should have type error):\n"
-assert_errors "$FLOW" status --strip-root
+assert_errors "$FLOW" status --show-lazy-status --strip-root

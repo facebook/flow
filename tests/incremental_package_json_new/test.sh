@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "\nExpect no errors.\n"
-assert_ok "$FLOW" status --no-auto-start .
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start .
 
 printf "\nAdd trivial package.json:\n"
 echo {} > package.json

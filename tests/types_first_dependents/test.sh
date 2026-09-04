@@ -7,14 +7,14 @@
 printf "\\nServer should start in fs lazy mode and in types-first mode\\n"
 start_flow . --lazy
 
-assert_ok "$FLOW" status --strip-root
+assert_ok "$FLOW" status --show-lazy-status --strip-root
 
 printf "\\nWarm up cyclic dependencies\\n"
 assert_ok "$FLOW" force-recheck --focus types.js
-assert_errors "$FLOW" status --strip-root
+assert_errors "$FLOW" status --show-lazy-status --strip-root
 
 printf "\\nEditing a file should cause dependents to pull in dependencies in the same cycle\\n"
 assert_ok "$FLOW" force-recheck --focus touched.js
-assert_errors "$FLOW" status --strip-root
+assert_errors "$FLOW" status --show-lazy-status --strip-root
 
 assert_ok "$FLOW" stop

@@ -11,11 +11,11 @@ printf "\nQuick start.\n"
 start_flow . --lazy
 
 printf "\nExpect no errors.\n"
-assert_ok "$FLOW" status --no-auto-start .
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start .
 
 printf "\nChange @flow file with dependency on a @flow file, expect no error.\n"
 echo "// change" >> b.js
 assert_ok "$FLOW" force-recheck b.js
-assert_ok "$FLOW" status --no-auto-start .
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start .
 
 printf "\nDone!\n"

@@ -4,7 +4,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 # rename Dependency and make it slow, so we can interrupt the recheck
 mv dependency.js dependency.js.ignored
@@ -21,4 +21,4 @@ mv dependency.js.ignored slow/dependency.js
 
 assert_ok "$FLOW" force-recheck slow/dependency.js
 
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start

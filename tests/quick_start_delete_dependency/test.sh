@@ -13,17 +13,17 @@ printf "\nQuick start.\n"
 start_flow . --lazy
 
 printf "\nExpect no errors.\n"
-assert_ok "$FLOW" status --no-auto-start .
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start .
 
 printf "\nDelete @flow file with a @flow dependent file, expect error.\n"
 mv a.js tmp/
 assert_ok "$FLOW" force-recheck a.js
-assert_errors "$FLOW" status --no-auto-start .
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start .
 
 printf "\nRevert file, expect no errors.\n"
 mv tmp/a.js .
 assert_ok "$FLOW" force-recheck a.js
-assert_ok "$FLOW" status --no-auto-start .
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start .
 
 rm -rf tmp
 printf "\nDone!\n"

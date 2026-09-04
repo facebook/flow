@@ -68,7 +68,7 @@ assert_ok "$FLOW" force-recheck --focus dependent.js
 
 # Wait for recheck
 printf "No new errors:\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 echo
 
 # Move to commit2
@@ -81,7 +81,7 @@ assert_ok "$FLOW" force-recheck --missed-changes --changed-mergebase dummy.js
 
 # Wait for reinit
 printf "No new errors:\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 echo
 
 printf "Found correct merge base hash: "

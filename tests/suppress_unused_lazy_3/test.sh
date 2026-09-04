@@ -27,30 +27,30 @@
 # warnings.
 
 printf "\n=== Initial check shows no errors or warnings\n"
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 printf "\n=== Force check A1.js\n"
 assert_ok "$FLOW" force-recheck --focus A1.js
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 printf "\n=== Force check B1.js\n"
 assert_ok "$FLOW" force-recheck --focus B1.js
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 printf "\n=== Add comment to B1.js (should skip B2.js check)\n"
 echo "// comment" >> B1.js
 assert_ok "$FLOW" force-recheck --focus B1.js
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 assert_ok "$FLOW" force-recheck --focus B4.js
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 printf "\n=== Add comment to B1.js (B4 won't be in to_merge set)\n"
 echo "// comment" >> B1.js
 assert_ok "$FLOW" force-recheck --focus B1.js
-assert_ok "$FLOW" status --include-warnings
+assert_ok "$FLOW" status --show-lazy-status --include-warnings
 
 printf "\n=== Add comment to B4.js (We still need to suppress the error in B2)\n"
 echo "// comment" >> B4.js
 assert_ok "$FLOW" force-recheck --focus B4.js
-assert_ok "$FLOW" status
+assert_ok "$FLOW" status --show-lazy-status

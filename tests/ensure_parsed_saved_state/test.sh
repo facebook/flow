@@ -8,7 +8,7 @@
 # parses things which were not originally parsed due to saved_state
 
 printf "==== No errors at start====\\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 cp B.js B.js.orig
 cp C.js C.js.orig
@@ -22,7 +22,7 @@ printf "\\n\\n==== ensure_parsed notices that B has changed ====\\n"
 # Focusing on A.js requires B.js to be checked, so ensure_parsed tries to
 # parse it. But it notices it has changed and triggers a recheck, which finds
 # the parse errors
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start
 
 # Reset the parse error
 cp B.js.orig B.js
@@ -30,7 +30,7 @@ assert_ok "$FLOW" stop
 start_flow . --lazy-mode fs --file-watcher none
 
 printf "==== No errors after restart====\\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 cp C.js.with_new_dependency C.js
 cp A.js.modified A.js
@@ -41,12 +41,12 @@ printf "\\n\\n==== ensure_parsed notices that C has changed ====\\n"
 # Focusing on A.js requires C.js to be checked, so ensure_parsed tries to
 # parse it. But it notices it has changed and triggers a recheck, which finds
 # the error
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start
 show_skipping_stats "$FLOW_LOG_FILE"
 
 # simulate the file watcher event for C
 assert_ok "$FLOW" force-recheck C.js
 
 printf "\\n\\n==== after file watcher update ====\\n"
-assert_errors "$FLOW" status --no-auto-start
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start
 show_skipping_stats "$FLOW_LOG_FILE"

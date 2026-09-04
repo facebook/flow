@@ -17,4 +17,4 @@ cd new_root
 "$FLOW" start --saved-state-fetcher local --wait
 echo "const a: string = new Object()" > test.js
 "$FLOW" force-recheck test.js
-assert_errors "$FLOW" status --strip-root
+assert_errors "$FLOW" status --show-lazy-status --strip-root

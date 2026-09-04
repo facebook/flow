@@ -44,7 +44,7 @@ start_flow . --saved-state-fetcher local
 
 echo "Scenario 1: upstream libdef change"
 echo "Before recheck:"
-assert_ok "$FLOW" status --strip-root
+assert_ok "$FLOW" status --show-lazy-status --strip-root
 
 # Now simulate mergebase change: update lib on disk to match saved state B
 cat > libs/lib.js <<'LIBEOF'
@@ -60,7 +60,7 @@ assert_ok "$FLOW" force-recheck libs/lib.js --changed-mergebase --missed-changes
 
 # Wait for recheck to complete and show status
 echo "After recheck:"
-"$FLOW" status --strip-root 2>/dev/null || true
+"$FLOW" status --show-lazy-status --strip-root 2>/dev/null || true
 
 # Check which reinit path was used
 echo "Used saved-state reinit:"
@@ -86,7 +86,7 @@ start_flow . --saved-state-fetcher local
 
 echo "Scenario 2: local libdef change"
 echo "Before recheck:"
-assert_ok "$FLOW" status --strip-root
+assert_ok "$FLOW" status --show-lazy-status --strip-root
 
 # Simulate mergebase change + local lib modification:
 # lib on disk differs from both saved state A and B
@@ -102,7 +102,7 @@ assert_ok "$FLOW" force-recheck libs/lib.js --changed-mergebase --missed-changes
 
 # Wait for recheck to complete and show status
 echo "After recheck:"
-"$FLOW" status --strip-root 2>/dev/null || true
+"$FLOW" status --show-lazy-status --strip-root 2>/dev/null || true
 
 # Check which reinit path was used
 echo "Tried saved-state reinit:"

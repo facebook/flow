@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "==== No errors at start====\\n"
-assert_ok "$FLOW" status --no-auto-start
+assert_ok "$FLOW" status --show-lazy-status --no-auto-start
 
 rm A.js
 
@@ -16,4 +16,4 @@ printf "\\n\\n==== ensure_parsed notices that A was removed ====\\n"
 # Focusing on A.js requires B.js to be checked, so ensure_parsed tries to parse
 # it. But it notices it has been removed and triggers a recheck, which finds the
 # error
-assert_errors "$FLOW" status --no-auto-start --strip-root
+assert_errors "$FLOW" status --show-lazy-status --no-auto-start --strip-root

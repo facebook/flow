@@ -7,7 +7,7 @@
 printf "\\nServer should start in fs lazy mode\\n"
 start_flow . --lazy-mode fs
 
-assert_ok "$FLOW" status --strip-root
+assert_ok "$FLOW" status --show-lazy-status --strip-root
 
 echo
 

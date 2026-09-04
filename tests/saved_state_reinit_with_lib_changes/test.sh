@@ -11,9 +11,9 @@ echo "" > .flow.saved_state_file_changes
 "$FLOW" save-state --out .flow.saved_state >> /dev/null
 "$FLOW" stop
 "$FLOW" start --saved-state-fetcher local --wait
-"$FLOW" status --strip-root
+"$FLOW" status --show-lazy-status --strip-root
 
 echo "test.js" > .flow.saved_state_file_changes
 echo "" > test.js
 "$FLOW" force-recheck --focus test.js --missed-changes --changed-mergebase
-"$FLOW" status --strip-root
+"$FLOW" status --show-lazy-status --strip-root

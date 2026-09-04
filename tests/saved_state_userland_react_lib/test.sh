@@ -14,4 +14,4 @@ echo "Generate saved-state"
 
 echo "Use saved state"
 "$FLOW" start --saved-state-fetcher local --wait
-"$FLOW" status --strip-root
+"$FLOW" status --show-lazy-status --strip-root
