@@ -6772,7 +6772,7 @@ pub mod properties {
     }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Dupe)]
-    pub struct PropertiesMap(Rc<BTreeMap<Name, Property>>);
+    pub struct PropertiesMap(Rc<Vec<(Name, Property)>>);
 
     impl std::hash::Hash for PropertiesMap {
         fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -6784,17 +6784,17 @@ pub mod properties {
 
     impl Default for PropertiesMap {
         fn default() -> Self {
-            Self(Rc::new(BTreeMap::new()))
+            Self::new()
         }
     }
 
     impl PropertiesMap {
         pub fn new() -> Self {
-            Self(Rc::new(BTreeMap::new()))
+            Self(Rc::new(Vec::new()))
         }
 
         pub fn from_btree_map(map: BTreeMap<Name, Property>) -> Self {
-            Self(Rc::new(map))
+            Self(Rc::new(map.into_iter().collect()))
         }
 
         pub fn is_empty(&self) -> bool {
@@ -6810,26 +6810,34 @@ pub mod properties {
         }
 
         pub fn get(&self, name: &Name) -> Option<&Property> {
-            self.0.get(name)
+            self.0
+                .binary_search_by(|(key, _)| key.cmp(name))
+                .ok()
+                .map(|index| &self.0[index].1)
         }
 
         pub fn contains_key(&self, name: &Name) -> bool {
-            self.0.contains_key(name)
+            self.0.binary_search_by(|(key, _)| key.cmp(name)).is_ok()
         }
 
         pub fn insert(&mut self, name: Name, prop: Property) -> Option<Property> {
-            Rc::make_mut(&mut self.0).insert(name, prop)
+            let map = Rc::make_mut(&mut self.0);
+            match map.binary_search_by(|(key, _)| key.cmp(&name)) {
+                Ok(index) => Some(std::mem::replace(&mut map[index].1, prop)),
+                Err(index) => {
+                    map.insert(index, (name, prop));
+                    None
+                }
+            }
         }
 
         pub fn remove(&mut self, name: &Name) -> Option<Property> {
-            if !self.0.contains_key(name) {
-                return None;
-            }
-            Rc::make_mut(&mut self.0).remove(name)
+            let index = self.0.binary_search_by(|(key, _)| key.cmp(name)).ok()?;
+            Some(Rc::make_mut(&mut self.0).remove(index).1)
         }
 
         pub fn iter(&self) -> impl DoubleEndedIterator<Item = (&Name, &Property)> {
-            self.0.iter()
+            self.0.iter().map(|(name, prop)| (name, prop))
         }
 
         pub fn iter_union<'a>(
@@ -6838,36 +6846,31 @@ pub mod properties {
         ) -> impl Iterator<Item = (&'a Name, Option<&'a Property>, Option<&'a Property>)> {
             let mut iter1 = self.0.iter().peekable();
             let mut iter2 = other.0.iter().peekable();
-            std::iter::from_fn(move || {
-                match (
-                    iter1.peek().map(|(name, _)| *name),
-                    iter2.peek().map(|(name, _)| *name),
-                ) {
-                    (None, None) => None,
-                    (Some(_), None) => {
+            std::iter::from_fn(move || match (iter1.peek(), iter2.peek()) {
+                (None, None) => None,
+                (Some(_), None) => {
+                    let (name, prop) = iter1.next().unwrap();
+                    Some((name, Some(prop), None))
+                }
+                (None, Some(_)) => {
+                    let (name, prop) = iter2.next().unwrap();
+                    Some((name, None, Some(prop)))
+                }
+                (Some((name1, _)), Some((name2, _))) => match name1.cmp(name2) {
+                    std::cmp::Ordering::Less => {
                         let (name, prop) = iter1.next().unwrap();
                         Some((name, Some(prop), None))
                     }
-                    (None, Some(_)) => {
+                    std::cmp::Ordering::Greater => {
                         let (name, prop) = iter2.next().unwrap();
                         Some((name, None, Some(prop)))
                     }
-                    (Some(name1), Some(name2)) => match name1.cmp(name2) {
-                        std::cmp::Ordering::Less => {
-                            let (name, prop) = iter1.next().unwrap();
-                            Some((name, Some(prop), None))
-                        }
-                        std::cmp::Ordering::Greater => {
-                            let (name, prop) = iter2.next().unwrap();
-                            Some((name, None, Some(prop)))
-                        }
-                        std::cmp::Ordering::Equal => {
-                            let (name, prop1) = iter1.next().unwrap();
-                            let (_, prop2) = iter2.next().unwrap();
-                            Some((name, Some(prop1), Some(prop2)))
-                        }
-                    },
-                }
+                    std::cmp::Ordering::Equal => {
+                        let (name, prop1) = iter1.next().unwrap();
+                        let (_, prop2) = iter2.next().unwrap();
+                        Some((name, Some(prop1), Some(prop2)))
+                    }
+                },
             })
         }
 
@@ -6877,36 +6880,31 @@ pub mod properties {
         ) -> impl Iterator<Item = (&'a Name, Option<&'a Property>, Option<&'a Property>)> {
             let mut iter1 = self.0.iter().rev().peekable();
             let mut iter2 = other.0.iter().rev().peekable();
-            std::iter::from_fn(move || {
-                match (
-                    iter1.peek().map(|(name, _)| *name),
-                    iter2.peek().map(|(name, _)| *name),
-                ) {
-                    (None, None) => None,
-                    (Some(_), None) => {
+            std::iter::from_fn(move || match (iter1.peek(), iter2.peek()) {
+                (None, None) => None,
+                (Some(_), None) => {
+                    let (name, prop) = iter1.next().unwrap();
+                    Some((name, Some(prop), None))
+                }
+                (None, Some(_)) => {
+                    let (name, prop) = iter2.next().unwrap();
+                    Some((name, None, Some(prop)))
+                }
+                (Some((name1, _)), Some((name2, _))) => match name1.cmp(name2) {
+                    std::cmp::Ordering::Greater => {
                         let (name, prop) = iter1.next().unwrap();
                         Some((name, Some(prop), None))
                     }
-                    (None, Some(_)) => {
+                    std::cmp::Ordering::Less => {
                         let (name, prop) = iter2.next().unwrap();
                         Some((name, None, Some(prop)))
                     }
-                    (Some(name1), Some(name2)) => match name1.cmp(name2) {
-                        std::cmp::Ordering::Greater => {
-                            let (name, prop) = iter1.next().unwrap();
-                            Some((name, Some(prop), None))
-                        }
-                        std::cmp::Ordering::Less => {
-                            let (name, prop) = iter2.next().unwrap();
-                            Some((name, None, Some(prop)))
-                        }
-                        std::cmp::Ordering::Equal => {
-                            let (name, prop1) = iter1.next().unwrap();
-                            let (_, prop2) = iter2.next().unwrap();
-                            Some((name, Some(prop1), Some(prop2)))
-                        }
-                    },
-                }
+                    std::cmp::Ordering::Equal => {
+                        let (name, prop1) = iter1.next().unwrap();
+                        let (_, prop2) = iter2.next().unwrap();
+                        Some((name, Some(prop1), Some(prop2)))
+                    }
+                },
             })
         }
 
@@ -6914,24 +6912,30 @@ pub mod properties {
         where
             F: FnMut(&Property) -> Property,
         {
-            let mut map_prime = None;
-            for (name, prop) in self.iter() {
+            let mut map_prime: Option<Vec<(Name, Property)>> = None;
+            for (index, (name, prop)) in self.0.iter().enumerate() {
                 let prop_prime = f(prop);
-                if !prop.ptr_eq(&prop_prime) {
-                    map_prime
-                        .get_or_insert_with(|| self.dupe())
-                        .insert(name.dupe(), prop_prime);
+                if let Some(map_prime) = map_prime.as_mut() {
+                    map_prime.push((name.dupe(), prop_prime));
+                } else if !prop.ptr_eq(&prop_prime) {
+                    let mut new_map = Vec::with_capacity(self.len());
+                    new_map.extend(self.0[..index].iter().cloned());
+                    new_map.push((name.dupe(), prop_prime));
+                    map_prime = Some(new_map);
                 }
             }
-            map_prime.unwrap_or_else(|| self.dupe())
+            match map_prime {
+                Some(map) => Self(Rc::new(map)),
+                None => self.dupe(),
+            }
         }
 
         pub fn values(&self) -> impl Iterator<Item = &Property> {
-            self.0.values()
+            self.0.iter().map(|(_, prop)| prop)
         }
 
         pub fn keys(&self) -> impl Iterator<Item = &Name> {
-            self.0.keys()
+            self.0.iter().map(|(name, _)| name)
         }
 
         pub fn extract_named_exports(&self) -> BTreeMap<Name, NamedSymbol> {
@@ -6968,19 +6972,19 @@ pub mod properties {
 
     impl From<BTreeMap<Name, Property>> for PropertiesMap {
         fn from(map: BTreeMap<Name, Property>) -> Self {
-            Self(Rc::new(map))
+            Self::from_btree_map(map)
         }
     }
 
     impl std::iter::FromIterator<(Name, Property)> for PropertiesMap {
         fn from_iter<I: IntoIterator<Item = (Name, Property)>>(iter: I) -> Self {
-            Self(Rc::new(iter.into_iter().collect()))
+            Self::from_btree_map(iter.into_iter().collect())
         }
     }
 
     impl<'a> IntoIterator for &'a PropertiesMap {
-        type Item = (&'a Name, &'a Property);
-        type IntoIter = std::collections::btree_map::Iter<'a, Name, Property>;
+        type Item = &'a (Name, Property);
+        type IntoIter = std::slice::Iter<'a, (Name, Property)>;
 
         fn into_iter(self) -> Self::IntoIter {
             self.0.iter()
