@@ -435,3 +435,15 @@ function-poly-6.js:7:6 = {
 }
 function.js:21:18 (framed) = (parameter) xs: Array<string>
 function.js:21:18,21:19
+overloads.js:7:1 (call, number arm) = function f(x: number): string (+2 overloads)
+overloads.js:7:1,7:1
+overloads.js:8:1 (call, string arm) = function f(x: string): string (+2 overloads)
+overloads.js:8:1,8:1
+overloads.js:12:11 (reference, not a call) = function f: ((x: number) => string)
+& ((x: string) => string)
+& ((x: boolean) => string)
+overloads.js:12:11,12:11
+overloads.js:15:1 (call, not overloaded) = function solo(x: number): string
+overloads.js:15:1,15:4
+overloads.js:22:3 (overloaded method call) = (method) C.m(x: number): string
+overloads.js:22:3,22:3

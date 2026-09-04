@@ -1880,6 +1880,19 @@ fn layout_of_binder_head(binder: &Binder) -> LayoutNode {
     ])
 }
 
+/// The `(+2 overloads)` tail, for a signature that is one of several the
+/// declaration provides. Empty when there is only the one being printed.
+fn layout_of_overload_count(overloads: u32) -> LayoutNode {
+    if overloads == 0 {
+        return LayoutNode::empty();
+    }
+    let plural = if overloads == 1 { "" } else { "s" };
+    layout::fuse(vec![
+        layout::space(),
+        LayoutNode::atom(format!("(+{overloads} overload{plural})")),
+    ])
+}
+
 /// Frames `t` as the declaration of `binder`: `const a: A`. A callable bound by
 /// `function` or a method is spliced into a signature (`function f(): void`)
 /// rather than annotated with an arrow type.
@@ -1906,6 +1919,7 @@ fn layout_of_binder(
                         name: context.name.dupe(),
                         owner: None,
                         type_parameter_context: None,
+                        overloads: 0,
                     },
                     t,
                     state,
@@ -1927,6 +1941,7 @@ fn layout_of_binder(
             layout::fuse(vec![
                 head,
                 type_function(opts, 0, &LayoutNode::atom(":".to_string()), func, state),
+                layout_of_overload_count(binder.overloads),
             ])
         }
         _ => layout::fuse(vec![

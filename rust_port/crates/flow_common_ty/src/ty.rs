@@ -865,6 +865,10 @@ pub struct Binder {
     /// Enclosing class or record, for members: the `A` in `(method) A.m()`.
     pub owner: Option<FlowSmolStr>,
     pub type_parameter_context: Option<Arc<TypeParameterContext<ALocElt>>>,
+    /// Signatures the declaration has beyond the one being printed. A call to an
+    /// overloaded function prints the signature the call selected, so without a
+    /// count nothing says the other signatures exist.
+    pub overloads: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

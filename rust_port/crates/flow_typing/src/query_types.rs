@@ -10,6 +10,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_analysis::bindings;
+use flow_analysis::scope_api;
 use flow_common::reason::Name;
 use flow_common_ty::ty::ALocElt;
 use flow_common_ty::ty::Alias;
@@ -150,6 +151,19 @@ struct Framed {
     alias: Option<Alias>,
 }
 
+/// How many signatures a binding has beyond the one hover is about to print.
+///
+/// Flow spells an overload as a name declared more than once, so the extra
+/// declaration sites the binding records are the extra signatures. Only
+/// functions overload; any other kind with repeated declarations is a redeclared
+/// name, which is a different thing and gets no count.
+fn overloads_of_def<L>(kind: BinderKind, def: &scope_api::Def<L>) -> u32 {
+    match kind {
+        BinderKind::Function => (def.locs.len() - 1) as u32,
+        _ => 0,
+    }
+}
+
 fn import_provenance(file_sig: &FileSig, local_name: &FlowSmolStr) -> Option<ImportProvenance> {
     file_sig.requires().iter().find_map(|require| {
         let Require::Import {
@@ -217,6 +231,7 @@ fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &AL
         name: def.actual_name.dupe(),
         owner: None,
         type_parameter_context: None,
+        overloads: overloads_of_def(kind, def),
     });
     let alias = is_imported_binding_kind(def.kind).then(|| Alias {
         kind: AliasKind::Import,
@@ -353,6 +368,10 @@ fn binder_of_member_reference(
         name: name.dupe(),
         owner,
         type_parameter_context: None,
+        // `NamedProp::Method` holds one signature, so by the time a member has
+        // been looked up an overloaded method is indistinguishable from a plain
+        // one and there is nothing left to count.
+        overloads: 0,
     })
 }
 pub fn dump_type_at_pos(
@@ -448,6 +467,7 @@ pub fn type_at_pos_type<'a>(
                                 name,
                                 owner: None,
                                 type_parameter_context: None,
+                                overloads: 0,
                             }),
                         alias: None,
                     },
@@ -577,6 +597,11 @@ pub fn type_at_pos_type<'a>(
                                 name: alias.name.dupe(),
                                 owner: None,
                                 type_parameter_context: None,
+                                // The declaration sites are in the exporting
+                                // module, so there is nothing here to count. An
+                                // overloaded import is an intersection anyway, and
+                                // `callable` only matches a lone signature.
+                                overloads: 0,
                             })
                         });
                         QueryResult::Success(
