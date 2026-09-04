@@ -596,33 +596,12 @@ References:
                      ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------- component_in_type_position.js:12:115
-
-Cannot assign `<Poly />` to `polyElemBad` because in type argument `P` [1] > property `prop`: `"STRING"` [2] is
-incompatible with `number` [3]. [incompatible-type]
-
-   component_in_type_position.js:12:115
-   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:97
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                                                                       ^ [1]
-   component_in_type_position.js:12:126
-   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                                                                                                                    ^^^^^^^^ [2]
-   component_in_type_position.js:12:25
-   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                               ^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------ component_in_type_position.js:13:20
+Error ------------------------------------------------------------------------------ component_in_type_position.js:11:20
 
 Cannot use component Poly [1] without 1 type argument. [missing-type-arg]
 
-   component_in_type_position.js:13:20
-   13| type PolyNoTargs = Poly; // ERROR
+   component_in_type_position.js:11:20
+   11| type PolyNoTargs = Poly; // ERROR
                           ^^^^
 
 References:
@@ -1806,84 +1785,46 @@ References:
                            ^ [2]
 
 
-Error ---------------------------------------------------------------------- import_component_in_type_position.js:13:121
-
-Cannot assign `<Poly />` to `polyElemError` because in type argument `P` [1] > property `prop`: `"STRING"` [2] is
-incompatible with `number` [3]. [incompatible-type]
-
-   import_component_in_type_position.js:13:121
-   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                                                                                                               ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:97
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                                                                       ^ [1]
-   import_component_in_type_position.js:13:132
-   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                                                                                                                          ^^^^^^^^ [2]
-   import_component_in_type_position.js:13:31
-   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                     ^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------ import_component_in_type_position.js:18:2
+Error ------------------------------------------------------------------------ import_component_in_type_position.js:14:2
 
 Cannot cast `<Bar />` to `Foo` because `{...}` [1] is incompatible with `React.RendersExactly<typeof FooType>` [2].
 [incompatible-type]
 
-   import_component_in_type_position.js:18:2
-   18| (<Bar />) as Foo; // ERROR
+   import_component_in_type_position.js:14:2
+   14| (<Bar />) as Foo; // ERROR
         ^^^^^^^ [1]
 
 References:
-   import_component_in_type_position.js:18:14
-   18| (<Bar />) as Foo; // ERROR
+   import_component_in_type_position.js:14:14
+   14| (<Bar />) as Foo; // ERROR
                     ^^^ [2]
 
 
-Error ------------------------------------------------------------------------ import_component_in_type_position.js:21:1
-
-Cannot cast `aliasedFoo` to number because `{...}` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   import_component_in_type_position.js:21:1
-   21| aliasedFoo as number; // ERROR
-       ^^^^^^^^^^
-
-References:
-   import_component_in_type_position.js:20:70
-   20| const aliasedFoo: AliasedFoo extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Foo />;
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   import_component_in_type_position.js:21:15
-   21| aliasedFoo as number; // ERROR
-                     ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------- import_component_in_type_position.js:25:45
+Error ----------------------------------------------------------------------- import_component_in_type_position.js:18:45
 
 Cannot assign `3` to `errRendersMFoo` because number literal `3` [1] does not render `Foo` [2]. [incompatible-type]
 
-   import_component_in_type_position.js:25:45
-   25| const errRendersMFoo: renders MemoFooType = 3; // ERROR
+   import_component_in_type_position.js:18:45
+   18| const errRendersMFoo: renders MemoFooType = 3; // ERROR
                                                    ^ [1]
 
 References:
-   component_in_type_position.js:17:56
-   17| export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
+   component_in_type_position.js:15:56
+   15| export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
                                                               ^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------- import_component_in_type_position.js:26:49
+Error ----------------------------------------------------------------------- import_component_in_type_position.js:19:49
 
 Cannot assign `3` to `errRendersMFooType` because number literal `3` [1] does not render `Foo` [2]. [incompatible-type]
 
-   import_component_in_type_position.js:26:49
-   26| const errRendersMFooType: renders MemoFooType = 3; // ERROR
+   import_component_in_type_position.js:19:49
+   19| const errRendersMFooType: renders MemoFooType = 3; // ERROR
                                                        ^ [1]
 
 References:
-   component_in_type_position.js:17:56
-   17| export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
+   component_in_type_position.js:15:56
+   15| export const MemoFoo: component(...React.PropsOf<Foo>) renders Foo = React.memo(Foo);
                                                               ^^^^^^^^^^^ [2]
 
 
@@ -3655,4 +3596,4 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 235 errors
+Found 232 errors
