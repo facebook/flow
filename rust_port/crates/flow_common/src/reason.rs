@@ -1991,7 +1991,7 @@ pub fn is_promise_reason(r: &Reason) -> bool {
 }
 
 pub fn mk_annot_reason(desc: ReasonDesc, annot_loc: ALoc) -> Reason {
-    mk_reason(desc, annot_loc.dupe()).annotate(annot_loc)
+    VirtualReason::new_with(desc, annot_loc.dupe(), None, Some(annot_loc))
 }
 
 /// Creates a description string for an arbitrary expression. This description
