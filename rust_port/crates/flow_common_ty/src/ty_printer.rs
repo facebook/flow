@@ -319,7 +319,7 @@ fn type_impl<L: Dupe>(
             for t in ts.iter() {
                 all.push(t.as_ref());
             }
-            type_union(opts, depth, &all, size)
+            type_union(opts, depth, false, &all, size)
         }
         Ty::Inter(t1, t2, ts) => {
             let mut all = vec![t1.as_ref()];
@@ -1317,6 +1317,7 @@ fn type_args<L: Dupe>(
 fn type_union<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
+    after_assignment: bool,
     types: &[&Ty<L>],
     size: &mut PrintState<L>,
 ) -> LayoutNode {
@@ -1340,18 +1341,48 @@ fn type_union<L: Dupe>(
             (LayoutNode::empty(), types.to_vec())
         };
 
-    let elements = intersperse_pretty_line(
-        opts,
-        depth,
-        "|",
-        "union member",
-        "union members",
-        &filtered_types,
-        size,
-    );
-    layout::group(vec![layout::fuse(
-        std::iter::once(prefix).chain(elements).collect(),
-    )])
+    if after_assignment {
+        let elements = type_list_elements(
+            opts,
+            depth,
+            "|",
+            "union member",
+            "union members",
+            &filtered_types,
+            size,
+        )
+        .into_iter()
+        .enumerate()
+        .map(|(i, element)| {
+            if i == 0 {
+                layout::fuse(vec![
+                    layout::if_break(
+                        layout::fuse(vec![LayoutNode::atom("|".to_string()), layout::space()]),
+                        layout::space(),
+                    ),
+                    prefix.dupe(),
+                    element,
+                ])
+            } else {
+                element
+            }
+        })
+        .collect();
+        layout::list(None, None, None, false, Some((false, true)), None, elements)
+    } else {
+        let elements = intersperse_pretty_line(
+            opts,
+            depth,
+            "|",
+            "union member",
+            "union members",
+            &filtered_types,
+            size,
+        );
+        layout::group(vec![layout::fuse(
+            std::iter::once(prefix).chain(elements).collect(),
+        )])
+    }
 }
 
 fn type_intersection<L: Dupe>(
@@ -1373,6 +1404,32 @@ fn type_intersection<L: Dupe>(
 }
 
 fn intersperse_pretty_line<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    sep: &str,
+    singular: &str,
+    plural: &str,
+    types: &[&Ty<L>],
+    size: &mut PrintState<L>,
+) -> Vec<LayoutNode> {
+    let elts = type_list_elements(opts, depth, sep, singular, plural, types, size);
+    let len = elts.len();
+    elts.into_iter()
+        .enumerate()
+        .map(|(i, elt)| {
+            layout::fuse(vec![
+                elt,
+                if i == len - 1 {
+                    LayoutNode::empty()
+                } else {
+                    layout::pretty_line()
+                },
+            ])
+        })
+        .collect()
+}
+
+fn type_list_elements<L: Dupe>(
     opts: &PrinterOptions,
     depth: usize,
     sep: &str,
@@ -1408,20 +1465,7 @@ fn intersperse_pretty_line<L: Dupe>(
         }
     }
 
-    let len = elts.len();
-    elts.into_iter()
-        .enumerate()
-        .map(|(i, elt)| {
-            layout::fuse(vec![
-                elt,
-                if i == len - 1 {
-                    LayoutNode::empty()
-                } else {
-                    layout::pretty_line()
-                },
-            ])
-        })
-        .collect()
+    elts
 }
 
 fn type_with_parens<L: Dupe>(
@@ -1581,8 +1625,7 @@ fn type_alias<L: Dupe>(
         Some(t) => layout::fuse(vec![
             layout::pretty_space(),
             LayoutNode::atom("=".to_string()),
-            layout::pretty_space(),
-            type_(opts, depth, t, size),
+            type_after_assignment(opts, depth, t, size),
         ]),
         None => LayoutNode::empty(),
     };
@@ -1594,6 +1637,33 @@ fn type_alias<L: Dupe>(
         tparams_node,
         body,
     ])
+}
+
+fn type_after_assignment<L: Dupe>(
+    opts: &PrinterOptions,
+    depth: usize,
+    t: &Ty<L>,
+    size: &mut PrintState<L>,
+) -> LayoutNode {
+    let depth = depth + 1;
+    if size.remaining == 0 {
+        return layout::fuse(vec![layout::space(), crop_atom(size)]);
+    }
+    size.remaining -= 1;
+
+    match t {
+        Ty::Union(_, t1, t2, ts) => {
+            let types: Vec<_> = [t1.as_ref(), t2.as_ref()]
+                .into_iter()
+                .chain(ts.iter().map(AsRef::as_ref))
+                .collect();
+            type_union(opts, depth, true, &types, size)
+        }
+        _ => layout::fuse(vec![
+            layout::pretty_space(),
+            type_impl(opts, depth, t, size),
+        ]),
+    }
 }
 
 fn variable_decl<L: Dupe>(

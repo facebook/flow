@@ -16,6 +16,8 @@ mod tests {
     use flow_parser::loc::Loc;
     use flow_parser::loc_sig::LocSig;
 
+    use crate::ty::Decl;
+    use crate::ty::DeclTypeAliasDeclData;
     use crate::ty::Dict;
     use crate::ty::Elt;
     use crate::ty::FunEffect;
@@ -238,6 +240,50 @@ mod tests {
         let result = string_of_t(&union, &opts);
 
         assert_eq!(result, "number | string | ... 1 more union member ...");
+    }
+
+    #[test]
+    fn test_multiline_union_aligns_members() {
+        let union = Ty::<ALoc>::Union(
+            false,
+            Arc::new(Ty::StrLit(FlowSmolStr::new(
+                "FIRST_UNION_MEMBER_WITH_A_LONG_NAME",
+            ))),
+            Arc::new(Ty::StrLit(FlowSmolStr::new(
+                "SECOND_UNION_MEMBER_WITH_A_LONG_NAME",
+            ))),
+            vec![Arc::new(Ty::StrLit(FlowSmolStr::new(
+                "THIRD_UNION_MEMBER_WITH_A_LONG_NAME",
+            )))]
+            .into(),
+        );
+        let type_alias = Elt::Decl(Decl::TypeAliasDecl(Box::new(DeclTypeAliasDeclData {
+            import: false,
+            name: Symbol {
+                sym_provenance: Provenance::Local,
+                sym_def_loc: ALoc::none(),
+                sym_name: FlowSmolStr::new("LongUnion"),
+                sym_anonymous: false,
+            },
+            tparams: None,
+            type_: Some(Arc::new(union)),
+        })));
+
+        let (type_str, _) = string_of_type_at_pos_result(
+            TypeAtPosPrint {
+                ty: &type_alias,
+                refs: None,
+                binder: None,
+                alias: None,
+            },
+            &|_| Loc::none(),
+            &test_options(),
+        );
+
+        assert_eq!(
+            type_str,
+            "type LongUnion =\n  | \"FIRST_UNION_MEMBER_WITH_A_LONG_NAME\"\n  | \"SECOND_UNION_MEMBER_WITH_A_LONG_NAME\"\n  | \"THIRD_UNION_MEMBER_WITH_A_LONG_NAME\""
+        );
     }
 
     #[test]

@@ -436,13 +436,14 @@ where
 
 Found exact match 'SevenColors' defined at types.js:45:6,45:16 with type
 ```
-type SevenColors = "red"
-| "orange"
-| "yellow"
-| "green"
-| "blue"
-| "indigo"
-| "violet"
+type SevenColors =
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "blue"
+  | "indigo"
+  | "violet"
 ```
 where
 'SevenColors' is defined at types.js:45:6-16

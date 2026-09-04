@@ -1044,10 +1044,11 @@ Poly<
 unions.js:103:3,103:4
 
 At unions.js:112:6
-type LongUnion = LongLongLongLongLongLongLongLongName1
-| LongLongLongLongLongLongLongLongName2
-| LongLongLongLongLongLongLongLongName3
-| LongLongLongLongLongLongLongLongName4
+type LongUnion =
+  | LongLongLongLongLongLongLongLongName1
+  | LongLongLongLongLongLongLongLongName2
+  | LongLongLongLongLongLongLongLongName3
+  | LongLongLongLongLongLongLongLongName4
 
 'LongLongLongLongLongLongLongLongName1' defined at unions.js:107:20
 'LongLongLongLongLongLongLongLongName2' defined at unions.js:108:20
