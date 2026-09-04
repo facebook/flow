@@ -7,8 +7,8 @@ declare function f(x: boolean): string;
 f(1);
 f('hi');
 
-// A reference that is not a call keeps the whole intersection, so it needs no
-// count.
+// A reference that is not a call has the whole set in view, so it lists the
+// signatures rather than counting them.
 const g = f;
 
 declare function solo(x: number): string;

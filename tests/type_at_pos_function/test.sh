@@ -87,8 +87,10 @@ assert_ok "$FLOW" type-at-pos function.js 21 18 --strip-root
 
 # overloads.js
 # Flow spells an overload as a name declared more than once. A call selects one
-# signature, so hover counts the rest; a reference that is not a call keeps the
-# whole intersection and counts nothing.
+# signature, so hover prints that one and counts the rest; anywhere the whole
+# set is in view it is listed a signature per line and nothing is counted.
+printf "overloads.js:3:18 (declaration site) = "
+assert_ok "$FLOW" type-at-pos overloads.js 3 18 --strip-root
 printf "overloads.js:7:1 (call, number arm) = "
 assert_ok "$FLOW" type-at-pos overloads.js 7 1 --strip-root
 printf "overloads.js:8:1 (call, string arm) = "

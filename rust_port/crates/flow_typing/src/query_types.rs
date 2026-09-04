@@ -600,7 +600,7 @@ pub fn type_at_pos_type<'a>(
                                 // The declaration sites are in the exporting
                                 // module, so there is nothing here to count. An
                                 // overloaded import is an intersection anyway, and
-                                // `callable` only matches a lone signature.
+                                // `Ty::Fun` only matches a lone signature.
                                 overloads: 0,
                             })
                         });

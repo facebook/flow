@@ -1893,6 +1893,23 @@ fn layout_of_overload_count(overloads: u32) -> LayoutNode {
     ])
 }
 
+/// The signatures of an overload set, if `t` is one: an intersection whose every
+/// member is a function. A mixed intersection is not an overload set and has no
+/// reading as a list of signatures.
+fn overload_signatures(t: &Ty<ALoc>) -> Option<Vec<&FunT<ALoc>>> {
+    let Ty::Inter(t1, t2, rest) = t else {
+        return None;
+    };
+    [t1, t2]
+        .into_iter()
+        .chain(rest.iter())
+        .map(|t| match t.as_ref() {
+            Ty::Fun(func) => Some(func.as_ref()),
+            _ => None,
+        })
+        .collect()
+}
+
 /// Frames `t` as the declaration of `binder`: `const a: A`. A callable bound by
 /// `function` or a method is spliced into a signature (`function f(): void`)
 /// rather than annotated with an arrow type.
@@ -1943,6 +1960,25 @@ fn layout_of_binder(
                 type_function(opts, 0, &LayoutNode::atom(":".to_string()), func, state),
                 layout_of_overload_count(binder.overloads),
             ])
+        }
+        t if matches!(binder.kind, BinderKind::Function | BinderKind::Method)
+            && let Some(signatures) = overload_signatures(t) =>
+        {
+            let mut parts = Vec::new();
+            for (i, func) in signatures.iter().enumerate() {
+                if i > 0 {
+                    parts.push(layout::hardline());
+                }
+                parts.push(layout_of_binder_head(binder));
+                parts.push(type_function(
+                    opts,
+                    0,
+                    &LayoutNode::atom(":".to_string()),
+                    func,
+                    state,
+                ));
+            }
+            layout::fuse(parts)
         }
         _ => layout::fuse(vec![
             head,
