@@ -1,0 +1,6 @@
+[options]
+all=true
+component_syntax=true
+; note: move to another test suite once the flag is always on
+experimental.always_generalize_jsx=true
+no_flowlib=false

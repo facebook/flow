@@ -749,6 +749,9 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                 } => (normalized_render_type_collector, renders_variant),
             };
             match t.deref() {
+                TypeInner::GenericT(_) => {
+                    normalized_render_type_collector.add(t.dupe());
+                }
                 TypeInner::AnyT(..) => {
                     if !drop_renders_any {
                         normalized_render_type_collector.add(t.dupe());
