@@ -1932,6 +1932,7 @@ fn layout_of_binder_head(binder: &Binder) -> LayoutNode {
         BinderKind::Const => "const",
         BinderKind::Function => "function",
         BinderKind::Method => "(method)",
+        BinderKind::Constructor => "constructor",
         BinderKind::Getter => "(getter)",
         BinderKind::Setter => "(setter)",
         BinderKind::Property => "(property)",
@@ -2024,15 +2025,22 @@ fn layout_of_binder(
                 declaration,
             ])
         }
-        Ty::Fun(func) if matches!(binder.kind, BinderKind::Function | BinderKind::Method) => {
+        Ty::Fun(func)
+            if matches!(
+                binder.kind,
+                BinderKind::Function | BinderKind::Method | BinderKind::Constructor
+            ) =>
+        {
             layout::fuse(vec![
                 head,
                 type_function(opts, 0, &LayoutNode::atom(":".to_string()), func, state),
                 layout_of_overload_count(binder.overloads),
             ])
         }
-        t if matches!(binder.kind, BinderKind::Function | BinderKind::Method)
-            && let Some(signatures) = overload_signatures(t) =>
+        t if matches!(
+            binder.kind,
+            BinderKind::Function | BinderKind::Method | BinderKind::Constructor
+        ) && let Some(signatures) = overload_signatures(t) =>
         {
             let mut parts = Vec::new();
             for (i, func) in signatures.iter().enumerate() {

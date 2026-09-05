@@ -611,8 +611,8 @@ pub mod type_at_pos {
                 .collect()
         }
 
-        /// A constructor is reported as its class, not as a member, so it has no
-        /// binder kind of its own.
+        /// A constructor is framed as its class's own declaration, under the
+        /// class's name rather than the `constructor` keyword.
         fn binder_kind_of_method(
             method: &ast::class::Method<ALoc, (ALoc, Type)>,
         ) -> Option<BinderKind> {
@@ -621,7 +621,7 @@ pub mod type_at_pos {
                 MethodKind::Method => Some(BinderKind::Method),
                 MethodKind::Get => Some(BinderKind::Getter),
                 MethodKind::Set => Some(BinderKind::Setter),
-                MethodKind::Constructor => None,
+                MethodKind::Constructor => Some(BinderKind::Constructor),
             }
         }
 
@@ -981,11 +981,8 @@ pub mod type_at_pos {
             }
         }
 
-        //     Class information
-        //     v
-        // new C(e1, e2);
-        // ^^^^
-        // Constructor information
+        // `new C()` names the constructor declaration at both the keyword
+        // and the callee: `constructor C(...): ...`
         fn new(
             &mut self,
             loc: &'ast (ALoc, Type),
@@ -996,10 +993,36 @@ pub mod type_at_pos {
             let expr_start_loc = expr_loc.to_loc_exn().first_char();
             let callee_start_loc = callee_loc.to_loc_exn().char_before().char_before();
             let new_loc = Loc::between(&expr_start_loc, &callee_start_loc);
-            if self.covers_target_loc(&new_loc) {
-                match self.cx.get_ctor_callee(expr_loc) {
-                    Some(t) => self.find_loc(callee_loc, &t, false, None),
-                    None => ast_visitor::new_default(self, loc, expr),
+            // The name the callee gives the constructor: `C` itself in
+            // `new C()`, the property in `new ns.C()`. A target anywhere
+            // else in a member callee (e.g. on `ns`) falls through to the
+            // default walk.
+            let callee_ctor_name: Option<(&ALoc, &FlowSmolStr)> = match expr.callee.deref() {
+                ast::expression::ExpressionInner::Identifier { inner: id, .. } => {
+                    Some((callee_loc, &id.name))
+                }
+                ast::expression::ExpressionInner::Member { inner, .. } => {
+                    use ast::expression::member::Property;
+                    match &inner.property {
+                        Property::PropertyIdentifier(id) => {
+                            let (name_loc, _) = &id.loc;
+                            Some((name_loc, &id.name))
+                        }
+                        _ => None,
+                    }
+                }
+                _ => None,
+            };
+            let covers_ctor_name = callee_ctor_name
+                .as_ref()
+                .is_some_and(|(name_loc, _)| self.covers_target(name_loc));
+            if self.covers_target_loc(&new_loc) || covers_ctor_name {
+                match (callee_ctor_name, self.cx.get_ctor_callee(expr_loc)) {
+                    (Some((name_loc, name)), Some(t)) => {
+                        self.find_binder(name_loc, &t, BinderKind::Constructor, name)
+                    }
+                    (None, Some(t)) => self.find_loc(callee_loc, &t, false, None),
+                    (_, None) => ast_visitor::new_default(self, loc, expr),
                 }
             } else {
                 ast_visitor::new_default(self, loc, expr)
@@ -1141,7 +1164,19 @@ pub mod type_at_pos {
                 && let (loc, t) = &id.loc
                 && self.covers_target(loc)
             {
-                return self.find_binder(loc, t, kind, &id.name);
+                // The `constructor` keyword names no binding of its own, so a
+                // constructor is reported under its class's name. An anonymous
+                // class has no name to borrow, so its constructor falls through
+                // unframed rather than rendering as `constructor constructor`.
+                let name = if kind == BinderKind::Constructor {
+                    let Some(name) = self.enclosing_nominal.as_ref() else {
+                        return ast_visitor::class_method_default(self, method);
+                    };
+                    name
+                } else {
+                    &id.name
+                };
+                return self.find_binder(loc, t, kind, name);
             }
             // A private key carries no type of its own, so the method's
             // stands in for it.

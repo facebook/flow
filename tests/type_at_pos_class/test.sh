@@ -188,9 +188,21 @@ printf "class-getters-setters.js:9:7 (framed) = "
 assert_ok "$FLOW" type-at-pos class-getters-setters.js 9 7 --strip-root
 printf "FluxStore.js:5:3 (framed) = "
 assert_ok "$FLOW" type-at-pos FluxStore.js 5 3 --strip-root
-# A constructor is reported as its class, so it gets no member framing.
+# A constructor is framed as its class's own declaration, both at its site
+# and at a `new` callee naming it.
 printf "constructor.js:4:7 (framed) = "
 assert_ok "$FLOW" type-at-pos constructor.js 4 7 --strip-root
+printf "constructor.js:9:17 (framed) = "
+assert_ok "$FLOW" type-at-pos constructor.js 9 17 --strip-root
+printf "constructor.js:9:14 (new keyword, framed) = "
+assert_ok "$FLOW" type-at-pos constructor.js 9 14 --strip-root
+# A member callee names the constructor under its property name.
+printf "constructor.js:17:20 (member callee, framed) = "
+assert_ok "$FLOW" type-at-pos constructor.js 17 20 --strip-root
+# An anonymous class has no name to frame its constructor under, so the
+# keyword is left unframed.
+printf "constructor.js:20:3 (anonymous, framed) = "
+assert_ok "$FLOW" type-at-pos constructor.js 20 3 --strip-root
 
 # declare_class_members.js
 printf "declare_class_members.js:8:3 (framed) = "

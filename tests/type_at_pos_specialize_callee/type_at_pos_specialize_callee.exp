@@ -296,10 +296,7 @@ At file.js:229:17
 file.js:229:18,229:18
 
 At file.js:231:18
-class C<X>
-
-'C' defined at file.js:223:8
-
+(x: number) => void
 file.js:231:18,231:18
 
 At file.js:241:13

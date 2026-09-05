@@ -906,8 +906,16 @@ class-getters-setters.js:9:7 (framed) = (setter) A.x: ?string
 class-getters-setters.js:9:7,9:7
 FluxStore.js:5:3 (framed) = (property) FluxStore.p: string
 FluxStore.js:5:3,5:3
-constructor.js:4:7 (framed) = (x: string) => void
+constructor.js:4:7 (framed) = constructor Foo(x: string): void
 constructor.js:4:3,4:13
+constructor.js:9:17 (framed) = constructor Foo(x: string): void
+constructor.js:9:17,9:19
+constructor.js:9:14 (new keyword, framed) = constructor Foo(x: string): void
+constructor.js:9:17,9:19
+constructor.js:17:20 (member callee, framed) = constructor Bar(x: number): void
+constructor.js:17:20,17:22
+constructor.js:20:3 (anonymous, framed) = (x: string) => void
+constructor.js:20:3,20:13
 declare_class_members.js:8:3 (framed) = (property) D.p: number
 declare_class_members.js:8:3,8:3
 declare_class_members.js:9:3 (framed) = (method) D.m(): void

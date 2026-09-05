@@ -526,7 +526,7 @@ new-array.js:3:15 = {
   "path":"new-array.js",
   "reasons":[],
   "start":13,
-  "types":{"type":"class Array<T>"}
+  "types":{"type":"(arrayLength?: number) => void"}
 }
 object-resolution.js:5:2 = {
   "end":2,

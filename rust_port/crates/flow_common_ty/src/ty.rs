@@ -850,6 +850,7 @@ pub enum BinderKind {
     Const,
     Function,
     Method,
+    Constructor,
     Getter,
     Setter,
     Property,

@@ -147,7 +147,7 @@ Flags: --strip-root --pretty
   "path":"class_declaration.js",
   "reasons":[],
   "start":13,
-  "types":{"type":"class Foo"}
+  "types":{"type":"() => void"}
 }
 
 function_declaration.js:8:4
@@ -204,7 +204,7 @@ Flags: --strip-root --pretty
   "path":"declare.js",
   "reasons":[],
   "start":5,
-  "types":{"type":"class Bar"}
+  "types":{"type":"() => void"}
 }
 
 declare.js:24:4
