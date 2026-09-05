@@ -43,6 +43,7 @@ use flow_typing_ty_normalizer::env::EvaluateTypeDestructorsMode;
 use flow_typing_ty_normalizer::env::Options;
 use flow_typing_ty_normalizer::normalizer::Error;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_util;
 use flow_typing_utils::convert_types;
 use flow_typing_utils::type_env;
@@ -318,6 +319,17 @@ fn binder_of_member_reference(
     name: &FlowSmolStr,
 ) -> Option<Binder> {
     let prop_name = Name::new(name.dupe());
+    // A receiver like `super` can still be an open type variable after
+    // checking, which member expansion sees opaquely. Resolve settled
+    // constraints first, falling back to the type as found.
+    let resolved = cx
+        .find_resolved(object_type)
+        .unwrap_or_else(|| object_type.dupe());
+    let object_type = &resolved;
+    // A `super` (or `this`) receiver resolves to a type application over its
+    // class, which member expansion otherwise reads as the class object.
+    // Force the instance view so instance members resolve.
+    let force_instance = matches!(&**object_type, TypeInner::ThisTypeAppT(_));
     // Expanding members flows types, which can raise errors. Server state persists
     // across IDE requests, so they are rolled back rather than left behind.
     let (expanded, object_ty) = cx.run_and_rolled_back_cache(|| {
@@ -339,7 +351,7 @@ fn binder_of_member_reference(
             file_sig,
         );
         let expanded = ty_normalizer_flow::expand_members(
-            false,
+            force_instance,
             Some(vec![prop_name.dupe()]),
             &genv,
             object_type,

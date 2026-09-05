@@ -268,6 +268,8 @@ class-4.js:9:6 = {
   "start":5,
   "types":{"type":"Y"}
 }
+class-4.js:9:11 (framed) = (property) Y.a: string
+class-4.js:9:11,9:11
 class-bound.js:4:6 = {
   "end":6,
   "endline":4,

@@ -52,6 +52,8 @@ assert_ok "$FLOW" type-at-pos class-3.js 10 9 --strip-root --pretty
 # class-4.js
 printf "class-4.js:9:6 = "
 assert_ok "$FLOW" type-at-pos class-4.js 9 6 --strip-root --pretty
+printf "class-4.js:9:11 (framed) = "
+assert_ok "$FLOW" type-at-pos class-4.js 9 11 --strip-root
 
 # class-bound.js
 printf "class-bound.js:4:6 = "
