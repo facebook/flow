@@ -14,3 +14,12 @@ type S = number | void
 
 test.js:10:6,10:6
 
+test.js:15:12
+Flags:
+(unknown)
+
+test.js:19:12
+Flags:
+(property) O.a: number
+test.js:19:12,19:14
+
