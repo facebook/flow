@@ -133,6 +133,10 @@ function.js:16:3 = {
   "start":3,
   "types":{"type":"<T>(x: T) => T"}
 }
+function.js:24:20 (this parameter, framed) = (parameter) this: {z: number}
+function.js:24:20,24:36
+function.js:24:27 (this annotation, unframed) = (property) z: number
+function.js:24:27,24:27
 default.js:4:16 = {
   "end":16,
   "endline":4,

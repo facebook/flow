@@ -207,6 +207,7 @@ pub mod type_at_pos {
     use flow_parser::ast_visitor::AstVisitor;
     use flow_parser::ast_visitor::TypeParamsContext;
     use flow_parser::loc::Loc;
+    use flow_parser::loc::Position;
     use flow_typing_context::Context;
     use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefTInner;
@@ -1697,6 +1698,30 @@ pub mod type_at_pos {
                 return self.find_binder(loc, t, BinderKind::Parameter, &id.name);
             }
             ast_visitor::function_param_default(self, param)
+        }
+
+        /// A `this: T` parameter binds no identifier, but hovers as the
+        /// parameter it is. The `this` keyword has no node of its own, so
+        /// claim exactly its span and let the annotation keep its own hover.
+        fn function_this_param(
+            &mut self,
+            this_param: &'ast ast::function::ThisParam<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let ast::function::ThisParam { loc, annot, .. } = this_param;
+            let param_loc = loc.to_loc_exn();
+            let keyword = Loc {
+                source: param_loc.source.dupe(),
+                start: param_loc.start,
+                end: Position {
+                    line: param_loc.start.line,
+                    column: param_loc.start.column + 4,
+                },
+            };
+            if self.covers_target_loc(&keyword) {
+                let (_, t) = annot.annotation.loc();
+                return self.find_binder(loc, t, BinderKind::Parameter, &FlowSmolStr::new("this"));
+            }
+            ast_visitor::function_this_param_default(self, this_param)
         }
 
         /// `(a: number)` in an interface call signature: the label binds

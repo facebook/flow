@@ -25,6 +25,12 @@ printf "function.js:12:3 = "
 assert_ok "$FLOW" type-at-pos function.js 12 3 --strip-root --pretty
 printf "function.js:16:3 = "
 assert_ok "$FLOW" type-at-pos function.js 16 3 --strip-root --pretty
+# A `this` parameter binds no identifier. Queried in friendly mode to observe
+# the framing.
+printf "function.js:24:20 (this parameter, framed) = "
+assert_ok "$FLOW" type-at-pos function.js 24 20 --strip-root
+printf "function.js:24:27 (this annotation, unframed) = "
+assert_ok "$FLOW" type-at-pos function.js 24 27 --strip-root
 
 # default.js
 printf "default.js:4:16 = "

@@ -19,3 +19,6 @@ const d = {
 // A rest parameter is not a `RegularParam`, so it is framed by the binding it
 // resolves to rather than by the parameter hook.
 function rest(...xs: Array<string>): void {}
+
+// A `this` parameter binds no identifier, but hovers as the parameter.
+function with_this(this: {z: number}, a: number): void {}
