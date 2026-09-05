@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -731,14 +732,11 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         ts: Vec<Type>,
-        gas: i32,
+        ancestors: &mut BTreeSet<Type>,
         drop_renders_any: bool,
         mut state: RenderTypeSynthesisState,
     ) -> Result<RenderTypeSynthesisState, FlowJsException> {
         for t in ts {
-            if gas <= 0 {
-                return Ok(RenderTypeSynthesisState::FailedSynthesisState);
-            }
             let (normalized_render_type_collector, renders_variant) = match &state {
                 RenderTypeSynthesisState::FailedSynthesisState => {
                     return Ok(RenderTypeSynthesisState::FailedSynthesisState);
@@ -748,6 +746,9 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                     renders_variant,
                 } => (normalized_render_type_collector, renders_variant),
             };
+            if !ancestors.insert(t.dupe()) {
+                return Ok(RenderTypeSynthesisState::FailedSynthesisState);
+            }
             match t.deref() {
                 TypeInner::GenericT(_) => {
                     normalized_render_type_collector.add(t.dupe());
@@ -781,7 +782,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                             cx,
                             env,
                             promoted_ts,
-                            gas - 1,
+                            ancestors,
                             drop_renders_any,
                             current_state,
                         )?;
@@ -822,7 +823,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                                 cx,
                                 env,
                                 concrete,
-                                gas - 1,
+                                ancestors,
                                 drop_renders_any,
                                 RenderTypeSynthesisState::IntermediateSynthesisState {
                                     normalized_render_type_collector: collector,
@@ -879,7 +880,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                             cx,
                             env,
                             concrete,
-                            gas - 1,
+                            ancestors,
                             drop_renders_any,
                             RenderTypeSynthesisState::IntermediateSynthesisState {
                                 normalized_render_type_collector: collector,
@@ -895,6 +896,7 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
                     state = RenderTypeSynthesisState::FailedSynthesisState;
                 }
             }
+            ancestors.remove(&t);
         }
         Ok(state)
     }
@@ -909,7 +911,14 @@ pub(super) fn try_synthesize_render_type_with_env<'cx>(
         type_util::reason_of_t(t),
         t,
     )?;
-    match on_concretized_react_node_types(cx, env, concrete, 5, drop_renders_any, state)? {
+    match on_concretized_react_node_types(
+        cx,
+        env,
+        concrete,
+        &mut BTreeSet::new(),
+        drop_renders_any,
+        state,
+    )? {
         RenderTypeSynthesisState::FailedSynthesisState => Ok(None),
         RenderTypeSynthesisState::IntermediateSynthesisState {
             normalized_render_type_collector,

@@ -7,7 +7,13 @@ declare const Context: React.Context<string>;
 component GenericProvider<TChildren extends React.Node>(
   children: TChildren,
 ) renders TChildren {
-  return <Context.Provider value="value">{children}</Context.Provider>;
+  return (
+    <Context.Provider value="outer">
+      <Context.Provider value="middle">
+        <Context.Provider value="inner">{children}</Context.Provider>
+      </Context.Provider>
+    </Context.Provider>
+  );
 }
 
 component OptionalGenericProvider<TChildren extends React.Node = void>(

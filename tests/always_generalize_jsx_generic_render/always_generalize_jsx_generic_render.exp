@@ -1,31 +1,31 @@
-Error ---------------------------------------------------------------------------------------- generic_provider.js:87:23
+Error ---------------------------------------------------------------------------------------- generic_provider.js:93:23
 
 Cannot create `AcceptsFirst` element because in property `child`: `GenericProvider` element [1] does not render
 `First` [2]. [incompatible-type]
 
-   generic_provider.js:87:23
-   87| <AcceptsFirst child={<GenericProvider><Second /></GenericProvider>} />; // ERROR
+   generic_provider.js:93:23
+   93| <AcceptsFirst child={<GenericProvider><Second /></GenericProvider>} />; // ERROR
                              ^^^^^^^^^^^^^^^ [1]
 
 References:
-   generic_provider.js:52:31
-   52| component AcceptsFirst(child: renders First) {
+   generic_provider.js:58:31
+   58| component AcceptsFirst(child: renders First) {
                                      ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- generic_provider.js:90:6
+Error ----------------------------------------------------------------------------------------- generic_provider.js:96:6
 
 Cannot create `AcceptsEither` element because in property `child`: [incompatible-type]
  - Either `EitherGenericProvider` element [1] does not render `First` [2].
  - Or `EitherGenericProvider` element [1] does not render `Second` [2].
 
-   generic_provider.js:90:6
-   90|     <EitherGenericProvider
+   generic_provider.js:96:6
+   96|     <EitherGenericProvider
             ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   generic_provider.js:60:32
-   60| component AcceptsEither(child: renders (First | Second)) {
+   generic_provider.js:66:32
+   66| component AcceptsEither(child: renders (First | Second)) {
                                       ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
