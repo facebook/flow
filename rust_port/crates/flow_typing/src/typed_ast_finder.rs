@@ -1602,6 +1602,40 @@ pub mod type_at_pos {
             ast_visitor::function_param_default(self, param)
         }
 
+        /// `(a: number)` in an interface call signature: the label binds
+        /// nothing, but hovers as the parameter it names.
+        fn function_param_type(
+            &mut self,
+            fpt: &'ast ast::types::function::Param<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let ast::types::function::ParamKind::Labeled { name: id, .. } = &fpt.param
+                && let (loc, t) = &id.loc
+                && self.covers_target(loc)
+            {
+                return self.find_binder(loc, t, BinderKind::Parameter, &id.name);
+            }
+            ast_visitor::function_param_type_default(self, fpt)
+        }
+
+        /// `[k: string]` in an index signature: the key binds nothing, but
+        /// hovers as the parameter it names. The default walk skips the id
+        /// entirely, so without this hook the key is hover-silent. The id
+        /// node itself carries the indexer's value type, so the hovered type
+        /// comes from the key annotation instead.
+        fn object_indexer_property_type(
+            &mut self,
+            indexer: &'ast ast::types::object::Indexer<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let Some(id) = &indexer.id
+                && let (loc, _) = &id.loc
+                && self.covers_target(loc)
+            {
+                let (_, key_t) = indexer.key.loc();
+                return self.find_binder(loc, key_t, BinderKind::Parameter, &id.name);
+            }
+            ast_visitor::object_indexer_property_type_default(self, indexer)
+        }
+
         fn call_type_arg(
             &mut self,
             t: &'ast ast::expression::CallTypeArg<ALoc, (ALoc, Type)>,

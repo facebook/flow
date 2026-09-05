@@ -61,3 +61,13 @@ const cloneFn = box.clone;
 
 declare const cls: Class<Box<number>>;
 //            ^
+
+interface Callable {
+  (a: number): string;
+// ^
+}
+
+interface StringMap {
+  [k: string]: number;
+// ^
+}
