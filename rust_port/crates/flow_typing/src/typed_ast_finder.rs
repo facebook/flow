@@ -308,6 +308,10 @@ pub mod type_at_pos {
         /// Name of the class, declared class, record or interface whose own body
         /// is being visited, so that a member binder can qualify itself as `A.m`.
         enclosing_nominal: Option<FlowSmolStr>,
+        /// Type of the object a destructuring pattern matches against, so that
+        /// a property key frames like a member reference. Restored on exit,
+        /// since patterns nest.
+        enclosing_pattern_scrutinee: Option<Type>,
         /// Names bound by `infer` and in scope at the current position. The scope
         /// builder records these as ordinary type bindings, indistinguishable from
         /// a type alias, so the syntax that bound them is the only thing that says
@@ -1091,6 +1095,51 @@ pub mod type_at_pos {
             }
         }
 
+        /// The object a destructuring pattern matches against, so that a
+        /// property key below can resolve itself in it. Restored on exit,
+        /// since patterns nest.
+        fn pattern_object_p(
+            &mut self,
+            kind: Option<ast::VariableKind>,
+            loc: &'ast (ALoc, Type),
+            prop: &'ast ast::pattern::object::Property<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let (_, t) = loc;
+            let outer = self.enclosing_pattern_scrutinee.replace(t.dupe());
+            let res: Result<(), FoundResult> =
+                ast_visitor::pattern_object_p_default(self, kind, loc, prop);
+            self.enclosing_pattern_scrutinee = outer;
+            res
+        }
+
+        /// `d02` in `const {d02: d03} = ...`: the key names a member of the
+        /// scrutinee, so it frames like a member reference. A shorthand key
+        /// is the binding itself rather than a member access, and is left
+        /// alone.
+        fn pattern_object_property(
+            &mut self,
+            kind: Option<ast::VariableKind>,
+            prop: &'ast ast::pattern::object::NormalProperty<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if !prop.shorthand
+                && let ast::pattern::object::Key::Identifier(id) = &prop.key
+                && let (id_loc, t) = &id.loc
+                && self.covers_target(id_loc)
+                && let Some(scrutinee) = self.enclosing_pattern_scrutinee.dupe()
+            {
+                return self.find_loc(
+                    id_loc,
+                    t,
+                    false,
+                    Some(Framing::MemberRef {
+                        name: id.name.dupe(),
+                        object_type: scrutinee,
+                    }),
+                );
+            }
+            ast_visitor::pattern_object_property_default(self, kind, prop)
+        }
+
         // The hooks below fire when the target is a binding's own name, so that
         // hover can frame the type as a declaration. Each checks the bound
         // identifier directly and falls through to the default walk otherwise, so a
@@ -1522,6 +1571,7 @@ pub mod type_at_pos {
             target_loc: loc,
             enclosing_tparams: Vec::new(),
             enclosing_nominal: None,
+            enclosing_pattern_scrutinee: None,
             infer_tparams: Vec::new(),
             enclosing_private_members: Vec::new(),
         };

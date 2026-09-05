@@ -83,3 +83,8 @@ object.js:12:6 (framed) = var b1: O
 'O' defined at object.js:3:20
 
 object.js:12:6,12:7
+object.js:12:3 (framed) = (property) b: O
+
+'O' defined at object.js:3:20
+
+object.js:12:3,12:3

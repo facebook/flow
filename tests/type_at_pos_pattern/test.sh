@@ -23,3 +23,5 @@ printf "object.js:11:3 (framed) = "
 assert_ok "$FLOW" type-at-pos object.js 11 3 --strip-root
 printf "object.js:12:6 (framed) = "
 assert_ok "$FLOW" type-at-pos object.js 12 6 --strip-root
+printf "object.js:12:3 (framed) = "
+assert_ok "$FLOW" type-at-pos object.js 12 3 --strip-root
