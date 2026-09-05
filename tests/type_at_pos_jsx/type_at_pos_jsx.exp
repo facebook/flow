@@ -1,31 +1,31 @@
 test.js:7:7
 Flags:
-number
+(property) x: number
 test.js:7:7,7:7
 
 test.js:10:7
 Flags:
-number
+(property) x: number
 test.js:10:7,10:7
 
 test.js:13:7
 Flags:
-number
+(property) x: number
 test.js:13:7,13:7
 
 test.js:16:7
 Flags:
-number
+(property) x: number
 test.js:16:7,16:7
 
 test.js:19:7
 Flags:
-void
+(property) key: void
 test.js:19:7,19:9
 
 test.js:22:7
 Flags:
-void
+(property) ref: void
 test.js:22:7,22:9
 
 test.js:27:8
@@ -77,6 +77,11 @@ Flags:
 'Node' defined at (lib) react.js:443:22
 
 test.js:59:6,59:8
+
+test.js:66:18
+Flags:
+(property) x: number
+test.js:66:18,66:18
 
 jsx_instantiation.js:3:19
 Flags:

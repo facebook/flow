@@ -208,6 +208,7 @@ pub mod type_at_pos {
     use flow_parser::ast_visitor::TypeParamsContext;
     use flow_parser::loc::Loc;
     use flow_typing_context::Context;
+    use flow_typing_type::type_::AnySource;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::LazyHintT;
     use flow_typing_type::type_::Type;
@@ -412,6 +413,22 @@ pub mod type_at_pos {
                 | BinderKind::Property => self.enclosing_nominal.dupe(),
                 _ => None,
             };
+            self.find_binder_with_owner(loc, t, kind, name, owner)
+        }
+
+        /// Like `find_binder`, but the nominal owner is given explicitly.
+        /// Use this when the binder's owner is not the lexically enclosing
+        /// class/interface/record, e.g. a component's (anonymous) props
+        /// object for a JSX attribute name that happens to sit inside a
+        /// class body.
+        fn find_binder_with_owner(
+            &self,
+            loc: &ALoc,
+            t: &Type,
+            kind: BinderKind,
+            name: &FlowSmolStr,
+            owner: Option<FlowSmolStr>,
+        ) -> Result<(), FoundResult> {
             Err(FoundResult::FoundType {
                 loc: loc.dupe(),
                 is_type_identifier_reference: false,
@@ -1054,7 +1071,40 @@ pub mod type_at_pos {
                 // Split with_hint to avoid double &mut self borrow in closures
                 let hint_t = type_hint::with_hint(Some, || None, hint_result);
                 match hint_t {
-                    Some(t) => self.find_loc(loc, &t, false, None),
+                    // Frame the settled hint as a member of the component's
+                    // props. A hint variable that never settled (intrinsic
+                    // attributes, whose props never constrain it) or an
+                    // implicit `any` reports bare instead.
+                    Some(t) => {
+                        let resolved = self.cx.find_resolved(&t);
+                        let settled = match &resolved {
+                            Some(resolved) => !matches!(
+                                resolved.deref(),
+                                ConstraintTypeInner::OpenT(_)
+                                    | ConstraintTypeInner::AnyT(
+                                        _,
+                                        AnySource::AnyError(_)
+                                            | AnySource::Unsound(_)
+                                            | AnySource::Untyped,
+                                    )
+                            ),
+                            None => false,
+                        };
+                        if settled {
+                            // The props object is structural, so the binder
+                            // has no nominal owner, even when the element
+                            // sits lexically inside a class body.
+                            self.find_binder_with_owner(
+                                loc,
+                                resolved.as_ref().unwrap_or(&t),
+                                BinderKind::Property,
+                                &ident.name,
+                                None,
+                            )
+                        } else {
+                            self.find_loc(loc, &t, false, None)
+                        }
+                    }
                     None => ast_visitor::jsx_attribute_name_identifier_default(self, ident),
                 }
             } else {

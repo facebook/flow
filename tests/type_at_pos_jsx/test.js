@@ -58,3 +58,12 @@ declare var NS: { Sub: typeof Foo };
 
 (<NS.Sub x={0} />);
 //   ^
+
+// An attribute lexically inside a class body still frames as the component's
+// (anonymous) props, not as a member of the enclosing class.
+class C {
+  render(): React.Node {
+    return (<Foo x={0} />);
+//               ^
+  }
+}
