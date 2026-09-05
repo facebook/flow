@@ -341,6 +341,22 @@ pub mod type_at_pos {
             reason::in_range(&self.target_loc, loc)
         }
 
+        /// A module specifier (`'./mod'` in an `import` or `export ... from`)
+        /// names its module, like `declare module` does.
+        fn find_module_specifier(
+            &self,
+            source: &((ALoc, Type), ast::StringLiteral<ALoc>),
+        ) -> Result<(), FoundResult> {
+            let ((loc, _), lit) = source;
+            if self.covers_target(loc) {
+                return Err(FoundResult::FoundHardcodedModule(
+                    loc.dupe(),
+                    lit.value.dupe(),
+                ));
+            }
+            Ok(())
+        }
+
         fn type_parameter_context(&self, t: &Type) -> Option<Rc<TypeParameterContext<Type>>> {
             let def_loc = type_util::def_loc_of_t(t);
             self.enclosing_tparams
@@ -1130,6 +1146,37 @@ pub mod type_at_pos {
                 ast::statement::declare_module::Id::Literal(_) => {}
             }
             ast_visitor::declare_module_default(self, loc, m)
+        }
+
+        fn import_declaration(
+            &mut self,
+            loc: &'ast ALoc,
+            decl: &'ast ast::statement::ImportDeclaration<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            self.find_module_specifier(&decl.source)?;
+            ast_visitor::import_declaration_default(self, loc, decl)
+        }
+
+        fn export_named_declaration(
+            &mut self,
+            loc: &'ast ALoc,
+            decl: &'ast ast::statement::ExportNamedDeclaration<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let Some(source) = &decl.source {
+                self.find_module_specifier(source)?;
+            }
+            ast_visitor::export_named_declaration_default(self, loc, decl)
+        }
+
+        fn declare_export_declaration(
+            &mut self,
+            loc: &'ast ALoc,
+            decl: &'ast ast::statement::DeclareExportDeclaration<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            if let Some(source) = &decl.source {
+                self.find_module_specifier(source)?;
+            }
+            ast_visitor::declare_export_declaration_default(self, loc, decl)
         }
 
         fn match_object_pattern_property(

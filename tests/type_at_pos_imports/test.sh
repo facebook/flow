@@ -17,6 +17,7 @@ function run() {
   queries_in_file "type-at-pos" "import-rec-export.js" "${args[@]}"
   queries_in_file "type-at-pos" "import-star.js" "${args[@]}"
   queries_in_file "type-at-pos" "import-typeof-class.js" "${args[@]}"
+  queries_in_file "type-at-pos" "module-specifier.js" "${args[@]}"
   queries_in_file "type-at-pos" "module-export-0.js" "${args[@]}"
   queries_in_file "type-at-pos" "module-export-1.js" "${args[@]}"
   queries_in_file "type-at-pos" "module-import.js" "${args[@]}"

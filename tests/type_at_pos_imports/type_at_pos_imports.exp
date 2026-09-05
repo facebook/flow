@@ -847,6 +847,78 @@ Flags: --pretty --expand-json-output
   }
 }
 
+module-specifier.js:3:32
+Flags: --pretty
+{
+  "end":45,
+  "endline":3,
+  "line":3,
+  "loc":{
+    "end":{"column":45,"line":3,"offset":55},
+    "source":"module-specifier.js",
+    "start":{"column":30,"line":3,"offset":39},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":30,
+  "types":{"type":"module \"./exports-type\""}
+}
+
+module-specifier.js:5:15
+Flags: --pretty
+{
+  "end":30,
+  "endline":5,
+  "line":5,
+  "loc":{
+    "end":{"column":30,"line":5,"offset":129},
+    "source":"module-specifier.js",
+    "start":{"column":15,"line":5,"offset":113},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":15,
+  "types":{"type":"module \"./exports-type\""}
+}
+
+module-specifier.js:7:18
+Flags: --pretty
+{
+  "end":30,
+  "endline":7,
+  "line":7,
+  "loc":{
+    "end":{"column":30,"line":7,"offset":186},
+    "source":"module-specifier.js",
+    "start":{"column":17,"line":7,"offset":172},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":17,
+  "types":{"type":"module \"./rec-export\""}
+}
+
+module-specifier.js:9:23
+Flags: --pretty
+{
+  "end":38,
+  "endline":9,
+  "line":9,
+  "loc":{
+    "end":{"column":38,"line":9,"offset":254},
+    "source":"module-specifier.js",
+    "start":{"column":23,"line":9,"offset":238},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":23,
+  "types":{"type":"module \"./exports-type\""}
+}
+
 module-export-0.js:3:20
 Flags: --pretty
 {
@@ -2098,6 +2170,78 @@ Flags: --do_not_use_typed_AST_for_imports --pretty --expand-json-output
     },
     "type":"type D = typeof C"
   }
+}
+
+module-specifier.js:3:32
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "end":45,
+  "endline":3,
+  "line":3,
+  "loc":{
+    "end":{"column":45,"line":3,"offset":55},
+    "source":"module-specifier.js",
+    "start":{"column":30,"line":3,"offset":39},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":30,
+  "types":{"type":"module \"./exports-type\""}
+}
+
+module-specifier.js:5:15
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "end":30,
+  "endline":5,
+  "line":5,
+  "loc":{
+    "end":{"column":30,"line":5,"offset":129},
+    "source":"module-specifier.js",
+    "start":{"column":15,"line":5,"offset":113},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":15,
+  "types":{"type":"module \"./exports-type\""}
+}
+
+module-specifier.js:7:18
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "end":30,
+  "endline":7,
+  "line":7,
+  "loc":{
+    "end":{"column":30,"line":7,"offset":186},
+    "source":"module-specifier.js",
+    "start":{"column":17,"line":7,"offset":172},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":17,
+  "types":{"type":"module \"./rec-export\""}
+}
+
+module-specifier.js:9:23
+Flags: --do_not_use_typed_AST_for_imports --pretty
+{
+  "end":38,
+  "endline":9,
+  "line":9,
+  "loc":{
+    "end":{"column":38,"line":9,"offset":254},
+    "source":"module-specifier.js",
+    "start":{"column":23,"line":9,"offset":238},
+    "type":"SourceFile"
+  },
+  "path":"module-specifier.js",
+  "reasons":[],
+  "start":23,
+  "types":{"type":"module \"./exports-type\""}
 }
 
 module-export-0.js:3:20
