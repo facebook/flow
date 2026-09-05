@@ -1936,6 +1936,7 @@ fn layout_of_binder_head(binder: &Binder) -> LayoutNode {
         BinderKind::Getter => "(getter)",
         BinderKind::Setter => "(setter)",
         BinderKind::Property => "(property)",
+        BinderKind::Index => "(index)",
         BinderKind::EnumMember => "(enum member)",
         BinderKind::Parameter => "(parameter)",
         BinderKind::TypeParameter => "(type parameter)",

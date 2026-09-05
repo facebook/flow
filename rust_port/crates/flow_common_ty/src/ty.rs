@@ -854,6 +854,7 @@ pub enum BinderKind {
     Getter,
     Setter,
     Property,
+    Index,
     EnumMember,
     Parameter,
     TypeParameter,

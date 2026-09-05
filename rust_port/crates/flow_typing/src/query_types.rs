@@ -23,6 +23,7 @@ use flow_common_ty::ty::Elt;
 use flow_common_ty::ty::ImportProvenance;
 use flow_common_ty::ty::ImportSpecifier;
 use flow_common_ty::ty::NamedProp;
+use flow_common_ty::ty::ObjKind;
 use flow_common_ty::ty::Prop;
 use flow_common_ty::ty::Ty;
 use flow_common_ty::ty::TypeAtPosResult;
@@ -242,6 +243,37 @@ fn framed_of_identifier_reference(cx: &Context<'_>, file_sig: &FileSig, loc: &AL
     Framed { binder, alias }
 }
 
+/// The `(index)` head name for the first constituent carrying a string-keyed
+/// index signature, traversing the same shapes as `named_prop_of_ty`. Only
+/// string keys: every caller is a named access, which a number-keyed indexer
+/// does not serve. The label is the user-written one (`[k: string]`), falling
+/// back to `[string]` when the signature is anonymous.
+fn index_head_name_of_ty(ty: &Ty<ALoc>) -> Option<FlowSmolStr> {
+    match ty {
+        Ty::Obj(obj) => {
+            if let ObjKind::IndexedObj(dict) = &obj.obj_kind
+                && matches!(&*dict.dict_key, Ty::Str)
+            {
+                let head = match &dict.dict_name {
+                    Some(name) => FlowSmolStr::new(format!("[{name}: string]")),
+                    None => FlowSmolStr::new("[string]"),
+                };
+                return Some(head);
+            }
+            obj.obj_props.iter().find_map(|p| match p {
+                Prop::SpreadProp(t) => index_head_name_of_ty(t),
+                _ => None,
+            })
+        }
+        Ty::Fun(fun) => index_head_name_of_ty(&fun.fun_static),
+        Ty::Union(_, t1, t2, ts) | Ty::Inter(t1, t2, ts) => [t1, t2]
+            .into_iter()
+            .chain(ts.iter())
+            .find_map(|t| index_head_name_of_ty(t)),
+        _ => None,
+    }
+}
+
 /// The first constituent of a union or intersection that has the property is
 /// enough, since only the property's kind is read off the result, not its type.
 fn named_prop_of_ty<'a>(ty: &'a Ty<ALoc>, name: &Name) -> Option<&'a NamedProp<ALoc>> {
@@ -361,7 +393,21 @@ fn binder_of_member_reference(
         (expanded, object_ty)
     });
     let expanded = expanded.ok()?;
-    let named_prop = named_prop_of_ty(&expanded, &prop_name)?;
+    let named_prop = named_prop_of_ty(&expanded, &prop_name);
+    if named_prop.is_none()
+        && let Some(name) = index_head_name_of_ty(&expanded)
+    {
+        // A named access that hits an index signature has no declared
+        // member; frame the index signature itself.
+        return Some(Binder {
+            kind: BinderKind::Index,
+            name,
+            owner: None,
+            type_parameter_context: None,
+            overloads: 0,
+        });
+    }
+    let named_prop = named_prop?;
     let (owner, receiver_is_enum) = match &object_ty {
         Ok(elt) => owner_of_receiver_elt(elt),
         Err(_) => (None, false),

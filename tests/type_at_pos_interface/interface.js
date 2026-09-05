@@ -71,3 +71,14 @@ interface StringMap {
   [k: string]: number;
 // ^
 }
+
+declare const omap: {[k: string]: number};
+omap.count;
+//   ^
+declare const sm: StringMap;
+sm.count;
+// ^
+// Union receiver: the first constituent carrying an indexer frames the access.
+declare const u: {[k: string]: number} | {s: string};
+const uc = u.count;
+//           ^

@@ -113,6 +113,21 @@ Flags:
 (parameter) k: string
 interface.js:71:4,71:4
 
+interface.js:76:6
+Flags:
+(index) [k: string]: number
+interface.js:76:6,76:10
+
+interface.js:79:4
+Flags:
+number
+interface.js:79:4,79:8
+
+interface.js:83:14
+Flags:
+(index) [k: string]: number | void
+interface.js:83:14,83:18
+
 object_members.js:7:3
 Flags:
 (property) Named.p: number
