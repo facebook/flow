@@ -2176,23 +2176,6 @@ pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct EMethodUnbindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub use_op: VirtualUseOp<L>,
-    pub reason_prop: ErrorReference<L>,
-    pub reason_op: VirtualReason<L>,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
 pub struct EHookIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub lower: VirtualReason<L>,
@@ -2955,8 +2938,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     ),
 
     EClassToObject(Box<EClassToObjectData<L>>),
-
-    EMethodUnbinding(Box<EMethodUnbindingData<L>>),
 
     EHookIncompatible(Box<EHookIncompatibleData<L>>),
 
@@ -5019,16 +5000,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 kind,
             })),
 
-            EMethodUnbinding(box EMethodUnbindingData {
-                use_op,
-                reason_op,
-                reason_prop,
-            }) => EMethodUnbinding(Box::new(EMethodUnbindingData {
-                use_op: map_use_op(use_op),
-                reason_op: map_reason(reason_op),
-                reason_prop: map_error_ref(reason_prop),
-            })),
-
             EHookIncompatible(box EHookIncompatibleData {
                 use_op,
                 lower,
@@ -6504,7 +6475,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EIncompatible(box EIncompatibleData { .. })
             | Self::EIncompatibleType(box EIncompatibleTypeData { .. })
             | Self::EIncompatibleSpeculation(..)
-            | Self::EMethodUnbinding(box EMethodUnbindingData { .. })
             | Self::EHookIncompatible(box EHookIncompatibleData { .. })
             | Self::EHookUniqueIncompatible(box EHookUniqueIncompatibleData { .. })
             | Self::EImplicitInstantiationUnderconstrainedError(
@@ -9202,23 +9172,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ErrorMessage::EMethodUnbinding(box EMethodUnbindingData {
-                use_op,
-                reason_op,
-                reason_prop,
-            }) => {
-                let loc = reason_op.loc.dupe();
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageMethodUnbinding {
-                        reason_op,
-                        context_loc: reason_prop.loc,
-                    },
-                    use_op,
-                    explanation: None,
-                }))
-            }
-
             ErrorMessage::EHookIncompatible(box EHookIncompatibleData {
                 use_op,
                 lower,
@@ -9513,7 +9466,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
     pub fn defered_in_speculation(&self) -> bool {
         match self {
             Self::EUntypedTypeImport(box (_, _))
-            | Self::EMethodUnbinding(box EMethodUnbindingData { .. })
             | Self::EUntypedImport(box (_, _))
             | Self::ENonstrictImport(_)
             | Self::EUnclearType(_)
@@ -10136,9 +10088,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Some(ValueAsType)
             }
             ErrorMessage::EClassToObject(box EClassToObjectData { .. }) => Some(ClassObject),
-            ErrorMessage::EMethodUnbinding(box EMethodUnbindingData { .. }) => {
-                Some(MethodUnbinding)
-            }
             ErrorMessage::EHookIncompatible(box EHookIncompatibleData { .. })
             | ErrorMessage::EHookUniqueIncompatible(box EHookUniqueIncompatibleData { .. }) => {
                 Some(ReactRuleHookIncompatible)

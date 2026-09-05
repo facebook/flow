@@ -60,7 +60,6 @@ use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
-use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
 use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::EVarianceKeywordData;
@@ -112,7 +111,6 @@ use crate::autofix_imports;
 use crate::autofix_interface;
 use crate::autofix_legacy_flow_syntax;
 use crate::autofix_match_syntax;
-use crate::autofix_method;
 use crate::autofix_missing_local_annots;
 use crate::autofix_new_to_record;
 use crate::autofix_object_to_record;
@@ -1427,28 +1425,6 @@ pub fn ast_transforms_of_error(
                         autofix_interface::replace_object_at_target(ast, loc)
                     })),
                     target_loc: obj_loc,
-                    confidence: QuickfixConfidence::BestEffort,
-                }]
-            } else {
-                vec![]
-            }
-        }
-        ErrorMessage::EMethodUnbinding(box EMethodUnbindingData {
-            reason_op,
-            reason_prop,
-            ..
-        }) => {
-            let error_loc = reason_op.loc().dupe();
-            if loc_opt_intersects(loc, error_loc.dupe()) {
-                let original = flow_common::reason::string_of_desc::<Loc>(&reason_prop.desc);
-                let title = format!("Rewrite {} as an arrow function", original);
-                vec![AstTransformOfError {
-                    title,
-                    diagnostic_title: "replace_method_with_arrow".to_string(),
-                    transform: untyped_ast_transform(Box::new(|ast, loc| {
-                        autofix_method::replace_method_at_target(ast, loc)
-                    })),
-                    target_loc: reason_prop.loc.dupe(),
                     confidence: QuickfixConfidence::BestEffort,
                 }]
             } else {

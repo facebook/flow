@@ -2258,11 +2258,6 @@ pub enum Message<L: Dupe> {
         ctor: FlowSmolStr,
     },
 
-    MessageMethodUnbinding {
-        reason_op: VirtualReason<L>,
-        context_loc: L,
-    },
-
     MessageMissingAnnotation(VirtualReasonDesc<L>),
     MessageMissingAnnotationDueToContextualTypingFailure(VirtualReasonDesc<L>),
     MessageMissingAnnotationForGenericFunction(VirtualReasonDesc<L>),

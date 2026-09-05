@@ -73,7 +73,6 @@ use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
 use flow_typing_errors::error_message::EInvalidThisArgData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EKeySpreadPropData;
-use flow_typing_errors::error_message::EMethodUnbindingData;
 use flow_typing_errors::error_message::EMissingPlatformSupportData;
 use flow_typing_errors::error_message::EMissingPlatformSupportWithAvailablePlatformsData;
 use flow_typing_errors::error_message::EMissingTypeArgsData;
@@ -3763,18 +3762,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EClassToObject(box EClassToObjectData { .. }) => "EClassToObject".to_string(),
-        ErrorMessage::EMethodUnbinding(box EMethodUnbindingData {
-            use_op,
-            reason_prop,
-            reason_op,
-        }) => {
-            format!(
-                "EMethodUnbinding ({}) ({}) ({})",
-                string_of_use_op(use_op),
-                dump_reason(cx, reason_op),
-                string_of_aloc(None, &reason_prop.loc)
-            )
-        }
         ErrorMessage::EHookIncompatible(box EHookIncompatibleData {
             use_op,
             lower,

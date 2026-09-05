@@ -19,7 +19,6 @@ pub mod autofix_imports;
 pub mod autofix_interface;
 pub mod autofix_legacy_flow_syntax;
 pub mod autofix_match_syntax;
-pub mod autofix_method;
 pub mod autofix_missing_local_annots;
 pub mod autofix_new_to_record;
 pub mod autofix_object_to_record;

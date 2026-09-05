@@ -219,9 +219,7 @@ fn json_of_type_t_kind(kind: &TypeTKind) -> Json {
 fn funtype_to_json<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, funtype: &FunType) -> Json {
     let (this_t_type, this_status) = &funtype.this_t;
     let this_status_json = match this_status {
-        ThisStatus::ThisMethod { unbound } => {
-            json!({"kind": "This_Method", "unbound": unbound})
-        }
+        ThisStatus::ThisMethod => json!({"kind": "This_Method"}),
         ThisStatus::ThisFunction => {
             json!({"kind": "This_Function"})
         }

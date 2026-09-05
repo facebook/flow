@@ -3018,19 +3018,12 @@ impl<'a> DefFinder<'a> {
                     for elem in elements.iter() {
                         match elem {
                             ast::pattern::array::Element::NormalElement(e) => {
-                                match other_pattern_hint_opt(providers, &e.argument) {
-                                    Some(h) => acc
-                                        .push(ArrayElementPatternHint::ArrayElementPatternHint(h)),
-                                    None => return None,
-                                }
+                                let h = other_pattern_hint_opt(providers, &e.argument)?;
+                                acc.push(ArrayElementPatternHint::ArrayElementPatternHint(h))
                             }
                             ast::pattern::array::Element::RestElement(r) => {
-                                match other_pattern_hint_opt(providers, &r.argument) {
-                                    Some(h) => acc.push(
-                                        ArrayElementPatternHint::ArrayRestElementPatternHint(h),
-                                    ),
-                                    None => return None,
-                                }
+                                let h = other_pattern_hint_opt(providers, &r.argument)?;
+                                acc.push(ArrayElementPatternHint::ArrayRestElementPatternHint(h))
                             }
                             ast::pattern::array::Element::Hole(_) => return None,
                         }
@@ -3079,12 +3072,8 @@ impl<'a> DefFinder<'a> {
                                 }
                             }
                             ast::pattern::object::Property::RestElement(r) => {
-                                match other_pattern_hint_opt(providers, &r.argument) {
-                                    Some(h) => acc.push(
-                                        ObjectPropPatternHint::ObjectSpreadPropPatternHint(h),
-                                    ),
-                                    None => return None,
-                                }
+                                let h = other_pattern_hint_opt(providers, &r.argument)?;
+                                acc.push(ObjectPropPatternHint::ObjectSpreadPropPatternHint(h))
                             }
                         }
                     }
@@ -3719,9 +3708,8 @@ impl<'a> DefFinder<'a> {
         }
 
         match expr.deref() {
-            // Member expressions are always synthesizable, but we use hints on
-            // member expressions to avoid method-unbinding errors when the hint is
-            // a supertype of a mixed (which would make the method un-callable).
+            // Member expressions are synthesizable, but retaining their hints is
+            // necessary for contextual inference of computed object properties.
             ast::expression::ExpressionInner::Member { .. }
             // The following kinds of expressions are also typically synthesizable,
             // but it is often unseful for Natural Inference to have hint information

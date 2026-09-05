@@ -4760,7 +4760,7 @@ fn merge_fun<'cx>(
             }
         };
         let this_status = if is_method {
-            type_::ThisStatus::ThisMethod { unbound: false }
+            type_::ThisStatus::ThisMethod
         } else {
             type_::ThisStatus::ThisFunction
         };

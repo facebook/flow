@@ -4662,7 +4662,7 @@ impl TypeGuard {
 /// can be lenient while calls still check the concrete `this` parameter.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ThisStatus {
-    ThisMethod { unbound: bool },
+    ThisMethod,
     ThisFunction,
 }
 
@@ -6999,7 +6999,7 @@ pub mod properties {
         match &**t {
             TypeInner::DefT(r, def_t) => match &**def_t {
                 DefTInner::FunT(static_, ft)
-                    if matches!(&ft.this_t, (_, ThisStatus::ThisMethod { .. })) =>
+                    if matches!(&ft.this_t, (_, ThisStatus::ThisMethod)) =>
                 {
                     let mut new_ft = (**ft).clone();
                     new_ft.this_t = (
@@ -11713,7 +11713,7 @@ pub fn mk_boundfunctiontype(
 ) -> FunType {
     mk_methodtype(
         this,
-        Some(ThisStatus::ThisMethod { unbound: false }),
+        Some(ThisStatus::ThisMethod),
         effect_,
         tins,
         rest_param,

@@ -2442,7 +2442,7 @@ pub fn subtype_this_of_function(funtype: &crate::type_::FunType) -> Type {
     let (this, subtyping) = &funtype.this_t;
     match subtyping {
         ThisStatus::ThisFunction => this.dupe(),
-        ThisStatus::ThisMethod { .. } => implicit_mixed_this(reason_of_t(this).dupe()),
+        ThisStatus::ThisMethod => implicit_mixed_this(reason_of_t(this).dupe()),
     }
 }
 
@@ -2759,7 +2759,7 @@ pub fn normalize_construct_sig(override_return_t: Option<Type>, t: Type) -> Type
             .map(|t| t.dupe())
             .unwrap_or_else(|| ft.return_t.dupe());
         crate::type_::FunType {
-            this_t: (any_this_t, ThisStatus::ThisMethod { unbound: true }),
+            this_t: (any_this_t, ThisStatus::ThisMethod),
             return_t,
             ..ft.clone()
         }

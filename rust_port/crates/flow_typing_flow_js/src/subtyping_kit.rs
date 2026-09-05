@@ -462,9 +462,9 @@ fn funt_to_funt_check_this_contravariant<'cx>(
         // a contravariant check would reject.
         // It would not compromise safety since after unbinding method,
         // ThisMethod is turned into ThisFunction.
-        (ThisStatus::ThisMethod { .. }, ThisStatus::ThisMethod { .. }) => {}
-        (ThisStatus::ThisMethod { .. }, ThisStatus::ThisFunction)
-        | (ThisStatus::ThisFunction, ThisStatus::ThisMethod { .. })
+        (ThisStatus::ThisMethod, ThisStatus::ThisMethod) => {}
+        (ThisStatus::ThisMethod, ThisStatus::ThisFunction)
+        | (ThisStatus::ThisFunction, ThisStatus::ThisMethod)
         | (ThisStatus::ThisFunction, ThisStatus::ThisFunction) => {
             FlowJs::rec_flow_with_env(
                 cx,

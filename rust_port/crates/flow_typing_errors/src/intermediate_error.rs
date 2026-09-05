@@ -8138,15 +8138,6 @@ where
                     text(ctor),
                 ])
             }
-            MessageMethodUnbinding {
-                reason_op,
-                context_loc,
-            } => friendly::Message(vec![
-                ref_(reason_op),
-                text(" cannot be unbound from the "),
-                friendly::hardcoded_string_desc_ref("context", loc_of_aloc(context_loc)),
-                text(" where it was defined"),
-            ]),
             MessageMissingPlatformSupport { missing_platforms } => {
                 let platforms: Vec<_> = missing_platforms.iter().cloned().collect();
                 let platform_features =
