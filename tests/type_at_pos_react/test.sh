@@ -23,11 +23,11 @@ assert_ok "$FLOW" type-at-pos react_component.js 13 33 --strip-root
 printf "react_component.js:18:17 = "
 assert_ok "$FLOW" type-at-pos react_component.js 18 17 --strip-root
 printf "react_component.js:31:7 = "
-assert_ok "$FLOW" type-at-pos react_component.js 31 7 --strip-root --pretty --expand-json-output
+assert_ok "$FLOW" type-at-pos react_component.js 31 7 --strip-root
 printf "react_component.js:32:15 = "
-assert_ok "$FLOW" type-at-pos react_component.js 32 15 --strip-root --pretty --expand-json-output
+assert_ok "$FLOW" type-at-pos react_component.js 32 15 --strip-root
 printf "react_component.js:32:31 = "
-assert_ok "$FLOW" type-at-pos react_component.js 32 31 --strip-root --pretty --expand-json-output
+assert_ok "$FLOW" type-at-pos react_component.js 32 31 --strip-root
 
 queries_in_file "type-at-pos" "react.js"
 

@@ -1,895 +1,218 @@
-dictionary.js:3:7 = {
-  "end":8,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":8,"line":3,"offset":18},
-    "source":"dictionary.js",
-    "start":{"column":7,"line":3,"offset":16},
-    "type":"SourceFile"
-  },
-  "path":"dictionary.js",
-  "reasons":[],
-  "start":7,
-  "types":{
-    "type":"{\"\": null, \" \": null, \"'\": null, \"1\": null, _: null, \"a b\": null, \"a'b\": null, ab: null, get x(): null, set y(string): void}"
-  }
+dictionary.js:3:7 = const d1: {
+  "": null,
+  " ": null,
+  "'": null,
+  "1": null,
+  _: null,
+  "a b": null,
+  "a'b": null,
+  ab: null,
+  get x(): null,
+  set y(string): void
 }
-dictionary.js:19:7 = {
-  "end":8,
-  "endline":19,
-  "line":19,
-  "loc":{
-    "end":{"column":8,"line":19,"offset":211},
-    "source":"dictionary.js",
-    "start":{"column":7,"line":19,"offset":209},
-    "type":"SourceFile"
-  },
-  "path":"dictionary.js",
-  "reasons":[],
-  "start":7,
-  "types":{
-    "type":"{\"\": null, \" \": null, '\"': null, \"1\": null, _: null, \"a b\": null, 'a\"b': null, ab: null, get x(): null, set y(string): void}"
-  }
+dictionary.js:3:7,3:8
+dictionary.js:19:7 = const d2: {
+  "": null,
+  " ": null,
+  '"': null,
+  "1": null,
+  _: null,
+  "a b": null,
+  'a"b': null,
+  ab: null,
+  get x(): null,
+  set y(string): void
 }
-jsx.js:7:12 = {
-  "end":14,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":14,"line":7,"offset":133},
-    "source":"jsx.js",
-    "start":{"column":12,"line":7,"offset":130},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":12,
-  "types":{"type":"\"div\""}
+dictionary.js:19:7,19:8
+jsx.js:7:12 = "div"
+jsx.js:7:12,7:14
+jsx.js:7:16 = (property) style: string
+jsx.js:7:16,7:20
+jsx.js:7:23 = const props: {data: A, name: string, ...}
+
+'A' defined at jsx.js:4:20
+
+jsx.js:7:23,7:27
+jsx.js:7:29 = (property) data: A
+
+'A' defined at jsx.js:4:20
+
+jsx.js:7:29,7:32
+jsx.js:7:35 = "literal"
+jsx.js:7:35,7:36
+jsx.js:7:48 = true
+jsx.js:7:48,7:53
+jsx.js:7:59 = const props: {data: A, name: string, ...}
+
+'A' defined at jsx.js:4:20
+
+jsx.js:7:59,7:63
+jsx.js:8:17 = const props: {data: A, name: string, ...}
+
+'A' defined at jsx.js:4:20
+
+jsx.js:8:17,8:21
+jsx.js:8:23 = (property) name: string
+jsx.js:8:23,8:26
+jsx.js:8:30 = "div"
+jsx.js:8:30,8:32
+jsx.js:11:17 = const str: string
+jsx.js:11:17,11:19
+jsx.js:18:12 = const o: {r: typeof C}
+
+'C' defined at jsx.js:13:6
+
+jsx.js:18:12,18:12
+jsx.js:18:14 = class C
+
+'C' defined at jsx.js:13:6
+
+jsx.js:18:14,18:14
+jsx.js:18:12 = const o: {r: typeof C}
+
+'C' defined at jsx.js:13:6
+
+jsx.js:18:22,18:22
+jsx.js:18:24 = class C
+
+'C' defined at jsx.js:13:6
+
+jsx.js:18:24,18:24
+literals.js:6:7 = const s: "A"
+literals.js:6:7,6:7
+literals.js:7:7 = const n: 1
+literals.js:7:7,7:7
+literals.js:8:7 = const f: 1.01
+literals.js:8:7,8:7
+literals.js:9:7 = const b: true
+literals.js:9:7,9:7
+literals.js:10:7 = const u: boolean | number | string
+literals.js:10:7,10:7
+literals.js:13:6 = type S = "A"
+
+'S' defined at literals.js:13:5
+
+literals.js:13:6,13:6
+literals.js:14:6 = type N = 1
+
+'N' defined at literals.js:14:5
+
+literals.js:14:6,14:6
+literals.js:15:6 = type F = 1.01
+
+'F' defined at literals.js:15:5
+
+literals.js:15:6,15:6
+literals.js:16:6 = type B = true
+
+'B' defined at literals.js:16:5
+
+literals.js:16:6,16:6
+literals.js:17:6 = type U = "A" | 1 | 1.01 | true
+
+'U' defined at literals.js:17:5
+
+literals.js:17:6,17:6
+literals.js:19:7 = const f1: (x: "A" | "B") => "A" | "B"
+literals.js:19:7,19:8
+literals.js:21:7 = const o1: {f: string}
+literals.js:21:7,21:8
+literals.js:22:7 = const o2: {f: "f"}
+literals.js:22:7,22:8
+literals.js:24:7 = const f2: (x: "A" | "B") => "A" | "B"
+literals.js:24:7,24:8
+literals.js:28:7 = const numLitArray: Array<number>
+literals.js:28:7,28:17
+literals.js:31:7 = const a_n: A<number>
+
+'A' defined at literals.js:30:6
+
+literals.js:31:7,31:9
+literals.js:32:7 = const a_1: A<1>
+
+'A' defined at literals.js:30:6
+
+literals.js:32:7,32:9
+new-array.js:3:15 = 
+ Returns a new JavaScript array with its length property set to that number.
+ (Note: this implies an array of arrayLength empty slots, not slots with actual undefined
+ values. See [sparse arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Indexed_collections#sparse_arrays)).
+constructor Array(arrayLength?: number): void
+new-array.js:3:13,3:17
+object-resolution.js:5:2 = const ro: {readonly p: number}
+object-resolution.js:5:1,5:2
+object-resolution.js:10:2 = const diff: Omit<O2, "p">
+
+'O2' defined at object-resolution.js:8:5
+'Omit' defined at (lib) core.js:3350:5
+
+object-resolution.js:10:1,10:4
+object-resolution.js:13:5 = const spread: {p: number, q: string, ...}
+object-resolution.js:13:5,13:10
+object.js:3:17 = const obj: {a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...}
+object.js:3:15,3:17
+object.js:3:21 = (property) a: void | {b: ?{c: null | {d: number, ...}, ...}, ...}
+object.js:3:21,3:21
+object.js:3:26 = (property) b: ?{c: null | {d: number, ...}, ...}
+object.js:3:26,3:26
+object.js:3:31 = (property) c: null | {d: number, ...}
+object.js:3:31,3:31
+object.js:3:42 = (property) d: number
+object.js:3:42,3:42
+object.js:6:5 = const obj: {a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...}
+object.js:6:3,6:5
+object.js:6:7 = (property) a: void | {b: ?{c: null | {d: number, ...}, ...}, ...}
+object.js:6:7,6:7
+object.js:7:10 = (property) a: {b: ?{c: null | {d: number, ...}, ...}, ...}
+
+Refined at object.js:6:2
+
+object.js:7:10,7:10
+object.js:7:12 = (property) b: ?{c: null | {d: number, ...}, ...}
+object.js:7:12,7:12
+object.js:8:14 = (property) b: {c: null | {d: number, ...}, ...}
+
+Refined at object.js:7:5
+
+object.js:8:14,8:14
+object.js:8:16 = (property) c: null | {d: number, ...}
+object.js:8:16,8:16
+object.js:9:18 = (property) c: {d: number, ...}
+
+Refined at object.js:8:7
+
+object.js:9:18,9:18
+object.js:9:34 = (property) d: number
+
+Refined at object.js:9:9
+
+object.js:9:34,9:34
+object.js:15:3 = (method) m(n: string): string
+object.js:15:3,15:3
+object.js:16:3 = (property) n: (k: number) => number
+object.js:16:3,16:3
+object.js:19:3 = let myobj: {m(n: string): string, n: (k: number) => number}
+object.js:19:1,19:5
+object.js:19:7 = (method) m(n: string): string
+object.js:19:7,19:7
+object.js:20:7 = (method) m(n: string): string
+object.js:20:7,20:7
+object.js:21:7 = (property) n: (k: number) => number
+object.js:21:7,21:7
+object.js:22:7 = (property) n: (k: number) => number
+object.js:22:7,22:7
+object.js:35:1 = const litobj: {
+  b: 0b111,
+  d: 11,
+  f: "ff",
+  g: 'g"g',
+  h: 'h"h',
+  i: "i'i",
+  j: "'",
+  x: 0x111,
+  ...
 }
-jsx.js:7:16 = {
-  "end":20,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":20,"line":7,"offset":139},
-    "source":"jsx.js",
-    "start":{"column":16,"line":7,"offset":134},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":16,
-  "types":{"type":"string"}
-}
-jsx.js:7:23 = {
-  "end":27,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":27,"line":7,"offset":146},
-    "source":"jsx.js",
-    "start":{"column":23,"line":7,"offset":141},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":23,
-  "types":{"type":"{data: A, name: string, ...}"}
-}
-jsx.js:7:29 = {
-  "end":32,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":32,"line":7,"offset":151},
-    "source":"jsx.js",
-    "start":{"column":29,"line":7,"offset":147},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":29,
-  "types":{"type":"A"}
-}
-jsx.js:7:35 = {
-  "end":36,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":36,"line":7,"offset":155},
-    "source":"jsx.js",
-    "start":{"column":35,"line":7,"offset":153},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":35,
-  "types":{"type":"\"literal\""}
-}
-jsx.js:7:48 = {
-  "end":53,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":53,"line":7,"offset":172},
-    "source":"jsx.js",
-    "start":{"column":48,"line":7,"offset":166},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":48,
-  "types":{"type":"true"}
-}
-jsx.js:7:59 = {
-  "end":63,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":63,"line":7,"offset":182},
-    "source":"jsx.js",
-    "start":{"column":59,"line":7,"offset":177},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":59,
-  "types":{"type":"{data: A, name: string, ...}"}
-}
-jsx.js:8:17 = {
-  "end":21,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":21,"line":8,"offset":209},
-    "source":"jsx.js",
-    "start":{"column":17,"line":8,"offset":204},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":17,
-  "types":{"type":"{data: A, name: string, ...}"}
-}
-jsx.js:8:23 = {
-  "end":26,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":26,"line":8,"offset":214},
-    "source":"jsx.js",
-    "start":{"column":23,"line":8,"offset":210},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":23,
-  "types":{"type":"string"}
-}
-jsx.js:8:30 = {
-  "end":32,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":32,"line":8,"offset":220},
-    "source":"jsx.js",
-    "start":{"column":30,"line":8,"offset":217},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":30,
-  "types":{"type":"\"div\""}
-}
-jsx.js:11:17 = {
-  "end":19,
-  "endline":11,
-  "line":11,
-  "loc":{
-    "end":{"column":19,"line":11,"offset":270},
-    "source":"jsx.js",
-    "start":{"column":17,"line":11,"offset":267},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":17,
-  "types":{"type":"string"}
-}
-jsx.js:18:12 = {
-  "end":12,
-  "endline":18,
-  "line":18,
-  "loc":{
-    "end":{"column":12,"line":18,"offset":355},
-    "source":"jsx.js",
-    "start":{"column":12,"line":18,"offset":354},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":12,
-  "types":{"type":"{r: typeof C}"}
-}
-jsx.js:18:14 = {
-  "end":14,
-  "endline":18,
-  "line":18,
-  "loc":{
-    "end":{"column":14,"line":18,"offset":357},
-    "source":"jsx.js",
-    "start":{"column":14,"line":18,"offset":356},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":14,
-  "types":{"type":"class C"}
-}
-jsx.js:18:12 = {
-  "end":22,
-  "endline":18,
-  "line":18,
-  "loc":{
-    "end":{"column":22,"line":18,"offset":365},
-    "source":"jsx.js",
-    "start":{"column":22,"line":18,"offset":364},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":22,
-  "types":{"type":"{r: typeof C}"}
-}
-jsx.js:18:24 = {
-  "end":24,
-  "endline":18,
-  "line":18,
-  "loc":{
-    "end":{"column":24,"line":18,"offset":367},
-    "source":"jsx.js",
-    "start":{"column":24,"line":18,"offset":366},
-    "type":"SourceFile"
-  },
-  "path":"jsx.js",
-  "reasons":[],
-  "start":24,
-  "types":{"type":"class C"}
-}
-literals.js:6:7 = {
-  "end":7,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":7,"line":6,"offset":71},
-    "source":"literals.js",
-    "start":{"column":7,"line":6,"offset":70},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"\"A\""}
-}
-literals.js:7:7 = {
-  "end":7,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":7,"line":7,"offset":86},
-    "source":"literals.js",
-    "start":{"column":7,"line":7,"offset":85},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"1"}
-}
-literals.js:8:7 = {
-  "end":7,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":7,"line":8,"offset":99},
-    "source":"literals.js",
-    "start":{"column":7,"line":8,"offset":98},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"1.01"}
-}
-literals.js:9:7 = {
-  "end":7,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":7,"line":9,"offset":115},
-    "source":"literals.js",
-    "start":{"column":7,"line":9,"offset":114},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"true"}
-}
-literals.js:10:7 = {
-  "end":7,
-  "endline":10,
-  "line":10,
-  "loc":{
-    "end":{"column":7,"line":10,"offset":131},
-    "source":"literals.js",
-    "start":{"column":7,"line":10,"offset":130},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"boolean | number | string"}
-}
-literals.js:13:6 = {
-  "end":6,
-  "endline":13,
-  "line":13,
-  "loc":{
-    "end":{"column":6,"line":13,"offset":189},
-    "source":"literals.js",
-    "start":{"column":6,"line":13,"offset":188},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":6,
-  "types":{"type":"type S = \"A\""}
-}
-literals.js:14:6 = {
-  "end":6,
-  "endline":14,
-  "line":14,
-  "loc":{
-    "end":{"column":6,"line":14,"offset":203},
-    "source":"literals.js",
-    "start":{"column":6,"line":14,"offset":202},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":6,
-  "types":{"type":"type N = 1"}
-}
-literals.js:15:6 = {
-  "end":6,
-  "endline":15,
-  "line":15,
-  "loc":{
-    "end":{"column":6,"line":15,"offset":215},
-    "source":"literals.js",
-    "start":{"column":6,"line":15,"offset":214},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":6,
-  "types":{"type":"type F = 1.01"}
-}
-literals.js:16:6 = {
-  "end":6,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":6,"line":16,"offset":230},
-    "source":"literals.js",
-    "start":{"column":6,"line":16,"offset":229},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":6,
-  "types":{"type":"type B = true"}
-}
-literals.js:17:6 = {
-  "end":6,
-  "endline":17,
-  "line":17,
-  "loc":{
-    "end":{"column":6,"line":17,"offset":245},
-    "source":"literals.js",
-    "start":{"column":6,"line":17,"offset":244},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":6,
-  "types":{"type":"type U = \"A\" | 1 | 1.01 | true"}
-}
-literals.js:19:7 = {
-  "end":8,
-  "endline":19,
-  "line":19,
-  "loc":{
-    "end":{"column":8,"line":19,"offset":280},
-    "source":"literals.js",
-    "start":{"column":7,"line":19,"offset":278},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"(x: \"A\" | \"B\") => \"A\" | \"B\""}
-}
-literals.js:21:7 = {
-  "end":8,
-  "endline":21,
-  "line":21,
-  "loc":{
-    "end":{"column":8,"line":21,"offset":313},
-    "source":"literals.js",
-    "start":{"column":7,"line":21,"offset":311},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"{f: string}"}
-}
-literals.js:22:7 = {
-  "end":8,
-  "endline":22,
-  "line":22,
-  "loc":{
-    "end":{"column":8,"line":22,"offset":336},
-    "source":"literals.js",
-    "start":{"column":7,"line":22,"offset":334},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"{f: \"f\"}"}
-}
-literals.js:24:7 = {
-  "end":8,
-  "endline":24,
-  "line":24,
-  "loc":{
-    "end":{"column":8,"line":24,"offset":367},
-    "source":"literals.js",
-    "start":{"column":7,"line":24,"offset":365},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"(x: \"A\" | \"B\") => \"A\" | \"B\""}
-}
-literals.js:28:7 = {
-  "end":17,
-  "endline":28,
-  "line":28,
-  "loc":{
-    "end":{"column":17,"line":28,"offset":427},
-    "source":"literals.js",
-    "start":{"column":7,"line":28,"offset":416},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"Array<number>"}
-}
-literals.js:31:7 = {
-  "end":9,
-  "endline":31,
-  "line":31,
-  "loc":{
-    "end":{"column":9,"line":31,"offset":471},
-    "source":"literals.js",
-    "start":{"column":7,"line":31,"offset":468},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"A<number>"}
-}
-literals.js:32:7 = {
-  "end":9,
-  "endline":32,
-  "line":32,
-  "loc":{
-    "end":{"column":9,"line":32,"offset":500},
-    "source":"literals.js",
-    "start":{"column":7,"line":32,"offset":497},
-    "type":"SourceFile"
-  },
-  "path":"literals.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"A<1>"}
-}
-new-array.js:3:15 = {
-  "documentation":"\n Returns a new JavaScript array with its length property set to that number.\n (Note: this implies an array of arrayLength empty slots, not slots with actual undefined\n values. See [sparse arrays](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Indexed_collections#sparse_arrays)).",
-  "end":17,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":17,"line":3,"offset":27},
-    "source":"new-array.js",
-    "start":{"column":13,"line":3,"offset":22},
-    "type":"SourceFile"
-  },
-  "path":"new-array.js",
-  "reasons":[],
-  "start":13,
-  "types":{"type":"(arrayLength?: number) => void"}
-}
-object-resolution.js:5:2 = {
-  "end":2,
-  "endline":5,
-  "line":5,
-  "loc":{
-    "end":{"column":2,"line":5,"offset":65},
-    "source":"object-resolution.js",
-    "start":{"column":1,"line":5,"offset":63},
-    "type":"SourceFile"
-  },
-  "path":"object-resolution.js",
-  "reasons":[],
-  "start":1,
-  "types":{"type":"{readonly p: number}"}
-}
-object-resolution.js:10:2 = {
-  "end":4,
-  "endline":10,
-  "line":10,
-  "loc":{
-    "end":{"column":4,"line":10,"offset":191},
-    "source":"object-resolution.js",
-    "start":{"column":1,"line":10,"offset":187},
-    "type":"SourceFile"
-  },
-  "path":"object-resolution.js",
-  "reasons":[],
-  "start":1,
-  "types":{"type":"Omit<O2, \"p\">"}
-}
-object-resolution.js:13:5 = {
-  "end":10,
-  "endline":13,
-  "line":13,
-  "loc":{
-    "end":{"column":10,"line":13,"offset":254},
-    "source":"object-resolution.js",
-    "start":{"column":5,"line":13,"offset":248},
-    "type":"SourceFile"
-  },
-  "path":"object-resolution.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"{p: number, q: string, ...}"}
-}
-object.js:3:17 = {
-  "end":17,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":17,"line":3,"offset":27},
-    "source":"object.js",
-    "start":{"column":15,"line":3,"offset":24},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":15,
-  "types":{"type":"{a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...}"}
-}
-object.js:3:21 = {
-  "end":21,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":21,"line":3,"offset":31},
-    "source":"object.js",
-    "start":{"column":21,"line":3,"offset":30},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":21,
-  "types":{"type":"void | {b: ?{c: null | {d: number, ...}, ...}, ...}"}
-}
-object.js:3:26 = {
-  "end":26,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":26,"line":3,"offset":36},
-    "source":"object.js",
-    "start":{"column":26,"line":3,"offset":35},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":26,
-  "types":{"type":"?{c: null | {d: number, ...}, ...}"}
-}
-object.js:3:31 = {
-  "end":31,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":31,"line":3,"offset":41},
-    "source":"object.js",
-    "start":{"column":31,"line":3,"offset":40},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":31,
-  "types":{"type":"null | {d: number, ...}"}
-}
-object.js:3:42 = {
-  "end":42,
-  "endline":3,
-  "line":3,
-  "loc":{
-    "end":{"column":42,"line":3,"offset":52},
-    "source":"object.js",
-    "start":{"column":42,"line":3,"offset":51},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":42,
-  "types":{"type":"number"}
-}
-object.js:6:5 = {
-  "end":5,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":5,"line":6,"offset":100},
-    "source":"object.js",
-    "start":{"column":3,"line":6,"offset":97},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":3,
-  "types":{"type":"{a?: {b: ?{c: null | {d: number, ...}, ...}, ...}, ...}"}
-}
-object.js:6:7 = {
-  "end":7,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":7,"line":6,"offset":102},
-    "source":"object.js",
-    "start":{"column":7,"line":6,"offset":101},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"void | {b: ?{c: null | {d: number, ...}, ...}, ...}"}
-}
-object.js:7:10 = {
-  "end":10,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":10,"line":7,"offset":115},
-    "source":"object.js",
-    "start":{"column":10,"line":7,"offset":114},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":10,
-  "types":{"type":"{b: ?{c: null | {d: number, ...}, ...}, ...}"}
-}
-object.js:7:12 = {
-  "end":12,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":12,"line":7,"offset":117},
-    "source":"object.js",
-    "start":{"column":12,"line":7,"offset":116},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":12,
-  "types":{"type":"?{c: null | {d: number, ...}, ...}"}
-}
-object.js:8:14 = {
-  "end":14,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":14,"line":8,"offset":134},
-    "source":"object.js",
-    "start":{"column":14,"line":8,"offset":133},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":14,
-  "types":{"type":"{c: null | {d: number, ...}, ...}"}
-}
-object.js:8:16 = {
-  "end":16,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":16,"line":8,"offset":136},
-    "source":"object.js",
-    "start":{"column":16,"line":8,"offset":135},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":16,
-  "types":{"type":"null | {d: number, ...}"}
-}
-object.js:9:18 = {
-  "end":18,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":18,"line":9,"offset":157},
-    "source":"object.js",
-    "start":{"column":18,"line":9,"offset":156},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":18,
-  "types":{"type":"{d: number, ...}"}
-}
-object.js:9:34 = {
-  "end":34,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":34,"line":9,"offset":173},
-    "source":"object.js",
-    "start":{"column":34,"line":9,"offset":172},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":34,
-  "types":{"type":"number"}
-}
-object.js:15:3 = {
-  "end":3,
-  "endline":15,
-  "line":15,
-  "loc":{
-    "end":{"column":3,"line":15,"offset":242},
-    "source":"object.js",
-    "start":{"column":3,"line":15,"offset":241},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":3,
-  "types":{"type":"(n: string) => string"}
-}
-object.js:16:3 = {
-  "end":3,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":3,"line":16,"offset":272},
-    "source":"object.js",
-    "start":{"column":3,"line":16,"offset":271},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":3,
-  "types":{"type":"(k: number) => number"}
-}
-object.js:19:3 = {
-  "end":5,
-  "endline":19,
-  "line":19,
-  "loc":{
-    "end":{"column":5,"line":19,"offset":300},
-    "source":"object.js",
-    "start":{"column":1,"line":19,"offset":295},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":1,
-  "types":{"type":"{m(n: string): string, n: (k: number) => number}"}
-}
-object.js:19:7 = {
-  "end":7,
-  "endline":19,
-  "line":19,
-  "loc":{
-    "end":{"column":7,"line":19,"offset":302},
-    "source":"object.js",
-    "start":{"column":7,"line":19,"offset":301},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"(n: string) => string"}
-}
-object.js:20:7 = {
-  "end":7,
-  "endline":20,
-  "line":20,
-  "loc":{
-    "end":{"column":7,"line":20,"offset":311},
-    "source":"object.js",
-    "start":{"column":7,"line":20,"offset":310},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"(n: string) => string"}
-}
-object.js:21:7 = {
-  "end":7,
-  "endline":21,
-  "line":21,
-  "loc":{
-    "end":{"column":7,"line":21,"offset":325},
-    "source":"object.js",
-    "start":{"column":7,"line":21,"offset":324},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"(k: number) => number"}
-}
-object.js:22:7 = {
-  "end":7,
-  "endline":22,
-  "line":22,
-  "loc":{
-    "end":{"column":7,"line":22,"offset":334},
-    "source":"object.js",
-    "start":{"column":7,"line":22,"offset":333},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"(k: number) => number"}
-}
-object.js:35:1 = {
-  "end":6,
-  "endline":35,
-  "line":35,
-  "loc":{
-    "end":{"column":6,"line":35,"offset":469},
-    "source":"object.js",
-    "start":{"column":1,"line":35,"offset":463},
-    "type":"SourceFile"
-  },
-  "path":"object.js",
-  "reasons":[],
-  "start":1,
-  "types":{
-    "type":"{b: 0b111, d: 11, f: \"ff\", g: 'g\"g', h: 'h\"h', i: \"i'i\", j: \"'\", x: 0x111, ...}"
-  }
-}
+object.js:35:1,35:6
 object.js:37:7
 Flags:
 const frozenObject1: {readonly A: "a", readonly B: "b"}
@@ -910,81 +233,25 @@ Flags:
 (method) constructor(this: typeof Object.prototype, ...empty): any (implicit)
 object.js:46:5,46:15
 
-optional_chaining.js:16:7 = {
-  "end":7,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":7,"line":16,"offset":123},
-    "source":"optional_chaining.js",
-    "start":{"column":7,"line":16,"offset":122},
-    "type":"SourceFile"
-  },
-  "path":"optional_chaining.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"number | void"}
-}
-optional_chaining.js:16:11 = {
-  "end":13,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":13,"line":16,"offset":129},
-    "source":"optional_chaining.js",
-    "start":{"column":11,"line":16,"offset":126},
-    "type":"SourceFile"
-  },
-  "path":"optional_chaining.js",
-  "reasons":[],
-  "start":11,
-  "types":{"type":"?Foo"}
-}
-optional_chaining.js:16:16 = {
-  "end":18,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":18,"line":16,"offset":134},
-    "source":"optional_chaining.js",
-    "start":{"column":16,"line":16,"offset":131},
-    "type":"SourceFile"
-  },
-  "path":"optional_chaining.js",
-  "reasons":[],
-  "start":16,
-  "types":{"type":"void | Bar"}
-}
-optional_chaining.js:16:20 = {
-  "end":22,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":22,"line":16,"offset":138},
-    "source":"optional_chaining.js",
-    "start":{"column":20,"line":16,"offset":135},
-    "type":"SourceFile"
-  },
-  "path":"optional_chaining.js",
-  "reasons":[],
-  "start":20,
-  "types":{"type":"void | Baz"}
-}
-optional_chaining.js:16:24 = {
-  "end":26,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":26,"line":16,"offset":142},
-    "source":"optional_chaining.js",
-    "start":{"column":24,"line":16,"offset":139},
-    "type":"SourceFile"
-  },
-  "path":"optional_chaining.js",
-  "reasons":[],
-  "start":24,
-  "types":{"type":"number | void"}
-}
+optional_chaining.js:16:7 = const n: number | void
+optional_chaining.js:16:7,16:7
+optional_chaining.js:16:11 = const foo: ?Foo
+
+'Foo' defined at optional_chaining.js:3:6
+
+optional_chaining.js:16:11,16:13
+optional_chaining.js:16:16 = (property) Foo.bar: void | Bar
+
+'Bar' defined at optional_chaining.js:7:6
+
+optional_chaining.js:16:16,16:18
+optional_chaining.js:16:20 = (property) Bar.baz: void | Baz
+
+'Baz' defined at optional_chaining.js:11:6
+
+optional_chaining.js:16:20,16:22
+optional_chaining.js:16:24 = (property) Baz.qux: number | void
+optional_chaining.js:16:24,16:26
 identifier.js:5:4
 Flags:
 const fooBar: number

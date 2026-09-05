@@ -1,225 +1,39 @@
-predicates.js - undefined: {
-  "end":18,
-  "endline":5,
-  "line":5,
-  "loc":{
-    "end":{"column":18,"line":5,"offset":60},
-    "source":"predicates.js",
-    "start":{"column":10,"line":5,"offset":51},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":10,
-  "types":{"type":"void"}
-}
-predicates.js - Array: {
-  "end":9,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":9,"line":6,"offset":74},
-    "source":"predicates.js",
-    "start":{"column":5,"line":6,"offset":69},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"class Array<T>"}
-}
-predicates.js - isArray: {
-  "end":17,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":17,"line":6,"offset":82},
-    "source":"predicates.js",
-    "start":{"column":11,"line":6,"offset":75},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":11,
-  "types":{"type":"any (implicit)"}
-}
-predicates.js - y (refined obj): {
-  "end":5,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":5,"line":8,"offset":96},
-    "source":"predicates.js",
-    "start":{"column":5,"line":8,"offset":95},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"{FOO: string}"}
-}
-predicates.js - if (y.FOO) obj: {
-  "end":5,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":5,"line":9,"offset":120},
-    "source":"predicates.js",
-    "start":{"column":5,"line":9,"offset":119},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"{FOO: string}"}
-}
-predicates.js - if (y.FOO) prop: {
-  "end":9,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":9,"line":9,"offset":124},
-    "source":"predicates.js",
-    "start":{"column":7,"line":9,"offset":121},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"string"}
-}
-predicates.js - if (y.FOO == '') obj: {
-  "end":5,
-  "endline":10,
-  "line":10,
-  "loc":{
-    "end":{"column":5,"line":10,"offset":134},
-    "source":"predicates.js",
-    "start":{"column":5,"line":10,"offset":133},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"{FOO: string}"}
-}
-predicates.js - if (y.FOO == '') prop: {
-  "end":9,
-  "endline":10,
-  "line":10,
-  "loc":{
-    "end":{"column":9,"line":10,"offset":138},
-    "source":"predicates.js",
-    "start":{"column":7,"line":10,"offset":135},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"string"}
-}
-predicates.js - if (y.FOO === '') obj: {
-  "end":5,
-  "endline":11,
-  "line":11,
-  "loc":{
-    "end":{"column":5,"line":11,"offset":154},
-    "source":"predicates.js",
-    "start":{"column":5,"line":11,"offset":153},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"{FOO: string}"}
-}
-predicates.js - if (y.FOO === '') prop: {
-  "end":9,
-  "endline":11,
-  "line":11,
-  "loc":{
-    "end":{"column":9,"line":11,"offset":158},
-    "source":"predicates.js",
-    "start":{"column":7,"line":11,"offset":155},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"string"}
-}
-predicates.js - if (y.FOO == null) prop: {
-  "end":9,
-  "endline":12,
-  "line":12,
-  "loc":{
-    "end":{"column":9,"line":12,"offset":179},
-    "source":"predicates.js",
-    "start":{"column":7,"line":12,"offset":176},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"string"}
-}
-predicates.js - if (y.FOO == undefined) prop: {
-  "end":9,
-  "endline":13,
-  "line":13,
-  "loc":{
-    "end":{"column":9,"line":13,"offset":201},
-    "source":"predicates.js",
-    "start":{"column":7,"line":13,"offset":198},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"string"}
-}
-predicates.js - if (Array.isArray(y.FOO)): {
-  "end":23,
-  "endline":14,
-  "line":14,
-  "loc":{
-    "end":{"column":23,"line":14,"offset":242},
-    "source":"predicates.js",
-    "start":{"column":21,"line":14,"offset":239},
-    "type":"SourceFile"
-  },
-  "path":"predicates.js",
-  "reasons":[],
-  "start":21,
-  "types":{"type":"string"}
-}
-refinement.js:7:25 = {
-  "end":26,
-  "endline":7,
-  "line":7,
-  "loc":{
-    "end":{"column":26,"line":7,"offset":83},
-    "source":"refinement.js",
-    "start":{"column":24,"line":7,"offset":80},
-    "type":"SourceFile"
-  },
-  "path":"refinement.js",
-  "reasons":[],
-  "start":24,
-  "types":{"type":"() => void"}
-}
-refinement.js:8:25 = {
-  "end":26,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":26,"line":8,"offset":113},
-    "source":"refinement.js",
-    "start":{"column":24,"line":8,"offset":110},
-    "type":"SourceFile"
-  },
-  "path":"refinement.js",
-  "reasons":[],
-  "start":24,
-  "types":{"type":"() => void"}
-}
+predicates.js - undefined: void
+predicates.js:5:10,5:18
+predicates.js - Array: class Array<T>
+
+'Array' defined at (lib) prelude.js:30:14
+
+predicates.js:6:5,6:9
+predicates.js - isArray: any (implicit)
+predicates.js:6:11,6:17
+predicates.js - y (refined obj): let y: {FOO: string}
+predicates.js:8:5,8:5
+predicates.js - if (y.FOO) obj: let y: {FOO: string}
+predicates.js:9:5,9:5
+predicates.js - if (y.FOO) prop: (property) FOO: string
+predicates.js:9:7,9:9
+predicates.js - if (y.FOO == '') obj: let y: {FOO: string}
+predicates.js:10:5,10:5
+predicates.js - if (y.FOO == '') prop: (property) FOO: string
+predicates.js:10:7,10:9
+predicates.js - if (y.FOO === '') obj: let y: {FOO: string}
+predicates.js:11:5,11:5
+predicates.js - if (y.FOO === '') prop: (property) FOO: string
+predicates.js:11:7,11:9
+predicates.js - if (y.FOO == null) prop: (property) FOO: string
+predicates.js:12:7,12:9
+predicates.js - if (y.FOO == undefined) prop: (property) FOO: string
+predicates.js:13:7,13:9
+predicates.js - if (Array.isArray(y.FOO)): (property) FOO: string
+predicates.js:14:21,14:23
+refinement.js:7:25 = (property) foo: () => void
+
+Refined at refinement.js:7:4
+
+refinement.js:7:24,7:26
+refinement.js:8:25 = (property) foo: () => void
+
+Refined at refinement.js:8:4
+
+refinement.js:8:24,8:26

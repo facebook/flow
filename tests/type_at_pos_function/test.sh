@@ -6,25 +6,25 @@
 
 # declare.js
 printf "declare.js:3:18 = "
-assert_ok "$FLOW" type-at-pos declare.js 3 18 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos declare.js 3 18 --strip-root
 printf "declare.js:5:18 = "
-assert_ok "$FLOW" type-at-pos declare.js 5 18 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos declare.js 5 18 --strip-root
 printf "declare.js:6:18 = "
-assert_ok "$FLOW" type-at-pos declare.js 6 18 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos declare.js 6 18 --strip-root
 printf "declare.js:8:18 = "
-assert_ok "$FLOW" type-at-pos declare.js 8 18 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos declare.js 8 18 --strip-root
 printf "declare.js:9:18 = "
-assert_ok "$FLOW" type-at-pos declare.js 9 18 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos declare.js 9 18 --strip-root
 
 # function.js
 printf "function.js:4:3 = "
-assert_ok "$FLOW" type-at-pos function.js 4 3 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function.js 4 3 --strip-root
 printf "function.js:8:3 = "
-assert_ok "$FLOW" type-at-pos function.js 8 3 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function.js 8 3 --strip-root
 printf "function.js:12:3 = "
-assert_ok "$FLOW" type-at-pos function.js 12 3 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function.js 12 3 --strip-root
 printf "function.js:16:3 = "
-assert_ok "$FLOW" type-at-pos function.js 16 3 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function.js 16 3 --strip-root
 # A `this` parameter binds no identifier. Queried in friendly mode to observe
 # the framing.
 printf "function.js:24:20 (this parameter, framed) = "
@@ -34,60 +34,61 @@ assert_ok "$FLOW" type-at-pos function.js 24 27 --strip-root
 
 # default.js
 printf "default.js:4:16 = "
-assert_ok "$FLOW" type-at-pos default.js 4 16 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos default.js 4 16 --strip-root
 printf "default.js:5:17 = "
-assert_ok "$FLOW" type-at-pos default.js 5 17 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos default.js 5 17 --strip-root
 
 # function-poly-0.js
 printf "function-poly-0.js:3:10 = "
-assert_ok "$FLOW" type-at-pos function-poly-0.js 3 10 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-0.js 3 10 --strip-root
 printf "function-poly-0.js:3:30 = "
-assert_ok "$FLOW" type-at-pos function-poly-0.js 3 33 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-0.js 3 33 --strip-root
 printf "function-poly-0.js:4:7 = "
-assert_ok "$FLOW" type-at-pos function-poly-0.js 4 7 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-0.js 4 7 --strip-root
 
 # function-poly-1.js
 printf "function-poly-1.js:3:10 = "
-assert_ok "$FLOW" type-at-pos function-poly-1.js 3 10 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-1.js 3 10 --strip-root
 printf "function-poly-1.js:3:3 = "
-assert_ok "$FLOW" type-at-pos function-poly-1.js 3 33 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-1.js 3 33 --strip-root
 printf "function-poly-1.js:4:7 = "
-assert_ok "$FLOW" type-at-pos function-poly-1.js 4 7 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-1.js 4 7 --strip-root
 
 # function-poly-2.js
 printf "function-poly-2.js:3:10 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 3 10 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 3 10 --strip-root
 printf "function-poly-2.js:4:12 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 4 12 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 4 12 --strip-root
 printf "function-poly-2.js:5:5 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 5 5 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 5 5 --strip-root
 printf "function-poly-2.js:6:5 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 6 5 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 6 5 --strip-root
 printf "function-poly-2.js:7:12 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 7 12 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 7 12 --strip-root
 printf "function-poly-2.js:9:13 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 9 13 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 9 13 --strip-root
 printf "function-poly-2.js:11:12 = "
-assert_ok "$FLOW" type-at-pos function-poly-2.js 11 12 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-2.js 11 12 --strip-root
 
 # function-poly-4.js
 printf "function-poly-4.js:3:11 = "
-assert_ok "$FLOW" type-at-pos function-poly-4.js 3 11 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-4.js 3 11 --strip-root
 printf "function-poly-4.js:7:7 = "
-assert_ok "$FLOW" type-at-pos function-poly-4.js 7 7 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-4.js 7 7 --strip-root
 printf "function-poly-4.js:9:7 = "
-assert_ok "$FLOW" type-at-pos function-poly-4.js 9 7 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-4.js 9 7 --strip-root
 
 # function-poly-5.js
 printf "function-poly-5.js:3:10 = "
-assert_ok "$FLOW" type-at-pos function-poly-5.js 3 10 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-5.js 3 10 --strip-root
 
 # function-poly-6.js
 printf "function-poly-6.js:7:6 = "
-assert_ok "$FLOW" type-at-pos function-poly-6.js 7 6 --strip-root --pretty
+assert_ok "$FLOW" type-at-pos function-poly-6.js 7 6 --strip-root
 
 # function.js
-# Friendly mode: `--pretty` above yields a bare type by design.
+# Friendly mode renders the declaration head; the bare type is pinned in
+# type_at_pos_json_pretty.
 printf "function.js:21:18 (framed) = "
 assert_ok "$FLOW" type-at-pos function.js 21 18 --strip-root
 

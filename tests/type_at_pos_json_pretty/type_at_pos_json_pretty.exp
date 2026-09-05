@@ -1,0 +1,198 @@
+basic.js:3:7 = {
+  "end":9,
+  "endline":3,
+  "line":3,
+  "loc":{
+    "end":{"column":9,"line":3,"offset":19},
+    "source":"basic.js",
+    "start":{"column":7,"line":3,"offset":16},
+    "type":"SourceFile"
+  },
+  "path":"basic.js",
+  "reasons":[],
+  "start":7,
+  "types":{"type":"number"}
+}
+basic.js:4:7 = {
+  "end":9,
+  "endline":4,
+  "line":4,
+  "loc":{
+    "end":{"column":9,"line":4,"offset":42},
+    "source":"basic.js",
+    "start":{"column":7,"line":4,"offset":39},
+    "type":"SourceFile"
+  },
+  "path":"basic.js",
+  "reasons":[],
+  "start":7,
+  "types":{"type":"\"hello\""}
+}
+basic.js:6:1 = {
+  "end":3,
+  "endline":6,
+  "line":6,
+  "loc":{
+    "end":{"column":3,"line":6,"offset":58},
+    "source":"basic.js",
+    "start":{"column":1,"line":6,"offset":55},
+    "type":"SourceFile"
+  },
+  "path":"basic.js",
+  "reasons":[],
+  "start":1,
+  "types":{"type":"number"}
+}
+basic.js:8:5 = {
+  "end":0,
+  "endline":0,
+  "line":0,
+  "loc":{
+    "end":{"column":0,"line":0,"offset":0},
+    "source":null,
+    "start":{"column":1,"line":0,"offset":0},
+    "type":null
+  },
+  "path":"",
+  "reasons":[],
+  "start":1,
+  "types":null
+}
+docs.js:6:7 = {
+  "documentation":"\n this is documented!",
+  "end":16,
+  "endline":6,
+  "line":6,
+  "loc":{
+    "end":{"column":16,"line":6,"offset":57},
+    "source":"docs.js",
+    "start":{"column":7,"line":6,"offset":47},
+    "type":"SourceFile"
+  },
+  "path":"docs.js",
+  "reasons":[],
+  "start":7,
+  "types":{"type":"number"}
+}
+docs.js:8:1 = {
+  "documentation":"\n this is documented!",
+  "end":10,
+  "endline":8,
+  "line":8,
+  "loc":{
+    "end":{"column":10,"line":8,"offset":82},
+    "source":"docs.js",
+    "start":{"column":1,"line":8,"offset":72},
+    "type":"SourceFile"
+  },
+  "path":"docs.js",
+  "reasons":[],
+  "start":1,
+  "types":{"type":"number"}
+}
+spread.js:4:7 = {
+  "end":14,
+  "endline":4,
+  "line":4,
+  "loc":{
+    "end":{"column":14,"line":4,"offset":55},
+    "source":"spread.js",
+    "start":{"column":7,"line":4,"offset":47},
+    "type":"SourceFile"
+  },
+  "path":"spread.js",
+  "reasons":[],
+  "start":7,
+  "types":{
+    "expanded":{
+      "def_loc":"spread.js:4:18-35",
+      "kind":"Obj",
+      "obj_kind":"Exact",
+      "props":[
+        {
+          "kind":"NamedProp",
+          "prop":{
+            "def_locs":["spread.js:3:15"],
+            "inherited":false,
+            "name":"a",
+            "prop":{"kind":"Field","optional":false,"polarity":"Neutral","type":{"kind":"Num"}},
+            "source":"other"
+          }
+        },
+        {
+          "kind":"NamedProp",
+          "prop":{
+            "def_locs":["spread.js:3:21"],
+            "inherited":false,
+            "name":"b",
+            "prop":{"kind":"Field","optional":false,"polarity":"Neutral","type":{"kind":"Str"}},
+            "source":"other"
+          }
+        },
+        {
+          "kind":"NamedProp",
+          "prop":{
+            "def_locs":["spread.js:4:28"],
+            "inherited":false,
+            "name":"c",
+            "prop":{"kind":"Field","optional":false,"polarity":"Neutral","type":{"kind":"Bool"}},
+            "source":"other"
+          }
+        }
+      ]
+    },
+    "type":"{a: number, b: string, c: boolean}"
+  }
+}
+main.js:5:10 = {
+  "end":14,
+  "endline":5,
+  "line":5,
+  "loc":{
+    "end":{"column":14,"line":5,"offset":59},
+    "source":"main.js",
+    "start":{"column":10,"line":5,"offset":54},
+    "type":"SourceFile"
+  },
+  "path":"main.js",
+  "reasons":[],
+  "start":10,
+  "types":{
+    "expanded":{
+      "body":{
+        "def_loc":"dep.js:3:21-49",
+        "kind":"Obj",
+        "obj_kind":"Exact",
+        "props":[
+          {
+            "kind":"NamedProp",
+            "prop":{
+              "def_locs":["dep.js:3:22-26"],
+              "inherited":false,
+              "name":"color",
+              "prop":{"kind":"Field","optional":false,"polarity":"Neutral","type":{"kind":"Str"}},
+              "source":"other"
+            }
+          },
+          {
+            "kind":"NamedProp",
+            "prop":{
+              "def_locs":["dep.js:3:37-40"],
+              "inherited":false,
+              "name":"size",
+              "prop":{"kind":"Field","optional":false,"polarity":"Neutral","type":{"kind":"Num"}},
+              "source":"other"
+            }
+          }
+        ]
+      },
+      "kind":"TypeAlias",
+      "name":{
+        "name":"Props",
+        "provenance":{"kind":"Imported as `Props` (type)","loc":"dep.js:3:13-17"}
+      },
+      "typeParams":null
+    },
+    "type":"type Props = {color: string, size: number}"
+  }
+}

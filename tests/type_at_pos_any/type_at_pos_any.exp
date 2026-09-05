@@ -1,420 +1,56 @@
-typed.js:2:7 = {
-  "end":13,
-  "endline":2,
-  "line":2,
-  "loc":{
-    "end":{"column":13,"line":2,"offset":22},
-    "source":"typed.js",
-    "start":{"column":7,"line":2,"offset":15},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":7,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:4:5 = {
-  "end":5,
-  "endline":4,
-  "line":4,
-  "loc":{
-    "end":{"column":5,"line":4,"offset":57},
-    "source":"typed.js",
-    "start":{"column":5,"line":4,"offset":56},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:5:5 = {
-  "end":5,
-  "endline":5,
-  "line":5,
-  "loc":{
-    "end":{"column":5,"line":5,"offset":86},
-    "source":"typed.js",
-    "start":{"column":5,"line":5,"offset":85},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:5:9 = {
-  "end":16,
-  "endline":5,
-  "line":5,
-  "loc":{
-    "end":{"column":16,"line":5,"offset":97},
-    "source":"typed.js",
-    "start":{"column":9,"line":5,"offset":89},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:6:5 = {
-  "end":5,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":5,"line":6,"offset":121},
-    "source":"typed.js",
-    "start":{"column":5,"line":6,"offset":120},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:6:9 = {
-  "end":14,
-  "endline":6,
-  "line":6,
-  "loc":{
-    "end":{"column":14,"line":6,"offset":130},
-    "source":"typed.js",
-    "start":{"column":9,"line":6,"offset":124},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:8:5 = {
-  "end":5,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":5,"line":8,"offset":155},
-    "source":"typed.js",
-    "start":{"column":5,"line":8,"offset":154},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:8:9 = {
-  "end":9,
-  "endline":8,
-  "line":8,
-  "loc":{
-    "end":{"column":9,"line":8,"offset":159},
-    "source":"typed.js",
-    "start":{"column":9,"line":8,"offset":158},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:9:5 = {
-  "end":5,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":5,"line":9,"offset":178},
-    "source":"typed.js",
-    "start":{"column":5,"line":9,"offset":177},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:9:9 = {
-  "end":9,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":9,"line":9,"offset":182},
-    "source":"typed.js",
-    "start":{"column":9,"line":9,"offset":181},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:9:12 = {
-  "end":12,
-  "endline":9,
-  "line":9,
-  "loc":{
-    "end":{"column":12,"line":9,"offset":185},
-    "source":"typed.js",
-    "start":{"column":11,"line":9,"offset":183},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":11,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:10:5 = {
-  "end":5,
-  "endline":10,
-  "line":10,
-  "loc":{
-    "end":{"column":5,"line":10,"offset":204},
-    "source":"typed.js",
-    "start":{"column":5,"line":10,"offset":203},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:10:9 = {
-  "end":9,
-  "endline":10,
-  "line":10,
-  "loc":{
-    "end":{"column":9,"line":10,"offset":208},
-    "source":"typed.js",
-    "start":{"column":9,"line":10,"offset":207},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (explicit)"}
-}
-typed.js:12:5 = {
-  "end":5,
-  "endline":12,
-  "line":12,
-  "loc":{
-    "end":{"column":5,"line":12,"offset":231},
-    "source":"typed.js",
-    "start":{"column":5,"line":12,"offset":230},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:12:9 = {
-  "end":15,
-  "endline":12,
-  "line":12,
-  "loc":{
-    "end":{"column":15,"line":12,"offset":241},
-    "source":"typed.js",
-    "start":{"column":9,"line":12,"offset":234},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:12:17 = {
-  "end":18,
-  "endline":12,
-  "line":12,
-  "loc":{
-    "end":{"column":18,"line":12,"offset":244},
-    "source":"typed.js",
-    "start":{"column":17,"line":12,"offset":242},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":17,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:13:5 = {
-  "end":5,
-  "endline":13,
-  "line":13,
-  "loc":{
-    "end":{"column":5,"line":13,"offset":263},
-    "source":"typed.js",
-    "start":{"column":5,"line":13,"offset":262},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:13:9 = {
-  "end":15,
-  "endline":13,
-  "line":13,
-  "loc":{
-    "end":{"column":15,"line":13,"offset":273},
-    "source":"typed.js",
-    "start":{"column":9,"line":13,"offset":266},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":9,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:15:5 = {
-  "end":12,
-  "endline":15,
-  "line":15,
-  "loc":{
-    "end":{"column":12,"line":15,"offset":300},
-    "source":"typed.js",
-    "start":{"column":5,"line":15,"offset":292},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:15:27 = {
-  "end":37,
-  "endline":15,
-  "line":15,
-  "loc":{
-    "end":{"column":37,"line":15,"offset":325},
-    "source":"typed.js",
-    "start":{"column":27,"line":15,"offset":314},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":27,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:16:5 = {
-  "end":12,
-  "endline":16,
-  "line":16,
-  "loc":{
-    "end":{"column":12,"line":16,"offset":351},
-    "source":"typed.js",
-    "start":{"column":5,"line":16,"offset":343},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"any (implicit)"}
-}
-typed.js:18:5 = {
-  "end":7,
-  "endline":18,
-  "line":18,
-  "loc":{
-    "end":{"column":7,"line":18,"offset":401},
-    "source":"typed.js",
-    "start":{"column":5,"line":18,"offset":398},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"number"}
-}
-typed.js:20:5 = {
-  "end":7,
-  "endline":20,
-  "line":20,
-  "loc":{
-    "end":{"column":7,"line":20,"offset":433},
-    "source":"typed.js",
-    "start":{"column":5,"line":20,"offset":430},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"string"}
-}
-typed.js:21:5 = {
-  "end":5,
-  "endline":21,
-  "line":21,
-  "loc":{
-    "end":{"column":5,"line":21,"offset":455},
-    "source":"typed.js",
-    "start":{"column":5,"line":21,"offset":454},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"string"}
-}
-typed.js:23:5 = {
-  "end":7,
-  "endline":23,
-  "line":23,
-  "loc":{
-    "end":{"column":7,"line":23,"offset":471},
-    "source":"typed.js",
-    "start":{"column":5,"line":23,"offset":468},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"Array<any>"}
-}
-typed.js:24:5 = {
-  "end":8,
-  "endline":24,
-  "line":24,
-  "loc":{
-    "end":{"column":8,"line":24,"offset":487},
-    "source":"typed.js",
-    "start":{"column":5,"line":24,"offset":483},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"Array<any>"}
-}
-typed.js:27:5 = {
-  "end":7,
-  "endline":27,
-  "line":27,
-  "loc":{
-    "end":{"column":7,"line":27,"offset":549},
-    "source":"typed.js",
-    "start":{"column":5,"line":27,"offset":546},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"(any) => void"}
-}
-typed.js:28:5 = {
-  "end":7,
-  "endline":28,
-  "line":28,
-  "loc":{
-    "end":{"column":7,"line":28,"offset":567},
-    "source":"typed.js",
-    "start":{"column":5,"line":28,"offset":564},
-    "type":"SourceFile"
-  },
-  "path":"typed.js",
-  "reasons":[],
-  "start":5,
-  "types":{"type":"(any) => void"}
-}
+typed.js:2:7 = const untyped: any (implicit)
+typed.js:2:7,2:13
+typed.js:4:5 = let x: any (explicit)
+typed.js:4:5,4:5
+typed.js:5:5 = let y: any (explicit)
+typed.js:5:5,5:5
+typed.js:5:9 = any (explicit)
+typed.js:5:9,5:16
+typed.js:6:5 = let z: any (explicit)
+typed.js:6:5,6:5
+typed.js:6:9 = any (explicit)
+typed.js:6:9,6:14
+typed.js:8:5 = let a: any (explicit)
+typed.js:8:5,8:5
+typed.js:8:9 = let x: any (explicit)
+typed.js:8:9,8:9
+typed.js:9:5 = let b: any (implicit)
+typed.js:9:5,9:5
+typed.js:9:9 = let z: any (explicit)
+typed.js:9:9,9:9
+typed.js:9:12 = any (implicit)
+typed.js:9:11,9:12
+typed.js:10:5 = let c: any (implicit)
+typed.js:10:5,10:5
+typed.js:10:9 = let y: any (explicit)
+typed.js:10:9,10:9
+typed.js:12:5 = let u: any (implicit)
+typed.js:12:5,12:5
+typed.js:12:9 = const untyped: any (implicit)
+typed.js:12:9,12:15
+typed.js:12:17 = any (implicit)
+typed.js:12:17,12:18
+typed.js:13:5 = let v: any (implicit)
+typed.js:13:5,13:5
+typed.js:13:9 = const untyped: any (implicit)
+typed.js:13:9,13:15
+typed.js:15:5 = let unsound1: any (implicit)
+typed.js:15:5,15:12
+typed.js:15:27 = (method) constructor: any (implicit)
+typed.js:15:27,15:37
+typed.js:16:5 = let unsound2: any (implicit)
+typed.js:16:5,16:12
+typed.js:18:5 = let num: number
+typed.js:18:5,18:7
+typed.js:20:5 = let str: string
+typed.js:20:5,20:7
+typed.js:21:5 = let m: string
+typed.js:21:5,21:5
+typed.js:23:5 = let arr: Array<any>
+typed.js:23:5,23:7
+typed.js:24:5 = let arr2: Array<any>
+typed.js:24:5,24:8
+typed.js:27:5 = let bar: (any) => void
+typed.js:27:5,27:7
+typed.js:28:5 = let baz: (any) => void
+typed.js:28:5,28:7
