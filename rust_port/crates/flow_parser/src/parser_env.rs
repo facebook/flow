@@ -1690,7 +1690,18 @@ pub(crate) mod peek {
         lexer_lookahead1_matches(env, |token| matches!(token, TokenKind::TIdentifier { .. }))
     }
 
-    pub(crate) fn import_equals_module_reference_starts_require_call(env: &mut ParserEnv) -> bool {
+    pub(crate) fn token_after_current_is_string(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(env, |token| matches!(token, TokenKind::TString(..)))
+    }
+
+    pub(crate) fn token_after_current_is_identifier_other_than_from(env: &mut ParserEnv) -> bool {
+        lexer_lookahead1_matches(
+            env,
+            |token| matches!(token, TokenKind::TIdentifier { raw, .. } if raw != "from"),
+        )
+    }
+
+    pub(crate) fn token_after_current_is_lparen(env: &mut ParserEnv) -> bool {
         lexer_lookahead1_matches(env, |token| token == &TokenKind::TLparen)
     }
 

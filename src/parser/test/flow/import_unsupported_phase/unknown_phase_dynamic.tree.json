@@ -1,0 +1,135 @@
+{
+  "body": [
+    {
+      "declarations": [
+        {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 7,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 6,
+                "line": 1
+              }
+            },
+            "name": "x",
+            "optional": false,
+            "range": [
+              6,
+              7
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "init": {
+            "loc": {
+              "end": {
+                "column": 36,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 10,
+                "line": 1
+              }
+            },
+            "range": [
+              10,
+              36
+            ],
+            "source": {
+              "loc": {
+                "end": {
+                  "column": 35,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 28,
+                  "line": 1
+                }
+              },
+              "range": [
+                28,
+                35
+              ],
+              "raw": "\"./foo\"",
+              "type": "Literal",
+              "value": "./foo"
+            },
+            "type": "ImportExpression"
+          },
+          "loc": {
+            "end": {
+              "column": 36,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 6,
+              "line": 1
+            }
+          },
+          "range": [
+            6,
+            36
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 37,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        37
+      ],
+      "type": "VariableDeclaration"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 27,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 17,
+          "line": 1
+        }
+      },
+      "message": "The `bogusphase` import phase is not supported."
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 37,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    37
+  ],
+  "type": "Program"
+}

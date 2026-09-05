@@ -875,6 +875,8 @@ pub mod imports_helper {
                         loc: dummy_loc.dupe(),
                         inner: Arc::new(ast::statement::ImportDeclaration {
                             import_kind: import_declaration.import_kind,
+                            // Synthesised type imports are never phase-modified.
+                            phase: None,
                             source: import_declaration.source,
                             default: import_declaration.default.map(|identifier| {
                                 ast::statement::import_declaration::DefaultIdentifier {
@@ -900,6 +902,7 @@ pub mod imports_helper {
                         loc: dummy_loc.dupe(),
                         inner: Arc::new(ast::statement::ImportDeclaration {
                             import_kind,
+                            phase: None,
                             source,
                             default: None,
                             specifiers,

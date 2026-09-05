@@ -344,6 +344,7 @@ module.exports = [
       source: this.deserializeNode(),
       importKind: this.deserializeString(),
       attributes: this.deserializeNodeList(),
+      phase: this.deserializeString(),
     };
   },
 
@@ -695,6 +696,7 @@ module.exports = [
       loc: this.addEmptyLoc(),
       source: this.deserializeNode(),
       options: this.deserializeNode(),
+      phase: this.deserializeString(),
     };
   },
 
@@ -3085,6 +3087,10 @@ module.exports = [
     {
       const value = this.deserializeNodeList();
       if (value.length > 0) node['attributes'] = value;
+    }
+    {
+      const value = this.deserializeString();
+      if (value != null) node['phase'] = value;
     }
     return node;
   },

@@ -1,0 +1,117 @@
+{
+  "body": [
+    {
+      "importKind": "value",
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        33
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 32,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 25,
+            "line": 1
+          }
+        },
+        "range": [
+          25,
+          32
+        ],
+        "raw": "\"./foo\"",
+        "type": "Literal",
+        "value": "./foo"
+      },
+      "specifiers": [
+        {
+          "loc": {
+            "end": {
+              "column": 19,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 18,
+              "line": 1
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 19,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 18,
+                "line": 1
+              }
+            },
+            "name": "x",
+            "optional": false,
+            "range": [
+              18,
+              19
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            18,
+            19
+          ],
+          "type": "ImportDefaultSpecifier"
+        }
+      ],
+      "type": "ImportDeclaration"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 17,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 7,
+          "line": 1
+        }
+      },
+      "message": "The `bogusphase` import phase is not supported."
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 33,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    33
+  ],
+  "type": "Program"
+}

@@ -181,6 +181,7 @@ fn deserialize_call(ty: PropType) -> &'static str {
         PropType::OptionalNode => "this.deserializeNode()",
         PropType::TrueBoolean => "this.deserializeBoolean()",
         PropType::NonEmptyNodeList => "this.deserializeNodeList()",
+        PropType::MaybeString => "this.deserializeString()",
         PropType::MaybeNode => "this.deserializeNode()",
         PropType::MaybeBoolean => "this.deserializeBoolean()",
         PropType::CommentList => "this.deserializeComments()",
@@ -202,6 +203,12 @@ fn print_property(indent: &str, prop_name: &str, prop_ty: PropType) {
             println!("{indent}{{");
             println!("{indent}  const value = this.deserializeNodeList();");
             println!("{indent}  if (value.length > 0) node['{prop_name}'] = value;");
+            println!("{indent}}}");
+        }
+        PropType::MaybeString => {
+            println!("{indent}{{");
+            println!("{indent}  const value = this.deserializeString();");
+            println!("{indent}  if (value != null) node['{prop_name}'] = value;");
             println!("{indent}}}");
         }
         PropType::MaybeNode => {
@@ -228,6 +235,7 @@ fn is_conditional_property(prop_ty: PropType) -> bool {
         PropType::OptionalNode
             | PropType::TrueBoolean
             | PropType::NonEmptyNodeList
+            | PropType::MaybeString
             | PropType::MaybeNode
             | PropType::MaybeBoolean
     )

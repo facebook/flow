@@ -252,6 +252,7 @@ fn update_import(
     match &**stmt {
         StatementInner::ImportDeclaration { inner, .. } => {
             let import_kind = inner.import_kind;
+            let phase = inner.phase;
             let source = inner.source.clone();
             let from = source.1.value.to_string();
             let default = inner.default.clone();
@@ -365,6 +366,7 @@ fn update_import(
                         loc: loc.clone(),
                         inner: std::sync::Arc::new(statement::ImportDeclaration {
                             import_kind,
+                            phase,
                             source,
                             default,
                             specifiers: Some(

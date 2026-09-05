@@ -13578,6 +13578,7 @@ pub fn import_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let ast::expression::Import {
         argument,
         options,
+        phase: _,
         comments,
     } = expr;
     visitor.expression(argument)?;
@@ -13595,12 +13596,14 @@ pub fn map_import_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let ast::expression::Import {
         argument,
         options,
+        phase: _,
         comments,
     } = expr;
     let argument_ = visitor.map_expression(argument);
     let options_ = options.as_ref().map(|opts| visitor.map_expression(opts));
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::expression::Import {
+        phase: expr.phase,
         argument: argument_,
         options: options_,
         comments: comments_,
@@ -13713,6 +13716,7 @@ pub fn import_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let _ = loc;
     let ast::statement::ImportDeclaration {
         import_kind,
+        phase: _,
         source,
         specifiers,
         default,
@@ -13741,6 +13745,7 @@ pub fn map_import_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 ) -> ast::statement::ImportDeclaration<Loc, Loc> {
     let ast::statement::ImportDeclaration {
         import_kind,
+        phase,
         source,
         default,
         specifiers,
@@ -13767,6 +13772,7 @@ pub fn map_import_declaration_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::statement::ImportDeclaration {
         import_kind: *import_kind,
+        phase: *phase,
         source: source_,
         default: default_,
         specifiers: specifiers_,

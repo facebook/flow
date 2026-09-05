@@ -1015,7 +1015,10 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         inner: &ast::expression::Import<Loc, Loc>,
     ) {
-        if self.is_babel() {
+        // A phase-modified call has no `Import` callee to hang the phase off,
+        // so Babel represents it as an ImportExpression too — only a plain
+        // `import(...)` lowers to `CallExpression(Import, ...)`.
+        if self.is_babel() && inner.phase.is_none() {
             self.write_node_header(NodeKind::BabelCallExpression, loc);
             let import_loc = Loc {
                 source: loc.source.clone(),
@@ -1040,6 +1043,7 @@ impl<'a> Serializer<'a> {
                 Some(options) => self.serialize_expression(options),
                 None => self.write_null_node(),
             }
+            self.write_str_opt(inner.phase.map(|phase| phase.as_str()));
         }
     }
 
@@ -2793,7 +2797,7 @@ impl<'a> Serializer<'a> {
         loc: &Loc,
         decl: &ast::statement::ImportDeclaration<Loc, Loc>,
     ) {
-        // 29: ImportDeclaration — specifiers(NodeList) source(Node) importKind(String) attributes(NodeList)
+        // 29: ImportDeclaration — specifiers(NodeList) source(Node) importKind(String) attributes(NodeList) phase(String)
         self.write_node_header(
             if self.is_babel() {
                 NodeKind::BabelImportDeclaration
@@ -2873,6 +2877,8 @@ impl<'a> Serializer<'a> {
             }
             None => self.buf.push(0),
         }
+        // phase — the null string sentinel for an unmodified import.
+        self.write_str_opt(decl.phase.map(|phase| phase.as_str()));
     }
 
     fn serialize_import_attribute(

@@ -35,6 +35,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "value",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -123,6 +124,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "value",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -199,6 +201,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "value",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -275,6 +278,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "value",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -379,6 +383,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "value",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -474,6 +479,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "value",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -593,6 +599,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "type",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",
@@ -672,6 +679,7 @@ describe('ImportDeclaration', () => {
            {
              "attributes": [],
              "importKind": "typeof",
+             "phase": null,
              "source": {
                "literalType": "string",
                "raw": "'Foo'",

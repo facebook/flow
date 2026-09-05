@@ -13248,6 +13248,9 @@ fn import_decl<'arena, 'ast>(
         default,
         specifiers,
         import_kind: kind,
+        // Deferred evaluation does not change the shape of the namespace, so
+        // a deferred import is signed exactly like the eager one.
+        phase: _,
         attributes: _,
         comments: _,
     } = decl;

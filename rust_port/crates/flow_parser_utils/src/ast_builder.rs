@@ -1358,6 +1358,8 @@ pub mod statements {
             loc,
             inner: Arc::new(statement::ImportDeclaration {
                 import_kind,
+                // Synthesised imports are never phase-modified.
+                phase: None,
                 source,
                 default,
                 specifiers,

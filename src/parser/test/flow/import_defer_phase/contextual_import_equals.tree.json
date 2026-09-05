@@ -1,0 +1,100 @@
+{
+  "body": [
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 12,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 1
+          }
+        },
+        "name": "defer",
+        "optional": false,
+        "range": [
+          7,
+          12
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "importKind": "value",
+      "isExport": false,
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "moduleReference": {
+        "expression": {
+          "loc": {
+            "end": {
+              "column": 31,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 23,
+              "line": 1
+            }
+          },
+          "range": [
+            23,
+            31
+          ],
+          "raw": "\"module\"",
+          "type": "Literal",
+          "value": "module"
+        },
+        "loc": {
+          "end": {
+            "column": 31,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 23,
+            "line": 1
+          }
+        },
+        "range": [
+          23,
+          31
+        ],
+        "type": "ExternalModuleReference"
+      },
+      "range": [
+        0,
+        33
+      ],
+      "type": "ImportEqualsDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 33,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    33
+  ],
+  "type": "Program"
+}

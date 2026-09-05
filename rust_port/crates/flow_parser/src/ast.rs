@@ -3074,6 +3074,46 @@ pub mod statement {
         ImportValue,
     }
 
+    /// The evaluation phase an import is modified with, as introduced by the
+    /// deferred import evaluation proposal:
+    ///
+    /// ```ignore
+    /// import defer * as ns from "m";
+    /// const ns = await import.defer("m");
+    /// ```
+    ///
+    /// [None] on an unmodified `import` / `import()`.
+    ///
+    /// The source phase (`import source x from "m"`, `import.source("m")`) is
+    /// not parsed yet. Adding it is a `Source` variant here plus the parse and
+    /// validation arms the compiler will point at: nothing about the field,
+    /// the ESTree `phase` property or the WASM wire format needs to change to
+    /// carry it.
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
+    pub enum ImportPhase {
+        Defer,
+    }
+
+    impl ImportPhase {
+        /// The ESTree `phase` property value for this phase.
+        pub fn as_str(self) -> &'static str {
+            match self {
+                ImportPhase::Defer => "defer",
+            }
+        }
+    }
+
     pub mod import_declaration {
         use super::*;
 
@@ -3179,6 +3219,7 @@ pub mod statement {
     )]
     pub struct ImportDeclaration<M: Dupe, T: Dupe> {
         pub import_kind: ImportKind,
+        pub phase: Option<ImportPhase>,
         pub source: (T, StringLiteral<M>),
         pub default: Option<import_declaration::DefaultIdentifier<M, T>>,
         pub specifiers: Option<import_declaration::Specifier<M, T>>,
@@ -4719,6 +4760,9 @@ pub mod expression {
     pub struct Import<M: Dupe, T: Dupe> {
         pub argument: Expression<M, T>,
         pub options: Option<Expression<M, T>>,
+        /// [Some] for a phase-modified dynamic import (`import.defer(...)`),
+        /// [None] for a plain `import(...)`.
+        pub phase: Option<super::statement::ImportPhase>,
         pub comments: Option<Syntax<M, ()>>,
     }
 

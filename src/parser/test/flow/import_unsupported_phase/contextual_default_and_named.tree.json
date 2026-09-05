@@ -1,0 +1,162 @@
+{
+  "body": [
+    {
+      "importKind": "value",
+      "loc": {
+        "end": {
+          "column": 34,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        34
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 26,
+            "line": 1
+          }
+        },
+        "range": [
+          26,
+          33
+        ],
+        "raw": "\"./foo\"",
+        "type": "Literal",
+        "value": "./foo"
+      },
+      "specifiers": [
+        {
+          "loc": {
+            "end": {
+              "column": 13,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 7,
+              "line": 1
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 13,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 7,
+                "line": 1
+              }
+            },
+            "name": "source",
+            "optional": false,
+            "range": [
+              7,
+              13
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            7,
+            13
+          ],
+          "type": "ImportDefaultSpecifier"
+        },
+        {
+          "importKind": null,
+          "imported": {
+            "loc": {
+              "end": {
+                "column": 18,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 17,
+                "line": 1
+              }
+            },
+            "name": "x",
+            "optional": false,
+            "range": [
+              17,
+              18
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 18,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 17,
+              "line": 1
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 18,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 17,
+                "line": 1
+              }
+            },
+            "name": "x",
+            "optional": false,
+            "range": [
+              17,
+              18
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            17,
+            18
+          ],
+          "type": "ImportSpecifier"
+        }
+      ],
+      "type": "ImportDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 34,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    34
+  ],
+  "type": "Program"
+}

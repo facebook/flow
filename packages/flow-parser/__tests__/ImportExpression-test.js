@@ -29,25 +29,26 @@ describe('ImportExpression', () => {
 
   test('ESTree', () => {
     expect(parseForSnapshot(testCase.code)).toMatchInlineSnapshot(`
-      {
-        "body": [
-          {
-            "directive": null,
-            "expression": {
-              "options": null,
-              "source": {
-                "literalType": "string",
-                "raw": "'foo'",
-                "type": "Literal",
-                "value": "foo",
-              },
-              "type": "ImportExpression",
-            },
-            "type": "ExpressionStatement",
-          },
-        ],
-        "type": "Program",
-      }
+     {
+       "body": [
+         {
+           "directive": null,
+           "expression": {
+             "options": null,
+             "phase": null,
+             "source": {
+               "literalType": "string",
+               "raw": "'foo'",
+               "type": "Literal",
+               "value": "foo",
+             },
+             "type": "ImportExpression",
+           },
+           "type": "ExpressionStatement",
+         },
+       ],
+       "type": "Program",
+     }
     `);
     expectEspreeAlignment(testCase);
   });

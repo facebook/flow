@@ -116,6 +116,8 @@ pub enum ParseError {
     IllegalReturn,
     IllegalUnicodeEscape,
     ImportAttributeMissingComma,
+    ImportDeferPhaseRequiresNamespace,
+    ImportPhaseUnsupported(String),
     ImportSpecifierMissingComma,
     ImportTypeShorthandOnlyInPureImport,
     IndexSignatureInvalidModifier(String),
@@ -513,6 +515,12 @@ impl fmt::Display for ParseError {
             }
             Self::ImportAttributeMissingComma => {
                 write!(f, "Missing comma between import attributes")
+            }
+            Self::ImportDeferPhaseRequiresNamespace => {
+                write!(f, "Only `import defer * as ns from \"module\"` is valid")
+            }
+            Self::ImportPhaseUnsupported(phase) => {
+                write!(f, "The `{}` import phase is not supported.", phase)
             }
             Self::ImportSpecifierMissingComma => {
                 write!(f, "Missing comma between import specifiers")

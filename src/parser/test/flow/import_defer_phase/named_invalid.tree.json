@@ -1,0 +1,140 @@
+{
+  "body": [
+    {
+      "importKind": "value",
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "phase": "defer",
+      "range": [
+        0,
+        33
+      ],
+      "source": {
+        "loc": {
+          "end": {
+            "column": 32,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 24,
+            "line": 1
+          }
+        },
+        "range": [
+          24,
+          32
+        ],
+        "raw": "\"module\"",
+        "type": "Literal",
+        "value": "module"
+      },
+      "specifiers": [
+        {
+          "importKind": null,
+          "imported": {
+            "loc": {
+              "end": {
+                "column": 16,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 15,
+                "line": 1
+              }
+            },
+            "name": "a",
+            "optional": false,
+            "range": [
+              15,
+              16
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "loc": {
+            "end": {
+              "column": 16,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 15,
+              "line": 1
+            }
+          },
+          "local": {
+            "loc": {
+              "end": {
+                "column": 16,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 15,
+                "line": 1
+              }
+            },
+            "name": "a",
+            "optional": false,
+            "range": [
+              15,
+              16
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "range": [
+            15,
+            16
+          ],
+          "type": "ImportSpecifier"
+        }
+      ],
+      "type": "ImportDeclaration"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 14,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 13,
+          "line": 1
+        }
+      },
+      "message": "Only `import defer * as ns from \"module\"` is valid"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 33,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    33
+  ],
+  "type": "Program"
+}

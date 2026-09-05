@@ -93,6 +93,10 @@ pub enum PropType {
     TrueBoolean,
     /// Read a node list and omit the JS property when it is empty.
     NonEmptyNodeList,
+    /// Read a string slot and omit the JS property when it is null. Used for
+    /// Babel-shaped nodes whose alignment baseline (the pinned `@babel/parser`)
+    /// predates the property.
+    MaybeString,
     /// Read a presence bit followed by a node slot, assigning even when null.
     MaybeNode,
     /// Read a presence bit followed by a boolean value.
@@ -596,6 +600,7 @@ define_nodes! {
         source: Node,
         importKind: String,
         attributes: NodeList,
+        phase: String,
     } from Statement::ImportDeclaration { loc, inner }
         {=> self.serialize_import_declaration(loc, inner)},
     ImportDefaultSpecifier = 30 {
@@ -823,6 +828,7 @@ define_nodes! {
     ImportExpression = 62 {
         source: Node,
         options: Node,
+        phase: String,
     } from Expression::Import { loc, inner }
         {=> self.serialize_import_expression(loc, inner)},
     MetaProperty = 63 {
@@ -2007,6 +2013,7 @@ define_nodes! {
         source: Node,
         importKind: String,
         attributes: NonEmptyNodeList,
+        phase: MaybeString,
     },
     BabelExportNamedDeclaration = 273 as "ExportNamedDeclaration" {
         declaration: OptionalNode,

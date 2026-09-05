@@ -129,6 +129,9 @@ impl Mapper {
                     source,
                     specifiers,
                     default,
+                    // Only `import type` declarations are rewritten here, and
+                    // those are never phase-modified.
+                    phase: _,
                     attributes: _,
                     comments: _,
                 } = &**decl;
@@ -204,6 +207,7 @@ impl Mapper {
                                     loc: loc.dupe(),
                                     inner: Arc::new(ast::statement::ImportDeclaration {
                                         import_kind: ImportKind::ImportValue,
+                                        phase: None,
                                         default: None,
                                         source: source.clone(),
                                         specifiers: Some(
@@ -261,6 +265,7 @@ impl Mapper {
                                     loc: loc.dupe(),
                                     inner: Arc::new(ast::statement::ImportDeclaration {
                                         import_kind: ImportKind::ImportValue,
+                                        phase: None,
                                         default: None,
                                         source: source.clone(),
                                         specifiers: Some(

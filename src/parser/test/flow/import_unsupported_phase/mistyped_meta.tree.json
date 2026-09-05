@@ -1,0 +1,116 @@
+{
+  "body": [
+    {
+      "directive": null,
+      "expression": {
+        "loc": {
+          "end": {
+            "column": 12,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 0,
+            "line": 1
+          }
+        },
+        "meta": {
+          "loc": {
+            "end": {
+              "column": 6,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 0,
+              "line": 1
+            }
+          },
+          "name": "import",
+          "optional": false,
+          "range": [
+            0,
+            6
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "property": {
+          "loc": {
+            "end": {
+              "column": 12,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 7,
+              "line": 1
+            }
+          },
+          "name": "meta",
+          "optional": false,
+          "range": [
+            7,
+            12
+          ],
+          "type": "Identifier",
+          "typeAnnotation": null
+        },
+        "range": [
+          0,
+          12
+        ],
+        "type": "MetaProperty"
+      },
+      "loc": {
+        "end": {
+          "column": 13,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        13
+      ],
+      "type": "ExpressionStatement"
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 12,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 7,
+          "line": 1
+        }
+      },
+      "message": "Unexpected identifier, expected the identifier `meta`"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 13,
+      "line": 1
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    13
+  ],
+  "type": "Program"
+}

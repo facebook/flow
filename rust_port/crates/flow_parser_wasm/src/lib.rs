@@ -625,7 +625,7 @@ mod tests {
                 let len = buf[idx] as usize;
                 (0..len).fold(idx + 1, |cursor, _| skip_node(buf, cursor))
             }
-            PropType::String => skip_string(buf, idx),
+            PropType::String | PropType::MaybeString => skip_string(buf, idx),
             PropType::Boolean | PropType::TrueBoolean => idx + 1,
             PropType::Number => {
                 let aligned = if idx.is_multiple_of(2) { idx } else { idx + 1 };
@@ -750,6 +750,57 @@ mod tests {
             buf[declare_variable_idx + 3],
             encoded_kind(NodeKind::VariableDeclarator),
             "DeclareVariable.declarations should contain VariableDeclarator nodes"
+        );
+    }
+
+    /// The buffer walkers above cannot step over a `Literal`, whose payload is
+    /// `custom` in the schema, so a node containing one — every
+    /// ImportDeclaration — is not addressable by property name. Search the
+    /// string buffer instead: the phase is the only place these fixtures can
+    /// put the word "defer" on the wire.
+    fn string_buffer_contains(
+        buffers: &crate::serializer::SerializerBuffers,
+        needle: &str,
+    ) -> bool {
+        buffers
+            .string_buffer
+            .windows(needle.len())
+            .any(|window| window == needle.as_bytes())
+    }
+
+    #[test]
+    fn import_declaration_serializes_defer_phase() {
+        let phased =
+            parse_and_serialize_with_filename("import defer * as ns from \"m\";", "test.js");
+        assert!(
+            string_buffer_contains(&phased, "defer"),
+            "`import defer * as ns from \"m\"` should serialize phase=\"defer\""
+        );
+
+        let unphased = parse_and_serialize_with_filename("import * as ns from \"m\";", "test.js");
+        assert!(
+            !string_buffer_contains(&unphased, "defer"),
+            "an unmodified import should serialize a null phase"
+        );
+        assert_eq!(
+            phased.program_buffer.len(),
+            unphased.program_buffer.len() + 1,
+            "the phase should cost one extra word over the null sentinel"
+        );
+    }
+
+    #[test]
+    fn import_expression_serializes_defer_phase() {
+        let phased = parse_and_serialize_with_filename("import.defer(\"m\");", "test.js");
+        assert!(
+            string_buffer_contains(&phased, "defer"),
+            "`import.defer(\"m\")` should serialize phase=\"defer\""
+        );
+
+        let unphased = parse_and_serialize_with_filename("import(\"m\");", "test.js");
+        assert!(
+            !string_buffer_contains(&unphased, "defer"),
+            "a plain `import()` should serialize a null phase"
         );
     }
 
