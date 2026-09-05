@@ -169,3 +169,13 @@ Flags:
 
 test.js:54:3,54:6
 
+test.js:3:9 (framed) = (enum member) E.A: E
+
+'E' defined at test.js:3:5
+
+test.js:3:9,3:9
+test.js:3:12 (framed) = (enum member) E.B: E
+
+'E' defined at test.js:3:5
+
+test.js:3:12,3:12

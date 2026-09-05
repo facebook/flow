@@ -208,8 +208,10 @@ pub mod type_at_pos {
     use flow_parser::ast_visitor::TypeParamsContext;
     use flow_parser::loc::Loc;
     use flow_typing_context::Context;
+    use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::LazyHintT;
     use flow_typing_type::type_::Type;
+    use flow_typing_type::type_::TypeInner as ConstraintTypeInner;
     use flow_typing_type::type_::TypeParam;
     use flow_typing_type::type_::TypeParamInner;
     use flow_typing_type::type_util;
@@ -312,6 +314,10 @@ pub mod type_at_pos {
         /// a property key frames like a member reference. Restored on exit,
         /// since patterns nest.
         enclosing_pattern_scrutinee: Option<Type>,
+        /// Name and object type of the enum whose members are being visited,
+        /// so that a member site frames like a member reference. Enum members
+        /// carry no types of their own.
+        enclosing_enum: Option<(FlowSmolStr, Type)>,
         /// Names bound by `infer` and in scope at the current position. The scope
         /// builder records these as ordinary type bindings, indistinguishable from
         /// a type alias, so the syntax that bound them is the only thing that says
@@ -1140,6 +1146,60 @@ pub mod type_at_pos {
             ast_visitor::pattern_object_property_default(self, kind, prop)
         }
 
+        /// Records the enum being declared, so that a member site below can
+        /// resolve itself in the enum's object type. Members carry no types
+        /// of their own.
+        fn enum_declaration(
+            &mut self,
+            loc: &'ast ALoc,
+            enum_: &'ast ast::statement::EnumDeclaration<ALoc, (ALoc, Type)>,
+        ) -> Result<(), FoundResult> {
+            let (_, t) = &enum_.id.loc;
+            let outer = self
+                .enclosing_enum
+                .replace((enum_.id.name.dupe(), t.dupe()));
+            let res = ast_visitor::enum_declaration_default(self, loc, enum_);
+            self.enclosing_enum = outer;
+            res
+        }
+
+        /// `A` in `enum E01 { A, ... }`: the member names a field of its
+        /// enum, so it frames like a member reference.
+        fn enum_member_name(
+            &mut self,
+            id: &'ast ast::statement::enum_declaration::MemberName<ALoc>,
+        ) -> Result<(), FoundResult> {
+            use ast::statement::enum_declaration::MemberName;
+            let (loc, name) = match id {
+                MemberName::Identifier(id) => (&id.loc, id.name.dupe()),
+                MemberName::StringLiteral(loc, lit) => (loc, lit.value.dupe()),
+            };
+            if self.covers_target(loc)
+                && let Some((_, enum_t)) = self.enclosing_enum.as_ref()
+            {
+                // The member's type is the enum's value type: the object type
+                // itself would normalize to the `enum E` declaration, whose
+                // printing drops the framing.
+                let member_t = match &**enum_t {
+                    ConstraintTypeInner::DefT(_, def) => match def.deref() {
+                        DefTInner::EnumObjectT { enum_value_t, .. } => enum_value_t.dupe(),
+                        _ => enum_t.dupe(),
+                    },
+                    _ => enum_t.dupe(),
+                };
+                return self.find_loc(
+                    loc,
+                    &member_t,
+                    false,
+                    Some(Framing::MemberRef {
+                        name,
+                        object_type: enum_t.dupe(),
+                    }),
+                );
+            }
+            ast_visitor::enum_member_name_default(self, id)
+        }
+
         // The hooks below fire when the target is a binding's own name, so that
         // hover can frame the type as a declaration. Each checks the bound
         // identifier directly and falls through to the default walk otherwise, so a
@@ -1572,6 +1632,7 @@ pub mod type_at_pos {
             enclosing_tparams: Vec::new(),
             enclosing_nominal: None,
             enclosing_pattern_scrutinee: None,
+            enclosing_enum: None,
             infer_tparams: Vec::new(),
             enclosing_private_members: Vec::new(),
         };

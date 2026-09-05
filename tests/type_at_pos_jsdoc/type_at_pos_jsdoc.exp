@@ -838,95 +838,95 @@ objects.js:58:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a defaulted string enum",
-  "end":0,
-  "endline":0,
-  "line":0,
+  "end":9,
+  "endline":58,
+  "line":58,
   "loc":{
-    "end":{"column":0,"line":0,"offset":0},
-    "source":null,
-    "start":{"column":1,"line":0,"offset":0},
-    "type":null
+    "end":{"column":9,"line":58,"offset":896},
+    "source":"objects.js",
+    "start":{"column":3,"line":58,"offset":889},
+    "type":"SourceFile"
   },
-  "path":"",
+  "path":"objects.js",
   "reasons":[],
-  "start":1,
-  "types":null
+  "start":3,
+  "types":{"type":"DefaultedStringEnum"}
 }
 
 objects.js:73:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of an initialized string enum",
-  "end":0,
-  "endline":0,
-  "line":0,
+  "end":9,
+  "endline":73,
+  "line":73,
   "loc":{
-    "end":{"column":0,"line":0,"offset":0},
-    "source":null,
-    "start":{"column":1,"line":0,"offset":0},
-    "type":null
+    "end":{"column":9,"line":73,"offset":1112},
+    "source":"objects.js",
+    "start":{"column":3,"line":73,"offset":1105},
+    "type":"SourceFile"
   },
-  "path":"",
+  "path":"objects.js",
   "reasons":[],
-  "start":1,
-  "types":null
+  "start":3,
+  "types":{"type":"InitializedStringEnum"}
 }
 
 objects.js:88:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a number enum",
-  "end":0,
-  "endline":0,
-  "line":0,
+  "end":9,
+  "endline":88,
+  "line":88,
   "loc":{
-    "end":{"column":0,"line":0,"offset":0},
-    "source":null,
-    "start":{"column":1,"line":0,"offset":0},
-    "type":null
+    "end":{"column":9,"line":88,"offset":1306},
+    "source":"objects.js",
+    "start":{"column":3,"line":88,"offset":1299},
+    "type":"SourceFile"
   },
-  "path":"",
+  "path":"objects.js",
   "reasons":[],
-  "start":1,
-  "types":null
+  "start":3,
+  "types":{"type":"NumberEnum"}
 }
 
 objects.js:103:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a boolean enum",
-  "end":0,
-  "endline":0,
-  "line":0,
+  "end":9,
+  "endline":103,
+  "line":103,
   "loc":{
-    "end":{"column":0,"line":0,"offset":0},
-    "source":null,
-    "start":{"column":1,"line":0,"offset":0},
-    "type":null
+    "end":{"column":9,"line":103,"offset":1489},
+    "source":"objects.js",
+    "start":{"column":3,"line":103,"offset":1482},
+    "type":"SourceFile"
   },
-  "path":"",
+  "path":"objects.js",
   "reasons":[],
-  "start":1,
-  "types":null
+  "start":3,
+  "types":{"type":"BooleanEnum"}
 }
 
 objects.js:118:5
 Flags: --strip-root --pretty
 {
   "documentation":"\n first member of a symbol enum",
-  "end":0,
-  "endline":0,
-  "line":0,
+  "end":9,
+  "endline":118,
+  "line":118,
   "loc":{
-    "end":{"column":0,"line":0,"offset":0},
-    "source":null,
-    "start":{"column":1,"line":0,"offset":0},
-    "type":null
+    "end":{"column":9,"line":118,"offset":1684},
+    "source":"objects.js",
+    "start":{"column":3,"line":118,"offset":1677},
+    "type":"SourceFile"
   },
-  "path":"",
+  "path":"objects.js",
   "reasons":[],
-  "start":1,
-  "types":null
+  "start":3,
+  "types":{"type":"SymbolEnum"}
 }
 
 objects.js:168:5
