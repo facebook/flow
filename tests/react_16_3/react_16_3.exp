@@ -69,18 +69,18 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    forwardRef.js:22:38
-   22| const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => x} />; // Incorrect ref type
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   22| const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => { x }} />; // Incorrect ref type
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    forwardRef.js:5:45
     5| const FancyButton = React.forwardRef<Props, ButtonInstance>((props, ref) => (
                                                    ^^^^^^^^^^^^^^ [1]
    forwardRef.js:22:49
-   22| const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => x} />; // Incorrect ref type
+   22| const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => { x }} />; // Incorrect ref type
                                                        ^^^^^^^^^^^ [2]
    forwardRef.js:22:42
-   22| const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => x} />; // Incorrect ref type
+   22| const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => { x }} />; // Incorrect ref type
                                                 ^^^^ [3]
 
 

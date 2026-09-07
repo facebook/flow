@@ -296,7 +296,10 @@ Flags: --pretty
       "name":"RefAttributes",
       "type":"type RefAttributes<T> = {ref?: RefSetter<T>, ...}"
     },
-    {"name":"RefCallback","type":"type RefCallback<T> = (T | null) => unknown"},
+    {
+      "name":"RefCallback",
+      "type":"type RefCallback<T> = (T | null) => void | (() => void)"
+    },
     {"name":"RefObject","type":"type RefObject<T> = React$RefObject<T>"},
     {
       "name":"RefOf",
@@ -304,7 +307,7 @@ Flags: --pretty
     },
     {
       "name":"RefSetter",
-      "type":"type RefSetter<in T> = ?{writeonly current: T | null, ...} | ((T | null) => unknown)"
+      "type":"type RefSetter<in T> = ?{writeonly current: T | null, ...} | ((T | null) => void | (() => void))"
     },
     {"name":"SetStateAction","type":"type SetStateAction<S> = S | ((S) => S)"},
     {

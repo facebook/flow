@@ -43,7 +43,7 @@ References:
      3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [4]
 
 
@@ -169,7 +169,7 @@ References:
      3| class CustomComponent extends React.Component<{prop: string, ...}, void> {}
               ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [4]
 
 

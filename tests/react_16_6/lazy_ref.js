@@ -4,7 +4,7 @@ const React = require('react');
 const {useImperativeHandle} = React;
 
 type T = {moo(x: string): void}
-function Demo(props: {}, ref: ?({writeonly current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
+function Demo(props: {}, ref: React.RefSetter<T>) {
   useImperativeHandle(ref, () => ({
     moo(x: string) {},
   }));
@@ -19,7 +19,7 @@ function App() {
   // Error below: moo expects a string, given a number
   return (
     <React.Suspense fallback="Loading...">
-      <Lazy ref={ref => ref && ref.moo(0)} />;
+      <Lazy ref={ref => { if (ref) ref.moo(0) }} />;
     </React.Suspense>
   );
 }

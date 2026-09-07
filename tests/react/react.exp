@@ -1386,7 +1386,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either `"foo"` [1] is incompatible with `{writeonly current: Foo | null, ...}` [2].
- - Or `"foo"` [1] is incompatible with `(Foo | null) => unknown` [3].
+ - Or `"foo"` [1] is incompatible with `(Foo | null) => void | (() => void)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1400,8 +1400,8 @@ References:
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => unknown)
-               ^^^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => void | (() => void))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
@@ -1430,24 +1430,24 @@ References:
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:11:18
+Error ----------------------------------------------------------------------------------------------------- ref.js:11:20
 
 Cannot cast `foo` to `Foo` because `null` [1] is incompatible with `Foo` [2]. [incompatible-type]
 
-   ref.js:11:18
-    11| <Foo ref={foo => foo as Foo} />; // Error: `Foo` may be null.
-                         ^^^
+   ref.js:11:20
+    11| <Foo ref={foo => { foo as Foo }} />; // Error: `Foo` may be null.
+                           ^^^
 
 References:
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [1]
-   ref.js:11:25
-    11| <Foo ref={foo => foo as Foo} />; // Error: `Foo` may be null.
-                                ^^^ [2]
+   ref.js:11:27
+    11| <Foo ref={foo => { foo as Foo }} />; // Error: `Foo` may be null.
+                                  ^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:13:18
+Error ----------------------------------------------------------------------------------------------------- ref.js:13:20
 
 Cannot cast `foo` to union type because: [incompatible-type]
  - Either `Foo` [1] is incompatible with `Bar` [2].
@@ -1456,33 +1456,86 @@ Cannot cast `foo` to union type because: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   ref.js:13:18
-   13| <Foo ref={foo => foo as Bar | null} />; // Error: `Foo` is not `Bar`.
-                        ^^^
+   ref.js:13:20
+   13| <Foo ref={foo => { foo as Bar | null }} />; // Error: `Foo` is not `Bar`.
+                          ^^^
 
 References:
    ref.js:3:7
     3| class Foo extends React.Component<{...}, void> {}
              ^^^ [1]
-   ref.js:13:25
-   13| <Foo ref={foo => foo as Bar | null} />; // Error: `Foo` is not `Bar`.
-                               ^^^ [2]
-   ref.js:13:31
-   13| <Foo ref={foo => foo as Bar | null} />; // Error: `Foo` is not `Bar`.
-                                     ^^^^ [3]
+   ref.js:13:27
+   13| <Foo ref={foo => { foo as Bar | null }} />; // Error: `Foo` is not `Bar`.
+                                 ^^^ [2]
+   ref.js:13:33
+   13| <Foo ref={foo => { foo as Bar | null }} />; // Error: `Foo` is not `Bar`.
+                                       ^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:18:15
+Error ----------------------------------------------------------------------------------------------------- ref.js:15:11
 
-Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either `"foo"` [1] is incompatible with `{writeonly current: FooExact | null, ...}` [2].
- - Or `"foo"` [1] is incompatible with `(FooExact | null) => unknown` [3].
+Cannot create `Foo` element because in property `ref`: [incompatible-type]
+ - Either in the return value: `42` [1] is incompatible with `() => void` [2].
+ - Or in the return value: `42` [1] is incompatible with `void` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   ref.js:18:15
-    18| <FooExact ref="foo" />; // Error: string ref is banned
+   ref.js:15:11
+    15| <Foo ref={foo => 42} />; // Error: ref callbacks may only return cleanup functions.
+                  ^^^^^^^^^
+
+References:
+   ref.js:15:18
+    15| <Foo ref={foo => 42} />; // Error: ref callbacks may only return cleanup functions.
+                         ^^ [1]
+   <BUILTINS>/react.js:108:30
+   108|     | ((T | null) => void | (() => void))
+                                     ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:108:22
+   108|     | ((T | null) => void | (() => void))
+                             ^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- ref.js:16:11
+
+Cannot create `Foo` element because in property `ref`: [incompatible-type]
+ - Either in the return value > the return value: `42` [1] is incompatible with `void` [2].
+ - Or in the return value: `() => 42` [3] is incompatible with `void` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   ref.js:16:11
+    16| <Foo ref={(foo: Foo | null) => () => 42} />; // Error: cleanup functions may not return values.
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   ref.js:16:38
+    16| <Foo ref={(foo: Foo | null) => () => 42} />; // Error: cleanup functions may not return values.
+                                             ^^ [1]
+   <BUILTINS>/react.js:108:36
+   108|     | ((T | null) => void | (() => void))
+                                           ^^^^ [2]
+   ref.js:16:32
+    16| <Foo ref={(foo: Foo | null) => () => 42} />; // Error: cleanup functions may not return values.
+                                       ^^^^^^^^ [3]
+   <BUILTINS>/react.js:108:22
+   108|     | ((T | null) => void | (() => void))
+                             ^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- ref.js:21:15
+
+Cannot create `FooExact` element because in property `ref`: [incompatible-type]
+ - Either `"foo"` [1] is incompatible with `{writeonly current: FooExact | null, ...}` [2].
+ - Or `"foo"` [1] is incompatible with `(FooExact | null) => void | (() => void)` [3].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   ref.js:21:15
+    21| <FooExact ref="foo" />; // Error: string ref is banned
                       ^^^^^ [1]
 
 References:
@@ -1490,11 +1543,11 @@ References:
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => unknown)
-               ^^^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => void | (() => void))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:21:16
+Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `number` [1] is incompatible with `FooExact` [2].
@@ -1504,23 +1557,23 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   ref.js:21:16
-    21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+   ref.js:24:16
+    24| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                        ^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   ref.js:21:22
-    21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
+   ref.js:24:22
+    24| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
                              ^^^^^^ [1]
-   ref.js:15:7
-    15| class FooExact extends React.Component<{}, void> {}
+   ref.js:18:7
+    18| class FooExact extends React.Component<{}, void> {}
               ^^^^^^^^ [2]
    <BUILTINS>/react.js:107:7
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:22:16
+Error ----------------------------------------------------------------------------------------------------- ref.js:25:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `FooExact` [1] is incompatible with `null` [2].
@@ -1530,23 +1583,23 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   ref.js:22:16
-    22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
+   ref.js:25:16
+    25| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                        ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   ref.js:22:22
-    22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
+   ref.js:25:22
+    25| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.
                              ^^^^^^^^ [1]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [2]
    <BUILTINS>/react.js:107:7
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
+Error ----------------------------------------------------------------------------------------------------- ref.js:27:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either in the first parameter: `FooExact` [1] is incompatible with `Bar` [2].
@@ -1555,19 +1608,19 @@ Cannot create `FooExact` element because in property `ref`: [incompatible-type]
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
-   ref.js:24:16
-   24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+   ref.js:27:16
+   27| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
                       ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   ref.js:15:7
-   15| class FooExact extends React.Component<{}, void> {}
+   ref.js:18:7
+   18| class FooExact extends React.Component<{}, void> {}
              ^^^^^^^^ [1]
-   ref.js:24:22
-   24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+   ref.js:27:22
+   27| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
                             ^^^ [2]
-   ref.js:24:28
-   24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+   ref.js:27:28
+   27| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
                                   ^^^^ [3]
 
 
@@ -2625,4 +2678,4 @@ References:
 
 
 
-Found 147 errors
+Found 149 errors

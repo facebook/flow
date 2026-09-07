@@ -1031,7 +1031,7 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either `number` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
- - Or `number` [1] is incompatible with `(any | null) => unknown` [3].
+ - Or `number` [1] is incompatible with `(any | null) => void | (() => void)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1048,8 +1048,8 @@ References:
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => unknown)
-               ^^^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => void | (() => void))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:56:52
@@ -1978,7 +1978,7 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either `string` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
- - Or `string` [1] is incompatible with `(any | null) => unknown` [3].
+ - Or `string` [1] is incompatible with `(any | null) => void | (() => void)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1995,8 +1995,8 @@ References:
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => unknown)
-               ^^^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => void | (() => void))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:23:2
@@ -2507,7 +2507,7 @@ References:
      3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
                                                                    ^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [3]
 
 
@@ -2532,7 +2532,7 @@ References:
      3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
                                                                    ^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [3]
 
 
@@ -2580,7 +2580,7 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either in property `current`: `null` [1] is incompatible with component Reffed [2].
- - Or `{current: typeof Reffed}` [3] is incompatible with `(any | null) => unknown` [4].
+ - Or `{current: typeof Reffed}` [3] is incompatible with `(any | null) => void | (() => void)` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2600,37 +2600,8 @@ References:
      3| component Foo(ref: {current: typeof Reffed}) { return null };
                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => unknown)
-               ^^^^^^^^^^^^^^^^^^^^^ [4]
-
-
-Error ----------------------------------------------------------------------------------------------------- refs.js:5:15
-
-The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either in the first parameter: component Reffed [1] is incompatible with `null` [2].
- - Or `(typeof Reffed) => unknown` [3] is incompatible with `{writeonly current: any | null, ...}` [4].
-    - Functions without statics are not compatible with objects.
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   refs.js:5:15
-     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                      ^^^
-
-References:
-   refs.js:5:22
-     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                             ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
-                    ^^^^ [2]
-   refs.js:5:21
-     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:107:7
-   107|     | { writeonly current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   108|     | ((T | null) => void | (() => void))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
@@ -2840,60 +2811,6 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
 
-Cannot cast `Bar` to component because in property `ref`: `null` [1] is incompatible with
-`(typeof Reffed) => unknown` [2]. [incompatible-type]
-
-   refs.js:15:1
-   15| Bar as component(ref: React.RefSetter<string>); // err
-       ^^^
-
-References:
-   refs.js:15:23
-   15| Bar as component(ref: React.RefSetter<string>); // err
-                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
-
-Cannot cast `Bar` to component because in property `ref`: `void` [1] is incompatible with
-`(typeof Reffed) => unknown` [2]. [incompatible-type]
-
-   refs.js:15:1
-   15| Bar as component(ref: React.RefSetter<string>); // err
-       ^^^
-
-References:
-   refs.js:15:23
-   15| Bar as component(ref: React.RefSetter<string>); // err
-                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
-
-Cannot cast `Bar` to component because in property `ref`: `{writeonly current: string | null, ...}` [1] is incompatible
-with `(typeof Reffed) => unknown` [2]. [incompatible-type]
-
-   refs.js:15:1
-   15| Bar as component(ref: React.RefSetter<string>); // err
-       ^^^
-
-References:
-   refs.js:15:23
-   15| Bar as component(ref: React.RefSetter<string>); // err
-                             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- refs.js:15:1
-
 Cannot cast `Bar` to component because in the first parameter of property `ref`: [incompatible-type]
  - Either component Reffed [1] is incompatible with `string` [2].
  - Or component Reffed [1] is incompatible with `null` [3].
@@ -2902,19 +2819,19 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    refs.js:15:1
-    15| Bar as component(ref: React.RefSetter<string>); // err
-        ^^^
+   15| Bar as component(ref: ((string | null) => void)); // err
+       ^^^
 
 References:
    refs.js:5:22
-     5| component Bar(ref: ((typeof Reffed) => unknown)) { return null };
-                             ^^^^^^^^^^^^^ [1]
-   refs.js:15:39
-    15| Bar as component(ref: React.RefSetter<string>); // err
-                                              ^^^^^^ [2]
-   <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
-                    ^^^^ [3]
+    5| component Bar(ref: ((typeof Reffed | null) => void)) { return null };
+                            ^^^^^^^^^^^^^ [1]
+   refs.js:15:25
+   15| Bar as component(ref: ((string | null) => void)); // err
+                               ^^^^^^ [2]
+   refs.js:15:34
+   15| Bar as component(ref: ((string | null) => void)); // err
+                                        ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:1
@@ -3012,7 +2929,7 @@ References:
     88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:108:13
-   108|     | ((T | null) => unknown)
+   108|     | ((T | null) => void | (() => void))
                     ^^^^ [4]
 
 
@@ -3048,7 +2965,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `GenericRef1` element because in property `ref`: [incompatible-type]
  - Either `1` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
- - Or `1` [1] is incompatible with `(any | null) => unknown` [3].
+ - Or `1` [1] is incompatible with `(any | null) => void | (() => void)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3062,8 +2979,8 @@ References:
    107|     | { writeonly current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:108:8
-   108|     | ((T | null) => unknown)
-               ^^^^^^^^^^^^^^^^^^^^^ [3]
+   108|     | ((T | null) => void | (() => void))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
@@ -3596,4 +3513,4 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 232 errors
+Found 228 errors

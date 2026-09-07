@@ -18,8 +18,8 @@ const _d = <FancyButton foo={3} ref={goodRef} />;
 const badRef = React.createRef<DivInstance>();
 const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
 
-const _f = <FancyButton foo={3} ref={x => x} />;
-const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => x} />; // Incorrect ref type
+const _f = <FancyButton foo={3} ref={x => { x }} />;
+const _g = <FancyButton foo={3} ref={(x: null | DivInstance) => { x }} />; // Incorrect ref type
 
 type FooProps = {foo: number};
 

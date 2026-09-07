@@ -231,13 +231,13 @@ References:
                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ lazy_ref.js:22:40
+Error ------------------------------------------------------------------------------------------------ lazy_ref.js:22:44
 
 Cannot call `ref.moo` with `0` bound to `x` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   lazy_ref.js:22:40
-   22|       <Lazy ref={ref => ref && ref.moo(0)} />;
-                                              ^ [1]
+   lazy_ref.js:22:44
+   22|       <Lazy ref={ref => { if (ref) ref.moo(0) }} />;
+                                                  ^ [1]
 
 References:
    lazy_ref.js:6:18
@@ -347,35 +347,13 @@ References:
                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ memo_ref.js:14:42
-
-Cannot call `React.forwardRef` with `Demo` bound to `render` because in the second parameter: [incompatible-type]
- - Either property `current` is write-only in object type [1] but readable in object type [2].
- - Or `{writeonly current: null | T, ...}` [1] is incompatible with `(inst: T | null) => unknown` [3].
-
-   memo_ref.js:14:42
-     14| const Memo = React.memo(React.forwardRef(Demo));
-                                                  ^^^^
-
-References:
-   <BUILTINS>/react.js:1068:36
-   1068|       render: (props: Config, ref: React.RefSetter<Instance>) => Renders,
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   memo_ref.js:7:33
-      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   memo_ref.js:7:63
-      7| function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
-                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:43
+Error ------------------------------------------------------------------------------------------------ memo_ref.js:18:47
 
 Cannot call `ref.moo` with `0` bound to `x` because `0` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   memo_ref.js:18:43
-   18|   return <Memo ref={ref => ref && ref.moo(0)} />;
-                                                 ^ [1]
+   memo_ref.js:18:47
+   18|   return <Memo ref={ref => { if (ref) ref.moo(0) }} />;
+                                                     ^ [1]
 
 References:
    memo_ref.js:6:18
@@ -384,4 +362,4 @@ References:
 
 
 
-Found 20 errors
+Found 19 errors

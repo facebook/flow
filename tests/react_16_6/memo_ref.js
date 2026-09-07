@@ -4,7 +4,7 @@ const React = require('react');
 const {useImperativeHandle} = React;
 
 type T = {moo(x: string): void}
-function Demo(props: {}, ref: ?({current: (T | null), ...} | ((inst: (T | null)) => unknown))) {
+function Demo(props: {}, ref: React.RefSetter<T>) {
   useImperativeHandle(ref, () => ({
     moo(x: string) {},
   }));
@@ -15,5 +15,5 @@ const Memo = React.memo(React.forwardRef(Demo));
 
 function App() {
   // Error below: moo expects a string, given a number
-  return <Memo ref={ref => ref && ref.moo(0)} />;
+  return <Memo ref={ref => { if (ref) ref.moo(0) }} />;
 }
