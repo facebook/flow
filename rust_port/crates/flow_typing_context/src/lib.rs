@@ -200,7 +200,6 @@ pub struct FrozenMetadata {
     pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,
     pub tslib_syntax: bool,
-    pub typescript_global_library_definition_discovery: bool,
     pub typescript_library_definition_support: bool,
     pub type_expansion_recursion_limit: i32,
     pub use_unknown_in_catch_variables: bool,
@@ -262,7 +261,6 @@ impl Default for FrozenMetadata {
             deprecated_colon_extends_excludes: Arc::from([]),
             ts_utility_syntax: false,
             tslib_syntax: false,
-            typescript_global_library_definition_discovery: false,
             typescript_library_definition_support: false,
             type_expansion_recursion_limit: 3,
             use_unknown_in_catch_variables: false,
@@ -661,8 +659,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             deprecated_colon_extends_excludes: options.deprecated_colon_extends_excludes.dupe(),
             ts_utility_syntax: options.ts_utility_syntax,
             tslib_syntax: options.tslib_syntax,
-            typescript_global_library_definition_discovery: options
-                .typescript_global_library_definition_discovery,
             typescript_library_definition_support: options.typescript_library_definition_support,
             deprecated_utilities: options.deprecated_utilities.dupe(),
             assert_operator: options.assert_operator,
@@ -1410,13 +1406,6 @@ impl<'cx> Context<'cx> {
 
     pub fn tslib_syntax(&self) -> bool {
         self.0.metadata.frozen.tslib_syntax || self.is_global_lib_context()
-    }
-
-    pub fn typescript_global_library_definition_discovery(&self) -> bool {
-        self.0
-            .metadata
-            .frozen
-            .typescript_global_library_definition_discovery
     }
 
     pub fn typescript_library_definition_support(&self) -> bool {

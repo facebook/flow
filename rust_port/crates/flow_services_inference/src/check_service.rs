@@ -199,11 +199,8 @@ pub fn mk_check_file(
                 // at the import site instead of merging it.
                 Some(dep_file_key)
                     if files::is_lib_file(all_unordered_libs, &dep_file_key)
-                        || (base_metadata
-                            .frozen
-                            .typescript_global_library_definition_discovery
-                            && transaction.get_dts_file_kind(&dep_file_key)
-                                == Some(DtsFileKind::GlobalLibdef)) =>
+                        || transaction.get_dts_file_kind(&dep_file_key)
+                            == Some(DtsFileKind::GlobalLibdef) =>
                 {
                     ResolvedRequire::GlobalLibdefModule(dep_file_key)
                 }

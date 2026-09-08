@@ -421,9 +421,6 @@ pub fn changed_declaration_files<'a>(
     transaction: &Transaction,
     files: impl IntoIterator<Item = &'a FileKey>,
 ) -> FlowOrdSet<FileKey> {
-    if !options.typescript_global_library_definition_discovery {
-        return FlowOrdSet::new();
-    }
     files
         .into_iter()
         .filter(|file| {
@@ -560,9 +557,7 @@ fn reducer(
         } => {
             use flow_aloc::aloc_representation_do_not_use;
 
-            if options.typescript_global_library_definition_discovery
-                && let Some(dts_file_kind) = new_dts_file_kind
-            {
+            if let Some(dts_file_kind) = new_dts_file_kind {
                 acc.dts_file_kinds.insert(file_key.dupe(), dts_file_kind);
             }
 

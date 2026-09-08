@@ -583,9 +583,8 @@ fn check_that_we_care_about_this_file(
         content: &str,
         file_key: &flow_parser::file_key::FileKey,
     ) -> Result<(), &'static str> {
-        let is_declaration_discovery_candidate = options
-            .typescript_global_library_definition_discovery
-            && flow_parser::file_key::has_dts_ext(file_key.as_str());
+        let is_declaration_discovery_candidate =
+            flow_parser::file_key::has_dts_ext(file_key.as_str());
         if options.all || env.is_lib_file(file_key) || is_declaration_discovery_candidate {
             Ok(())
         } else {

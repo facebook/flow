@@ -52,18 +52,19 @@ References:
                                                        ^^^^ [3]
 
 
-Error ----------------------------------------------------------------------------- namespace_interface_merge.d.ts:15:11
+Error ----------------------------------------------------------------------------- namespace_interface_merge.d.ts:15:19
 
-Cannot declare `MR` [1] because the name is already bound. [name-already-bound]
+This name declaration overrides an existing binding `MR` [1]. Overriding in library definitions can lead to surprising
+behaviors. [libdef-override]
 
-   namespace_interface_merge.d.ts:15:11
-   15| interface MR<R> { // ERROR — name-already-bound (separate pre-existing limitation; Flow's `can_coexist` rejects type-only-namespace + interface declaration merging)
-                 ^^
+   namespace_interface_merge.d.ts:15:19
+   15| declare namespace MR { // ERROR — libdef-override
+                         ^^
 
 References:
-   namespace_interface_merge.d.ts:11:19
-   11| declare namespace MR {
-                         ^^ [1]
+   namespace_interface_merge.d.ts:19:11
+   19| interface MR<R> {
+                 ^^ [1]
 
 
 

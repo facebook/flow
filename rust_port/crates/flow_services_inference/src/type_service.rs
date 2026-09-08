@@ -2562,9 +2562,6 @@ fn global_scope_changes(
     saved_discovered: &BTreeSet<FileKey>,
     updates: &FlowOrdSet<FileKey>,
 ) -> BTreeSet<FileKey> {
-    if !options.typescript_global_library_definition_discovery {
-        return BTreeSet::new();
-    }
     let mut moved: BTreeSet<FileKey> = updates
         .iter()
         .filter(|file| saved_discovered.contains(*file))
