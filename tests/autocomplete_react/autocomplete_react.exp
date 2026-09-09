@@ -172,15 +172,15 @@ Flags: --pretty
     },
     {
       "name":"ComponentProps",
-      "type":"type ComponentProps<T extends React$ElementType> = React$ElementConfig<T>"
+      "type":"type ComponentProps<T extends React$ElementType> = T extends component(...infer Props extends {...}) ? Props : T extends string ? $JSXIntrinsics[T][\"props\"] : empty"
     },
     {
       "name":"ComponentPropsWithRef",
-      "type":"type ComponentPropsWithRef<T extends React$ElementType> = React$ElementConfig<T>"
+      "type":"type ComponentPropsWithRef<T extends React$ElementType> = ComponentProps<T>"
     },
     {
       "name":"ComponentPropsWithoutRef",
-      "type":"type ComponentPropsWithoutRef<T extends React$ElementType> = Omit<React$ElementConfig<T>, \"ref\">"
+      "type":"type ComponentPropsWithoutRef<T extends React$ElementType> = Omit<ComponentProps<T>, \"ref\">"
     },
     {
       "name":"ComponentType",
