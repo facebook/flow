@@ -60,7 +60,7 @@ component ConstrainedGeneric<T extends {id: string, label: string}>(
 where
 'ConstrainedGeneric' is defined at react.js:105:1-98
 
-Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `component InexactRest(bar: string, foo: number)` 
+Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `component InexactRest(bar: string, foo: number, ...{...})` 
 where
 'InexactRest' is defined at react.js:22:1-63
 
@@ -72,33 +72,40 @@ Found exact match 'NamedProps' defined at react.js:32:11,32:20 with type `compon
 where
 'NamedProps' is defined at react.js:32:1-84
 
-Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(...UserCardProps)` 
+Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
 where
 'UserCard' is defined at react.js:37:1-43
-'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 
 Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
 where
 'DataDisplay' is defined at react.js:49:1-55
 'DataDisplayProps' is defined at types.js:12:13-28
 
-Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type `component ProductItem(...ProductItemProps)` 
+Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type
+```
+component ProductItem(
+  category?: string,
+  id: string,
+  inStock: boolean,
+  price: number,
+  title: string
+)
+```
 where
 'ProductItem' is defined at react.js:59:1-49
-'ProductItemProps' is defined at types.js:19:13-28 = {category?: string, id: string, inStock: boolean, price: number, title: string}
 
 Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
 ```
 component UserProfile(
-  ...{
-    ...UserCardProps,
-    readonly className: string,
-    readonly showActions?: boolean
-  }
+  age?: number,
+  className: string,
+  email: string,
+  isActive: boolean,
+  name: string,
+  showActions?: boolean
 )
 ```
 where
-'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 'UserProfile' is defined at react.js:71:1,75:1
 
 Found exact match 'NotificationWithDocblock' defined at react.js:96:11,96:34 with type
@@ -118,7 +125,7 @@ and documentation:
 
 
 === React Components (--hide-references) ===
-Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(...UserCardProps)` 
+Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
 Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
 
 === React Components (--expand-component-props) ===
@@ -181,7 +188,7 @@ component ConstrainedGeneric<T extends {id: string, label: string}>(
 where
 'ConstrainedGeneric' is defined at react.js:105:1-98
 
-Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `component InexactRest(bar: string, foo: number)` 
+Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `component InexactRest(bar: string, foo: number, ...{...})` 
 where
 'InexactRest' is defined at react.js:22:1-63
 
@@ -232,15 +239,15 @@ where
 Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
 ```
 component UserProfile(
-  ...{
-    ...UserCardProps,
-    readonly className: string,
-    readonly showActions?: boolean
-  }
+  age?: number,
+  className: string,
+  email: string,
+  isActive: boolean,
+  name: string,
+  showActions?: boolean
 )
 ```
 where
-'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 'UserProfile' is defined at react.js:71:1,75:1
 
 Found exact match 'NotificationWithDocblock' defined at react.js:96:1,100:1 with type
@@ -308,10 +315,9 @@ component UserProfile(
 where
 'UserProfile' is defined at react.js:71:1,75:1
 
-Found exact match 'UserCard' defined at react.js:37:1,37:43 with type `component UserCard(...UserCardProps)` 
+Found exact match 'UserCard' defined at react.js:37:1,37:43 with type `component UserCard(age?: number, email: string, isActive: boolean, name: string)` 
 where
 'UserCard' is defined at react.js:37:1-43
-'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 
 Found exact match 'Array' defined as a library definition (no need to import) with type `class Array<T>` 
 where

@@ -83,6 +83,222 @@ Flags:
 (property) x: number
 test.js:66:18,66:18
 
+test.js:77:19
+Flags:
+component SpreadComp(a: number, b: string)
+
+'SpreadComp' defined at test.js:77:0
+
+test.js:77:19,77:28
+
+test.js:80:3
+Flags:
+component SpreadComp(a: number, b: string)
+
+'SpreadComp' defined at test.js:77:0
+
+test.js:80:3,80:12
+
+test.js:86:19
+Flags:
+component OuterComp(x: Inner, y: number)
+
+'Inner' defined at test.js:83:5
+'OuterComp' defined at test.js:86:0
+
+test.js:86:19,86:27
+
+test.js:92:19
+Flags:
+component UnionComp(...A | B)
+
+'A' defined at test.js:89:5
+'B' defined at test.js:90:5
+'UnionComp' defined at test.js:92:0
+
+test.js:92:19,92:27
+
+test.js:98:19
+Flags:
+component MixedComp(a: number, b: string, c: number)
+
+'MixedComp' defined at test.js:98:0
+
+test.js:98:19,98:27
+
+test.js:103:19
+Flags:
+component OmitComp(a: number)
+
+'OmitComp' defined at test.js:103:0
+
+test.js:103:19,103:26
+
+test.js:106:19
+Flags:
+component PickComp(a: number)
+
+'PickComp' defined at test.js:106:0
+
+test.js:106:19,106:26
+
+test.js:109:19
+Flags:
+component ReadonlyComp(a: number, b: string)
+
+'ReadonlyComp' defined at test.js:109:0
+
+test.js:109:19,109:30
+
+test.js:112:19
+Flags:
+component PartialComp(a?: number, b?: string)
+
+'PartialComp' defined at test.js:112:0
+
+test.js:112:19,112:29
+
+test.js:121:19
+Flags:
+component ChainComp(a: number, extra: string)
+
+'ChainComp' defined at test.js:121:0
+
+test.js:121:19,121:27
+
+test.js:132:19
+Flags:
+component FourSpreads(a: number, b: number, c: number, d: number)
+
+'FourSpreads' defined at test.js:132:0
+
+test.js:132:19,132:29
+
+test.js:147:19
+Flags:
+component BigComp(
+  m1: {
+    a: {
+      a: string,
+      b: string,
+      c: string,
+      d: string,
+      e: string,
+      f: string,
+      g: string,
+      h: string,
+      i: string,
+      j: string,
+      k: string,
+      l: string,
+      m: string,
+      n: string,
+      o: string,
+      p: string,
+      q: string,
+      r: string,
+      s: string,
+      t: string,
+      u: string,
+      v: string,
+      w: string,
+      x: string,
+      y: string,
+      z: string
+    },
+    b: {
+      a: string,
+      b: string,
+      c: string,
+      d: string,
+      e: string,
+      f: string,
+      g: string,
+      h: string,
+      i: string,
+      j: string,
+      k: string,
+      l: string,
+      m: string,
+      n: string,
+      o: string,
+      p: string,
+      q: string,
+      r: string,
+      s: string,
+      t: string,
+      u: string,
+      v: string,
+      w: string,
+      x: string,
+      y: string,
+      z: string
+    },
+    c: {
+      a: string,
+      b: string,
+      c: string,
+      d: string,
+      e: string,
+      f: string,
+      g: string,
+      h: string,
+      i: string,
+      j: string,
+      k: string,
+      l: string,
+      m: string,
+      n: string,
+      o: string,
+      p: string,
+      q: string,
+      r: string,
+      s: string,
+      t: string,
+      u: string,
+      v: string,
+      w: string,
+      x: string,
+      y: string,
+      z: string
+    },
+    d: {
+      a: string,
+      b: string,
+      c: string,
+      d: string,
+      e: string,
+      f: string,
+      g: string,
+      h: string,
+      i: string,
+      j: string,
+      k: string,
+      l: string,
+      m: string,
+      n: string,
+      o: string,
+      p: string,
+      q: string,
+      ... 9 more properties ...
+    },
+    ... 22 more properties ...
+  },
+  ... 4 more component parameters ...
+)
+
+'BigComp' defined at test.js:147:0
+
+test.js:147:19,147:25
+
+test.js:156:19
+Flags:
+component OverComp(a: number, b: string, extra: boolean, keep: string)
+
+'OverComp' defined at test.js:156:0
+
+test.js:156:19,156:26
+
 jsx_instantiation.js:3:19
 Flags:
 component Foo1<T>(x: T, y: T)
@@ -117,7 +333,7 @@ jsx_instantiation.js:20:6,20:9
 
 jsx_instantiation.js:26:13
 Flags:
-component Bar<1>(...Readonly<{n: 1}>)
+component Bar<1>(n: 1)
 
 'Bar' defined at jsx_instantiation.js:25:4
 
@@ -125,10 +341,9 @@ jsx_instantiation.js:26:13,26:15
 
 jsx_instantiation.js:41:17
 Flags:
-component Foo<Q>(...Props<Q>)
+component Foo<Q>(f: (number) => void)
 
 'Foo' defined at jsx_instantiation.js:37:4
-'Props' defined at jsx_instantiation.js:33:9
 'Q' defined at jsx_instantiation.js:31:9
 
 jsx_instantiation.js:41:17,41:19

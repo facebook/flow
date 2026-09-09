@@ -56,10 +56,9 @@ export default function App(): typeof Widget {
                 {
                   language: 'flow',
                   value:
-                    '(alias) component Widget(...Props)\nimport Widget from "./a"',
+                    '(alias) component Widget(id: number, name: string)\nimport Widget from "./a"',
                 },
-                'Go to [Props](<PLACEHOLDER_PROJECT_URL>/b.js#L3,13) | ' +
-                  '[Widget](<PLACEHOLDER_PROJECT_URL>/a.js#L4,16)',
+                'Go to [Widget](<PLACEHOLDER_PROJECT_URL>/a.js#L4,16)',
               ],
               range: {
                 end: {

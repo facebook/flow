@@ -67,3 +67,91 @@ class C {
 //               ^
   }
 }
+
+// A component declared with a rest props alias shows one level of props,
+// both at the declaration site and at element names. Nested aliases stay
+// written, and unions stay condensed.
+
+type SpreadProps = { a: number, b: string };
+
+declare component SpreadComp(...props: SpreadProps);
+//                ^
+
+(<SpreadComp a={0} b="" />);
+//^
+
+type Inner = { n: number };
+type Outer = { x: Inner, y: number };
+
+declare component OuterComp(...props: Outer);
+//                ^
+
+type A = { a: number };
+type B = { b: string };
+
+declare component UnionComp(...props: A | B);
+//                ^
+
+// A component with explicit params before the rest alias expands the alias
+// alongside them.
+
+declare component MixedComp(c: number, ...props: SpreadProps);
+//                ^
+
+// Utilities that reduce to plain props expand too.
+
+declare component OmitComp(...props: Omit<SpreadProps, 'b'>);
+//                ^
+
+declare component PickComp(...props: Pick<SpreadProps, 'a'>);
+//                ^
+
+declare component ReadonlyComp(...props: Readonly<SpreadProps>);
+//                ^
+
+declare component PartialComp(...props: Partial<SpreadProps>);
+//                ^
+
+// A rest alias whose body itself spreads another alias flattens
+// transitively instead of stopping halfway at `...{...Base, ...}`.
+
+type Base = {a: number};
+type PropsWithExtra = {...Base, extra: string};
+
+declare component ChainComp(...props: PropsWithExtra);
+//                ^
+
+// Object resolution expands all sibling spreads, not only the first.
+
+type SA = {a: number};
+type SB = {b: number};
+type SC = {c: number};
+type SD = {d: number};
+type FourProps = {...SA, ...SB, ...SC, ...SD};
+
+declare component FourSpreads(...props: FourProps);
+//                ^
+
+// An expanded props object larger than the printer budget crops the tail.
+
+type Keys = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z';
+
+type BigProps = {
+  m1: {[key in Keys]: {[key in Keys]: string}},
+  m2: {[key in Keys]: {[key in Keys]: string}},
+  m3: {[key in Keys]: {[key in Keys]: string}},
+  tail1: number,
+  tail2: number,
+};
+
+declare component BigComp(...props: BigProps);
+//                ^
+
+// A later prop overrides an earlier same-name prop from a spread, mirroring
+// object spread semantics: one `b`, with the overriding type.
+
+type OverBase = {a: number, b: number, keep: string};
+type OverProps = {...OverBase, b: string, extra: boolean};
+
+declare component OverComp(...props: OverProps);
+//                ^

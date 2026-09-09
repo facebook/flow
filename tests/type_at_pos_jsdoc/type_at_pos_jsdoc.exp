@@ -879,7 +879,7 @@ components.js:25:4
 Flags: --strip-root
 
  This is the component Foo!
-component Foo(baz: string, bar: string)
+component Foo(bar: string, baz: string)
 
 'Foo' defined at components.js:8:0
 

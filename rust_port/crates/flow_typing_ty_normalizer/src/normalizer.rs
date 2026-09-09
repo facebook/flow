@@ -1458,7 +1458,7 @@ mod type_converter {
                     ..
                 }) => {
                     let (regular_props, renders_ty) =
-                        convert_component::<I>(env, state, config, renders)?;
+                        convert_component::<I>(env, state, config, renders, false)?;
                     Ok(Arc::new(ty::Ty::Component {
                         regular_props,
                         renders: renders_ty,
@@ -2218,9 +2218,75 @@ mod type_converter {
         state: &mut State,
         config: &Type,
         renders: &Type,
+        expand_config_alias: bool,
     ) -> Result<(ty::ComponentProps<ALoc>, Option<ALocTy>), Error> {
         use flow_typing_type::type_::CanonicalRendersForm;
-        let config_ty = type__::<I>(env, state, None, config)?;
+
+        fn expanded_config<'cx, I: NormalizerInput>(
+            env: &mut Env<'_, 'cx>,
+            state: &mut State,
+            config: &Type,
+        ) -> Result<Option<ALocTy>, Error> {
+            let TypeInner::EvalT {
+                type_: operand,
+                defer_use_t,
+                id,
+            } = config.deref()
+            else {
+                return Ok(None);
+            };
+            let flow_typing_type::type_::TypeDestructorTInner(_, _, destructor) =
+                defer_use_t.deref();
+            // The attempt runs for any non-generic operand, including
+            // utilities (`Pick`, `Omit`, `Partial`, `ReadOnly`) and inline
+            // objects. Only a result that is an object of plain field
+            // props is used; anything else keeps its written form via the
+            // check below and the fallback above.
+            if !matches!(&**destructor, Destructor::ReactCheckComponentConfig { .. })
+                || operand_is_generic(env, operand)
+                || env.seen_eval_ids.contains(id)
+            {
+                return Ok(None);
+            }
+            descend(env, config)?;
+            let old_seen_eval_ids = env.seen_eval_ids.dupe();
+            env.seen_eval_ids.insert(id.dupe());
+            let expanded = eval_t::<I>(
+                env,
+                state,
+                // Dispatch has already produced the config object. Bypass its
+                // outer alias while preserving aliases in its property types.
+                |env, state, id, t| type_ctor::<I>(env, state, id, type_with_alias_reason::<I>, t),
+                |env, state, _id, t| type__::<I>(env, state, None, t),
+                type_destructor_unevaluated::<I>,
+                true,
+                (operand, defer_use_t, id),
+            );
+            env.depth -= 1;
+            env.seen_eval_ids = old_seen_eval_ids;
+            let expanded = expanded?;
+            Ok(matches!(
+                expanded.as_ref(),
+                ty::Ty::Obj(obj)
+                    if obj.obj_props.iter().all(|prop| matches!(
+                        prop,
+                        ty::Prop::NamedProp {
+                            prop: ty::NamedProp::Field { .. },
+                            ..
+                        }
+                    ))
+            )
+            .then_some(expanded))
+        }
+
+        let config_ty = if expand_config_alias {
+            match expanded_config::<I>(env, state, config)? {
+                Some(expanded) => expanded,
+                None => type__::<I>(env, state, None, config)?,
+            }
+        } else {
+            type__::<I>(env, state, None, config)?
+        };
         let renders_ty = match renders.deref() {
             TypeInner::DefT(_, def_t)
                 if matches!(
@@ -3779,8 +3845,9 @@ pub mod element_converter {
                 }
                 None => None,
             };
+            let is_type = env.toplevel_is_type_identifier_reference();
             let (props, renders) =
-                type_converter::convert_component::<I>(env, state, config, renders)?;
+                type_converter::convert_component::<I>(env, state, config, renders, !is_type)?;
             Ok(ty::Elt::Decl(ty::Decl::NominalComponentDecl(Box::new(
                 ty::DeclNominalComponentDeclData {
                     name: reason_utils::component_symbol(env, name, reason)?,
@@ -3788,7 +3855,7 @@ pub mod element_converter {
                     targs: targs.map(Into::into),
                     props,
                     renders: renders.map(|t| t.as_ref().clone()),
-                    is_type: env.toplevel_is_type_identifier_reference(),
+                    is_type,
                 },
             ))))
         }
