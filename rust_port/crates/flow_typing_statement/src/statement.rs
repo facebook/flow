@@ -13394,7 +13394,6 @@ fn react_jsx_desugar<'a>(
                             tout: tout_tvar,
                             targs: targs_opt.clone().map(|v| v.into()),
                             return_hint: return_hint.clone(),
-                            record_monomorphized_result: false,
                             inferred_targs: None,
                             specialized_component: Some(specialized_component.clone()),
                         },

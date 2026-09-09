@@ -252,32 +252,6 @@ References:
 
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
 
-Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either `{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1]
-   is incompatible with `component(...empty)` [2].
- - Or `{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is
-   incompatible with `string` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   import_star_invalid_use.js:9:2
-    9| <Foo></Foo>;
-        ^^^
-
-References:
-   foo.js
-   ^^^^^^ [1]
-   <BUILTINS>/react.js:44:5
-   44|   | component(...empty);
-           ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:43:5
-   43|   | string
-           ^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
-
 `import *` [1] object can only be used by accessing one of its named exports with a member access or destructuring.
 [invalid-import-star-use]
 
@@ -645,4 +619,4 @@ export please `import` and then `export default` instead. [export-renamed-defaul
 
 
 
-Found 55 errors
+Found 54 errors

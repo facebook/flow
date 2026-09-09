@@ -782,7 +782,6 @@ fn instantiate_component<'cx>(
                         ),
                         unknown_use(),
                         reason.dupe(),
-                        component.dupe(),
                         jsx_props_and_children.try_get_forced(cx)?.dupe(),
                         jsx_targs_val.as_ref().map(|v| Rc::from(v.as_slice())),
                     )

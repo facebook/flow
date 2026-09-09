@@ -4910,7 +4910,6 @@ fn __flow_impl<'cx>(
             ..
         }) = def_t.deref()
             && let react::Tool::CreateElement(box react::CreateElementData {
-                component,
                 jsx_props,
                 return_hint,
                 targs,
@@ -4937,7 +4936,6 @@ fn __flow_impl<'cx>(
             let t_c = t.dupe();
             let use_op_c = use_op.dupe();
             let reason_op_c = reason_op.dupe();
-            let component_c = component.dupe();
             let jsx_props_c = jsx_props.dupe();
             let targs_c = targs.dupe();
             let check = move || {
@@ -4950,7 +4948,6 @@ fn __flow_impl<'cx>(
                     ),
                     use_op_c.dupe(),
                     reason_op_c.dupe(),
-                    component_c.dupe(),
                     jsx_props_c.dupe(),
                     targs_c.dupe(),
                 )
@@ -4962,12 +4959,11 @@ fn __flow_impl<'cx>(
                 reason: reason_op.dupe(),
                 tool: Box::new(react::Tool::<Context<'cx>>::CreateElement(Box::new(
                     react::CreateElementData {
-                        component: component.dupe(),
+                        component: t_.dupe(),
                         jsx_props: jsx_props.dupe(),
                         return_hint: return_hint.clone(),
                         targs: None,
                         tout: tout.dupe(),
-                        record_monomorphized_result: true,
                         inferred_targs: Some(inferred_targs.into()),
                         specialized_component: specialized_component.clone(),
                     },

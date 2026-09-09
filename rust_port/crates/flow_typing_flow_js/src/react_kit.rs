@@ -42,14 +42,12 @@ use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::MethodCallType;
 use flow_typing_type::type_::MethodTData;
-use flow_typing_type::type_::NominalType;
-use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::ObjKind;
-use flow_typing_type::type_::ObjType;
 use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ReactEffectType;
+use flow_typing_type::type_::RendersVariant;
 use flow_typing_type::type_::SpecializedCallee;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
@@ -1053,10 +1051,8 @@ pub(super) fn run_with_env<'cx>(
         original_use_op: UseOp,
         reason_op: &Reason,
         l: &Type,
-        u: &react::Tool<Context<'cx>>,
         component: &Type,
         jsx_props: &Type,
-        record_monomorphized_result: bool,
         inferred_targs: &Option<Rc<[(Type, flow_common::subst_name::SubstName)]>>,
         specialized_component: &Option<SpecializedCallee>,
         tout: &Tvar,
@@ -1184,83 +1180,6 @@ pub(super) fn run_with_env<'cx>(
                 .replace_desc(desc)
                 .annotate(annot_loc.dupe())
         };
-        let elem = {
-            let use_op_clone = use_op.dupe();
-            FlowJs::get_builtin_typeapp_with_env(
-                cx,
-                env,
-                &elem_reason,
-                Some(true),
-                "ExactReactElement_DEPRECATED",
-                vec![
-                    component.dupe(),
-                    flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_t| {
-                        get_config(
-                            cx,
-                            env,
-                            trace,
-                            l,
-                            use_op_clone.dupe(),
-                            reason_op,
-                            u,
-                            Polarity::Positive,
-                            tout_t,
-                        )
-                    })?,
-                ],
-            )
-        };
-
-        // Concretize to an ObjT so that we can asssociate the monomorphized component with the props id
-        let elem = {
-            let result = FlowJs::singleton_concrete_type_for_inspection_with_env(
-                cx,
-                env,
-                &elem_reason,
-                &elem,
-            )?;
-            if let TypeInner::NominalT {
-                reason: _,
-                nominal_type: opq,
-            } = result.deref()
-                && let Some(upper_t) = &opq.upper_t
-                && let TypeInner::DefT(super_r, def_t) = upper_t.deref()
-                && let DefTInner::ObjT(obj_t) = def_t.deref()
-            {
-                if record_monomorphized_result {
-                    let new_props_tmap =
-                        cx.generate_property_map(cx.find_props(obj_t.props_tmap.dupe()));
-                    let t = Type::new(TypeInner::NominalT {
-                        reason: elem_reason.dupe(),
-                        nominal_type: Rc::new(NominalType::new(NominalTypeInner {
-                            nominal_id: opq.nominal_id.clone(),
-                            underlying_t: opq.underlying_t.clone(),
-                            lower_t: opq.lower_t.dupe(),
-                            upper_t: Some(Type::new(TypeInner::DefT(
-                                super_r.dupe(),
-                                DefT::new(DefTInner::ObjT(Rc::new(ObjType {
-                                    props_tmap: new_props_tmap.dupe(),
-                                    flags: obj_t.flags.clone(),
-                                    proto_t: obj_t.proto_t.dupe(),
-                                    call_t: obj_t.call_t,
-                                    reachable_targs: obj_t.reachable_targs.dupe(),
-                                    strictness_kind: obj_t.strictness_kind,
-                                }))),
-                            ))),
-                            nominal_type_args: opq.nominal_type_args.dupe(),
-                        })),
-                    });
-                    cx.add_monomorphized_component(new_props_tmap, l.dupe());
-                    t
-                } else {
-                    elem
-                }
-            } else {
-                // TODO(jmbrown): Internal Error
-                elem
-            }
-        };
-
         // Record the instantiated type for hover types.
         {
             let component = l;
@@ -1316,7 +1235,46 @@ pub(super) fn run_with_env<'cx>(
             }
         }
 
-        let elem = match renders_kit::try_synthesize_render_type_with_env(cx, env, false, &elem)? {
+        let component_renders =
+            FlowJs::run_render_extractor_with_env(cx, env, unknown_use(), &elem_reason, component)?;
+        let concrete_renders = FlowJs::possible_concrete_types_for_inspection_with_env(
+            cx,
+            env,
+            &elem_reason,
+            &component_renders,
+        )?;
+        let synthesized_render = if !concrete_renders.is_empty()
+            && concrete_renders.iter().all(|t| match t.deref() {
+                TypeInner::AnyT(..) => true,
+                TypeInner::DefT(_, def_t) => matches!(def_t.deref(), DefTInner::RendersT(_)),
+                _ => false,
+            }) {
+            renders_kit::try_synthesize_render_type_with_env(cx, env, false, &component_renders)?
+        } else if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
+            cx,
+            env,
+            component,
+            &Type::new(TypeInner::DefT(
+                elem_reason.dupe(),
+                DefT::new(DefTInner::SingletonStrT {
+                    from_annot: true,
+                    value: "svg".into(),
+                }),
+            )),
+        )? {
+            Some((
+                RendersVariant::RendersNormal,
+                vec![Type::new(TypeInner::DefT(
+                    elem_reason.dupe(),
+                    DefT::new(DefTInner::RendersT(Rc::new(
+                        CanonicalRendersForm::IntrinsicRenders("svg".into()),
+                    ))),
+                ))],
+            ))
+        } else {
+            None
+        };
+        let elem = match synthesized_render {
             None => FlowJs::get_builtin_react_type_with_env(
                 cx,
                 env,
@@ -1357,7 +1315,6 @@ pub(super) fn run_with_env<'cx>(
             tout,
             targs: _,
             return_hint: _,
-            record_monomorphized_result,
             inferred_targs,
             specialized_component,
         }) => create_element(
@@ -1367,10 +1324,8 @@ pub(super) fn run_with_env<'cx>(
             use_op,
             reason_op,
             l,
-            u,
             component,
             jsx_props,
-            *record_monomorphized_result,
             inferred_targs,
             specialized_component,
             tout,

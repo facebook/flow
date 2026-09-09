@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:1
 
-Cannot resolve name `ExactReactElement_DEPRECATED`. [cannot-resolve-name]
+Cannot import `MixedElement` because there is no `MixedElement` export in `react`. [missing-export]
 
    3| <div />;
       ^^^^^^^

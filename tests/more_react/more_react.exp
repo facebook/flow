@@ -122,31 +122,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
-Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either class `D` [1] is incompatible with `string` [2].
- - Or `D` [1] is incompatible with `Component<empty, empty>` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   subclassComponent.js:29:2
-    29| <D></D>; // error
-         ^
-
-References:
-   subclassComponent.js:21:15
-    21| declare class D extends React$Component2<Props2, void> {}
-                      ^ [1]
-   <BUILTINS>/react.js:43:5
-    43|   | string
-            ^^^^^^ [2]
-   <BUILTINS>/react.js:972:19
-   972|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
-
 `D` [1] is incompatible with `Component<empty, empty>` [2]. [incompatible-type]
 
    subclassComponent.js:29:2
@@ -174,31 +149,6 @@ References:
    subclassComponent.js:30:1
    30| <E></E>; // error
        ^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
-
-Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either class `E` [1] is incompatible with `string` [2].
- - Or `E` [1] is incompatible with `Component<empty, empty>` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   subclassComponent.js:30:2
-    30| <E></E>; // error
-         ^
-
-References:
-   subclassComponent.js:23:15
-    23| declare class E extends D {}
-                      ^ [1]
-   <BUILTINS>/react.js:43:5
-    43|   | string
-            ^^^^^^ [2]
-   <BUILTINS>/react.js:972:19
-   972|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
@@ -234,31 +184,6 @@ References:
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
-Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either class `F` [1] is incompatible with `string` [2].
- - Or `F` [1] is incompatible with `Component<empty, empty>` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   subclassComponent.js:31:2
-    31| <F></F>; // error
-         ^
-
-References:
-   subclassComponent.js:25:15
-    25| declare class F {
-                      ^ [1]
-   <BUILTINS>/react.js:43:5
-    43|   | string
-            ^^^^^^ [2]
-   <BUILTINS>/react.js:972:19
-   972|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [3]
-
-
-Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
-
 `F` [1] is incompatible with `Component<empty, empty>` [2]. [incompatible-type]
 
    subclassComponent.js:31:2
@@ -275,4 +200,4 @@ References:
 
 
 
-Found 15 errors
+Found 12 errors

@@ -1585,11 +1585,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                 Some(new_tout),
             )
         }
-        flow_typing_implicit_instantiation_check::Operation::ReactJSX {
-            component,
-            jsx_props,
-            targs,
-        } => {
+        flow_typing_implicit_instantiation_check::Operation::ReactJSX { jsx_props, targs } => {
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
             let targs_rc: Option<Rc<[Targ]>> = targs.dupe();
             let (_, inferred_targ_list) = merge_targs(&targs_rc)?;
@@ -1599,12 +1595,11 @@ fn check_instantiation<'cx, Obs: Observer>(
                 reason: reason_op.dupe(),
                 tool: Box::new(react::Tool::<Context<'cx>>::CreateElement(Box::new(
                     react::CreateElementData {
-                        component: component.dupe(),
+                        component: check.lhs.dupe(),
                         jsx_props: jsx_props.dupe(),
                         targs: None,
                         tout: new_tout_tvar,
                         return_hint: hint_unavailable(),
-                        record_monomorphized_result: false,
                         inferred_targs: None,
                         specialized_component: None,
                     },

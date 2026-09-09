@@ -467,12 +467,6 @@ pub struct ComponentT<'cx> {
     // It is key-ed by the body_loc of components.
     inferred_component_return: RefCell<ALocFuzzyMap<Vec1<Type>>>,
     exhaustive_checks: RefCell<ALocMap<(Vec<ALoc>, bool)>>,
-    // React$Element does not store the monomorphized version of a component to support
-    // cloning polymorphic elements. We need to know the monomorphized version of a component
-    // to determine the render type of an element of a polymorphic component, so we keep track
-    // of the monomorphized version here by mapping the Element's object id to the monomorphized
-    // component
-    monomorphized_components: RefCell<HashMap<type_::properties::Id, Type>>,
     // Signature help
     signature_help_callee: RefCell<ALocMap<Type>>,
     // Hover type
@@ -798,7 +792,6 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         const_fold_cache: RefCell::new(Default::default()),
         annot_graph: RefCell::new(IntHashMap::default()),
         exhaustive_checks: RefCell::new(ALocMap::new()),
-        monomorphized_components: RefCell::new(HashMap::new()),
         signature_help_callee: RefCell::new(ALocMap::new()),
         ctor_callee: RefCell::new(ALocMap::new()),
         union_opt: RefCell::new(ALocMap::new()),
@@ -2093,14 +2086,6 @@ impl<'cx> Context<'cx> {
         self.0.ccx.voidable_checks.borrow_mut().push(voidable_check);
     }
 
-    pub fn add_monomorphized_component(&self, id: type_::properties::Id, t: Type) {
-        self.0
-            .ccx
-            .monomorphized_components
-            .borrow_mut()
-            .insert(id, t);
-    }
-
     pub fn add_reachable_dep(&self, file_key: FileKey) {
         self.0.reachable_deps.borrow_mut().insert(file_key);
     }
@@ -2967,15 +2952,6 @@ impl<'cx> Context<'cx> {
 
     pub fn find_avar_opt(&self, id: i32) -> Option<AConstraint<'cx>> {
         self.0.ccx.annot_graph.borrow().get(&id).duped()
-    }
-
-    pub fn find_monomorphized_component(&self, id: type_::properties::Id) -> Option<Type> {
-        self.0
-            .ccx
-            .monomorphized_components
-            .borrow()
-            .get(&id)
-            .duped()
     }
 
     pub fn remove_avar(&self, id: i32) {

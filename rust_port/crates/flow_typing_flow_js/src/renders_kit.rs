@@ -370,7 +370,6 @@ pub fn rec_renders_to_renders<'cx>(
     }
 }
 
-// let possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq) =
 fn possibly_promoted_render_types_of_react_element_type<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -417,75 +416,69 @@ fn possibly_promoted_render_types_of_react_element_type<'cx>(
     if let (Some(upper_t), [(_, _, component_t, _), ..]) =
         (&opq.upper_t, &opq.nominal_type_args[..])
         && let TypeInner::DefT(_, def_t) = upper_t.deref()
-        && let DefTInner::ObjT(obj_t) = def_t.deref()
+        && matches!(def_t.deref(), DefTInner::ObjT(_))
     {
-        let props_tmap = obj_t.props_tmap.dupe();
-        match cx.find_monomorphized_component(props_tmap) {
-            Some(mono_component) => concretize_component_renders_and_check(&mono_component),
-            None => {
-                // We only want to promote if this is actually a React of a component, otherwise we want
-                // to flow the original object to the tout.
-                //
-                // We perform a speculative subtyping check and then use ComponentRenders to
-                // extract the render type of the component. This type gets concretized, and we continue
-                // with renders subtyping if we get a RendersT from ComponentRenders, otherwise we error,
-                // as we've already checked for structural compatibility in subtyping kit.
-                let top_abstract_component = {
-                    let config = Type::new(TypeInner::DefT(
-                        elem_reason.dupe(),
-                        DefT::new(DefTInner::EmptyT),
-                    ));
-                    let renders = FlowJs::get_builtin_react_type_with_env(
-                        cx,
-                        env,
-                        None,
-                        elem_reason,
-                        None,
-                        ExpectedModulePurpose::ReactModuleForReactNodeType,
-                    )?;
-                    Type::new(TypeInner::DefT(
-                        elem_reason.dupe(),
-                        DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
-                            ReactAbstractComponentTData {
-                                config,
-                                renders,
-                                component_kind: ComponentKind::Structural,
-                            },
-                        ))),
-                    ))
-                };
-                if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
-                    cx,
-                    env,
-                    component_t,
-                    &top_abstract_component,
-                )? {
-                    concretize_component_renders_and_check(component_t)
-                } else if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
-                    cx,
-                    env,
-                    component_t,
-                    &Type::new(TypeInner::DefT(
-                        elem_reason.dupe(),
-                        DefT::new(DefTInner::SingletonStrT {
-                            from_annot: true,
-                            value: "svg".into(),
-                        }),
-                    )),
-                )? {
-                    Ok((
-                        vec![Type::new(TypeInner::DefT(
-                            elem_reason.dupe(),
-                            DefT::new(DefTInner::RendersT(Rc::new(
-                                CanonicalRendersForm::IntrinsicRenders("svg".into()),
-                            ))),
-                        ))],
-                        false,
-                    ))
-                } else {
-                    Ok((vec![], true))
-                }
-            }
+        // We only want to promote if this is actually a React of a component, otherwise we want
+        // to flow the original object to the tout.
+        //
+        // We perform a speculative subtyping check and then use ComponentRenders to
+        // extract the render type of the component. This type gets concretized, and we continue
+        // with renders subtyping if we get a RendersT from ComponentRenders, otherwise we error,
+        // as we've already checked for structural compatibility in subtyping kit.
+        let top_abstract_component = {
+            let config = Type::new(TypeInner::DefT(
+                elem_reason.dupe(),
+                DefT::new(DefTInner::EmptyT),
+            ));
+            let renders = FlowJs::get_builtin_react_type_with_env(
+                cx,
+                env,
+                None,
+                elem_reason,
+                None,
+                ExpectedModulePurpose::ReactModuleForReactNodeType,
+            )?;
+            Type::new(TypeInner::DefT(
+                elem_reason.dupe(),
+                DefT::new(DefTInner::ReactAbstractComponentT(Box::new(
+                    ReactAbstractComponentTData {
+                        config,
+                        renders,
+                        component_kind: ComponentKind::Structural,
+                    },
+                ))),
+            ))
+        };
+        if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
+            cx,
+            env,
+            component_t,
+            &top_abstract_component,
+        )? {
+            concretize_component_renders_and_check(component_t)
+        } else if FlowJs::speculative_subtyping_succeeds_with_flow_errors(
+            cx,
+            env,
+            component_t,
+            &Type::new(TypeInner::DefT(
+                elem_reason.dupe(),
+                DefT::new(DefTInner::SingletonStrT {
+                    from_annot: true,
+                    value: "svg".into(),
+                }),
+            )),
+        )? {
+            Ok((
+                vec![Type::new(TypeInner::DefT(
+                    elem_reason.dupe(),
+                    DefT::new(DefTInner::RendersT(Rc::new(
+                        CanonicalRendersForm::IntrinsicRenders("svg".into()),
+                    ))),
+                ))],
+                false,
+            ))
+        } else {
+            Ok((vec![], true))
         }
     } else {
         Ok((vec![], true))

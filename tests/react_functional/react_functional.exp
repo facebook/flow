@@ -44,30 +44,5 @@ References:
                ^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:17:2
 
-Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either `number` [1] is incompatible with `string` [2].
- - Or `number` [1] is incompatible with `component(...empty)` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   test.js:17:2
-   17| <Z />; // error, expected React component
-        ^
-
-References:
-   test.js:16:9
-   16| var Z = 0;
-               ^ [1]
-   <BUILTINS>/react.js:43:5
-   43|   | string
-           ^^^^^^ [2]
-   <BUILTINS>/react.js:44:5
-   44|   | component(...empty);
-           ^^^^^^^^^^^^^^^^^^^ [3]
-
-
-
-Found 4 errors
+Found 3 errors

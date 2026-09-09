@@ -25,7 +25,6 @@ pub enum Operation {
     Call(FuncallType),
     Constructor(Option<Rc<[Targ]>>, Rc<[CallArg]>),
     ReactJSX {
-        component: Type,
         jsx_props: Type,
         targs: Option<Rc<[Targ]>>,
     },
@@ -73,22 +72,13 @@ impl ImplicitInstantiationCheck {
         poly_t: PolyT,
         use_op: UseOp,
         reason_op: Reason,
-        component: Type,
         jsx_props: Type,
         targs: Option<Rc<[Targ]>>,
     ) -> Self {
         Self {
             lhs,
             poly_t,
-            operation: (
-                use_op,
-                reason_op,
-                Operation::ReactJSX {
-                    component,
-                    targs,
-                    jsx_props,
-                },
-            ),
+            operation: (use_op, reason_op, Operation::ReactJSX { targs, jsx_props }),
         }
     }
 }
