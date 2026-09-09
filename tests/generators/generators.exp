@@ -39,8 +39,8 @@ Cannot return empty string because in type argument `Return` [1]: `string` [2] i
                     ^^ [2]
 
 References:
-   <BUILTINS>/core.js:2025:30
-   2025| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2027:30
+   2027| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
                                       ^^^^^^ [1]
    class.js:23:39
      23|   *stmt_return_err(): Generator<void, number, void> {
@@ -130,14 +130,14 @@ References:
    class.js:71:31
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
                                        ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:2011:11
-   2011| interface $Iterable<out Yield,out Return,in Next> {
+   <BUILTINS>/core.js:2013:11
+   2013| interface $Iterable<out Yield,out Return,in Next> {
                    ^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1885:58
-   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+   <BUILTINS>/core.js:1887:58
+   1887| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
                                                                   ^^^^ [3]
-   <BUILTINS>/core.js:1895:58
-   1895| declare class Iterator<out Yield,out Return=void,in Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+   <BUILTINS>/core.js:1897:58
+   1897| declare class Iterator<out Yield,out Return=void,in Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
                                                                   ^^^^ [4]
    class.js:71:71
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
@@ -379,8 +379,8 @@ Cannot return empty string because in type argument `Return` [1]: `string` [2] i
                   ^^ [2]
 
 References:
-   <BUILTINS>/core.js:2025:30
-   2025| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2027:30
+   2027| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
                                       ^^^^^^ [1]
    generators.js:22:46
      22| function *stmt_return_err(): Generator<void, number, void> {
@@ -685,8 +685,8 @@ Cannot cast `refuse_return_result.value` to string because `void` [1] is incompa
            ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1872:22
-   1872|     readonly value?: Return,
+   <BUILTINS>/core.js:1874:22
+   1874|     readonly value?: Return,
                               ^^^^^^ [1]
    return.js:20:33
      20|   refuse_return_result.value as string; // error: number | void ~> string

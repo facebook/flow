@@ -8,8 +8,8 @@ Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > th
                                        ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1885:33
-   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+   <BUILTINS>/core.js:1887:33
+   1887| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
                                          ^^^^^ [1]
    class_iterator.js:35:34
      35|   *[Symbol.iterator](): Iterator<string> {
@@ -29,8 +29,8 @@ string literal `Set` [2]. [incompatible-type]
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2079:36
-   2079|     readonly [Symbol.toStringTag]: 'Map';
+   <BUILTINS>/core.js:2081:36
+   2081|     readonly [Symbol.toStringTag]: 'Map';
                                             ^^^^^ [1]
    collection_to_string_tag.js:11:28
      11| map[Symbol.toStringTag] as 'Set'; // ERROR
@@ -47,8 +47,8 @@ string literal `Map` [2]. [incompatible-type]
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2250:36
-   2250|     readonly [Symbol.toStringTag]: 'Set';
+   <BUILTINS>/core.js:2252:36
+   2252|     readonly [Symbol.toStringTag]: 'Set';
                                             ^^^^^ [1]
    collection_to_string_tag.js:12:30
      12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
@@ -68,8 +68,8 @@ References:
    collection_to_string_tag.js:19:54
      19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
                                                               ^^^^^ [1]
-   <BUILTINS>/core.js:2250:36
-   2250|     readonly [Symbol.toStringTag]: 'Set';
+   <BUILTINS>/core.js:2252:36
+   2252|     readonly [Symbol.toStringTag]: 'Set';
                                             ^^^^^ [2]
 
 
@@ -239,8 +239,8 @@ Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return va
          ^^^
 
 References:
-   <BUILTINS>/core.js:1885:33
-   1885| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+   <BUILTINS>/core.js:1887:33
+   1887| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
                                          ^^^^^ [1]
    type_well_known_symbol.js:16:44
      16| type Bad = { [Symbol.iterator](): Iterator<string> };

@@ -921,8 +921,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1740:5
-   1740|     valueOf(): number;
+   <BUILTINS>/core.js:1742:5
+   1742|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -973,8 +973,8 @@ with `number` [2]. [incompatible-type]
                                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1728:5
-   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1730:5
+   1730|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -991,8 +991,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the `this` par
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1578:15
-   1578| declare class Date {
+   <BUILTINS>/core.js:1580:15
+   1580| declare class Date {
                        ^^^^ [1]
 
 
@@ -1006,8 +1006,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return val
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1728:93
-   1728|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1730:93
+   1730|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                      ^^^^^^ [1]
    object_prototype.js:151:30
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error

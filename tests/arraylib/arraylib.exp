@@ -102,8 +102,8 @@ References:
    array_lib.js:58:4
      58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1500:13
-   1500|     length: number;
+   <BUILTINS>/core.js:1502:13
+   1502|     length: number;
                      ^^^^^^ [2]
 
 
@@ -119,8 +119,8 @@ References:
    array_lib.js:59:4
      59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1500:13
-   1500|     length: number;
+   <BUILTINS>/core.js:1502:13
+   1502|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,14 +139,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1233:37
-   1233|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1235:37
+   1235|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:71:31
      71|   Array.from('abcd') as Array<empty>; // ERROR
                                        ^^^^^ [2]
-   <BUILTINS>/core.js:1233:31
-   1233|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1235:31
+   1235|     static from(str: string): Array<string>;
                                        ^^^^^^^^^^^^^ [3]
    array_lib.js:71:25
      71|   Array.from('abcd') as Array<empty>; // ERROR
@@ -267,8 +267,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                  ^^^^^^
 
 References:
-   <BUILTINS>/core.js:1500:13
-   1500|     length: number;
+   <BUILTINS>/core.js:1502:13
+   1502|     length: number;
                      ^^^^^^ [1]
    <BUILTINS>/core.js:1076:109
    1076|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;

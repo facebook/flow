@@ -442,7 +442,7 @@ Flags: --strip-root
  async method property of an object literal
 (method) g(): Promise<void>
 
-'Promise' defined at (lib) core.js:2298:14
+'Promise' defined at (lib) core.js:2300:14
 
 objects.js:180:5,180:5
 

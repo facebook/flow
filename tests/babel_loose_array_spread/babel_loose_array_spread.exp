@@ -27,11 +27,11 @@ Cannot call `f.apply` because in type argument `A` > property `@@iterator` > the
                        ^^
 
 References:
-   <BUILTINS>/core.js:2012:19
-   2012|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+   <BUILTINS>/core.js:2014:19
+   2014|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1243:17
-   1243|   @@iterator(): Iterator<T>;
+   <BUILTINS>/core.js:1245:17
+   1245|   @@iterator(): Iterator<T>;
                          ^^^^^^^^^^^ [2]
 
 
