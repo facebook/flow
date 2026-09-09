@@ -2107,7 +2107,6 @@ pub fn make_options(
         options:
             flow_config::opts::Opts {
                 all,
-                always_generalize_jsx,
                 autoimports,
                 autoimports_min_characters,
                 autoimports_ranked_by_usage,
@@ -2490,7 +2489,6 @@ pub fn make_options(
         };
     Options {
         all,
-        always_generalize_jsx,
         assert_operator,
         autoimports,
         autoimports_min_characters,

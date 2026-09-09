@@ -141,7 +141,6 @@ pub mod opts {
     #[derive(Debug, Clone)]
     pub struct Opts {
         pub all: Option<bool>,
-        pub always_generalize_jsx: bool,
         pub autoimports: Option<bool>,
         pub autoimports_min_characters: Option<u32>,
         pub autoimports_ranked_by_usage: bool,
@@ -298,7 +297,6 @@ pub mod opts {
 
         Opts {
             all: None,
-            always_generalize_jsx: true,
             autoimports: None,
             autoimports_min_characters: None,
             autoimports_ranked_by_usage: true,
@@ -2113,14 +2111,7 @@ pub mod opts {
                 )
             }),
             ("experimental.always_generalize_jsx", |values, config| {
-                parse_boolean(
-                    |opts, v| {
-                        opts.always_generalize_jsx = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )
+                enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config)
             }),
             ("experimental.assert_operator", |values, config| {
                 assert_operator_parser(values, config)
@@ -3614,6 +3605,24 @@ pub fn get_with_ignored_version(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn always_generalize_jsx_only_accepts_true() {
+        let parse_value = |value: &str| {
+            let mut config = empty_config();
+            parse(
+                &mut config,
+                vec![
+                    (1, "[options]".to_owned()),
+                    (2, format!("experimental.always_generalize_jsx={value}")),
+                ],
+                true,
+            )
+        };
+
+        assert!(parse_value("true").is_ok());
+        assert!(matches!(parse_value("false"), Err(Error(2, _))));
+    }
 
     #[test]
     fn new_this_typing_only_accepts_true() {
