@@ -168,9 +168,7 @@ pub(crate) mod range {
 
     pub(crate) type T = Loc;
 
-    pub(crate) fn to_json(
-        root: &str,
-        write_root: &str,
+    pub(crate) fn byte_span_to_json(
         offset_table_of_file_key: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<OffsetTable>,
         Loc {
             source,
@@ -199,9 +197,18 @@ pub(crate) mod range {
                 }
             }
         };
+        src::byte_span::to_json(&span)
+    }
+
+    pub(crate) fn to_json(
+        root: &str,
+        write_root: &str,
+        offset_table_of_file_key: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<OffsetTable>,
+        loc: &Loc,
+    ) -> Value {
         key(json!({
-            "module": module_::to_json(&module_::of_loc_source(root, write_root, source.as_ref())),
-            "span": src::byte_span::to_json(&span),
+            "module": module_::to_json(&module_::of_loc_source(root, write_root, loc.source.as_ref())),
+            "span": byte_span_to_json(offset_table_of_file_key, loc),
         }))
     }
 }
@@ -516,6 +523,39 @@ pub(crate) mod module_doc {
         key(json!({
             "file": src::file::to_json(file),
             "documentation": documentation::to_json(root, write_root, offset_table_of_file_key, doc),
+        }))
+    }
+}
+
+pub(crate) mod module_docblock_range {
+    use flow_parser::loc::Loc;
+    use serde_json::Value;
+    use serde_json::json;
+
+    use super::OffsetTable;
+    use super::key;
+    use super::module_;
+    use super::range;
+    use super::src;
+
+    pub(crate) struct T {
+        pub(crate) module_: module_::T,
+        pub(crate) file: src::file::T,
+        pub(crate) span: Loc,
+    }
+
+    pub(crate) fn to_json(
+        offset_table_of_file_key: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<OffsetTable>,
+        T {
+            module_,
+            file,
+            span,
+        }: &T,
+    ) -> Value {
+        key(json!({
+            "module": module_::to_json(module_),
+            "file": src::file::to_json(file),
+            "span": range::byte_span_to_json(offset_table_of_file_key, span),
         }))
     }
 }
