@@ -36,6 +36,6 @@ class Foo extends React.Component<Props, State> {
 }
 
 Foo.defaultProps = 0;
-var foo: $jsx<number> = <Foo/>;
+var foo: React.MixedElement = <Foo/>;
 
 Foo.bar();

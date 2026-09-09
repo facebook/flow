@@ -1,7 +1,1 @@
-const a = <div /> as const; // stay as ExactReactElement_DEPRECATED<'div'>
-const b = <div />; // generalized to React.MixedElement
-
-a as ExactReactElement_DEPRECATED<'div'>; // ok
-b as ExactReactElement_DEPRECATED<'div'>; // error
-a as empty; // error
-b as empty; // error
+const a = <div /> as const; // as const on jsx no longer does anything. We don't error on it for now.

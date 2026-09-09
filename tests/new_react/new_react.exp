@@ -163,79 +163,19 @@ References:
                               ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:39:25
-
-Cannot assign `<Foo />` to `foo` because number [1] is not a React component. [not-a-component]
-
-   classes.js:39:25
-   39| var foo: $jsx<number> = <Foo/>;
-                               ^^^^^^
-
-References:
-   classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:39:25
-
-Cannot assign `<Foo />` to `foo` because in type argument `ElementType`: [incompatible-type]
- - Either `number` [1] is incompatible with `string` [2].
- - Or `number` [1] is incompatible with `component(...empty)` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
-
-   classes.js:39:25
-   39| var foo: $jsx<number> = <Foo/>;
-                               ^^^^^^
-
-References:
-   classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [1]
-   <BUILTINS>/react.js:43:5
-   43|   | string
-           ^^^^^^ [2]
-   <BUILTINS>/react.js:44:5
-   44|   | component(...empty);
-           ^^^^^^^^^^^^^^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:39:26
-
-Cannot assign `<Foo />` to `foo` because in type argument `ElementType` [1]: class `Foo` [2] is incompatible with
-`number` [3]. [incompatible-type]
-
-   classes.js:39:26
-   39| var foo: $jsx<number> = <Foo/>;
-                                ^^^
-
-References:
-   <BUILTINS>/react.js:58:54
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                            ^^^^^^^^^^^ [1]
-   classes.js:7:7
-    7| class Foo extends React.Component<Props, State> {
-             ^^^ [2]
-   classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------------- classes.js:39:26
+Error ------------------------------------------------------------------------------------------------- classes.js:39:32
 
 Cannot create `Foo` element because property `x` is missing in props [1] but exists in props of class `Foo` [2].
 [incompatible-type]
 
-   classes.js:39:26
-   39| var foo: $jsx<number> = <Foo/>;
-                                ^^^
+   classes.js:39:32
+   39| var foo: React.MixedElement = <Foo/>;
+                                      ^^^
 
 References:
-   classes.js:39:25
-   39| var foo: $jsx<number> = <Foo/>;
-                               ^^^^^^ [1]
+   classes.js:39:31
+   39| var foo: React.MixedElement = <Foo/>;
+                                     ^^^^^^ [1]
    classes.js:7:7
     7| class Foo extends React.Component<Props, State> {
              ^^^ [2]
@@ -461,4 +401,4 @@ References:
 
 
 
-Found 27 errors
+Found 24 errors

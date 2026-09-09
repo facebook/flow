@@ -34,156 +34,36 @@ References:
                                 ^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:9:60
-
-Cannot assign `<Component />` to `z` because in type argument `P` [1]: property `bar` is missing in `Props` [2] but
-exists in object type [3]. [incompatible-type]
-
-   test.js:9:60
-    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                  ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:97
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                                                                       ^ [1]
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [2]
-   test.js:5:28
-    5| function Component2(props: { bar: number }): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:60
-
-Cannot assign `<Component />` to `z` because in type argument `P` [1]: property `foo` is extra in `Props` [2] but
-missing in object type [3]. Exact objects do not accept extra props. [incompatible-type]
-
-   test.js:9:60
-    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                  ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:97
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                                                                       ^ [1]
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [2]
-   test.js:5:28
-    5| function Component2(props: { bar: number }): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:61
-
-Cannot assign `<Component />` to `z` because in type argument `ElementType` [1] > the first parameter: property `bar` is
-extra in object type [2] but missing in `Props` [3]. Exact objects do not accept extra props. [incompatible-type]
-
-   test.js:9:61
-    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                   ^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:54
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                            ^^^^^^^^^^^ [1]
-   test.js:5:28
-    5| function Component2(props: { bar: number }): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^ [2]
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:61
-
-Cannot assign `<Component />` to `z` because in type argument `ElementType` [1] > the first parameter: property `foo` is
-missing in object type [2] but exists in `Props` [3]. [incompatible-type]
-
-   test.js:9:61
-    9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                   ^^^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:54
-   58| declare opaque type ExactReactElement_DEPRECATED<out ElementType extends React$ElementType, out P = React$ElementConfig<ElementType>>: {...};
-                                                            ^^^^^^^^^^^ [1]
-   test.js:5:28
-    5| function Component2(props: { bar: number }): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^ [2]
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [3]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:61
-
-Cannot create `Component` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact objects
-do not accept extra props. [incompatible-type]
-
-   test.js:9:61
-   9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                  ^^^^^^^^^
-
-References:
-   test.js:9:60
-   9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                 ^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:4:27
-   4| function Component(props: Props): React.Node { return null }
-                                ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:61
-
-Cannot create `Component` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[incompatible-type]
-
-   test.js:9:61
-   9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                  ^^^^^^^^^
-
-References:
-   test.js:9:60
-   9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
-                                                                 ^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:4:27
-   4| function Component(props: Props): React.Node { return null }
-                                ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:14:22
+Error ---------------------------------------------------------------------------------------------------- test.js:13:22
 
 Cannot create `Component2` element because property `bar` is missing in props [1] but exists in object type [2].
 [incompatible-type]
 
-   test.js:14:22
-   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+   test.js:13:22
+   13| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                             ^^^^^^^^^^
 
 References:
-   test.js:14:21
-   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+   test.js:13:21
+   13| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                            ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:5:28
     5| function Component2(props: { bar: number }): React.Node { return null }
                                   ^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:14:22
+Error ---------------------------------------------------------------------------------------------------- test.js:13:22
 
 Cannot create `Component2` element because property `foo` is extra in props [1] but missing in object type [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
-   test.js:14:22
-   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+   test.js:13:22
+   13| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                             ^^^^^^^^^^
 
 References:
-   test.js:14:21
-   14| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
+   test.js:13:21
+   13| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo
                            ^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:5:28
     5| function Component2(props: { bar: number }): React.Node { return null }
@@ -191,4 +71,4 @@ References:
 
 
 
-Found 10 errors
+Found 4 errors

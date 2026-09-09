@@ -20,13 +20,7 @@ const _b = <React.Profiler />; // Error, id and onRender are required
 // Profiler doesn't preserve the instance type
 function F(props: {}) { return null }
 
-const _c: ExactReactElement_DEPRECATED<
-  // Ok, instance type is void.
-  component(
-    ...React.ElementConfig<typeof React.Profiler>
-  )
->
-=
+const _c =
   <React.Profiler id="Test3" onRender={onRender}>
     <F />
   </React.Profiler>;

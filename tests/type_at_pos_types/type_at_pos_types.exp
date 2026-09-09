@@ -677,17 +677,11 @@ Mono
 subst.js:21:7,21:8
 
 At subst.js:25:7
-ExactReactElement_DEPRECATED<any, any>
-
-'ExactReactElement_DEPRECATED' defined at subst.js:25:20
-
+any (explicit)
 subst.js:25:7,25:8
 
 At subst.js:27:7
-ExactReactElement_DEPRECATED<any, any>
-
-'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
-
+renders any
 subst.js:27:7,27:8
 
 type-alias.js

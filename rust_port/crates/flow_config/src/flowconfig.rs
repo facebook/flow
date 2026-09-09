@@ -298,7 +298,7 @@ pub mod opts {
 
         Opts {
             all: None,
-            always_generalize_jsx: false,
+            always_generalize_jsx: true,
             autoimports: None,
             autoimports_min_characters: None,
             autoimports_ranked_by_usage: true,

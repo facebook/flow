@@ -1324,7 +1324,7 @@ pub(super) fn run_with_env<'cx>(
                     env,
                     Some(trace),
                     &elem_reason,
-                    None,
+                    Some(true),
                     ExpectedModulePurpose::ReactModuleForReactMixedElementType,
                 )?,
                 Some((renders_variant, ts)) => Type::new(TypeInner::DefT(

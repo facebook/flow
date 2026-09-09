@@ -844,20 +844,6 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:40:3
 
-Cannot cast `<>...</>` to empty because React element [1] is incompatible with `empty` [2]. [incompatible-type]
-
-   expression.js:40:3
-   40| ((<>foo</> as empty) as T).p as empty;
-         ^^^^^^^^ [1]
-
-References:
-   expression.js:40:15
-   40| ((<>foo</> as empty) as T).p as empty;
-                     ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:40:3
-
 Cannot get `React.Fragment` because property `Fragment` is missing in object type [1]. [prop-missing]
 
    expression.js:40:3
@@ -1635,4 +1621,4 @@ References:
 
 
 
-Found 104 errors
+Found 103 errors

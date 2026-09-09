@@ -26,13 +26,44 @@ References:
                  ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- import.js:7:1
+Error ---------------------------------------------------------------------------------------- generic_provider.js:93:23
+
+Cannot create `AcceptsFirst` element because in property `child`: `GenericProvider` element [1] does not render
+`First` [2]. [incompatible-type]
+
+   generic_provider.js:93:23
+   93| <AcceptsFirst child={<GenericProvider><Second /></GenericProvider>} />; // ERROR
+                             ^^^^^^^^^^^^^^^ [1]
+
+References:
+   generic_provider.js:58:31
+   58| component AcceptsFirst(child: renders First) {
+                                     ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- generic_provider.js:96:6
+
+Cannot create `AcceptsEither` element because in property `child`: [incompatible-type]
+ - Either `EitherGenericProvider` element [1] does not render `First` [2].
+ - Or `EitherGenericProvider` element [1] does not render `Second` [2].
+
+   generic_provider.js:96:6
+   96|     <EitherGenericProvider
+            ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   generic_provider.js:66:32
+   66| component AcceptsEither(child: renders (First | Second)) {
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:7:2
 
 Cannot cast `<Foo />` to renders `Bar` because `Foo` element [1] does not render `Bar` [2]. [incompatible-type]
 
-   import.js:7:1
+   import.js:7:2
    7| <Foo /> as renders Bar; // ERROR
-      ^^^^^^^ [1]
+       ^^^ [1]
 
 References:
    import.js:7:12
@@ -40,13 +71,13 @@ References:
                  ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- import.js:8:1
+Error ---------------------------------------------------------------------------------------------------- import.js:8:2
 
 Cannot cast `<Bar />` to renders `Foo` because `Bar` element [1] does not render `Foo` [2]. [incompatible-type]
 
-   import.js:8:1
+   import.js:8:2
    8| <Bar /> as renders Foo; // ERROR
-      ^^^^^^^ [1]
+       ^^^ [1]
 
 References:
    import.js:8:12
@@ -54,14 +85,14 @@ References:
                  ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:10:1
+Error --------------------------------------------------------------------------------------------------- import.js:10:2
 
 Cannot cast `<MaybeFoo />` to renders `Foo` because a value that renders nothing [1] does not render `Foo` [2].
 [incompatible-type]
 
-   import.js:10:1
+   import.js:10:2
    10| <MaybeFoo /> as renders Foo; // ERROR
-       ^^^^^^^^^^^^ [1]
+        ^^^^^^^^ [1]
 
 References:
    import.js:10:17
@@ -69,13 +100,13 @@ References:
                        ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:14:1
+Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
 Cannot cast `<StarFoo />` to renders `Foo` because `$ReadOnlyArray` [1] does not render `Foo` [2]. [incompatible-type]
 
-   import.js:14:1
+   import.js:14:2
     14| <StarFoo /> as renders Foo; // ERROR
-        ^^^^^^^^^^^
+         ^^^^^^^
 
 References:
    <BUILTINS>/core.js:731:15
@@ -86,14 +117,14 @@ References:
                        ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:14:1
+Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
 Cannot cast `<StarFoo />` to renders `Foo` because a value that renders nothing [1] does not render `Foo` [2].
 [incompatible-type]
 
-   import.js:14:1
+   import.js:14:2
    14| <StarFoo /> as renders Foo; // ERROR
-       ^^^^^^^^^^^ [1]
+        ^^^^^^^ [1]
 
 References:
    import.js:14:16
@@ -101,13 +132,13 @@ References:
                       ^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- import.js:15:1
+Error --------------------------------------------------------------------------------------------------- import.js:15:2
 
 Cannot cast `<StarFoo />` to renders? `Foo` because `$ReadOnlyArray` [1] does not render `Foo` [2]. [incompatible-type]
 
-   import.js:15:1
+   import.js:15:2
     15| <StarFoo /> as renders? Foo; // ERROR
-        ^^^^^^^^^^^
+         ^^^^^^^
 
 References:
    <BUILTINS>/core.js:731:15
@@ -266,14 +297,14 @@ References:
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- poly_component_type.js:15:1
+Error -------------------------------------------------------------------------------------- poly_component_type.js:15:9
 
-Cannot cast `<Poly2 />` to renders? `NotAButton` because React element [1] does not render `NotAButton` [2].
+Cannot cast `<Poly2 />` to renders? `NotAButton` because `Button` element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
-   poly_component_type.js:15:1
+   poly_component_type.js:15:9
    15| <Poly2><Button /></Poly2> as renders? NotAButton; // ERROR
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+               ^^^^^^ [1]
 
 References:
    poly_component_type.js:15:30
@@ -281,14 +312,14 @@ References:
                                     ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------- poly_component_type.js:17:1
+Error -------------------------------------------------------------------------------------- poly_component_type.js:17:9
 
-Cannot cast `<Poly2 />` to renders* `NotAButton` because React element [1] does not render `NotAButton` [2].
+Cannot cast `<Poly2 />` to renders* `NotAButton` because `Button` element [1] does not render `NotAButton` [2].
 [incompatible-type]
 
-   poly_component_type.js:17:1
+   poly_component_type.js:17:9
    17| <Poly2><Button /></Poly2> as renders* NotAButton; // ERROR
-       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+               ^^^^^^ [1]
 
 References:
    poly_component_type.js:17:30
@@ -319,13 +350,13 @@ References:
                            ^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- poly_no_args.js:15:17
+Error -------------------------------------------------------------------------------------------- poly_no_args.js:15:18
 
 Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
-   poly_no_args.js:15:17
+   poly_no_args.js:15:18
    15| const bad1: U = <NotPoly />; // ERROR
-                       ^^^^^^^^^^^ [1]
+                        ^^^^^^^ [1]
 
 References:
    poly_no_args.js:15:13
@@ -333,15 +364,15 @@ References:
                    ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- poly_no_args.js:16:21
+Error -------------------------------------------------------------------------------------------- poly_no_args.js:16:22
 
 Cannot assign `<NotPoly />` to `bad2` because: [incompatible-type]
  - Either `NotPoly` element [1] does not render `Poly` [2].
  - Or `NotPoly` element [1] does not render `Poly2` [2].
 
-   poly_no_args.js:16:21
+   poly_no_args.js:16:22
    16| const bad2: Multi = <NotPoly />; // ERROR
-                           ^^^^^^^^^^^ [1]
+                            ^^^^^^^ [1]
 
 References:
    poly_no_args.js:8:21
@@ -363,13 +394,13 @@ References:
                            ^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------- poly_no_args_import.js:14:17
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:14:18
 
 Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
-   poly_no_args_import.js:14:17
+   poly_no_args_import.js:14:18
    14| const bad1: U = <NotPoly />; // ERROR
-                       ^^^^^^^^^^^ [1]
+                        ^^^^^^^ [1]
 
 References:
    poly_no_args_import.js:14:13
@@ -377,13 +408,13 @@ References:
                    ^ [2]
 
 
-Error ------------------------------------------------------------------------------------- poly_no_args_import.js:15:18
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:15:19
 
 Cannot assign `<NotPoly />` to `bad2` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
 
-   poly_no_args_import.js:15:18
+   poly_no_args_import.js:15:19
    15| const bad2: U2 = <NotPoly />; // ERROR
-                        ^^^^^^^^^^^ [1]
+                         ^^^^^^^ [1]
 
 References:
    poly_no_args_import.js:15:13
@@ -391,15 +422,15 @@ References:
                    ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------- poly_no_args_import.js:16:21
+Error ------------------------------------------------------------------------------------- poly_no_args_import.js:16:22
 
 Cannot assign `<NotPoly />` to `bad3` because: [incompatible-type]
  - Either `NotPoly` element [1] does not render `Poly` [2].
  - Or `NotPoly` element [1] does not render `Poly2` [2].
 
-   poly_no_args_import.js:16:21
+   poly_no_args_import.js:16:22
    16| const bad3: Multi = <NotPoly />; // ERROR
-                           ^^^^^^^^^^^ [1]
+                            ^^^^^^^ [1]
 
 References:
    poly_no_args.js:8:21
@@ -424,14 +455,14 @@ renders. If you want to express the idea of rendering zero or one item, please u
                                ^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- renders_maybe.js:23:2
+Error -------------------------------------------------------------------------------------------- renders_maybe.js:23:3
 
 Cannot cast `<Bar />` to renders? `MenuItem` because `Bar` element [1] does not render `MenuItem` [2].
 [incompatible-type]
 
-   renders_maybe.js:23:2
+   renders_maybe.js:23:3
    23| (<Bar />) as renders? MenuItem; // ERROR
-        ^^^^^^^ [1]
+         ^^^ [1]
 
 References:
    renders_maybe.js:23:14
@@ -634,14 +665,14 @@ References:
                                                       ^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------- renders_star.js:31:34
+Error -------------------------------------------------------------------------------------------- renders_star.js:31:35
 
 Cannot cast array literal to renders* `MenuItem` because `Bad` element [1] does not render `MenuItem` [2].
 [incompatible-type]
 
-   renders_star.js:31:34
+   renders_star.js:31:35
    31| [<MenuItem />, <BlueMenuItem />, <Bad />] as renders* MenuItem; // ERROR
-                                        ^^^^^^^ [1]
+                                         ^^^ [1]
 
 References:
    renders_star.js:31:46
@@ -1346,14 +1377,14 @@ References:
                   ^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ svg.js:22:1
+Error ------------------------------------------------------------------------------------------------------ svg.js:22:2
 
 Cannot cast `<Bar />` to renders string literal `svg` because `Bar` element [1] does not render string literal
 `svg` [2]. [incompatible-type]
 
-   svg.js:22:1
+   svg.js:22:2
    22| <Bar /> as renders 'svg'; // error
-       ^^^^^^^ [1]
+        ^^^ [1]
 
 References:
    svg.js:22:20
@@ -1780,4 +1811,4 @@ Cannot use number [1] as the type argument of renders type. [invalid-render]
 
 
 
-Found 137 errors
+Found 139 errors

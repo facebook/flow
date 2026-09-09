@@ -373,14 +373,7 @@ Use [`React.MixedElement`](#toc-react-mixedelement) or [`React.Node`](#toc-react
 To enforce design system constraints, use [render types](./render-types.md) instead.
 :::
 
-The type for the value of a JSX element, parameterized by the element's component type. It is
-also the return type of `React.createElement()` / `React.jsx()`.
-
-```js flow-check
-import * as React from 'react';
-
-const element: ExactReactElement_DEPRECATED<'div'> = <div />;
-```
+The type for the value of a JSX element, parameterized by the element's component type.
 
 ## See Also {#toc-see-also}
 

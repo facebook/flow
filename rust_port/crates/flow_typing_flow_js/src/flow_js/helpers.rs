@@ -36,6 +36,7 @@ use flow_typing_type::type_::ReadPropData;
 use flow_typing_type::type_::ResolveUnionTData;
 use flow_typing_type::type_::SealGenericTData;
 use flow_typing_type::type_::SpecializeTData;
+use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeArgCompatibilityData;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
@@ -1936,6 +1937,26 @@ pub(super) fn reposition<'cx>(
                 })?;
                 Ok(Type::new(TypeInner::UnionT(r, rep)))
             }
+            TypeInner::AnnotT(r, inner_t, use_desc) => Ok(Type::new(TypeInner::AnnotT(
+                mod_reason(r.dupe()),
+                inner_t.dupe(),
+                matches!(desc, Some(ReasonDesc::RReactElement { .. })) || *use_desc,
+            ))),
+            TypeInner::TypeAppT(box TypeAppTData {
+                reason,
+                use_op,
+                type_,
+                targs,
+                from_value,
+                use_desc,
+            }) => Ok(Type::new(TypeInner::TypeAppT(Box::new(TypeAppTData {
+                reason: mod_reason(reason.dupe()),
+                use_op: use_op.dupe(),
+                type_: type_.dupe(),
+                targs: targs.dupe(),
+                from_value: *from_value,
+                use_desc: matches!(desc, Some(ReasonDesc::RReactElement { .. })) || *use_desc,
+            })))),
             TypeInner::NominalT {
                 reason: r,
                 nominal_type,

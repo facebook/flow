@@ -5,14 +5,14 @@ No errors!
 No errors!
 
 === block 3 ===
-Error ------------------------------------------------------------------------------- -:12:17
+Error ------------------------------------------------------------------------------- -:12:18
 
 Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
 [incompatible-type]
 
-   -:12:17
+   -:12:18
    12| <Layout header={<Footer />} />; // ERROR: doesn't render Header
-                       ^^^^^^^^^^ [1]
+                        ^^^^^^ [1]
 
 References:
    -:7:26
@@ -23,14 +23,14 @@ References:
 Found 1 error
 
 === block 4 ===
-Error ------------------------------------------------------------------------------- -:18:17
+Error ------------------------------------------------------------------------------- -:18:18
 
 Cannot create `Layout` element because in property `header`: `Footer` element [1] does not render `Header` [2].
 [incompatible-type]
 
-   -:18:17
+   -:18:18
    18| <Layout header={<Footer />} />; // ERROR
-                       ^^^^^^^^^^ [1]
+                        ^^^^^^ [1]
 
 References:
    -:11:11

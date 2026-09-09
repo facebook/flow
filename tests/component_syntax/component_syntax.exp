@@ -583,8 +583,7 @@ References:
 
 Error ------------------------------------------------------------------------------- component_in_type_position.js:6:22
 
-Cannot assign `<Foo />` to `fooElem` because `{...}` [1] is incompatible with `React.RendersExactly<typeof Foo>` [2].
-[incompatible-type]
+Cannot assign `<Foo />` to `fooElem` because `{...}` [1] is incompatible with `Foo` element [2]. [incompatible-type]
 
    component_in_type_position.js:6:22
    6| const fooElem: Foo = <Foo />; // ERROR
@@ -1787,8 +1786,7 @@ References:
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:14:2
 
-Cannot cast `<Bar />` to `Foo` because `{...}` [1] is incompatible with `React.RendersExactly<typeof FooType>` [2].
-[incompatible-type]
+Cannot cast `<Bar />` to `Foo` because `{...}` [1] is incompatible with `Foo` element [2]. [incompatible-type]
 
    import_component_in_type_position.js:14:2
    14| (<Bar />) as Foo; // ERROR
