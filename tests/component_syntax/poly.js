@@ -12,20 +12,5 @@ export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
 declare const x: Poly<number>;
 x as Poly<string>;
 
-component BRB<TValue extends string>(foo: TValue) { return null };
-
-type BRBT<TValue extends string> = component(foo:TValue);
-
-component Foo<TValue extends string>(setTV: TValue => void, children: React.ChildrenArray<ExactReactElement_DEPRECATED<BRBT<TValue>>>) {
-    return null;
- }
-
-component Test() {
-    declare const set: 'number' => void;
-    return (<Foo setTV={set /* error */}>
-        <BRB foo={'out'} />
-    </Foo>)
-}
-
 declare const C: React.ComponentType<{foo: string}>;
 const el = <C foo="str" />;

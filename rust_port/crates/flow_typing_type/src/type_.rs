@@ -8718,7 +8718,6 @@ pub mod react {
         pub jsx_props: Type,
         pub tout: Tvar,
         pub targs: Option<Rc<[Targ]>>,
-        pub should_generalize: bool,
         pub return_hint: LazyHintT<CX>,
         pub record_monomorphized_result: bool,
         pub inferred_targs: Option<Rc<[(Type, SubstName)]>>,
@@ -8739,7 +8738,6 @@ pub mod react {
                     jsx_props,
                     tout,
                     targs,
-                    should_generalize,
                     return_hint,
                     record_monomorphized_result,
                     inferred_targs,
@@ -8749,7 +8747,6 @@ pub mod react {
                     jsx_props: jsx_props.clone(),
                     tout: tout.clone(),
                     targs: targs.clone(),
-                    should_generalize: *should_generalize,
                     return_hint: return_hint.clone(),
                     record_monomorphized_result: *record_monomorphized_result,
                     inferred_targs: inferred_targs.clone(),
@@ -8772,22 +8769,20 @@ pub mod react {
                         jsx_props: b1,
                         tout: c1,
                         targs: d1,
-                        should_generalize: e1,
-                        return_hint: f1,
-                        record_monomorphized_result: g1,
-                        inferred_targs: h1,
-                        specialized_component: i1,
+                        return_hint: e1,
+                        record_monomorphized_result: f1,
+                        inferred_targs: g1,
+                        specialized_component: h1,
                     }),
                     Tool::CreateElement(box CreateElementData {
                         component: a2,
                         jsx_props: b2,
                         tout: c2,
                         targs: d2,
-                        should_generalize: e2,
-                        return_hint: f2,
-                        record_monomorphized_result: g2,
-                        inferred_targs: h2,
-                        specialized_component: i2,
+                        return_hint: e2,
+                        record_monomorphized_result: f2,
+                        inferred_targs: g2,
+                        specialized_component: h2,
                     }),
                 ) => {
                     a1 == a2
@@ -8798,7 +8793,6 @@ pub mod react {
                         && f1 == f2
                         && g1 == g2
                         && h1 == h2
-                        && i1 == i2
                 }
                 (Tool::ConfigCheck { props: a1 }, Tool::ConfigCheck { props: a2 }) => a1 == a2,
                 (Tool::GetConfig { tout: a1 }, Tool::GetConfig { tout: a2 }) => a1 == a2,
@@ -8818,7 +8812,6 @@ pub mod react {
                     jsx_props,
                     tout,
                     targs,
-                    should_generalize,
                     return_hint,
                     record_monomorphized_result,
                     inferred_targs,
@@ -8828,7 +8821,6 @@ pub mod react {
                     jsx_props.hash(state);
                     tout.hash(state);
                     targs.hash(state);
-                    should_generalize.hash(state);
                     return_hint.hash(state);
                     record_monomorphized_result.hash(state);
                     inferred_targs.hash(state);
@@ -8870,22 +8862,20 @@ pub mod react {
                         jsx_props: b1,
                         tout: c1,
                         targs: d1,
-                        should_generalize: e1,
-                        return_hint: f1,
-                        record_monomorphized_result: g1,
-                        inferred_targs: h1,
-                        specialized_component: i1,
+                        return_hint: e1,
+                        record_monomorphized_result: f1,
+                        inferred_targs: g1,
+                        specialized_component: h1,
                     }),
                     Tool::CreateElement(box CreateElementData {
                         component: a2,
                         jsx_props: b2,
                         tout: c2,
                         targs: d2,
-                        should_generalize: e2,
-                        return_hint: f2,
-                        record_monomorphized_result: g2,
-                        inferred_targs: h2,
-                        specialized_component: i2,
+                        return_hint: e2,
+                        record_monomorphized_result: f2,
+                        inferred_targs: g2,
+                        specialized_component: h2,
                     }),
                 ) => a1
                     .cmp(a2)
@@ -8895,8 +8885,7 @@ pub mod react {
                     .then_with(|| e1.cmp(e2))
                     .then_with(|| f1.cmp(f2))
                     .then_with(|| g1.cmp(g2))
-                    .then_with(|| h1.cmp(h2))
-                    .then_with(|| i1.cmp(i2)),
+                    .then_with(|| h1.cmp(h2)),
                 (Tool::ConfigCheck { props: a1 }, Tool::ConfigCheck { props: a2 }) => a1.cmp(a2),
                 (Tool::GetConfig { tout: a1 }, Tool::GetConfig { tout: a2 }) => a1.cmp(a2),
                 _ => std::cmp::Ordering::Equal,
@@ -8912,7 +8901,6 @@ pub mod react {
                     jsx_props,
                     tout,
                     targs,
-                    should_generalize,
                     return_hint,
                     record_monomorphized_result,
                     inferred_targs,
@@ -8923,7 +8911,6 @@ pub mod react {
                     .field("jsx_props", jsx_props)
                     .field("tout", tout)
                     .field("targs", targs)
-                    .field("should_generalize", should_generalize)
                     .field("return_hint", return_hint)
                     .field("record_monomorphized_result", record_monomorphized_result)
                     .field("inferred_targs", inferred_targs)

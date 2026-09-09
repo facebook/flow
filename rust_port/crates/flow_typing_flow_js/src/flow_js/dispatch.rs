@@ -4912,7 +4912,6 @@ fn __flow_impl<'cx>(
             && let react::Tool::CreateElement(box react::CreateElementData {
                 component,
                 jsx_props,
-                should_generalize,
                 return_hint,
                 targs,
                 tout,
@@ -4941,7 +4940,6 @@ fn __flow_impl<'cx>(
             let component_c = component.dupe();
             let jsx_props_c = jsx_props.dupe();
             let targs_c = targs.dupe();
-            let should_generalize_c = *should_generalize;
             let check = move || {
                 flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck::of_react_jsx(
                     l_clone.dupe(),
@@ -4955,7 +4953,6 @@ fn __flow_impl<'cx>(
                     component_c.dupe(),
                     jsx_props_c.dupe(),
                     targs_c.dupe(),
-                    should_generalize_c,
                 )
             };
             let (t_, inferred_targs) =
@@ -4967,7 +4964,6 @@ fn __flow_impl<'cx>(
                     react::CreateElementData {
                         component: component.dupe(),
                         jsx_props: jsx_props.dupe(),
-                        should_generalize: *should_generalize,
                         return_hint: return_hint.clone(),
                         targs: None,
                         tout: tout.dupe(),

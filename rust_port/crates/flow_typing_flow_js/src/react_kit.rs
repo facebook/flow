@@ -1056,7 +1056,6 @@ pub(super) fn run_with_env<'cx>(
         u: &react::Tool<Context<'cx>>,
         component: &Type,
         jsx_props: &Type,
-        should_generalize: bool,
         record_monomorphized_result: bool,
         inferred_targs: &Option<Rc<[(Type, flow_common::subst_name::SubstName)]>>,
         specialized_component: &Option<SpecializedCallee>,
@@ -1317,32 +1316,28 @@ pub(super) fn run_with_env<'cx>(
             }
         }
 
-        let elem = if should_generalize {
-            match renders_kit::try_synthesize_render_type_with_env(cx, env, false, &elem)? {
-                None => FlowJs::get_builtin_react_type_with_env(
-                    cx,
-                    env,
-                    Some(trace),
-                    &elem_reason,
-                    Some(true),
-                    ExpectedModulePurpose::ReactModuleForReactMixedElementType,
-                )?,
-                Some((renders_variant, ts)) => Type::new(TypeInner::DefT(
-                    elem_reason.dupe(),
-                    DefT::new(DefTInner::RendersT(Rc::new(
-                        CanonicalRendersForm::StructuralRenders {
-                            renders_variant,
-                            renders_structural_type: type_util::union_of_ts(
-                                elem_reason.dupe(),
-                                ts,
-                                None,
-                            ),
-                        },
-                    ))),
-                )),
-            }
-        } else {
-            elem
+        let elem = match renders_kit::try_synthesize_render_type_with_env(cx, env, false, &elem)? {
+            None => FlowJs::get_builtin_react_type_with_env(
+                cx,
+                env,
+                Some(trace),
+                &elem_reason,
+                Some(true),
+                ExpectedModulePurpose::ReactModuleForReactMixedElementType,
+            )?,
+            Some((renders_variant, ts)) => Type::new(TypeInner::DefT(
+                elem_reason.dupe(),
+                DefT::new(DefTInner::RendersT(Rc::new(
+                    CanonicalRendersForm::StructuralRenders {
+                        renders_variant,
+                        renders_structural_type: type_util::union_of_ts(
+                            elem_reason.dupe(),
+                            ts,
+                            None,
+                        ),
+                    },
+                ))),
+            )),
         };
         FlowJs::rec_flow_t_with_env(
             cx,
@@ -1361,7 +1356,6 @@ pub(super) fn run_with_env<'cx>(
             jsx_props,
             tout,
             targs: _,
-            should_generalize,
             return_hint: _,
             record_monomorphized_result,
             inferred_targs,
@@ -1376,7 +1370,6 @@ pub(super) fn run_with_env<'cx>(
             u,
             component,
             jsx_props,
-            *should_generalize,
             *record_monomorphized_result,
             inferred_targs,
             specialized_component,

@@ -1589,7 +1589,6 @@ fn check_instantiation<'cx, Obs: Observer>(
             component,
             jsx_props,
             targs,
-            should_generalize,
         } => {
             let new_tout = flow_typing_tvar::mk(cx, reason_op.dupe());
             let targs_rc: Option<Rc<[Targ]>> = targs.dupe();
@@ -1604,7 +1603,6 @@ fn check_instantiation<'cx, Obs: Observer>(
                         jsx_props: jsx_props.dupe(),
                         targs: None,
                         tout: new_tout_tvar,
-                        should_generalize: *should_generalize,
                         return_hint: hint_unavailable(),
                         record_monomorphized_result: false,
                         inferred_targs: None,

@@ -2243,24 +2243,6 @@ References:
                  ^^^^^^ [3]
 
 
-Error ---------------------------------------------------------------------------------------------------- poly.js:25:25
-
-Cannot create `Foo` element because in property `setTV` > the first parameter: string literal `number` [1] is
-incompatible with string literal `out` [2]. [incompatible-type]
-
-   poly.js:25:25
-   25|     return (<Foo setTV={set /* error */}>
-                               ^^^
-
-References:
-   poly.js:24:24
-   24|     declare const set: 'number' => void;
-                              ^^^^^^^^ [1]
-   poly.js:26:19
-   26|         <BRB foo={'out'} />
-                         ^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:39
 
 Cannot assign `Foo` to `a` because inexact object type [1] is incompatible with exact props of component Foo [2].
@@ -3511,4 +3493,4 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 228 errors
+Found 227 errors

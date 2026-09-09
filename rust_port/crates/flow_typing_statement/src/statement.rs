@@ -7853,14 +7853,14 @@ fn expression_<'a>(
             })
         }
         ExpressionInner::JSXElement { inner, .. } => {
-            let (t, e) = jsx(cx, true, loc.dupe(), inner)?;
+            let (t, e) = jsx(cx, loc.dupe(), inner)?;
             expression::Expression::new(ExpressionInner::JSXElement {
                 loc: (loc, t),
                 inner: e.into(),
             })
         }
         ExpressionInner::JSXFragment { inner, .. } => {
-            let (t, f) = jsx_fragment(cx, true, loc.dupe(), inner)?;
+            let (t, f) = jsx_fragment(cx, loc.dupe(), inner)?;
             expression::Expression::new(ExpressionInner::JSXFragment {
                 loc: (loc, t),
                 inner: f.into(),
@@ -12337,7 +12337,6 @@ pub fn collapse_children<'a>(
 
 fn jsx<'a>(
     cx: &Context<'a>,
-    should_generalize: bool,
     expr_loc: ALoc,
     e: &ast::jsx::Element<ALoc, ALoc>,
 ) -> Result<(Type, ast::jsx::Element<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -12350,14 +12349,8 @@ fn jsx<'a>(
         Some(_) => (expr_loc, open_.dupe(), children_loc),
         _ => (open_.dupe(), open_.dupe(), open_.dupe()),
     };
-    let (t, typed_opening, typed_children, typed_closing) = jsx_title(
-        cx,
-        should_generalize,
-        &e.opening_element,
-        children,
-        closing_element,
-        locs,
-    )?;
+    let (t, typed_opening, typed_children, typed_closing) =
+        jsx_title(cx, &e.opening_element, children, closing_element, locs)?;
     tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &t);
     Ok((
         t,
@@ -12372,7 +12365,6 @@ fn jsx<'a>(
 
 fn jsx_fragment<'a>(
     cx: &Context<'a>,
-    should_generalize: bool,
     expr_loc: ALoc,
     fragment: &ast::jsx::Fragment<ALoc, ALoc>,
 ) -> Result<(Type, ast::jsx::Fragment<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -12462,7 +12454,6 @@ fn jsx_fragment<'a>(
     let (t, _) = react_jsx_desugar(
         cx,
         FlowSmolStr::new("React.Fragment"),
-        should_generalize,
         expr_loc.dupe(),
         loc_children.dupe(),
         fragment_t,
@@ -12484,7 +12475,6 @@ fn jsx_fragment<'a>(
 
 fn jsx_title<'a>(
     cx: &Context<'a>,
-    should_generalize: bool,
     opening_element: &ast::jsx::Opening<ALoc, ALoc>,
     children: &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
     closing_element: Option<&ast::jsx::Closing<ALoc, ALoc>>,
@@ -12659,7 +12649,6 @@ fn jsx_title<'a>(
                     flow_common::options::JsxMode::JsxReact => react_jsx_desugar(
                         cx,
                         id_name.dupe(),
-                        should_generalize,
                         loc_element.dupe(),
                         loc_children.dupe(),
                         c.dupe(),
@@ -12728,7 +12717,6 @@ fn jsx_title<'a>(
             let (t, _) = react_jsx_desugar(
                 cx,
                 FlowSmolStr::new(el_name),
-                should_generalize,
                 loc_element.dupe(),
                 loc_children.dupe(),
                 c,
@@ -13315,7 +13303,6 @@ fn react_jsx_normalize_children_prop<'a>(
 fn react_jsx_desugar<'a>(
     cx: &Context<'a>,
     name: FlowSmolStr,
-    should_generalize: bool,
     loc_element: ALoc,
     loc_children: ALoc,
     component_t: Type,
@@ -13406,7 +13393,6 @@ fn react_jsx_desugar<'a>(
                             jsx_props: props.dupe(),
                             tout: tout_tvar,
                             targs: targs_opt.clone().map(|v| v.into()),
-                            should_generalize,
                             return_hint: return_hint.clone(),
                             record_monomorphized_result: false,
                             inferred_targs: None,
@@ -13607,7 +13593,7 @@ fn jsx_body<'a>(
     let loc = _child.loc().dupe();
     Ok(match _child {
         ast::jsx::Child::Element { inner: e, .. } => {
-            let (t, typed_e) = jsx(_cx, false, loc.dupe(), e)?;
+            let (t, typed_e) = jsx(_cx, loc.dupe(), e)?;
             let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
             (
                 Some(type_::UnresolvedParam::UnresolvedArg(Box::new(
@@ -13623,7 +13609,7 @@ fn jsx_body<'a>(
             )
         }
         ast::jsx::Child::Fragment { inner: f, .. } => {
-            let (t, typed_f) = jsx_fragment(_cx, false, loc.dupe(), f)?;
+            let (t, typed_f) = jsx_fragment(_cx, loc.dupe(), f)?;
             let reason = mk_reason(VirtualReasonDesc::RJSXChild, loc.dupe());
             (
                 Some(type_::UnresolvedParam::UnresolvedArg(Box::new(

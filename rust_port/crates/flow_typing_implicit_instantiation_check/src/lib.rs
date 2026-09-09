@@ -28,7 +28,6 @@ pub enum Operation {
         component: Type,
         jsx_props: Type,
         targs: Option<Rc<[Targ]>>,
-        should_generalize: bool,
     },
 }
 
@@ -77,7 +76,6 @@ impl ImplicitInstantiationCheck {
         component: Type,
         jsx_props: Type,
         targs: Option<Rc<[Targ]>>,
-        should_generalize: bool,
     ) -> Self {
         Self {
             lhs,
@@ -89,7 +87,6 @@ impl ImplicitInstantiationCheck {
                     component,
                     targs,
                     jsx_props,
-                    should_generalize,
                 },
             ),
         }

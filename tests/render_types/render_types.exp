@@ -264,17 +264,14 @@ in renders. If you want to express the idea of rendering zero or one item, pleas
                      ^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- poly.js:33:5
+Error ----------------------------------------------------------------------------------------------------- poly.js:33:6
 
 Cannot create `FooContainer` element because in property `children`: `Fragment` element [1] does not render `Foo` [2].
 [incompatible-type]
 
-   poly.js:33:5
-           v---------
+   poly.js:33:6
    33|     <Fragment>
-   34|       <Bar />
-   35|     </Fragment>
-           ----------^ [1]
+            ^^^^^^^^ [1]
 
 References:
    poly.js:20:34
