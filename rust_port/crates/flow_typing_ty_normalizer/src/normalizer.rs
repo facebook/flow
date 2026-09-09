@@ -2311,6 +2311,16 @@ mod type_converter {
                 }
             }
             ty::Ty::Obj(obj) => {
+                // An indexer tail is carried alongside the flat params so it
+                // prints as `...{[string]: T}` instead of being silently
+                // dropped. Anything that is not a plain field prop still
+                // keeps the whole config written via the fallback below.
+                let dict = match &obj.obj_kind {
+                    ty::ObjKind::IndexedObj(dict) => Some(dict.clone()),
+                    ty::ObjKind::ExactObj
+                    | ty::ObjKind::InexactObj
+                    | ty::ObjKind::MappedTypeObj => None,
+                };
                 let props_result: Result<Vec<_>, _> = obj
                     .obj_props
                     .iter()
@@ -2333,6 +2343,7 @@ mod type_converter {
                     Ok(props) => ty::ComponentProps::FlattenedComponentProps {
                         props: props.into(),
                         inexact: matches!(obj.obj_kind, ty::ObjKind::InexactObj),
+                        dict,
                     },
                     Err(_) => ty::ComponentProps::UnflattenedComponentProps(config_ty.dupe()),
                 }

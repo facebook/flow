@@ -1076,7 +1076,11 @@ fn type_component_sig<L: Dupe>(
                 type_(opts, depth, t.as_ref(), size),
             ])]
         }
-        ComponentProps::FlattenedComponentProps { props, inexact } => {
+        ComponentProps::FlattenedComponentProps {
+            props,
+            inexact,
+            dict,
+        } => {
             let mut params_list = Vec::new();
             for (idx, prop) in props.iter().enumerate() {
                 if size.remaining == 0 {
@@ -1105,6 +1109,14 @@ fn type_component_sig<L: Dupe>(
             }
             if *inexact {
                 params_list.push(LayoutNode::atom("...{...}".to_string()));
+            }
+            if let Some(dict) = dict {
+                params_list.push(layout::fuse(vec![
+                    LayoutNode::atom("...".to_string()),
+                    LayoutNode::atom("{".to_string()),
+                    type_dict(opts, depth, dict, size),
+                    LayoutNode::atom("}".to_string()),
+                ]));
             }
             params_list
         }

@@ -299,6 +299,14 @@ component OverComp(a: number, b: string, extra: boolean, keep: string)
 
 test.js:156:19,156:26
 
+test.js:162:19
+Flags:
+component IndexedComp(foo: number, ...{[string]: number})
+
+'IndexedComp' defined at test.js:162:0
+
+test.js:162:19,162:29
+
 jsx_instantiation.js:3:19
 Flags:
 component Foo1<T>(x: T, y: T)

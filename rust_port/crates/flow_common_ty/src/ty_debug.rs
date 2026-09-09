@@ -677,7 +677,11 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
                 ComponentProps::UnflattenedComponentProps(t) => {
                     vec![format!("...{}", dump_t(depth, t))]
                 }
-                ComponentProps::FlattenedComponentProps { props, inexact } => {
+                ComponentProps::FlattenedComponentProps {
+                    props,
+                    inexact,
+                    dict,
+                } => {
                     let mut prop_strs: Vec<String> = props
                         .iter()
                         .map(|p| match p {
@@ -694,6 +698,13 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
                         .collect();
                     if *inexact {
                         prop_strs.push("...{...}".to_string());
+                    }
+                    if let Some(dict) = dict {
+                        prop_strs.push(format!(
+                            "...{{[{}]: {}}}",
+                            dump_t(depth, &dict.dict_key),
+                            dump_t(depth, &dict.dict_value)
+                        ));
                     }
                     prop_strs
                 }
@@ -1306,7 +1317,11 @@ fn json_of_component<L: Debug + Clone + Dupe>(
                 ("type".to_string(), json_of_t(converter, t, strip_root)),
             ]))
         }
-        ComponentProps::FlattenedComponentProps { props, inexact } => {
+        ComponentProps::FlattenedComponentProps {
+            props,
+            inexact,
+            dict,
+        } => {
             let props_arr: Vec<Json> = props
                 .iter()
                 .map(|p| match p {
@@ -1323,6 +1338,12 @@ fn json_of_component<L: Debug + Clone + Dupe>(
                 ("kind".to_string(), Json::String("flattened".to_string())),
                 ("types".to_string(), Json::Array(props_arr)),
                 ("inexact".to_string(), Json::Bool(*inexact)),
+                (
+                    "dict".to_string(),
+                    dict.as_ref()
+                        .map(|d| json_of_dict(converter, d, strip_root))
+                        .unwrap_or(Json::Null),
+                ),
             ]))
         }
     };

@@ -155,3 +155,9 @@ type OverProps = {...OverBase, b: string, extra: boolean};
 
 declare component OverComp(...props: OverProps);
 //                ^
+
+// An indexer rest config flattens its named props and keeps the indexer
+// as a tail instead of dropping it.
+
+declare component IndexedComp(...props: {[string]: number, foo: number});
+//                ^

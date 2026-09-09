@@ -64,7 +64,7 @@ Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `compo
 where
 'InexactRest' is defined at react.js:22:1-63
 
-Found exact match 'IndexedRest' defined at react.js:27:11,27:21 with type `component IndexedRest(foo: number)` 
+Found exact match 'IndexedRest' defined at react.js:27:11,27:21 with type `component IndexedRest(foo: number, ...{[string]: number})` 
 where
 'IndexedRest' is defined at react.js:27:1-68
 
@@ -192,7 +192,7 @@ Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `compon
 where
 'InexactRest' is defined at react.js:22:1-63
 
-Found exact match 'IndexedRest' defined at react.js:27:1,27:68 with type `component IndexedRest(foo: number)` 
+Found exact match 'IndexedRest' defined at react.js:27:1,27:68 with type `component IndexedRest(foo: number, ...{[string]: number})` 
 where
 'IndexedRest' is defined at react.js:27:1-68
 

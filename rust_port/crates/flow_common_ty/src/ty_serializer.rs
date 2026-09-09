@@ -1182,12 +1182,18 @@ impl Serializer {
                     comments: None,
                 }
             }
-            ComponentProps::FlattenedComponentProps { props, inexact } => {
+            ComponentProps::FlattenedComponentProps {
+                props,
+                inexact,
+                dict,
+            } => {
                 let params: Vec<ast::types::component_params::Param<Loc, Loc>> = props
                     .iter()
                     .filter_map(|p| self.component_param(p))
                     .collect();
-                let rest = if *inexact {
+                // The AST has no indexer spelling, so a dict tail degrades to
+                // the same openness marker as inexactness.
+                let rest = if *inexact || dict.is_some() {
                     let empty_obj = ast::types::Type::new(TypeInner::Object {
                         loc: LOC_NONE,
                         inner: Arc::new(ast::types::Object {

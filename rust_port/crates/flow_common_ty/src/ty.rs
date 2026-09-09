@@ -604,6 +604,7 @@ pub enum ComponentProps<L> {
     FlattenedComponentProps {
         props: Arc<[FlattenedComponentProp<L>]>,
         inexact: bool,
+        dict: Option<Dict<L>>,
     },
 }
 
@@ -1638,9 +1639,16 @@ where
             ComponentProps::UnflattenedComponentProps(t) => {
                 self.on_t(env, t);
             }
-            ComponentProps::FlattenedComponentProps { props, inexact: _ } => {
+            ComponentProps::FlattenedComponentProps {
+                props,
+                inexact: _,
+                dict,
+            } => {
                 for prop in props.iter() {
                     self.on_flattened_component_prop(env, prop);
+                }
+                if let Some(dict) = dict {
+                    self.on_dict(env, dict);
                 }
             }
         }
@@ -2402,13 +2410,20 @@ where
                 ComponentProps::FlattenedComponentProps {
                     props: p1,
                     inexact: i1,
+                    dict: dict1,
                 },
                 ComponentProps::FlattenedComponentProps {
                     props: p2,
                     inexact: i2,
+                    dict: dict2,
                 },
             ) => {
                 self.on_bool(env, *i1, *i2)?;
+                match (dict1, dict2) {
+                    (Some(d1), Some(d2)) => self.on_dict(env, d1, d2)?,
+                    (None, None) => {}
+                    _ => return self.fail_component_props(cp1, cp2),
+                }
                 self.on_list(
                     |s, e, fcp1, fcp2| s.on_flattened_component_prop(e, fcp1, fcp2),
                     env,
@@ -3154,10 +3169,17 @@ where
     fn on_component_props(&mut self, env: &Env, cp: &ComponentProps<L>) -> Self::Acc {
         match cp {
             ComponentProps::UnflattenedComponentProps(t) => self.on_t(env, t),
-            ComponentProps::FlattenedComponentProps { props, inexact: _ } => {
+            ComponentProps::FlattenedComponentProps {
+                props,
+                inexact: _,
+                dict,
+            } => {
                 let mut acc = Self::Acc::zero();
                 for prop in props.iter() {
                     acc = Self::Acc::plus(acc, self.on_flattened_component_prop(env, prop));
+                }
+                if let Some(dict) = dict {
+                    acc = Self::Acc::plus(acc, self.on_dict(env, dict));
                 }
                 acc
             }
@@ -3940,13 +3962,18 @@ where
                 let t_new = self.on_t(env, t);
                 ComponentProps::UnflattenedComponentProps(t_new)
             }
-            ComponentProps::FlattenedComponentProps { props, inexact } => {
+            ComponentProps::FlattenedComponentProps {
+                props,
+                inexact,
+                dict,
+            } => {
                 let props_new: Arc<[_]> = self
                     .on_list(|s, e, p| s.on_flattened_component_prop(e, p), env, &props)
                     .into();
                 ComponentProps::FlattenedComponentProps {
                     props: props_new,
                     inexact,
+                    dict: dict.map(|d| self.on_dict(env, d)),
                 }
             }
         }
@@ -4791,16 +4818,19 @@ impl<L: Dupe> ComponentProps<L> {
             ComponentProps::UnflattenedComponentProps(arc_ty) => {
                 ComponentProps::UnflattenedComponentProps(Arc::new(arc_ty.as_ref().map_locs(f)))
             }
-            ComponentProps::FlattenedComponentProps { props, inexact } => {
-                ComponentProps::FlattenedComponentProps {
-                    props: props
-                        .iter()
-                        .map(|p| p.map_locs(f))
-                        .collect::<Vec<_>>()
-                        .into(),
-                    inexact: *inexact,
-                }
-            }
+            ComponentProps::FlattenedComponentProps {
+                props,
+                inexact,
+                dict,
+            } => ComponentProps::FlattenedComponentProps {
+                props: props
+                    .iter()
+                    .map(|p| p.map_locs(f))
+                    .collect::<Vec<_>>()
+                    .into(),
+                inexact: *inexact,
+                dict: dict.as_ref().map(|d| d.map_locs(f)),
+            },
         }
     }
 }
