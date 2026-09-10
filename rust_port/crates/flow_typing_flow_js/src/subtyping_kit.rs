@@ -5563,8 +5563,6 @@ pub fn rec_sub_t<'cx>(
                                 n,
                                 lower: r1.dupe(),
                                 upper: r2.dupe(),
-                                lower_optional: optional1,
-                                upper_optional: optional2,
                             },
                         ))),
                         Arc::new(use_op.dupe()),

@@ -1316,20 +1316,14 @@ where
             }
             ReactConfigCheck => ReactConfigCheck,
             ReactGetConfig { polarity } => ReactGetConfig { polarity },
-            TupleElementCompatibility(box TupleElementCompatibilityData {
-                n,
-                lower,
-                upper,
-                lower_optional,
-                upper_optional,
-            }) => TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
-                n,
-                lower: mod_reason(lower),
-                upper: mod_reason(upper),
-                lower_optional,
-                upper_optional,
-            })),
-            TupleAssignment { upper_optional } => TupleAssignment { upper_optional },
+            TupleElementCompatibility(box TupleElementCompatibilityData { n, lower, upper }) => {
+                TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
+                    n,
+                    lower: mod_reason(lower),
+                    upper: mod_reason(upper),
+                }))
+            }
+            TupleAssignment => TupleAssignment,
             TypeArgCompatibility(box TypeArgCompatibilityData {
                 name,
                 targ,

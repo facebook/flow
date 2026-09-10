@@ -58,6 +58,7 @@ use flow_typing_type::type_::ThisInstanceTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeStrictnessKind;
+use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_util;
 use vec1::Vec1;
 
@@ -315,9 +316,22 @@ fn eval_id_of_aloc<'cx>(cx: &Context<'cx>, loc: ALoc) -> type_::eval::Id {
     type_::eval::Id::of_aloc_id(true, cx.make_aloc_id(&loc))
 }
 
-fn specialize<'cx>(cx: &Context<'cx>, reason_op: Reason, t: Type) -> Type {
+fn specialize<'cx>(
+    cx: &Context<'cx>,
+    reason_op: Reason,
+    t: Type,
+    operation: AnnotationInferenceOperation,
+) -> Type {
     let reason = type_util::reason_of_t(&t).dupe();
-    annotation_inference::specialize(cx, t, type_::unknown_use(), reason_op, reason, None)
+    annotation_inference::specialize(
+        cx,
+        t,
+        type_::unknown_use(),
+        reason_op,
+        reason,
+        None,
+        operation,
+    )
 }
 
 /// Repositioning the underlying type does not seem to have any perceptible impact
@@ -4219,7 +4233,12 @@ fn merge_class_extends<'cx>(
         ),
         ClassExtends::ClassExplicitExtends(box (loc, t)) => {
             let reason_op = reason::mk_reason(RClassExtends, loc.dupe());
-            let t = specialize(cx, reason_op, merge_impl(env, cx, file, t, false, false));
+            let t = specialize(
+                cx,
+                reason_op,
+                merge_impl(env, cx, file, t, false, false),
+                AnnotationInferenceOperation::ClassExtends,
+            );
             let t = type_util::this_typeapp(t, this.dupe(), None, Some(loc.dupe()));
             let static_proto = type_util::class_type(t.dupe(), false, None);
             (t, static_proto)
@@ -4303,7 +4322,12 @@ fn merge_class_mixin<'cx>(
     match mixin {
         ClassMixins::ClassMixin(box (loc, t)) => {
             let reason_op = reason::mk_reason(RClassMixins, loc.dupe());
-            let t = specialize(cx, reason_op, merge_mixin_ref(cx, file, loc.dupe(), t));
+            let t = specialize(
+                cx,
+                reason_op,
+                merge_mixin_ref(cx, file, loc.dupe(), t),
+                AnnotationInferenceOperation::ClassMixins,
+            );
             type_util::this_typeapp(t, this, None, Some(loc.dupe()))
         }
         ClassMixins::ClassMixinApp(box (loc, t, targs)) => {

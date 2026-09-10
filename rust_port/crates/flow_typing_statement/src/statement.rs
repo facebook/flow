@@ -20681,6 +20681,7 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                             flow_typing_errors::error_message::EnumInvalidCheckData {
                                 loc: loc.dupe(),
                                 enum_reason: enum_reason.dupe(),
+                                enum_name: enum_info.enum_name().map(Dupe::dupe),
                                 example_member: example_member.dupe(),
                                 from_match: false,
                             },

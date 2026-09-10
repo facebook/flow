@@ -2255,6 +2255,7 @@ dependencies = [
  "flow_typing_key",
  "flow_typing_loc_env",
  "flow_typing_tvar",
+ "flow_typing_ty_normalizer",
  "flow_typing_type",
  "flow_typing_visitors",
  "flow_utils_concurrency",

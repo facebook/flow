@@ -27,6 +27,7 @@ use flow_type_sig::signature_error::SignatureError;
 use flow_typing_context::Context;
 use flow_typing_default::Default;
 use flow_typing_errors::error_message::EAbstractClassData;
+use flow_typing_errors::error_message::EAnnotationInferenceData;
 use flow_typing_errors::error_message::EAssignConstLikeBindingData;
 use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
@@ -137,6 +138,8 @@ use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
 use flow_typing_errors::error_message::EnumModificationData;
 use flow_typing_errors::error_message::EnumNonIdentifierMemberNameData;
 use flow_typing_errors::error_message::EnumNotAllCheckedData;
+use flow_typing_errors::error_message::EnumNotIterableData;
+use flow_typing_errors::error_message::EnumNotIterableForInData;
 use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
@@ -3415,6 +3418,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
                 reason,
                 enum_reason,
+                ..
             }) => {
                 format!(
                     "EEnumError (EnumInvalidObjectUtilType ({}) ({}))",
@@ -3425,6 +3429,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
                 reason,
                 enum_reason,
+                ..
             }) => {
                 format!(
                     "EEnumError (EnumInvalidObjectFunction ({}) ({}))",
@@ -3432,14 +3437,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     dump_reason(cx, enum_reason)
                 )
             }
-            EnumErrorKind::EnumNotIterable(reason) => {
+            EnumErrorKind::EnumNotIterable(box EnumNotIterableData { reason, .. }) => {
                 format!(
                     "EEnumError (EnumNotIterable ({} {:?}))",
                     string_of_aloc(None, &reason.loc),
                     reason.desc
                 )
             }
-            EnumErrorKind::EnumNotIterableForIn(reason) => format!(
+            EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData {
+                reason, ..
+            }) => format!(
                 "EEnumError (EnumNotIterableForIn ({}))",
                 dump_reason(cx, reason)
             ),
@@ -3500,6 +3507,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 enum_reason,
                 example_member,
                 from_match,
+                ..
             }) => {
                 let member_str = match example_member {
                     Some(m) => m.to_string(),
@@ -3804,12 +3812,19 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 err_str
             )
         }
-        ErrorMessage::EAnnotationInference(box (loc, reason_op, reason, _)) => {
+        ErrorMessage::EAnnotationInference(box EAnnotationInferenceData {
+            loc,
+            operation,
+            operation_loc: _,
+            target_loc,
+            target_desc,
+        }) => {
             format!(
-                "EAnnotationInference ({}) ({}) ({})",
+                "EAnnotationInference ({}) ({:?}) ({}) ({:?})",
                 string_of_aloc(None, loc),
-                dump_reason(cx, reason_op),
-                dump_reason(cx, reason)
+                operation,
+                string_of_aloc(None, target_loc),
+                target_desc,
             )
         }
         ErrorMessage::ETrivialRecursiveDefinition(reason) => {

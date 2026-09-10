@@ -35,6 +35,7 @@ use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::UnionEnum;
+use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDesc;
 use flow_typing_type::type_::union_rep::OptimizedError;
 use vec1::Vec1;
@@ -1328,6 +1329,7 @@ pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
 pub struct MessageCannotInstantiateObjectUtilTypeWithEnumData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
     pub enum_reason: VirtualReason<L>,
+    pub enum_name: Option<FlowSmolStr>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1367,9 +1369,10 @@ pub struct MessageCannotUseEnumMemberUsedAsTypeData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
-    pub reason_op: VirtualReason<L>,
-    pub reason: VirtualReason<L>,
-    pub suggestion: Option<FlowSmolStr>,
+    pub operation: AnnotationInferenceOperation,
+    pub operation_loc: L,
+    pub target_loc: L,
+    pub target_desc: Result<ALocTy, VirtualReasonDesc<L>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1433,12 +1436,6 @@ pub struct MessageIncompatibleTupleArityData<L: Dupe> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MessageIncompatibleImplicitReturnData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReasonDesc<L>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
     pub lower_loc: L,
     pub upper_loc: L,
@@ -1492,6 +1489,7 @@ pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidEnumMemberCheckData<L: Dupe> {
     pub enum_reason: VirtualReason<L>,
+    pub enum_name: Option<FlowSmolStr>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
 }
@@ -1741,11 +1739,6 @@ pub enum Message<L: Dupe> {
         kind: InvalidObjKey,
     },
 
-    MessageCannotAssignToOptionalTupleElement {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
-
     MessageCannotAssignToInvalidLHS,
 
     MessageCannotBuildTypedInterface(SignatureError<L>),
@@ -1757,6 +1750,7 @@ pub enum Message<L: Dupe> {
     MessageCannotCallObjectFunctionOnEnum {
         reason: VirtualReason<L>,
         enum_reason: VirtualReason<L>,
+        enum_name: Option<FlowSmolStr>,
     },
 
     MessageCannotCallReactComponent(VirtualReason<L>),
@@ -1819,9 +1813,15 @@ pub enum Message<L: Dupe> {
         Box<MessageCannotInstantiateObjectUtilTypeWithEnumData<L>>,
     ),
 
-    MessageCannotIterateEnum(VirtualReasonDesc<L>),
+    MessageCannotIterateEnum {
+        description: VirtualReasonDesc<L>,
+        enum_name: Option<FlowSmolStr>,
+    },
 
-    MessageCannotIterateEnumForIn(VirtualReason<L>),
+    MessageCannotIterateEnumForIn {
+        reason: VirtualReason<L>,
+        enum_name: Option<FlowSmolStr>,
+    },
 
     MessageCannotIterateWithForIn(VirtualReason<L>),
     MessageCannotMutateThisPrototype,
@@ -2074,8 +2074,6 @@ pub enum Message<L: Dupe> {
     },
 
     MessageIncompatibleTupleArity(Box<MessageIncompatibleTupleArityData<L>>),
-
-    MessageIncompatibleImplicitReturn(Box<MessageIncompatibleImplicitReturnData<L>>),
 
     MessageIncompatibleClassToObject {
         reason_class: VirtualReason<L>,

@@ -737,6 +737,13 @@ impl EnumInfo {
         Self(Rc::new(inner))
     }
 
+    pub fn enum_name(&self) -> Option<&FlowSmolStr> {
+        match self.deref() {
+            EnumInfoInner::ConcreteEnum(info) => Some(&info.enum_name),
+            EnumInfoInner::AbstractEnum { .. } => None,
+        }
+    }
+
     pub fn ptr_eq(&self, other: &EnumInfo) -> bool {
         Rc::ptr_eq(&self.0, &other.0)
     }
@@ -1062,8 +1069,6 @@ pub struct TupleElementCompatibilityData<L: Dupe + PartialEq + Eq + PartialOrd +
     pub n: i32,
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
-    pub lower_optional: bool,
-    pub upper_optional: bool,
 }
 
 #[derive(
@@ -1285,9 +1290,7 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         polarity: Polarity,
     },
     TupleElementCompatibility(Box<TupleElementCompatibilityData<L>>),
-    TupleAssignment {
-        upper_optional: bool,
-    },
+    TupleAssignment,
     TypeArgCompatibility(Box<TypeArgCompatibilityData<L>>),
     TypeParamBound {
         name: SubstName,
@@ -9791,12 +9794,66 @@ pub mod aconstraint {
 
     use super::*;
 
+    #[derive(
+        Debug,
+        Clone,
+        Dupe,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
+    pub enum AnnotationInferenceOperation {
+        ImportsAndExports,
+        CommonJSExports,
+        Inspection,
+        ImportTypeof(FlowSmolStr),
+        Export(Name),
+        ClassExtends,
+        ClassMixins,
+        TypeApplication,
+        ThisSpecialization,
+        TypeReference,
+        Property(Option<Name>),
+        ComputedProperty,
+        Enum,
+        Statics,
+        Exact,
+        ReactCheckComponentConfig,
+        ReadOnly,
+        Partial,
+        Required,
+        Spread,
+        Rest,
+        ReactConfig,
+        Object,
+        MappedType,
+        Prototype,
+        Mixins,
+        Arithmetic(FlowSmolStr),
+        UnaryPlus,
+        UnaryMinus,
+        BitwiseNot,
+        Update,
+        UnaryNot,
+        ObjectKeyMirror,
+        DeepReadOnly,
+        KeySet,
+        ToString,
+        Values,
+        ArrayRest,
+    }
+
     #[derive(Clone)]
     pub struct AnnotSpecializeTData {
         pub use_op: UseOp,
         pub reason: Reason,
         pub reason2: Reason,
         pub types: Option<Rc<[Type]>>,
+        pub operation: AnnotationInferenceOperation,
     }
 
     #[derive(Clone)]
@@ -10121,36 +10178,76 @@ pub mod aconstraint {
             }
         }
 
-        pub fn display_reason(&self) -> Reason {
-            use flow_common::reason::VirtualReasonDesc::*;
+        pub fn error_operation(&self) -> AnnotationInferenceOperation {
             match &**self {
-                OpInner::AnnotObjKitT(data) => {
-                    let desc = match &data.tool {
-                        object::Tool::MakeExact => RCustom("exact".into()),
-                        object::Tool::ReactCheckComponentConfig { .. } => {
-                            RCustom("react check component config".into())
-                        }
-                        object::Tool::ReadOnly => RCustom("readonly".into()),
-                        object::Tool::Partial => RCustom("partial".into()),
-                        object::Tool::Required => RCustom("required".into()),
-                        object::Tool::Spread { .. } => RCustom("spread".into()),
-                        object::Tool::Rest { .. } => RCustom("rest".into()),
-                        object::Tool::ReactConfig { .. } => RCustom("react config".into()),
-                        object::Tool::ObjectRep => RCustom("object".into()),
-                        object::Tool::ObjectMap { .. } => RCustom("mapped type".into()),
-                    };
-                    data.reason.dupe().replace_desc(desc)
+                OpInner::AnnotConcretizeForImportsExports(_, _) => {
+                    AnnotationInferenceOperation::ImportsAndExports
                 }
-                OpInner::AnnotGetStaticsT(r) => r.dupe().replace_desc(RCustom("statics".into())),
-                OpInner::AnnotMixinT(r) => r.dupe().replace_desc(RMixins),
-                OpInner::AnnotUnaryArithT { reason, .. } => reason.dupe().replace_desc(RUnaryMinus),
-                OpInner::AnnotNotT(r) => r.dupe().replace_desc(RUnaryNot),
-                OpInner::AnnotGetPropT(data) => data
-                    .reason
-                    .dupe()
-                    .replace_desc(RProperty(name_of_propref(&data.prop_ref))),
-                OpInner::AnnotObjRestT { reason, .. } => reason.dupe().replace_desc(RRest),
-                _ => self.reason(),
+                OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(_) => {
+                    AnnotationInferenceOperation::CommonJSExports
+                }
+                OpInner::AnnotConcretizeForInspection { .. } => {
+                    AnnotationInferenceOperation::Inspection
+                }
+                OpInner::AnnotImportTypeofT { name, .. } => {
+                    AnnotationInferenceOperation::ImportTypeof(name.dupe())
+                }
+                OpInner::AnnotAssertExportIsTypeT { name, .. } => {
+                    AnnotationInferenceOperation::Export(name.dupe())
+                }
+                OpInner::AnnotSpecializeT(data) => data.operation.dupe(),
+                OpInner::AnnotThisSpecializeT { .. } => {
+                    AnnotationInferenceOperation::ThisSpecialization
+                }
+                OpInner::AnnotUseTTypeT { .. } => AnnotationInferenceOperation::TypeReference,
+                OpInner::AnnotGetTypeFromNamespaceT(data) => {
+                    AnnotationInferenceOperation::Property(Some(data.prop_ref.1.dupe()))
+                }
+                OpInner::AnnotGetEnumT(_) => AnnotationInferenceOperation::Enum,
+                OpInner::AnnotGetPropT(data) => {
+                    AnnotationInferenceOperation::Property(name_of_propref(&data.prop_ref))
+                }
+                OpInner::AnnotGetElemT { .. } | OpInner::AnnotElemT { .. } => {
+                    AnnotationInferenceOperation::ComputedProperty
+                }
+                OpInner::AnnotGetStaticsT(_) => AnnotationInferenceOperation::Statics,
+                OpInner::AnnotLookupT(data) => {
+                    AnnotationInferenceOperation::Property(name_of_propref(&data.prop_ref))
+                }
+                OpInner::AnnotObjKitT(data) => match &data.tool {
+                    object::Tool::MakeExact => AnnotationInferenceOperation::Exact,
+                    object::Tool::ReactCheckComponentConfig { .. } => {
+                        AnnotationInferenceOperation::ReactCheckComponentConfig
+                    }
+                    object::Tool::ReadOnly => AnnotationInferenceOperation::ReadOnly,
+                    object::Tool::Partial => AnnotationInferenceOperation::Partial,
+                    object::Tool::Required => AnnotationInferenceOperation::Required,
+                    object::Tool::Spread { .. } => AnnotationInferenceOperation::Spread,
+                    object::Tool::Rest { .. } => AnnotationInferenceOperation::Rest,
+                    object::Tool::ReactConfig { .. } => AnnotationInferenceOperation::ReactConfig,
+                    object::Tool::ObjectRep => AnnotationInferenceOperation::Object,
+                    object::Tool::ObjectMap { .. } => AnnotationInferenceOperation::MappedType,
+                },
+                OpInner::AnnotObjTestProtoT(_) => AnnotationInferenceOperation::Prototype,
+                OpInner::AnnotMixinT(_) => AnnotationInferenceOperation::Mixins,
+                OpInner::AnnotArithT(data) => {
+                    AnnotationInferenceOperation::Arithmetic(data.kind.0.dupe())
+                }
+                OpInner::AnnotUnaryArithT { kind, .. } => match kind {
+                    UnaryArithKind::Plus => AnnotationInferenceOperation::UnaryPlus,
+                    UnaryArithKind::Minus => AnnotationInferenceOperation::UnaryMinus,
+                    UnaryArithKind::BitNot => AnnotationInferenceOperation::BitwiseNot,
+                    UnaryArithKind::Update => AnnotationInferenceOperation::Update,
+                },
+                OpInner::AnnotNotT(_) => AnnotationInferenceOperation::UnaryNot,
+                OpInner::AnnotObjKeyMirror(_) => AnnotationInferenceOperation::ObjectKeyMirror,
+                OpInner::AnnotDeepReadOnlyT(_) => AnnotationInferenceOperation::DeepReadOnly,
+                OpInner::AnnotGetKeysT(_) | OpInner::AnnotGetKeysDictKeyT(_) => {
+                    AnnotationInferenceOperation::KeySet
+                }
+                OpInner::AnnotToStringT { .. } => AnnotationInferenceOperation::ToString,
+                OpInner::AnnotObjRestT { .. } => AnnotationInferenceOperation::Rest,
+                OpInner::AnnotGetValuesT(_) => AnnotationInferenceOperation::Values,
             }
         }
     }
@@ -11219,7 +11316,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::ReactConfigCheck => "ReactConfigCheck",
         VirtualFrameUseOp::ReactGetConfig { .. } => "ReactGetConfig",
         VirtualFrameUseOp::TupleElementCompatibility(..) => "TupleElementCompatibility",
-        VirtualFrameUseOp::TupleAssignment { .. } => "TupleAssignment",
+        VirtualFrameUseOp::TupleAssignment => "TupleAssignment",
         VirtualFrameUseOp::TypeArgCompatibility(..) => "TypeArgCompatibility",
         VirtualFrameUseOp::TypeParamBound { .. } => "TypeParamBound",
         VirtualFrameUseOp::OpaqueTypeLowerBound { .. } => "OpaqueTypeLowerBound",

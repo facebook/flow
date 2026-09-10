@@ -17,6 +17,7 @@ use flow_common::reason::mk_id;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EAnnotationInferenceData;
 use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
@@ -50,6 +51,7 @@ use flow_typing_type::type_::aconstraint::AnnotGetTypeFromNamespaceTData;
 use flow_typing_type::type_::aconstraint::AnnotLookupTData;
 use flow_typing_type::type_::aconstraint::AnnotObjKitTData;
 use flow_typing_type::type_::aconstraint::AnnotSpecializeTData;
+use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::aconstraint::Op;
 use flow_typing_type::type_::aconstraint::OpInner;
 use flow_typing_type::type_::constraint::Constraints;
@@ -165,29 +167,37 @@ fn get_builtin_typeapp<'cx>(
 // The only kind of errors that are reported here are "unsupported" cases. These
 // are mostly cases that rely on subtyping, which is not implemented here; most
 // commonly evaluating call-like EvalTs and speculation.
-fn error_unsupported_reason(
-    suggestion: Option<FlowSmolStr>,
+fn error_unsupported_operation(
     cx: &Context,
     dst_cx: &Context,
-    reason: Reason,
-    reason_op: Reason,
+    target: &Type,
+    operation: AnnotationInferenceOperation,
+    operation_reason: Reason,
 ) -> Type {
-    let loc = reason_op.loc().dupe();
-    let msg =
-        ErrorMessage::EAnnotationInference(Box::new((loc, reason_op.dupe(), reason, suggestion)));
+    let target_reason = type_util::reason_of_t(target);
+    let target_loc = target_reason
+        .annot_loc()
+        .unwrap_or_else(|| target_reason.def_loc())
+        .dupe();
+    let genv = flow_typing_ty_normalizer::no_flow::mk_default_genv(None, cx);
+    let target_desc = flow_typing_ty_normalizer::no_flow::type_to_desc_for_errors(&genv, target);
+    let operation_loc = operation_reason
+        .annot_loc()
+        .unwrap_or_else(|| operation_reason.def_loc())
+        .dupe();
+    let msg = ErrorMessage::EAnnotationInference(Box::new(EAnnotationInferenceData {
+        loc: operation_reason.loc().dupe(),
+        operation,
+        operation_loc,
+        target_loc,
+        target_desc,
+    }));
     flow_js_utils::add_annot_inference_error(cx, dst_cx, msg);
-    type_::any_t::error(reason_op)
+    type_::any_t::error(operation_reason)
 }
 
-fn error_unsupported<'cx>(
-    suggestion: Option<FlowSmolStr>,
-    cx: &Context,
-    dst_cx: &Context,
-    reason: Reason,
-    op: &Op<'cx>,
-) -> Type {
-    let reason_op = op.display_reason();
-    error_unsupported_reason(suggestion, cx, dst_cx, reason, reason_op)
+fn error_unsupported<'cx>(cx: &Context, dst_cx: &Context, target: &Type, op: &Op<'cx>) -> Type {
+    error_unsupported_operation(cx, dst_cx, target, op.error_operation(), op.reason())
 }
 
 pub(crate) fn error_recursive(cx: &Context, dst_cx: &Context, reason: &Reason) -> Type {
@@ -261,7 +271,7 @@ fn error_internal_reason(cx: &Context, dst_cx: &Context, msg: &str, reason_op: R
 }
 
 fn error_internal<'cx>(cx: &Context, dst_cx: &Context, msg: &str, op: &Op<'cx>) -> Type {
-    let reason_op = op.display_reason();
+    let reason_op = op.reason();
     error_internal_reason(cx, dst_cx, msg, reason_op)
 }
 
@@ -1017,7 +1027,7 @@ pub fn elab_t<'cx>(
                     );
                     elab_t(cx, env, dst_cx, None, t, op)
                 }
-                _ => error_unsupported(None, cx, dst_cx, reason, &op),
+                _ => error_unsupported(cx, dst_cx, &t, &op),
             }
         }
         (TypeInner::OpenT(tvar), OpInner::AnnotConcretizeForInspection { .. }) => {
@@ -1091,9 +1101,9 @@ fn elab_t_concrete<'cx>(
         // UseT TypeT (runtime types derive static types through annotation)
         // *******************************************************************
         // First handle catch-all cases of subtyping_kit.rs
-        (TypeInner::MaybeT(reason, _), OpInner::AnnotUseTTypeT { .. })
-        | (TypeInner::OptionalT { reason, .. }, OpInner::AnnotUseTTypeT { .. }) => {
-            error_unsupported(None, cx, dst_cx, reason.dupe(), &op)
+        (TypeInner::MaybeT(_, _), OpInner::AnnotUseTTypeT { .. })
+        | (TypeInner::OptionalT { .. }, OpInner::AnnotUseTTypeT { .. }) => {
+            error_unsupported(cx, dst_cx, &t, &op)
         }
         (
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
@@ -1113,6 +1123,7 @@ fn elab_t_concrete<'cx>(
                 reason_op,
                 reason_tapp.dupe(),
                 targs.clone(),
+                op.error_operation(),
             );
             let t = this_specialize(cx, env, reason_tapp, this_t.dupe(), tc);
             elab_t(cx, env, dst_cx, Some(seen), t, op)
@@ -1139,6 +1150,7 @@ fn elab_t_concrete<'cx>(
                 *from_value,
                 type_.dupe(),
                 targs.clone(),
+                op.error_operation(),
             );
             elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
@@ -1347,9 +1359,9 @@ fn elab_t_concrete<'cx>(
         // **********************************
         // Wildcards (idx, maybe, optional)
         // **********************************
-        (TypeInner::MaybeT(reason, _), _) | (TypeInner::OptionalT { reason, .. }, _) => {
+        (TypeInner::MaybeT(_, _), _) | (TypeInner::OptionalT { .. }, _) => {
             // These are rare in practice. Will consider adding support if we hit this error case.
-            error_unsupported(None, cx, dst_cx, reason.dupe(), &op)
+            error_unsupported(cx, dst_cx, &t, &op)
         }
         // *******************
         //  Type applications
@@ -1372,6 +1384,7 @@ fn elab_t_concrete<'cx>(
                 reason_op,
                 reason_tapp.dupe(),
                 targs.clone(),
+                op.error_operation(),
             );
             let t = this_specialize(cx, env, reason_tapp, this_t.dupe(), tc);
             elab_t(cx, env, dst_cx, Some(seen), t, op)
@@ -1397,6 +1410,7 @@ fn elab_t_concrete<'cx>(
                 *from_value,
                 type_.dupe(),
                 targs.clone(),
+                op.error_operation(),
             );
             elab_t(cx, env, dst_cx, Some(seen), t, op)
         }
@@ -1570,9 +1584,7 @@ fn elab_t_concrete<'cx>(
             data.tool.clone(),
             t,
         ),
-        (TypeInner::IntersectionT(reason, _), _) => {
-            error_unsupported(None, cx, dst_cx, reason.dupe(), &op)
-        }
+        (TypeInner::IntersectionT(_, _), _) => error_unsupported(cx, dst_cx, &t, &op),
         // *************************
         //  ConcretizeForInspection
         // *************************
@@ -1695,13 +1707,7 @@ fn elab_t_concrete<'cx>(
                         {
                             make_mixin_instance(inst_r, i, *is_this, subst_name, class_r, r)
                         } else {
-                            error_unsupported(
-                                None,
-                                cx,
-                                dst_cx,
-                                type_util::reason_of_t(&t).dupe(),
-                                &op,
-                            )
+                            error_unsupported(cx, dst_cx, &t, &op)
                         }
                     }
                     DefTInner::PolyT(box PolyTData {
@@ -1732,39 +1738,19 @@ fn elab_t_concrete<'cx>(
                                         *strictness_kind,
                                     )
                                 } else {
-                                    error_unsupported(
-                                        None,
-                                        cx,
-                                        dst_cx,
-                                        type_util::reason_of_t(&t).dupe(),
-                                        &op,
-                                    )
+                                    error_unsupported(cx, dst_cx, &t, &op)
                                 }
                             } else {
-                                error_unsupported(
-                                    None,
-                                    cx,
-                                    dst_cx,
-                                    type_util::reason_of_t(&t).dupe(),
-                                    &op,
-                                )
+                                error_unsupported(cx, dst_cx, &t, &op)
                             }
                         } else {
-                            error_unsupported(
-                                None,
-                                cx,
-                                dst_cx,
-                                type_util::reason_of_t(&t).dupe(),
-                                &op,
-                            )
+                            error_unsupported(cx, dst_cx, &t, &op)
                         }
                     }
-                    _ => {
-                        error_unsupported(None, cx, dst_cx, type_util::reason_of_t(&t).dupe(), &op)
-                    }
+                    _ => error_unsupported(cx, dst_cx, &t, &op),
                 }
             } else {
-                error_unsupported(None, cx, dst_cx, type_util::reason_of_t(&t).dupe(), &op)
+                error_unsupported(cx, dst_cx, &t, &op)
             }
         }
 
@@ -2123,9 +2109,7 @@ fn elab_t_concrete<'cx>(
                                 ),
                             }
                         }
-                        type_::PropRef::Computed(_) => {
-                            error_unsupported(None, cx, dst_cx, _lreason.dupe(), &op)
-                        }
+                        type_::PropRef::Computed(_) => error_unsupported(cx, dst_cx, &t, &op),
                     }
                 }
                 TypeInner::DefT(_, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
@@ -2340,12 +2324,10 @@ fn elab_t_concrete<'cx>(
                     // Annotation inference is never speculative
                     .unwrap()
                 }
-                TypeInner::DefT(reason, def_t)
-                    if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
-                {
+                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
                     // This implementation relies on unsealed objects and set-prop logic that is
                     // hard to implement in annotation inference.
-                    error_unsupported(None, cx, dst_cx, reason.dupe(), &op)
+                    error_unsupported(cx, dst_cx, &t, &op)
                 }
                 TypeInner::ObjProtoT(_) => flow_typing_flow_common::obj_type::mk_with_proto(
                     cx,
@@ -2495,9 +2477,7 @@ fn elab_t_concrete<'cx>(
                             // Annotation inference is never speculative
                             .unwrap()
                         }
-                        type_::PropRef::Computed(_) => {
-                            error_unsupported(None, cx, dst_cx, reason_instance.dupe(), &op)
-                        }
+                        type_::PropRef::Computed(_) => error_unsupported(cx, dst_cx, &t, &op),
                     }
                 }
                 TypeInner::DefT(reason_obj, def_t) if let DefTInner::ObjT(o) = def_t.deref() => {
@@ -2773,9 +2753,7 @@ fn elab_t_concrete<'cx>(
         {
             flow_js_utils::obj_key_mirror(cx, env, o, reason_op)
         }
-        (_, OpInner::AnnotObjKeyMirror(_)) => {
-            error_unsupported(None, cx, dst_cx, type_util::reason_of_t(&t).dupe(), &op)
-        }
+        (_, OpInner::AnnotObjKeyMirror(_)) => error_unsupported(cx, dst_cx, &t, &op),
         (TypeInner::DefT(_, def_t), OpInner::AnnotGetEnumT(reason))
             if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
         {
@@ -2787,9 +2765,7 @@ fn elab_t_concrete<'cx>(
                 }),
             ))
         }
-        (_, OpInner::AnnotGetEnumT(_)) => {
-            error_unsupported(None, cx, dst_cx, type_util::reason_of_t(&t).dupe(), &op)
-        }
+        (_, OpInner::AnnotGetEnumT(_)) => error_unsupported(cx, dst_cx, &t, &op),
         // *********************
         //  Opaque types (pt 2)
         // *********************
@@ -3119,6 +3095,7 @@ pub fn specialize<'cx>(
     reason_op: Reason,
     reason_tapp: Reason,
     ts: Option<Rc<[Type]>>,
+    operation: AnnotationInferenceOperation,
 ) -> Type {
     specialize_with_env(
         cx,
@@ -3128,6 +3105,7 @@ pub fn specialize<'cx>(
         reason_op,
         reason_tapp,
         ts,
+        operation,
     )
 }
 
@@ -3139,6 +3117,7 @@ fn specialize_with_env<'cx>(
     reason_op: Reason,
     reason_tapp: Reason,
     ts: Option<Rc<[Type]>>,
+    operation: AnnotationInferenceOperation,
 ) -> Type {
     elab_t(
         cx,
@@ -3151,6 +3130,7 @@ fn specialize_with_env<'cx>(
             reason: reason_op,
             reason2: reason_tapp,
             types: ts,
+            operation,
         }))),
     )
 }
@@ -3182,6 +3162,7 @@ fn specialize_class<'cx>(
     reason_op: Reason,
     reason_tapp: Reason,
     ts: Option<Rc<[Type]>>,
+    operation: AnnotationInferenceOperation,
 ) -> Type {
     match ts {
         None => c,
@@ -3193,6 +3174,7 @@ fn specialize_class<'cx>(
             reason_op,
             reason_tapp,
             Some(ts),
+            operation,
         ),
     }
 }
@@ -3305,6 +3287,7 @@ fn mk_typeapp_instance<'cx>(
     from_value: bool,
     c: Type,
     ts: Rc<[Type]>,
+    operation: AnnotationInferenceOperation,
 ) -> Type {
     let t = specialize_with_env(
         cx,
@@ -3314,6 +3297,7 @@ fn mk_typeapp_instance<'cx>(
         reason_op,
         reason_tapp.dupe(),
         Some(ts),
+        operation,
     );
     if from_value {
         type_util::mod_reason_of_t(&|_| reason_tapp.dupe(), &t)
@@ -4195,11 +4179,11 @@ fn obj_rest_with_env<'cx>(
 }
 
 pub fn arr_rest<'cx>(cx: &Context<'cx>, _use_op: UseOp, reason: Reason, _i: i32, t: Type) -> Type {
-    error_unsupported_reason(
-        None,
+    error_unsupported_operation(
         cx,
         &effective_dst_cx(cx),
-        type_util::reason_of_t(&t).dupe(),
+        &t,
+        AnnotationInferenceOperation::ArrayRest,
         reason,
     )
 }

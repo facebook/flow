@@ -370,6 +370,7 @@ pub mod pattern_union_builder {
                                     Box::new(EnumInvalidCheckData {
                                         loc: loc.dupe(),
                                         enum_reason: reason_of_t(t).dupe(),
+                                        enum_name: Some(enum_info.enum_name.dupe()),
                                         example_member,
                                         from_match: true,
                                     }),

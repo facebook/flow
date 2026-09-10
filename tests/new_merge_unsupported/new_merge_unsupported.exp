@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------- ops_on_eval_conditional.js:5:25
 
-Cannot use class extends on conditional type [1] in an export position. Please provide an (alternative) annotation for
-class extends [2]. [invalid-exported-annotation]
+Cannot use class extends on `T` [1] in an export position. Please provide an (alternative) annotation for class
+extends [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:5:25
    5| export class x1 extends (0 as any as T) {}
@@ -15,8 +15,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- ops_on_eval_conditional.js:8:19
 
-Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
-property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on `T` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:8:19
    8| export const x2 = t.f;
@@ -30,8 +30,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:11:19
 
-Cannot use computed property on conditional type [1] in an export position. Please provide an (alternative) annotation
-for computed property [2]. [invalid-exported-annotation]
+Cannot use computed property on `T` [1] in an export position. Please provide an (alternative) annotation for computed
+property [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:11:19
    11| export const x3 = t['' as string];
@@ -45,8 +45,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:14:19
 
-Cannot use spread on conditional type [1] in an export position. Please provide an (alternative) annotation for
-spread [2]. [invalid-exported-annotation]
+Cannot use spread on `T` [1] in an export position. Please provide an (alternative) annotation for spread [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:14:19
    14| export const x4 = { ...t };
@@ -60,8 +60,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:17:19
 
-Cannot use exact on conditional type [1] in an export position. Please provide an (alternative) annotation for
-exact [2]. [invalid-exported-annotation]
+Cannot use exact on `T` [1] in an export position. Please provide an (alternative) annotation for exact [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:17:19
    17| declare const y5: $Exact<T>;
@@ -75,8 +75,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:21:19
 
-Cannot use statics on conditional type [1] in an export position. Please provide an (alternative) annotation for
-statics [2]. [invalid-exported-annotation]
+Cannot use statics on `T` [1] in an export position. Please provide an (alternative) annotation for statics [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:21:19
    21| declare const y6: Class<T>;
@@ -90,8 +90,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:27:19
 
-Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
-property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on `T` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:27:19
    27| export const x7 = y7.f;
@@ -105,8 +105,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:30:39
 
-Cannot use prototype on conditional type [1] in an export position. Please provide an (alternative) annotation for
-prototype [2]. [invalid-exported-annotation]
+Cannot use prototype on `T` [1] in an export position. Please provide an (alternative) annotation for prototype [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:30:39
    30| declare export const x8: { __proto__: T };
@@ -120,8 +120,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:33:32
 
-Cannot use mixins on conditional type [1] in an export position. Please provide an (alternative) annotation for
-mixins [2]. [invalid-exported-annotation]
+Cannot use mixins on `T` [1] in an export position. Please provide an (alternative) annotation for mixins [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:33:32
    33| declare export class x9 mixins t {}
@@ -135,8 +135,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:36:20
 
-Cannot use unary minus on conditional type [1] in an export position. Please provide an (alternative) annotation for
-unary minus [2]. [invalid-exported-annotation]
+Cannot use unary minus on `T` [1] in an export position. Please provide an (alternative) annotation for unary minus [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:36:20
    36| export const x10 = -t;
@@ -150,8 +150,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:39:20
 
-Cannot use unary not on conditional type [1] in an export position. Please provide an (alternative) annotation for unary
-not [2]. [invalid-exported-annotation]
+Cannot use unary not on `T` [1] in an export position. Please provide an (alternative) annotation for unary not [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:39:20
    39| export const x11 = !t;
@@ -165,7 +165,7 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:42:20
 
-Cannot use `$KeyMirror` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+Cannot use `$KeyMirror` on `T` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
    ops_on_eval_conditional.js:42:20
@@ -180,8 +180,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_conditional.js:46:20
 
-Cannot use key set on conditional type [1] in an export position. Please provide an (alternative) annotation for key
-set [2]. [invalid-exported-annotation]
+Cannot use key set on `T` [1] in an export position. Please provide an (alternative) annotation for key set [2].
+[invalid-exported-annotation]
 
    ops_on_eval_conditional.js:46:20
    46| declare const y13: keyof T;
@@ -195,8 +195,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:5:19
 
-Cannot use property `f` on object type [1] in an export position. Please provide an (alternative) annotation for
-property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on `T` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:5:19
    5| export const x2 = t.f;
@@ -210,8 +210,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:8:19
 
-Cannot use computed property on object type [1] in an export position. Please provide an (alternative) annotation for
-computed property [2]. [invalid-exported-annotation]
+Cannot use computed property on `T` [1] in an export position. Please provide an (alternative) annotation for computed
+property [2]. [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:8:19
    8| export const x3 = t['' as string]; // error: unsafe string key access
@@ -239,7 +239,7 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:11:19
 
-Cannot use spread on object type [1] in an export position. Please provide an (alternative) annotation for spread [2].
+Cannot use spread on `T` [1] in an export position. Please provide an (alternative) annotation for spread [2].
 [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:11:19
@@ -254,7 +254,7 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:14:19
 
-Cannot use exact on object type [1] in an export position. Please provide an (alternative) annotation for exact [2].
+Cannot use exact on `T` [1] in an export position. Please provide an (alternative) annotation for exact [2].
 [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:14:19
@@ -269,8 +269,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:18:39
 
-Cannot use prototype on object type [1] in an export position. Please provide an (alternative) annotation for
-prototype [2]. [invalid-exported-annotation]
+Cannot use prototype on `T` [1] in an export position. Please provide an (alternative) annotation for prototype [2].
+[invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:18:39
    18| declare export const x8: { __proto__: T };
@@ -284,8 +284,8 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:21:20
 
-Cannot use unary not on object type [1] in an export position. Please provide an (alternative) annotation for unary
-not [2]. [invalid-exported-annotation]
+Cannot use unary not on `T` [1] in an export position. Please provide an (alternative) annotation for unary not [2].
+[invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:21:20
    21| export const x11 = !t;
@@ -299,7 +299,7 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:24:20
 
-Cannot use `$KeyMirror` on object type [1] in an export position. Please provide an (alternative) annotation for
+Cannot use `$KeyMirror` on `T` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:24:20
@@ -314,7 +314,7 @@ References:
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:28:20
 
-Cannot use key set on object type [1] in an export position. Please provide an (alternative) annotation for key set [2].
+Cannot use key set on `T` [1] in an export position. Please provide an (alternative) annotation for key set [2].
 [invalid-exported-annotation]
 
    ops_on_eval_mapped_type.js:28:20
@@ -344,8 +344,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:11:25
 
-Cannot use class extends on intersection type [1] in an export position. Please provide an (alternative) annotation for
-class extends [2]. [invalid-exported-annotation]
+Cannot use class extends on `T` [1] in an export position. Please provide an (alternative) annotation for class
+extends [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:11:25
    11| export class x1 extends (0 as any as T) {}
@@ -359,8 +359,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:14:19
 
-Cannot use property `f` on intersection type [1] in an export position. Please provide an (alternative) annotation for
-property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on `T` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:14:19
    14| export const x2 = t.f;
@@ -396,8 +396,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
 
-Cannot use computed property on intersection type [1] in an export position. Please provide an (alternative) annotation
-for computed property [2]. [invalid-exported-annotation]
+Cannot use computed property on `T` [1] in an export position. Please provide an (alternative) annotation for computed
+property [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:17:19
    17| export const x3 = t['' as string];
@@ -411,8 +411,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:23:19
 
-Cannot use statics on intersection type [1] in an export position. Please provide an (alternative) annotation for
-statics [2]. [invalid-exported-annotation]
+Cannot use statics on `C & D` [1] in an export position. Please provide an (alternative) annotation for statics [2].
+[invalid-exported-annotation]
 
    ops_on_intersection.js:23:19
    23| declare const y6: Class<C & D>;
@@ -426,8 +426,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:27:25
 
-Cannot use class extends on intersection type [1] in an export position. Please provide an (alternative) annotation for
-class extends [2]. [invalid-exported-annotation]
+Cannot use class extends on `T` [1] in an export position. Please provide an (alternative) annotation for class
+extends [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:27:25
    27| export class c7 extends (0 as any as T) {}
@@ -441,8 +441,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:32:39
 
-Cannot use prototype on intersection type [1] in an export position. Please provide an (alternative) annotation for
-prototype [2]. [invalid-exported-annotation]
+Cannot use prototype on `T` [1] in an export position. Please provide an (alternative) annotation for prototype [2].
+[invalid-exported-annotation]
 
    ops_on_intersection.js:32:39
    32| declare export const x8: { __proto__: T };
@@ -456,8 +456,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:35:32
 
-Cannot use mixins on intersection type [1] in an export position. Please provide an (alternative) annotation for
-mixins [2]. [invalid-exported-annotation]
+Cannot use mixins on `T` [1] in an export position. Please provide an (alternative) annotation for mixins [2].
+[invalid-exported-annotation]
 
    ops_on_intersection.js:35:32
    35| declare export class x9 mixins t {}
@@ -471,8 +471,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:38:20
 
-Cannot use unary minus on intersection type [1] in an export position. Please provide an (alternative) annotation for
-unary minus [2]. [invalid-exported-annotation]
+Cannot use unary minus on `number` [1] in an export position. Please provide an (alternative) annotation for unary
+minus [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:38:20
    38| export const x10 = -n;
@@ -486,8 +486,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:41:20
 
-Cannot use unary not on intersection type [1] in an export position. Please provide an (alternative) annotation for
-unary not [2]. [invalid-exported-annotation]
+Cannot use unary not on `number` [1] in an export position. Please provide an (alternative) annotation for unary
+not [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:41:20
    41| export const x11 = !n;
@@ -501,7 +501,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:44:20
 
-Cannot use `$KeyMirror` on intersection type [1] in an export position. Please provide an (alternative) annotation for
+Cannot use `$KeyMirror` on `S` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
    ops_on_intersection.js:44:20
@@ -516,8 +516,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:48:20
 
-Cannot use key set on intersection type [1] in an export position. Please provide an (alternative) annotation for key
-set [2]. [invalid-exported-annotation]
+Cannot use key set on `T` [1] in an export position. Please provide an (alternative) annotation for key set [2].
+[invalid-exported-annotation]
 
    ops_on_intersection.js:48:20
    48| declare const y13: keyof T;
@@ -531,8 +531,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:10:25
 
-Cannot use class extends on conditional type [1] in an export position. Please provide an (alternative) annotation for
-class extends [2]. [invalid-exported-annotation]
+Cannot use class extends on `T` [1] in an export position. Please provide an (alternative) annotation for class
+extends [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:10:25
    10| export class x1 extends (0 as any as T) {}
@@ -560,8 +560,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:13:19
 
-Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
-property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on `T` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:13:19
    13| export const x2 = t.f;
@@ -575,8 +575,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:19
 
-Cannot use computed property on conditional type [1] in an export position. Please provide an (alternative) annotation
-for computed property [2]. [invalid-exported-annotation]
+Cannot use computed property on `T` [1] in an export position. Please provide an (alternative) annotation for computed
+property [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:16:19
    16| export const x3 = t['' as string];
@@ -604,8 +604,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:19:19
 
-Cannot use spread on conditional type [1] in an export position. Please provide an (alternative) annotation for
-spread [2]. [invalid-exported-annotation]
+Cannot use spread on `T` [1] in an export position. Please provide an (alternative) annotation for spread [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:19:19
    19| export const x4 = { ...t };
@@ -619,8 +619,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:22:19
 
-Cannot use exact on conditional type [1] in an export position. Please provide an (alternative) annotation for
-exact [2]. [invalid-exported-annotation]
+Cannot use exact on `T` [1] in an export position. Please provide an (alternative) annotation for exact [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:22:19
    22| declare const y5: $Exact<T>;
@@ -634,8 +634,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:26:19
 
-Cannot use statics on conditional type [1] in an export position. Please provide an (alternative) annotation for
-statics [2]. [invalid-exported-annotation]
+Cannot use statics on `T` [1] in an export position. Please provide an (alternative) annotation for statics [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:26:19
    26| declare const y6: Class<T>;
@@ -677,8 +677,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:32:19
 
-Cannot use property `f` on conditional type [1] in an export position. Please provide an (alternative) annotation for
-property `f` [2]. [invalid-exported-annotation]
+Cannot use property `f` on `T` [1] in an export position. Please provide an (alternative) annotation for property
+`f` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:32:19
    32| export const x7 = y7.f;
@@ -692,8 +692,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:35:39
 
-Cannot use prototype on conditional type [1] in an export position. Please provide an (alternative) annotation for
-prototype [2]. [invalid-exported-annotation]
+Cannot use prototype on `T` [1] in an export position. Please provide an (alternative) annotation for prototype [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:35:39
    35| declare export const x8: { __proto__: T };
@@ -707,8 +707,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:38:32
 
-Cannot use mixins on conditional type [1] in an export position. Please provide an (alternative) annotation for
-mixins [2]. [invalid-exported-annotation]
+Cannot use mixins on `T` [1] in an export position. Please provide an (alternative) annotation for mixins [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:38:32
    38| declare export class x9 mixins t {}
@@ -736,8 +736,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:20
 
-Cannot use unary minus on conditional type [1] in an export position. Please provide an (alternative) annotation for
-unary minus [2]. [invalid-exported-annotation]
+Cannot use unary minus on `T` [1] in an export position. Please provide an (alternative) annotation for unary minus [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:41:20
    41| export const x10 = -t;
@@ -765,8 +765,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:44:20
 
-Cannot use unary not on conditional type [1] in an export position. Please provide an (alternative) annotation for unary
-not [2]. [invalid-exported-annotation]
+Cannot use unary not on `T` [1] in an export position. Please provide an (alternative) annotation for unary not [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:44:20
    44| export const x11 = !t;
@@ -780,7 +780,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:47:20
 
-Cannot use `$KeyMirror` on conditional type [1] in an export position. Please provide an (alternative) annotation for
+Cannot use `$KeyMirror` on `T` [1] in an export position. Please provide an (alternative) annotation for
 `$KeyMirror` [2]. [invalid-exported-annotation]
 
    ops_on_react_config.js:47:20
@@ -795,8 +795,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:51:20
 
-Cannot use key set on conditional type [1] in an export position. Please provide an (alternative) annotation for key
-set [2]. [invalid-exported-annotation]
+Cannot use key set on `T` [1] in an export position. Please provide an (alternative) annotation for key set [2].
+[invalid-exported-annotation]
 
    ops_on_react_config.js:51:20
    51| declare const y13: keyof T;

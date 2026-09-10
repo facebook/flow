@@ -7659,9 +7659,7 @@ pub fn array_elem_check<'cx>(
                                                 t,
                                                 VirtualUseOp::Frame(
                                                     std::sync::Arc::new(
-                                                        VirtualFrameUseOp::TupleAssignment {
-                                                            upper_optional: *optional,
-                                                        },
+                                                        VirtualFrameUseOp::TupleAssignment,
                                                     ),
                                                     std::sync::Arc::new(use_op),
                                                 ),

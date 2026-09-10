@@ -29,6 +29,8 @@ use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::EnumNotIterableData;
+use flow_typing_errors::error_message::EnumNotIterableForInData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InvalidThisArgKind;
@@ -2638,13 +2640,16 @@ pub mod type_assertions {
                             Ok(())
                         }
                         TypeInner::DefT(enum_reason, def_t)
-                            if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
+                            if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
                         {
                             flow_js_utils::add_output_with_env(
                                 cx,
                                 env,
                                 ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
-                                    enum_reason.dupe(),
+                                    Box::new(EnumNotIterableForInData {
+                                        reason: enum_reason.dupe(),
+                                        enum_name: enum_info.enum_name().map(Dupe::dupe),
+                                    }),
                                 )),
                             )
                         }
@@ -2855,15 +2860,18 @@ pub mod type_assertions {
         for ti in &ts {
             match ti.deref() {
                 TypeInner::DefT(enum_reason, def_t)
-                    if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
+                    if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
                 {
                     flow_js_utils::flow_js_result_to_job_error(
                         flow_js_utils::add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(
-                                enum_reason.to_error_reference(),
-                            )),
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(Box::new(
+                                EnumNotIterableData {
+                                    reason: enum_reason.to_error_reference(),
+                                    enum_name: enum_info.enum_name().map(Dupe::dupe),
+                                },
+                            ))),
                         ),
                     )?;
                     let any = type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe());

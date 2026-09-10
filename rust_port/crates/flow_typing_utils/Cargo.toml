@@ -29,6 +29,7 @@ flow_typing_implicit_instantiation_check = { path = "../flow_typing_implicit_ins
 flow_typing_key = { path = "../flow_typing_key" }
 flow_typing_loc_env = { path = "../flow_typing_loc_env" }
 flow_typing_tvar = { path = "../flow_typing_tvar" }
+flow_typing_ty_normalizer = { path = "../flow_typing_ty_normalizer" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_visitors = { path = "../flow_typing_visitors" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }

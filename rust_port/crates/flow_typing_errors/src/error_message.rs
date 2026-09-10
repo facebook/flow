@@ -20,7 +20,6 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::is_scalar_reason;
 use flow_common::refinement_invalidation;
 use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ErrorKind;
@@ -53,6 +52,7 @@ use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::VirtualUseOp;
+use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::fold_virtual_use_op;
 use flow_typing_type::type_::type_or_type_desc;
 pub use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDesc;
@@ -338,6 +338,7 @@ pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq +
 pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: ErrorReference<L>,
     pub enum_reason: VirtualReason<L>,
+    pub enum_name: Option<FlowSmolStr>,
 }
 
 #[derive(
@@ -354,6 +355,39 @@ pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq 
 pub struct EnumInvalidObjectFunctionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: VirtualReason<L>,
     pub enum_reason: VirtualReason<L>,
+    pub enum_name: Option<FlowSmolStr>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EnumNotIterableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: ErrorReference<L>,
+    pub enum_name: Option<FlowSmolStr>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EnumNotIterableForInData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub reason: VirtualReason<L>,
+    pub enum_name: Option<FlowSmolStr>,
 }
 
 #[derive(
@@ -438,6 +472,7 @@ pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub enum_reason: VirtualReason<L>,
+    pub enum_name: Option<FlowSmolStr>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
 }
@@ -702,8 +737,8 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EnumMemberDuplicateValue(Box<EnumMemberDuplicateValueData<L>>),
     EnumInvalidObjectUtilType(Box<EnumInvalidObjectUtilTypeData<L>>),
     EnumInvalidObjectFunction(Box<EnumInvalidObjectFunctionData<L>>),
-    EnumNotIterable(ErrorReference<L>),
-    EnumNotIterableForIn(VirtualReason<L>),
+    EnumNotIterable(Box<EnumNotIterableData<L>>),
+    EnumNotIterableForIn(Box<EnumNotIterableForInData<L>>),
     EnumMemberAlreadyChecked(Box<EnumMemberAlreadyCheckedData<L>>),
     EnumAllMembersAlreadyChecked(Box<EnumAllMembersAlreadyCheckedData<L>>),
     EnumNotAllChecked(Box<EnumNotAllCheckedData<L>>),
@@ -972,6 +1007,52 @@ pub struct EIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub lower: (VirtualReason<L>, Option<LowerKind>),
     pub upper: IncompatibleUpperData<L>,
     pub use_op: Option<VirtualUseOp<L>>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct EAnnotationInferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub operation: AnnotationInferenceOperation,
+    pub operation_loc: L,
+    pub target_loc: L,
+    pub target_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+}
+
+// The normalized target type is presentation-only, so it does not affect error identity.
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EAnnotationInferenceData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.loc == other.loc
+            && self.operation == other.operation
+            && self.operation_loc == other.operation_loc
+            && self.target_loc == other.target_loc
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for EAnnotationInferenceData<L> {}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EAnnotationInferenceData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.loc.hash(state);
+        self.operation.hash(state);
+        self.operation_loc.hash(state);
+        self.target_loc.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for EAnnotationInferenceData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EAnnotationInferenceData<L> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.loc
+            .cmp(&other.loc)
+            .then_with(|| self.operation.cmp(&other.operation))
+            .then_with(|| self.operation_loc.cmp(&other.operation_loc))
+            .then_with(|| self.target_loc.cmp(&other.target_loc))
+    }
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2972,7 +3053,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidGraphQL(Box<(L, GraphqlError)>),
 
-    EAnnotationInference(Box<(L, VirtualReason<L>, VirtualReason<L>, Option<FlowSmolStr>)>),
+    EAnnotationInference(Box<EAnnotationInferenceData<L>>),
 
     ETrivialRecursiveDefinition(ErrorReference<L>),
 
@@ -4528,19 +4609,33 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
                         reason,
                         enum_reason,
+                        enum_name,
                     }) => EnumInvalidObjectUtilType(Box::new(EnumInvalidObjectUtilTypeData {
                         reason: map_error_ref(reason),
                         enum_reason: map_reason(enum_reason),
+                        enum_name,
                     })),
                     EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
                         reason,
                         enum_reason,
+                        enum_name,
                     }) => EnumInvalidObjectFunction(Box::new(EnumInvalidObjectFunctionData {
                         reason: map_reason(reason),
                         enum_reason: map_reason(enum_reason),
+                        enum_name,
                     })),
-                    EnumNotIterable(reason) => EnumNotIterable(map_error_ref(reason)),
-                    EnumNotIterableForIn(reason) => EnumNotIterableForIn(map_reason(reason)),
+                    EnumNotIterable(box EnumNotIterableData { reason, enum_name }) => {
+                        EnumNotIterable(Box::new(EnumNotIterableData {
+                            reason: map_error_ref(reason),
+                            enum_name,
+                        }))
+                    }
+                    EnumNotIterableForIn(box EnumNotIterableForInData { reason, enum_name }) => {
+                        EnumNotIterableForIn(Box::new(EnumNotIterableForInData {
+                            reason: map_reason(reason),
+                            enum_name,
+                        }))
+                    }
                     EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
                         case_test_loc,
                         prev_check_loc,
@@ -4582,11 +4677,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumInvalidCheck(box EnumInvalidCheckData {
                         loc,
                         enum_reason,
+                        enum_name,
                         example_member,
                         from_match,
                     }) => EnumInvalidCheck(Box::new(EnumInvalidCheckData {
                         loc: f(loc),
                         enum_reason: map_reason(enum_reason),
+                        enum_name,
                         example_member,
                         from_match,
                     })),
@@ -5094,9 +5191,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidGraphQL(box (loc, err)) => EInvalidGraphQL(Box::new((f(loc), err))),
 
-            EAnnotationInference(box (loc, r1, r2, suggestion)) => EAnnotationInference(Box::new(
-                (f(loc), map_reason(r1), map_reason(r2), suggestion),
-            )),
+            EAnnotationInference(box EAnnotationInferenceData {
+                loc,
+                operation,
+                operation_loc,
+                target_loc,
+                target_desc,
+            }) => EAnnotationInference(Box::new(EAnnotationInferenceData {
+                loc: f(loc),
+                operation,
+                operation_loc: f(operation_loc),
+                target_loc: f(target_loc),
+                target_desc: target_desc.map_err(map_desc),
+            })),
 
             ETrivialRecursiveDefinition(reason) => {
                 ETrivialRecursiveDefinition(map_error_ref(reason))
@@ -5860,12 +5967,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
     }
 }
 
-fn desc_of_reason<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
-    r: &VirtualReason<L>,
-) -> &VirtualReasonDesc<L> {
-    r.desc(is_scalar_reason(r))
-}
-
 /// A utility function for getting and updating the use_op in error messages.
 pub fn util_use_op_of_msg<L, T, F>(nope: T, util: F, msg: &ErrorMessage<L>) -> T
 where
@@ -6088,7 +6189,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     reason,
                     ..
                 })
-                | EnumErrorKind::EnumNotIterable(reason),
+                | EnumErrorKind::EnumNotIterable(box EnumNotIterableData { reason, .. }),
             ) => Some(reason.loc.dupe()),
 
             Self::EEnumError(
@@ -6096,7 +6197,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     reason,
                     ..
                 })
-                | EnumErrorKind::EnumNotIterableForIn(reason),
+                | EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData {
+                    reason, ..
+                }),
             )
             | Self::EInvalidConstructor(reason)
             | Self::EInvalidDeclaration(box EInvalidDeclarationData {
@@ -6243,7 +6346,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 ..
             })
             | Self::EInvalidGraphQL(box (loc, _))
-            | Self::EAnnotationInference(box (loc, _, _, _))
+            | Self::EAnnotationInference(box EAnnotationInferenceData { loc, .. })
             | Self::EInvalidCatchParameterAnnotation { loc, .. }
             | Self::EInvalidMappedType { loc, .. }
             | Self::EInvalidTemplateLiteralType { loc, .. }
@@ -6599,21 +6702,6 @@ pub fn mk_prop_message<L>(prop: Option<&str>) -> Vec<MessageFeature<L>> {
             )]
         }
         Some(prop) => vec![text("property "), code(prop)],
-    }
-}
-
-pub fn enum_name_of_reason<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
-    reason: &VirtualReason<L>,
-) -> Option<FlowSmolStr> {
-    enum_name_of_desc(desc_of_reason(reason))
-}
-
-pub fn enum_name_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> Option<FlowSmolStr> {
-    use flow_common::reason::VirtualReasonDesc::*;
-    match desc {
-        REnum { name: Some(name) } => Some(name.dupe()),
-        RType(name) => Some(name.dupe()),
-        _ => None,
     }
 }
 
@@ -7643,12 +7731,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prev_use_loc,
                 enum_reason,
             }),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(reason)) => {
-                Normal(Message::MessageCannotIterateEnum(reason.desc))
-            }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(reason)) => {
-                Normal(Message::MessageCannotIterateEnumForIn(reason))
-            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
+                reason,
+                enum_name,
+            })) => Normal(Message::MessageCannotIterateEnum {
+                description: reason.desc,
+                enum_name,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
+                box EnumNotIterableForInData { reason, enum_name },
+            )) => Normal(Message::MessageCannotIterateEnumForIn { reason, enum_name }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
                 box EnumMemberAlreadyCheckedData {
                     prev_check_loc,
@@ -7697,6 +7789,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
                 box EnumInvalidCheckData {
                     enum_reason,
+                    enum_name,
                     example_member,
                     from_match,
                     ..
@@ -7704,6 +7797,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => Normal(Message::MessageInvalidEnumMemberCheck(Box::new(
                 MessageInvalidEnumMemberCheckData {
                     enum_reason,
+                    enum_name,
                     example_member,
                     from_match,
                 },
@@ -7892,15 +7986,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }),
             )),
 
-            ErrorMessage::EAnnotationInference(box (_, reason_op, reason, suggestion)) => {
-                Normal(Message::MessageCannotUseTypeForAnnotationInference(
-                    Box::new(MessageCannotUseTypeForAnnotationInferenceData {
-                        reason_op,
-                        reason,
-                        suggestion,
-                    }),
-                ))
-            }
+            ErrorMessage::EAnnotationInference(box EAnnotationInferenceData {
+                loc: _,
+                operation,
+                operation_loc,
+                target_loc,
+                target_desc,
+            }) => Normal(Message::MessageCannotUseTypeForAnnotationInference(
+                Box::new(MessageCannotUseTypeForAnnotationInferenceData {
+                    operation,
+                    operation_loc,
+                    target_loc,
+                    target_desc,
+                }),
+            )),
             ErrorMessage::ETrivialRecursiveDefinition(reason) => Normal(
                 Message::MessageInvalidTrivialRecursiveDefinition(reason.desc),
             ),
@@ -9093,11 +9192,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumInvalidObjectUtilTypeData {
                     reason,
                     enum_reason,
+                    enum_name,
                 },
             )) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum(
                 Box::new(MessageCannotInstantiateObjectUtilTypeWithEnumData {
                     description: reason.desc,
                     enum_reason,
+                    enum_name,
                 }),
             )),
 
@@ -9105,10 +9206,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumInvalidObjectFunctionData {
                     reason,
                     enum_reason,
+                    enum_name,
                 },
             )) => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
                 reason,
                 enum_reason,
+                enum_name,
             }),
 
             ErrorMessage::EAssignConstLikeBinding(box EAssignConstLikeBindingData {

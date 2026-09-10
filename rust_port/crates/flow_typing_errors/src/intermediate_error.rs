@@ -56,6 +56,7 @@ use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::VirtualUseOp;
+use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::fold_virtual_use_op;
 use flow_typing_type::type_::root_of_use_op;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
@@ -106,7 +107,6 @@ use super::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use super::intermediate_error_types::MessageExponentialSpreadData;
 use super::intermediate_error_types::MessageIncompatibleDueToInvariantSubtypingData;
 use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
-use super::intermediate_error_types::MessageIncompatibleImplicitReturnData;
 use super::intermediate_error_types::MessageIncompatibleTupleArityData;
 use super::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use super::intermediate_error_types::MessageInvalidArgumentWithPrintedTypeData;
@@ -466,19 +466,13 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
             }))
         }
         ReactConfigCheck => ReactConfigCheck,
-        TupleElementCompatibility(box TupleElementCompatibilityData {
-            n,
-            lower,
-            upper,
-            lower_optional,
-            upper_optional,
-        }) => TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
-            n,
-            lower: upper,
-            upper: lower,
-            lower_optional: upper_optional,
-            upper_optional: lower_optional,
-        })),
+        TupleElementCompatibility(box TupleElementCompatibilityData { n, lower, upper }) => {
+            TupleElementCompatibility(Box::new(TupleElementCompatibilityData {
+                n,
+                lower: upper,
+                upper: lower,
+            }))
+        }
         TypeArgCompatibility(box TypeArgCompatibilityData {
             name,
             targ,
@@ -498,7 +492,7 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
                 upper: lower,
             }
         }
-        TupleAssignment { .. }
+        TupleAssignment
         | StandaloneCallThis(..)
         | TypeParamBound { .. }
         | OpaqueTypeLowerBound { .. }
@@ -2315,7 +2309,7 @@ where
                         | VirtualFrameUseOp::ReactConfigCheck
                         | VirtualFrameUseOp::ReactGetConfig { .. }
                         | VirtualFrameUseOp::MappedTypeKeyCompatibility { .. }
-                        | VirtualFrameUseOp::TupleAssignment { .. }
+                        | VirtualFrameUseOp::TupleAssignment
                         | VirtualFrameUseOp::RendersCompatibility => loop_impl(
                             loc,
                             frames,
@@ -3332,31 +3326,6 @@ where
                 _ => {
                     let root_use_op = root_of_use_op(&use_op);
                     match root_use_op {
-                        VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
-                            upper: return_reason,
-                            ..
-                        }) => {
-                            if upper.loc() == return_reason.loc() {
-                                let upper_desc = upper.desc(is_scalar_reason(&upper)).clone();
-                                make_error(
-                                    &lower,
-                                    Message::MessageIncompatibleImplicitReturn(Box::new(
-                                        MessageIncompatibleImplicitReturnData {
-                                            lower: lower.dupe(),
-                                            upper: upper_desc,
-                                        },
-                                    )),
-                                )
-                            } else {
-                                make_error(
-                                    &lower,
-                                    Message::MessageIncompatibleGeneral {
-                                        lower: lower.dupe(),
-                                        upper: upper.dupe(),
-                                    },
-                                )
-                            }
-                        }
                         VirtualRootUseOp::ComponentRestParamCompatibility { rest_param } => {
                             mk_no_frame_or_explanation_error(
                                 rest_param,
@@ -3375,45 +3344,6 @@ where
             },
 
             VirtualUseOp::Frame(frame, inner_use_op) => match frame.as_ref() {
-                VirtualFrameUseOp::TupleElementCompatibility(
-                    box TupleElementCompatibilityData { upper_optional, .. },
-                ) if *upper_optional
-                    && matches!(
-                        lower.desc(is_scalar_reason(&lower)),
-                        VirtualReasonDesc::RVoid
-                    ) =>
-                {
-                    let upper_loc = upper.loc().dupe();
-                    let new_upper =
-                        mk_reason(VirtualReasonDesc::RTupleElement { name: None }, upper_loc);
-                    make_error(
-                        &lower,
-                        Message::MessageCannotAssignToOptionalTupleElement {
-                            lower: lower.dupe(),
-                            upper: new_upper,
-                        },
-                    )
-                }
-
-                VirtualFrameUseOp::TupleAssignment { upper_optional }
-                    if *upper_optional
-                        && matches!(
-                            lower.desc(is_scalar_reason(&lower)),
-                            VirtualReasonDesc::RVoid
-                        ) =>
-                {
-                    let upper_loc = upper.loc().dupe();
-                    let new_upper =
-                        mk_reason(VirtualReasonDesc::RTupleElement { name: None }, upper_loc);
-                    make_error(
-                        &lower,
-                        Message::MessageCannotAssignToOptionalTupleElement {
-                            lower: lower.dupe(),
-                            upper: new_upper,
-                        },
-                    )
-                }
-
                 VirtualFrameUseOp::FunMissingArg(box FunMissingArgData { def, op, .. }) => {
                     let message = match inner_use_op.as_ref() {
                         VirtualUseOp::Op(inner_root) => match inner_root.as_ref() {
@@ -3469,31 +3399,6 @@ where
                 _ => {
                     let root_use_op = root_of_use_op(&use_op);
                     match root_use_op {
-                        VirtualRootUseOp::FunImplicitReturn(box FunImplicitReturnData {
-                            upper: return_reason,
-                            ..
-                        }) => {
-                            if upper.loc() == return_reason.loc() {
-                                let upper_desc = upper.desc(is_scalar_reason(&upper)).clone();
-                                make_error(
-                                    &lower,
-                                    Message::MessageIncompatibleImplicitReturn(Box::new(
-                                        MessageIncompatibleImplicitReturnData {
-                                            lower: lower.dupe(),
-                                            upper: upper_desc,
-                                        },
-                                    )),
-                                )
-                            } else {
-                                make_error(
-                                    &lower,
-                                    Message::MessageIncompatibleGeneral {
-                                        lower: lower.dupe(),
-                                        upper: upper.dupe(),
-                                    },
-                                )
-                            }
-                        }
                         VirtualRootUseOp::ComponentRestParamCompatibility { rest_param } => {
                             mk_no_frame_or_explanation_error(
                                 rest_param,
@@ -4129,6 +4034,53 @@ where
     };
 
     intermediate_error
+}
+
+fn annotation_inference_operation_description(
+    operation: &AnnotationInferenceOperation,
+) -> FlowSmolStr {
+    use AnnotationInferenceOperation::*;
+
+    match operation {
+        ImportsAndExports => "imports and exports".into(),
+        CommonJSExports => "CommonJS exports".into(),
+        Inspection => "type inspection".into(),
+        ImportTypeof(name) => format!("`import typeof` of `{}`", name).into(),
+        Export(name) => format!("export `{}`", name.display_smol_str()).into(),
+        ClassExtends => "class extends".into(),
+        ClassMixins => "class mixins".into(),
+        TypeApplication => "type application".into(),
+        ThisSpecialization => "`this` specialization".into(),
+        TypeReference => "type reference".into(),
+        Property(Some(name)) => format!("property `{}`", name.display_smol_str()).into(),
+        Property(None) | ComputedProperty => "computed property".into(),
+        Enum => "enum".into(),
+        Statics => "statics".into(),
+        Exact => "exact".into(),
+        ReactCheckComponentConfig => "React component config check".into(),
+        ReadOnly => "readonly".into(),
+        Partial => "partial".into(),
+        Required => "required".into(),
+        Spread => "spread".into(),
+        Rest => "rest".into(),
+        ReactConfig => "React config".into(),
+        Object => "object".into(),
+        MappedType => "mapped type".into(),
+        Prototype => "prototype".into(),
+        Mixins => "mixins".into(),
+        Arithmetic(operator) => format!("arithmetic operator `{}`", operator).into(),
+        UnaryPlus => "unary plus".into(),
+        UnaryMinus => "unary minus".into(),
+        BitwiseNot => "bitwise not".into(),
+        Update => "update".into(),
+        UnaryNot => "unary not".into(),
+        ObjectKeyMirror => "`$KeyMirror`".into(),
+        DeepReadOnly => "deep readonly".into(),
+        KeySet => "key set".into(),
+        ToString => "string conversion".into(),
+        Values => "values".into(),
+        ArrayRest => "array rest".into(),
+    }
 }
 
 #[allow(dead_code)]
@@ -5403,15 +5355,6 @@ where
                     " See https://flow.org/en/docs/types/literals/ for more information on literal types.",
                 ),
             ]),
-            MessageCannotAssignToOptionalTupleElement { lower, upper } => friendly::Message(vec![
-                text("you cannot assign "),
-                ref_(lower),
-                text(" to optional "),
-                ref_(upper),
-                text(" (to do so, add "),
-                code("| void"),
-                text(" to the tuple element type)"),
-            ]),
             MessageIncompatibleWithExact { kind, lower, upper } => {
                 let object_kind = match kind {
                     super::intermediate_error_types::ExactnessErrorKind::UnexpectedIndexer => {
@@ -5453,15 +5396,6 @@ where
                 ref_(lower),
                 text(", is incompatible with "),
                 ref_(upper),
-            ]),
-            MessageIncompatibleImplicitReturn(box MessageIncompatibleImplicitReturnData {
-                lower,
-                upper,
-            }) => friendly::Message(vec![
-                ref_(lower),
-                text(" is incompatible with "),
-                text("implicitly-returned "),
-                friendly::desc_of_reason_desc(upper),
             ]),
             MessageIncompatibleReactHooksWithNonReactHook {
                 lower,
@@ -5648,9 +5582,9 @@ where
             MessageCannotCallObjectFunctionOnEnum {
                 reason,
                 enum_reason,
+                enum_name,
             } => {
-                use super::error_message::enum_name_of_reason;
-                let suggestion = match enum_name_of_reason(enum_reason) {
+                let suggestion = match enum_name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use "),
@@ -5954,14 +5888,14 @@ where
                 box MessageCannotInstantiateObjectUtilTypeWithEnumData {
                     description,
                     enum_reason,
+                    enum_name,
                 },
             ) => {
-                use super::error_message::enum_name_of_reason;
-                let suggestion = match enum_name_of_reason(enum_reason) {
+                let suggestion = match enum_name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use the enum's name "),
-                        code(&enum_name),
+                        code(enum_name),
                         text(" as the type of its members."),
                     ],
                     None => vec![],
@@ -5976,9 +5910,8 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateEnumForIn(reason) => {
-                use super::error_message::enum_name_of_reason;
-                let suggestion = match enum_name_of_reason(reason) {
+            MessageCannotIterateEnumForIn { reason, enum_name } => {
+                let suggestion = match enum_name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use "),
@@ -5997,9 +5930,11 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateEnum(description) => {
-                use super::error_message::enum_name_of_desc;
-                let suggestion = match enum_name_of_desc(description) {
+            MessageCannotIterateEnum {
+                description,
+                enum_name,
+            } => {
+                let suggestion = match enum_name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use "),
@@ -6543,29 +6478,28 @@ where
             }
             MessageCannotUseTypeForAnnotationInference(
                 box MessageCannotUseTypeForAnnotationInferenceData {
-                    reason_op,
-                    reason,
-                    suggestion,
+                    operation,
+                    operation_loc,
+                    target_loc,
+                    target_desc,
                 },
             ) => {
-                let unwrapped_reason = reason.dupe().replace_desc(reason.desc(true).clone());
+                let operation_desc = annotation_inference_operation_description(operation);
                 let mut features = vec![
                     text("Cannot use "),
-                    friendly::desc_of_reason_desc(&reason_op.desc(true).map_locs(&loc_of_aloc)),
+                ];
+                features.extend(friendly::message_of_string::<Loc>(&operation_desc).0);
+                features.extend(vec![
                     text(" on "),
-                    ref_(&unwrapped_reason),
+                    ref_of_ty_or_desc(target_loc, target_desc),
                     text(" in an export position. "),
                     text("Please provide an (alternative) annotation for "),
-                    ref_(reason_op),
+                    friendly::hardcoded_string_desc_ref(
+                        &operation_desc,
+                        loc_of_aloc(operation_loc),
+                    ),
                     text("."),
-                ];
-                if let Some(util) = suggestion {
-                    features.extend(vec![
-                        text(" (Try using the "),
-                        code(util),
-                        text(" utility type instead.)"),
-                    ]);
-                }
+                ]);
                 friendly::Message(features)
             }
             MessageCannotUseTypeGuardWithFunctionParamHavoced(
@@ -7673,11 +7607,11 @@ where
             ]),
             MessageInvalidEnumMemberCheck(box MessageInvalidEnumMemberCheckData {
                 enum_reason,
+                enum_name,
                 example_member,
                 from_match,
             }) => {
-                use super::error_message::enum_name_of_reason;
-                let suggestion = match enum_name_of_reason(enum_reason) {
+                let suggestion = match enum_name {
                     Some(enum_name) => {
                         let example_member =
                             example_member.as_ref().map(|s| s.as_str()).unwrap_or("A");

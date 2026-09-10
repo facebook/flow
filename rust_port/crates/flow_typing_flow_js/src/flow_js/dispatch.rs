@@ -9052,7 +9052,7 @@ fn __flow_impl<'cx>(
             }
         }
         (TypeInner::DefT(enum_reason, def_t), UseTInner::GetValuesT(op_reason, tout))
-            if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
+            if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
         {
             flow_js_utils::add_output_with_env(
                 cx,
@@ -9061,6 +9061,7 @@ fn __flow_impl<'cx>(
                     EnumInvalidObjectUtilTypeData {
                         reason: op_reason.to_error_reference(),
                         enum_reason: enum_reason.dupe(),
+                        enum_name: enum_info.enum_name().map(Dupe::dupe),
                     },
                 ))),
             )?;
@@ -9068,7 +9069,7 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
         }
         (TypeInner::DefT(enum_reason, def_t), UseTInner::GetDictValuesT(reason, result))
-            if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) =>
+            if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
         {
             flow_js_utils::add_output_with_env(
                 cx,
@@ -9077,6 +9078,7 @@ fn __flow_impl<'cx>(
                     EnumInvalidObjectFunctionData {
                         reason: reason.dupe(),
                         enum_reason: enum_reason.dupe(),
+                        enum_name: enum_info.enum_name().map(Dupe::dupe),
                     },
                 ))),
             )?;
