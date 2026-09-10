@@ -668,7 +668,7 @@ impl MatchLowerer<'_> {
                 expression::UnaryOperator::Typeof,
                 value,
             ),
-            builders::string_literal(type_name),
+            builders::string_literal(&builders::generated_loc(), type_name),
         )
     }
 
@@ -682,7 +682,12 @@ impl MatchLowerer<'_> {
                 arg.clone(),
             )],
             Condition::IsNan { key } => vec![builders::call(
-                builders::member(builders::identifier("Number"), "isNaN"),
+                &builders::generated_loc(),
+                builders::member(
+                    &builders::generated_loc(),
+                    builders::identifier(&builders::generated_loc(), "Number"),
+                    "isNaN",
+                ),
                 vec![Self::expression_of_key(root, key)],
             )],
             Condition::Array {
@@ -693,7 +698,12 @@ impl MatchLowerer<'_> {
                 let value = Self::expression_of_key(root, key);
                 vec![
                     builders::call(
-                        builders::member(builders::identifier("Array"), "isArray"),
+                        &builders::generated_loc(),
+                        builders::member(
+                            &builders::generated_loc(),
+                            builders::identifier(&builders::generated_loc(), "Array"),
+                            "isArray",
+                        ),
                         vec![value.clone()],
                     ),
                     ast_builder::expressions::binary(
@@ -704,7 +714,7 @@ impl MatchLowerer<'_> {
                         } else {
                             expression::BinaryOperator::StrictEqual
                         },
-                        builders::member(value, "length"),
+                        builders::member(&builders::generated_loc(), value, "length"),
                         ast_builder::int_literal_expression(
                             Some(builders::generated_loc()),
                             None,
@@ -746,7 +756,7 @@ impl MatchLowerer<'_> {
                 Some(builders::generated_loc()),
                 None,
                 expression::BinaryOperator::In,
-                builders::string_literal(name.as_str()),
+                builders::string_literal(&builders::generated_loc(), name.as_str()),
                 Self::expression_of_key(root, key),
             )],
             Condition::Or(alternatives) => vec![Self::disjunction(
@@ -796,7 +806,12 @@ impl MatchLowerer<'_> {
                     *kind,
                     builders::identifier_pattern(id),
                     builders::call(
-                        builders::member(Self::expression_of_key(root, key), "slice"),
+                        &builders::generated_loc(),
+                        builders::member(
+                            &builders::generated_loc(),
+                            Self::expression_of_key(root, key),
+                            "slice",
+                        ),
                         vec![ast_builder::int_literal_expression(
                             Some(builders::generated_loc()),
                             None,
@@ -861,6 +876,7 @@ impl MatchLowerer<'_> {
             None,
             expression::BinaryOperator::Plus,
             builders::string_literal(
+                &builders::generated_loc(),
                 "Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: ",
             ),
             root.clone(),
@@ -868,7 +884,11 @@ impl MatchLowerer<'_> {
         statement::Statement::new(StatementInner::Throw {
             loc: builders::generated_loc(),
             inner: Arc::new(statement::Throw {
-                argument: builders::call(builders::identifier("Error"), vec![message]),
+                argument: builders::call(
+                    &builders::generated_loc(),
+                    builders::identifier(&builders::generated_loc(), "Error"),
+                    vec![message],
+                ),
                 comments: None,
             }),
         })
@@ -929,7 +949,7 @@ impl MatchLowerer<'_> {
                 statements,
             )),
         );
-        builders::call(arrow, arg.into_iter().collect())
+        builders::call(&builders::generated_loc(), arrow, arg.into_iter().collect())
     }
 
     fn lower_match_expression(

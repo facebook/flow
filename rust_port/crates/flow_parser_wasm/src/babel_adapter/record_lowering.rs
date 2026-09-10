@@ -263,7 +263,7 @@ impl RecordLowerer {
                     inner: Arc::new(member),
                 },
                 None,
-                builders::identifier(binding_name.as_str()),
+                builders::identifier(&builders::generated_loc(), binding_name.as_str()),
             );
             assignments.push(ast_builder::statements::expression(
                 Some(builders::generated_loc()),

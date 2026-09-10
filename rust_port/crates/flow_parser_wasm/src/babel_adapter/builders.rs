@@ -15,12 +15,18 @@ use flow_parser::ast::pattern;
 use flow_parser::loc::Loc;
 use flow_parser_utils::ast_builder;
 
+/// Placeholder for synthesized nodes that have not yet been given a real source position.
+///
+/// Line 1 column 0 is a *reachable* position, so a node carrying this is indistinguishable from
+/// one genuinely at the top of the file — which is why it is being migrated out. `enum_lowering`
+/// no longer uses it; `record_lowering` and `match_lowering` still do, and each call site that
+/// passes it marks work remaining. `rg generated_loc` lists what is left.
 pub fn generated_loc() -> Loc {
     Loc::mk(None, 1, 0, 1, 0)
 }
 
-pub fn identifier(name: &str) -> expression::Expression<Loc, Loc> {
-    ast_builder::expressions::identifier(Some(generated_loc()), None, name)
+pub fn identifier(loc: &Loc, name: &str) -> expression::Expression<Loc, Loc> {
+    ast_builder::expressions::identifier(Some(loc.dupe()), None, name)
 }
 
 pub fn identifier_pattern(id: &ast::Identifier<Loc, Loc>) -> pattern::Pattern<Loc, Loc> {
@@ -34,11 +40,12 @@ pub fn identifier_pattern(id: &ast::Identifier<Loc, Loc>) -> pattern::Pattern<Lo
     }
 }
 
-pub fn string_literal(value: &str) -> expression::Expression<Loc, Loc> {
-    ast_builder::string_literal_expression(Some(generated_loc()), None, value)
+pub fn string_literal(loc: &Loc, value: &str) -> expression::Expression<Loc, Loc> {
+    ast_builder::string_literal_expression(Some(loc.dupe()), None, value)
 }
 
 pub fn call(
+    loc: &Loc,
     callee: expression::Expression<Loc, Loc>,
     arguments: Vec<expression::Expression<Loc, Loc>>,
 ) -> expression::Expression<Loc, Loc> {
@@ -47,9 +54,9 @@ pub fn call(
         .map(ast_builder::expressions::expression_or_spread)
         .collect();
     ast_builder::expressions::call(
-        Some(generated_loc()),
+        Some(loc.dupe()),
         Some(ast_builder::expressions::arg_list(
-            Some(generated_loc()),
+            Some(loc.dupe()),
             None,
             arguments,
         )),
@@ -58,11 +65,12 @@ pub fn call(
 }
 
 pub fn member(
+    loc: &Loc,
     object: expression::Expression<Loc, Loc>,
     property: &str,
 ) -> expression::Expression<Loc, Loc> {
     ast_builder::expressions::member(
-        Some(generated_loc()),
+        Some(loc.dupe()),
         ast_builder::expressions::members::identifier_by_name(None, property, object),
     )
 }

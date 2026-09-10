@@ -32,16 +32,17 @@ struct EnumLowerer {
 }
 
 impl EnumLowerer {
-    fn runtime_expression(&mut self) -> expression::Expression<Loc, Loc> {
+    fn runtime_expression(&mut self, loc: &Loc) -> expression::Expression<Loc, Loc> {
         match self.runtime {
             EnumRuntime::Default => builders::call(
-                builders::identifier("require"),
-                vec![builders::string_literal("flow-enums-runtime")],
+                loc,
+                builders::identifier(loc, "require"),
+                vec![builders::string_literal(loc, "flow-enums-runtime")],
             ),
             EnumRuntime::CustomPlaceholder => {
                 let index = self.next_placeholder;
                 self.next_placeholder += 1;
-                builders::identifier(&format!("\0flow_enum_runtime_{index}"))
+                builders::identifier(loc, &format!("\0flow_enum_runtime_{index}"))
             }
         }
     }
@@ -90,7 +91,8 @@ impl EnumLowerer {
         &mut self,
         declaration: &statement::EnumDeclaration<Loc, Loc>,
     ) -> statement::Statement<Loc, Loc> {
-        let runtime = self.runtime_expression();
+        let construct_loc = builders::generated_loc();
+        let runtime = self.runtime_expression(&construct_loc);
         let mirrored = declaration.body.members.first().is_none_or(|member| {
             matches!(
                 member,
@@ -111,14 +113,16 @@ impl EnumLowerer {
                 .iter()
                 .map(|member| {
                     ast_builder::expressions::array_expression(builders::string_literal(
+                        &construct_loc,
                         Self::member_name(member).as_str(),
                     ))
                 })
                 .collect();
             builders::call(
-                builders::member(runtime, "Mirrored"),
+                &construct_loc,
+                builders::member(&construct_loc, runtime, "Mirrored"),
                 vec![ast_builder::expressions::array(
-                    Some(builders::generated_loc()),
+                    Some(construct_loc.dupe()),
                     None,
                     elements,
                 )],
@@ -132,8 +136,12 @@ impl EnumLowerer {
                     let value =
                         builders::expression_from_enum_member(member).unwrap_or_else(|| {
                             builders::call(
-                                builders::identifier("Symbol"),
-                                vec![builders::string_literal(Self::member_name(member).as_str())],
+                                &construct_loc,
+                                builders::identifier(&construct_loc, "Symbol"),
+                                vec![builders::string_literal(
+                                    &construct_loc,
+                                    Self::member_name(member).as_str(),
+                                )],
                             )
                         });
                     ast_builder::expressions::object_property(
@@ -145,10 +153,11 @@ impl EnumLowerer {
                 })
                 .collect();
             builders::call(
+                &construct_loc,
                 runtime,
                 vec![ast_builder::expressions::object_(
                     None,
-                    Some(builders::generated_loc()),
+                    Some(construct_loc.dupe()),
                     properties,
                 )],
             )
