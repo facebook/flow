@@ -1,0 +1,10 @@
+Error ----------------------------------------------------------------------------------------------------- haste.js:1:1
+
+Dynamic `import` is not supported in this file. [unsupported-syntax]
+
+   1| import('./module'); // ERROR
+      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error

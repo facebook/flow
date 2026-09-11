@@ -177,6 +177,7 @@ pub mod opts {
         pub format_single_quotes: Option<bool>,
         #[cfg(fbcode_build)]
         pub fox: bool,
+        pub haste_disallow_dynamic_import: bool,
         pub haste_module_ref_prefix: Option<String>,
         pub haste_paths_excludes: Vec<String>,
         pub haste_paths_includes: Vec<String>,
@@ -331,6 +332,7 @@ pub mod opts {
             format_single_quotes: None,
             #[cfg(fbcode_build)]
             fox: false,
+            haste_disallow_dynamic_import: false,
             haste_module_ref_prefix: None,
             haste_paths_excludes: vec![
                 ocaml_str_to_rust_regex("\\(.*\\)?/node_modules/.*"),
@@ -2546,6 +2548,23 @@ pub mod opts {
             ("module.system", |values, config| {
                 module_system_parser(values, config)
             }),
+            (
+                "module.system.haste.disallow_dynamic_import",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            if v && opts.module_system != ModuleSystem::Haste {
+                                return Err("Cannot be configured unless `module.system=haste`."
+                                    .to_string());
+                            }
+                            opts.haste_disallow_dynamic_import = v;
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             ("module.system.haste.module_ref_prefix", |values, config| {
                 haste_module_ref_prefix_parser(values, config)
             }),

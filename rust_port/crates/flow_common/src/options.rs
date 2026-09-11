@@ -154,6 +154,7 @@ pub struct Options {
     pub flowconfig_hash: FlowSmolStr,
     pub flowconfig_name: FlowSmolStr,
     pub format: Format,
+    pub haste_disallow_dynamic_import: bool,
     pub haste_module_ref_prefix: Option<FlowSmolStr>,
     pub hook_compatibility: bool,
     pub hook_compatibility_excludes: Arc<[Regex]>,

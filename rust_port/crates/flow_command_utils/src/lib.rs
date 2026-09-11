@@ -2141,6 +2141,7 @@ pub fn make_options(
                 format_single_quotes,
                 #[cfg(fbcode_build)]
                     fox: _,
+                haste_disallow_dynamic_import,
                 haste_module_ref_prefix,
                 haste_paths_excludes: _,
                 haste_paths_includes: _,
@@ -2524,6 +2525,7 @@ pub fn make_options(
         flowconfig_hash: FlowSmolStr::new(flowconfig_hash),
         flowconfig_name: FlowSmolStr::new(flowconfig_name),
         format,
+        haste_disallow_dynamic_import,
         haste_module_ref_prefix: haste_module_ref_prefix.map(FlowSmolStr::new),
         hook_compatibility,
         hook_compatibility_excludes,

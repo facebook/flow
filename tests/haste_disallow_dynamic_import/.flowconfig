@@ -1,0 +1,5 @@
+[options]
+all=true
+module.system=haste
+module.system.haste.disallow_dynamic_import=true
+module.system.haste.paths.excludes=<PROJECT_ROOT>/non_haste/.*

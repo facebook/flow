@@ -9407,6 +9407,11 @@ where
                         code("unique symbol"),
                         text("."),
                     ]),
+                    ImportDynamic => friendly::Message(vec![
+                        text("Dynamic "),
+                        code("import"),
+                        text(" is not supported in this file."),
+                    ]),
                     ImportDynamicArgument => friendly::Message(vec![
                         text("The parameter passed to "),
                         code("import"),

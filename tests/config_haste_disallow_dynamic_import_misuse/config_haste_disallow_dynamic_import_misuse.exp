@@ -1,0 +1,3 @@
+
+Flowconfig should not be valid:
+.flowconfig:3 Error setting value for "module.system.haste.disallow_dynamic_import". Cannot be configured unless `module.system=haste`.

@@ -1,0 +1,3 @@
+[options]
+all=true
+module.system.haste.disallow_dynamic_import=true

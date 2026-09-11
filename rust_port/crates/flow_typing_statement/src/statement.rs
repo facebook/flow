@@ -8089,6 +8089,18 @@ fn expression_<'a>(
             }
         }
         ExpressionInner::Import { inner, .. } => {
+            if cx.disallow_dynamic_import() {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        loc.dupe(),
+                        UnsupportedSyntax::ImportDynamic,
+                    ))),
+                );
+                let Ok(v) =
+                    polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, e);
+                return Ok(v);
+            }
             let source_loc = inner.argument.loc().dupe();
             let argument = &*inner.argument;
             let t = |module_name: flow_import_specifier::Userland| -> Result<Type, JobError> {

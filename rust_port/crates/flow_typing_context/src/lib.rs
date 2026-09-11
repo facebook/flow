@@ -172,6 +172,7 @@ pub struct FrozenMetadata {
     pub facebook_module_interop: bool,
     pub file_options: Arc<FileOptions>,
     pub global_libdefs: Arc<BTreeSet<FileKey>>,
+    pub haste_disallow_dynamic_import: bool,
     pub hook_compatibility: bool,
     pub hook_compatibility_excludes: Arc<[Regex]>,
     pub hook_compatibility_includes: Arc<[Regex]>,
@@ -232,6 +233,7 @@ impl Default for FrozenMetadata {
             facebook_module_interop: false,
             file_options: Arc::new(FileOptions::default()),
             global_libdefs: Arc::new(BTreeSet::new()),
+            haste_disallow_dynamic_import: false,
             hook_compatibility: false,
             hook_compatibility_excludes: Arc::from([]),
             hook_compatibility_includes: Arc::from([]),
@@ -625,6 +627,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             facebook_module_interop: options.facebook_module_interop,
             file_options: options.file_options.dupe(),
             global_libdefs,
+            haste_disallow_dynamic_import: options.haste_disallow_dynamic_import,
             ignore_non_literal_requires: options.ignore_non_literal_requires,
             max_workers: options.max_workers,
             missing_module_generators: options.missing_module_generators.dupe(),
@@ -1067,6 +1070,15 @@ impl<'cx> Context<'cx> {
         self.in_dirlist(&self.0.metadata.frozen.hook_compatibility_includes)
             || (self.0.metadata.frozen.hook_compatibility
                 && !self.in_dirlist(&self.0.metadata.frozen.hook_compatibility_excludes))
+    }
+
+    pub fn disallow_dynamic_import(&self) -> bool {
+        self.0.metadata.frozen.haste_disallow_dynamic_import
+            && flow_common::files::haste_name_opt(
+                &self.0.metadata.frozen.file_options,
+                &self.0.file,
+            )
+            .is_some()
     }
 
     pub fn react_rule_enabled(&self, rule: ReactRule) -> bool {

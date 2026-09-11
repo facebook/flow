@@ -242,6 +242,7 @@ pub enum UnsupportedSyntax {
     ExplicitCallAfterProto,
     ExplicitProtoAfterCall,
     SpreadArgument,
+    ImportDynamic,
     ImportDynamicArgument,
     IllegalName,
     UserDefinedTypeGuards { kind: TypeGuardKind },
