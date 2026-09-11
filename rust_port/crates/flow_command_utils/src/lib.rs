@@ -989,6 +989,9 @@ fn flowlib_builtin_lib(
     } else {
         match builtin_lib {
             ConfigBuiltinLib::Flowlib => flow_flowlib::BuiltinLib::Flowlib,
+            ConfigBuiltinLib::FlowlibWithLibDomDts => {
+                flow_flowlib::BuiltinLib::FlowlibWithLibDomDts
+            }
             ConfigBuiltinLib::Prelude => flow_flowlib::BuiltinLib::Prelude,
             ConfigBuiltinLib::Tslib => flow_flowlib::BuiltinLib::Tslib,
         }
@@ -1013,6 +1016,9 @@ pub fn file_options(
     let default_lib_dir = Some(match flowlib_dir {
         flow_flowlib::LibDir::Prelude(path) => flow_common::files::LibDir::Prelude(path),
         flow_flowlib::LibDir::Flowlib(path) => flow_common::files::LibDir::Flowlib(path),
+        flow_flowlib::LibDir::FlowlibWithLibDomDts(path) => {
+            flow_common::files::LibDir::FlowlibWithLibDomDts(path)
+        }
         flow_flowlib::LibDir::Tslib(path) => flow_common::files::LibDir::Tslib(path),
     });
 
@@ -3150,6 +3156,9 @@ pub fn connect_and_make_request(
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
         }
         flow_flowlib::LibDir::Flowlib(ref path) => {
+            flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
+        }
+        flow_flowlib::LibDir::FlowlibWithLibDomDts(ref path) => {
             flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
         }
         flow_flowlib::LibDir::Tslib(ref path) => {

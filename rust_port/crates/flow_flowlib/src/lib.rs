@@ -12,12 +12,14 @@ use std::path::PathBuf;
 use flow_common::sys_utils;
 
 mod flowlib_contents;
+mod flowlib_with_lib_dom_d_ts_contents;
 mod prelude_contents;
 mod tslib_contents;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BuiltinLib {
     Flowlib,
+    FlowlibWithLibDomDts,
     Prelude,
     Tslib,
 }
@@ -33,6 +35,7 @@ pub fn builtin_lib_of_no_flowlib(no_flowlib: bool) -> BuiltinLib {
 fn hash(lib: BuiltinLib) -> String {
     match lib {
         BuiltinLib::Flowlib => flowlib_contents::HASH.to_string(),
+        BuiltinLib::FlowlibWithLibDomDts => flowlib_with_lib_dom_d_ts_contents::HASH.to_string(),
         BuiltinLib::Prelude => prelude_contents::HASH.to_string(),
         BuiltinLib::Tslib => tslib_contents::HASH.to_string(),
     }
@@ -41,6 +44,7 @@ fn hash(lib: BuiltinLib) -> String {
 fn contents(lib: BuiltinLib) -> &'static [(&'static str, &'static str)] {
     match lib {
         BuiltinLib::Flowlib => flowlib_contents::CONTENTS,
+        BuiltinLib::FlowlibWithLibDomDts => flowlib_with_lib_dom_d_ts_contents::CONTENTS,
         BuiltinLib::Prelude => prelude_contents::CONTENTS,
         BuiltinLib::Tslib => tslib_contents::CONTENTS,
     }
@@ -53,6 +57,7 @@ pub fn contents_list(no_flowlib: bool) -> Vec<(&'static str, &'static str)> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LibDir {
     Flowlib(PathBuf),
+    FlowlibWithLibDomDts(PathBuf),
     Prelude(PathBuf),
     Tslib(PathBuf),
 }
@@ -78,6 +83,7 @@ pub fn libdir(builtin_lib: BuiltinLib, parent_dir: &Path) -> LibDir {
     let path = parent_dir.join(&basename);
     match builtin_lib {
         BuiltinLib::Flowlib => LibDir::Flowlib(path),
+        BuiltinLib::FlowlibWithLibDomDts => LibDir::FlowlibWithLibDomDts(path),
         BuiltinLib::Prelude => LibDir::Prelude(path),
         BuiltinLib::Tslib => LibDir::Tslib(path),
     }
@@ -87,6 +93,7 @@ pub fn path_of_libdir(libdir: &LibDir) -> &Path {
     match libdir {
         LibDir::Prelude(path) => path,
         LibDir::Flowlib(path) => path,
+        LibDir::FlowlibWithLibDomDts(path) => path,
         LibDir::Tslib(path) => path,
     }
 }
@@ -109,6 +116,7 @@ pub fn extract(libdir: &LibDir) {
     let (path, lib) = match libdir {
         LibDir::Prelude(path) => (path.as_path(), BuiltinLib::Prelude),
         LibDir::Flowlib(path) => (path.as_path(), BuiltinLib::Flowlib),
+        LibDir::FlowlibWithLibDomDts(path) => (path.as_path(), BuiltinLib::FlowlibWithLibDomDts),
         LibDir::Tslib(path) => (path.as_path(), BuiltinLib::Tslib),
     };
     for entry in contents(lib) {
@@ -119,6 +127,7 @@ pub fn extract(libdir: &LibDir) {
 pub fn extract_if_missing(libdir: &LibDir) {
     let sentinel_name = match libdir {
         LibDir::Flowlib(_) => "core.js",
+        LibDir::FlowlibWithLibDomDts(_) => "lib.dom.d.ts",
         LibDir::Prelude(_) => "prelude.js",
         LibDir::Tslib(_) => "lib.d.ts",
     };
@@ -133,6 +142,9 @@ fn libdir_from_files_libdir(files_libdir: &flow_common::files::LibDir) -> LibDir
     match files_libdir {
         flow_common::files::LibDir::Prelude(path) => LibDir::Prelude(path.clone()),
         flow_common::files::LibDir::Flowlib(path) => LibDir::Flowlib(path.clone()),
+        flow_common::files::LibDir::FlowlibWithLibDomDts(path) => {
+            LibDir::FlowlibWithLibDomDts(path.clone())
+        }
         flow_common::files::LibDir::Tslib(path) => LibDir::Tslib(path.clone()),
     }
 }

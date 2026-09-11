@@ -91,6 +91,7 @@ pub fn cached_canonicalize(path: &Path) -> std::io::Result<PathBuf> {
 pub enum LibDir {
     Prelude(PathBuf),
     Flowlib(PathBuf),
+    FlowlibWithLibDomDts(PathBuf),
     Tslib(PathBuf),
 }
 #[derive(Debug, Clone)]
@@ -548,7 +549,10 @@ pub fn is_in_flowlib(options: &FileOptions, path: &str) -> bool {
         None => false,
         Some(libdir) => {
             let root_path = match libdir {
-                LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
+                LibDir::Prelude(path)
+                | LibDir::Flowlib(path)
+                | LibDir::FlowlibWithLibDomDts(path)
+                | LibDir::Tslib(path) => path,
             };
             let path = Path::new(path);
             path.starts_with(root_path)
@@ -568,7 +572,10 @@ pub fn ordered_and_unordered_lib_paths(options: &FileOptions) -> Vec<String> {
             Some(libdir) => {
                 let libs = &options.lib_paths;
                 let root_path = match libdir {
-                    LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => path,
+                    LibDir::Prelude(path)
+                    | LibDir::Flowlib(path)
+                    | LibDir::FlowlibWithLibDomDts(path)
+                    | LibDir::Tslib(path) => path,
                 };
                 let root = root_path.clone();
                 let root_resolved = root.to_string_lossy().to_string();
@@ -912,9 +919,10 @@ pub fn make_next_files(
                 .default_lib_dir
                 .as_ref()
                 .map(|libdir| match libdir {
-                    LibDir::Prelude(path) | LibDir::Flowlib(path) | LibDir::Tslib(path) => {
-                        path.clone()
-                    }
+                    LibDir::Prelude(path)
+                    | LibDir::Flowlib(path)
+                    | LibDir::FlowlibWithLibDomDts(path)
+                    | LibDir::Tslib(path) => path.clone(),
                 })
                 .into_iter()
                 .collect();

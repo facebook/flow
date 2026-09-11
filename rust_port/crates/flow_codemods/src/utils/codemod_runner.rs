@@ -170,6 +170,9 @@ pub fn extract_flowlibs_or_exit(options: &Options) {
             let flowlib_libdir = match libdir {
                 LibDir::Prelude(path) => flow_flowlib::LibDir::Prelude(path),
                 LibDir::Flowlib(path) => flow_flowlib::LibDir::Flowlib(path),
+                LibDir::FlowlibWithLibDomDts(path) => {
+                    flow_flowlib::LibDir::FlowlibWithLibDomDts(path)
+                }
                 LibDir::Tslib(path) => flow_flowlib::LibDir::Tslib(path),
             };
             let extract_result =

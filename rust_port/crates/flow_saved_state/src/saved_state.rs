@@ -292,6 +292,7 @@ fn collect_non_flowlib_configured_libs(env: &Env, options: &Options) -> BTreeSet
         .map(|dir| match dir {
             flow_common::files::LibDir::Prelude(path)
             | flow_common::files::LibDir::Flowlib(path)
+            | flow_common::files::LibDir::FlowlibWithLibDomDts(path)
             | flow_common::files::LibDir::Tslib(path) => path.clone(),
         });
     env.configured_libs()

@@ -134,6 +134,7 @@ pub mod opts {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum BuiltinLib {
         Flowlib,
+        FlowlibWithLibDomDts,
         Prelude,
         Tslib,
     }
@@ -2617,6 +2618,10 @@ pub mod opts {
                 enum_parser(
                     &[
                         ("flowlib", BuiltinLib::Flowlib),
+                        (
+                            "flowlib-with-lib-dom-d-ts",
+                            BuiltinLib::FlowlibWithLibDomDts,
+                        ),
                         ("prelude", BuiltinLib::Prelude),
                         ("experimental.tslib", BuiltinLib::Tslib),
                     ],

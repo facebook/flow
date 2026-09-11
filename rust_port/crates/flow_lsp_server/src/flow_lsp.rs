@@ -3308,6 +3308,9 @@ fn main_handle_unsafe(
                 flow_flowlib::LibDir::Flowlib(path) => {
                     flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
                 }
+                flow_flowlib::LibDir::FlowlibWithLibDomDts(path) => {
+                    flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
+                }
                 flow_flowlib::LibDir::Tslib(path) => {
                     flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
                 }
