@@ -57,8 +57,6 @@ use flow_typing_errors::error_message::EHookRuleViolationData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
 use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErrorData;
-use flow_typing_errors::error_message::EIncompatibleData;
-use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
@@ -1900,23 +1898,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
     }
 
     match err {
-        ErrorMessage::EIncompatible(box EIncompatibleData {
-            lower,
-            upper,
-            use_op,
-        }) => {
-            let (reason_lower, _lower_kind) = lower;
-            format!(
-                "EIncompatible(Box::new(EIncompatibleData {{ lower = ({}, _); upper = ({}, {}); use_op = {}; branches = _ }}))",
-                dump_reason(cx, reason_lower),
-                format_args!("loc {:?}", upper.loc),
-                dump_upper_kind(&upper.kind),
-                match use_op {
-                    None => "None".to_string(),
-                    Some(use_op) => format!("Some({})", string_of_use_op(use_op)),
-                }
-            )
-        }
         ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
             lower_reason,
             lower_desc,
@@ -1952,19 +1933,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     None => "None".to_string(),
                     Some(use_op) => format!("Some({})", string_of_use_op(use_op)),
                 }
-            )
-        }
-        ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
-            use_op,
-            reason_lower,
-            reason_upper,
-            branches: _,
-        }) => {
-            format!(
-                "EIncompatibleDefs {{ reason_lower = {}; reason_upper = {}; use_op = {}; branches = _ }}",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
-                string_of_use_op(use_op)
             )
         }
         ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {

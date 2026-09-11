@@ -16,7 +16,6 @@ use flow_common::reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
-use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
@@ -1030,12 +1029,7 @@ pub fn subtype_str_lit_into_template<'cx>(
         MatchResult::Mismatch => flow_js_utils::add_output_with_env(
             cx,
             env,
-            ErrorMessage::EIncompatibleDefs(Box::new(EIncompatibleDefsData {
-                use_op: use_op.dupe(),
-                reason_lower: type_util::reason_of_t(lower).dupe(),
-                reason_upper: type_util::reason_of_t(upper).dupe(),
-                branches: vec![],
-            })),
+            flow_js_utils::incompatible_types_error(lower, upper, use_op.dupe(), None),
         ),
         MatchResult::Match(pairs) => {
             for (part, t) in pairs {

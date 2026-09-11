@@ -18,7 +18,6 @@ use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
-use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EUnionOptimizationData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
@@ -80,7 +79,7 @@ enum CasesSpec<'cx, 'a> {
         on_success: Option<Box<dyn FnOnce(&Context<'cx>, &FlowJsEnv) + 'a>>,
     },
     IntersectionCases {
-        intersection_reason: Reason,
+        intersection: Type,
         ls: Vec<Type>,
         use_t: UseT<Context<'cx>>,
     },
@@ -369,7 +368,7 @@ pub fn try_intersection<'cx>(
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_t: UseT<Context<'cx>>,
-    intersection_reason: Reason,
+    intersection: Type,
     rep: &inter_rep::InterRep,
 ) -> Result<(), FlowJsException> {
     let ls: Vec<Type> = rep.members_iter().duped().collect();
@@ -378,7 +377,7 @@ pub fn try_intersection<'cx>(
         env,
         trace,
         CasesSpec::IntersectionCases {
-            intersection_reason,
+            intersection,
             ls,
             use_t,
         },
@@ -624,16 +623,17 @@ where
                 Ok(())
             }
             CasesSpec::IntersectionCases {
-                intersection_reason: r,
+                intersection,
                 ls,
                 use_t: upper,
             } => {
-                let reason_lower = mk_intersection_reason(r, ls);
+                let intersection_reason = type_util::reason_of_t(intersection);
+                let reason_lower = mk_intersection_reason(intersection_reason, ls);
                 let flow_fn = |t1: Type, t2: Type| {
                     FlowJs::flow_t_with_env(cx, env, &t1, &t2)?;
                     Ok(())
                 };
-                let resolve_callee_pair = (r.dupe(), ls.clone());
+                let resolve_callee_pair = (intersection_reason.dupe(), ls.clone());
                 default_resolve::default_resolve_touts(
                     &flow_fn,
                     Some(&resolve_callee_pair),
@@ -644,12 +644,13 @@ where
                 assert!(ls.len() == msgs.len());
                 let err = match &**upper {
                     UseTInner::UseT(use_op, t) => {
-                        ErrorMessage::EIncompatibleDefs(Box::new(EIncompatibleDefsData {
-                            use_op: use_op.dupe(),
-                            reason_lower,
-                            reason_upper: type_util::reason_of_t(t).dupe(),
-                            branches: msgs,
-                        }))
+                        flow_js_utils::incompatible_types_error_with_branches(
+                            intersection,
+                            t,
+                            use_op.dupe(),
+                            None,
+                            msgs,
+                        )
                     }
                     UseTInner::LookupT(box LookupTData {
                         reason,

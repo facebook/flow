@@ -10,7 +10,6 @@ use std::sync::Arc;
 
 use flow_typing_debug::verbose::print_types_if_verbose;
 use flow_typing_errors::error_message::ECallTypeArityData;
-use flow_typing_errors::error_message::EIncompatibleData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
@@ -3760,7 +3759,7 @@ fn __flow_impl<'cx>(
         ) => {
             collector.add(l.dupe());
         }
-        (TypeInner::IntersectionT(r, rep), _) => {
+        (TypeInner::IntersectionT(_, rep), _) => {
             // We only call CalleeRecorder here for sig-help information. As far as
             // the typed AST is concerned when dealing with intersections we record
             // the specific branch that was selected. Therefore, we do not record
@@ -3770,7 +3769,7 @@ fn __flow_impl<'cx>(
             // intersection as the type for the callee node. (This happens in
             // Default_resolver.)
             callee_recorder::add_callee_use(env, callee_recorder::Kind::SigHelp, l.dupe(), u);
-            speculation_kit::try_intersection(cx, env, trace, u.dupe(), r.dupe(), rep)?;
+            speculation_kit::try_intersection(cx, env, trace, u.dupe(), l.dupe(), rep)?;
         }
         (
             _,
@@ -4499,14 +4498,14 @@ fn __flow_impl<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,
                     env,
-                    ErrorMessage::EIncompatible(Box::new(EIncompatibleData {
-                        lower: (reason_l.dupe(), None),
-                        upper: IncompatibleUpperData {
+                    flow_js_utils::incompatible_type_error(
+                        l,
+                        IncompatibleUpperData {
                             loc: flow_js_utils::error_message_loc_of_upper(u),
                             kind: flow_js_utils::error_message_kind_of_upper(u),
                         },
-                        use_op: Some(use_op.dupe()),
-                    })),
+                        Some(use_op.dupe()),
+                    ),
                 )?;
                 let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
                 rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
@@ -10163,6 +10162,7 @@ fn __flow_impl<'cx>(
                                     upper_desc: type_or_explanatory_desc(ext_u),
                                     explanation: None,
                                     example: Some(error.0),
+                                    branches: vec![],
                                 },
                             )),
                         )?;

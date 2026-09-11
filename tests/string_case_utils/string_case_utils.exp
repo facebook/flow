@@ -74,8 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- capitalize.js:48:1
 
-Cannot cast `'abcxyz'` to `C8` because string literal `abcxyz` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'abcxyz'` to `C8` because `"abcxyz"` [1] is incompatible with `C8` [2]. [incompatible-type]
 
    capitalize.js:48:1
    48| 'abcxyz' as C8; // ERROR (first char must be capital)
@@ -89,8 +88,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- capitalize.js:56:1
 
-Cannot cast `'abc'` to `C9` because string literal `abc` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'abc'` to `C9` because: [incompatible-type]
+ - Either `"abc"` [1] is incompatible with ``Abc`` [2].
+ - Or `"abc"` [1] is incompatible with ``${Capitalize<string>}abc`` [2].
 
    capitalize.js:56:1
    56| 'abc' as C9; // ERROR (first char is lowercase)
@@ -104,8 +104,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- capitalize.js:58:1
 
-Cannot cast `'xYZabc'` to `C9` because string literal `xYZabc` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'xYZabc'` to `C9` because: [incompatible-type]
+ - Either `"xYZabc"` [1] is incompatible with ``Abc`` [2].
+ - Or `"xYZabc"` [1] is incompatible with ``${Capitalize<string>}abc`` [2].
 
    capitalize.js:58:1
    58| 'xYZabc' as C9; // ERROR (first char of inner is lowercase)
@@ -486,8 +487,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:45:1
 
-Cannot cast `'abcXYZ'` to `L7` because string literal `abcXYZ` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'abcXYZ'` to `L7` because `"abcXYZ"` [1] is incompatible with `L7` [2]. [incompatible-type]
 
    lowercase.js:45:1
    45| 'abcXYZ' as L7; // ERROR (inner not lowercase)
@@ -501,8 +501,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:46:1
 
-Cannot cast `'ABCxyz'` to `L7` because string literal `ABCxyz` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'ABCxyz'` to `L7` because `"ABCxyz"` [1] is incompatible with `L7` [2]. [incompatible-type]
 
    lowercase.js:46:1
    46| 'ABCxyz' as L7; // ERROR (prefix wrong case)
@@ -674,8 +673,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:55:1
 
-Cannot cast `'ABCxyz'` to `U8` because string literal `ABCxyz` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'ABCxyz'` to `U8` because `"ABCxyz"` [1] is incompatible with `U8` [2]. [incompatible-type]
 
    uncapitalize.js:55:1
    55| 'ABCxyz' as U8; // ERROR (first char must be lowercase)
@@ -689,8 +687,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:64:1
 
-Cannot cast `'ABC'` to `U8b` because string literal `ABC` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'ABC'` to `U8b` because: [incompatible-type]
+ - Either `"ABC"` [1] is incompatible with ``aBC`` [2].
+ - Or `"ABC"` [1] is incompatible with ``${Uncapitalize<string>}ABC`` [2].
 
    uncapitalize.js:64:1
    64| 'ABC' as U8b; // ERROR (first char must be lowercase)
@@ -704,8 +703,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:66:1
 
-Cannot cast `'XABC'` to `U8b` because string literal `XABC` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'XABC'` to `U8b` because: [incompatible-type]
+ - Either `"XABC"` [1] is incompatible with ``aBC`` [2].
+ - Or `"XABC"` [1] is incompatible with ``${Uncapitalize<string>}ABC`` [2].
 
    uncapitalize.js:66:1
    66| 'XABC' as U8b; // ERROR (first char of inner is uppercase)
@@ -845,8 +845,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:51:1
 
-Cannot cast `'ABCxyz'` to `U9` because string literal `ABCxyz` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'ABCxyz'` to `U9` because `"ABCxyz"` [1] is incompatible with `U9` [2]. [incompatible-type]
 
    uppercase.js:51:1
    51| 'ABCxyz' as U9; // ERROR (inner is not uppercase)
@@ -860,8 +859,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:52:1
 
-Cannot cast `'abcXYZ'` to `U9` because string literal `abcXYZ` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'abcXYZ'` to `U9` because `"abcXYZ"` [1] is incompatible with `U9` [2]. [incompatible-type]
 
    uppercase.js:52:1
    52| 'abcXYZ' as U9; // ERROR (prefix has wrong case)

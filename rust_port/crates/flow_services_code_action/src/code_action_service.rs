@@ -69,7 +69,6 @@ use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::FriendlyMessageRecipe;
 use flow_typing_errors::error_message::IncompatibleTypeUseData;
-use flow_typing_errors::error_message::IncompatibleUseData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
 use flow_typing_errors::error_message::MatchInvalidObjectShorthandData;
@@ -2323,12 +2322,6 @@ pub fn ast_transforms_of_error(
                     vec![]
                 }
             }
-            FriendlyMessageRecipe::IncompatibleUse(box IncompatibleUseData {
-                loc: error_loc,
-                upper_kind: UpperKind::IncompatibleGetPropT(..),
-                reason_lower,
-                ..
-            }) => optional_chaining_actions(error_loc, reason_lower.desc.unwrap()),
             FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
                 loc: error_loc,
                 upper_kind: UpperKind::IncompatibleGetPropT(..),

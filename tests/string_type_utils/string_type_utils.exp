@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- combo.js:3:1
 
-Cannot cast `'bar(--color)'` to `CSSVarInter` because string literal `bar(--color)` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'bar(--color)'` to `CSSVarInter` because `"bar(--color)"` [1] is incompatible with
+``${"var(--"}${string}`` [2]. [incompatible-type]
 
    combo.js:3:1
    3| 'bar(--color)' as CSSVarInter; // ERROR
@@ -15,8 +15,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:4:1
 
-Cannot cast `'var(--color'` to `CSSVarInter` because string literal `var(--color` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'var(--color'` to `CSSVarInter` because `"var(--color"` [1] is incompatible with ``${string}${")"}`` [2].
+[incompatible-type]
 
    combo.js:4:1
    4| 'var(--color' as CSSVarInter; // ERROR
@@ -30,8 +30,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:8:1
 
-Cannot cast `'bar(--color)'` to `CSSVarRemainder` because string literal `bar(--color)` [1] is incompatible with
-template literal type [2]. [incompatible-type]
+Cannot cast `'bar(--color)'` to `CSSVarRemainder` because `"bar(--color)"` [1] is incompatible with
+``${"var(--"}${StringSuffix<")">}`` [2]. [incompatible-type]
 
    combo.js:8:1
    8| 'bar(--color)' as CSSVarRemainder; // ERROR
@@ -45,8 +45,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- combo.js:9:1
 
-Cannot cast `'var(--color'` to `CSSVarRemainder` because string literal `color` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'var(--color'` to `CSSVarRemainder` because `"color"` [1] is incompatible with ``${string}${")"}`` [2].
+[incompatible-type]
 
    combo.js:9:1
    9| 'var(--color' as CSSVarRemainder; // ERROR
@@ -172,7 +172,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:6:1
 
-Cannot cast `'data'` to `DataProp` because string literal `data` [1] is incompatible with template literal type [2].
+Cannot cast `'data'` to `DataProp` because `"data"` [1] is incompatible with ``${"data-"}${string}`` [2].
 [incompatible-type]
 
    prefix.js:6:1
@@ -187,8 +187,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- prefix.js:7:1
 
-Cannot cast `'x-data-x'` to `DataProp` because string literal `x-data-x` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'x-data-x'` to `DataProp` because `"x-data-x"` [1] is incompatible with ``${"data-"}${string}`` [2].
+[incompatible-type]
 
    prefix.js:7:1
    7| 'x-data-x' as DataProp; // ERROR
@@ -346,8 +346,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:84:1
 
-Cannot cast `'$'` to `Price` because string literal `$` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'$'` to `Price` because `"$"` [1] is incompatible with ``${"$"}${"1" | "2"}`` [2]. [incompatible-type]
 
    prefix.js:84:1
    84| '$' as Price; // ERROR
@@ -361,8 +360,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:85:1
 
-Cannot cast `'1'` to `Price` because string literal `1` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'1'` to `Price` because `"1"` [1] is incompatible with ``${"$"}${"1" | "2"}`` [2]. [incompatible-type]
 
    prefix.js:85:1
    85| '1' as Price; // ERROR
@@ -394,7 +392,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:106:3
 
-Cannot cast `x` to `StringPrefix` because string literal `foobar` [1] is incompatible with template literal type [2].
+Cannot cast `x` to `StringPrefix` because `"foobar"` [1] is incompatible with ``${"foo"}${"xxx"}`` [2].
 [incompatible-type]
 
    prefix.js:106:3
@@ -412,7 +410,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:109:3
 
-Cannot cast `x` to `StringPrefix` because string literal `foobar` [1] is incompatible with template literal type [2].
+Cannot cast `x` to `StringPrefix` because `"foobar"` [1] is incompatible with ``${"f"}${"bar"}`` [2].
 [incompatible-type]
 
    prefix.js:109:3
@@ -463,8 +461,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:130:5
 
-Cannot assign `obj` to `noCopyReadWrite` because in the indexer property's key: string `bar` [1] is incompatible with
-template literal type [2]. [incompatible-type]
+Cannot assign `obj` to `noCopyReadWrite` because in the indexer property's key: `"bar"` [1] is incompatible with
+``${"foo"}${string}`` [2]. [incompatible-type]
 
    prefix.js:130:5
    130|     obj; // ERROR
@@ -499,8 +497,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:6:1
 
-Cannot cast empty string to `Percent` because empty string [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast empty string to `Percent` because `""` [1] is incompatible with ``${string}${"%"}`` [2]. [incompatible-type]
 
    suffix.js:6:1
    6| '' as Percent; // ERROR
@@ -514,8 +511,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- suffix.js:7:1
 
-Cannot cast `'%6'` to `Percent` because string literal `%6` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'%6'` to `Percent` because `"%6"` [1] is incompatible with ``${string}${"%"}`` [2]. [incompatible-type]
 
    suffix.js:7:1
    7| '%6' as Percent; // ERROR
@@ -641,7 +637,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:69:1
 
-Cannot cast `'!'` to `Exclamation` because string literal `!` [1] is incompatible with template literal type [2].
+Cannot cast `'!'` to `Exclamation` because `"!"` [1] is incompatible with ``${"woo" | "yay"}${"!"}`` [2].
 [incompatible-type]
 
    suffix.js:69:1
@@ -656,7 +652,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:70:1
 
-Cannot cast `'yay'` to `Exclamation` because string literal `yay` [1] is incompatible with template literal type [2].
+Cannot cast `'yay'` to `Exclamation` because `"yay"` [1] is incompatible with ``${"woo" | "yay"}${"!"}`` [2].
 [incompatible-type]
 
    suffix.js:70:1
@@ -688,7 +684,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:91:3
 
-Cannot cast `x` to `StringSuffix` because string literal `barfoo` [1] is incompatible with template literal type [2].
+Cannot cast `x` to `StringSuffix` because `"barfoo"` [1] is incompatible with ``${"xxx"}${"foo"}`` [2].
 [incompatible-type]
 
    suffix.js:91:3
@@ -706,7 +702,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:94:3
 
-Cannot cast `x` to `StringSuffix` because string literal `barfoo` [1] is incompatible with template literal type [2].
+Cannot cast `x` to `StringSuffix` because `"barfoo"` [1] is incompatible with ``${"bar"}${"o"}`` [2].
 [incompatible-type]
 
    suffix.js:94:3

@@ -4317,11 +4317,11 @@ pub fn rec_sub_t<'cx>(
         // in turn, with the goal of selecting the correct branch. This process is
         // reused for unions as well. See comments on try_union and
         // try_intersection.)
-        (TypeInner::IntersectionT(r, rep), _) => speculation_kit::try_intersection(
+        (TypeInner::IntersectionT(_, rep), _) => speculation_kit::try_intersection(
             cx, env,
             trace,
             UseT::new(UseTInner::UseT(use_op, u.dupe())),
-            r.dupe(),
+            l.dupe(),
             rep,
         ),
         (TypeInner::NullProtoT(reason), _) => {

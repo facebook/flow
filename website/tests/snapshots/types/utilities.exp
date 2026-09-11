@@ -647,8 +647,8 @@ Found 1 error
 === block 41 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast `'random string'` to `DataProp` because string literal `random string` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'random string'` to `DataProp` because `"random string"` [1] is incompatible with
+``${"data-"}${string}`` [2]. [incompatible-type]
 
    -:5:1
    5| 'random string' as DataProp; // ERROR
@@ -665,8 +665,8 @@ Found 1 error
 === block 42 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast `'random string'` to `Exclaim` because string literal `random string` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'random string'` to `Exclaim` because `"random string"` [1] is incompatible with ``${string}${"!"}`` [2].
+[incompatible-type]
 
    -:5:1
    5| 'random string' as Exclaim; // ERROR
@@ -683,8 +683,8 @@ Found 1 error
 === block 43 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
-Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'random string'` to `CSSVar` because `"random string"` [1] is incompatible with
+``${"var(--"}${string}`` [2]. [incompatible-type]
 
    -:4:1
    4| 'random string' as CSSVar; // ERROR
@@ -697,8 +697,8 @@ References:
 
 Error ----------------------------------------------------------------------------- -:4:1
 
-Cannot cast `'random string'` to `CSSVar` because string literal `random string` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `'random string'` to `CSSVar` because `"random string"` [1] is incompatible with ``${string}${")"}`` [2].
+[incompatible-type]
 
    -:4:1
    4| 'random string' as CSSVar; // ERROR
@@ -715,7 +715,7 @@ Found 2 errors
 === block 44 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast `'$999'` to `Price` because string literal `$999` [1] is incompatible with template literal type [2].
+Cannot cast `'$999'` to `Price` because `"$999"` [1] is incompatible with ``${"$"}${"1" | "2"}`` [2].
 [incompatible-type]
 
    -:5:1

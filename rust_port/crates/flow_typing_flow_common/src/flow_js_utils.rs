@@ -1672,6 +1672,16 @@ pub fn incompatible_types_error(
     use_op: UseOp,
     explanation: Option<Explanation<ALoc>>,
 ) -> ErrorMessage<ALoc> {
+    incompatible_types_error_with_branches(lower, upper, use_op, explanation, vec![])
+}
+
+pub fn incompatible_types_error_with_branches(
+    lower: &Type,
+    upper: &Type,
+    use_op: UseOp,
+    explanation: Option<Explanation<ALoc>>,
+    branches: Vec<ErrorMessage<ALoc>>,
+) -> ErrorMessage<ALoc> {
     use flow_typing_type::type_util;
 
     ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
@@ -1684,6 +1694,7 @@ pub fn incompatible_types_error(
         use_op,
         explanation,
         example: None,
+        branches,
     }))
 }
 

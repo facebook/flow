@@ -14116,6 +14116,7 @@ fn static_method_call_object<'a>(
                         use_op,
                         explanation: None,
                         example: None,
+                        branches: vec![],
                     },
                 )),
             );

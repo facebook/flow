@@ -158,25 +158,6 @@ pub struct EIncompatibleSpeculationData<L: Dupe + PartialOrd + Ord + PartialEq +
     pub branches: Vec<ErrorMessage<L>>,
 }
 
-/// Data struct for boxed `ErrorMessage::EIncompatibleDefs` variant.
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub struct EIncompatibleDefsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub use_op: VirtualUseOp<L>,
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
-    pub branches: Vec<ErrorMessage<L>>,
-}
-
 /// Data struct for boxed `ErrorMessage::EPropsNotFoundInInvariantSubtyping` variant.
 #[derive(
     Debug,
@@ -991,24 +972,6 @@ pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     },
 }
 
-/// Error message types for Flow type errors.
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub struct EIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lower: (VirtualReason<L>, Option<LowerKind>),
-    pub upper: IncompatibleUpperData<L>,
-    pub use_op: Option<VirtualUseOp<L>>,
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EAnnotationInferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
@@ -1066,7 +1029,7 @@ pub struct EIncompatibleTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: Option<VirtualUseOp<L>>,
 }
 
-// The normalized type is presentation-only so error deduplication matches EIncompatible.
+// The normalized type is presentation-only, so it does not affect error identity.
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIncompatibleTypeData<L> {
     fn eq(&self, other: &Self) -> bool {
         self.lower_reason == other.lower_reason
@@ -1914,6 +1877,7 @@ pub struct EIncompatibleTypesWithUseOpData<L: Dupe + PartialOrd + Ord + PartialE
     pub upper_desc: TypeOrTypeDesc<L>,
     pub explanation: Option<Explanation<L>>,
     pub example: Option<Box<ErrorMessage<L>>>,
+    pub branches: Vec<ErrorMessage<L>>,
 }
 
 // Source references preserve provenance while type descriptions keep distinct inferred branches
@@ -1929,6 +1893,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIncompatibleTyp
             && self.upper_desc == other.upper_desc
             && self.explanation == other.explanation
             && self.example == other.example
+            && self.branches == other.branches
     }
 }
 
@@ -1947,6 +1912,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
         self.upper_desc.hash(state);
         self.explanation.hash(state);
         self.example.hash(state);
+        self.branches.hash(state);
     }
 }
 
@@ -1970,6 +1936,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIncompatibleTypesWith
             .then_with(|| self.upper_desc.cmp(&other.upper_desc))
             .then_with(|| self.explanation.cmp(&other.explanation))
             .then_with(|| self.example.cmp(&other.example))
+            .then_with(|| self.branches.cmp(&other.branches))
     }
 }
 
@@ -2646,13 +2613,9 @@ pub struct EDevOnlyInvalidatedRefinementInfoData<L: Dupe + PartialOrd + Ord + Pa
     serde::Deserialize
 )]
 pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    EIncompatible(Box<EIncompatibleData<L>>),
-
     EIncompatibleType(Box<EIncompatibleTypeData<L>>),
 
     EIncompatibleSpeculation(Box<EIncompatibleSpeculationData<L>>),
-
-    EIncompatibleDefs(Box<EIncompatibleDefsData<L>>),
 
     EIncompatibleProp(Box<EIncompatiblePropData<L>>),
 
@@ -3763,23 +3726,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         };
 
         match msg {
-            EIncompatible(box EIncompatibleData {
-                use_op,
-                lower: (lreason, lkind),
-                upper:
-                    IncompatibleUpperData {
-                        loc: uloc,
-                        kind: ukind,
-                    },
-            }) => EIncompatible(Box::new(EIncompatibleData {
-                use_op: use_op.map(map_use_op),
-                lower: (map_reason(lreason), lkind),
-                upper: IncompatibleUpperData {
-                    loc: f(uloc),
-                    kind: map_upper_kind(ukind),
-                },
-            })),
-
             EIncompatibleType(box EIncompatibleTypeData {
                 lower_reason,
                 lower_kind,
@@ -3812,18 +3758,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => EIncompatibleSpeculation(Box::new(EIncompatibleSpeculationData {
                 use_op: use_op.map(map_use_op),
                 loc: f(loc),
-                branches: branches.into_iter().map(map_branch).collect(),
-            })),
-
-            EIncompatibleDefs(box EIncompatibleDefsData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                branches,
-            }) => EIncompatibleDefs(Box::new(EIncompatibleDefsData {
-                use_op: map_use_op(use_op),
-                reason_lower: map_reason(reason_lower),
-                reason_upper: map_reason(reason_upper),
                 branches: branches.into_iter().map(map_branch).collect(),
             })),
 
@@ -4222,6 +4156,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_desc,
                 explanation,
                 example,
+                branches,
             }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
                 use_op: map_use_op(use_op),
                 lower_loc: f(lower_loc),
@@ -4232,6 +4167,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_desc),
                 explanation: explanation.map(|e| map_loc_of_explanation(&|l: &L| f(l.dupe()), e)),
                 example: example.map(|example| Box::new(map_branch(*example))),
+                branches: branches.into_iter().map(map_branch).collect(),
             })),
 
             EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
@@ -5798,6 +5734,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_desc,
                 explanation,
                 example,
+                branches,
             }) => EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
                 use_op: map_use_op(&f, use_op),
                 lower_loc,
@@ -5809,6 +5746,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 explanation,
                 example: example
                     .map(|example| Box::new(Self::convert_type_to_type_desc(f.clone(), *example))),
+                branches: branches
+                    .into_iter()
+                    .map(|branch| Self::convert_type_to_type_desc(f.clone(), branch))
+                    .collect(),
             })),
 
             EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
@@ -5868,25 +5809,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            EIncompatibleDefs(box EIncompatibleDefsData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                branches,
-            }) => {
-                let use_op = map_use_op(&f, use_op);
-                let branches = branches
-                    .into_iter()
-                    .map(|b| Self::convert_type_to_type_desc(f.clone(), b))
-                    .collect();
-                EIncompatibleDefs(Box::new(EIncompatibleDefsData {
-                    use_op,
-                    reason_lower,
-                    reason_upper,
-                    branches,
-                }))
-            }
-
             EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,
                 loc,
@@ -5916,16 +5838,12 @@ where
     F: Fn(&VirtualUseOp<L>) -> T,
 {
     match msg {
-        ErrorMessage::EIncompatible(box EIncompatibleData { use_op, .. }) => {
-            use_op.as_ref().map_or_else(|| nope, util)
-        }
         ErrorMessage::EIncompatibleType(box EIncompatibleTypeData { use_op, .. }) => {
             use_op.as_ref().map_or_else(|| nope, util)
         }
         ErrorMessage::EIncompatibleSpeculation(box EIncompatibleSpeculationData {
             use_op, ..
         }) => use_op.as_ref().map_or_else(|| nope, util),
-        ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData { use_op, .. }) => util(use_op),
         ErrorMessage::EIncompatibleProp(box EIncompatiblePropData { use_op, .. }) => {
             use_op.as_ref().map_or_else(|| nope, util)
         }
@@ -6475,7 +6393,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EEnumError(EnumErrorKind::EnumIncompatible(box EnumIncompatibleData {
                 ..
             }))
-            | Self::EIncompatibleDefs(..)
             | Self::EInvalidObjectKit(box EInvalidObjectKitData { .. })
             | Self::EIncompatibleWithExact { .. }
             | Self::EFunctionIncompatibleWithIndexer { .. }
@@ -6511,7 +6428,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EExpectedStringLit(box EExpectedStringLitData { .. })
             | Self::EExpectedBigIntLit(box EExpectedBigIntLitData { .. })
             | Self::EIncompatibleProp(box EIncompatiblePropData { .. })
-            | Self::EIncompatible(box EIncompatibleData { .. })
             | Self::EIncompatibleType(box EIncompatibleTypeData { .. })
             | Self::EIncompatibleSpeculation(..)
             | Self::EHookIncompatible(box EHookIncompatibleData { .. })
@@ -6752,24 +6668,6 @@ pub fn type_casting_examples() -> (&'static str, &'static str) {
 
 /// Friendly messages are created differently based on the specific error they come from.
 /// We collect the ingredients here and pass them to make_error_printable.
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub struct IncompatibleUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub loc: L,
-    pub upper_kind: UpperKind<L>,
-    pub reason_lower: VirtualReason<L>,
-    pub use_op: VirtualUseOp<L>,
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct IncompatibleTypeUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
@@ -7009,7 +6907,6 @@ pub struct PropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    IncompatibleUse(Box<IncompatibleUseData<L>>),
     IncompatibleTypeUse(Box<IncompatibleTypeUseData<L>>),
     Speculation(Box<SpeculationData<L>>),
     IncompatibleSubtyping(Box<IncompatibleSubtypingData<L>>),
@@ -7047,21 +6944,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         use FriendlyMessageRecipe::*;
 
         match self {
-            ErrorMessage::EIncompatible(box EIncompatibleData {
-                lower: (reason_lower, _),
-                upper:
-                    IncompatibleUpperData {
-                        loc,
-                        kind: upper_kind,
-                    },
-                use_op,
-            }) => IncompatibleUse(Box::new(IncompatibleUseData {
-                loc,
-                upper_kind,
-                reason_lower,
-                use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
-            })),
-
             ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
                 lower_reason,
                 lower_desc,
@@ -7089,29 +6971,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
                 branches,
             })),
-
-            ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                branches,
-            }) => {
-                if branches.is_empty() {
-                    IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
-                        reason_lower,
-                        reason_upper,
-                        use_op,
-                        explanation: None,
-                    }))
-                } else {
-                    let loc = reason_upper.loc.dupe();
-                    Speculation(Box::new(SpeculationData {
-                        loc,
-                        use_op,
-                        branches,
-                    }))
-                }
-            }
 
             ErrorMessage::EExportValueAsType(box (_, export_name)) => Normal(
                 Message::MessageExportValueAsType(export_name.display_smol_str()),
@@ -7404,58 +7263,70 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 explanation,
                 example,
-                ..
-            }) => match example {
-                Some(example) => {
-                    IncompatibleTypesWithExample(Box::new(IncompatibleTypesWithExampleData {
-                        loc: lower_loc.dupe(),
-                        lower_loc: lower_def_loc,
-                        upper_loc: upper_def_loc,
-                        lower_desc: expect_type_desc(lower_desc),
-                        upper_desc: expect_type_desc(upper_desc),
+                branches,
+            }) => {
+                if !branches.is_empty() {
+                    Speculation(Box::new(SpeculationData {
+                        loc: upper_loc,
                         use_op,
-                        explanation,
-                        example,
+                        branches,
                     }))
-                }
-                None => {
-                    let lower_desc = expect_type_desc(lower_desc);
-                    let upper_desc = expect_type_desc(upper_desc);
-                    if let (Err(lower_desc), Err(upper_desc)) = (&lower_desc, &upper_desc)
-                        && (lower_desc.is_explanatory() || upper_desc.is_explanatory())
-                    {
-                        return IncompatibleSubtyping(Box::new(IncompatibleSubtypingData {
-                            reason_lower: VirtualReason::new_with(
-                                lower_desc.clone(),
-                                lower_loc,
-                                Some(lower_def_loc),
-                                None,
-                            ),
-                            reason_upper: VirtualReason::new_with(
-                                upper_desc.clone(),
-                                upper_loc,
-                                Some(upper_def_loc),
-                                None,
-                            ),
-                            use_op,
-                            explanation,
-                        }));
-                    }
-                    UseOp(Box::new(UseOpData {
-                        loc: lower_loc,
-                        message: Message::MessageIncompatibleGeneralWithPrintedTypes(Box::new(
-                            MessageIncompatibleGeneralWithPrintedTypesData {
+                } else {
+                    match example {
+                        Some(example) => IncompatibleTypesWithExample(Box::new(
+                            IncompatibleTypesWithExampleData {
+                                loc: lower_loc.dupe(),
                                 lower_loc: lower_def_loc,
                                 upper_loc: upper_def_loc,
-                                lower_desc,
-                                upper_desc,
+                                lower_desc: expect_type_desc(lower_desc),
+                                upper_desc: expect_type_desc(upper_desc),
+                                use_op,
+                                explanation,
+                                example,
                             },
                         )),
-                        use_op,
-                        explanation,
-                    }))
+                        None => {
+                            let lower_desc = expect_type_desc(lower_desc);
+                            let upper_desc = expect_type_desc(upper_desc);
+                            if let (Err(lower_desc), Err(upper_desc)) = (&lower_desc, &upper_desc)
+                                && (lower_desc.is_explanatory() || upper_desc.is_explanatory())
+                            {
+                                return IncompatibleSubtyping(Box::new(
+                                    IncompatibleSubtypingData {
+                                        reason_lower: VirtualReason::new_with(
+                                            lower_desc.clone(),
+                                            lower_loc,
+                                            Some(lower_def_loc),
+                                            None,
+                                        ),
+                                        reason_upper: VirtualReason::new_with(
+                                            upper_desc.clone(),
+                                            upper_loc,
+                                            Some(upper_def_loc),
+                                            None,
+                                        ),
+                                        use_op,
+                                        explanation,
+                                    },
+                                ));
+                            }
+                            UseOp(Box::new(UseOpData {
+                                loc: lower_loc,
+                                message: Message::MessageIncompatibleGeneralWithPrintedTypes(
+                                    Box::new(MessageIncompatibleGeneralWithPrintedTypesData {
+                                        lower_loc: lower_def_loc,
+                                        upper_loc: upper_def_loc,
+                                        lower_desc,
+                                        upper_desc,
+                                    }),
+                                ),
+                                use_op,
+                                explanation,
+                            }))
+                        }
+                    }
                 }
-            },
+            }
 
             ErrorMessage::EUnsupportedSetProto(_) => {
                 Normal(Message::MessageCannotMutateThisPrototype)
@@ -9831,14 +9702,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EImportTypeAsTypeof(box (_, _)) => Some(InvalidImportType),
             ErrorMessage::EImportTypeAsValue(box (_, _)) => Some(ImportTypeAsValue),
             ErrorMessage::EImportValueAsType(box (_, _)) => Some(ImportValueAsType),
-            ErrorMessage::EIncompatible(box EIncompatibleData {
-                upper:
-                    IncompatibleUpperData {
-                        kind: upper_kind, ..
-                    },
-                ..
-            })
-            | ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
+            ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
                 upper:
                     IncompatibleUpperData {
                         kind: upper_kind, ..
@@ -9850,9 +9714,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ..
             }) => Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleUse),
             ErrorMessage::EIncompatibleSpeculation(..) => Some(IncompatibleUse),
-            ErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData { use_op, .. }) => {
-                Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
-            }
             ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 use_op: Some(use_op),
                 ..

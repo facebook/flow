@@ -89,8 +89,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:46:1
 
-Cannot cast `'+1'` to `BigBody` because string literal `+1` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'+1'` to `BigBody` because `"+1"` [1] is incompatible with `BigBody` [2]. [incompatible-type]
 
    basic.js:46:1
    46| '+1' as BigBody; // ERROR (leading + sign not allowed)
@@ -104,8 +103,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:47:1
 
-Cannot cast `'01'` to `BigBody` because string literal `01` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'01'` to `BigBody` because `"01"` [1] is incompatible with `BigBody` [2]. [incompatible-type]
 
    basic.js:47:1
    47| '01' as BigBody; // ERROR (no leading zero in decimal)
@@ -119,8 +117,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:48:1
 
-Cannot cast `'1_000'` to `BigBody` because string literal `1_000` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'1_000'` to `BigBody` because `"1_000"` [1] is incompatible with `BigBody` [2]. [incompatible-type]
 
    basic.js:48:1
    48| '1_000' as BigBody; // ERROR (no separators)
@@ -194,8 +191,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:77:1
 
-Cannot cast `"hello world!"` to `Greeting` because string literal `hello world!` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `"hello world!"` to `Greeting` because `"hello world!"` [1] is incompatible with `Greeting` [2].
+[incompatible-type]
 
    basic.js:77:1
    77| "hello world!" as Greeting; // ERROR
@@ -223,8 +220,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:98:1
 
-Cannot cast `"unknown_id"` to `AllLocaleIDs` because string literal `unknown_id` [1] is incompatible with template
-literal type [2]. [incompatible-type]
+Cannot cast `"unknown_id"` to `AllLocaleIDs` because `"unknown_id"` [1] is incompatible with `AllLocaleIDs` [2].
+[incompatible-type]
 
    basic.js:98:1
    98| "unknown_id" as AllLocaleIDs; // ERROR
@@ -266,8 +263,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:114:1
 
-Cannot cast `"a_e"` to `ABCD` because string literal `a_e` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `"a_e"` to `ABCD` because `"a_e"` [1] is incompatible with `ABCD` [2]. [incompatible-type]
 
    basic.js:114:1
    114| "a_e" as ABCD; // ERROR
@@ -352,7 +348,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:166:1
 
-Cannot cast `'axybxyc'` to `TL3` because string literal `axybxyc` [1] is incompatible with template literal type [2].
+Cannot cast `'axybxyc'` to `TL3` because `"axybxyc"` [1] is incompatible with ``a${`x${"o"}y`}b${`x${"o"}y`}c`` [2].
 [incompatible-type]
 
    basic.js:166:1
@@ -367,7 +363,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:167:1
 
-Cannot cast `'aobyoc'` to `TL3` because string literal `aobyoc` [1] is incompatible with template literal type [2].
+Cannot cast `'aobyoc'` to `TL3` because `"aobyoc"` [1] is incompatible with ``a${`x${"o"}y`}b${`x${"o"}y`}c`` [2].
 [incompatible-type]
 
    basic.js:167:1
@@ -396,8 +392,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:183:1
 
-Cannot cast `'a-e'` to `AliasTemplate` because string literal `a-e` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'a-e'` to `AliasTemplate` because `"a-e"` [1] is incompatible with `AliasTemplate` [2]. [incompatible-type]
 
    basic.js:183:1
    183| 'a-e' as AliasTemplate; // ERROR
@@ -441,8 +436,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:227:1
 
-Cannot cast `'NaNpx'` to `PixelValue` because string literal `NaNpx` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'NaNpx'` to `PixelValue` because `"NaNpx"` [1] is incompatible with `PixelValue` [2]. [incompatible-type]
 
    basic.js:227:1
    227| 'NaNpx' as PixelValue; // ERROR
@@ -456,8 +450,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:228:1
 
-Cannot cast `'Infinitypx'` to `PixelValue` because string literal `Infinitypx` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'Infinitypx'` to `PixelValue` because `"Infinitypx"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:228:1
    228| 'Infinitypx' as PixelValue; // ERROR
@@ -471,8 +465,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:229:1
 
-Cannot cast `'1_000px'` to `PixelValue` because string literal `1_000px` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'1_000px'` to `PixelValue` because `"1_000px"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:229:1
    229| '1_000px' as PixelValue; // ERROR (separators not allowed)
@@ -486,8 +480,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:230:1
 
-Cannot cast `'pxpx'` to `PixelValue` because string literal `pxpx` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'pxpx'` to `PixelValue` because `"pxpx"` [1] is incompatible with `PixelValue` [2]. [incompatible-type]
 
    basic.js:230:1
    230| 'pxpx' as PixelValue; // ERROR (empty number portion)
@@ -501,8 +494,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:231:1
 
-Cannot cast `'1.5.5px'` to `PixelValue` because string literal `1.5.5px` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'1.5.5px'` to `PixelValue` because `"1.5.5px"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:231:1
    231| '1.5.5px' as PixelValue; // ERROR (multiple decimals)
@@ -516,8 +509,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:232:1
 
-Cannot cast `'1epx'` to `PixelValue` because string literal `1epx` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'1epx'` to `PixelValue` because `"1epx"` [1] is incompatible with `PixelValue` [2]. [incompatible-type]
 
    basic.js:232:1
    232| '1epx' as PixelValue; // ERROR (missing exponent digits)
@@ -531,8 +523,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:233:1
 
-Cannot cast `'--5px'` to `PixelValue` because string literal `--5px` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'--5px'` to `PixelValue` because `"--5px"` [1] is incompatible with `PixelValue` [2]. [incompatible-type]
 
    basic.js:233:1
    233| '--5px' as PixelValue; // ERROR (double sign)
@@ -546,8 +537,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:234:1
 
-Cannot cast `'0xff_00px'` to `PixelValue` because string literal `0xff_00px` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'0xff_00px'` to `PixelValue` because `"0xff_00px"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:234:1
    234| '0xff_00px' as PixelValue; // ERROR (underscore in hex)
@@ -561,8 +552,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:235:1
 
-Cannot cast `'.px'` to `PixelValue` because string literal `.px` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'.px'` to `PixelValue` because `".px"` [1] is incompatible with `PixelValue` [2]. [incompatible-type]
 
    basic.js:235:1
    235| '.px' as PixelValue; // ERROR (dot only)
@@ -576,8 +566,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:237:1
 
-Cannot cast `'-0x10px'` to `PixelValue` because string literal `-0x10px` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'-0x10px'` to `PixelValue` because `"-0x10px"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:237:1
    237| '-0x10px' as PixelValue; // ERROR (signed hex)
@@ -591,8 +581,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:238:1
 
-Cannot cast `'+0o10px'` to `PixelValue` because string literal `+0o10px` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'+0o10px'` to `PixelValue` because `"+0o10px"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:238:1
    238| '+0o10px' as PixelValue; // ERROR (signed oct)
@@ -606,8 +596,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:239:1
 
-Cannot cast `'-0b10px'` to `PixelValue` because string literal `-0b10px` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'-0b10px'` to `PixelValue` because `"-0b10px"` [1] is incompatible with `PixelValue` [2].
+[incompatible-type]
 
    basic.js:239:1
    239| '-0b10px' as PixelValue; // ERROR (signed bin)
@@ -621,8 +611,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:244:1
 
-Cannot cast `'%'` to `Percentage` because string literal `%` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'%'` to `Percentage` because `"%"` [1] is incompatible with `Percentage` [2]. [incompatible-type]
 
    basic.js:244:1
    244| '%' as Percentage; // ERROR
@@ -636,8 +625,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:252:1
 
-Cannot cast `'1.2'` to `SemVerLike` because string literal `1.2` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'1.2'` to `SemVerLike` because `"1.2"` [1] is incompatible with `SemVerLike` [2]. [incompatible-type]
 
    basic.js:252:1
    252| '1.2' as SemVerLike; // ERROR (missing third)
@@ -651,8 +639,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:253:1
 
-Cannot cast `'a.b.c'` to `SemVerLike` because string literal `a.b.c` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'a.b.c'` to `SemVerLike` because `"a.b.c"` [1] is incompatible with `SemVerLike` [2]. [incompatible-type]
 
    basic.js:253:1
    253| 'a.b.c' as SemVerLike; // ERROR
@@ -666,8 +653,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:264:1
 
-Cannot cast `'1.5n'` to `BigSuf` because string literal `1.5n` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'1.5n'` to `BigSuf` because `"1.5n"` [1] is incompatible with `BigSuf` [2]. [incompatible-type]
 
    basic.js:264:1
    264| '1.5n' as BigSuf; // ERROR (decimal not bigint)
@@ -681,8 +667,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:265:1
 
-Cannot cast `'+5n'` to `BigSuf` because string literal `+5n` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'+5n'` to `BigSuf` because `"+5n"` [1] is incompatible with `BigSuf` [2]. [incompatible-type]
 
    basic.js:265:1
    265| '+5n' as BigSuf; // ERROR (no leading + for bigint)
@@ -696,8 +681,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:266:1
 
-Cannot cast `'05n'` to `BigSuf` because string literal `05n` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'05n'` to `BigSuf` because `"05n"` [1] is incompatible with `BigSuf` [2]. [incompatible-type]
 
    basic.js:266:1
    266| '05n' as BigSuf; // ERROR (no leading zero)
@@ -711,8 +695,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:273:1
 
-Cannot cast `'is_maybe'` to `BoolPrefix` because string literal `is_maybe` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'is_maybe'` to `BoolPrefix` because `"is_maybe"` [1] is incompatible with `BoolPrefix` [2].
+[incompatible-type]
 
    basic.js:273:1
    273| 'is_maybe' as BoolPrefix; // ERROR
@@ -770,8 +754,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:379:1
 
-Cannot cast `'hello'` to `Bracketed` because string literal `hello` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'hello'` to `Bracketed` because `"hello"` [1] is incompatible with `Bracketed` [2]. [incompatible-type]
 
    basic.js:379:1
    379| 'hello' as Bracketed; // ERROR
@@ -832,8 +815,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'1'` to `Spacing` because: [incompatible-type]
  - Either string literal `1` [1] is incompatible with string literal `0` [2].
- - Or string literal `1` [1] is incompatible with template literal type [3].
- - Or string literal `1` [1] is incompatible with template literal type [4].
+ - Or `"1"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -849,17 +831,13 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:410:1
 
 Cannot cast `'px'` to `Spacing` because: [incompatible-type]
  - Either string literal `px` [1] is incompatible with string literal `0` [2].
- - Or string literal `px` [1] is incompatible with template literal type [3].
- - Or string literal `px` [1] is incompatible with template literal type [4].
+ - Or `"px"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -875,17 +853,13 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:411:1
 
 Cannot cast `'12em'` to `Spacing` because: [incompatible-type]
  - Either string literal `12em` [1] is incompatible with string literal `0` [2].
- - Or string literal `12em` [1] is incompatible with template literal type [3].
- - Or string literal `12em` [1] is incompatible with template literal type [4].
+ - Or `"12em"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -901,17 +875,13 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:412:1
 
 Cannot cast `'s0'` to `Spacing` because: [incompatible-type]
  - Either string literal `s0` [1] is incompatible with string literal `0` [2].
- - Or string literal `s0` [1] is incompatible with template literal type [3].
- - Or string literal `s0` [1] is incompatible with template literal type [4].
+ - Or `"s0"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -927,17 +897,13 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:413:1
 
 Cannot cast `'s21'` to `Spacing` because: [incompatible-type]
  - Either string literal `s21` [1] is incompatible with string literal `0` [2].
- - Or string literal `s21` [1] is incompatible with template literal type [3].
- - Or string literal `s21` [1] is incompatible with template literal type [4].
+ - Or `"s21"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -953,17 +919,13 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:414:1
 
 Cannot cast `'red'` to `Spacing` because: [incompatible-type]
  - Either string literal `red` [1] is incompatible with string literal `0` [2].
- - Or string literal `red` [1] is incompatible with template literal type [3].
- - Or string literal `red` [1] is incompatible with template literal type [4].
+ - Or `"red"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -979,17 +941,14 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:425:1
 
 Cannot cast `'0'` to `SpacingShorthand` because: [incompatible-type]
- - Either string literal `0` [1] is incompatible with template literal type [2].
- - Or string literal `0` [1] is incompatible with template literal type [3].
- - Or string literal `0` [1] is incompatible with template literal type [4].
+ - Either `"0"` [1] is incompatible with ``${Spacing} ${Spacing}`` [2].
+ - Or `"0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing}`` [3].
+ - Or `"0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing} ${Spacing}`` [4].
 
    basic.js:425:1
    425| '0' as SpacingShorthand; // ERROR: 1-tuple not allowed
@@ -1011,14 +970,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'0 0 0 0 0'` to `SpacingShorthand` because: [incompatible-type]
  - Either string literal `0 0 0 0` [1] is incompatible with string literal `0` [2].
- - Or string literal `0 0 0 0` [1] is incompatible with template literal type [3].
- - Or string literal `0 0 0 0` [1] is incompatible with template literal type [4].
  - Or string literal `0 0 0` [1] is incompatible with string literal `0` [2].
- - Or string literal `0 0 0` [1] is incompatible with template literal type [3].
- - Or string literal `0 0 0` [1] is incompatible with template literal type [4].
  - Or string literal `0 0` [1] is incompatible with string literal `0` [2].
- - Or string literal `0 0` [1] is incompatible with template literal type [3].
- - Or string literal `0 0` [1] is incompatible with template literal type [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1031,20 +984,14 @@ References:
    basic.js:398:7
    398|     | `0`
               ^^^ [2]
-   basic.js:399:7
-   399|     | `${number}px`
-              ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:427:1
 
 Cannot cast `'0,0,0'` to `SpacingShorthand` because: [incompatible-type]
- - Either string literal `0,0,0` [1] is incompatible with template literal type [2].
- - Or string literal `0,0,0` [1] is incompatible with template literal type [3].
- - Or string literal `0,0,0` [1] is incompatible with template literal type [4].
+ - Either `"0,0,0"` [1] is incompatible with ``${Spacing} ${Spacing}`` [2].
+ - Or `"0,0,0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing}`` [3].
+ - Or `"0,0,0"` [1] is incompatible with ``${Spacing} ${Spacing} ${Spacing} ${Spacing}`` [4].
 
    basic.js:427:1
    427| '0,0,0' as SpacingShorthand; // ERROR: wrong delimiter
@@ -1066,10 +1013,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `'foo bar'` to `SpacingShorthand` because: [incompatible-type]
  - Either string literal `foo` [1] is incompatible with string literal `0` [2].
- - Or string literal `foo` [1] is incompatible with template literal type [3].
- - Or string literal `foo` [1] is incompatible with template literal type [4].
- - Or string literal `foo bar` [1] is incompatible with template literal type [5].
- - Or string literal `foo bar` [1] is incompatible with template literal type [6].
+ - Or `"foo"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1085,25 +1029,13 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
-   basic.js:418:7
-   418|     | `${Spacing} ${Spacing} ${Spacing}`
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   basic.js:419:7
-   419|     | `${Spacing} ${Spacing} ${Spacing} ${Spacing}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error --------------------------------------------------------------------------------------------------- basic.js:429:1
 
 Cannot cast `'s21 0'` to `SpacingShorthand` because: [incompatible-type]
  - Either string literal `s21` [1] is incompatible with string literal `0` [2].
- - Or string literal `s21` [1] is incompatible with template literal type [3].
- - Or string literal `s21` [1] is incompatible with template literal type [4].
- - Or string literal `s21 0` [1] is incompatible with template literal type [5].
- - Or string literal `s21 0` [1] is incompatible with template literal type [6].
+ - Or `"s21"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1119,15 +1051,6 @@ References:
    basic.js:399:7
    399|     | `${number}px`
               ^^^^^^^^^^^^^ [3]
-   basic.js:400:7
-   400|     | `${number}rem`
-              ^^^^^^^^^^^^^^ [4]
-   basic.js:418:7
-   418|     | `${Spacing} ${Spacing} ${Spacing}`
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   basic.js:419:7
-   419|     | `${Spacing} ${Spacing} ${Spacing} ${Spacing}`;
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error -------------------------------------------------------------------------------------------------- basic.js:434:19
@@ -1148,8 +1071,7 @@ Template literal type produces a union type that is too complex to represent. [i
 
 Error --------------------------------------------------------------------------------------------------- basic.js:446:1
 
-Cannot cast `'abk'` to `AtLimit` because string literal `abk` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'abk'` to `AtLimit` because `"abk"` [1] is incompatible with `AtLimit` [2]. [incompatible-type]
 
    basic.js:446:1
    446| 'abk' as AtLimit; // ERROR
@@ -1244,8 +1166,7 @@ Template literal type placeholder must be a subtype of `string | number | bigint
 
 Error --------------------------------------------------------------------------------------------------- basic.js:479:1
 
-Cannot cast `'abcpx'` to `NumPx` because string literal `abcpx` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'abcpx'` to `NumPx` because `"abcpx"` [1] is incompatible with `NumPx` [2]. [incompatible-type]
 
    basic.js:479:1
    479| 'abcpx' as NumPx; // ERROR (not numeric body)
@@ -1752,8 +1673,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:185:1
 
-Cannot cast `'hello world'` to `REP1` because string literal `hello world` [1] is incompatible with template literal
-type [2]. [incompatible-type]
+Cannot cast `'hello world'` to `REP1` because `"hello world"` [1] is incompatible with ``${"hello
+"}${"there"}${""}`` [2]. [incompatible-type]
 
    inference.js:185:1
    185| 'hello world' as REP1; // ERROR
@@ -1976,8 +1897,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:306:1
 
-Cannot cast `'[d]'` to `W1` because string literal `[d]` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'[d]'` to `W1` because: [incompatible-type]
+ - Either `"[d]"` [1] is incompatible with ``[${"a"}]`` [2].
+ - Or `"[d]"` [1] is incompatible with ``[${"b"}]`` [2].
+ - Or `"[d]"` [1] is incompatible with ``[${"c"}]`` [2].
 
    inference.js:306:1
    306| '[d]' as W1; // ERROR
@@ -2093,8 +2016,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:383:1
 
-Cannot cast `'a.b.d'` to `J1` because string literal `d` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'a.b.d'` to `J1` because `"d"` [1] is incompatible with ``${["c"][0]}`` [2]. [incompatible-type]
 
    inference.js:383:1
    383| 'a.b.d' as J1; // ERROR
@@ -2108,8 +2030,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:387:1
 
-Cannot cast `'wrong'` to `J2` because string literal `wrong` [1] is incompatible with template literal type [2].
-[incompatible-type]
+Cannot cast `'wrong'` to `J2` because `"wrong"` [1] is incompatible with ``${[1, 2, 3][0]}${"-"}${Join<[2, 3],
+"-">}`` [2]. [incompatible-type]
 
    inference.js:387:1
    387| 'wrong' as J2; // ERROR
@@ -2123,7 +2045,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:406:1
 
-Cannot cast `'wrong'` to `RA1` because string literal `wrong` [1] is incompatible with template literal type [2].
+Cannot cast `'wrong'` to `RA1` because `"wrong"` [1] is incompatible with ``${"a/b/c"}${"/"}${"d"}`` [2].
 [incompatible-type]
 
    inference.js:406:1
@@ -2138,7 +2060,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:410:1
 
-Cannot cast `'hello'` to `RA2` because string literal `hello` [1] is incompatible with template literal type [2].
+Cannot cast `'hello'` to `RA2` because `"hello"` [1] is incompatible with ``${"her"}${"r"}${"o"}`` [2].
 [incompatible-type]
 
    inference.js:410:1
@@ -2168,7 +2090,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:422:1
 
-Cannot cast `'ade'` to `Backtrack` because string literal `ade` [1] is incompatible with template literal type [2].
+Cannot cast `'ade'` to `Backtrack` because `"ade"` [1] is incompatible with ``${"a" | "ab"}${"c"}`` [2].
 [incompatible-type]
 
    inference.js:422:1

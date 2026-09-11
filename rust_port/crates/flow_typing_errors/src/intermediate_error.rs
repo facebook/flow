@@ -62,7 +62,6 @@ use flow_typing_type::type_::root_of_use_op;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use vec1::Vec1;
 
-use super::error_message::EIncompatibleDefsData;
 use super::error_message::EnumErrorKind;
 use super::error_message::ErrorMessage as FlowErrorMessage;
 use super::error_message::util_use_op_of_msg;
@@ -152,7 +151,6 @@ use crate::error_message::IncompatibleInvariantSubtypingData;
 use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
 use crate::error_message::IncompatibleTypesWithExampleData;
-use crate::error_message::IncompatibleUseData;
 use crate::error_message::PropMissingInLookupData;
 use crate::error_message::PropMissingInSubtypingData;
 use crate::error_message::PropPolarityMismatchData;
@@ -369,19 +367,18 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
             box EIncompatibleTypesWithUseOpData {
                 lower_desc,
                 upper_desc,
+                branches,
                 ..
             },
         ) = msg
         {
-            score_categories(type_category(lower_desc), type_category(upper_desc))
+            if branches.is_empty() {
+                score_categories(type_category(lower_desc), type_category(upper_desc))
+            } else {
+                REASON_SCORE
+            }
         } else {
             let reasons: Option<(&VirtualReason<L>, &VirtualReason<L>)> = match msg {
-                FlowErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
-                    reason_lower: rl,
-                    reason_upper: ru,
-                    branches,
-                    ..
-                }) if branches.is_empty() => Some((rl, ru)),
                 FlowErrorMessage::EIncompatibleWithExact((rl, ru), _, _) => Some((rl, ru)),
                 _ => None,
             };
@@ -587,24 +584,6 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
         };
 
         match error.msg_of_error() {
-            FlowErrorMessage::EIncompatibleDefs(box EIncompatibleDefsData {
-                use_op,
-                reason_lower,
-                reason_upper,
-                branches,
-            }) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EIncompatibleDefs(Box::new(
-                        EIncompatibleDefsData {
-                            use_op: use_op_new,
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
-                            branches: branches.clone(),
-                        },
-                    )))
-            }
             FlowErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
                 reason_lower,
                 reason_upper,
@@ -680,6 +659,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                     upper_desc,
                     explanation,
                     example,
+                    branches,
                 },
             ) => {
                 let (
@@ -705,6 +685,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                             upper_desc: upper_desc_new,
                             explanation: explanation.clone(),
                             example: example.clone(),
+                            branches: branches.clone(),
                         },
                     )))
             }
@@ -3900,16 +3881,6 @@ where
             .unwrap(),
             use_op,
         ),
-
-        (
-            None,
-            FriendlyMessageRecipe::IncompatibleUse(box IncompatibleUseData {
-                loc,
-                upper_kind,
-                reason_lower,
-                use_op,
-            }),
-        ) => mk_incompatible_use_error(loc_of_aloc(&loc), upper_kind, reason_lower, None, use_op),
 
         (
             None,

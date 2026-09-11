@@ -79,6 +79,7 @@ fn incompatible_renders_error(
         use_op,
         explanation: None,
         example: None,
+        branches: vec![],
     }))
 }
 
