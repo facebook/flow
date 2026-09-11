@@ -1,0 +1,511 @@
+Error ----------------------------------------------------------------------------------------------------- exp.js:12:24
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Expected
+simple key in object: [signature-verification-failure]
+
+   12| export const untyped = {[shared]: 1}; // ERROR: cannot build a typed interface
+                              ^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:17:33
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   17| export const throughComma = (0, Symbol()); // ERROR: cannot build a typed interface
+                                       ^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:25:25
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this conditional expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   25| export const branched = test ? Symbol() : Symbol(); // ERROR: cannot build a typed interface
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:26:24
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this match expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+                              v------------------------------------------------------
+   26| export const matched = match (test) { // ERROR: cannot build a typed interface
+   27|   true => Symbol(),
+   28|   _ => Symbol(),
+   29| };
+       ^
+
+
+Error ----------------------------------------------------------------------------------------------------- exp.js:30:21
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this logical expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   30| export const ored = test || Symbol(); // ERROR: cannot build a typed interface
+                           ^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- imp.js:8:7
+
+Cannot get `table[local]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   imp.js:8:7
+   8| table[local]; // ERROR: not a key of `table`
+            ^^^^^
+
+References:
+   exp.js:8:29
+   8| declare export const table: {[shared]: number, [registered]: string};
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ imp.js:14:7
+
+Cannot get `table[reRegistered]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   imp.js:14:7
+   14| table[reRegistered]; // ERROR: not a key of `table`
+             ^^^^^^^^^^^^
+
+References:
+   exp.js:8:29
+    8| declare export const table: {[shared]: number, [registered]: string};
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- keys.js:10:11
+
+Cannot get `annotated[otherKey]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   keys.js:10:11
+   10| annotated[otherKey]; // ERROR: a different symbol
+                 ^^^^^^^^
+
+References:
+   keys.js:8:26
+    8| declare const annotated: {[key]: number};
+                                ^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- keys.js:19:3
+
+Cannot get `c[otherKey]` because property `[symbol]` is missing in `C` [1]. [prop-missing]
+
+   keys.js:19:3
+   19| c[otherKey]; // ERROR: declared on the static side, not on an instance
+         ^^^^^^^^
+
+References:
+   keys.js:16:18
+   16| declare const c: C;
+                        ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- keys.js:35:1
+
+Cannot cast `otherKey` to `Keys` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   keys.js:35:1
+   35| otherKey as Keys; // ERROR: not a key of `annotated`
+       ^^^^^^^^
+
+References:
+   keys.js:35:13
+   35| otherKey as Keys; // ERROR: not a key of `annotated`
+                   ^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- keys.js:36:1
+
+Cannot cast `key` to string because unique symbol [1] is incompatible with `string` [2]. [incompatible-type]
+
+   keys.js:36:1
+   36| key as string; // ERROR: a symbol is not a string
+       ^^^
+
+References:
+   keys.js:5:13
+    5| const key = Symbol('key');
+                   ^^^^^^^^^^^^^ [1]
+   keys.js:36:8
+   36| key as string; // ERROR: a symbol is not a string
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:25:11
+
+Cannot get `onlyFirst[second]` because property `[symbol]` is missing in object literal [1]. [prop-missing]
+
+   mint.js:25:11
+   25| onlyFirst[second]; // ERROR: a different symbol
+                 ^^^^^^
+
+References:
+   mint.js:24:19
+   24| const onlyFirst = {[first]: 1};
+                         ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- mint.js:31:5
+
+Cannot get `obj[other]` because property `[symbol]` is missing in object literal [1]. [prop-missing]
+
+   mint.js:31:5
+   31| obj[other]; // ERROR: not a key of `obj`
+           ^^^^^
+
+References:
+   mint.js:13:13
+   13| const obj = {[minted]: 1, [described]: 2, [registered]: 3};
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:37:19
+
+Cannot use `rebindable` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `rebindable` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:37:19
+    37| const fromLet = {[rebindable]: 1}; // ERROR: `symbol` is not a key
+                          ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:40:19
+
+Cannot use `alsoRebindable` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `alsoRebindable` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:40:19
+    40| const fromVar = {[alsoRebindable]: 1}; // ERROR: `symbol` is not a key
+                          ^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:45:25
+
+Cannot use `annotated` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `annotated` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:45:25
+   45| const fromAnnotated = {[annotated]: 1}; // ERROR: `symbol` is not a key
+                               ^^^^^^^^^ [1]
+
+References:
+   mint.js:44:18
+   44| const annotated: symbol = Symbol();
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:51:22
+
+Cannot use `inObject.k` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `inObject.k` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:51:22
+    51| const fromObject = {[inObject.k]: 1}; // ERROR: `symbol` is not a key
+                             ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:54:21
+
+Cannot use `inArray[0]` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `inArray[0]` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:54:21
+    54| const fromArray = {[inArray[0]]: 1}; // ERROR: `symbol` is not a key
+                            ^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:56:23
+
+Cannot use `Symbol()` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `Symbol()` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:56:23
+    56| const fromNothing = {[Symbol()]: 1}; // ERROR: `symbol` is not a key
+                              ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:61:21
+
+Cannot use `throughComma` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `throughComma` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:61:21
+    61| const fromComma = {[throughComma]: 1}; // ERROR: `symbol` is not a key
+                            ^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mint.js:69:24
+
+Cannot use `fromCall` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `fromCall` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:69:24
+    69| const fromFunction = {[fromCall]: 1}; // ERROR: `symbol` is not a key
+                               ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- mint.js:107:19
+
+Cannot use `anded` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a boolean [2]. Can you add an appropriate type annotation to `anded` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   mint.js:107:19
+   107| const fromAnd = {[anded]: 1}; // ERROR: `boolean` is not a key
+                          ^^^^^ [1]
+
+References:
+   mint.js:77:21
+    77| declare const test: boolean;
+                            ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- notcalls.js:7:27
+
+Cannot use `constructed` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a `Symbol` [2]. Can you add an appropriate type annotation to `constructed` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   notcalls.js:7:27
+   7| const fromConstructed = {[constructed]: 1}; // ERROR: an instance is not a key
+                                ^^^^^^^^^^^ [1]
+
+References:
+   notcalls.js:6:21
+   6| const constructed = new Symbol();
+                          ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ notcalls.js:11:24
+
+Cannot use `optional` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `optional` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   notcalls.js:11:24
+    11| const fromOptional = {[optional]: 1}; // ERROR: `symbol` is not a key
+                               ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ notcalls.js:16:26
+
+An index signature declaring the expected key / value type is missing in class `Symbol` [1]. [incompatible-use]
+
+   notcalls.js:16:26
+    16| const bracketed = Symbol['for']('a key'); // ERROR: no index signature on `Symbol`
+                                 ^^^^^
+
+References:
+   <BUILTINS>/core.js:260:15
+   260| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ notcalls.js:21:22
+
+Cannot use `keyOf` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
+but this one is a null or undefined [2]. Can you add an appropriate type annotation to `keyOf` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   notcalls.js:21:22
+    21| const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
+                             ^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:301:31
+   301|   static keyFor(sym: symbol): ?string;
+                                      ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ notcalls.js:26:25
+
+Cannot use `elsewhere` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a symbol [2]. Can you add an appropriate type annotation to `elsewhere` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+
+   notcalls.js:26:25
+   26| const fromElsewhere = {[elsewhere]: 1}; // ERROR: `symbol` is not a key
+                               ^^^^^^^^^ [1]
+
+References:
+   notcalls.js:24:48
+   24| declare const registry: {for: (key: string) => symbol};
+                                                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- shadow.js:11:1
+
+Cannot cast `shadowed` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   shadow.js:11:1
+   11| shadowed as symbol; // ERROR: nothing minted a symbol here
+       ^^^^^^^^
+
+References:
+   shadow.js:5:40
+    5| function Symbol(description?: string): number {
+                                              ^^^^^^ [1]
+   shadow.js:11:13
+   11| shadowed as symbol; // ERROR: nothing minted a symbol here
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- shadow.js:13:25
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   13| export const exported = Symbol('x'); // ERROR: cannot build a typed interface
+                               ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- shadow_for.js:13:1
+
+Cannot cast `shadowed` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   shadow_for.js:13:1
+   13| shadowed as symbol; // ERROR: nothing minted a symbol here
+       ^^^^^^^^
+
+References:
+   shadow_for.js:6:21
+    6|   for(key: string): number {
+                           ^^^^^^ [1]
+   shadow_for.js:13:13
+   13| shadowed as symbol; // ERROR: nothing minted a symbol here
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- shadow_for.js:15:25
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   15| export const exported = Symbol.for('x'); // ERROR: cannot build a typed interface
+                               ^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- shadow_hoisted.js:7:1
+
+Cannot cast `early` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   shadow_hoisted.js:7:1
+   7| early as symbol; // ERROR: nothing minted a symbol here
+      ^^^^^
+
+References:
+   shadow_hoisted.js:9:40
+   9| function Symbol(description?: string): number {
+                                             ^^^^^^ [1]
+   shadow_hoisted.js:7:10
+   7| early as symbol; // ERROR: nothing minted a symbol here
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ shadow_hoisted.js:13:25
+
+Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. [signature-verification-failure]
+
+   13| export const exported = Symbol('x'); // ERROR: cannot build a typed interface
+                               ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- shadow_scope.js:10:3
+
+Cannot cast `inner` to symbol because `number` [1] is incompatible with `symbol` [2]. [incompatible-type]
+
+   shadow_scope.js:10:3
+   10|   inner as symbol; // ERROR: nothing minted a symbol here
+         ^^^^^
+
+References:
+   shadow_scope.js:7:24
+    7|   const Symbol = () => 1;
+                              ^ [1]
+   shadow_scope.js:10:12
+   10|   inner as symbol; // ERROR: nothing minted a symbol here
+                  ^^^^^^ [2]
+
+
+
+Found 34 errors
+
+Custom global Symbol libdef:
+Error --------------------------------------------------------------------------------------------------------- a.js:9:1
+
+Cannot cast `k` to number because unique symbol [1] is incompatible with `number` [2]. [incompatible-type]
+
+   a.js:9:1
+   9| k as number; // ERROR: minted, so not the declared return type
+      ^
+
+References:
+   a.js:8:11
+   8| const k = Symbol('x');
+                ^^^^^^^^^^^ [1]
+   a.js:9:6
+   9| k as number; // ERROR: minted, so not the declared return type
+           ^^^^^^ [2]
+
+
+
+Found 1 error

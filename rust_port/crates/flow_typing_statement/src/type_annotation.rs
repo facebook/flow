@@ -933,7 +933,7 @@ fn convert_single_binding_value<'a>(
 /// The location of a bare `unique symbol` annotation, the spelling that names
 /// one specific symbol. A nested occurrence is rejected outright by
 /// `convert_inner`, so only a whole annotation is reported on here.
-fn bare_unique_symbol_loc(t: &ast::types::Type<ALoc, ALoc>) -> Option<&ALoc> {
+pub(crate) fn bare_unique_symbol_loc(t: &ast::types::Type<ALoc, ALoc>) -> Option<&ALoc> {
     use std::ops::Deref;
 
     match t.deref() {

@@ -1781,14 +1781,19 @@ fn name_symbol_field(prop: type_::Property, name: &FlowSmolStr) -> type_::Proper
     use std::ops::Deref;
     if let type_::PropertyInner::Field(fd) = prop.deref()
         && let type_::TypeInner::DefT(reason, def) = fd.type_.deref()
-        && let type_::DefTInner::UniqueSymbolT(sym) = def.deref()
-        && sym.name().is_none()
+        && let type_::DefTInner::UniqueSymbolT(data) = def.deref()
+        && data.symbol.name().is_none()
     {
-        let named =
-            flow_common::reason::SymbolID::with_name(sym.aloc_id().dupe(), Some(name.dupe()));
+        let named = flow_common::reason::SymbolID::with_name(
+            data.symbol.aloc_id().dupe(),
+            Some(name.dupe()),
+        );
         let type_ = Type::new(type_::TypeInner::DefT(
             reason.dupe(),
-            type_::DefT::new(type_::DefTInner::UniqueSymbolT(named)),
+            type_::DefT::new(type_::DefTInner::UniqueSymbolT(type_::UniqueSymbolTData {
+                symbol: named,
+                from_annot: data.from_annot,
+            })),
         ));
         return type_::Property::new(type_::PropertyInner::Field(Box::new(type_::FieldData {
             preferred_def_locs: fd.preferred_def_locs.clone(),
@@ -3116,6 +3121,15 @@ fn merge_value<'cx>(
                     reason,
                     type_::DefT::new(type_::DefTInner::BoolGeneralT),
                 ))
+            }
+        }
+        Value::UniqueSymbol(box loc) => {
+            if as_const {
+                type_::unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe(), None)
+            } else if const_decl {
+                type_::unique_symbol_t::inferred_at(cx.make_aloc_id(loc), loc.dupe(), None)
+            } else {
+                type_::symbol_t::at(loc.dupe())
             }
         }
         Value::NullLit(box loc) => type_::null::at(loc.dupe()),

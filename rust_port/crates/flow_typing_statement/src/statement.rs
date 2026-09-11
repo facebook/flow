@@ -50,6 +50,7 @@ use flow_parser::jsdoc;
 use flow_parser::loc_sig::LocSig;
 use flow_parser::polymorphic_ast_mapper;
 use flow_parser_utils::graphql;
+use flow_parser_utils::symbol_call;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::ECallTypeArityData;
@@ -5992,6 +5993,21 @@ fn variable<'a>(
         ast::types::AnnotationOrHint::Missing(_) => false,
         ast::types::AnnotationOrHint::Available(_) => true,
     };
+    // A bare `unique symbol` annotation introduces the symbol the binding will
+    // hold, and a call to the symbol constructor in the same declaration is
+    // what produces it, so the call stands for the annotated symbol rather than
+    // one of its own. Otherwise the two would be different symbols and nothing
+    // could ever inhabit the annotation. TypeScript reads the pair as one
+    // symbol as well. There is no test for `const` here: a binding that can be
+    // reassigned is already reported on its annotation, and repeating that as a
+    // second error about the initializer would say nothing new.
+    let init_fills_annotated_symbol = match (&annot, init) {
+        (ast::types::AnnotationOrHint::Available(annot), Some(expr)) => {
+            type_annotation::bare_unique_symbol_loc(&annot.annotation).is_some()
+                && is_symbol_constructor_call(cx, expr)
+        }
+        _ => false,
+    };
     let id_reason = match id {
         ast::pattern::Pattern::Identifier { inner, .. } => {
             let id_loc = inner.name.loc.dupe();
@@ -6073,6 +6089,11 @@ fn variable<'a>(
                     var: Some(id_reason.dupe()),
                     init: init_reason.dupe(),
                 }));
+                let init_t = if init_fills_annotated_symbol {
+                    &annot_t
+                } else {
+                    init_t
+                };
                 init_var(cx, &use_op, init_t, id_loc.dupe())?;
             }
             let ast_t = type_env::constraining_type(annot_t, cx, name, id_loc.dupe());
@@ -6521,6 +6542,20 @@ fn check_super_abstract<'a>(
         );
     }
     Ok(())
+}
+
+/// Whether `e` is a call to the global `Symbol`, or to its registry lookup
+/// `Symbol.for`, which are the two calls that return a symbol nothing else can
+/// return. A binding of that name in the file shadows the global constructor,
+/// and then the call returns whatever that binding says. Global here means only
+/// that the file does not bind the name, so a library definition that writes its
+/// own `Symbol` mints too. See [`symbol_call::symbol_constructor_call`].
+pub(crate) fn is_symbol_constructor_call<'a>(
+    cx: &Context<'a>,
+    e: &expression::Expression<ALoc, ALoc>,
+) -> bool {
+    symbol_call::symbol_constructor_call(e)
+        .is_some_and(|id| type_env::is_global_var(cx, id.loc.dupe()))
 }
 
 fn expression_<'a>(
@@ -7444,7 +7479,37 @@ fn expression_<'a>(
         }
         ExpressionInner::Call { .. } => {
             cx.set_enclosing_context_for_call(loc.dupe(), encl_ctx.dupe());
-            subscript(encl_ctx, cx, e)?
+            let call_ast = subscript(encl_ctx, cx, e)?;
+            // The call is checked as written, so a bad argument is still
+            // reported, and only its result type is replaced: the symbol this
+            // one call returns, rather than the `symbol` any call returns. The
+            // identity is the call's own location, so two call sites are two
+            // symbols, as they are at runtime.
+            match call_ast.deref() {
+                ExpressionInner::Call {
+                    loc: (l, call_t),
+                    inner,
+                } if is_symbol_constructor_call(cx, e) => {
+                    let t = natural_inference::adjust_unique_symbol_precision(
+                        cx,
+                        &syntactic_flags,
+                        || {
+                            type_::unique_symbol_t::inferred_at(
+                                cx.make_aloc_id(&loc),
+                                loc.dupe(),
+                                None,
+                            )
+                        },
+                        || call_t.dupe(),
+                        &loc,
+                    );
+                    expression::Expression::new(ExpressionInner::Call {
+                        loc: (l.dupe(), t),
+                        inner: inner.dupe(),
+                    })
+                }
+                _ => call_ast,
+            }
         }
         ExpressionInner::OptionalCall { .. } => subscript(encl_ctx, cx, e)?,
         ExpressionInner::Conditional { inner, .. } => {
@@ -15080,11 +15145,18 @@ pub fn mk_class_sig<'a>(
                         AnnotatedOrInferred::Annotated(annot_t.dupe()),
                     ),
                 };
+                let fills_annotated_symbol = match annot {
+                    ast::types::AnnotationOrHint::Missing(_) => false,
+                    ast::types::AnnotationOrHint::Available(annot) => {
+                        type_annotation::bare_unique_symbol_loc(&annot.annotation).is_some()
+                    }
+                };
                 let field_init_sig = crate::func_sig::field_initializer(
                     reason.dupe(),
                     expr.dupe(),
                     annot_loc,
                     annot_or_inferred,
+                    fills_annotated_symbol,
                 );
                 let value_ref_c = value_ref.dupe();
                 let set_asts: class_types::SetAsts<StmtConfigTypes> = Rc::new(move |args| {
@@ -18290,6 +18362,11 @@ pub fn mk_record_sig<'a>(
                         expr.clone(),
                         annot_loc,
                         AnnotatedOrInferred::Annotated(annot_t.dupe()),
+                        // A record field is annotated above with
+                        // `BindsSingleValue::No`, so a bare `unique symbol`
+                        // there is rejected and never names a symbol an
+                        // initializer could produce.
+                        false,
                     ),
                     set_asts,
                 );
@@ -18340,6 +18417,9 @@ pub fn mk_record_sig<'a>(
                 value_expr.clone(),
                 annot_loc,
                 AnnotatedOrInferred::Annotated(annot_t.dupe()),
+                // As above: a bare `unique symbol` on a record field is
+                // rejected, so no initializer produces the annotated symbol.
+                false,
             ),
             set_asts,
         );
@@ -19898,7 +19978,7 @@ pub fn mk_func_sig<'a>(
         func::Kind::Async
         | func::Kind::Generator { .. }
         | func::Kind::AsyncGenerator { .. }
-        | func::Kind::FieldInit(_)
+        | func::Kind::FieldInit { .. }
         | func::Kind::Ctor => Some(func::string_of_kind(&kind)),
         _ if getset => Some("getter/setter"),
         _ => None,

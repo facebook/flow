@@ -1841,6 +1841,7 @@ pub enum Value<Loc, T> {
     BigIntLit(Box<(Loc, Option<i64>, FlowSmolStr)>),
     BooleanVal(Box<Loc>),
     BooleanLit(Box<(Loc, bool)>),
+    UniqueSymbol(Box<Loc>),
     NullLit(Box<Loc>),
     DeclareModuleImplicitlyExportedObject(Box<ValueDeclareModuleImplicitlyExportedObject<Loc, T>>),
     ObjLit(Box<ValueObjLit<Loc, T>>),
@@ -1887,6 +1888,7 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T>
                 inner.0.hash(state);
                 inner.1.hash(state);
             }
+            Value::UniqueSymbol(loc) => loc.hash(state),
             Value::NullLit(loc) => loc.hash(state),
             Value::DeclareModuleImplicitlyExportedObject(inner) => {
                 inner.loc.hash(state);
@@ -1951,6 +1953,7 @@ impl<Loc, T> Value<Loc, T> {
             Value::BigIntLit(inner) => f_loc(cx, &inner.0),
             Value::BooleanVal(loc) => f_loc(cx, loc),
             Value::BooleanLit(inner) => f_loc(cx, &inner.0),
+            Value::UniqueSymbol(loc) => f_loc(cx, loc),
             Value::NullLit(loc) => f_loc(cx, loc),
             Value::DeclareModuleImplicitlyExportedObject(inner) => {
                 f_loc(cx, &inner.loc);
@@ -2025,6 +2028,7 @@ impl<Loc, T> Value<Loc, T> {
             }
             Value::BooleanVal(loc) => Value::BooleanVal(Box::new(f_loc(cx, loc))),
             Value::BooleanLit(inner) => Value::BooleanLit(Box::new((f_loc(cx, &inner.0), inner.1))),
+            Value::UniqueSymbol(loc) => Value::UniqueSymbol(Box::new(f_loc(cx, loc))),
             Value::NullLit(loc) => Value::NullLit(Box::new(f_loc(cx, loc))),
             Value::DeclareModuleImplicitlyExportedObject(inner) => {
                 Value::DeclareModuleImplicitlyExportedObject(Box::new(

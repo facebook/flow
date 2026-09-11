@@ -3514,9 +3514,9 @@ pub fn rec_sub_t<'cx>(
         // * unique symbol ~> unique symbol *
         // **********************************
         (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
-            if let (DefTInner::UniqueSymbolT(id1), DefTInner::UniqueSymbolT(id2)) =
+            if let (DefTInner::UniqueSymbolT(data1), DefTInner::UniqueSymbolT(data2)) =
                 (ld.deref(), ud.deref())
-                && id1 == id2 =>
+                && data1.symbol == data2.symbol =>
         {
             Ok(())
         }
@@ -3573,8 +3573,8 @@ pub fn rec_sub_t<'cx>(
             // by nominal identity. A general `symbol` names none, so it holds
             // only where an indexer accepts a symbol key.
             let desc = match ld.deref() {
-                DefTInner::UniqueSymbolT(sym) => {
-                    VirtualReasonDesc::RProperty(Some(Name::symbol(sym.dupe())))
+                DefTInner::UniqueSymbolT(data) => {
+                    VirtualReasonDesc::RProperty(Some(Name::symbol(data.symbol.dupe())))
                 }
                 _ => VirtualReasonDesc::RProperty(None),
             };

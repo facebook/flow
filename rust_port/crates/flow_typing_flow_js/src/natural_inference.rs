@@ -47,6 +47,7 @@ use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeDestructorT;
 use flow_typing_type::type_::TypeDestructorTInner;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::UniqueSymbolTData;
 use flow_typing_type::type_::constraint;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::exports;
@@ -268,6 +269,28 @@ fn singleton_bigint_action(
     }
 }
 
+fn unique_symbol_action(
+    action: SingletonAction,
+    t: Type,
+    r: &Reason,
+    data: &UniqueSymbolTData,
+) -> Type {
+    match action {
+        SingletonAction::KeepAsIs => t,
+        SingletonAction::KeepAsConst => Type::new(TypeInner::DefT(
+            r.dupe(),
+            DefT::new(DefTInner::UniqueSymbolT(UniqueSymbolTData {
+                symbol: data.symbol.dupe(),
+                from_annot: true,
+            })),
+        )),
+        SingletonAction::DoNotKeep => Type::new(TypeInner::DefT(
+            r.dupe().replace_desc(VirtualReasonDesc::RSymbol),
+            DefT::new(DefTInner::SymbolT),
+        )),
+    }
+}
+
 fn literal_type_mapper_tvar<'cx>(
     type_fn: &mut dyn FnMut(&Context<'cx>, &LiteralMapCx, Type) -> Type,
     cx: &Context<'cx>,
@@ -370,6 +393,10 @@ fn literal_type_mapper_type_dispatch<'cx>(
             } => {
                 let action = singleton_action(r.loc());
                 LiteralMapAction::Done(singleton_bigint_action(action, t.dupe(), r, value))
+            }
+            DefTInner::UniqueSymbolT(data) if !data.from_annot => {
+                let action = singleton_action(r.loc());
+                LiteralMapAction::Done(unique_symbol_action(action, t.dupe(), r, data))
             }
             _ => LiteralMapAction::Done(t.dupe()),
         },
@@ -481,7 +508,10 @@ fn is_literal_type<'cx>(cx: &Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -
             }
             | DefTInner::SingletonBigIntT {
                 from_annot: false, ..
-            } => true,
+            }
+            | DefTInner::UniqueSymbolT(UniqueSymbolTData {
+                from_annot: false, ..
+            }) => true,
             _ => false,
         },
         _ => false,
@@ -749,7 +779,10 @@ fn is_generalization_candidate_inner<'cx>(
             }
             | DefTInner::SingletonBigIntT {
                 from_annot: false, ..
-            } = def_t.deref() =>
+            }
+            | DefTInner::UniqueSymbolT(UniqueSymbolTData {
+                from_annot: false, ..
+            }) = def_t.deref() =>
         {
             true
         }
@@ -864,6 +897,32 @@ fn needs_precise_type<'cx>(
         || loc_has_hint(cx, loc)
 }
 
+fn choose_precision<'cx>(
+    cx: &Context<'cx>,
+    precise: impl FnOnce() -> Type,
+    general: impl FnOnce() -> Type,
+    loc: &ALoc,
+    needs_precise: impl FnOnce() -> bool,
+) -> Type {
+    let typing_mode = cx.typing_mode();
+    if matches!(
+        &*typing_mode,
+        TypingMode::SynthesisMode {
+            target_loc: Some(target_loc),
+        } if aloc_contains(target_loc, loc)
+    ) {
+        return cx.mk_placeholder(reason_of_t(&general()).dupe());
+    }
+    if matches!(&*typing_mode, TypingMode::SynthesisMode { .. }) {
+        cx.set_synthesis_produced_uncacheable_result();
+    }
+    if needs_precise() {
+        precise()
+    } else {
+        general()
+    }
+}
+
 pub fn adjust_precision<'cx>(
     cx: &Context<'cx>,
     syntactic_flags: &SyntacticFlags<'cx>,
@@ -878,27 +937,25 @@ pub fn adjust_precision<'cx>(
         frozen,
         has_hint,
     } = syntactic_flags;
-    let typing_mode = cx.typing_mode();
-    match &*typing_mode {
-        TypingMode::SynthesisMode {
-            target_loc: Some(target_loc),
-        } if aloc_contains(target_loc, loc) => cx.mk_placeholder(reason_of_t(&general()).dupe()),
-        TypingMode::SynthesisMode { .. } => {
-            cx.set_synthesis_produced_uncacheable_result();
-            if needs_precise_type(cx, encl_ctx, decl, *as_const, frozen, has_hint, loc) {
-                precise()
-            } else {
-                general()
-            }
-        }
-        TypingMode::CheckingMode | TypingMode::HintEvaluationMode => {
-            if needs_precise_type(cx, encl_ctx, decl, *as_const, frozen, has_hint, loc) {
-                precise()
-            } else {
-                general()
-            }
-        }
-    }
+    choose_precision(cx, precise, general, loc, || {
+        needs_precise_type(cx, encl_ctx, decl, *as_const, frozen, has_hint, loc)
+    })
+}
+
+/// Unlike primitive literals, a call to `Symbol()` only has a stable identity
+/// when it initializes a `const`. Once that inferred identity is stored in a
+/// binding, ordinary natural inference decides whether a later use should keep
+/// it or widen it to `symbol`.
+pub fn adjust_unique_symbol_precision<'cx>(
+    cx: &Context<'cx>,
+    syntactic_flags: &SyntacticFlags<'cx>,
+    precise: impl FnOnce() -> Type,
+    general: impl FnOnce() -> Type,
+    loc: &ALoc,
+) -> Type {
+    choose_precision(cx, precise, general, loc, || {
+        syntactic_flags.decl == Some(VariableKind::Const)
+    })
 }
 
 pub fn try_generalize<'cx>(

@@ -45,6 +45,7 @@ use flow_parser_utils::object_type_key;
 use flow_parser_utils::object_type_key::ObjectTypeKeyForm;
 use flow_parser_utils::record_utils;
 use flow_parser_utils::signature_utils;
+use flow_parser_utils::symbol_call;
 use flow_parser_utils::type_param_analysis::analyze_type_params;
 use flow_parser_utils::type_param_analysis::type_param_order;
 use vec1::Vec1;
@@ -2180,6 +2181,7 @@ pub(super) mod scope {
                 | Value::BigIntLit(_)
                 | Value::BooleanVal(_)
                 | Value::BooleanLit(_)
+                | Value::UniqueSymbol(_)
                 | Value::NullLit(_)
                 | Value::EmptyConstArrayLit(_) => value.clone(),
             }
@@ -12580,6 +12582,47 @@ fn variable_decl<'arena: 'ast, 'ast>(
             let id_loc_node = tbls.push_loc(id_loc.dupe());
 
             match (kind, annot, init) {
+                // A symbol constructor call is a fresh value. Keep it distinct
+                // from an explicit `unique symbol` annotation so natural
+                // inference can widen later uses of the binding.
+                (
+                    ast::VariableKind::Const,
+                    ast::types::AnnotationOrHint::Missing(_),
+                    Some(expr),
+                ) if symbol_call::symbol_constructor_call(expr).is_some() => {
+                    let splice_loc = id_loc_node.dupe();
+                    let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
+                        tbls.splice(splice_loc, |tbls| {
+                            // Only the global constructor mints. A binding of
+                            // that name in the file shadows it, leaving an
+                            // ordinary call, which a signature has no way to
+                            // describe. Which of the two it is cannot be
+                            // settled until every binding of the file is in
+                            // scope, so the call's location is recorded here
+                            // rather than on the way past it.
+                            if scope::lookup_value(
+                                scopes,
+                                scope,
+                                &FlowSmolStr::new_inline("Symbol"),
+                            )
+                            .is_some()
+                            {
+                                return expression(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    FrozenKind::NotFrozen,
+                                    expr,
+                                );
+                            }
+                            let call_loc = tbls.push_loc(expr.loc().dupe());
+                            Parsed::Value(Box::new(ParsedValue::UniqueSymbol(Box::new(call_loc))))
+                        })
+                    }));
+
+                    scope::bind_const(scope, scopes, tbls, id_loc_node, name.clone(), def, k);
+                }
                 // const x = ... special cases
                 (
                     ast::VariableKind::Const,

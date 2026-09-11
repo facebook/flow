@@ -2802,8 +2802,8 @@ fn __flow_impl<'cx>(
                         && cx.has_prop(mapr.dupe(), &Name::new(x.dupe())) => {}
                 // If we have a symbol key and that property exists
                 (TypeInner::DefT(_, inner_def), _)
-                    if let DefTInner::UniqueSymbolT(sym) = inner_def.deref()
-                        && cx.has_prop(mapr.dupe(), &Name::symbol(sym.dupe())) => {}
+                    if let DefTInner::UniqueSymbolT(data) = inner_def.deref()
+                        && cx.has_prop(mapr.dupe(), &Name::symbol(data.symbol.dupe())) => {}
                 // If we have a dictionary, try that next
                 (
                     _,
@@ -2843,9 +2843,9 @@ fn __flow_impl<'cx>(
                             // typo suggestion: a symbol key has no string spelling to
                             // match against string property names.
                             TypeInner::DefT(_, inner_def2)
-                                if let DefTInner::UniqueSymbolT(sym) = inner_def2.deref() =>
+                                if let DefTInner::UniqueSymbolT(data) = inner_def2.deref() =>
                             {
-                                (Some(Name::symbol(sym.dupe())), None)
+                                (Some(Name::symbol(data.symbol.dupe())), None)
                             }
                             _ => (None, None),
                         };
@@ -2883,8 +2883,8 @@ fn __flow_impl<'cx>(
                 }
                 // A `unique symbol` key resolves to a distinct named member by its
                 // nominal identity, mirroring the `ObjT` branch above.
-                TypeInner::DefT(_, kd) if let DefTInner::UniqueSymbolT(sym) = kd.deref() => {
-                    Some(Name::symbol(sym.dupe()))
+                TypeInner::DefT(_, kd) if let DefTInner::UniqueSymbolT(data) = kd.deref() => {
+                    Some(Name::symbol(data.symbol.dupe()))
                 }
                 TypeInner::GenericT(box GenericTData { bound, .. })
                     if let TypeInner::DefT(_, kd) = bound.deref()

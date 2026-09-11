@@ -2613,7 +2613,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
         let method_ = |set_asts: &class_types::SetAsts<C>,
                        f: &func_class_sig_types::func::Func<C>| {
             match (&f.body, &f.kind) {
-                (None, func_class_sig_types::func::Kind::FieldInit(_)) | (Some(_), _) => {
+                (None, func_class_sig_types::func::Kind::FieldInit { .. }) | (Some(_), _) => {
                     let (params_ast, body_ast, init_ast) = func_sig::toplevels(cx, f)?;
                     if let Some(ref init) = init_ast {
                         let (_, t) = init.loc();

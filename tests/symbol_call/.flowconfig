@@ -1,0 +1,6 @@
+[ignore]
+libdef/**
+
+[options]
+all=true
+no_flowlib=false

@@ -68,6 +68,7 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeStrictnessKind;
 use flow_typing_type::type_::UnaryArithKind;
+use flow_typing_type::type_::UniqueSymbolTData;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
@@ -6554,7 +6555,10 @@ pub fn type_of_key_name_with_env(env: &FlowJsEnv, name: Name, reason: &Reason) -
                 .update_desc(|_| VirtualReasonDesc::RUniqueSymbol);
             return Type::new(TypeInner::DefT(
                 key_reason,
-                DefT::new(DefTInner::UniqueSymbolT(sym.dupe())),
+                DefT::new(DefTInner::UniqueSymbolT(UniqueSymbolTData {
+                    symbol: sym.dupe(),
+                    from_annot: true,
+                })),
             ));
         }
         Name::Str(s) => s,
@@ -7822,8 +7826,8 @@ pub fn propref_for_elem_t_with_env<'cx>(
                             return mk_named_prop(reason, true, name);
                         }
                     }
-                    if let DefTInner::UniqueSymbolT(sym) = def.deref() {
-                        let name = Name::symbol(sym.dupe());
+                    if let DefTInner::UniqueSymbolT(data) = def.deref() {
+                        let name = Name::symbol(data.symbol.dupe());
                         let reason = reason
                             .dupe()
                             .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
@@ -7856,8 +7860,8 @@ pub fn propref_for_elem_t_with_env<'cx>(
                         return mk_named_prop(reason, true, name);
                     }
                 }
-                if let DefTInner::UniqueSymbolT(sym) = def.deref() {
-                    let name = Name::symbol(sym.dupe());
+                if let DefTInner::UniqueSymbolT(data) = def.deref() {
+                    let name = Name::symbol(data.symbol.dupe());
                     let reason = reason
                         .dupe()
                         .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
@@ -7876,8 +7880,8 @@ pub fn propref_for_elem_t_with_env<'cx>(
                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
                 return mk_named_prop(reason, true, name);
             }
-            if let DefTInner::UniqueSymbolT(sym) = def.deref() {
-                let name = Name::symbol(sym.dupe());
+            if let DefTInner::UniqueSymbolT(data) = def.deref() {
+                let name = Name::symbol(data.symbol.dupe());
                 let reason = reason
                     .dupe()
                     .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));

@@ -119,8 +119,8 @@ fn partition_keys_and_indexer<'cx>(
             // indexer would make `{[K in typeof s]: V}` a symbol-keyed dictionary
             // that matches every symbol, which e.g. makes `Omit<O, typeof s>` drop
             // every property. Mirrors `dispatch_substituted_name`.
-            TypeInner::DefT(r, def_t) if let DefTInner::UniqueSymbolT(sym) = def_t.deref() => {
-                keys_result.push((Name::symbol(sym.dupe()), r.dupe()));
+            TypeInner::DefT(r, def_t) if let DefTInner::UniqueSymbolT(data) = def_t.deref() => {
+                keys_result.push((Name::symbol(data.symbol.dupe()), r.dupe()));
                 continue;
             }
             TypeInner::DefT(_, def_t) if let DefTInner::EmptyT = def_t.deref() => continue,
@@ -165,8 +165,8 @@ fn dispatch_substituted_name<'cx>(
             // A `unique symbol` destination is a distinct named property keyed by
             // its nominal identity, not an indexer. Routing it here keeps distinct
             // symbols apart instead of collapsing them into a single indexer.
-            TypeInner::DefT(r, def_t) if let DefTInner::UniqueSymbolT(sym) = def_t.deref() => {
-                dests.push((Name::symbol(sym.dupe()), r.dupe()));
+            TypeInner::DefT(r, def_t) if let DefTInner::UniqueSymbolT(data) = def_t.deref() => {
+                dests.push((Name::symbol(data.symbol.dupe()), r.dupe()));
             }
             _ => idx_keys.push(t.dupe()),
         }

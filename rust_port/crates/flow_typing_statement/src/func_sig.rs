@@ -338,10 +338,14 @@ pub fn field_initializer<C: ConfigTypes>(
     expr: ast::expression::Expression<ALoc, ALoc>,
     annot_loc: ALoc,
     return_annot_or_inferred: AnnotatedOrInferred,
+    fills_annotated_symbol: bool,
 ) -> Func<C> {
     Func {
         reason,
-        kind: Kind::FieldInit(expr),
+        kind: Kind::FieldInit {
+            expr,
+            fills_annotated_symbol,
+        },
         tparams: None,
         fparams: func_params::empty(Rc::new(|_, _, _| None)),
         body: None,
@@ -531,7 +535,7 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
     // Set the scope early so default exprs can reference earlier params
     let prev_scope_kind = {
         let var_scope_kind = match kind {
-            Kind::Ordinary | Kind::FieldInit(_) | Kind::TypeGuard(_) => {
+            Kind::Ordinary | Kind::FieldInit { .. } | Kind::TypeGuard(_) => {
                 flow_env_builder::name_def_types::ScopeKind::Ordinary
             }
             Kind::Async => flow_env_builder::name_def_types::ScopeKind::Async,
@@ -799,7 +803,10 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                 );
                 (use_op, t, None)
             }
-            Kind::FieldInit(e) => {
+            Kind::FieldInit {
+                expr: e,
+                fills_annotated_symbol,
+            } => {
                 let ast = statement::expression(
                     Some(flow_common::enclosing_context::EnclosingContext::NoContext),
                     None,
@@ -807,7 +814,15 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
                     cx,
                     e,
                 )?;
-                let t = ast.loc().1.dupe();
+                // The field is annotated with a bare `unique symbol` and this
+                // initializer is what produces it, so the call stands for the
+                // annotated symbol rather than one of its own. See the same
+                // rule on a variable declaration in `statement::variable`.
+                let t = if *fills_annotated_symbol && statement::is_symbol_constructor_call(cx, e) {
+                    return_t.dupe()
+                } else {
+                    ast.loc().1.dupe()
+                };
                 let body = reason::mk_expression_reason(e);
                 let use_op = UseOp::Op(Arc::new(type_::RootUseOp::InitField {
                     op: reason_fn.dupe(),

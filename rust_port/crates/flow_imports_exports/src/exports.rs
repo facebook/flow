@@ -403,6 +403,7 @@ mod eval {
                 | PackedValue::NumberLit(..)
                 | PackedValue::BooleanVal(_)
                 | PackedValue::BooleanLit(..)
+                | PackedValue::UniqueSymbol(_)
                 | PackedValue::NullLit(..)
                 | PackedValue::EmptyConstArrayLit(..)
                 | PackedValue::ArrayLit(..)

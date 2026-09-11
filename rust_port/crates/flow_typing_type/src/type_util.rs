@@ -1847,7 +1847,7 @@ where
                     value: expected, ..
                 },
             ) => actual.1.as_str() == expected.as_str(),
-            (D::UniqueSymbolT(id1), D::UniqueSymbolT(id2)) => id1 == id2,
+            (D::UniqueSymbolT(data1), D::UniqueSymbolT(data2)) => data1.symbol == data2.symbol,
             (_, D::MixedT(mixed_flavor)) => is_mixed_subtype(l, mixed_flavor.clone()),
             _ => false,
         },

@@ -1,3 +1,163 @@
+Error ---------------------------------------------------------------------------------------------------- call.js:15:14
+
+Cannot get `onlyDeclared[minted]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   call.js:15:14
+   15| onlyDeclared[minted]; // ERROR: the minted symbol is a different key
+                    ^^^^^^
+
+References:
+   call.js:14:29
+   14| declare const onlyDeclared: {[declared]: number};
+                                   ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:42:36
+
+Cannot assign `Symbol()` to `viaTypeof` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   call.js:42:36
+    42| const viaTypeof: typeof declared = Symbol(); // ERROR
+                                           ^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [1]
+   call.js:42:18
+    42| const viaTypeof: typeof declared = Symbol(); // ERROR
+                         ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:47:37
+
+Cannot assign `mk()` to `fromFunction` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   call.js:47:37
+   47| const fromFunction: unique symbol = mk(); // ERROR
+                                           ^^^^
+
+References:
+   call.js:46:24
+   46| declare function mk(): symbol;
+                              ^^^^^^ [1]
+   call.js:47:21
+   47| const fromFunction: unique symbol = mk(); // ERROR
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:48:36
+
+Cannot assign `minted` to `fromBinding` because unique symbol [1] is incompatible with unique symbol [2].
+[incompatible-type]
+
+   call.js:48:36
+   48| const fromBinding: unique symbol = minted; // ERROR
+                                          ^^^^^^
+
+References:
+   call.js:8:16
+    8| const minted = Symbol();
+                      ^^^^^^^^ [1]
+   call.js:48:20
+   48| const fromBinding: unique symbol = minted; // ERROR
+                          ^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:53:17
+
+A variable whose type is `unique symbol` must be `const`. A binding that can be reassigned would let a different symbol
+take the place of the one this annotation names. [unsupported-syntax]
+
+   53| let rebindable: unique symbol = Symbol(); // ERROR: not `const`
+                       ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:55:15
+
+A class property whose type is `unique symbol` must be both `static` and `readonly`. An instance property declares one
+member per instance, and a property that can be written would let a different symbol take the place of the one this
+annotation names. [unsupported-syntax]
+
+   55|   readonly I: unique symbol = Symbol(); // ERROR: instance field
+                     ^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- call.js:62:51
+
+Cannot assign object literal to `inObject` because in property `a`: `symbol` [1] is incompatible with unique symbol [2].
+[incompatible-type]
+
+   call.js:62:51
+    62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR
+                                                          ^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:265:29
+   265|   static (value?: unknown): symbol;
+                                    ^^^^^^ [1]
+   call.js:62:30
+    62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR
+                                     ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- call_consumer.js:10:1
+
+Cannot cast `table[annotated]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   call_consumer.js:10:1
+   10| table[annotated] as string; // ERROR: number is not string
+       ^^^^^^^^^^^^^^^^
+
+References:
+   call_exported.js:16:16
+   16|   [annotated]: number,
+                      ^^^^^^ [1]
+   call_consumer.js:10:21
+   10| table[annotated] as string; // ERROR: number is not string
+                           ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- call_consumer.js:15:7
+
+Cannot get `table[local]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   call_consumer.js:15:7
+   15| table[local]; // ERROR: not a key of `table`
+             ^^^^^
+
+References:
+   call_exported.js:15:29
+                                   v
+   15| declare export const table: {
+   16|   [annotated]: number,
+   17|   [registered]: string,
+   18|   [C.K]: boolean,
+   19|   [C.L]: null,
+   20| };
+       ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- call_consumer.js:18:7
+
+Cannot get `table[localAnnotated]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+
+   call_consumer.js:18:7
+   18| table[localAnnotated]; // ERROR: not a key of `table`
+             ^^^^^^^^^^^^^^
+
+References:
+   call_exported.js:15:29
+                                   v
+   15| declare export const table: {
+   16|   [annotated]: number,
+   17|   [registered]: string,
+   18|   [C.K]: boolean,
+   19|   [C.L]: null,
+   20| };
+       ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------- class_consumer.js:10:1
 
 Cannot cast `e[key1]` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1299,4 +1459,4 @@ References:
 
 
 
-Found 92 errors
+Found 102 errors

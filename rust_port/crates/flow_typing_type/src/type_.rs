@@ -437,7 +437,7 @@ pub enum DefTInner {
     NullT,
     VoidT,
     SymbolT,
-    UniqueSymbolT(SymbolID),
+    UniqueSymbolT(UniqueSymbolTData),
     FunT(Type, Rc<FunType>),
     ObjT(Rc<ObjType>),
     ArrT(Rc<ArrType>),
@@ -491,6 +491,15 @@ pub enum DefTInner {
         enum_value_t: Type,
         enum_info: Rc<EnumInfo>,
     },
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UniqueSymbolTData {
+    pub symbol: SymbolID,
+    /// Inferred singleton types are widened by natural inference when their
+    /// identity is not needed. An explicit annotation (and an `as const`
+    /// conversion) makes the identity non-widening.
+    pub from_annot: bool,
 }
 
 #[derive(Debug, Clone, Dupe)]
@@ -10662,12 +10671,23 @@ pub mod unique_symbol_t {
     use super::*;
 
     pub fn at(id: ALocId, loc: ALoc, name: Option<FlowSmolStr>) -> Type {
+        make(id, loc, name, true)
+    }
+
+    pub fn inferred_at(id: ALocId, loc: ALoc, name: Option<FlowSmolStr>) -> Type {
+        make(id, loc, name, false)
+    }
+
+    fn make(id: ALocId, loc: ALoc, name: Option<FlowSmolStr>, from_annot: bool) -> Type {
         Type::new(TypeInner::DefT(
             flow_common::reason::mk_reason(
                 flow_common::reason::VirtualReasonDesc::RUniqueSymbol,
                 loc,
             ),
-            DefT::new(DefTInner::UniqueSymbolT(SymbolID::with_name(id, name))),
+            DefT::new(DefTInner::UniqueSymbolT(UniqueSymbolTData {
+                symbol: SymbolID::with_name(id, name),
+                from_annot,
+            })),
         ))
     }
 }

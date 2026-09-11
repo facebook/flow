@@ -102,9 +102,19 @@ pub mod func {
     pub enum Kind {
         Ordinary,
         Async,
-        Generator { return_loc: ALoc },
-        AsyncGenerator { return_loc: ALoc },
-        FieldInit(Expression<ALoc, ALoc>),
+        Generator {
+            return_loc: ALoc,
+        },
+        AsyncGenerator {
+            return_loc: ALoc,
+        },
+        FieldInit {
+            expr: Expression<ALoc, ALoc>,
+            /// Whether the field is annotated with a bare `unique symbol`, in
+            /// which case an initializer that calls the symbol constructor
+            /// produces the annotated symbol rather than one of its own.
+            fills_annotated_symbol: bool,
+        },
         TypeGuard(TypeGuard),
         Ctor,
     }
@@ -115,7 +125,7 @@ pub mod func {
             Kind::Async => "async",
             Kind::Generator { .. } => "generator",
             Kind::AsyncGenerator { .. } => "async generator",
-            Kind::FieldInit(_) => "field initializer",
+            Kind::FieldInit { .. } => "field initializer",
             Kind::TypeGuard(_) => "type guard",
             Kind::Ctor => "constructor",
         }
