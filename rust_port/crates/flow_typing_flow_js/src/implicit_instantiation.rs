@@ -137,7 +137,7 @@ fn union_flatten(t: Type) -> Vec<Type> {
 // We would like the type of `st` and `setSt` to use the general form of the type
 // for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
 // the rather impractical `42` (resp. `(42)=>void`).
-fn generalize_singletons<'cx>(
+pub(crate) fn generalize_singletons<'cx>(
     cx: &Context<'cx>,
     call_loc: &flow_aloc::ALoc,
     has_syntactic_hint: bool,

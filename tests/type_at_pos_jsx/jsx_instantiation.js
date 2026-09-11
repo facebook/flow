@@ -23,7 +23,7 @@ function test_Nominal_error() {
 
 component Test_return_hint() {
     declare component Bar<T>(...props: Readonly<{ n: T }>);
-    return <Bar n={1} />; // TODO(T225771252)
+    return <Bar n={1} />;
 //          ^
 }
 

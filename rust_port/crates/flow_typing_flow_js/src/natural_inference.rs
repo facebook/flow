@@ -780,6 +780,9 @@ pub fn is_generalization_candidate<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
     is_generalization_candidate_inner(cx, &mut TvarSeenSet::new(), t)
 }
 
+/// Whether the given location has any non-best-effort hint, based only on the
+/// hint's kind. Unlike `has_ast_syntactic_hint` below, checker-synthesized
+/// hints count.
 pub fn loc_has_hint<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
     let env = cx.environment();
     match env.ast_hint_map.get(loc) {
@@ -793,6 +796,18 @@ pub fn loc_has_hint<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
             Hint::HintDecomp(_, _, HintKind::BestEffortHint) => false,
         }),
     }
+}
+
+/// Whether any AST hint at the given location originates from a user-written
+/// type annotation. Unlike `loc_has_hint` above, which is kind-based,
+/// checker-synthesized hints do not count.
+pub fn has_ast_syntactic_hint<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
+    cx.environment().ast_hint_map.get(loc).is_some_and(|hints| {
+        hints.iter().any(|hint| match hint {
+            Hint::HintT(node, _) | Hint::HintDecomp(_, node, _) => node.is_syntactic(),
+            Hint::HintPlaceholder => false,
+        })
+    })
 }
 
 pub fn enclosing_context_needs_precise(encl_ctx: &EnclosingContext) -> bool {

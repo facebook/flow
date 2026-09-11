@@ -341,7 +341,7 @@ jsx_instantiation.js:20:6,20:9
 
 jsx_instantiation.js:26:13
 Flags:
-component Bar<1>(n: 1)
+component Bar<number>(n: number)
 
 'Bar' defined at jsx_instantiation.js:25:4
 

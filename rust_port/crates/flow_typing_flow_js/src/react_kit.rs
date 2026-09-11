@@ -76,6 +76,8 @@ use flow_typing_type::type_util;
 use flow_typing_type::type_util::mk_named_prop;
 
 use crate::flow_js::FlowJs;
+use crate::implicit_instantiation::generalize_singletons;
+use crate::natural_inference::has_ast_syntactic_hint;
 use crate::renders_kit;
 use crate::tvar_resolver;
 
@@ -1214,6 +1216,19 @@ pub(super) fn run_with_env<'cx>(
                                 },
                             ))),
                         ));
+                        // The recorded component is only used for hover
+                        // display. When the element has a hint that does not
+                        // originate from a user-written type annotation (e.g.
+                        // the default `React.Node` hint on `return` expressions
+                        // in components without a `renders` annotation),
+                        // generalize literals for display so hover types don't
+                        // expose overly precise types (e.g. `Bar<1>` instead of
+                        // `Bar<number>`). Checking itself is unaffected.
+                        let inst_component = if has_ast_syntactic_hint(cx, reason_op.loc()) {
+                            inst_component
+                        } else {
+                            generalize_singletons(cx, reason_op.loc(), false, inst_component)
+                        };
                         callee_recorder::add_callee(
                             env,
                             callee_recorder::Kind::Tast,

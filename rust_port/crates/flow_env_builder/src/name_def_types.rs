@@ -80,6 +80,35 @@ pub enum ObjectPropPatternHint {
     ObjectSpreadPropPatternHint(HintNode),
 }
 
+impl HintNode {
+    /// Whether this hint originates from a user-written type annotation,
+    /// looking through pattern-hint decompositions.
+    pub fn is_syntactic(&self) -> bool {
+        match self {
+            HintNode::AnnotationHint(_, _) => true,
+            HintNode::ComposedArrayPatternHint(_, elements) => {
+                elements.iter().any(|element| match element {
+                    ArrayElementPatternHint::ArrayElementPatternHint(node)
+                    | ArrayElementPatternHint::ArrayRestElementPatternHint(node) => {
+                        node.is_syntactic()
+                    }
+                })
+            }
+            HintNode::ComposedObjectPatternHint(_, props) => props.iter().any(|prop| match prop {
+                ObjectPropPatternHint::ObjectPropPatternHint(_, _, node)
+                | ObjectPropPatternHint::ObjectSpreadPropPatternHint(node) => node.is_syntactic(),
+            }),
+            HintNode::ValueHint(_, _)
+            | HintNode::ProvidersHint(_)
+            | HintNode::WriteLocHint(_, _)
+            | HintNode::StringLiteralType(_)
+            | HintNode::ReactFragmentType
+            | HintNode::ReactNodeType
+            | HintNode::AnyErrorHint(_) => false,
+        }
+    }
+}
+
 pub type AstHint = Hint<
     'static,
     HintNode,
