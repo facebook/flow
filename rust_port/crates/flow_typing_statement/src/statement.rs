@@ -8063,7 +8063,7 @@ fn expression_<'a>(
             if inner.meta.name.as_str() == "import" && inner.property.name.as_str() == "meta" =>
         {
             let reason = mk_reason(VirtualReasonDesc::RImportMeta, loc.dupe());
-            let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, "Import$Meta")?;
+            let t = flow_js::get_builtin_type_non_speculating(cx, &reason, None, "ImportMeta")?;
             expression::Expression::new(ExpressionInner::MetaProperty {
                 loc: (loc.dupe(), t.dupe()),
                 inner: expression::MetaProperty {

@@ -1,42 +1,47 @@
-Error ----------------------------------------------------------------------------------------------- import_meta.js:5:1
+Error ---------------------------------------------------------------------------------------------- import_meta.js:4:13
 
-Cannot cast `import.meta` to number literal `1` because `Import$Meta` [1] is incompatible with `1` [2].
-[incompatible-type]
+Cannot get `import.meta.XXX` because property `XXX` is missing in `ImportMeta` [1]. [prop-missing]
 
-   import_meta.js:5:1
-      5| import.meta as 1; // Error
-         ^^^^^^^^^^^
+   import_meta.js:4:13
+   4| import.meta.XXX as unknown; // Error
+                  ^^^
 
 References:
-   <BUILTINS>/core.js:3272:20
-                            v
-   3272| type Import$Meta = {
-   3273|   [string]: unknown,
-   3274|   url?: string,
-   3275|   ...
-   3276| };
-         ^ [1]
-   import_meta.js:5:16
-      5| import.meta as 1; // Error
-                        ^ [2]
+   import_meta_lib.js:1:19
+   1| declare interface ImportMeta {
+                        ^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- import_meta.js:6:1
 
-Cannot cast `import.meta.XXX` to number literal `1` because `unknown` [1] is incompatible with `1` [2].
+Cannot cast `import.meta` to number literal `1` because `ImportMeta` [1] is incompatible with `1` [2].
 [incompatible-type]
 
    import_meta.js:6:1
-      6| import.meta.XXX as 1; // Error
-         ^^^^^^^^^^^^^^^
+   6| import.meta as 1; // Error
+      ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3273:13
-   3273|   [string]: unknown,
-                     ^^^^^^^ [1]
-   import_meta.js:6:20
-      6| import.meta.XXX as 1; // Error
-                            ^ [2]
+   import_meta_lib.js:1:19
+   1| declare interface ImportMeta {
+                        ^^^^^^^^^^ [1]
+   import_meta.js:6:16
+   6| import.meta as 1; // Error
+                     ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- import_meta.js:7:13
+
+Cannot get `import.meta.XXX` because property `XXX` is missing in `ImportMeta` [1]. [prop-missing]
+
+   import_meta.js:7:13
+   7| import.meta.XXX as 1; // Error
+                  ^^^
+
+References:
+   import_meta_lib.js:1:19
+   1| declare interface ImportMeta {
+                        ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ new_target.js:3:3
@@ -68,4 +73,4 @@ References:
 
 
 
-Found 4 errors
+Found 5 errors

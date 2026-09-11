@@ -44,8 +44,8 @@ incompatible with `SharedArrayBuffer` [3]. [incompatible-type]
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3435:26
-   3435| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/core.js:3432:26
+   3432| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    test.js:96:46
      96| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;

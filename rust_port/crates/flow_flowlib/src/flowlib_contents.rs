@@ -15,13 +15,22 @@ pub(super) const CORE_JS: &str = include_str!("flowlib/core.js");
 pub(super) const CORE_JS: &str = include_str!("../../../../lib/core.js");
 
 #[cfg(fbcode_build)]
+const DOM_EXTRA_TO_BE_REMOVED_JS: &str = include_str!("flowlib/dom_extra_to_be_removed.js");
+#[cfg(not(fbcode_build))]
+const DOM_EXTRA_TO_BE_REMOVED_JS: &str = include_str!("../../../../lib/dom_extra_to_be_removed.js");
+
+#[cfg(fbcode_build)]
 pub(super) const REACT_JS: &str = include_str!("flowlib/react.js");
 #[cfg(not(fbcode_build))]
 pub(super) const REACT_JS: &str = include_str!("../../../../lib/react.js");
 
 /// The embedded flowlib file contents as (filename, contents) pairs.
 /// Order matches the OCaml PPX behavior (directory listing order).
-pub static CONTENTS: &[(&str, &str)] = &[("core.js", CORE_JS), ("react.js", REACT_JS)];
+pub static CONTENTS: &[(&str, &str)] = &[
+    ("core.js", CORE_JS),
+    ("dom_extra_to_be_removed.js", DOM_EXTRA_TO_BE_REMOVED_JS),
+    ("react.js", REACT_JS),
+];
 
 pub static HASH: LazyLock<String> = LazyLock::new(|| {
     let mut state = xx::State::new(0);

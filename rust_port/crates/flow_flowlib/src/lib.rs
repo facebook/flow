@@ -174,3 +174,29 @@ pub fn extract_if_missing_or_exit(files_libdir_opt: Option<&flow_common::files::
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::BuiltinLib;
+    use super::contents;
+
+    #[test]
+    fn dom_extra_to_be_removed_is_only_in_flowlib() {
+        let contains_dom_extra = |lib| {
+            contents(lib)
+                .iter()
+                .any(|(filename, _)| *filename == "dom_extra_to_be_removed.js")
+        };
+
+        assert!(contains_dom_extra(BuiltinLib::Flowlib));
+        assert!(
+            [
+                BuiltinLib::FlowlibWithLibDomDts,
+                BuiltinLib::Prelude,
+                BuiltinLib::Tslib,
+            ]
+            .into_iter()
+            .all(|lib| !contains_dom_extra(lib))
+        );
+    }
+}
