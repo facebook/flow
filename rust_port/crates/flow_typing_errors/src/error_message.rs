@@ -2564,22 +2564,6 @@ pub struct EMissingPlatformSupportWithAvailablePlatformsData<
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct EMissingPlatformSupportData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub loc: L,
-    pub missing_platforms: BTreeSet<FlowSmolStr>,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
 pub struct EUnionOptimizationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub kind: OptimizedError<L>,
@@ -2789,8 +2773,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ECallTypeArity(Box<ECallTypeArityData<L>>),
 
-    ETypeParamMinArity(L, i32),
-
     ETooManyTypeArgs(Box<ETooManyTypeArgsData<L>>),
 
     ETooFewTypeArgs(Box<ETooFewTypeArgsData<L>>),
@@ -2798,8 +2780,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EInvalidInfer(L),
 
     EConstantCondition(Box<EConstantConditionData<L>>),
-
-    EInvalidTypeArgs(Box<(VirtualReason<L>, VirtualReason<L>)>),
 
     EInvalidExtends(VirtualReason<L>),
 
@@ -2933,8 +2913,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidThisArg(Box<EInvalidThisArgData<L>>),
 
-    EReactElementFunArity(Box<(L, FlowSmolStr, i32)>),
-
     EReactRefInRender {
         usage: VirtualReason<L>,
         kind: RefInRenderKind,
@@ -3009,8 +2987,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EInexactMayOverwriteIndexer(Box<EInexactMayOverwriteIndexerData<L>>),
 
     EExponentialSpread(Box<EExponentialSpreadData<L>>),
-
-    EComputedPropertyWithUnion(VirtualReason<L>),
 
     EAssignConstLikeBinding(Box<EAssignConstLikeBindingData<L>>),
 
@@ -3121,8 +3097,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         Box<EMissingPlatformSupportWithAvailablePlatformsData<L>>,
     ),
 
-    EMissingPlatformSupport(Box<EMissingPlatformSupportData<L>>),
-
     EUnionPartialOptimizationNonUniqueKey(Box<EUnionPartialOptimizationNonUniqueKeyData<L>>),
 
     EUnionOptimization(Box<EUnionOptimizationData<L>>),
@@ -3149,10 +3123,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EDevOnlyRefinedLocInfo(Box<EDevOnlyRefinedLocInfoData<L>>),
 
     EDevOnlyInvalidatedRefinementInfo(Box<EDevOnlyInvalidatedRefinementInfoData<L>>),
-
-    // As the name suggest, don't use this for production purposes, but feel free to use it to
-    // quickly test out some ideas.
-    ETemporaryHardcodedErrorForPrototyping(Box<(L, FlowSmolStr)>),
 }
 
 #[derive(
@@ -3200,7 +3170,6 @@ pub enum RefInRenderKind {
     serde::Deserialize
 )]
 pub enum BindingError {
-    EGlobalAlreadyDeclared,
     ENameAlreadyBound,
     ENameAlreadyBoundInCoreJs,
     EVarRedeclaration,
@@ -3244,14 +3213,12 @@ pub enum InternalError {
     DebugThrow,
     ParseJobException(FlowSmolStr),
     CheckTimeout(String),
-    CheckJobException(FlowSmolStr),
     UnexpectedAnnotationInference(FlowSmolStr),
     UnexpectedInlineInterfaceType,
     MissingSwitchExhaustiveCheck,
     MissingEnvRead(ALoc),
     MissingEnvWrite(ALoc),
     ReadOfUnreachedTvar(DefLocType),
-    ReadOfUnresolvedTvar(DefLocType),
     ForcedReadOfUnderResolutionTvar(DefLocType),
     EnvInvariant(EnvInvariantFailure<ALoc>),
     ImplicitInstantiationInvariant(FlowSmolStr),
@@ -3280,7 +3247,6 @@ pub enum LowerKind {
     PossiblyNull,
     PossiblyVoid,
     PossiblyNullOrVoid,
-    IncompatibleIntersection,
 }
 
 #[derive(
@@ -4411,8 +4377,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 expected_arity,
             })),
 
-            ETypeParamMinArity(loc, i) => ETypeParamMinArity(f(loc), i),
-
             ETooManyTypeArgs(box ETooManyTypeArgsData {
                 reason_tapp,
                 arity_loc,
@@ -4432,10 +4396,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 arity_loc: f(arity_loc),
                 minimum_arity,
             })),
-
-            EInvalidTypeArgs(box (r1, r2)) => {
-                EInvalidTypeArgs(Box::new((map_reason(r1), map_reason(r2))))
-            }
 
             EInvalidInfer(l) => EInvalidInfer(f(l)),
 
@@ -4897,10 +4857,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidLHSInAssignment(l) => EInvalidLHSInAssignment(f(l)),
             EUnsupportedImplements(reason) => EUnsupportedImplements(map_error_ref(reason)),
 
-            EReactElementFunArity(box (loc, s, i)) => {
-                EReactElementFunArity(Box::new((f(loc), s, i)))
-            }
-
             EReactRefInRender {
                 usage,
                 kind,
@@ -5054,8 +5010,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     reasons_for_operand2,
                 ),
             })),
-
-            EComputedPropertyWithUnion(reason) => EComputedPropertyWithUnion(map_reason(reason)),
 
             EAssignConstLikeBinding(box EAssignConstLikeBindingData {
                 loc,
@@ -5443,14 +5397,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )),
 
-            EMissingPlatformSupport(box EMissingPlatformSupportData {
-                loc,
-                missing_platforms,
-            }) => EMissingPlatformSupport(Box::new(EMissingPlatformSupportData {
-                loc: f(loc),
-                missing_platforms,
-            })),
-
             EUnionPartialOptimizationNonUniqueKey(
                 box EUnionPartialOptimizationNonUniqueKeyData {
                     loc,
@@ -5713,10 +5659,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         .map(|(l, r)| (f(l), r))
                         .collect(),
                 }))
-            }
-
-            ETemporaryHardcodedErrorForPrototyping(box (loc, s)) => {
-                ETemporaryHardcodedErrorForPrototyping(Box::new((f(loc), s)))
             }
         }
     }
@@ -6096,8 +6038,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 Some(reason_use.loc.dupe())
             }
 
-            Self::ENonStrictEqualityComparison(box (primary, _))
-            | Self::EInvalidTypeArgs(box (_, primary)) => Some(primary.loc.dupe()),
+            Self::ENonStrictEqualityComparison(box (primary, _)) => Some(primary.loc.dupe()),
 
             Self::ETooFewTypeArgs(box ETooFewTypeArgsData { reason_tapp, .. })
             | Self::ETooManyTypeArgs(box ETooManyTypeArgsData { reason_tapp, .. }) => {
@@ -6109,7 +6050,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             }
 
             Self::EUnsupportedSetProto(loc)
-            | Self::EReactElementFunArity(box (loc, _, _))
             | Self::ERecursionLimit(loc)
             | Self::ENestedComponent(loc)
             | Self::ENestedHook(loc)
@@ -6120,8 +6060,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EImportTypeAsValue(box (loc, _))
             | Self::EImportTypeAsTypeof(box (loc, _))
             | Self::EExportValueAsType(box (loc, _))
-            | Self::EImportValueAsType(box (loc, _))
-            | Self::ETemporaryHardcodedErrorForPrototyping(box (loc, _)) => Some(loc.dupe()),
+            | Self::EImportValueAsType(box (loc, _)) => Some(loc.dupe()),
 
             Self::EUnsupportedImplements(reason) | Self::EMissingLocalAnnotation { reason, .. } => {
                 Some(reason.loc.dupe())
@@ -6142,7 +6081,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EArithmeticOperand(reason)
             | Self::EComponentMissingReturn(reason)
             | Self::EUnsupportedExact(box (_, reason))
-            | Self::EComputedPropertyWithUnion(reason)
             | Self::ETypeParamConstInvalidPosition(reason) => Some(reason.loc.dupe()),
 
             Self::EObjectComputedPropertyPotentialOverwrite(
@@ -6337,7 +6275,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EHookRuleViolation(box EHookRuleViolationData { call_loc: loc, .. })
             | Self::EExportsAnnot(loc)
             | Self::EUnexpectedThisType(loc)
-            | Self::ETypeParamMinArity(loc, _)
             | Self::EAssignConstLikeBinding(box EAssignConstLikeBindingData { loc, .. })
             | Self::EMalformedCode(loc)
             | Self::EObjectThisSuperReference(box (loc, _, _))
@@ -6362,7 +6299,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EMissingPlatformSupportWithAvailablePlatforms(
                 box EMissingPlatformSupportWithAvailablePlatformsData { loc, .. },
             )
-            | Self::EMissingPlatformSupport(box EMissingPlatformSupportData { loc, .. })
             | Self::EUnionOptimization(box EUnionOptimizationData { loc, .. })
             | Self::EUnionOptimizationOnNonUnion(box EUnionOptimizationOnNonUnionData {
                 loc,
@@ -6712,11 +6648,6 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
             k
         )
         .into(),
-        InternalError::ReadOfUnresolvedTvar(k) => format!(
-            "read of {:?} entry from previous component is not FullyResolved",
-            k
-        )
-        .into(),
         InternalError::ForcedReadOfUnderResolutionTvar(k) => format!(
             "forced read of {:?} entry from component is not yet FullyResolved",
             k
@@ -6742,7 +6673,6 @@ pub fn string_of_internal_error(error: &InternalError) -> FlowSmolStr {
         InternalError::DebugThrow => "debug throw".into(),
         InternalError::ParseJobException(exc) => format!("uncaught exception: {}", exc).into(),
         InternalError::CheckTimeout(s) => format!("check job timed out after {} seconds", s).into(),
-        InternalError::CheckJobException(exc) => format!("uncaught exception: {}", exc).into(),
         InternalError::UnexpectedAnnotationInference(s) => {
             format!("unexpected {} in annotation inference", s).into()
         }
@@ -7699,10 +7629,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     reasons_for_operand2,
                 },
             ))),
-            ErrorMessage::EComputedPropertyWithUnion(reason) => {
-                Normal(Message::MessageCannotUseComputedPropertyWithUnion(reason))
-            }
-
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
                 box EnumInvalidMemberAccessData {
                     member_name,
@@ -8233,10 +8159,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 invalidation_info,
             )),
 
-            ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (_, str)) => {
-                Normal(Message::MessagePlainTextReservedForInternalErrorOnly(str))
-            }
-
             ErrorMessage::ENoDefaultExport(box (_, module_name, suggestion)) => Normal(
                 Message::MessageNoDefaultExport(Box::new(MessageNoDefaultExportData {
                     module_name: module_name.into_inner(),
@@ -8289,13 +8211,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 n: minimum_arity,
             }),
 
-            ErrorMessage::EInvalidTypeArgs(box (reason_main, reason_tapp)) => {
-                Normal(Message::MessageCannotUseTypeWithInvalidTypeArgs {
-                    reason_main,
-                    reason_tapp,
-                })
-            }
-
             ErrorMessage::EConstantCondition(box EConstantConditionData {
                 is_truthy,
                 warning,
@@ -8313,10 +8228,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 } else {
                     Normal(Message::MessageCannotUseTypeWithoutExactlyNTypeArgs(n))
                 }
-            }
-
-            ErrorMessage::ETypeParamMinArity(_, n) => {
-                Normal(Message::MessageCannotUseTypeWithoutAtLeastNTypeArgs(n))
             }
 
             ErrorMessage::ECallTypeArity(box ECallTypeArityData {
@@ -8783,9 +8694,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 );
 
                 let msg = match binding_error {
-                    BindingError::EGlobalAlreadyDeclared => {
-                        Message::MessageCannotDeclareAlreadyBoundGlobal(x_reason.dupe())
-                    }
                     BindingError::ENameAlreadyBound => {
                         Message::MessageCannotDeclareAlreadyBoundName(x_reason.dupe())
                     }
@@ -9008,10 +8916,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op,
                     explanation: None,
                 }))
-            }
-
-            ErrorMessage::EReactElementFunArity(box (_, fn_name, n)) => {
-                Normal(Message::MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name, n })
             }
 
             ErrorMessage::EReactRefInRender {
@@ -9397,13 +9301,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 )),
             ),
 
-            ErrorMessage::EMissingPlatformSupport(box EMissingPlatformSupportData {
-                missing_platforms,
-                ..
-            }) => Normal(Message::MessageMissingPlatformSupport {
-                missing_platforms: missing_platforms.clone(),
-            }),
-
             ErrorMessage::EUnionPartialOptimizationNonUniqueKey(
                 box EUnionPartialOptimizationNonUniqueKeyData {
                     non_unique_keys, ..
@@ -9730,7 +9627,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EBinaryInRHS { .. } => Some(InvalidInRhs),
 
             ErrorMessage::EBindingError(box (binding_error, _, _, _)) => match binding_error {
-                EGlobalAlreadyDeclared => Some(NameAlreadyBound),
                 ENameAlreadyBound => Some(NameAlreadyBound),
                 ENameAlreadyBoundInCoreJs => Some(NameAlreadyBound),
                 EVarRedeclaration => Some(NameAlreadyBound),
@@ -9772,12 +9668,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::ENonStrictEqualityComparison { .. }
             | ErrorMessage::EComparison(box EComparisonData { .. }) => Some(InvalidCompare),
 
-            ErrorMessage::EComputedPropertyWithUnion { .. } => Some(InvalidComputedProp),
             ErrorMessage::EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData { .. }) => None,
             ErrorMessage::EDevOnlyInvalidatedRefinementInfo(
                 box EDevOnlyInvalidatedRefinementInfoData { .. },
             ) => None,
-            ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (_, _)) => None,
             ErrorMessage::EIncorrectTypeWithReplacement(
                 box EIncorrectTypeWithReplacementData { kind, .. },
             ) => match kind.error_type_of_kind() {
@@ -9998,7 +9892,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
                 ..
             }) => Some(InvalidReactCreateElement),
-            ErrorMessage::EInvalidTypeArgs(box (_, _)) => Some(InvalidTypeArg),
             ErrorMessage::EInvalidTypeof { .. } => Some(IllegalTypeof),
             ErrorMessage::EInvalidInfer { .. } => Some(InvalidInfer),
             ErrorMessage::EConstantCondition(box EConstantConditionData { .. }) => {
@@ -10078,7 +9971,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData { .. }) => {
                 Some(IncompatibleVariance)
             }
-            ErrorMessage::EReactElementFunArity(box (_, _, _)) => Some(MissingArg),
             ErrorMessage::EReactRefInRender { .. } => Some(ReactRuleRef),
             ErrorMessage::ERecursionLimit(_) => None,
             ErrorMessage::EROArrayWrite(_, use_op) => {
@@ -10141,7 +10033,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
             ErrorMessage::ETupleUnsafeWrite { .. } => Some(InvalidTupleIndex),
             ErrorMessage::ETypeParamArity(_, _) => Some(NonpolymorphicTypeApp),
-            ErrorMessage::ETypeParamMinArity(_, _) => Some(MissingTypeArg),
             ErrorMessage::EUnableToSpread(box EUnableToSpreadData { error_kind, .. }) => {
                 match error_kind {
                     ExactnessErrorKind::UnexpectedInexact => Some(CannotSpreadInexact),
@@ -10280,9 +10171,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms(
                 box EMissingPlatformSupportWithAvailablePlatformsData { .. },
             ) => Some(MissingPlatformSupport),
-            ErrorMessage::EMissingPlatformSupport(box EMissingPlatformSupportData { .. }) => {
-                Some(MissingPlatformSupport)
-            }
             ErrorMessage::EUnionPartialOptimizationNonUniqueKey(..) => {
                 Some(UnionPartiallyOptimizableNonUniqueKeys)
             }

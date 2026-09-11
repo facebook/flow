@@ -74,7 +74,6 @@ use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
 use flow_typing_errors::error_message::EInvalidThisArgData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EKeySpreadPropData;
-use flow_typing_errors::error_message::EMissingPlatformSupportData;
 use flow_typing_errors::error_message::EMissingPlatformSupportWithAvailablePlatformsData;
 use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::ENegativeTypeGuardConsistencyData;
@@ -1837,7 +1836,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
     fn dump_internal_error(err: &InternalError) -> &'static str {
         match err {
             InternalError::ReadOfUnreachedTvar(_) => "ReadOfUnreachedTvar",
-            InternalError::ReadOfUnresolvedTvar(_) => "ReadOfUnresolvedTvar",
             InternalError::ForcedReadOfUnderResolutionTvar(_) => "ForcedReadOfUnderResolutionTvar",
             InternalError::MethodNotAFunction => "MethodNotAFunction",
             InternalError::OptionalMethod => "OptionalMethod",
@@ -1853,7 +1851,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             InternalError::DebugThrow => "DebugThrow",
             InternalError::ParseJobException(_) => "ParseJobException",
             InternalError::CheckTimeout(_) => "CheckTimeout",
-            InternalError::CheckJobException(_) => "CheckJobException",
             InternalError::UnexpectedAnnotationInference(_) => "UnexpectedAnnotationInference",
             InternalError::UnexpectedInlineInterfaceType => "UnexpectedInlineInterfaceType",
             InternalError::MissingSwitchExhaustiveCheck => "MissingSwitchExhaustiveCheck",
@@ -2603,13 +2600,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 expected
             )
         }
-        ErrorMessage::ETypeParamMinArity(loc, expected) => {
-            format!(
-                "ETypeParamMinArity ({}, {})",
-                string_of_aloc(None, loc),
-                expected
-            )
-        }
         ErrorMessage::ECallTypeArity(box ECallTypeArityData {
             call_loc,
             is_new,
@@ -2654,13 +2644,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 ),
                 string_of_aloc(None, arity_loc),
                 minimum_arity
-            )
-        }
-        ErrorMessage::EInvalidTypeArgs(box (reason_tapp, reason_arity)) => {
-            format!(
-                "EInvalidTypeArgs(Box::new(({}, {})))",
-                dump_reason(cx, reason_tapp),
-                dump_reason(cx, reason_arity)
             )
         }
         ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
@@ -3035,9 +3018,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::EReactElementFunArity(box (loc, _, _)) => {
-            format!("EReactElementFunArity ({})", string_of_aloc(None, loc))
-        }
         ErrorMessage::EFunctionCallExtraArg(box (loc, def_reason, param_count, use_op)) => {
             format!(
                 "EFunctionCallExtraArg(Box::new(({}, {}, {}, {})))",
@@ -3357,9 +3337,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format_reason_group(reasons_for_operand1),
                 format_reason_group(reasons_for_operand2)
             )
-        }
-        ErrorMessage::EComputedPropertyWithUnion(reason) => {
-            format!("EComputedPropertyWithUnion ({})", dump_reason(cx, reason))
         }
         ErrorMessage::EEnumError(enum_error) => match enum_error {
             EnumErrorKind::EnumsNotEnabled(loc) => {
@@ -3955,16 +3932,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 required_platforms
             )
         }
-        ErrorMessage::EMissingPlatformSupport(box EMissingPlatformSupportData {
-            loc,
-            missing_platforms,
-        }) => {
-            format!(
-                "EMissingPlatformSupport({}, {:?})",
-                string_of_aloc(None, loc),
-                missing_platforms
-            )
-        }
         ErrorMessage::EUnionPartialOptimizationNonUniqueKey(
             box EUnionPartialOptimizationNonUniqueKeyData { loc, .. },
         ) => {
@@ -4194,12 +4161,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EDevOnlyInvalidatedRefinementInfo(Box::new(EDevOnlyInvalidatedRefinementInfoData {{read_loc={}}}))",
                 string_of_aloc(None, read_loc)
-            )
-        }
-        ErrorMessage::ETemporaryHardcodedErrorForPrototyping(box (loc, _)) => {
-            format!(
-                "ETemporaryHardcodedErrorForPrototyping(Box::new(({}, _)))",
-                string_of_aloc(None, loc)
             )
         }
         ErrorMessage::ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {

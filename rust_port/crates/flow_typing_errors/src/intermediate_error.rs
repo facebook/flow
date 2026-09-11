@@ -5614,15 +5614,6 @@ where
                 text(" because React components cannot be called. Use JSX instead. "),
                 text("(https://react.dev/reference/rules/react-calls-components-and-hooks)"),
             ]),
-            MessageCannotCallReactFunctionWithoutAtLeastNArgs { fn_name, n } => {
-                let suffix = if *n == 1 { "" } else { "s" };
-                friendly::Message(vec![
-                    text("Cannot call "),
-                    code(&format!("React.{}", fn_name)),
-                    text(" "),
-                    text(&format!("without at least {} argument{}.", n, suffix)),
-                ])
-            }
             MessageCannotCallReactHookConditionally(callee_loc) => friendly::Message(vec![
                 text("Cannot call "),
                 friendly::hardcoded_string_desc_ref("hook", loc_of_aloc(callee_loc)),
@@ -5753,11 +5744,6 @@ where
                 text("Cannot create exact type from "),
                 ref_(lower),
                 text("."),
-            ]),
-            MessageCannotDeclareAlreadyBoundGlobal(x) => friendly::Message(vec![
-                text("Cannot redeclare global "),
-                ref_(x),
-                text(" because the global is already declared in another file."),
             ]),
             MessageCannotDeclareAlreadyBoundName(x) => friendly::Message(vec![
                 text("Cannot declare "),
@@ -6327,23 +6313,6 @@ where
                 text(" because the declaration "),
                 text("either comes later or was skipped."),
             ]),
-            MessageCannotUseComputedPropertyWithUnion(computed_property_reason) => {
-                friendly::Message(vec![
-                    text("Cannot use "),
-                    ref_(computed_property_reason),
-                    text(" as a computed property."),
-                    text(
-                        " Computed properties may only be primitive literal values, but the type of ",
-                    ),
-                    ref_(computed_property_reason),
-                    text(" is a union. Can you add a literal type annotation to "),
-                    ref_(computed_property_reason),
-                    text("?"),
-                    text(
-                        " See https://flow.org/en/docs/types/literals/ for more information on literal types.",
-                    ),
-                ])
-            }
             MessageCannotUseDefaultImportWithDestrucuturing => friendly::Message(vec![
                 text(
                     "The default export of a module cannot be accessed from import destructuring. ",
@@ -6573,16 +6542,6 @@ where
                     }
                 }
             }
-            MessageCannotUseTypeWithInvalidTypeArgs {
-                reason_main,
-                reason_tapp,
-            } => friendly::Message(vec![
-                text("Cannot use "),
-                ref_(reason_main),
-                text(" with "),
-                ref_(reason_tapp),
-                text(" argument"),
-            ]),
             MessageCannotUseTypeWithoutAnyTypeArgs {
                 reason_arity,
                 min_arity,
@@ -6604,13 +6563,6 @@ where
                     text("Cannot use "),
                     ref_(reason_arity),
                     text(&format!(" without {} type {}.", arity, args)),
-                ])
-            }
-            MessageCannotUseTypeWithoutAtLeastNTypeArgs(n) => {
-                let suffix = if *n == 1 { "argument" } else { "arguments" };
-                friendly::Message(vec![
-                    text("Cannot use type without at least "),
-                    text(&format!("{} type {}.", n, suffix)),
                 ])
             }
             MessageCannotUseTypeWithoutExactlyNTypeArgs(n) => {
@@ -7338,21 +7290,6 @@ where
                 ]);
                 friendly::Message(features)
             }
-            MessageIncompatibleArity {
-                lower,
-                lower_arity,
-                upper,
-                upper_arity,
-            } => friendly::Message(vec![
-                text("arity "),
-                text(&lower_arity.to_string()),
-                text(" of "),
-                ref_(lower),
-                text(" is incompatible with arity "),
-                text(&upper_arity.to_string()),
-                text(" of "),
-                ref_(upper),
-            ]),
             MessageIncompatibleGeneralWithPrintedTypes(
                 box MessageIncompatibleGeneralWithPrintedTypesData {
                     lower_loc,
@@ -8071,29 +8008,6 @@ where
                     text(" is not supported by unclassified use "),
                     text(ctor),
                 ])
-            }
-            MessageMissingPlatformSupport { missing_platforms } => {
-                let platforms: Vec<_> = missing_platforms.iter().cloned().collect();
-                let platform_features =
-                    |platforms: &[FlowSmolStr]| -> Vec<friendly::MessageFeature<Loc>> {
-                        match platforms {
-                            [] => vec![text("no platforms")],
-                            [p] => vec![text("the "), code(p.as_str()), text(" platform")],
-                            [first, rest @ ..] => {
-                                let mut result =
-                                    vec![text("the following platforms: "), code(first.as_str())];
-                                for p in rest {
-                                    result.push(text(", "));
-                                    result.push(code(p.as_str()));
-                                }
-                                result
-                            }
-                        }
-                    };
-                let mut features = vec![text("Support for ")];
-                features.extend(platform_features(&platforms));
-                features.push(text(" is missing."));
-                friendly::Message(features)
             }
             MessageNoDefaultExport(box MessageNoDefaultExportData {
                 module_name,
@@ -9422,9 +9336,6 @@ where
                         code("invariant"),
                         text("."),
                     ]),
-                    JSXTypeArgs => {
-                        friendly::Message(vec![text("Flow doesn't support JSX type arguments.")])
-                    }
                     MatchExpression => friendly::Message(vec![
                         code("match"),
                         text(" expressions are not supported."),
@@ -9453,10 +9364,6 @@ where
                     PredicateFunction => friendly::Message(vec![text(
                         "Support for predicate functions is removed. `%checks` declaration is now ignored.",
                     )]),
-                    PredicateDeclarationAnonymousParameters => friendly::Message(vec![
-                        text("Predicate function declarations cannot use anonymous "),
-                        text("function parameters."),
-                    ]),
                     Records => friendly::Message(vec![text("Records are not enabled.")]),
                     DeclareClassMethodMissingReturnType => friendly::Message(vec![
                         text("Return type annotation is required for "),

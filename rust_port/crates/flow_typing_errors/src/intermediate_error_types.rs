@@ -231,9 +231,7 @@ pub enum UnsupportedSyntax {
     CatchParameterDeclaration,
     DestructuringObjectPropertyInvalidLiteral,
     DestructuringExpressionPattern,
-    JSXTypeArgs,
     PredicateFunction,
-    PredicateDeclarationAnonymousParameters,
     MatchExpression,
     MatchStatement,
     MatchInstancePattern,
@@ -1756,11 +1754,6 @@ pub enum Message<L: Dupe> {
 
     MessageCannotCallReactComponent(VirtualReason<L>),
 
-    MessageCannotCallReactFunctionWithoutAtLeastNArgs {
-        fn_name: FlowSmolStr,
-        n: i32,
-    },
-
     MessageCannotCallReactHookConditionally(L),
     MessageCannotCallReactHookInDefinitelyNonComponentOrHook(L),
     MessageCannotCallReactHookInNonComponentSyntaxComponentOrHookSyntaxHook(L),
@@ -1783,7 +1776,6 @@ pub enum Message<L: Dupe> {
 
     MessageCannotCreateExactType(VirtualReason<L>),
 
-    MessageCannotDeclareAlreadyBoundGlobal(VirtualReason<L>),
     MessageCannotDeclareAlreadyBoundName(VirtualReason<L>),
     MessageCannotDeclareAlreadyBoundNameInCoreJs(VirtualReason<L>),
 
@@ -1896,7 +1888,6 @@ pub enum Message<L: Dupe> {
     MessageCannotUseAsSuperClass(VirtualReason<L>),
     MessageCannotUseBeforeDeclaration(VirtualReason<L>),
 
-    MessageCannotUseComputedPropertyWithUnion(VirtualReason<L>),
     MessageCannotUseDefaultImportWithDestrucuturing,
     MessageCannotUseDollarExports,
 
@@ -1939,18 +1930,12 @@ pub enum Message<L: Dupe> {
 
     MessageCannotUseTypeInValuePosition(Box<MessageCannotUseTypeInValuePositionData<L>>),
 
-    MessageCannotUseTypeWithInvalidTypeArgs {
-        reason_main: VirtualReason<L>,
-        reason_tapp: VirtualReason<L>,
-    },
-
     MessageCannotUseTypeWithoutAnyTypeArgs {
         reason_arity: VirtualReason<L>,
         min_arity: i32,
         max_arity: i32,
     },
 
-    MessageCannotUseTypeWithoutAtLeastNTypeArgs(i32),
     MessageCannotUseTypeWithoutExactlyNTypeArgs(i32),
 
     MessageCannotUseTypeWithTooFewTypeArgs {
@@ -2066,13 +2051,6 @@ pub enum Message<L: Dupe> {
     MessageImportTypeAsTypeof(FlowSmolStr),
     MessageImportTypeAsValue(FlowSmolStr),
     MessageImportValueAsType(FlowSmolStr),
-
-    MessageIncompatibleArity {
-        lower: VirtualReason<L>,
-        lower_arity: i32,
-        upper: VirtualReason<L>,
-        upper_arity: i32,
-    },
 
     MessageIncompatibleTupleArity(Box<MessageIncompatibleTupleArityData<L>>),
 
@@ -2264,10 +2242,6 @@ pub enum Message<L: Dupe> {
     MessageMissingPlatformSupportWithAvailablePlatforms(
         Box<MessageMissingPlatformSupportWithAvailablePlatformsData>,
     ),
-
-    MessageMissingPlatformSupport {
-        missing_platforms: BTreeSet<FlowSmolStr>,
-    },
 
     MessageNoDefaultExport(Box<MessageNoDefaultExportData>),
 
