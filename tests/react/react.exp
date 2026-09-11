@@ -381,6 +381,61 @@ References:
                                              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- element_config.js:98:1
+
+Cannot cast `elementConfigResult` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   element_config.js:98:1
+   98| elementConfigResult as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   element_config.js:96:58
+   96| const elementConfigResult = inferFromElementConfig({foo: 42});
+                                                                ^^ [1]
+   element_config.js:98:24
+   98| elementConfigResult as string; // error: number ~> string
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- element_config.js:103:30
+
+Cannot call `inferFromComponentProps` because `T` [1] is underconstrained by call of `inferFromComponentProps` [2].
+Either add explicit type arguments or cast the expression to your expected type.
+[underconstrained-implicit-instantiation]
+
+   element_config.js:103:30
+   103| const componentPropsResult = inferFromComponentProps({foo: 42}); // :( underconstrained
+                                     ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   element_config.js:100:42
+   100| declare function inferFromComponentProps<T>(
+                                                 ^ [1]
+   element_config.js:103:30
+   103| const componentPropsResult = inferFromComponentProps({foo: 42}); // :( underconstrained
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- element_config.js:110:38
+
+Cannot call `inferFromFunctionComponentProps` because `T` [1] is underconstrained by call of
+`inferFromFunctionComponentProps` [2]. Either add explicit type arguments or cast the expression to your expected type.
+[underconstrained-implicit-instantiation]
+
+   element_config.js:110:38
+   110| const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42}); // :( underconstrained
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   element_config.js:107:50
+   107| declare function inferFromFunctionComponentProps<T>(
+                                                         ^ [1]
+   element_config.js:110:38
+   110| const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42}); // :( underconstrained
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8
 
 Cannot create `Component` element because properties `bar` and `foo` are missing in props [1] but exist in props of
@@ -2450,4 +2505,4 @@ References:
 
 
 
-Found 137 errors
+Found 140 errors

@@ -86,3 +86,27 @@ exactEmptyObject as React.ElementConfig<typeof F>; // OK
 ({}) as React.ElementConfig<typeof J>; // OK
 ({p: 42}) as React.ElementConfig<typeof J>; // OK
 ({p: 'foo'}) as React.ElementConfig<typeof J>; // Error: string ~> number
+
+declare class PolyComponent<T> extends React.Component<{foo: T, ...}> {}
+declare function PolyFunction<T>(props: {foo: T, ...}): React.Node;
+
+declare function inferFromElementConfig<T>(
+  config: React.ElementConfig<typeof PolyComponent<T>>,
+): T;
+const elementConfigResult = inferFromElementConfig({foo: 42});
+elementConfigResult as number;
+elementConfigResult as string; // error: number ~> string
+
+declare function inferFromComponentProps<T>(
+  props: React.ComponentProps<typeof PolyComponent<T>>,
+): T;
+const componentPropsResult = inferFromComponentProps({foo: 42}); // :( underconstrained
+componentPropsResult as number;
+componentPropsResult as string; // should error but doesn't: number ~> string
+
+declare function inferFromFunctionComponentProps<T>(
+  props: React.ComponentProps<typeof PolyFunction<T>>,
+): T;
+const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42}); // :( underconstrained
+functionComponentPropsResult as number;
+functionComponentPropsResult as string; // should error but doesn't: number ~> string
