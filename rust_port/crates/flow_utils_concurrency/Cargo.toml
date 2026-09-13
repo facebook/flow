@@ -6,7 +6,7 @@ version = "0.0.0"
 edition = "2024"
 
 [dependencies]
-crossbeam = "0.8"
+crossbeam = "0.8.5"
 dupe = "0.9.1"
 equivalent = "1.0.2"
 flow_aloc = { path = "../flow_aloc" }

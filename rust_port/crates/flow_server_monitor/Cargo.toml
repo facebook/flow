@@ -7,7 +7,7 @@ edition = "2024"
 
 [dependencies]
 bincode = { version = "2", features = ["serde"] }
-crossbeam = "0.8"
+crossbeam = "0.8.5"
 dupe = "0.9.1"
 flow_common = { path = "../flow_common" }
 flow_common_exit_status = { path = "../flow_common_exit_status" }
