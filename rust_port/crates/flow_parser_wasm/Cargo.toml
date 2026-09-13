@@ -13,7 +13,7 @@ flow_parser_utils = { path = "../flow_parser_utils" }
 prettyplease = { version = "0.3.0", features = ["verbatim"] }
 proc-macro2 = { version = "1.0.107", features = ["span-locations"] }
 quote = "1.0.47"
-syn = { version = "3", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
+syn = { version = "3.0.5", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
 thiserror = "2.0.20"
 
 [dev-dependencies]
