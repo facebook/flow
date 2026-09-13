@@ -3358,9 +3358,9 @@ dependencies = [
 
 [[package]]
 name = "sval"
-version = "2.21.1"
+version = "2.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec4a2a7d92fa86fcc6222e4c3845f8486cff899d9db32480b26c91a5dbf2e22d"
+checksum = "b81b254da21fe1fcc4e3a74fe39b46e25e3a863078f8b71c954d47f84889dbc6"
 
 [[package]]
 name = "sval_buffer"
