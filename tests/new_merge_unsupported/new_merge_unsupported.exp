@@ -751,7 +751,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:41:21
 
-Cannot perform arithmetic operation because object type [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `{f?: number, g: number}` [1] is not a number or bigint. [unsafe-arithmetic]
 
    ops_on_react_config.js:41:21
    41| export const x10 = -t;

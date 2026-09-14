@@ -9892,7 +9892,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because boolean [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `false` [1] is not a number or bigint. [unsafe-arithmetic]
 
    not.js:5:5
    5|     x++; // should error for null, void and boolean (false)
@@ -13216,7 +13216,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:51:15
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `string` [1] is not a number or bigint. [unsafe-arithmetic]
 
    switch.js:51:15
    51|       return (text++) + '';

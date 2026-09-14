@@ -1109,8 +1109,8 @@ References:
 
 Error ---------------------------------------------------------------------------- object_construct_sig_lib_usage.js:8:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
-[invalid-constructor]
+Cannot use `new` on `{new(): TsCtorGlobal}` [1]. Only classes and interfaces with a construct signature can be
+constructed. [invalid-constructor]
 
    object_construct_sig_lib_usage.js:8:5
     8| new TsCtorGlobalQuoted(); // ERROR: invalid-constructor
@@ -1252,7 +1252,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:69:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
+Cannot use `new` on `{new(): Bar}` [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
    object_construct_sig_usage.js:69:5
@@ -1267,7 +1267,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:70:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
+Cannot use `new` on `{new?: () => Bar}` [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
    object_construct_sig_usage.js:70:5
@@ -1282,7 +1282,7 @@ References:
 
 Error ------------------------------------------------------------------------------- object_construct_sig_usage.js:72:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
+Cannot use `new` on `{new: () => Bar}` [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
    object_construct_sig_usage.js:72:5

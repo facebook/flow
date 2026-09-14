@@ -17,6 +17,7 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
+use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
@@ -25,6 +26,7 @@ use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser_utils::signature_utils;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EArithmeticOperandData;
 use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
 use flow_typing_errors::error_message::EIncompatibleTypeData;
@@ -1604,7 +1606,9 @@ pub fn union_representative_use_op(
     }
 }
 
-fn type_or_explanatory_desc(t: &Type) -> TypeOrTypeDescT<ALoc> {
+/// Keeps a type for post-inference normalization unless its reason carries
+/// explanatory provenance that the normalized type cannot express.
+pub fn type_or_type_desc_for_error(t: &Type) -> TypeOrTypeDescT<ALoc> {
     use flow_typing_type::type_util;
 
     let desc = type_util::reason_of_t(t).desc(true);
@@ -1623,6 +1627,64 @@ fn type_or_explanatory_desc(t: &Type) -> TypeOrTypeDescT<ALoc> {
     } else {
         TypeOrTypeDescT::Type(t.dupe())
     }
+}
+
+/// Builds an `instanceof` RHS error while preserving descriptions that carry
+/// provenance not expressible by the normalized type.
+pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
+    use flow_typing_errors::error_message::EInstanceofRHSData;
+    use flow_typing_type::type_util;
+
+    let reason = type_util::reason_of_t(t);
+    let rhs_desc = if matches!(
+        t.deref(),
+        TypeInner::DefT(_, def_t)
+            if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT)
+    ) {
+        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
+    } else {
+        type_or_type_desc_for_error(t)
+    };
+    ErrorMessage::EInstanceofRHS(Box::new(EInstanceofRHSData {
+        loc: reason.loc().dupe(),
+        rhs_loc: type_util::ref_loc_of_t(t).dupe(),
+        rhs_desc,
+    }))
+}
+
+/// Builds an invalid-constructor error while preserving module provenance that
+/// the normalized namespace object type cannot express.
+pub fn invalid_constructor_error(t: &Type) -> ErrorMessage<ALoc> {
+    use flow_common::reason::VirtualReasonDesc;
+    use flow_typing_errors::error_message::EInvalidConstructorData;
+    use flow_typing_type::type_util;
+
+    let reason = type_util::reason_of_t(t);
+    let value_desc = if matches!(
+        reason.desc(true),
+        VirtualReasonDesc::RExports | VirtualReasonDesc::RModule(_)
+    ) {
+        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
+    } else {
+        type_or_type_desc_for_error(t)
+    };
+    ErrorMessage::EInvalidConstructor(Box::new(EInvalidConstructorData {
+        loc: reason.loc().dupe(),
+        value_loc: type_util::ref_loc_of_t(t).dupe(),
+        value_desc,
+    }))
+}
+
+/// Builds an invalid-prototype error that retains the type for normalization.
+pub fn invalid_prototype_error(loc: ALoc, t: &Type) -> ErrorMessage<ALoc> {
+    use flow_typing_errors::error_message::EInvalidPrototypeData;
+    use flow_typing_type::type_util;
+
+    ErrorMessage::EInvalidPrototype(Box::new(EInvalidPrototypeData {
+        loc,
+        prototype_loc: type_util::ref_loc_of_t(t).dupe(),
+        prototype_desc: type_or_type_desc_for_error(t),
+    }))
 }
 
 pub fn incompatible_type_error(
@@ -1653,7 +1715,7 @@ pub fn incompatible_type_error_with_lower_kind(
     {
         TypeOrTypeDescT::TypeDesc(Err(type_util::reason_of_t(lower).desc(true).clone()))
     } else {
-        type_or_explanatory_desc(lower)
+        type_or_type_desc_for_error(lower)
     };
     ErrorMessage::EIncompatibleType(Box::new(EIncompatibleTypeData {
         lower_reason: type_util::reason_of_t(lower).dupe(),
@@ -1689,8 +1751,8 @@ pub fn incompatible_types_error_with_branches(
         lower_def_loc: type_util::ref_loc_of_t(lower).dupe(),
         upper_loc: type_util::loc_of_t(upper).dupe(),
         upper_def_loc: type_util::ref_loc_of_t(upper).dupe(),
-        lower_desc: type_or_explanatory_desc(lower),
-        upper_desc: type_or_explanatory_desc(upper),
+        lower_desc: type_or_type_desc_for_error(lower),
+        upper_desc: type_or_type_desc_for_error(upper),
         use_op,
         explanation,
         example: None,
@@ -8266,6 +8328,25 @@ pub fn unary_negate_bigint_lit(
     (reason, (value, raw))
 }
 
+fn arithmetic_operand_error(t: &Type) -> ErrorMessage<ALoc> {
+    use flow_typing_type::type_util;
+
+    let reason = type_util::reason_of_t(t);
+    let operand_desc = if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
+        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
+    } else {
+        type_or_type_desc_for_error(t)
+    };
+    ErrorMessage::EArithmeticOperand(Box::new(EArithmeticOperandData {
+        loc: reason.loc().dupe(),
+        operand: ErrorReference::new(
+            type_util::ref_loc_of_t(t).dupe(),
+            reason.desc(false).clone(),
+        ),
+        operand_desc,
+    }))
+}
+
 pub fn flow_unary_arith<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -8279,7 +8360,6 @@ pub fn flow_unary_arith<'cx>(
     use flow_typing_type::type_::any_t;
     use flow_typing_type::type_::bigint_module_t;
     use flow_typing_type::type_::num_module_t;
-    use flow_typing_type::type_util::reason_of_t;
 
     match (kind, l.deref()) {
         (Minus, TypeInner::DefT(lreason, def_t)) => match def_t.deref() {
@@ -8310,11 +8390,7 @@ pub fn flow_unary_arith<'cx>(
             }
             DefTInner::BigIntGeneralT { .. } => Ok(l.dupe()),
             _ => {
-                add_output_with_env(
-                    cx,
-                    env,
-                    ErrorMessage::EArithmeticOperand(reason_of_t(l).dupe()),
-                )?;
+                add_output_with_env(cx, env, arithmetic_operand_error(l))?;
                 Ok(any_t::error(reason))
             }
         },
@@ -8366,11 +8442,7 @@ pub fn flow_unary_arith<'cx>(
             Ok(any_t::why(src, reason))
         }
         (_, _) => {
-            add_output_with_env(
-                cx,
-                env,
-                ErrorMessage::EArithmeticOperand(reason_of_t(l).dupe()),
-            )?;
+            add_output_with_env(cx, env, arithmetic_operand_error(l))?;
             Ok(any_t::error(reason))
         }
     }

@@ -212,7 +212,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instanceof.js:98:5
 
-Cannot perform arithmetic operation because array type [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `Array<number>` [1] is not a number or bigint. [unsafe-arithmetic]
 
    instanceof.js:98:5
    98|     x++; // error
@@ -241,7 +241,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- instanceof.js:105:26
 
-The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
+The right-hand side of an `instanceof` expression must be an object, but got `string` [1]. [invalid-in-rhs]
 
    105|   const y = x instanceof 'bad'; // error
                                  ^^^^^ [1]
@@ -249,7 +249,7 @@ The right-hand side of an `instanceof` expression must be an object, but got str
 
 Error --------------------------------------------------------------------------------------------- instanceof.js:106:20
 
-The right-hand side of an `instanceof` expression must be an object, but got string [1]. [invalid-in-rhs]
+The right-hand side of an `instanceof` expression must be an object, but got `string` [1]. [invalid-in-rhs]
 
    106|   if (x instanceof 'bad') {
                            ^^^^^ [1]

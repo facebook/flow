@@ -28,7 +28,10 @@ use flow_typing_context::Context;
 use flow_typing_default::Default;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::EAnnotationInferenceData;
+use flow_typing_errors::error_message::EArithmeticOperandData;
 use flow_typing_errors::error_message::EAssignConstLikeBindingData;
+use flow_typing_errors::error_message::EBinaryInLHSData;
+use flow_typing_errors::error_message::EBinaryInRHSData;
 use flow_typing_errors::error_message::EBuiltinModuleLookupFailedData;
 use flow_typing_errors::error_message::EBuiltinNameLookupFailedData;
 use flow_typing_errors::error_message::ECallTypeArityData;
@@ -52,6 +55,7 @@ use flow_typing_errors::error_message::EExpectedNumberLitData;
 use flow_typing_errors::error_message::EExpectedStringLitData;
 use flow_typing_errors::error_message::EExponentialSpreadData;
 use flow_typing_errors::error_message::EExportRenamedDefaultData;
+use flow_typing_errors::error_message::EForInRHSData;
 use flow_typing_errors::error_message::EHookIncompatibleData;
 use flow_typing_errors::error_message::EHookRuleViolationData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
@@ -64,9 +68,12 @@ use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::EIndexerCheckFailedData;
 use flow_typing_errors::error_message::EInexactMayOverwriteIndexerData;
+use flow_typing_errors::error_message::EInstanceofRHSData;
 use flow_typing_errors::error_message::EInvalidBinaryArithData;
+use flow_typing_errors::error_message::EInvalidConstructorData;
 use flow_typing_errors::error_message::EInvalidDeclarationData;
 use flow_typing_errors::error_message::EInvalidObjectKitData;
+use flow_typing_errors::error_message::EInvalidPrototypeData;
 use flow_typing_errors::error_message::EInvalidReactCreateElementData;
 use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
 use flow_typing_errors::error_message::EInvalidThisArgData;
@@ -2888,20 +2895,62 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 name
             )
         }
-        ErrorMessage::EBinaryInLHS(reason) => {
-            format!("EBinaryInLHS ({})", dump_reason(cx, reason))
+        ErrorMessage::EBinaryInLHS(box EBinaryInLHSData { loc, lhs_desc, .. }) => {
+            let lhs = match lhs_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EBinaryInLHS {{ loc = {}; lhs = {} }}",
+                string_of_aloc(None, loc),
+                lhs,
+            )
         }
-        ErrorMessage::EBinaryInRHS(reason) => {
-            format!("EBinaryInRHS ({})", dump_reason(cx, reason))
+        ErrorMessage::EBinaryInRHS(box EBinaryInRHSData { loc, rhs_desc, .. }) => {
+            let rhs = match rhs_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EBinaryInRHS {{ loc = {}; rhs = {} }}",
+                string_of_aloc(None, loc),
+                rhs,
+            )
         }
-        ErrorMessage::EArithmeticOperand(reason) => {
-            format!("EArithmeticOperand ({})", dump_reason(cx, reason))
+        ErrorMessage::EArithmeticOperand(box EArithmeticOperandData {
+            loc, operand_desc, ..
+        }) => {
+            let operand = match operand_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EArithmeticOperand {{ loc = {}; operand = {} }}",
+                string_of_aloc(None, loc),
+                operand,
+            )
         }
-        ErrorMessage::EForInRHS(reason) => {
-            format!("EForInRHS ({})", dump_reason(cx, reason))
+        ErrorMessage::EForInRHS(box EForInRHSData { loc, rhs_desc, .. }) => {
+            let rhs = match rhs_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EForInRHS {{ loc = {}; rhs = {} }}",
+                string_of_aloc(None, loc),
+                rhs,
+            )
         }
-        ErrorMessage::EInstanceofRHS(reason) => {
-            format!("EInstanceofRHS ({})", dump_reason(cx, reason))
+        ErrorMessage::EInstanceofRHS(box EInstanceofRHSData { loc, rhs_desc, .. }) => {
+            let rhs = match rhs_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EInstanceofRHS {{ loc = {}; rhs = {} }}",
+                string_of_aloc(None, loc),
+                rhs,
+            )
         }
         ErrorMessage::EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
             reason_obj,
@@ -3131,14 +3180,32 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 dump_reason(cx, reason)
             )
         }
-        ErrorMessage::EInvalidConstructor(reason) => {
-            format!("EInvalidConstructor ({})", dump_reason(cx, reason))
-        }
-        ErrorMessage::EInvalidPrototype(box (loc, reason)) => {
+        ErrorMessage::EInvalidConstructor(box EInvalidConstructorData {
+            loc, value_desc, ..
+        }) => {
+            let value = match value_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
             format!(
-                "EInvalidPrototype ({}) ({})",
+                "EInvalidConstructor {{ loc = {}; value = {} }}",
                 string_of_aloc(None, loc),
-                dump_reason(cx, reason)
+                value,
+            )
+        }
+        ErrorMessage::EInvalidPrototype(box EInvalidPrototypeData {
+            loc,
+            prototype_desc,
+            ..
+        }) => {
+            let prototype = match prototype_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!(
+                "EInvalidPrototype {{ loc = {}; prototype = {} }}",
+                string_of_aloc(None, loc),
+                prototype,
             )
         }
         ErrorMessage::EUnnecessaryOptionalChain(box (loc, _)) => {

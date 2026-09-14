@@ -239,7 +239,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:40:31
 
-Cannot use number [1] as a prototype. Expected an object or null. [not-an-object]
+Cannot use `number` [1] as a prototype. Expected an object or null. [not-an-object]
 
    40| type O_invalid = { __proto__: number, ... }; // error: number is not a valid proto
                                      ^^^^^^ [1]
@@ -446,7 +446,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- literal.js:27:30
 
-Cannot use number [1] as a prototype. Expected an object or null. [not-an-object]
+Cannot use `number` [1] as a prototype. Expected an object or null. [not-an-object]
 
    27| var o_invalid = { __proto__: 0 }; // error: 0 is not a valid proto
                                     ^ [1]

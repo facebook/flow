@@ -22,7 +22,10 @@ use flow_common::reason::mk_expression_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::expression;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EBinaryInLHSData;
+use flow_typing_errors::error_message::EBinaryInRHSData;
 use flow_typing_errors::error_message::EComparisonData;
+use flow_typing_errors::error_message::EForInRHSData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
 use flow_typing_errors::error_message::EInvalidThisArgData;
 use flow_typing_errors::error_message::EPropNotReadableData;
@@ -66,6 +69,7 @@ use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_::mixed_t;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
@@ -2523,7 +2527,11 @@ pub mod type_assertions {
                         _ => flow_js_utils::add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::EBinaryInLHS(reason_of_t(t).dupe()),
+                            ErrorMessage::EBinaryInLHS(Box::new(EBinaryInLHSData {
+                                loc: type_util::loc_of_t(t).dupe(),
+                                lhs_loc: type_util::ref_loc_of_t(t).dupe(),
+                                lhs_desc: flow_js_utils::type_or_type_desc_for_error(t),
+                            })),
                         ),
                     }
                 },
@@ -2565,7 +2573,11 @@ pub mod type_assertions {
                         _ => flow_js_utils::add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::EBinaryInRHS(reason_of_t(t).dupe()),
+                            ErrorMessage::EBinaryInRHS(Box::new(EBinaryInRHSData {
+                                loc: type_util::loc_of_t(t).dupe(),
+                                rhs_loc: type_util::ref_loc_of_t(t).dupe(),
+                                rhs_desc: flow_js_utils::type_or_type_desc_for_error(t),
+                            })),
                         ),
                     }
                 },
@@ -2656,7 +2668,11 @@ pub mod type_assertions {
                         _ => flow_js_utils::add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::EForInRHS(reason_of_t(t).dupe()),
+                            ErrorMessage::EForInRHS(Box::new(EForInRHSData {
+                                loc: type_util::loc_of_t(t).dupe(),
+                                rhs_loc: type_util::ref_loc_of_t(t).dupe(),
+                                rhs_desc: TypeOrTypeDescT::Type(t.dupe()),
+                            })),
                         ),
                     }
                 },
@@ -2788,7 +2804,7 @@ pub mod type_assertions {
                         _ => flow_js_utils::add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::EInstanceofRHS(reason_of_t(t).dupe()),
+                            flow_js_utils::instanceof_rhs_error(t),
                         ),
                     }
                 },

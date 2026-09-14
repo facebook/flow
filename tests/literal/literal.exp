@@ -78,7 +78,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:6:11
 
-Cannot perform arithmetic operation because string [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `string` [1] is not a number or bigint. [unsafe-arithmetic]
 
    number.js:6:11
    6|   return -x;

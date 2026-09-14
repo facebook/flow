@@ -7,10 +7,13 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_common::error_ref::ErrorReference;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
@@ -1448,6 +1451,38 @@ pub struct MessageTypeReferenceData<L: Dupe> {
     pub desc: Result<ALocTy, VirtualReasonDesc<L>>,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageArithmeticOperandData<L: Dupe> {
+    pub operand: ErrorReference<L>,
+    pub operand_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for MessageArithmeticOperandData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.operand == other.operand
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for MessageArithmeticOperandData<L> {}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for MessageArithmeticOperandData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.operand.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for MessageArithmeticOperandData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for MessageArithmeticOperandData<L> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.operand.cmp(&other.operand)
+    }
+}
+
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum LowerRequirement {
     Array,
@@ -1816,7 +1851,7 @@ pub enum Message<L: Dupe> {
         enum_name: Option<FlowSmolStr>,
     },
 
-    MessageCannotIterateWithForIn(VirtualReason<L>),
+    MessageCannotIterateWithForIn(Box<MessageTypeReferenceData<L>>),
     MessageCannotMutateThisPrototype,
     MessageCannotNestComponents,
     MessageCannotNestHook,
@@ -1829,7 +1864,7 @@ pub enum Message<L: Dupe> {
         in_hook: bool,
     },
 
-    MessageCannotPerformArithOnNonNumbersOrBigInt(VirtualReason<L>),
+    MessageCannotPerformArithOnNonNumbersOrBigInt(Box<MessageArithmeticOperandData<L>>),
     MessageCannotPerformBigIntRShift3(VirtualReason<L>),
     MessageCannotPerformBigIntUnaryPlus(VirtualReason<L>),
 
@@ -1883,8 +1918,8 @@ pub enum Message<L: Dupe> {
         interface_reason: VirtualReason<L>,
     },
 
-    MessageCannotUseAsConstructor(VirtualReason<L>),
-    MessageCannotUseAsPrototype(VirtualReason<L>),
+    MessageCannotUseAsConstructor(Box<MessageTypeReferenceData<L>>),
+    MessageCannotUseAsPrototype(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseAsSuperClass(VirtualReason<L>),
     MessageCannotUseBeforeDeclaration(VirtualReason<L>),
 
@@ -1895,9 +1930,9 @@ pub enum Message<L: Dupe> {
 
     MessageCannotUseExportInNonLegalToplevelContext(FlowSmolStr),
     MessageCannotUseImportStar(VirtualReason<L>),
-    MessageCannotUseInOperatorDueToBadLHS(VirtualReason<L>),
-    MessageCannotUseInOperatorDueToBadRHS(VirtualReason<L>),
-    MessageCannotUseInstanceOfOperatorDueToBadRHS(VirtualReason<L>),
+    MessageCannotUseInOperatorDueToBadLHS(Box<MessageTypeReferenceData<L>>),
+    MessageCannotUseInOperatorDueToBadRHS(Box<MessageTypeReferenceData<L>>),
+    MessageCannotUseInstanceOfOperatorDueToBadRHS(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseMixedImportAndRequire(VirtualReason<L>),
 
     MessageCannotUseNonPolymorphicTypeWithTypeArgs {

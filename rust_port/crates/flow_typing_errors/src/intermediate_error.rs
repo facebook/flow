@@ -5907,12 +5907,12 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateWithForIn(reason) => friendly::Message(vec![
+            MessageCannotIterateWithForIn(rhs) => friendly::Message(vec![
                 text("Cannot iterate using a "),
                 code("for...in"),
                 text(" statement "),
                 text("because "),
-                ref_(reason),
+                ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
                 text(" is not an object, null, or undefined."),
             ]),
             MessageCannotMutateThisPrototype => {
@@ -6020,12 +6020,13 @@ where
                     text(". (https://react.dev/reference/react/useRef)."),
                 ])
             }
-            MessageCannotPerformArithOnNonNumbersOrBigInt(reason) => friendly::Message(vec![
-                text("Cannot perform arithmetic operation because "),
-                ref_(reason),
-                text(" "),
-                text("is not a number or bigint."),
-            ]),
+            MessageCannotPerformArithOnNonNumbersOrBigInt(operand) => {
+                friendly::Message(vec![
+                    text("Cannot perform arithmetic operation because "),
+                    ref_of_ty_or_desc(&operand.operand.loc, &operand.operand_desc),
+                    text(" is not a number or bigint."),
+                ])
+            }
             MessageCannotPerformBigIntRShift3(reason) => friendly::Message(vec![
                 text("Cannot perform unsigned right shift because "),
                 ref_(reason),
@@ -6259,18 +6260,18 @@ where
                 text(" cannot be spread because interfaces do not "),
                 text("track the own-ness of their properties. Try using an object type instead"),
             ]),
-            MessageCannotUseAsConstructor(reason) => friendly::Message(vec![
+            MessageCannotUseAsConstructor(value) => friendly::Message(vec![
                 text("Cannot use "),
                 code("new"),
                 text(" on "),
-                ref_(reason),
+                ref_of_ty_or_desc(&value.loc, &value.desc),
                 text(
                     ". Only classes and interfaces with a construct signature can be constructed.",
                 ),
             ]),
-            MessageCannotUseAsPrototype(reason) => friendly::Message(vec![
+            MessageCannotUseAsPrototype(prototype) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_(reason),
+                ref_of_ty_or_desc(&prototype.loc, &prototype.desc),
                 text(" as a prototype. Expected an object or null."),
             ]),
             MessageCannotUseAsSuperClass(reason) => friendly::Message(vec![
@@ -6319,25 +6320,25 @@ where
                 text(" object can only be used by accessing one of its named exports"),
                 text(" with a member access or destructuring."),
             ]),
-            MessageCannotUseInOperatorDueToBadLHS(reason) => friendly::Message(vec![
+            MessageCannotUseInOperatorDueToBadLHS(lhs) => friendly::Message(vec![
                 text("Cannot use "),
                 code("in"),
                 text(" because on the left-hand side, "),
-                ref_(reason),
+                ref_of_ty_or_desc(&lhs.loc, &lhs.desc),
                 text(" must be a string or number."),
             ]),
-            MessageCannotUseInOperatorDueToBadRHS(reason) => friendly::Message(vec![
+            MessageCannotUseInOperatorDueToBadRHS(rhs) => friendly::Message(vec![
                 text("Cannot use "),
                 code("in"),
                 text(" because on the right-hand side, "),
-                ref_(reason),
+                ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
                 text(" must be an object or array."),
             ]),
-            MessageCannotUseInstanceOfOperatorDueToBadRHS(reason) => friendly::Message(vec![
+            MessageCannotUseInstanceOfOperatorDueToBadRHS(rhs) => friendly::Message(vec![
                 text("The right-hand side of an "),
                 code("instanceof"),
                 text(" expression must be an object, but got "),
-                ref_(reason),
+                ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
                 text("."),
             ]),
             MessageCannotUseMixedImportAndRequire(import_reason) => friendly::Message(vec![

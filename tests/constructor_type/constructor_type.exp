@@ -114,8 +114,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_construct_sig.js:9:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
-[invalid-constructor]
+Cannot use `new` on `{new(): {x: number}}` [1]. Only classes and interfaces with a construct signature can be
+constructed. [invalid-constructor]
 
    object_construct_sig.js:9:5
    9| new c();             // ERROR: invalid-constructor
@@ -129,8 +129,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- object_construct_sig.js:13:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
-[invalid-constructor]
+Cannot use `new` on `{new(): {x: number}}` [1]. Only classes and interfaces with a construct signature can be
+constructed. [invalid-constructor]
 
    object_construct_sig.js:13:5
    13| new quoted(); // ERROR: invalid-constructor
@@ -159,8 +159,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- object_construct_sig.js:19:5
 
-Cannot use `new` on object type [1]. Only classes and interfaces with a construct signature can be constructed.
-[invalid-constructor]
+Cannot use `new` on `{new: () => {x: number}}` [1]. Only classes and interfaces with a construct signature can be
+constructed. [invalid-constructor]
 
    object_construct_sig.js:19:5
    19| new field(); // ERROR: invalid-constructor

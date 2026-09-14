@@ -88,6 +88,7 @@ use crate::intermediate_error_types::MatchInvalidCaseSyntax;
 use crate::intermediate_error_types::MatchObjPatternKind;
 use crate::intermediate_error_types::Message;
 use crate::intermediate_error_types::MessageAlreadyExhaustivelyCheckOneEnumMemberData;
+use crate::intermediate_error_types::MessageArithmeticOperandData;
 use crate::intermediate_error_types::MessageCannotAccessEnumMemberData;
 use crate::intermediate_error_types::MessageCannotAddComputedPropertyDueToPotentialOverwriteData;
 use crate::intermediate_error_types::MessageCannotCallMaybeReactHookData;
@@ -131,6 +132,7 @@ use crate::intermediate_error_types::MessageTupleElementNotReadableData;
 use crate::intermediate_error_types::MessageTupleElementNotWritableData;
 use crate::intermediate_error_types::MessageTupleIndexOutOfBoundData;
 use crate::intermediate_error_types::MessageTupleNonIntegerIndexData;
+use crate::intermediate_error_types::MessageTypeReferenceData;
 use crate::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use crate::intermediate_error_types::ObjKind;
 use crate::intermediate_error_types::OverrideErrorKind;
@@ -2433,6 +2435,144 @@ pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub kind: flow_typing_type::type_::arith_kind::ArithKind,
 }
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct EArithmeticOperandData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub operand: ErrorReference<L>,
+    pub operand_desc: TypeOrTypeDesc<L>,
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EArithmeticOperandData<L> {
+    fn eq(&self, other: &Self) -> bool {
+        self.loc == other.loc && self.operand == other.operand
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for EArithmeticOperandData<L> {}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EArithmeticOperandData<L> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.loc.hash(state);
+        self.operand.hash(state);
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for EArithmeticOperandData<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EArithmeticOperandData<L> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.loc
+            .cmp(&other.loc)
+            .then_with(|| self.operand.cmp(&other.operand))
+    }
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EForInRHSData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub rhs_loc: L,
+    pub rhs_desc: TypeOrTypeDesc<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EInstanceofRHSData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub rhs_loc: L,
+    pub rhs_desc: TypeOrTypeDesc<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EBinaryInLHSData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub lhs_loc: L,
+    pub lhs_desc: TypeOrTypeDesc<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EBinaryInRHSData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub rhs_loc: L,
+    pub rhs_desc: TypeOrTypeDesc<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EInvalidConstructorData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub value_loc: L,
+    pub value_desc: TypeOrTypeDesc<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EInvalidPrototypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub prototype_loc: L,
+    pub prototype_desc: TypeOrTypeDesc<L>,
+}
+
 #[derive(
     Debug,
     Clone,
@@ -2748,7 +2888,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EExportsAnnot(L),
 
-    EInvalidConstructor(VirtualReason<L>),
+    EInvalidConstructor(Box<EInvalidConstructorData<L>>),
 
     EUnsupportedKeyInObject {
         loc: L,
@@ -2841,15 +2981,15 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidTypeof(Box<(L, FlowSmolStr)>),
 
-    EBinaryInLHS(VirtualReason<L>),
+    EBinaryInLHS(Box<EBinaryInLHSData<L>>),
 
-    EBinaryInRHS(VirtualReason<L>),
+    EBinaryInRHS(Box<EBinaryInRHSData<L>>),
 
-    EArithmeticOperand(VirtualReason<L>),
+    EArithmeticOperand(Box<EArithmeticOperandData<L>>),
 
-    EForInRHS(VirtualReason<L>),
+    EForInRHS(Box<EForInRHSData<L>>),
 
-    EInstanceofRHS(VirtualReason<L>),
+    EInstanceofRHS(Box<EInstanceofRHSData<L>>),
 
     EObjectComputedPropertyAccess(Box<EObjectComputedPropertyAccessData<L>>),
 
@@ -2925,7 +3065,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ESketchyNumberLint(SketchyNumberKind, VirtualReason<L>),
 
-    EInvalidPrototype(Box<(L, VirtualReason<L>)>),
+    EInvalidPrototype(Box<EInvalidPrototypeData<L>>),
 
     EUnnecessaryOptionalChain(Box<(L, VirtualReason<L>)>),
 
@@ -4137,7 +4277,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 EFunctionIncompatibleWithIndexer((map_reason(r1), map_reason(r2)), map_use_op(op))
             }
 
-            EInvalidConstructor(r) => EInvalidConstructor(map_reason(r)),
+            EInvalidConstructor(box EInvalidConstructorData {
+                loc,
+                value_loc,
+                value_desc,
+            }) => EInvalidConstructor(Box::new(EInvalidConstructorData {
+                loc: f(loc),
+                value_loc: f(value_loc),
+                value_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), value_desc),
+            })),
 
             EInvalidObjectKit(box EInvalidObjectKitData { reason, use_op }) => {
                 EInvalidObjectKit(Box::new(EInvalidObjectKitData {
@@ -4758,11 +4906,51 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUnreachable(loc) => EUnreachable(f(loc)),
             EInvalidTypeof(box (loc, s)) => EInvalidTypeof(Box::new((f(loc), s))),
-            EBinaryInLHS(r) => EBinaryInLHS(map_reason(r)),
-            EBinaryInRHS(r) => EBinaryInRHS(map_reason(r)),
-            EArithmeticOperand(r) => EArithmeticOperand(map_reason(r)),
-            EForInRHS(r) => EForInRHS(map_reason(r)),
-            EInstanceofRHS(r) => EInstanceofRHS(map_reason(r)),
+            EBinaryInLHS(box EBinaryInLHSData {
+                loc,
+                lhs_loc,
+                lhs_desc,
+            }) => EBinaryInLHS(Box::new(EBinaryInLHSData {
+                loc: f(loc),
+                lhs_loc: f(lhs_loc),
+                lhs_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lhs_desc),
+            })),
+            EBinaryInRHS(box EBinaryInRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc,
+            }) => EBinaryInRHS(Box::new(EBinaryInRHSData {
+                loc: f(loc),
+                rhs_loc: f(rhs_loc),
+                rhs_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), rhs_desc),
+            })),
+            EArithmeticOperand(box EArithmeticOperandData {
+                loc,
+                operand,
+                operand_desc,
+            }) => EArithmeticOperand(Box::new(EArithmeticOperandData {
+                loc: f(loc),
+                operand: map_error_ref(operand),
+                operand_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), operand_desc),
+            })),
+            EForInRHS(box EForInRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc,
+            }) => EForInRHS(Box::new(EForInRHSData {
+                loc: f(loc),
+                rhs_loc: f(rhs_loc),
+                rhs_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), rhs_desc),
+            })),
+            EInstanceofRHS(box EInstanceofRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc,
+            }) => EInstanceofRHS(Box::new(EInstanceofRHSData {
+                loc: f(loc),
+                rhs_loc: f(rhs_loc),
+                rhs_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), rhs_desc),
+            })),
 
             EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
                 reason_obj,
@@ -4851,7 +5039,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ESketchyNumberLint(kind, r) => ESketchyNumberLint(kind, map_reason(r)),
-            EInvalidPrototype(box (loc, r)) => EInvalidPrototype(Box::new((f(loc), map_reason(r)))),
+            EInvalidPrototype(box EInvalidPrototypeData {
+                loc,
+                prototype_loc,
+                prototype_desc,
+            }) => EInvalidPrototype(Box::new(EInvalidPrototypeData {
+                loc: f(loc),
+                prototype_loc: f(prototype_loc),
+                prototype_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), prototype_desc),
+            })),
             EUnnecessaryOptionalChain(box (loc, r)) => {
                 EUnnecessaryOptionalChain(Box::new((f(loc), map_reason(r))))
             }
@@ -5706,6 +5902,76 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             };
 
         match msg {
+            EInvalidPrototype(box EInvalidPrototypeData {
+                loc,
+                prototype_loc,
+                prototype_desc,
+            }) => EInvalidPrototype(Box::new(EInvalidPrototypeData {
+                loc,
+                prototype_loc,
+                prototype_desc: f(prototype_desc),
+            })),
+
+            EInvalidConstructor(box EInvalidConstructorData {
+                loc,
+                value_loc,
+                value_desc,
+            }) => EInvalidConstructor(Box::new(EInvalidConstructorData {
+                loc,
+                value_loc,
+                value_desc: f(value_desc),
+            })),
+
+            EBinaryInRHS(box EBinaryInRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc,
+            }) => EBinaryInRHS(Box::new(EBinaryInRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc: f(rhs_desc),
+            })),
+
+            EBinaryInLHS(box EBinaryInLHSData {
+                loc,
+                lhs_loc,
+                lhs_desc,
+            }) => EBinaryInLHS(Box::new(EBinaryInLHSData {
+                loc,
+                lhs_loc,
+                lhs_desc: f(lhs_desc),
+            })),
+
+            EInstanceofRHS(box EInstanceofRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc,
+            }) => EInstanceofRHS(Box::new(EInstanceofRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc: f(rhs_desc),
+            })),
+
+            EForInRHS(box EForInRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc,
+            }) => EForInRHS(Box::new(EForInRHSData {
+                loc,
+                rhs_loc,
+                rhs_desc: f(rhs_desc),
+            })),
+
+            EArithmeticOperand(box EArithmeticOperandData {
+                loc,
+                operand,
+                operand_desc,
+            }) => EArithmeticOperand(Box::new(EArithmeticOperandData {
+                loc,
+                operand,
+                operand_desc: f(operand_desc),
+            })),
+
             EIncompatibleType(box EIncompatibleTypeData {
                 lower_reason,
                 lower_kind,
@@ -5992,14 +6258,21 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 reason_prop: reason,
                 ..
             })
-            | Self::EForInRHS(reason)
-            | Self::EBinaryInRHS(reason)
-            | Self::EBinaryInLHS(reason)
-            | Self::EInstanceofRHS(reason)
-            | Self::EArithmeticOperand(reason)
             | Self::EComponentMissingReturn(reason)
             | Self::EUnsupportedExact(box (_, reason))
             | Self::ETypeParamConstInvalidPosition(reason) => Some(reason.loc.dupe()),
+
+            Self::EArithmeticOperand(box EArithmeticOperandData { loc, .. }) => Some(loc.dupe()),
+
+            Self::EForInRHS(box EForInRHSData { loc, .. }) => Some(loc.dupe()),
+
+            Self::EInstanceofRHS(box EInstanceofRHSData { loc, .. }) => Some(loc.dupe()),
+
+            Self::EBinaryInLHS(box EBinaryInLHSData { loc, .. }) => Some(loc.dupe()),
+
+            Self::EBinaryInRHS(box EBinaryInRHSData { loc, .. }) => Some(loc.dupe()),
+
+            Self::EInvalidConstructor(box EInvalidConstructorData { loc, .. }) => Some(loc.dupe()),
 
             Self::EObjectComputedPropertyPotentialOverwrite(
                 box EObjectComputedPropertyPotentialOverwriteData { key_loc, .. },
@@ -6057,7 +6330,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     reason, ..
                 }),
             )
-            | Self::EInvalidConstructor(reason)
             | Self::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration: reason,
                 ..
@@ -6143,7 +6415,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             Self::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData { def, .. }) => {
                 Some(def.dupe())
             }
-            Self::EInvalidPrototype(box (loc, _))
+            Self::EInvalidPrototype(box EInvalidPrototypeData { loc, .. })
             | Self::EUntypedTypeImport(box (loc, _))
             | Self::EUntypedImport(box (loc, _))
             | Self::EInvalidInfer(loc)
@@ -7352,13 +7624,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUnnecessaryDeclareTypeOnlyExport)
             }
 
-            ErrorMessage::EInvalidConstructor(reason) => {
-                Normal(Message::MessageCannotUseAsConstructor(reason))
-            }
+            ErrorMessage::EInvalidConstructor(box EInvalidConstructorData {
+                value_loc,
+                value_desc,
+                ..
+            }) => Normal(Message::MessageCannotUseAsConstructor(Box::new(
+                MessageTypeReferenceData {
+                    loc: value_loc,
+                    desc: expect_type_desc(value_desc),
+                },
+            ))),
 
-            ErrorMessage::EInvalidPrototype(box (_, reason)) => {
-                Normal(Message::MessageCannotUseAsPrototype(reason))
-            }
+            ErrorMessage::EInvalidPrototype(box EInvalidPrototypeData {
+                prototype_loc,
+                prototype_desc,
+                ..
+            }) => Normal(Message::MessageCannotUseAsPrototype(Box::new(
+                MessageTypeReferenceData {
+                    loc: prototype_loc,
+                    desc: expect_type_desc(prototype_desc),
+                },
+            ))),
 
             ErrorMessage::EUnnecessaryOptionalChain(box (_, lhs_reason)) => {
                 Normal(Message::MessageUnnecessaryOptionalChain(lhs_reason))
@@ -7368,25 +7654,52 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUnnecessaryInvariant(reason))
             }
 
-            ErrorMessage::EArithmeticOperand(reason) => Normal(
-                Message::MessageCannotPerformArithOnNonNumbersOrBigInt(reason),
-            ),
+            ErrorMessage::EArithmeticOperand(box EArithmeticOperandData {
+                operand,
+                operand_desc,
+                ..
+            }) => Normal(Message::MessageCannotPerformArithOnNonNumbersOrBigInt(
+                Box::new(MessageArithmeticOperandData {
+                    operand,
+                    operand_desc: expect_type_desc(operand_desc),
+                }),
+            )),
 
-            ErrorMessage::EBinaryInLHS(reason) => {
-                Normal(Message::MessageCannotUseInOperatorDueToBadLHS(reason))
-            }
+            ErrorMessage::EBinaryInLHS(box EBinaryInLHSData {
+                lhs_loc, lhs_desc, ..
+            }) => Normal(Message::MessageCannotUseInOperatorDueToBadLHS(Box::new(
+                MessageTypeReferenceData {
+                    loc: lhs_loc,
+                    desc: expect_type_desc(lhs_desc),
+                },
+            ))),
 
-            ErrorMessage::EBinaryInRHS(reason) => {
-                Normal(Message::MessageCannotUseInOperatorDueToBadRHS(reason))
-            }
+            ErrorMessage::EBinaryInRHS(box EBinaryInRHSData {
+                rhs_loc, rhs_desc, ..
+            }) => Normal(Message::MessageCannotUseInOperatorDueToBadRHS(Box::new(
+                MessageTypeReferenceData {
+                    loc: rhs_loc,
+                    desc: expect_type_desc(rhs_desc),
+                },
+            ))),
 
-            ErrorMessage::EForInRHS(reason) => {
-                Normal(Message::MessageCannotIterateWithForIn(reason))
-            }
+            ErrorMessage::EForInRHS(box EForInRHSData {
+                rhs_loc, rhs_desc, ..
+            }) => Normal(Message::MessageCannotIterateWithForIn(Box::new(
+                MessageTypeReferenceData {
+                    loc: rhs_loc,
+                    desc: expect_type_desc(rhs_desc),
+                },
+            ))),
 
-            ErrorMessage::EInstanceofRHS(reason) => Normal(
-                Message::MessageCannotUseInstanceOfOperatorDueToBadRHS(reason),
-            ),
+            ErrorMessage::EInstanceofRHS(box EInstanceofRHSData {
+                rhs_loc, rhs_desc, ..
+            }) => Normal(Message::MessageCannotUseInstanceOfOperatorDueToBadRHS(
+                Box::new(MessageTypeReferenceData {
+                    loc: rhs_loc,
+                    desc: expect_type_desc(rhs_desc),
+                }),
+            )),
 
             ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(
                 box EnumIncompatibleData {

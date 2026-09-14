@@ -2012,10 +2012,7 @@ fn elab_t_concrete<'cx>(
             } else {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    flow_typing_errors::error_message::ErrorMessage::EInvalidPrototype(Box::new((
-                        reason_op.loc().dupe(),
-                        type_util::reason_of_t(&t).dupe(),
-                    ))),
+                    flow_js_utils::invalid_prototype_error(reason_op.loc().dupe(), &t),
                 );
                 type_::obj_proto::why(reason_op.dupe())
             }

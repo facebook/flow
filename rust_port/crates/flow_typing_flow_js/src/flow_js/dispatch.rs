@@ -5511,10 +5511,7 @@ fn __flow_impl<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,
                     env,
-                    ErrorMessage::EInvalidPrototype(Box::new((
-                        reason_op.loc().dupe(),
-                        reason_of_t(l).dupe(),
-                    ))),
+                    flow_js_utils::invalid_prototype_error(reason_op.loc().dupe(), l),
                 )?;
                 Type::new(TypeInner::ObjProtoT(
                     reason_op
@@ -5810,7 +5807,7 @@ fn __flow_impl<'cx>(
         // sig is the [inst_construct_t] slot plus anything inherited via
         // [extends]; [collect_construct_ts] collects both in
         // derived-first order.
-        (TypeInner::DefT(reason_l, def_t), UseTInner::ConstructorT(box ctor_data))
+        (TypeInner::DefT(_, def_t), UseTInner::ConstructorT(box ctor_data))
             if let DefTInner::InstanceT(instance_t) = def_t.deref() =>
         {
             let inst_abstract = instance_t.inst.inst_abstract;
@@ -5882,7 +5879,7 @@ fn __flow_impl<'cx>(
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
-                        ErrorMessage::EInvalidConstructor(reason_l.dupe()),
+                        flow_js_utils::invalid_constructor_error(l),
                     )?;
                     let any_err = any_t::error(reason_op.dupe());
                     rec_flow_t(cx, env, trace, use_op.dupe(), (&any_err, t))?;
@@ -5894,7 +5891,7 @@ fn __flow_impl<'cx>(
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::EInvalidConstructor(reason_of_t(l).dupe()),
+                flow_js_utils::invalid_constructor_error(l),
             )?;
             let any_err = any_t::error(ctor_data.reason.dupe());
             rec_flow_t(
