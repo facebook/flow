@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------- previously_badly_positioned.js:3:3
 
-Cannot call `c` because string [1] is not an object. [not-an-object]
+Cannot call `c` because `string` [1] is not an object. [not-an-object]
 
    3| c('string')(); // error: string is not an object
         ^^^^^^^^ [1]

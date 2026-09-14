@@ -138,7 +138,7 @@ Found 1 error
 === block 15 ===
 Error ---------------------------------------------------------------- -:3:10
 
-Cannot use operator `+` with operands object literal [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands object literal [1] and `number` [2] [unsafe-addition]
 
    -:3:10
    3| map(x => x + 1, [{}]); // Error

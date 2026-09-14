@@ -88,7 +88,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:47:16
 
-Invalid use of $Flow$EnforceOptimized on non-union type number literal `1` [1]. [union-unoptimizable]
+Invalid use of $Flow$EnforceOptimized on non-union type `1` [1]. [union-unoptimizable]
 
    file.js:47:16
    47| type Error6a = $Flow$EnforceOptimized<1>; // error non-union argument
@@ -102,7 +102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:48:16
 
-Invalid use of $Flow$EnforceOptimized on non-union type explicit 'any' [1]. [union-unoptimizable]
+Invalid use of $Flow$EnforceOptimized on non-union type `any (explicit)` [1]. [union-unoptimizable]
 
    file.js:48:16
    48| type Error6c = $Flow$EnforceOptimized<any>; // error non-union argument
@@ -116,7 +116,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:49:16
 
-Invalid use of $Flow$EnforceOptimized on non-union type empty [1]. [union-unoptimizable]
+Invalid use of $Flow$EnforceOptimized on non-union type `empty` [1]. [union-unoptimizable]
 
    file.js:49:16
    49| type Error6d = $Flow$EnforceOptimized<empty>; // error non-union argument
@@ -130,7 +130,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:50:16
 
-Invalid use of $Flow$EnforceOptimized on non-union type function type [1]. [union-unoptimizable]
+Invalid use of $Flow$EnforceOptimized on non-union type `() => void` [1]. [union-unoptimizable]
 
    file.js:50:16
    50| type Error6e = $Flow$EnforceOptimized<() => void>; // error non-union argument

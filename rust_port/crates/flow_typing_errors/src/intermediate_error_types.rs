@@ -509,11 +509,11 @@ pub enum OverrideErrorKind<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
-pub enum InvalidRenderTypeKind<L: Dupe> {
+pub enum InvalidRenderTypeKind<T> {
     InvalidRendersNullVoidFalse,
     InvalidRendersIterable,
-    InvalidRendersStructural(VirtualReason<L>),
-    InvalidRendersNonNominalElement(VirtualReason<L>),
+    InvalidRendersStructural(T),
+    InvalidRendersNonNominalElement(T),
     InvalidRendersGenericT,
     UncategorizedInvalidRenders,
 }
@@ -564,18 +564,10 @@ pub enum ConstantConditionWarning<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
-pub enum StrictComparisonInfo<L: Dupe> {
-    General {
-        left: VirtualReason<L>,
-        right: VirtualReason<L>,
-    },
-    Null {
-        null_loc: L,
-        other: VirtualReason<L>,
-    },
-    Empty {
-        empty: VirtualReason<L>,
-    },
+pub enum StrictComparisonInfo<L, T> {
+    General { left: T, right: T },
+    Null { null_loc: L, other: T },
+    Empty { empty: T },
 }
 
 #[derive(
@@ -1304,9 +1296,9 @@ pub struct MessageCannotCallMaybeReactHookData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotCompareData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
-    pub strict_comparison_opt: Option<StrictComparisonInfo<L>>,
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
+    pub strict_comparison_opt: Option<StrictComparisonInfo<L, MessageTypeReferenceData<L>>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1359,8 +1351,8 @@ pub struct MessageCannotSpreadGeneralData<L: Dupe> {
 pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
     pub spread_reason: VirtualReason<L>,
     pub object2_reason: VirtualReason<L>,
-    pub key_reason: VirtualReason<L>,
-    pub value_reason: VirtualReason<L>,
+    pub key: Box<MessageTypeReferenceData<L>>,
+    pub value: Box<MessageTypeReferenceData<L>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1428,10 +1420,10 @@ pub struct MessageExponentialSpreadData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompatibleTupleArityData<L: Dupe> {
-    pub lower_reason: VirtualReason<L>,
+    pub lower: MessageTypeReferenceData<L>,
     pub lower_arity: (i32, i32),
     pub lower_inexact: bool,
-    pub upper_reason: VirtualReason<L>,
+    pub upper: MessageTypeReferenceData<L>,
     pub upper_arity: (i32, i32),
     pub upper_inexact: bool,
     pub unify: bool,
@@ -1537,8 +1529,8 @@ pub struct MessageInvalidKeyPropertyInSpreadData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidRendersTypeArgumentData<L: Dupe> {
     pub renders_variant: RendersVariant,
-    pub invalid_render_type_kind: InvalidRenderTypeKind<L>,
-    pub invalid_type_reasons: Vec1<VirtualReason<L>>,
+    pub invalid_render_type_kind: InvalidRenderTypeKind<MessageTypeReferenceData<L>>,
+    pub invalid_types: Vec1<MessageTypeReferenceData<L>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1592,7 +1584,7 @@ pub struct MessagePropMissingData<L: Dupe> {
     pub upper: Option<VirtualReason<L>>,
     pub prop: Option<FlowSmolStr>,
     pub suggestion: Option<FlowSmolStr>,
-    pub reason_indexer: Option<VirtualReason<L>>,
+    pub indexer: Option<Box<MessageTypeReferenceData<L>>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1805,11 +1797,11 @@ pub enum Message<L: Dupe> {
     MessageCannotCompare(Box<MessageCannotCompareData<L>>),
 
     MessageCannotCompareNonStrict {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
-    MessageCannotCreateExactType(VirtualReason<L>),
+    MessageCannotCreateExactType(Box<MessageTypeReferenceData<L>>),
 
     MessageCannotDeclareAlreadyBoundName(VirtualReason<L>),
     MessageCannotDeclareAlreadyBoundNameInCoreJs(VirtualReason<L>),
@@ -1821,7 +1813,7 @@ pub enum Message<L: Dupe> {
         reason: VirtualReason<L>,
     },
 
-    MessageCannotDelete(VirtualReason<L>),
+    MessageCannotDelete(Box<MessageTypeReferenceData<L>>),
     MessageCannotDetermineEmptyArrayLiteralType,
     MessageCannotDetermineModuleType,
 
@@ -1870,8 +1862,8 @@ pub enum Message<L: Dupe> {
 
     MessageCannotPerformBinaryArith {
         kind: flow_typing_type::type_::arith_kind::ArithKind,
-        reason_l: VirtualReason<L>,
-        reason_r: VirtualReason<L>,
+        left: Box<MessageArithmeticOperandData<L>>,
+        right: Box<MessageArithmeticOperandData<L>>,
     },
 
     MessageCannotReassignConstant(VirtualReason<L>),
@@ -1904,7 +1896,7 @@ pub enum Message<L: Dupe> {
     MessageCannotSpreadDueToPotentialOverwrite {
         spread_reason: VirtualReason<L>,
         object_reason: VirtualReason<L>,
-        key_reason: VirtualReason<L>,
+        key: Box<MessageTypeReferenceData<L>>,
     },
 
     MessageCannotSpreadGeneral(Box<MessageCannotSpreadGeneralData<L>>),
@@ -1937,7 +1929,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotUseNonPolymorphicTypeWithTypeArgs {
         is_new: bool,
-        reason_arity: VirtualReason<L>,
+        callee: Box<MessageTypeReferenceData<L>>,
         expected_arity: i32,
     },
 
@@ -2124,8 +2116,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageIncompatibleNonLiteralArrayToTuple {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
     MessageIncompatibleNonTypeGuardToTypeGuard {
@@ -2152,8 +2144,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageIncompatibleWithIndexed {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
     MessageIncompleteExhausiveCheckEnum(Box<MessageIncompleteExhausiveCheckEnumData<L>>),
@@ -2190,7 +2182,7 @@ pub enum Message<L: Dupe> {
     MessageInvalidTemplateLiteralTypeComplexity,
     MessageInvalidTemplateLiteralTypePlaceholder,
 
-    MessageInvalidReactCreateElement(VirtualReason<L>),
+    MessageInvalidReactCreateElement(Box<MessageTypeReferenceData<L>>),
 
     MessageInvalidThisArgMissingReceiver {
         name: FlowSmolStr,
@@ -2236,12 +2228,12 @@ pub enum Message<L: Dupe> {
 
     MessageNegativeTypeGuardConsistency {
         return_desc: VirtualReasonDesc<L>,
-        type_reason: VirtualReason<L>,
+        type_: Box<MessageTypeReferenceData<L>>,
     },
 
     MessageInvalidTypeGuardParamUnbound(VirtualReason<L>),
     MessageInvalidTypeGuardThisParam(VirtualReason<L>),
-    MessageInvalidUseOfFlowEnforceOptimized(VirtualReason<L>),
+    MessageInvalidUseOfFlowEnforceOptimized(Box<MessageTypeReferenceData<L>>),
 
     MessageLowerIsNotArray(VirtualReason<L>),
     MessageLowerIsNotArrayIndex(VirtualReason<L>),
@@ -2361,8 +2353,8 @@ pub enum Message<L: Dupe> {
 
     MessageTuplePolarityMismatch {
         index: i32,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
         polarity_lower: Polarity,
         polarity_upper: Polarity,
     },
@@ -2404,7 +2396,7 @@ pub enum Message<L: Dupe> {
     MessageUnknownParameterTypes(VirtualReason<L>),
     MessageUnknownParameterTypesWithPrintedType(Box<MessageTypeReferenceData<L>>),
     MessageUnnecessaryDeclareTypeOnlyExport,
-    MessageUnnecessaryInvariant(VirtualReason<L>),
+    MessageUnnecessaryInvariant(Box<MessageTypeReferenceData<L>>),
     MessageUnnecessaryOptionalChain(VirtualReason<L>),
     MessageUnreachableCode,
     MessageUnsafeGetterSetter,
@@ -2448,7 +2440,7 @@ pub enum Message<L: Dupe> {
     MessageMatchInvalidGuardedWildcard,
 
     MessageMatchInvalidIdentOrMemberPattern {
-        type_reason: VirtualReason<L>,
+        type_: Box<MessageTypeReferenceData<L>>,
     },
 
     MessageMatchInvalidBindingKind {

@@ -215,9 +215,10 @@ References:
 
 Error --------------------------------------------------------------------------------------- provider_edge_cases.js:5:5
 
-Cannot compare function [1] to `console.log` [2], because function [1] is not a subtype of function type [3] and
-function type [3] is not a subtype of function [1]. In **rare** cases, these types may have overlapping values but lack
-a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `(x: unknown) => number` [1] to `(...data: Array<any>) => void` [2], because `(x: unknown) => number` [1]
+is not a subtype of `(...data: Array<any>) => void` [3] and `(...data: Array<any>) => void` [3] is not a subtype of
+`(x: unknown) => number` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    provider_edge_cases.js:5:5

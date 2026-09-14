@@ -378,7 +378,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:24:7
 
-Cannot use operator `*` with operands number [1] and boolean [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `boolean` [2] [unsafe-arithmetic]
 
    bool.js:24:7
    24|   if (100 * false) {
@@ -395,7 +395,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:27:7
 
-Cannot use operator `*` with operands boolean [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `number` [2] [unsafe-arithmetic]
 
    bool.js:27:7
    27|   if (false * 100) {
@@ -982,7 +982,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:5:9
 
-Cannot compare string [1] to number [2] with a non-strict equality check. Make sure the arguments are valid, or try
+Cannot compare `string` [1] to `number` [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:5:9
@@ -1000,9 +1000,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- eq.js:6:9
 
-Cannot compare `x` [1] to `y` [2], because string [3] is not a subtype of number [4] and number [4] is not a subtype of
-string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
-happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `string` [1] to `number` [2], because `string` [3] is not a subtype of `number` [4] and `number` [4] is
+not a subtype of `string` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    eq.js:6:9
    6|     if (x === y) {} // error: flagged by constant condition
@@ -1025,8 +1026,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `foo` [1] to number literal `123` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `"foo"` [1] to `123` [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -1043,8 +1044,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:19:9
 
-Cannot compare string literal `bar` [1] to number literal `123` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `"bar"` [1] to `123` [2] with a non-strict equality check. Make sure the arguments are valid, or try
+using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    eq.js:19:9
    19|     if (x.y == 123) {} // error
@@ -1061,10 +1062,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- eq.js:20:9
 
-Cannot compare `x.y` [1] to number literal `123` [2], because `x.y` [1] is not a subtype of number literal `123` [2] and
-number literal `123` [2] is not a subtype of `x.y` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `"bar" | "foo"` [1] to `123` [2], because `"bar" | "foo"` [1] is not a subtype of `123` [2] and `123` [2]
+is not a subtype of `"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    eq.js:20:9
    20|     if (x.y === 123) {} // error
@@ -1173,9 +1174,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ flow_to_general.js:15:5
 
-Cannot compare `p` [1] to string literal `C` [2], because `p` [1] is not a subtype of string literal `C` [2] and string
-literal `C` [2] is not a subtype of `p` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `?T` [1] to `"C"` [2], because `?"A" | "B"` [1] is not a subtype of `"C"` [2] and `"C"` [2] is not a
+subtype of `?"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    flow_to_general.js:15:5
@@ -2606,8 +2607,8 @@ References:
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:35:5
 
-Cannot compare `y` [1] to string literal `val` [2], because [3] is null and string literal `val` [2] does not contain
-null. Perhaps you meant to use `==`, which checks for both `undefined` and `null`? [invalid-compare]
+Cannot compare `null` [1] to `"val"` [2], because [3] is null and `"val"` [2] does not contain null. Perhaps you meant
+to use `==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    inclusion_check_widening.js:35:5
    35| if (y === 'val') {} // error, invalid-compare. LHS is null but RHS does not include null
@@ -2627,7 +2628,7 @@ References:
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:43:5
 
-Cannot compare `key2` [1] to string literal `a` [2], because `key2` [1] is empty.  [invalid-compare]
+Cannot compare `keyof {...}` [1] to `"a"` [2], because `empty` [1] is empty.  [invalid-compare]
 
    inclusion_check_widening.js:43:5
    43| if (key2 === 'a') {} // error (key2 does not include 'a')
@@ -2675,10 +2676,9 @@ References:
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:58:9
 
-Cannot compare `prop` [1] to number literal `0` [2], because `C` [3] is not a subtype of number literal `0` [2] and
-number literal `0` [2] is not a subtype of `C` [3]. In **rare** cases, these types may have overlapping values but lack
-a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `C` [1] to `0` [2], because `C` [3] is not a subtype of `0` [2] and `0` [2] is not a subtype of `C` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    inclusion_check_widening.js:58:9
    58|         prop !== 0 // error (0 incompatible with C)
@@ -10086,7 +10086,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ null.js:4:7
 
-Cannot use operator `*` with operands number [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `null` [2] [unsafe-arithmetic]
 
    null.js:4:7
    4|   if (100 * null) {
@@ -10103,7 +10103,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ null.js:7:7
 
-Cannot use operator `*` with operands null [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `null` [1] and `number` [2] [unsafe-arithmetic]
 
    null.js:7:7
    7|   if (null * 100) {
@@ -10204,10 +10204,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:19:9
 
-Cannot compare `x` [1] to number literal `0` [2], because number literal `1` [3] is not a subtype of number literal
-`0` [2] and number literal `0` [2] is not a subtype of number literal `1` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `1` [1] to `0` [2], because `1` [3] is not a subtype of `0` [2] and `0` [2] is not a subtype of `1` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    number.js:19:9
    19|     if (x === 0) {
@@ -10241,10 +10240,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:26:9
 
-Cannot compare `x` [1] to number literal `1` [2], because number literal `0` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of number literal `0` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `0` [1] to `1` [2], because `0` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype of `0` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    number.js:26:9
    26|     if (x === 1) {
@@ -10278,10 +10276,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:33:9
 
-Cannot compare `x` [1] to number literal `1` [2], because number literal `0` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of number literal `0` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `0` [1] to `1` [2], because `0` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype of `0` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    number.js:33:9
    33|     if (x !== 1) {
@@ -10738,10 +10735,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:144:9
 
-Cannot compare `x` [1] to number literal `1` [2], because number literal `0` [3] is not a subtype of number literal
-`-1` [2] and number literal `-1` [2] is not a subtype of number literal `0` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `0` [1] to `-1` [2], because `0` [3] is not a subtype of `-1` [2] and `-1` [2] is not a subtype of
+`0` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
+you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    number.js:144:9
    144|     if (x === -1) { // error
@@ -10775,10 +10771,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:151:9
 
-Cannot compare `x` [1] to number literal `0` [2], because number literal `-1` [3] is not a subtype of number literal
-`0` [2] and number literal `0` [2] is not a subtype of number literal `-1` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `-1` [1] to `0` [2], because `-1` [3] is not a subtype of `0` [2] and `0` [2] is not a subtype of
+`-1` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
+you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    number.js:151:9
    151|     if (x === 0) { //error
@@ -11367,10 +11362,10 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:21:5
 
-Cannot compare computed property [1] to string literal `xxx` [2], because computed property [1] is not a subtype of
-string literal `xxx` [2] and string literal `xxx` [2] is not a subtype of computed property [1]. In **rare** cases,
-these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
-union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `"a" | "b"` [1] to `"xxx"` [2], because `"a" | "b"` [1] is not a subtype of `"xxx"` [2] and `"xxx"` [2]
+is not a subtype of `"a" | "b"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    object_union_number_keys.js:21:5
    21|     case 'xxx': break; // ERROR
@@ -11421,10 +11416,10 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:27:5
 
-Cannot compare property `0` [1] to string literal `xxx` [2], because property `0` [1] is not a subtype of string literal
-`xxx` [2] and string literal `xxx` [2] is not a subtype of property `0` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `"a" | "b"` [1] to `"xxx"` [2], because `"a" | "b"` [1] is not a subtype of `"xxx"` [2] and `"xxx"` [2]
+is not a subtype of `"a" | "b"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    object_union_number_keys.js:27:5
    27|     case 'xxx': break; // ERROR
@@ -12537,10 +12532,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:19:9
 
-Cannot compare `x` [1] to string literal `foo` [2], because string literal `bar` [3] is not a subtype of string literal
-`foo` [2] and string literal `foo` [2] is not a subtype of string literal `bar` [3]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `"bar"` [1] to `"foo"` [2], because `"bar"` [3] is not a subtype of `"foo"` [2] and `"foo"` [2] is not a
+subtype of `"bar"` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    string.js:19:9
    19|     if (x === 'foo') {
@@ -12574,10 +12568,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:26:9
 
-Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `"foo"` [1] to `"bar"` [2], because `"foo"` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is not a
+subtype of `"foo"` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    string.js:26:9
    26|     if (x === 'bar') {
@@ -12611,10 +12604,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:33:9
 
-Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `"foo"` [1] to `"bar"` [2], because `"foo"` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is not a
+subtype of `"foo"` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    string.js:33:9
    33|     if (x !== 'bar') {
@@ -13707,8 +13699,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:120:9
 
-Cannot compare `z.toString` [1] to number literal `0` [2], because function type [3] is not a subtype of number literal
-`0` [2] and number literal `0` [2] is not a subtype of function type [3]. In **rare** cases, these types may have
+Cannot compare `(radix?: number) => string` [1] to `0` [2], because `(radix?: number) => string` [3] is not a subtype of
+`0` [2] and `0` [2] is not a subtype of `(radix?: number) => string` [3]. In **rare** cases, these types may have
 overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
 to pass the flow check.  [invalid-compare]
 
@@ -13789,10 +13781,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:125:9
 
-Cannot compare `q.valueOf` [1] to number literal `0` [2], because function type [3] is not a subtype of number literal
-`0` [2] and number literal `0` [2] is not a subtype of function type [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `() => boolean` [1] to `0` [2], because `() => boolean` [3] is not a subtype of `0` [2] and `0` [2] is
+not a subtype of `() => boolean` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    tagged_union.js:125:9
    125|     if (q.valueOf === 0) {} // Error
@@ -13871,10 +13863,14 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:137:9
 
-Cannot compare `t.call` [1] to number literal `0` [2], because function type [3] is not a subtype of number literal
-`0` [2] and number literal `0` [2] is not a subtype of function type [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare
+`<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ....` [1] to
+`0` [2], because
+`<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ....` [3] is not a
+subtype of `0` [2] and `0` [2] is not a subtype of
+`<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ....` [3]. In
+**rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast
+one side to the union of both types to pass the flow check.  [invalid-compare]
 
    tagged_union.js:137:9
    137|     if (t.call === 0) {} // Error
@@ -15525,7 +15521,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `calc` because: [incompatible-type]
  - Either in index `0`: string literal `abs` [1] is incompatible with string literal `add` [2].
- - Or rest array [3] has 3 elements but tuple type [4] has 2 elements.
+ - Or `["abs", -2, 1]` [3] has 3 elements but `["abs", number]` [4] has 2 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -15553,7 +15549,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `calc` because: [incompatible-type]
  - Either in index `0`: string literal `add` [1] is incompatible with string literal `abs` [2].
- - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+ - Or `["add", 999]` [3] has 2 elements but `["add", number, number]` [4] has 3 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -16518,7 +16514,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:31:13
    31|     var y = x * 1000;
@@ -16549,7 +16545,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:38:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:38:13
    38|     var y = x * 1000;
@@ -16594,7 +16590,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:44:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:44:13
    44|     var y = x.x * 1000;
@@ -16639,7 +16635,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:51:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:51:13
    51|     var y = x.x * 1000;
@@ -16712,7 +16708,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:69:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:69:13
    69|     var b = y * 1000; // error
@@ -16729,7 +16725,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:74:7
 
-Cannot use operator `*` with operands number [1] and undefined [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `void` [2] [unsafe-arithmetic]
 
    undef.js:74:7
    74|   if (100 * undefined) {
@@ -16746,7 +16742,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:77:7
 
-Cannot use operator `*` with operands undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `void` [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:77:7
    77|   if (undefined * 100) {
@@ -16884,7 +16880,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- undef.js:109:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    undef.js:109:13
    109|     var y = x * 1000; // error
@@ -17250,7 +17246,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:31:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:31:13
    31|     var y = x * 1000;
@@ -17281,7 +17277,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:38:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:38:13
    38|     var y = x * 1000;
@@ -17326,7 +17322,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:44:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:44:13
    44|     var y = x.x * 1000;
@@ -17371,7 +17367,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:51:13
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:51:13
    51|     var y = x.x * 1000;
@@ -17416,7 +17412,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:56:32
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:56:32
    56|   if (x !== null && x !== void(x * 1000)) {
@@ -17478,7 +17474,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:62:32
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:62:32
    62|   if (x === null || x === void(x * 1000)) {
@@ -17568,7 +17564,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:36
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:69:36
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -17675,7 +17671,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:36
 
-Cannot use operator `*` with operands null or undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null or undefined [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:75:36
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -17726,7 +17722,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- void.js:82:7
 
-Cannot use operator `*` with operands number [1] and undefined [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `void` [2] [unsafe-arithmetic]
 
    void.js:82:7
    82|   if (100 * void(0)) {
@@ -17743,7 +17739,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- void.js:85:7
 
-Cannot use operator `*` with operands undefined [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `void` [1] and `number` [2] [unsafe-arithmetic]
 
    void.js:85:7
    85|   if (void(0) * 100) {

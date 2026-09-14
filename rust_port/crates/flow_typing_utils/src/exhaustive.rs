@@ -16,6 +16,7 @@ use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
 use flow_aloc::ALocSet;
+use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Reason;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -34,6 +35,7 @@ use flow_typing_errors::error_message::MatchNonExplicitEnumCheckData;
 use flow_typing_errors::error_message::MatchNotExhaustiveData;
 use flow_typing_errors::error_message::MatchUnusedPatternData;
 use flow_typing_flow_common::concrete_type_eq;
+use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -48,6 +50,7 @@ use flow_typing_loc_env::match_pattern_ir::value_union;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_mapper;
 use flow_utils_concurrency::job_error::JobError;
@@ -407,7 +410,11 @@ pub mod pattern_union_builder {
                 ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(
                     Box::new(MatchInvalidIdentOrMemberPatternData {
                         loc: loc.dupe(),
-                        type_reason: reason_of_t(t).dupe(),
+                        type_: ErrorReference::new(
+                            type_util::ref_loc_of_t(t).dupe(),
+                            reason_of_t(t).desc(false).clone(),
+                        ),
+                        type_desc: flow_js_utils::type_or_type_desc_for_error(t),
                     }),
                 )),
             );

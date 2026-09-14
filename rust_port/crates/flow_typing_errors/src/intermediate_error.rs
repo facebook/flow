@@ -145,8 +145,6 @@ use crate::error_message::EExpectedStringLitData;
 use crate::error_message::EIncompatiblePropData;
 use crate::error_message::EIncompatibleTypesWithUseOpData;
 use crate::error_message::EPropNotFoundInLookupData;
-use crate::error_message::EnumIncompatibleData;
-use crate::error_message::IncompatibleEnumData;
 use crate::error_message::IncompatibleInvariantSubtypingData;
 use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
@@ -690,25 +688,46 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                     )))
             }
             FlowErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(
-                box EnumIncompatibleData {
+                box EIncompatibleTypesWithUseOpData {
                     use_op,
-                    reason_lower,
-                    reason_upper,
-                    enum_kind,
-                    representation_type,
+                    lower_loc,
+                    lower_def_loc,
+                    upper_loc,
+                    upper_def_loc,
+                    lower_desc,
+                    upper_desc,
+                    explanation,
+                    example,
+                    branches,
                 },
             )) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
+                let (
+                    (
+                        (lower_loc_new, lower_def_loc_new, lower_desc_new),
+                        (upper_loc_new, upper_def_loc_new, upper_desc_new),
+                    ),
+                    use_op_new,
+                ) = dedupe_by_flip(
+                    (lower_loc.dupe(), lower_def_loc.dupe(), lower_desc.clone()),
+                    (upper_loc.dupe(), upper_def_loc.dupe(), upper_desc.clone()),
+                    use_op.clone(),
+                );
+                (lower_loc == &lower_loc_new && lower_def_loc == &lower_def_loc_new)
                     || is_not_duplicate(FlowErrorMessage::EEnumError(
-                        EnumErrorKind::EnumIncompatible(Box::new(EnumIncompatibleData {
-                            use_op: use_op_new,
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
-                            enum_kind: enum_kind.clone(),
-                            representation_type: representation_type.clone(),
-                        })),
+                        EnumErrorKind::EnumIncompatible(Box::new(
+                            EIncompatibleTypesWithUseOpData {
+                                use_op: use_op_new,
+                                lower_loc: lower_loc_new,
+                                lower_def_loc: lower_def_loc_new,
+                                upper_loc: upper_loc_new,
+                                upper_def_loc: upper_def_loc_new,
+                                lower_desc: lower_desc_new,
+                                upper_desc: upper_desc_new,
+                                explanation: explanation.clone(),
+                                example: example.clone(),
+                                branches: branches.clone(),
+                            },
+                        )),
                     ))
             }
             FlowErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
@@ -3037,7 +3056,12 @@ where
                 upper: None,
                 prop,
                 suggestion,
-                reason_indexer,
+                indexer: reason_indexer.map(|reason| {
+                    Box::new(MessageTypeReferenceData {
+                        loc: reason.loc.dupe(),
+                        desc: Err(reason.desc.clone()),
+                    })
+                }),
             })),
         )
     };
@@ -3046,7 +3070,7 @@ where
                                               suggestion: Option<FlowSmolStr>,
                                               lower: VirtualReason<L>,
                                               upper: VirtualReason<L>,
-                                              reason_indexer: Option<VirtualReason<L>>,
+                                              indexer: Option<Box<MessageTypeReferenceData<L>>>,
                                               use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
         let loc = loc_of_aloc(&lower.loc);
@@ -3060,7 +3084,7 @@ where
                 upper: Some(upper),
                 prop,
                 suggestion,
-                reason_indexer,
+                indexer,
             })),
         )
     };
@@ -3770,7 +3794,7 @@ where
                 prop,
                 reason_lower,
                 reason_upper,
-                reason_indexer,
+                indexer,
                 suggestion,
                 use_op,
             }),
@@ -3779,7 +3803,7 @@ where
             suggestion.dupe(),
             reason_lower,
             reason_upper,
-            reason_indexer,
+            indexer,
             use_op,
         ),
 
@@ -3931,57 +3955,6 @@ where
             upper_desc,
             use_op,
         ),
-
-        (
-            None,
-            FriendlyMessageRecipe::IncompatibleEnum(box IncompatibleEnumData {
-                reason_lower,
-                reason_upper,
-                use_op,
-                enum_kind,
-                representation_type,
-            }),
-        ) => {
-            use super::error_message::EnumKind;
-
-            let in_type_arg_position = {
-                fn loop_<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
-                    use_op: &VirtualUseOp<L>,
-                ) -> bool {
-                    match use_op {
-                        VirtualUseOp::Op(_) => false,
-                        VirtualUseOp::Frame(frame, _)
-                            if matches!(
-                                frame.as_ref(),
-                                VirtualFrameUseOp::TypeArgCompatibility(_)
-                                    | VirtualFrameUseOp::TypeParamBound { .. }
-                            ) =>
-                        {
-                            true
-                        }
-                        VirtualUseOp::Frame(_, parent) => loop_(parent),
-                    }
-                }
-                loop_(&use_op)
-            };
-
-            let additional_explanation = if in_type_arg_position {
-                None
-            } else {
-                match (&enum_kind, &representation_type) {
-                    (EnumKind::ConcreteEnumKind, Some(repr_type)) => {
-                        Some(Explanation::ExplanationConcreteEnumCasting {
-                            representation_type: repr_type.to_string().into(),
-                        })
-                    }
-                    (EnumKind::AbstractEnumKind, _) => {
-                        Some(Explanation::ExplanationAbstractEnumCasting)
-                    }
-                    _ => None,
-                }
-            };
-            mk_incompatible_error(additional_explanation, reason_lower, reason_upper, use_op)
-        }
 
         (
             None,
@@ -5648,9 +5621,9 @@ where
             }) => {
                 let mut features = vec![
                     text("Cannot compare "),
-                    ref_(lower),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(" to "),
-                    ref_(upper),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                 ];
                 match strict_comparison_opt {
                     None => features.push(text(".")),
@@ -5659,13 +5632,13 @@ where
                             StrictComparisonInfo::General { left, right } => {
                                 features.extend(vec![
                                     text(", because "),
-                                    ref_(left),
+                                    ref_of_ty_or_desc(&left.loc, &left.desc),
                                     text(" is not a subtype of "),
-                                    ref_(right),
+                                    ref_of_ty_or_desc(&right.loc, &right.desc),
                                     text(" and "),
-                                    ref_(right),
+                                    ref_of_ty_or_desc(&right.loc, &right.desc),
                                     text(" is not a subtype of "),
-                                    ref_(left),
+                                    ref_of_ty_or_desc(&left.loc, &left.desc),
                                     text(". In **rare** cases, these types may have overlapping values but lack a subtyping relationship. "),
                                     text("If that happens, you can cast one side to the union of both types to pass the flow check. "),
                                 ]);
@@ -5675,7 +5648,7 @@ where
                                     text(", because"),
                                     friendly::no_desc_ref(&loc_of_aloc(null_loc)),
                                     text(" is null and "),
-                                    ref_(other),
+                                    ref_of_ty_or_desc(&other.loc, &other.desc),
                                     text(" does not contain null. "),
                                     text("Perhaps you meant to use "),
                                     code("=="),
@@ -5689,7 +5662,7 @@ where
                             StrictComparisonInfo::Empty { empty } => {
                                 features.extend(vec![
                                     text(", because "),
-                                    ref_(empty),
+                                    ref_of_ty_or_desc(&empty.loc, &empty.desc),
                                     text(" is empty. "),
                                 ]);
                             }
@@ -5700,9 +5673,9 @@ where
             }
             MessageCannotCompareNonStrict { lower, upper } => friendly::Message(vec![
                 text("Cannot compare "),
-                ref_(lower),
+                ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 text(" to "),
-                ref_(upper),
+                ref_of_ty_or_desc(&upper.loc, &upper.desc),
                 text(" with a non-strict equality check. "),
                 text("Make sure the arguments are valid, "),
                 text("or try using strict equality ("),
@@ -5711,9 +5684,9 @@ where
                 code("!=="),
                 text(") instead."),
             ]),
-            MessageCannotCreateExactType(lower) => friendly::Message(vec![
+            MessageCannotCreateExactType(value) => friendly::Message(vec![
                 text("Cannot create exact type from "),
-                ref_(lower),
+                ref_of_ty_or_desc(&value.loc, &value.desc),
                 text("."),
             ]),
             MessageCannotDeclareAlreadyBoundName(x) => friendly::Message(vec![
@@ -5750,7 +5723,7 @@ where
             ]),
             MessageCannotDelete(expr) => friendly::Message(vec![
                 text("Cannot delete "),
-                ref_(expr),
+                ref_of_ty_or_desc(&expr.loc, &expr.desc),
                 text(" because only member expressions and variables can be deleted."),
             ]),
             MessageCannotDetermineEmptyArrayLiteralType => friendly::Message(vec![text(
@@ -6041,17 +6014,17 @@ where
             ]),
             MessageCannotPerformBinaryArith {
                 kind,
-                reason_l,
-                reason_r,
+                left,
+                right,
             } => {
                 let kind_str = kind.to_string();
                 friendly::Message(vec![
                     text("Cannot use operator `"),
                     text(kind_str),
                     text("` with operands "),
-                    ref_(reason_l),
+                    ref_of_ty_or_desc(&left.operand.loc, &left.operand_desc),
                     text(" and "),
-                    ref_(reason_r),
+                    ref_of_ty_or_desc(&right.operand.loc, &right.operand_desc),
                 ])
             }
             MessageCannotReassignConstant(x) => {
@@ -6171,14 +6144,14 @@ where
             MessageCannotSpreadDueToPotentialOverwrite {
                 spread_reason,
                 object_reason,
-                key_reason,
+                key,
             } => friendly::Message(vec![
                 text("Flow cannot determine a type for "),
                 ref_(spread_reason),
                 text(". "),
                 ref_(object_reason),
                 text(" cannot be spread because the indexer "),
-                ref_(key_reason),
+                ref_of_ty_or_desc(&key.loc, &key.desc),
                 text(
                     " may overwrite properties with explicit keys in a way that Flow cannot track. ",
                 ),
@@ -6231,8 +6204,8 @@ where
             MessageCannotSpreadInexactMayOverwriteIndexer(
                 box MessageCannotSpreadInexactMayOverwriteIndexerData {
                     spread_reason,
-                    key_reason,
-                    value_reason,
+                    key,
+                    value,
                     object2_reason,
                 },
             ) => friendly::Message(vec![
@@ -6242,9 +6215,9 @@ where
                 ref_(object2_reason),
                 text(" is inexact and may "),
                 text("have a property key that conflicts with "),
-                ref_(key_reason),
+                ref_of_ty_or_desc(&key.loc, &key.desc),
                 text(" or a property value that conflicts with "),
-                ref_(value_reason),
+                ref_of_ty_or_desc(&value.loc, &value.desc),
                 text(". Try making "),
                 ref_(object2_reason),
                 text(" exact"),
@@ -6350,7 +6323,7 @@ where
             ]),
             MessageCannotUseNonPolymorphicTypeWithTypeArgs {
                 is_new,
-                reason_arity,
+                callee,
                 expected_arity,
             } => {
                 let use_word = if *is_new { "construct " } else { "call " };
@@ -6359,7 +6332,7 @@ where
                         text("Cannot "),
                         text(use_word),
                         text("non-polymorphic "),
-                        ref_(reason_arity),
+                        ref_of_ty_or_desc(&callee.loc, &callee.desc),
                         text(" with type arguments."),
                     ])
                 } else {
@@ -6367,7 +6340,7 @@ where
                     friendly::Message(vec![
                         text("Cannot "),
                         text(use_word),
-                        ref_(reason_arity),
+                        ref_of_ty_or_desc(&callee.loc, &callee.desc),
                         text(" without exactly "),
                         text(&format!("{} type argument{}.", expected_arity, suffix)),
                     ])
@@ -7285,10 +7258,10 @@ where
                 ref_(mapped_type),
             ]),
             MessageIncompatibleTupleArity(box MessageIncompatibleTupleArityData {
-                lower_reason,
+                lower,
                 lower_arity,
                 lower_inexact,
-                upper_reason,
+                upper,
                 upper_arity,
                 upper_inexact,
                 ..
@@ -7310,11 +7283,11 @@ where
                     }
                 };
                 friendly::Message(vec![
-                    ref_(lower_reason),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(" has "),
                     text(&str_of_arity(*lower_inexact, lower_arity)),
                     text(" but "),
-                    ref_(upper_reason),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                     text(" has "),
                     text(&str_of_arity(*upper_inexact, upper_arity)),
                 ])
@@ -7340,10 +7313,10 @@ where
                 ])
             }
             MessageIncompatibleNonLiteralArrayToTuple { lower, upper } => friendly::Message(vec![
-                ref_(lower),
+                ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 text(" has an unknown number of elements, so is "),
                 text("incompatible with "),
-                ref_(upper),
+                ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
             MessageIncompatibleNonTypeGuardToTypeGuard { lower, upper } => friendly::Message(vec![
                 ref_(lower),
@@ -7360,9 +7333,9 @@ where
                 ])
             }
             MessageIncompatibleWithIndexed { lower, upper } => friendly::Message(vec![
-                ref_(lower),
+                ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 text(" is incompatible with indexed "),
-                ref_(upper),
+                ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
             MessageIncompleteExhausiveCheckEnum(box MessageIncompleteExhausiveCheckEnumData {
                 description,
@@ -7634,16 +7607,16 @@ where
                     ]),
                 }
             }
-            MessageInvalidReactCreateElement(invalid_react) => friendly::Message(vec![
+            MessageInvalidReactCreateElement(react) => friendly::Message(vec![
                 text("Cannot create react element because the "),
                 code("createElement"),
                 text(" property of "),
-                ref_(invalid_react),
+                ref_of_ty_or_desc(&react.loc, &react.desc),
                 text(" is incompatible with builtin "),
                 code("React.createElement"),
                 text(" type. "),
                 text("Please check the "),
-                ref_(invalid_react),
+                ref_of_ty_or_desc(&react.loc, &react.desc),
                 text(" identifier in scope to ensure it is the right one."),
             ]),
             MessageInvalidThisArgMissingReceiver {
@@ -7731,7 +7704,7 @@ where
             MessageInvalidRendersTypeArgument(box MessageInvalidRendersTypeArgumentData {
                 renders_variant,
                 invalid_render_type_kind,
-                invalid_type_reasons,
+                invalid_types,
             }) => {
                 use flow_parser::ast::types::RendersVariant;
 
@@ -7744,14 +7717,14 @@ where
                         text(" You can only use an element of "),
                         code("AbstractComponent"),
                         text(" when the third type argument is a render type and "),
-                        ref_(r),
+                        ref_of_ty_or_desc(&r.loc, &r.desc),
                         text(" is not a render type."),
                     ],
                     (InvalidRenderTypeKind::InvalidRendersNonNominalElement(r), _) => vec![
                         text(
                             " Only elements of a component-syntax components can appear in renders but ",
                         ),
-                        ref_(r),
+                        ref_of_ty_or_desc(&r.loc, &r.desc),
                         text(" is not a component-syntax component."),
                     ],
                     (InvalidRenderTypeKind::InvalidRendersNullVoidFalse, RendersVariant::Maybe) => {
@@ -7818,24 +7791,23 @@ where
                     ],
                     (InvalidRenderTypeKind::UncategorizedInvalidRenders, _) => vec![],
                 };
-                let refs =
-                    |reasons: &Vec1<VirtualReason<L>>| -> Vec<friendly::MessageFeature<Loc>> {
-                        let len = reasons.len();
-                        let mut result = Vec::new();
-                        for (i, r) in reasons.iter().enumerate() {
-                            if i > 0 {
-                                if i == len - 1 {
-                                    result.push(text(" and "));
-                                } else {
-                                    result.push(text(", "));
-                                }
+                let refs = |types: &Vec1<MessageTypeReferenceData<L>>| {
+                    let len = types.len();
+                    let mut result = Vec::new();
+                    for (i, type_) in types.iter().enumerate() {
+                        if i > 0 {
+                            if i == len - 1 {
+                                result.push(text(" and "));
+                            } else {
+                                result.push(text(", "));
                             }
-                            result.push(ref_(r));
                         }
-                        result
-                    };
+                        result.push(ref_of_ty_or_desc(&type_.loc, &type_.desc));
+                    }
+                    result
+                };
                 let mut features = vec![text("Cannot use ")];
-                features.extend(refs(invalid_type_reasons));
+                features.extend(refs(invalid_types));
                 features.push(text(" as the type argument of renders type."));
                 features.extend(additional_explanation);
                 friendly::Message(features)
@@ -7894,7 +7866,7 @@ where
             ]),
             MessageInvalidUseOfFlowEnforceOptimized(arg) => friendly::Message(vec![
                 text("Invalid use of $Flow$EnforceOptimized on non-union type "),
-                ref_(arg),
+                ref_of_ty_or_desc(&arg.loc, &arg.desc),
                 text("."),
             ]),
             MessageMissingAnnotation(d) => friendly::Message(vec![
@@ -8080,19 +8052,19 @@ where
                 upper,
                 prop,
                 suggestion,
-                reason_indexer,
+                indexer,
             }) => {
                 use super::error_message::mk_prop_message;
                 // If we were subtyping that add to the error message so our user knows what
                 // object required the missing property.
                 let prop_message = mk_prop_message(prop.as_deref());
-                let indexer_message: Vec<friendly::MessageFeature<Loc>> = match reason_indexer {
+                let indexer_message: Vec<friendly::MessageFeature<Loc>> = match indexer {
                     None => vec![],
                     Some(indexer) => vec![
                         text(". Any property that does not exist in "),
                         ref_(lower),
                         text(" must be compatible with its indexer "),
-                        ref_(indexer),
+                        ref_of_ty_or_desc(&indexer.loc, &indexer.desc),
                     ],
                 };
                 let suggestion: Vec<friendly::MessageFeature<Loc>> = match suggestion {
@@ -8864,8 +8836,8 @@ where
             )]),
             MessageTuplePolarityMismatch {
                 index,
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 polarity_lower,
                 polarity_upper,
             } => {
@@ -8878,11 +8850,11 @@ where
                     text(" is "),
                     text(expected),
                     text(" in "),
-                    ref_(reason_lower),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(" but "),
                     text(actual),
                     text(" in "),
-                    ref_(reason_upper),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                 ])
             }
             MessageTypeGuardIndexMismatch { lower, upper } => friendly::Message(vec![
@@ -8898,13 +8870,13 @@ where
             ]),
             MessageNegativeTypeGuardConsistency {
                 return_desc,
-                type_reason,
+                type_,
             } => friendly::Message(vec![
                 text("Cannot return "),
                 friendly::desc_of_reason_desc(return_desc),
                 text(" because the negation of the predicate encoded in this expression"),
                 text(" needs to completely refine away the guard type "),
-                ref_(type_reason),
+                ref_of_ty_or_desc(&type_.loc, &type_.desc),
                 text(". "),
                 text("Consider using a one-sided type-guard (`implies x is T`). "),
                 text("See 2. in "),
@@ -8969,9 +8941,9 @@ where
                 code("declare"),
                 text(" keyword is unnecessary for type exports."),
             ]),
-            MessageUnnecessaryInvariant(reason) => friendly::Message(vec![
+            MessageUnnecessaryInvariant(condition) => friendly::Message(vec![
                 text("This use of `invariant` is unnecessary because "),
-                ref_(reason),
+                ref_of_ty_or_desc(&condition.loc, &condition.desc),
                 text(" is always truthy."),
             ]),
             MessageUnnecessaryOptionalChain(lhs_reason) => friendly::Message(vec![
@@ -9704,9 +9676,9 @@ where
                 code("_"),
                 text(" in a case after this one, or remove the pattern."),
             ]),
-            MessageMatchInvalidIdentOrMemberPattern { type_reason } => friendly::Message(vec![
+            MessageMatchInvalidIdentOrMemberPattern { type_ } => friendly::Message(vec![
                 text("Cannot have "),
-                ref_(type_reason),
+                ref_of_ty_or_desc(&type_.loc, &type_.desc),
                 text(" in a match pattern position. "),
                 text("Valid types for match patterns include string literals, number literals, "),
                 text("bigint literals, boolean literals, enum members, null, or undefined."),

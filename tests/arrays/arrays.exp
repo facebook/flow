@@ -86,10 +86,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- map.js:6:7
 
-Cannot compare `n` [1] to empty string [2], because number [3] is not a subtype of empty string [2] and empty string [2]
-is not a subtype of number [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `number` [1] to `""` [2], because `number` [3] is not a subtype of `""` [2] and `""` [2] is not a subtype
+of `number` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    map.js:6:7
    6|   if (n !== '') { // number incompatible with string

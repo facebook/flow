@@ -30,7 +30,6 @@ use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::VirtualReasonDesc::*;
 use flow_common::reason::func_reason;
-use flow_common::reason::locationless_reason;
 use flow_common::reason::mk_annot_reason;
 use flow_common::reason::mk_expression_reason;
 use flow_common::reason::mk_id;
@@ -54,14 +53,15 @@ use flow_parser_utils::symbol_call;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::ECallTypeArityData;
+use flow_typing_errors::error_message::ECannotDeleteData;
 use flow_typing_errors::error_message::EComponentThisReferenceData;
 use flow_typing_errors::error_message::EDuplicateClassMemberData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
-use flow_typing_errors::error_message::EInvalidReactCreateElementData;
 use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwriteData;
 use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::ETypeGuardIncompatibleWithFunctionKindData;
+use flow_typing_errors::error_message::EUnnecessaryInvariantData;
 use flow_typing_errors::error_message::EnumBigIntMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumBooleanMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumDuplicateMemberNameData;
@@ -7236,9 +7236,10 @@ fn expression_<'a>(
                         ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                             call_loc: loc.dupe(),
                             is_new: true,
-                            reason_arity: locationless_reason(VirtualReasonDesc::RType(
+                            callee_loc: ALoc::none(),
+                            callee_desc: TypeOrTypeDescT::TypeDesc(Err(VirtualReasonDesc::RType(
                                 FlowSmolStr::new("Function"),
-                            )),
+                            ))),
                             expected_arity: 0,
                         })),
                     );
@@ -7304,7 +7305,8 @@ fn expression_<'a>(
                 (Some(_), _) => Err(ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: true,
-                    reason_arity: locationless_reason(VirtualReasonDesc::RType(n.dupe())),
+                    callee_loc: ALoc::none(),
+                    callee_desc: TypeOrTypeDescT::TypeDesc(Err(VirtualReasonDesc::RType(n.dupe()))),
                     expected_arity: 1,
                 }))),
             };
@@ -8558,8 +8560,9 @@ pub fn optional_chain<'a>(
                             ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                                 call_loc: loc.dupe(),
                                 is_new: false,
-                                reason_arity: locationless_reason(VirtualReasonDesc::RFunction(
-                                    ReasonDescFunction::RNormal,
+                                callee_loc: ALoc::none(),
+                                callee_desc: TypeOrTypeDescT::TypeDesc(Err(
+                                    VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
                                 )),
                                 expected_arity: 0,
                             })),
@@ -9051,10 +9054,31 @@ pub fn optional_chain<'a>(
                                     {
                                         flow_js::add_output_non_speculating(
                                             cx,
-                                            ErrorMessage::EUnnecessaryInvariant(Box::new((
-                                                loc.dupe(),
-                                                reason_of_t(&concretized_cond_t).dupe(),
-                                            ))),
+                                            ErrorMessage::EUnnecessaryInvariant(Box::new(
+                                                EUnnecessaryInvariantData {
+                                                    loc: loc.dupe(),
+                                                    condition: ErrorReference::new(
+                                                        ref_loc_of_t(&concretized_cond_t).dupe(),
+                                                        reason_of_t(&concretized_cond_t)
+                                                            .desc(false)
+                                                            .clone(),
+                                                    ),
+                                                    condition_desc: if matches!(
+                                                        concretized_cond_t.deref(),
+                                                        TypeInner::IntersectionT(_, _)
+                                                    ) {
+                                                        TypeOrTypeDescT::TypeDesc(Err(reason_of_t(
+                                                            &concretized_cond_t,
+                                                        )
+                                                        .desc(false)
+                                                        .clone()))
+                                                    } else {
+                                                        flow_js_utils::type_or_type_desc_for_error(
+                                                            &concretized_cond_t,
+                                                        )
+                                                    },
+                                                },
+                                            )),
                                         );
                                     }
                                     _ => {}
@@ -9099,8 +9123,9 @@ pub fn optional_chain<'a>(
                             ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                                 call_loc: loc.dupe(),
                                 is_new: false,
-                                reason_arity: locationless_reason(VirtualReasonDesc::RFunction(
-                                    ReasonDescFunction::RNormal,
+                                callee_loc: ALoc::none(),
+                                callee_desc: TypeOrTypeDescT::TypeDesc(Err(
+                                    VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
                                 )),
                                 expected_arity: 0,
                             })),
@@ -12377,7 +12402,14 @@ fn delete<'a>(
             let t = target_ast.loc().1.dupe();
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ECannotDelete(Box::new((loc.dupe(), reason_of_t(&t).dupe()))),
+                ErrorMessage::ECannotDelete(Box::new(ECannotDeleteData {
+                    loc: loc.dupe(),
+                    expression: ErrorReference::new(
+                        ref_loc_of_t(&t).dupe(),
+                        reason_of_t(&t).desc(false).clone(),
+                    ),
+                    expression_desc: flow_js_utils::type_or_type_desc_for_error(&t),
+                })),
             );
             Ok(target_ast)
         }
@@ -13535,12 +13567,7 @@ fn react_jsx_desugar<'a>(
             {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EInvalidReactCreateElement(Box::new(
-                        EInvalidReactCreateElementData {
-                            create_element_loc: loc_element.dupe(),
-                            invalid_react: reason_of_t(&react_t).dupe(),
-                        },
-                    )),
+                    flow_js_utils::invalid_react_create_element_error(loc_element.dupe(), &react_t),
                 );
             }
         }
@@ -14723,7 +14750,10 @@ fn static_method_call_object<'a>(
                 ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: false,
-                    reason_arity: locationless_reason(RFunction(ReasonDescFunction::RNormal)),
+                    callee_loc: ALoc::none(),
+                    callee_desc: TypeOrTypeDescT::TypeDesc(Err(RFunction(
+                        ReasonDescFunction::RNormal,
+                    ))),
                     expected_arity: arity,
                 })),
             );

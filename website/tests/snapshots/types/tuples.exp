@@ -76,8 +76,8 @@ Found 3 errors
 === block 8 ===
 Error ------------------------------------------------------------------------------- -:4:41
 
-Cannot assign `tuple1` to `tuple2` because tuple type [1] has 2 elements but tuple type [2] has 3 elements.
-[invalid-tuple-arity]
+Cannot assign `tuple1` to `tuple2` because `[number, boolean]` [1] has 2 elements but `[number, boolean, void]` [2] has
+3 elements. [invalid-tuple-arity]
 
    -:4:41
    4| const tuple2: [number, boolean, void] = tuple1; // Error!
@@ -97,8 +97,8 @@ Found 1 error
 === block 9 ===
 Error ------------------------------------------------------------------------------- -:4:35
 
-Cannot assign `tuple1` to `tuple2` because tuple type [1] has 3 elements but tuple type [2] has 2 elements.
-[invalid-tuple-arity]
+Cannot assign `tuple1` to `tuple2` because `[number, boolean, void]` [1] has 3 elements but `[number, boolean]` [2] has
+2 elements. [invalid-tuple-arity]
 
    -:4:35
    4| const tuple2: [number, boolean] = tuple1; // Error!
@@ -118,8 +118,8 @@ Found 1 error
 === block 10 ===
 Error ------------------------------------------------------------------------------- -:4:33
 
-Cannot assign `array` to `tuple` because array type [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot assign `array` to `tuple` because `Array<number>` [1] has an unknown number of elements, so is incompatible with
+`[number, number]` [2]. [invalid-tuple-arity]
 
    -:4:33
    4| const tuple: [number, number] = array; // Error!
@@ -250,8 +250,8 @@ Found 2 errors
 === block 21 ===
 Error -------------------------------------------------------------------------------- -:6:1
 
-Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
-`AllOptional` [2] has 2 elements. [invalid-tuple-arity]
+Cannot cast array literal to required of `AllOptional` because `Readonly<[]>` [1] has 0 elements but `AllOptional` [2]
+has 2 elements. [invalid-tuple-arity]
 
    -:6:1
    6| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
@@ -271,8 +271,8 @@ No errors!
 === block 23 ===
 Error -------------------------------------------------------------------------------- -:4:1
 
-Cannot cast `b` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot cast `b` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
+`[0, 1 | void, 2]` [2]. [invalid-tuple-arity]
 
    -:4:1
    4| b as [0, 1 | void, 2]; // ERROR
@@ -288,8 +288,8 @@ References:
 
 Error ------------------------------------------------------------------------------- -:10:1
 
-Cannot cast `e` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot cast `e` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
+`[0, foo?: 1, bar?: 2]` [2]. [invalid-tuple-arity]
 
    -:10:1
    10| e as [0, foo?: 1, bar?: 2]; // ERROR
@@ -312,8 +312,8 @@ No errors!
 === block 25 ===
 Error -------------------------------------------------------------------------------- -:4:1
 
-Cannot cast `y` to tuple type because array literal [1] has 2 or more elements (inexact tuple) but tuple type [2] has 2
-elements. [invalid-tuple-arity]
+Cannot cast `y` to tuple type because array literal [1] has 2 or more elements (inexact tuple) but
+`[number, number]` [2] has 2 elements. [invalid-tuple-arity]
 
    -:4:1
    4| y as [number, number]; // ERROR: it's inexact
@@ -340,8 +340,8 @@ Found 2 errors
 === block 26 ===
 Error ------------------------------------------------------------------------------- -:14:1
 
-Cannot call `mapTupleArray` because in type argument `T`: array type [1] has an unknown number of elements, so is
-incompatible with tuple type [2]. [invalid-tuple-arity]
+Cannot call `mapTupleArray` because in type argument `T`: `Array<number>` [1] has an unknown number of elements, so is
+incompatible with `Readonly<[...]>` [2]. [invalid-tuple-arity]
 
    -:14:1
    14| mapTupleArray(arrays, (x: number, y: number) => x + y); // ERROR: array is not a tuple

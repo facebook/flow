@@ -115,7 +115,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:23:14
 
 Cannot return `(typeof x) === 'number'` because the negation of the predicate encoded in this expression needs to
-completely refine away the guard type string [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+completely refine away the guard type `string` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    classes.js:23:14
@@ -504,7 +504,7 @@ References:
 Error --------------------------------------------------------------------------------------------- consistency.js:50:12
 
 Cannot return `(typeof x) === 'string'` because the negation of the predicate encoded in this expression needs to
-completely refine away the guard type number [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+completely refine away the guard type `number` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    consistency.js:50:12
@@ -709,8 +709,8 @@ References:
 Error -------------------------------------------------------------------------------------------- consistency.js:138:12
 
 Cannot return `isNumberOrString(...) && isBoolean(...)` because the negation of the predicate encoded in this expression
-needs to completely refine away the guard type string [1]. Consider using a one-sided type-guard (`implies x is T`). See
-2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+needs to completely refine away the guard type `string` [1]. Consider using a one-sided type-guard (`implies x is T`).
+See 2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 [incompatible-type-guard]
 
    consistency.js:138:12
@@ -3768,7 +3768,7 @@ References:
 Error -------------------------------------------------------------------------------------------- this_classes.js:40:14
 
 Cannot return `this instanceof B` because the negation of the predicate encoded in this expression needs to completely
-refine away the guard type intersection type [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+refine away the guard type `B & Unrelated` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    this_classes.js:40:14
@@ -4235,8 +4235,9 @@ References:
 Error ------------------------------------------------------------------------------------------- this_classes.js:328:14
 
 Cannot return `(typeof this.a) === 'number'` because the negation of the predicate encoded in this expression needs to
-completely refine away the guard type object type [1]. Consider using a one-sided type-guard (`implies x is T`). See 2.
-in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+completely refine away the guard type `{a: number}` [1]. Consider using a one-sided type-guard (`implies x is T`). See
+2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-type-guard]
 
    this_classes.js:328:14
    328|       return typeof this.a === 'number'; // error twice: exactness, and negation
@@ -4276,8 +4277,9 @@ References:
 Error ------------------------------------------------------------------------------------------- this_classes.js:333:14
 
 Cannot return `(typeof this.a) === 'number'` because the negation of the predicate encoded in this expression needs to
-completely refine away the guard type object type [1]. Consider using a one-sided type-guard (`implies x is T`). See 2.
-in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+completely refine away the guard type `{a: number, ...}` [1]. Consider using a one-sided type-guard (`implies x is T`).
+See 2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+[incompatible-type-guard]
 
    this_classes.js:333:14
    333|       return typeof this.a === 'number'; // error twice: class-object, and negation
@@ -4531,7 +4533,7 @@ References:
 Error ------------------------------------------------------------------------------------------- this_generics.js:23:14
 
 Cannot return `this.isDNumber()` because the negation of the predicate encoded in this expression needs to completely
-refine away the guard type `D` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+refine away the guard type `D<string>` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    this_generics.js:23:14

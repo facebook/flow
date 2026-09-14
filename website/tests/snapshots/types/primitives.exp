@@ -126,7 +126,7 @@ Found 1 error
 === block 13 ===
 Error ---------------------------------------------------------------------------- -:6:1
 
-Cannot use operator `+` with operands string [1] and object literal [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and object literal [2] [unsafe-addition]
 
    -:6:1
    6| "foo" + {};    // Error!
@@ -142,7 +142,7 @@ References:
 
 Error ---------------------------------------------------------------------------- -:7:1
 
-Cannot use operator `+` with operands string [1] and empty array literal [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `Array<empty>` [2] [unsafe-addition]
 
    -:7:1
    7| "foo" + [];    // Error!

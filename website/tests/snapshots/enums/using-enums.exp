@@ -21,7 +21,7 @@ No errors!
 === block 3 ===
 Error -------------------------------------------------------------------------- -:4:19
 
-Cannot assign `Status.Active` to `s` because `Status` [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `Status.Active` to `s` because `Status` [1] is incompatible with `string` [2]. [incompatible-type]
 
 You can explicitly cast your enum value to a string using `<expr> as string`.
 

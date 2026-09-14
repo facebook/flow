@@ -1,9 +1,9 @@
 Error -------------------------------------------------------------------------------------------- disjoint_union.js:8:7
 
-Cannot compare `shape.type` [1] to string literal `square` [2], because `shape.type` [1] is not a subtype of string
-literal `square` [2] and string literal `square` [2] is not a subtype of `shape.type` [1]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `"circle" | "rectangle"` [1] to `"square"` [2], because `"circle" | "rectangle"` [1] is not a subtype of
+`"square"` [2] and `"square"` [2] is not a subtype of `"circle" | "rectangle"` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
    disjoint_union.js:8:7
    8|   if (shape.type === 'square') { // error
@@ -20,10 +20,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:21:7
 
-Cannot compare `shape.type` [1] to string literal `square` [2], because `shape.type` [1] is not a subtype of string
-literal `square` [2] and string literal `square` [2] is not a subtype of `shape.type` [1]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `"circle" | "rectangle"` [1] to `"square"` [2], because `"circle" | "rectangle"` [1] is not a subtype of
+`"square"` [2] and `"square"` [2] is not a subtype of `"circle" | "rectangle"` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
    disjoint_union.js:21:7
    21|   if (shape.type === 'square') { // error
@@ -40,10 +40,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:34:7
 
-Cannot compare `shape.type` [1] to string literal `square` [2], because `shape.type` [1] is not a subtype of string
-literal `square` [2] and string literal `square` [2] is not a subtype of `shape.type` [1]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `"circle" | "rectangle"` [1] to `"square"` [2], because `"circle" | "rectangle"` [1] is not a subtype of
+`"square"` [2] and `"square"` [2] is not a subtype of `"circle" | "rectangle"` [1]. In **rare** cases, these types may
+have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
+types to pass the flow check.  [invalid-compare]
 
    disjoint_union.js:34:7
    34|   if (shape.type === 'square') { // error
@@ -60,9 +60,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:56:7
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:56:7
@@ -83,9 +83,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:57:7
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:57:7
@@ -106,9 +106,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:65:7
 
-Cannot compare `x.type` [1] to `OBJ.C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:65:7
@@ -129,9 +129,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:66:7
 
-Cannot compare `x.type` [1] to `OBJ.D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:66:7
@@ -152,9 +152,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:73:9
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:73:9
@@ -175,9 +175,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:74:9
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:74:9
@@ -198,9 +198,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:81:7
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:81:7
@@ -221,9 +221,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:82:7
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:82:7
@@ -244,9 +244,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:89:9
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:89:9
@@ -267,9 +267,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:90:9
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:90:9
@@ -290,9 +290,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:100:7
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:100:7
@@ -313,9 +313,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:101:7
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:101:7
@@ -336,9 +336,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:108:9
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:108:9
@@ -359,9 +359,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:109:9
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:109:9
@@ -382,9 +382,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:126:7
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:126:7
@@ -405,9 +405,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:127:7
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:127:7
@@ -428,9 +428,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:134:9
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:134:9
@@ -451,9 +451,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:135:9
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:135:9
@@ -474,9 +474,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:142:7
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:142:7
@@ -497,9 +497,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:143:7
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:143:7
@@ -520,9 +520,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:150:9
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:150:9
@@ -543,9 +543,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:151:9
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:151:9
@@ -566,9 +566,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:161:7
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:161:7
@@ -589,9 +589,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:162:7
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:162:7
@@ -612,9 +612,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:169:9
 
-Cannot compare `x.type` [1] to `C` [2], because `x.type` [1] is not a subtype of string literal `C` [3] and string
-literal `C` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"C"` [2], because `"A" | "B"` [1] is not a subtype of `"C"` [3] and `"C"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:169:9
@@ -635,9 +635,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:170:9
 
-Cannot compare `x.type` [1] to `D` [2], because `x.type` [1] is not a subtype of string literal `D` [3] and string
-literal `D` [3] is not a subtype of `x.type` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `"A" | "B"` [1] to `"D"` [2], because `"A" | "B"` [1] is not a subtype of `"D"` [3] and `"D"` [3] is not
+a subtype of `"A" | "B"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    disjoint_union.js:170:9
@@ -658,10 +658,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:6:14
 
-Cannot compare `binary` [1] to number literal `2` [2], because number literal `1` [3] is not a subtype of number literal
-`2` [2] and number literal `2` [2] is not a subtype of number literal `1` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `1` [1] to `2` [2], because `1` [3] is not a subtype of `2` [2] and `2` [2] is not a subtype of `1` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    enum.js:6:14
    6|   } else if (binary === 2) { // oops
@@ -681,10 +680,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generics.js:3:7
 
-Cannot compare `mm.type` [1] to string literal `q` [2], because `T` [3] is not a subtype of string literal `q` [2] and
-string literal `q` [2] is not a subtype of `T` [3]. In **rare** cases, these types may have overlapping values but lack
-a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `T` [1] to `"q"` [2], because `T` [3] is not a subtype of `"q"` [2] and `"q"` [2] is not a subtype of
+`T` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
+you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    generics.js:3:7
    3|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'
@@ -704,10 +702,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generics.js:12:7
 
-Cannot compare `mm.type` [1] to string literal `q` [2], because `mm.type` [1] is not a subtype of string literal `q` [2]
-and string literal `q` [2] is not a subtype of `mm.type` [1]. In **rare** cases, these types may have overlapping values
-but lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow
-check.  [invalid-compare]
+Cannot compare `"p" | "s"` [1] to `"q"` [2], because `"p" | "s"` [1] is not a subtype of `"q"` [2] and `"q"` [2] is not
+a subtype of `"p" | "s"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    generics.js:12:7
    12|   if (mm.type === 'q'); // Error 'q' is not included in 's' | 'p'

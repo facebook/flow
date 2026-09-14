@@ -38,7 +38,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: var boom = myNum * myStr;
-                          ^^^^^^^^^^^^^ Cannot use operator \`*\` with operands number [1] and string [2] [unsafe-arithmetic]
+                          ^^^^^^^^^^^^^ Cannot use operator \`*\` with operands \`number\` [1] and \`string\` [2] [unsafe-arithmetic]
             References:
               3: var myNum = 123;
                              ^^^ [1]

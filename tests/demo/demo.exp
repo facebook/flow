@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ 1/f.js:3:30
 
-Cannot use operator `/` with operands number [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `/` with operands `number` [1] and `null` [2] [unsafe-arithmetic]
 
    1/f.js:3:30
    3| function f(x: null) { return 42/x; }

@@ -137,7 +137,7 @@ Cannot delete `obj6.m` because property `m` is not writable. [cannot-write]
 
 Error --------------------------------------------------------------------------------------------------- delete.js:52:1
 
-Cannot delete number [1] because only member expressions and variables can be deleted. [cannot-delete]
+Cannot delete `number` [1] because only member expressions and variables can be deleted. [cannot-delete]
 
    delete.js:52:1
    52| delete 1;
@@ -165,7 +165,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- delete.js:54:1
 
-Cannot delete function [1] because only member expressions and variables can be deleted. [cannot-delete]
+Cannot delete `() => number` [1] because only member expressions and variables can be deleted. [cannot-delete]
 
    delete.js:54:1
    54| delete (() => 42);

@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot use operator `*` with operands number [1] and string [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `string` [2] [unsafe-arithmetic]
 
    switch.js:28:13
    28|         x = x*x;
@@ -17,7 +17,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    switch.js:28:13
    28|         x = x*x;
@@ -34,7 +34,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:28:13
 
-Cannot use operator `*` with operands string [1] and string [1] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `string` [1] [unsafe-arithmetic]
 
    switch.js:28:13
    28|         x = x*x;

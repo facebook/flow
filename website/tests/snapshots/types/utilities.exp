@@ -166,8 +166,8 @@ Found 1 error
 === block 14 ===
 Error ----------------------------------------------------------------------------- -:3:1
 
-Cannot cast array literal to required of `AllOptional` because empty array literal [1] has 0 elements but
-`AllOptional` [2] has 2 elements. [invalid-tuple-arity]
+Cannot cast array literal to required of `AllOptional` because `Readonly<[]>` [1] has 0 elements but `AllOptional` [2]
+has 2 elements. [invalid-tuple-arity]
 
    -:3:1
    3| [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
@@ -370,7 +370,7 @@ Found 1 error
 === block 24 ===
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast array literal to `EmptyArgs` because array literal [1] has 1 element but tuple type [2] has 0 elements.
+Cannot cast array literal to `EmptyArgs` because array literal [1] has 1 element but `Readonly<[]>` [2] has 0 elements.
 [invalid-tuple-arity]
 
    -:5:1

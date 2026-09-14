@@ -28,6 +28,7 @@ use flow_typing_errors::error_message::EComparisonData;
 use flow_typing_errors::error_message::EForInRHSData;
 use flow_typing_errors::error_message::EIllegalAssertOperatorData;
 use flow_typing_errors::error_message::EInvalidThisArgData;
+use flow_typing_errors::error_message::ENonStrictEqualityComparisonData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EReactIntrinsicOverlapData;
 use flow_typing_errors::error_message::ETupleElementNotReadableData;
@@ -450,12 +451,13 @@ pub mod operators {
                         cx,
                         (reason_of_t(l).dupe(), reason_of_t(r).dupe()),
                     );
+                    let (t1, t2) = flow_js_utils::ordered_types(cx, (l, r));
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
                         ErrorMessage::EComparison(Box::new(EComparisonData {
-                            r1,
-                            r2,
+                            r1: flow_js_utils::type_reference_with_reason_for_error(t1, r1),
+                            r2: flow_js_utils::type_reference_with_reason_for_error(t2, r2),
                             loc_opt: None,
                             strict_comparison_opt: None,
                         })),
@@ -705,16 +707,23 @@ pub mod operators {
                     if equatable(t1, t2) {
                         Ok(())
                     } else {
-                        let reasons = flow_js_utils::ordered_reasons(
+                        let (lower_reason, upper_reason) = flow_js_utils::ordered_reasons(
                             cx,
                             (reason_of_t(t1).dupe(), reason_of_t(t2).dupe()),
                         );
+                        let (lower, upper) = flow_js_utils::ordered_types(cx, (t1, t2));
                         flow_js_utils::add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::ENonStrictEqualityComparison(Box::new((
-                                reasons.0, reasons.1,
-                            ))),
+                            ErrorMessage::ENonStrictEqualityComparison(Box::new(
+                                ENonStrictEqualityComparisonData {
+                                    reasons: (lower_reason, upper_reason),
+                                    lower_loc: type_util::ref_loc_of_t(lower).dupe(),
+                                    lower_desc: flow_js_utils::type_or_type_desc_for_error(lower),
+                                    upper_loc: type_util::ref_loc_of_t(upper).dupe(),
+                                    upper_desc: flow_js_utils::type_or_type_desc_for_error(upper),
+                                },
+                            )),
                         )?;
                         Ok(())
                     }
@@ -790,9 +799,10 @@ pub mod operators {
                             cx,
                             (reason_of_t(l).dupe(), reason_of_t(r).dupe()),
                         );
+                        let (t1, t2) = flow_js_utils::ordered_types(cx, (l, r));
                         ErrorMessage::EComparison(Box::new(EComparisonData {
-                            r1,
-                            r2,
+                            r1: flow_js_utils::type_reference_with_reason_for_error(t1, r1),
+                            r2: flow_js_utils::type_reference_with_reason_for_error(t2, r2),
                             loc_opt: None,
                             strict_comparison_opt: None,
                         }))

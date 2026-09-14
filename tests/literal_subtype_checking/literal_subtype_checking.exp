@@ -1,9 +1,9 @@
 Error ------------------------------------------------------------------------------------------- non_refinements.js:5:1
 
-Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
-string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `?T` [1] to `"foox"` [2], because `?"bar" | "foo"` [1] is not a subtype of `"foox"` [2] and `"foox"` [2]
+is not a subtype of `?"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:5:1
    5| x === 'foox'; // ERROR
@@ -20,10 +20,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_refinements.js:7:1
 
-Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
-string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `?T` [1] to `"foox"` [2], because `?"bar" | "foo"` [1] is not a subtype of `"foox"` [2] and `"foox"` [2]
+is not a subtype of `?"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:7:1
    7| x === 'foox' || x === 'barx'; // ERROR
@@ -40,10 +40,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_refinements.js:7:17
 
-Cannot compare `x` [1] to string literal `barx` [2], because `x` [1] is not a subtype of string literal `barx` [2] and
-string literal `barx` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `?T` [1] to `"barx"` [2], because `?"bar" | "foo"` [1] is not a subtype of `"barx"` [2] and `"barx"` [2]
+is not a subtype of `?"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:7:17
    7| x === 'foox' || x === 'barx'; // ERROR
@@ -60,10 +60,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_refinements.js:9:1
 
-Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
-string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `?T` [1] to `"foox"` [2], because `?"bar" | "foo"` [1] is not a subtype of `"foox"` [2] and `"foox"` [2]
+is not a subtype of `?"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:9:1
    9| x === 'foox' || true;
@@ -80,10 +80,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_refinements.js:11:9
 
-Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
-string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `?T` [1] to `"foox"` [2], because `?"bar" | "foo"` [1] is not a subtype of `"foox"` [2] and `"foox"` [2]
+is not a subtype of `?"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:11:9
    11| true || x === 'foox'; // ERROR
@@ -100,10 +100,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------- non_refinements.js:13:15
 
-Cannot compare `x` [1] to string literal `foox` [2], because `x` [1] is not a subtype of string literal `foox` [2] and
-string literal `foox` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `T` [1] to `"foox"` [2], because `"bar" | "foo"` [1] is not a subtype of `"foox"` [2] and `"foox"` [2] is
+not a subtype of `"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:13:15
    13| x != null && (x === 'foox' || x === 'barx'); // ERROR
@@ -120,10 +120,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------- non_refinements.js:13:31
 
-Cannot compare `x` [1] to string literal `barx` [2], because `x` [1] is not a subtype of string literal `barx` [2] and
-string literal `barx` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `T` [1] to `"barx"` [2], because `"bar" | "foo"` [1] is not a subtype of `"barx"` [2] and `"barx"` [2] is
+not a subtype of `"bar" | "foo"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    non_refinements.js:13:31
    13| x != null && (x === 'foox' || x === 'barx'); // ERROR
@@ -140,10 +140,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
-Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:7:3
    7|   case 'bar': // Error
@@ -163,10 +163,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Cannot compare `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:8:3
    8|   case 1: // Error
@@ -186,10 +185,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
-Cannot compare `o.p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:14:3
    14|   case 'bar': // Error
@@ -209,10 +208,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:15:3
 
-Cannot compare `o.p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:15:3
    15|   case 1: // Error
@@ -232,10 +230,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:7
 
-Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:21:7
    21|   if (x === 'bar') {} // Error
@@ -255,10 +253,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:22:7
 
-Cannot compare `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:22:7
    22|   if (x === 1) {} // Error
@@ -278,10 +275,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:7
 
-Cannot compare `o.p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:25:7
    25|   if (o.p === 'bar') {} // Error
@@ -301,10 +298,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:26:7
 
-Cannot compare `o.p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:26:7
    26|   if (o.p === 1) {} // Error
@@ -324,10 +320,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:7
 
-Cannot compare string literal `bar` [1] to `x` [2], because string literal `bar` [1] is not a subtype of string literal
-`foo` [3] and string literal `foo` [3] is not a subtype of string literal `bar` [1]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `"bar"` [1] to `Literal` [2], because `"bar"` [1] is not a subtype of `Literal` [3] and `Literal` [3] is
+not a subtype of `"bar"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:31:7
    31|   if ('bar' === x) {} // Error
@@ -347,10 +343,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
 
-Cannot compare number literal `1` [1] to `x` [2], because number literal `1` [1] is not a subtype of string literal
-`foo` [3] and string literal `foo` [3] is not a subtype of number literal `1` [1]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `1` [1] to `Literal` [2], because `1` [1] is not a subtype of `Literal` [3] and `Literal` [3] is not a
+subtype of `1` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:32:7
    32|   if (1 === x) {} // Error
@@ -370,10 +365,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:7
 
-Cannot compare string literal `bar` [1] to `o.p` [2], because string literal `bar` [1] is not a subtype of string
-literal `foo` [3] and string literal `foo` [3] is not a subtype of string literal `bar` [1]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `"bar"` [1] to `Literal` [2], because `"bar"` [1] is not a subtype of `Literal` [3] and `Literal` [3] is
+not a subtype of `"bar"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:35:7
    35|   if ('bar' === o.p) {} // Error
@@ -393,10 +388,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:7
 
-Cannot compare number literal `1` [1] to `o.p` [2], because number literal `1` [1] is not a subtype of string literal
-`foo` [3] and string literal `foo` [3] is not a subtype of number literal `1` [1]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `1` [1] to `Literal` [2], because `1` [1] is not a subtype of `Literal` [3] and `Literal` [3] is not a
+subtype of `1` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:36:7
    36|   if (1 === o.p) {} // Error
@@ -416,10 +410,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:40:23
 
-Cannot compare `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:40:23
    40| if (true && (false || x === 'bar')) {} // Error
@@ -439,10 +433,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:41:23
 
-Cannot compare property `p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:41:23
    41| if (true && (false || o.p === 'bar')) {} // Error
@@ -462,10 +456,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:42:23
 
-Cannot compare `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:42:23
    42| if (true && (false || x === 1)) {} // Error
@@ -485,10 +478,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:43:23
 
-Cannot compare property `p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:43:23
    43| if (true && (false || o.p === 1)) {} // Error
@@ -508,10 +500,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:51:5
 
-Cannot compare `nullableX` [1] to string literal `bar` [2], because `nullableX` [1] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `?Literal` [1] to `"bar"` [2], because `?Literal` [1] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `?Literal` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:51:5
    51|     case 'bar': // Error
@@ -528,10 +520,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:52:5
 
-Cannot compare `nullableX` [1] to number literal `1` [2], because `nullableX` [1] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `?Literal` [1] to `1` [2], because `?Literal` [1] is not a subtype of `1` [2] and `1` [2] is not a
+subtype of `?Literal` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship.
+If that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:52:5
    52|     case 1: // Error
@@ -548,10 +539,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:58:5
 
-Cannot compare `nullableO?.p` [1] to string literal `bar` [2], because `nullableO?.p` [1] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `void | Literal` [1] to `"bar"` [2], because `Literal | void` [1] is not a subtype of `"bar"` [2] and
+`"bar"` [2] is not a subtype of `Literal | void` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
 
    test.js:58:5
    58|     case 'bar': // Error
@@ -568,10 +559,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:5
 
-Cannot compare `nullableO?.p` [1] to number literal `1` [2], because `nullableO?.p` [1] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `void | Literal` [1] to `1` [2], because `Literal | void` [1] is not a subtype of `1` [2] and `1` [2] is
+not a subtype of `Literal | void` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:59:5
    59|     case 1: // Error
@@ -588,10 +579,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:66:7
 
-Cannot compare `nullableX` [1] to string literal `bar` [2], because `nullableX` [1] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `?Literal` [1] to `"bar"` [2], because `?Literal` [1] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `?Literal` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:66:7
    66|   if (nullableX === 'bar') {} // Error
@@ -608,10 +599,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:67:7
 
-Cannot compare `nullableX` [1] to number literal `1` [2], because `nullableX` [1] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `?Literal` [1] to `1` [2], because `?Literal` [1] is not a subtype of `1` [2] and `1` [2] is not a
+subtype of `?Literal` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship.
+If that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:67:7
    67|   if (nullableX === 1) {} // Error
@@ -628,10 +618,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:7
 
-Cannot compare `nullableO?.p` [1] to string literal `bar` [2], because `nullableO?.p` [1] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `void | Literal` [1] to `"bar"` [2], because `Literal | void` [1] is not a subtype of `"bar"` [2] and
+`"bar"` [2] is not a subtype of `Literal | void` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
 
    test.js:70:7
    70|   if (nullableO?.p === 'bar') {} // Error
@@ -648,10 +638,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:7
 
-Cannot compare `nullableO?.p` [1] to number literal `1` [2], because `nullableO?.p` [1] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `void | Literal` [1] to `1` [2], because `Literal | void` [1] is not a subtype of `1` [2] and `1` [2] is
+not a subtype of `Literal | void` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:71:7
    71|   if (nullableO?.p === 1) {} // Error
@@ -668,10 +658,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:76:25
 
-Cannot compare `nullableX` [1] to string literal `bar` [2], because `nullableX` [1] is not a subtype of string literal
-`bar` [2] and string literal `bar` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `?Literal` [1] to `"bar"` [2], because `?Literal` [1] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `?Literal` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:76:25
    76|   if (true && (false || nullableX === 'bar')) {} // Error
@@ -688,10 +678,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:77:25
 
-Cannot compare `nullableO?.p` [1] to string literal `bar` [2], because `nullableO?.p` [1] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `void | Literal` [1] to `"bar"` [2], because `Literal | void` [1] is not a subtype of `"bar"` [2] and
+`"bar"` [2] is not a subtype of `Literal | void` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
 
    test.js:77:25
    77|   if (true && (false || nullableO?.p === 'bar')) {} // Error
@@ -708,10 +698,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:78:25
 
-Cannot compare `nullableX` [1] to number literal `1` [2], because `nullableX` [1] is not a subtype of number literal
-`1` [2] and number literal `1` [2] is not a subtype of `nullableX` [1]. In **rare** cases, these types may have
-overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both types
-to pass the flow check.  [invalid-compare]
+Cannot compare `?Literal` [1] to `1` [2], because `?Literal` [1] is not a subtype of `1` [2] and `1` [2] is not a
+subtype of `?Literal` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship.
+If that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:78:25
    78|   if (true && (false || nullableX === 1)) {} // Error
@@ -728,10 +717,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:79:25
 
-Cannot compare `nullableO?.p` [1] to number literal `1` [2], because `nullableO?.p` [1] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of `nullableO?.p` [1]. In **rare** cases, these types may
-have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of both
-types to pass the flow check.  [invalid-compare]
+Cannot compare `void | Literal` [1] to `1` [2], because `Literal | void` [1] is not a subtype of `1` [2] and `1` [2] is
+not a subtype of `Literal | void` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:79:25
    79|   if (true && (false || nullableO?.p === 1)) {} // Error
@@ -748,10 +737,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:84:7
 
-Cannot compare `b1` [1] to boolean literal `false` [2], because boolean literal `true` [3] is not a subtype of boolean
-literal `false` [2] and boolean literal `false` [2] is not a subtype of boolean literal `true` [3]. In **rare** cases,
-these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
-union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `true` [1] to `false` [2], because `true` [3] is not a subtype of `false` [2] and `false` [2] is not a
+subtype of `true` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:84:7
    84|   if (b1 === false) {} // error
@@ -771,10 +759,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:86:7
 
-Cannot compare `b1` [1] to boolean literal `false` [2], because boolean literal `true` [3] is not a subtype of boolean
-literal `false` [2] and boolean literal `false` [2] is not a subtype of boolean literal `true` [3]. In **rare** cases,
-these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
-union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `true` [1] to `false` [2], because `true` [3] is not a subtype of `false` [2] and `false` [2] is not a
+subtype of `true` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:86:7
    86|   if (b1 !== false) {} // error
@@ -794,10 +781,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:88:7
 
-Cannot compare `b2` [1] to boolean literal `true` [2], because boolean literal `false` [3] is not a subtype of boolean
-literal `true` [2] and boolean literal `true` [2] is not a subtype of boolean literal `false` [3]. In **rare** cases,
-these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
-union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `false` [1] to `true` [2], because `false` [3] is not a subtype of `true` [2] and `true` [2] is not a
+subtype of `false` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:88:7
    88|   if (b2 === true) {} // error
@@ -817,10 +803,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:90:7
 
-Cannot compare `b2` [1] to boolean literal `true` [2], because boolean literal `false` [3] is not a subtype of boolean
-literal `true` [2] and boolean literal `true` [2] is not a subtype of boolean literal `false` [3]. In **rare** cases,
-these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the
-union of both types to pass the flow check.  [invalid-compare]
+Cannot compare `false` [1] to `true` [2], because `false` [3] is not a subtype of `true` [2] and `true` [2] is not a
+subtype of `false` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:90:7
    90|   if (b2 !== true) {} // error
@@ -840,10 +825,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:105:7
 
-Cannot compare call of `x` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:105:7
    105|   if (x() === 'bar') {} // Error
@@ -863,10 +848,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:106:7
 
-Cannot compare call of `x` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:106:7
    106|   if (x() === 1) {} // Error
@@ -886,10 +870,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:109:7
 
-Cannot compare `o().p` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:109:7
    109|   if (o().p === 'bar') {} // Error
@@ -909,10 +893,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:110:7
 
-Cannot compare `o().p` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:110:7
    110|   if (o().p === 1) {} // Error
@@ -932,10 +915,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:113:7
 
-Cannot compare `m.p.q` [1] to string literal `bar` [2], because string literal `foo` [3] is not a subtype of string
-literal `bar` [2] and string literal `bar` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these
-types may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union
-of both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `"bar"` [2], because `Literal` [3] is not a subtype of `"bar"` [2] and `"bar"` [2] is
+not a subtype of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    test.js:113:7
    113|   if (m.p.q === 'bar') {} // Error
@@ -955,10 +938,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:114:7
 
-Cannot compare `m.p.q` [1] to number literal `1` [2], because string literal `foo` [3] is not a subtype of number
-literal `1` [2] and number literal `1` [2] is not a subtype of string literal `foo` [3]. In **rare** cases, these types
-may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
-both types to pass the flow check.  [invalid-compare]
+Cannot compare `Literal` [1] to `1` [2], because `Literal` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype
+of `Literal` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that
+happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    test.js:114:7
    114|   if (m.p.q === 1) {} // Error

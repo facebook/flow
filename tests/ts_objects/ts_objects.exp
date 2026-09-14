@@ -159,7 +159,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- function_to_object.ts:19:1
 
-Cannot cast `f` to object type because function type [1] is incompatible with indexed object type [2].
+Cannot cast `f` to object type because `() => void` [1] is incompatible with indexed `{[k: string]: number}` [2].
 [incompatible-function-indexer]
 
    function_to_object.ts:19:1
@@ -177,7 +177,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_usage.js:16:1
 
-Cannot cast `f` to object type because function type [1] is incompatible with indexed object type [2].
+Cannot cast `f` to object type because `() => void` [1] is incompatible with indexed `{[k: string]: number}` [2].
 [incompatible-function-indexer]
 
    function_usage.js:16:1

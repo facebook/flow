@@ -14,6 +14,7 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
+use flow_common::error_ref::ErrorReference;
 use flow_common::name_utils;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
@@ -28,6 +29,7 @@ use flow_typing_errors::error_message::EInexactMayOverwriteIndexerData;
 use flow_typing_errors::error_message::EInvalidObjectKitData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EUnableToSpreadData;
+use flow_typing_errors::error_message::EUnsupportedExactData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::intermediate_error_types;
@@ -82,6 +84,7 @@ use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_::str_module_t;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
@@ -519,15 +522,27 @@ fn spread2<'cx>(
             Box::new(ECannotSpreadIndexerOnRightData {
                 spread_reason: reason.dupe(),
                 object_reason: r2.dupe(),
-                key_reason: type_util::reason_of_t(&d2.key).dupe(),
+                key: ErrorReference::new(
+                    type_util::ref_loc_of_t(&d2.key).dupe(),
+                    type_util::reason_of_t(&d2.key).desc(false).clone(),
+                ),
+                key_desc: flow_js_utils::type_or_type_desc_for_error(&d2.key),
                 use_op: use_op.dupe(),
             }),
         ))),
         (Some(d1), _) if !(exact2 || *inline2) => Err(Box::new(
             ErrorMessage::EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
                 spread_reason: reason.dupe(),
-                key_reason: type_util::reason_of_t(&d1.key).dupe(),
-                value_reason: type_util::reason_of_t(&d1.value).dupe(),
+                key: ErrorReference::new(
+                    type_util::ref_loc_of_t(&d1.key).dupe(),
+                    type_util::reason_of_t(&d1.key).desc(false).clone(),
+                ),
+                key_desc: flow_js_utils::type_or_type_desc_for_error(&d1.key),
+                value: ErrorReference::new(
+                    type_util::ref_loc_of_t(&d1.value).dupe(),
+                    type_util::reason_of_t(&d1.value).desc(false).clone(),
+                ),
+                value_desc: flow_js_utils::type_or_type_desc_for_error(&d1.value),
                 object2_reason: r2.dupe(),
                 use_op: use_op.dupe(),
             })),
@@ -1539,7 +1554,11 @@ pub fn object_make_exact<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,
                     env,
-                    ErrorMessage::EUnsupportedExact(Box::new((reason.dupe(), r.dupe()))),
+                    ErrorMessage::EUnsupportedExact(Box::new(EUnsupportedExactData {
+                        reason: reason.dupe(),
+                        value_loc: r.loc().dupe(),
+                        value_desc: TypeOrTypeDescT::TypeDesc(Err(r.desc(false).clone())),
+                    })),
                 )?;
                 Ok(any_t::error(reason.dupe()))
             }
@@ -2637,10 +2656,11 @@ fn resolve_with_env<'cx, A>(
             add_output(
                 cx,
                 env,
-                ErrorMessage::EUnsupportedExact(Box::new((
-                    reason.dupe(),
-                    type_util::reason_of_t(&t).dupe(),
-                ))),
+                ErrorMessage::EUnsupportedExact(Box::new(EUnsupportedExactData {
+                    reason: reason.dupe(),
+                    value_loc: type_util::ref_loc_of_t(&t).dupe(),
+                    value_desc: flow_js_utils::type_or_type_desc_for_error(&t),
+                })),
             )?;
         }
         _ => {
@@ -2648,7 +2668,12 @@ fn resolve_with_env<'cx, A>(
                 cx,
                 env,
                 ErrorMessage::EInvalidObjectKit(Box::new(EInvalidObjectKitData {
-                    reason: type_util::reason_of_t(&t).dupe(),
+                    loc: type_util::reason_of_t(&t).loc().dupe(),
+                    value: ErrorReference::new(
+                        type_util::ref_loc_of_t(&t).dupe(),
+                        type_util::reason_of_t(&t).desc(false).clone(),
+                    ),
+                    value_desc: flow_js_utils::type_or_type_desc_for_error(&t),
                     use_op: use_op.clone(),
                 })),
             )?;

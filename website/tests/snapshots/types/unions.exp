@@ -148,7 +148,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `prettyPrint` because: [incompatible-type]
  - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
- - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+ - Or `["currency", 1]` [3] has 2 elements but `["currency", dollars: number, cents: number]` [4] has 3 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -175,7 +175,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `prettyPrint` because: [incompatible-type]
  - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
- - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
+ - Or `["currency", true]` [3] has 2 elements but `["currency", dollars: number, cents: number]` [4] has 3 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

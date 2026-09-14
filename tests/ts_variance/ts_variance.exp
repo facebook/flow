@@ -215,8 +215,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ tuple_polarity.ts:14:30
 
-Cannot assign `ro` to `must_error` because tuple element at index `0` is read-only in tuple type [1] but writable in
-tuple type [2]. [incompatible-variance]
+Cannot assign `ro` to `must_error` because tuple element at index `0` is read-only in `Readonly<[string]>` [1] but
+writable in `[string]` [2]. [incompatible-variance]
 
    tuple_polarity.ts:14:30
    14| const must_error: [string] = ro; // ERROR: readonly cannot flow into mutable

@@ -247,10 +247,18 @@ fn __unify_inner<'cx>(
                                     ErrorMessage::ETupleArityMismatch(Box::new(
                                         ETupleArityMismatchData {
                                             use_op: use_op.dupe(),
-                                            lower_reason: r1.dupe(),
+                                            lower:
+                                                flow_js_utils::type_reference_with_reason_for_error(
+                                                    t1,
+                                                    r1.dupe(),
+                                                ),
                                             lower_arity: *lower_arity,
                                             lower_inexact: *lower_inexact,
-                                            upper_reason: r2.dupe(),
+                                            upper:
+                                                flow_js_utils::type_reference_with_reason_for_error(
+                                                    t2,
+                                                    r2.dupe(),
+                                                ),
                                             upper_arity: *upper_arity,
                                             upper_inexact: *upper_inexact,
                                             unify: true,
@@ -285,9 +293,15 @@ fn __unify_inner<'cx>(
                                                         Box::new(
                                                             ETupleElementPolarityMismatchData {
                                                                 index: n,
-                                                                reason_lower: r1.dupe(),
+                                                                lower: flow_js_utils::type_reference_with_reason_for_error(
+                                                                    t1,
+                                                                    r1.dupe(),
+                                                                ),
                                                                 polarity_lower: p1,
-                                                                reason_upper: r2.dupe(),
+                                                                upper: flow_js_utils::type_reference_with_reason_for_error(
+                                                                    t2,
+                                                                    r2.dupe(),
+                                                                ),
                                                                 polarity_upper: p2,
                                                                 use_op: use_op.dupe(),
                                                             },

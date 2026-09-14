@@ -60,7 +60,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_spread.js:16:18
 
-Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer string [3] may
+Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer `string` [3] may
 overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
 the indexer. [cannot-spread-indexer]
 

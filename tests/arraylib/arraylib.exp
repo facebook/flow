@@ -92,7 +92,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:58:29
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    array_lib.js:58:29
      58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
@@ -109,7 +109,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:59:34
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    array_lib.js:59:34
      59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number

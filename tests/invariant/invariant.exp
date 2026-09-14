@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- index.js:4:1
 
-This use of `invariant` is unnecessary because boolean literal `true` [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
 
    index.js:4:1
    4| invariant(a); // constant-condition error
@@ -65,7 +65,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:11:5
 
-This use of `invariant` is unnecessary because boolean [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
 
    index.js:11:5
    11| c ? invariant(c) : invariant(c); // constant-condition error
@@ -113,7 +113,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:17:1
 
-This use of `invariant` is unnecessary because number literal `1` [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `1` [1] is always truthy. [unnecessary-invariant]
 
    index.js:17:1
    17| invariant(e);

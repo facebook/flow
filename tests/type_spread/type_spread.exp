@@ -15,9 +15,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_cases.js:12:10
 
-Flow cannot determine a type for object type [1]. `D` [2] cannot be spread because the indexer string [3] may overwrite
-properties with explicit keys in a way that Flow cannot track. Try spreading `D` [2] first or remove the indexer.
-[cannot-spread-indexer]
+Flow cannot determine a type for object type [1]. `D` [2] cannot be spread because the indexer `string` [3] may
+overwrite properties with explicit keys in a way that Flow cannot track. Try spreading `D` [2] first or remove the
+indexer. [cannot-spread-indexer]
 
    all_cases.js:12:10
    12| type E = {foo: number, ...D, ...}; // Error
@@ -127,7 +127,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- all_cases.js:267:12
 
 Flow cannot determine a type for object type [1]. `B23` [2] is inexact and may have a property key that conflicts with
-string [3] or a property value that conflicts with number [4]. Try making `B23` [2] exact. [cannot-spread-inexact]
+`string` [3] or a property value that conflicts with `number` [4]. Try making `B23` [2] exact. [cannot-spread-inexact]
 
    all_cases.js:267:12
    267| type C23 = {...A23, ...B23, ...}; // Error inexact B23 may have properties that conflict with A23's indexer
@@ -184,7 +184,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- all_cases.js:359:12
 
 Flow cannot determine a type for object type [1]. `B31` [2] is inexact and may have a property key that conflicts with
-string [3] or a property value that conflicts with number [4]. Try making `B31` [2] exact. [cannot-spread-inexact]
+`string` [3] or a property value that conflicts with `number` [4]. Try making `B31` [2] exact. [cannot-spread-inexact]
 
    all_cases.js:359:12
    359| type C31 = {...A31, ...B31, ...}; // Error B31 may have props that conflict with A31's indexer

@@ -247,7 +247,7 @@ No errors!
 Error -------------------------------------------------------------------------- -:8:5
 
 Cannot assign array literal to `fullName` because array literal [1] has an unknown number of elements, so is
-incompatible with tuple type [2]. [invalid-tuple-arity]
+incompatible with `[string, string | void, string]` [2]. [invalid-tuple-arity]
 
    -:8:5
    8| ] = ["Ada", ...middle, "Lovelace"]; // ERROR

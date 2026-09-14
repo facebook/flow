@@ -257,7 +257,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- date.js:28:17
 
-Cannot compare `Date` [1] to number [2]. [invalid-compare]
+Cannot compare `Date` [1] to `number` [2]. [invalid-compare]
 
    date.js:28:17
    28| var b:boolean = d > 0; // expect error
@@ -274,7 +274,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- date.js:29:17
 
-Cannot use operator `-` with operands `Date` [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `-` with operands `Date` [1] and `number` [2] [unsafe-arithmetic]
 
    date.js:29:17
    29| var n1:number = d - 12; // expect error
@@ -291,7 +291,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- date.js:30:17
 
-Cannot use operator `&` with operands `Date` [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `&` with operands `Date` [1] and `number` [2] [unsafe-arithmetic]
 
    date.js:30:17
    30| var n2:number = d & 255; // expect error
@@ -308,7 +308,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- date.js:31:17
 
-Cannot use operator `+` with operands `Date` [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands `Date` [1] and `number` [2] [unsafe-addition]
 
    date.js:31:17
    31| var n3:number = d + 12; // expect error

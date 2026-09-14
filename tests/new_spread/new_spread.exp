@@ -581,7 +581,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_dict.js:4:19
 
 Flow cannot determine a type for object type [1]. object type [2] is inexact and may have a property key that conflicts
-with string [3] or a property value that conflicts with `T` [4]. Try making object type [2] exact.
+with `string` [3] or a property value that conflicts with `T` [4]. Try making object type [2] exact.
 [cannot-spread-inexact]
 
    type_dict.js:4:19
@@ -842,7 +842,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_string.js:1:15
 
-string literal `foo` [1] is not an object. [not-an-object]
+`"foo"` [1] is not an object. [not-an-object]
 
    1| type O1 = {..."foo", ...}; // Error
                     ^^^^^ [1]
@@ -850,7 +850,7 @@ string literal `foo` [1] is not an object. [not-an-object]
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:19
 
-Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer number [3] may
+Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer `number` [3] may
 overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
 the indexer. [cannot-spread-indexer]
 

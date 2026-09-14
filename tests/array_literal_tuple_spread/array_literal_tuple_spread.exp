@@ -121,7 +121,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:52:3
 
 Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
-tuple type [2]. [invalid-tuple-arity]
+`[1, 2, 3]` [2]. [invalid-tuple-arity]
 
    test.js:52:3
    52|   nonTup as [1,2,3]; // error
@@ -139,7 +139,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:59:3
 
 Cannot cast `nonTup` to tuple type because array literal [1] has an unknown number of elements, so is incompatible with
-tuple type [2]. [invalid-tuple-arity]
+`[1, 2, 3]` [2]. [invalid-tuple-arity]
 
    test.js:59:3
    59|   nonTup as [1,2,3]; // error

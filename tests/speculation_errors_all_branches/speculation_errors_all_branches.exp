@@ -454,7 +454,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
- - Or tuple type [3] has 1 element but tuple type [5] has 2 elements.
+ - Or `[number]` [3] has 1 element but `[string, string]` [5] has 2 elements.
 
    intersection-function.js:56:1
    56| f([1] as [number]);
@@ -512,7 +512,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
- - Or tuple type [3] has 3 elements but tuple type [5] has 2 elements.
+ - Or `[number, number, number]` [3] has 3 elements but `[string, string]` [5] has 2 elements.
 
    intersection-function.js:58:1
    58| f([1, 2, 3] as [number, number, number]);
@@ -542,7 +542,7 @@ Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or in property `p`: `number` [3] is incompatible with `string` [4].
  - Or property `p` is missing in array type [5] but exists in interface type [6].
- - Or array type [5] has an unknown number of elements, so is incompatible with tuple type [7].
+ - Or `Array<number>` [5] has an unknown number of elements, so is incompatible with `[string, string]` [7].
  - Or `{p: number}` [8] is incompatible with `ReadonlyArray<string>` [9].
  - Or `{p: number}` [8] is incompatible with `[string, string]` [7].
 
@@ -1180,7 +1180,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
- - Or tuple type [3] has 1 element but tuple type [5] has 2 elements.
+ - Or `[number]` [3] has 1 element but `[string, string]` [5] has 2 elements.
 
    union.js:46:8
    46| [1] as [number] as F;
@@ -1232,7 +1232,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
- - Or tuple type [3] has 3 elements but tuple type [5] has 2 elements.
+ - Or `[number, number, number]` [3] has 3 elements but `[string, string]` [5] has 2 elements.
 
    union.js:48:14
    48| [1, 2, 3] as [number, number, number] as F;
@@ -1259,7 +1259,7 @@ Cannot cast `null` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or in property `p`: `number` [3] is incompatible with `string` [4].
  - Or property `p` is missing in array type [5] but exists in interface type [6].
- - Or array type [5] has an unknown number of elements, so is incompatible with tuple type [7].
+ - Or `Array<number>` [5] has an unknown number of elements, so is incompatible with `[string, string]` [7].
  - Or `{p: number}` [8] is incompatible with `ReadonlyArray<string>` [9].
  - Or `{p: number}` [8] is incompatible with `[string, string]` [7].
 

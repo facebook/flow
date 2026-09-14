@@ -338,7 +338,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- utilities.js:85:28
 
-Cannot assign array literal to `bp_bad` because array literal [1] has 1 element but tuple type [2] has 0 elements.
+Cannot assign array literal to `bp_bad` because array literal [1] has 1 element but `Readonly<[]>` [2] has 0 elements.
 [invalid-tuple-arity]
 
    utilities.js:85:28

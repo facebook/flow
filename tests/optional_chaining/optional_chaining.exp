@@ -1981,8 +1981,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:55:7
 
-Cannot compare `x?.a` [1] to null [2], because [2] is null and `x?.a` [1] does not contain null. Perhaps you meant to
-use `==`, which checks for both `undefined` and `null`? [invalid-compare]
+Cannot compare `void | any` [1] to `null` [2], because [2] is null and `void | any` [1] does not contain null. Perhaps
+you meant to use `==`, which checks for both `undefined` and `null`? [invalid-compare]
 
    refinements.js:55:7
    55|   if (x?.a === null) { // constant-condition error

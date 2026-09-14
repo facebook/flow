@@ -13,6 +13,7 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
+use flow_common::error_ref::ErrorReference;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -40,7 +41,6 @@ use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
 use flow_typing_errors::error_message::ETypeParamConstIncompatibilityData;
 use flow_typing_errors::error_message::EUnionOptimizationOnNonUnionData;
 use flow_typing_errors::error_message::EnumErrorKind;
-use flow_typing_errors::error_message::EnumIncompatibleData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InternalError;
@@ -1423,7 +1423,11 @@ impl PropsToIndexerContext<'_, '_> {
                             prop_name: name.dupe(),
                             reason_lower: ureason.dupe(),
                             reason_upper: lreason.dupe(),
-                            reason_indexer: type_util::reason_of_t(key).dupe(),
+                            indexer: ErrorReference::new(
+                                type_util::ref_loc_of_t(key).dupe(),
+                                type_util::reason_of_t(key).desc(false).clone(),
+                            ),
+                            indexer_desc: flow_js_utils::type_or_type_desc_for_error(key),
                             use_op: use_op.dupe(),
                         })),
                     )?;
@@ -5523,10 +5527,10 @@ pub fn rec_sub_t<'cx>(
                     cx,env,
                     ErrorMessage::ETupleArityMismatch(Box::new(ETupleArityMismatchData {
                         use_op: use_op.dupe(),
-                        lower_reason: r1.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, r1.dupe()),
                         lower_arity: *lower_arity,
                         lower_inexact: *lower_inexact,
-                        upper_reason: r2.dupe(),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, r2.dupe()),
                         upper_arity: *upper_arity,
                         upper_inexact: *upper_inexact,
                         unify: false,
@@ -5548,9 +5552,15 @@ pub fn rec_sub_t<'cx>(
                             ErrorMessage::ETupleElementPolarityMismatch(Box::new(
                                 ETupleElementPolarityMismatchData {
                                     index: n,
-                                    reason_lower: r1.dupe(),
+                                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                                        l,
+                                        r1.dupe(),
+                                    ),
                                     polarity_lower: p1,
-                                    reason_upper: r2.dupe(),
+                                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                                        u,
+                                        r2.dupe(),
+                                    ),
                                     polarity_upper: p2,
                                     use_op: use_op.dupe(),
                                 },
@@ -5679,7 +5689,13 @@ pub fn rec_sub_t<'cx>(
                 None => {
                     flow_js_utils::add_output_with_env(
                         cx,env,
-                        ErrorMessage::ENonLitArrayToTuple((r1.dupe(), r2.dupe()), use_op),
+                        ErrorMessage::ENonLitArrayToTuple(
+                            (
+                                flow_js_utils::type_reference_with_reason_for_error(l, r1.dupe()),
+                                flow_js_utils::type_reference_with_reason_for_error(u, r2.dupe()),
+                            ),
+                            use_op,
+                        ),
                     )?;
                 }
                 Some(tv) => {
@@ -5915,9 +5931,23 @@ pub fn rec_sub_t<'cx>(
                     )?;
                 }
                 ObjKind::Indexed(_) => {
+                    let (lower_t, upper_t) = flow_js_utils::ordered_types(cx, (l, u));
+                    let (lower_reason, upper_reason) = reasons;
                     flow_js_utils::add_output_with_env(
                         cx,env,
-                        ErrorMessage::EFunctionIncompatibleWithIndexer(reasons, use_op),
+                        ErrorMessage::EFunctionIncompatibleWithIndexer(
+                            (
+                                flow_js_utils::type_reference_with_reason_for_error(
+                                    lower_t,
+                                    lower_reason,
+                                ),
+                                flow_js_utils::type_reference_with_reason_for_error(
+                                    upper_t,
+                                    upper_reason,
+                                ),
+                            ),
+                            use_op,
+                        ),
                     )?;
                 }
                 _ => {}
@@ -6448,14 +6478,6 @@ pub fn rec_sub_t<'cx>(
                 }
                 && type_util::quick_subtype(None::<&fn(&Type)>, repr, u) =>
         {
-            let enum_kind = match ei.deref().deref() {
-                EnumInfoInner::ConcreteEnum(_) => {
-                    flow_typing_errors::error_message::EnumKind::ConcreteEnumKind
-                }
-                EnumInfoInner::AbstractEnum { .. } => {
-                    flow_typing_errors::error_message::EnumKind::AbstractEnumKind
-                }
-            };
             let representation_type = match repr.deref() {
                 TypeInner::DefT(_, d)
                     if matches!(
@@ -6496,17 +6518,51 @@ pub fn rec_sub_t<'cx>(
                 }
                 _ => None,
             };
+            let in_type_arg_position = {
+                fn loop_(use_op: &UseOp) -> bool {
+                    match use_op {
+                        VirtualUseOp::Op(_) => false,
+                        VirtualUseOp::Frame(frame, _)
+                            if matches!(
+                                frame.as_ref(),
+                                VirtualFrameUseOp::TypeArgCompatibility(_)
+                                    | VirtualFrameUseOp::TypeParamBound { .. }
+                            ) =>
+                        {
+                            true
+                        }
+                        VirtualUseOp::Frame(_, parent) => loop_(parent),
+                    }
+                }
+                loop_(&use_op)
+            };
+            let explanation = if in_type_arg_position {
+                None
+            } else {
+                match ei.deref().deref() {
+                    EnumInfoInner::ConcreteEnum(_) => representation_type.map(|representation_type| {
+                        intermediate_error_types::Explanation::ExplanationConcreteEnumCasting {
+                            representation_type,
+                        }
+                    }),
+                    EnumInfoInner::AbstractEnum { .. } => Some(
+                        intermediate_error_types::Explanation::ExplanationAbstractEnumCasting,
+                    ),
+                }
+            };
+            let mut error_data = flow_js_utils::incompatible_types_error_data(
+                l,
+                u,
+                use_op,
+                explanation,
+                vec![],
+            );
+            error_data.lower_desc = type_or_type_desc::TypeOrTypeDescT::TypeDesc(Err(
+                enum_reason.desc(false).clone(),
+            ));
             flow_js_utils::add_output_with_env(
                 cx,env,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(Box::new(
-                    EnumIncompatibleData {
-                        reason_lower: enum_reason.dupe(),
-                        reason_upper: type_util::reason_of_t(u).clone(),
-                        use_op,
-                        enum_kind,
-                        representation_type,
-                    },
-                ))),
+                ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible(Box::new(error_data))),
             )
         }
 
@@ -6637,7 +6693,8 @@ pub fn rec_sub_t<'cx>(
                 ErrorMessage::EUnionOptimizationOnNonUnion(Box::new(
                     EUnionOptimizationOnNonUnionData {
                         loc: reason.loc().dupe(),
-                        arg: type_util::reason_of_t(u).dupe(),
+                        arg_loc: type_util::ref_loc_of_t(u).dupe(),
+                        arg_desc: flow_js_utils::type_or_type_desc_for_error(u),
                     },
                 )),
             )

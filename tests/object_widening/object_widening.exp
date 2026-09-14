@@ -19,7 +19,7 @@ References:
 Error -------------------------------------------------------------------------------------------- exact_indexer.js:4:11
 
 Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
-spread because the indexer string [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
+spread because the indexer `string` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
 spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
 
    exact_indexer.js:4:11

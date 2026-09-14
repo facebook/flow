@@ -86,7 +86,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- forof.js:59:15
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    forof.js:59:15
    59|   const x1_ = x1 * 3; // error

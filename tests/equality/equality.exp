@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:5:7
 
-Cannot compare number literal `3` [1] to string literal `A` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `3` [1] to `"A"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:5:7
    5|   if (o1 == o2) { // error
@@ -18,8 +18,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:7
 
-Cannot compare number literal `3` [1] to string literal `B` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `3` [1] to `"B"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:5:7
    5|   if (o1 == o2) { // error
@@ -36,8 +36,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:7
 
-Cannot compare number literal `4` [1] to string literal `A` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `4` [1] to `"A"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:5:7
    5|   if (o1 == o2) { // error
@@ -54,8 +54,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:7
 
-Cannot compare number literal `4` [1] to string literal `B` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `4` [1] to `"B"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:5:7
    5|   if (o1 == o2) { // error
@@ -72,8 +72,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:7
 
-Cannot compare number literal `1` [1] to string literal `B` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `"A"` [1] to `3` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:14:7
    14|   if (o1 == o2) { // error
@@ -90,8 +90,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:7
 
-Cannot compare number literal `1` [1] to string literal `C` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `1` [1] to `"B"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:14:7
    14|   if (o1 == o2) { // error
@@ -108,8 +108,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:7
 
-Cannot compare number literal `2` [1] to string literal `B` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `1` [1] to `"C"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:14:7
    14|   if (o1 == o2) { // error
@@ -126,8 +126,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:7
 
-Cannot compare number literal `2` [1] to string literal `C` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `2` [1] to `"B"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:14:7
    14|   if (o1 == o2) { // error
@@ -144,8 +144,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:7
 
-Cannot compare string literal `A` [1] to number literal `3` [2] with a non-strict equality check. Make sure the
-arguments are valid, or try using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `2` [1] to `"C"` [2] with a non-strict equality check. Make sure the arguments are valid, or try using
+strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:14:7
    14|   if (o1 == o2) { // error
@@ -162,7 +162,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
-Cannot compare number [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try
+Cannot compare `number` [1] to `string` [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:25:1
@@ -180,7 +180,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
-Cannot compare string [1] to number [2] with a non-strict equality check. Make sure the arguments are valid, or try
+Cannot compare `string` [1] to `number` [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:25:1
@@ -198,7 +198,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:1
 
-Cannot compare number [1] to string [2] with a non-strict equality check. Make sure the arguments are valid, or try
+Cannot compare `number` [1] to `string` [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:29:1
@@ -216,7 +216,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:29:1
 
-Cannot compare string [1] to number [2] with a non-strict equality check. Make sure the arguments are valid, or try
+Cannot compare `string` [1] to `number` [2] with a non-strict equality check. Make sure the arguments are valid, or try
 using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    test.js:29:1

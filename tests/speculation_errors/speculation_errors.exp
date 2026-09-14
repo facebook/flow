@@ -3549,7 +3549,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- nullish.js:14:1
 
 Cannot cast array literal to union type because: [incompatible-type]
- - Either empty array literal [1] has 0 elements but tuple type [2] has 1 element.
+ - Either `Readonly<[]>` [1] has 0 elements but `[empty]` [2] has 1 element.
  - Or `Array<empty>` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

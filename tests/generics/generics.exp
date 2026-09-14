@@ -1,9 +1,8 @@
 Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:15:9
 
-Cannot compare `a` [1] to string literal `b` [2], because `A` [3] is not a subtype of string literal `b` [2] and string
-literal `b` [2] is not a subtype of `A` [3]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `A` [1] to `"b"` [2], because `A` [3] is not a subtype of `"b"` [2] and `"b"` [2] is not a subtype of
+`A` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
+you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    detect_literal_subtypes.js:15:9
    15|     if (a === 'b'){ } // error 'b' not compatible with 'a'
@@ -23,10 +22,9 @@ References:
 
 Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:19:9
 
-Cannot compare `b` [1] to string literal `b` [2], because `B` [3] is not a subtype of string literal `b` [2] and string
-literal `b` [2] is not a subtype of `B` [3]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `B` [1] to `"b"` [2], because `B` [3] is not a subtype of `"b"` [2] and `"b"` [2] is not a subtype of
+`B` [3]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens,
+you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    detect_literal_subtypes.js:19:9
    19|     if (b === 'b'){ } // error 'b' not compatible with 'a'
@@ -46,9 +44,9 @@ References:
 
 Error ---------------------------------------------------------------------------------- detect_literal_subtypes.js:37:7
 
-Cannot compare `x` [1] to string literal `r` [2], because `x` [1] is not a subtype of string literal `r` [2] and string
-literal `r` [2] is not a subtype of `x` [1]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+Cannot compare `keyof X` [1] to `"r"` [2], because `"p" | "q"` [1] is not a subtype of `"r"` [2] and `"r"` [2] is not a
+subtype of `"p" | "q"` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
    detect_literal_subtypes.js:37:7

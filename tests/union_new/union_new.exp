@@ -171,7 +171,7 @@ Missing an annotation on return because generic functions must be fully annotate
 
 Error -------------------------------------------------------------------------------------------------- test20.js:14:26
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    test20.js:14:26
      14| [""].reduce((acc,str) => acc * str.length);

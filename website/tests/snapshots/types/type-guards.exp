@@ -38,7 +38,7 @@ No errors!
 Error -------------------------------------------------------------------------- -:3:10
 
 Cannot return `(n != null) && (n > 0)` because the negation of the predicate encoded in this expression needs to
-completely refine away the guard type number [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
+completely refine away the guard type `number` [1]. Consider using a one-sided type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    -:3:10
@@ -426,8 +426,8 @@ References:
 Error -------------------------------------------------------------------------- -:3:11
 
 Cannot return `((typeof x) === "number") || ((typeof x) === "boolean")` because the negation of the predicate encoded in
-this expression needs to completely refine away the guard type union type [1]. Consider using a one-sided type-guard
-(`implies x is T`). See 2. in
+this expression needs to completely refine away the guard type `number | string` [1]. Consider using a one-sided
+type-guard (`implies x is T`). See 2. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
 
    -:3:11
@@ -449,8 +449,8 @@ No errors!
 Error -------------------------------------------------------------------------- -:3:12
 
 Cannot return `((typeof x) === 'number') && (x > 0)` because the negation of the predicate encoded in this expression
-needs to completely refine away the guard type number [1]. Consider using a one-sided type-guard (`implies x is T`). See
-2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
+needs to completely refine away the guard type `number` [1]. Consider using a one-sided type-guard (`implies x is T`).
+See 2. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 [incompatible-type-guard]
 
    -:3:12

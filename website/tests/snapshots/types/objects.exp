@@ -317,7 +317,7 @@ Found 2 errors
 === block 24 ===
 Error ------------------------------------------------------------------------------ -:6:13
 
-Flow cannot determine a type for object type [1]. `Dict` [2] cannot be spread because the indexer string [3] may
+Flow cannot determine a type for object type [1]. `Dict` [2] cannot be spread because the indexer `string` [3] may
 overwrite properties with explicit keys in a way that Flow cannot track. Try spreading `Dict` [2] first or remove the
 indexer. [cannot-spread-indexer]
 

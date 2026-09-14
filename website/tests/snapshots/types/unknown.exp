@@ -16,7 +16,7 @@ No errors!
 === block 6 ===
 Error ------------------------------------------------------------------------------ -:3:10
 
-Cannot use operator `+` with operands string [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `unknown` [2] [unsafe-addition]
 
    -:3:10
    3|   return "" + value; // Error!

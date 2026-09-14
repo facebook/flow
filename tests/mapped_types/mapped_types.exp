@@ -1526,7 +1526,7 @@ Template literal type is not enabled. [unsupported-syntax]
 Error ----------------------------------------------------------------------------------------------- issue-9448.js:56:1
 
 Cannot get `form.formState.errors.name` because: [incompatible-use]
- - Either cannot call `useForm` because boolean [1] is not an object.
+ - Either cannot call `useForm` because `boolean` [1] is not an object.
  - Or property `name` is missing in object type [2].
 
    issue-9448.js:56:1

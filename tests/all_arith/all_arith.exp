@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ all_arith.js:24:2
 
-Cannot use operator `+` with operands number [1] and bigint [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `bigint` [2] [unsafe-addition]
 
    all_arith.js:24:2
    24| (aNumber + aBigint); // error
@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:25:2
 
-Cannot use operator `+` with operands number [1] and `Date` [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `Date` [2] [unsafe-addition]
 
    all_arith.js:25:2
    25| (aNumber + aDate); // error
@@ -34,7 +34,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:26:2
 
-Cannot use operator `+` with operands number [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `boolean` [2] [unsafe-addition]
 
    all_arith.js:26:2
    26| (aNumber + aBoolean); // error
@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:27:2
 
-Cannot use operator `+` with operands number [1] and `T` [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `T` [2] [unsafe-addition]
 
    all_arith.js:27:2
    27| (aNumber + aT); // error
@@ -68,7 +68,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:28:2
 
-Cannot use operator `+` with operands number [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:28:2
    28| (aNumber + null); // error
@@ -85,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:29:2
 
-Cannot use operator `+` with operands number [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:29:2
    29| (aNumber + anArray); // error
@@ -102,7 +102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:30:2
 
-Cannot use operator `+` with operands number [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:30:2
    30| (aNumber + anObject); // error
@@ -119,7 +119,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:31:2
 
-Cannot use operator `+` with operands number [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:31:2
    31| (aNumber + aMixed); // error
@@ -136,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:37:2
 
-Cannot use operator `*` with operands number [1] and string [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `string` [2] [unsafe-arithmetic]
 
    all_arith.js:37:2
    37| (aNumber * aString); // error
@@ -153,7 +153,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:38:2
 
-Cannot use operator `*` with operands number [1] and bigint [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `bigint` [2] [unsafe-arithmetic]
 
    all_arith.js:38:2
    38| (aNumber * aBigint); // error
@@ -170,7 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:39:2
 
-Cannot use operator `*` with operands number [1] and `Date` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `Date` [2] [unsafe-arithmetic]
 
    all_arith.js:39:2
    39| (aNumber * aDate); // error
@@ -187,7 +187,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:40:2
 
-Cannot use operator `*` with operands number [1] and boolean [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `boolean` [2] [unsafe-arithmetic]
 
    all_arith.js:40:2
    40| (aNumber * aBoolean); // error
@@ -204,7 +204,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:41:2
 
-Cannot use operator `*` with operands number [1] and `T` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `T` [2] [unsafe-arithmetic]
 
    all_arith.js:41:2
    41| (aNumber * aT); // error
@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:42:2
 
-Cannot use operator `*` with operands number [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:42:2
    42| (aNumber * null); // error
@@ -238,7 +238,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:43:2
 
-Cannot use operator `*` with operands number [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:43:2
    43| (aNumber * anArray); // error
@@ -255,7 +255,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:44:2
 
-Cannot use operator `*` with operands number [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:44:2
    44| (aNumber * anObject); // error
@@ -272,7 +272,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:45:2
 
-Cannot use operator `*` with operands number [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:45:2
    45| (aNumber * aMixed); // error
@@ -289,7 +289,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:51:2
 
-Cannot use operator `+` with operands string [1] and bigint [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `bigint` [2] [unsafe-addition]
 
    all_arith.js:51:2
    51| (aString + aBigint); // error
@@ -306,7 +306,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:52:2
 
-Cannot use operator `+` with operands string [1] and `Date` [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `Date` [2] [unsafe-addition]
 
    all_arith.js:52:2
    52| (aString + aDate); // error
@@ -323,7 +323,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:53:2
 
-Cannot use operator `+` with operands string [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `boolean` [2] [unsafe-addition]
 
    all_arith.js:53:2
    53| (aString + aBoolean); // error
@@ -340,7 +340,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:54:2
 
-Cannot use operator `+` with operands string [1] and `T` [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `T` [2] [unsafe-addition]
 
    all_arith.js:54:2
    54| (aString + aT); // error
@@ -357,7 +357,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:55:2
 
-Cannot use operator `+` with operands string [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:55:2
    55| (aString + null); // error
@@ -374,7 +374,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:56:2
 
-Cannot use operator `+` with operands string [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:56:2
    56| (aString + anArray); // error
@@ -391,7 +391,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:57:2
 
-Cannot use operator `+` with operands string [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:57:2
    57| (aString + anObject); // error
@@ -408,7 +408,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:58:2
 
-Cannot use operator `+` with operands string [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:58:2
    58| (aString + aMixed); // error
@@ -425,7 +425,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:63:2
 
-Cannot use operator `*` with operands string [1] and string [1] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `string` [1] [unsafe-arithmetic]
 
    all_arith.js:63:2
    63| (aString * aString); // error
@@ -439,7 +439,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:64:2
 
-Cannot use operator `*` with operands string [1] and bigint [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `bigint` [2] [unsafe-arithmetic]
 
    all_arith.js:64:2
    64| (aString * aBigint); // error
@@ -456,7 +456,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:65:2
 
-Cannot use operator `*` with operands string [1] and `Date` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `Date` [2] [unsafe-arithmetic]
 
    all_arith.js:65:2
    65| (aString * aDate); // error
@@ -473,7 +473,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:66:2
 
-Cannot use operator `*` with operands string [1] and boolean [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `boolean` [2] [unsafe-arithmetic]
 
    all_arith.js:66:2
    66| (aString * aBoolean); // error
@@ -490,7 +490,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:67:2
 
-Cannot use operator `*` with operands string [1] and `T` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `T` [2] [unsafe-arithmetic]
 
    all_arith.js:67:2
    67| (aString * aT); // error
@@ -507,7 +507,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:68:2
 
-Cannot use operator `*` with operands string [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:68:2
    68| (aString * null); // error
@@ -524,7 +524,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:69:2
 
-Cannot use operator `*` with operands string [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:69:2
    69| (aString * anArray); // error
@@ -541,7 +541,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:70:2
 
-Cannot use operator `*` with operands string [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:70:2
    70| (aString * anObject); // error
@@ -558,7 +558,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:71:2
 
-Cannot use operator `*` with operands string [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:71:2
    71| (aString * aMixed); // error
@@ -575,7 +575,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:77:2
 
-Cannot use operator `+` with operands bigint [1] and `Date` [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `Date` [2] [unsafe-addition]
 
    all_arith.js:77:2
    77| (aBigint + aDate); // error
@@ -592,7 +592,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:78:2
 
-Cannot use operator `+` with operands bigint [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `boolean` [2] [unsafe-addition]
 
    all_arith.js:78:2
    78| (aBigint + aBoolean); // error
@@ -609,7 +609,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:79:2
 
-Cannot use operator `+` with operands bigint [1] and `T` [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `T` [2] [unsafe-addition]
 
    all_arith.js:79:2
    79| (aBigint + aT); // error
@@ -626,7 +626,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:80:2
 
-Cannot use operator `+` with operands bigint [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:80:2
    80| (aBigint + null); // error
@@ -643,7 +643,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:81:2
 
-Cannot use operator `+` with operands bigint [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:81:2
    81| (aBigint + anArray); // error
@@ -660,7 +660,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:82:2
 
-Cannot use operator `+` with operands bigint [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:82:2
    82| (aBigint + anObject); // error
@@ -677,7 +677,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:83:2
 
-Cannot use operator `+` with operands bigint [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:83:2
    83| (aBigint + aMixed); // error
@@ -694,7 +694,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:89:2
 
-Cannot use operator `*` with operands bigint [1] and `Date` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `Date` [2] [unsafe-arithmetic]
 
    all_arith.js:89:2
    89| (aBigint * aDate); // error
@@ -711,7 +711,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:90:2
 
-Cannot use operator `*` with operands bigint [1] and boolean [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `boolean` [2] [unsafe-arithmetic]
 
    all_arith.js:90:2
    90| (aBigint * aBoolean); // error
@@ -728,7 +728,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:91:2
 
-Cannot use operator `*` with operands bigint [1] and `T` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `T` [2] [unsafe-arithmetic]
 
    all_arith.js:91:2
    91| (aBigint * aT); // error
@@ -745,7 +745,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:92:2
 
-Cannot use operator `*` with operands bigint [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:92:2
    92| (aBigint * null); // error
@@ -762,7 +762,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:93:2
 
-Cannot use operator `*` with operands bigint [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:93:2
    93| (aBigint * anArray); // error
@@ -779,7 +779,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:94:2
 
-Cannot use operator `*` with operands bigint [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:94:2
    94| (aBigint * anObject); // error
@@ -796,7 +796,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:95:2
 
-Cannot use operator `*` with operands bigint [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `bigint` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:95:2
    95| (aBigint * aMixed); // error
@@ -827,7 +827,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:101:2
 
-Cannot use operator `+` with operands `Date` [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `Date` [1] and `boolean` [2] [unsafe-addition]
 
    all_arith.js:101:2
    101| (aDate + aBoolean); // error
@@ -861,7 +861,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:103:2
 
-Cannot use operator `+` with operands `Date` [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `Date` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:103:2
    103| (aDate + null); // error
@@ -878,7 +878,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:104:2
 
-Cannot use operator `+` with operands `Date` [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `Date` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:104:2
    104| (aDate + anArray); // error
@@ -895,7 +895,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:105:2
 
-Cannot use operator `+` with operands `Date` [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `Date` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:105:2
    105| (aDate + anObject); // error
@@ -943,7 +943,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:112:2
 
-Cannot use operator `*` with operands `Date` [1] and boolean [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Date` [1] and `boolean` [2] [unsafe-arithmetic]
 
    all_arith.js:112:2
    112| (aDate * aBoolean); // error
@@ -977,7 +977,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:114:2
 
-Cannot use operator `*` with operands `Date` [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Date` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:114:2
    114| (aDate * null); // error
@@ -994,7 +994,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:115:2
 
-Cannot use operator `*` with operands `Date` [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Date` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:115:2
    115| (aDate * anArray); // error
@@ -1011,7 +1011,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:116:2
 
-Cannot use operator `*` with operands `Date` [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Date` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:116:2
    116| (aDate * anObject); // error
@@ -1045,7 +1045,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:122:2
 
-Cannot use operator `+` with operands boolean [1] and boolean [1] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `boolean` [1] [unsafe-addition]
 
    all_arith.js:122:2
    122| (aBoolean + aBoolean); // error
@@ -1059,7 +1059,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:123:2
 
-Cannot use operator `+` with operands boolean [1] and `T` [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `T` [2] [unsafe-addition]
 
    all_arith.js:123:2
    123| (aBoolean + aT); // error
@@ -1076,7 +1076,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:124:2
 
-Cannot use operator `+` with operands boolean [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:124:2
    124| (aBoolean + null); // error
@@ -1093,7 +1093,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:125:2
 
-Cannot use operator `+` with operands boolean [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:125:2
    125| (aBoolean + anArray); // error
@@ -1110,7 +1110,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:126:2
 
-Cannot use operator `+` with operands boolean [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:126:2
    126| (aBoolean + anObject); // error
@@ -1127,7 +1127,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:127:2
 
-Cannot use operator `+` with operands boolean [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:127:2
    127| (aBoolean + aMixed); // error
@@ -1144,7 +1144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:132:2
 
-Cannot use operator `*` with operands boolean [1] and boolean [1] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `boolean` [1] [unsafe-arithmetic]
 
    all_arith.js:132:2
    132| (aBoolean * aBoolean); // error
@@ -1158,7 +1158,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:133:2
 
-Cannot use operator `*` with operands boolean [1] and `T` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `T` [2] [unsafe-arithmetic]
 
    all_arith.js:133:2
    133| (aBoolean * aT); // error
@@ -1175,7 +1175,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:134:2
 
-Cannot use operator `*` with operands boolean [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:134:2
    134| (aBoolean * null); // error
@@ -1192,7 +1192,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:135:2
 
-Cannot use operator `*` with operands boolean [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:135:2
    135| (aBoolean * anArray); // error
@@ -1209,7 +1209,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:136:2
 
-Cannot use operator `*` with operands boolean [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:136:2
    136| (aBoolean * anObject); // error
@@ -1226,7 +1226,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:137:2
 
-Cannot use operator `*` with operands boolean [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `boolean` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:137:2
    137| (aBoolean * aMixed); // error
@@ -1257,7 +1257,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:143:2
 
-Cannot use operator `+` with operands `T` [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `T` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:143:2
    143| (aT + null); // error
@@ -1274,7 +1274,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:144:2
 
-Cannot use operator `+` with operands `T` [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `T` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:144:2
    144| (aT + anArray); // error
@@ -1291,7 +1291,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:145:2
 
-Cannot use operator `+` with operands `T` [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `T` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:145:2
    145| (aT + anObject); // error
@@ -1339,7 +1339,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:152:2
 
-Cannot use operator `*` with operands `T` [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `T` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:152:2
    152| (aT * null); // error
@@ -1356,7 +1356,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:153:2
 
-Cannot use operator `*` with operands `T` [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `T` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:153:2
    153| (aT * anArray); // error
@@ -1373,7 +1373,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:154:2
 
-Cannot use operator `*` with operands `T` [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `T` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:154:2
    154| (aT * anObject); // error
@@ -1407,7 +1407,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:160:2
 
-Cannot use operator `+` with operands null [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `null` [2] [unsafe-addition]
 
    all_arith.js:160:2
    160| (null + null); // error
@@ -1424,7 +1424,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:161:2
 
-Cannot use operator `+` with operands null [1] and array type [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `Array<empty>` [2] [unsafe-addition]
 
    all_arith.js:161:2
    161| (null + anArray); // error
@@ -1441,7 +1441,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:162:2
 
-Cannot use operator `+` with operands null [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:162:2
    162| (null + anObject); // error
@@ -1458,7 +1458,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:163:2
 
-Cannot use operator `+` with operands null [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:163:2
    163| (null + aMixed); // error
@@ -1475,7 +1475,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:168:2
 
-Cannot use operator `*` with operands null [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `null` [1] and `null` [2] [unsafe-arithmetic]
 
    all_arith.js:168:2
    168| (null * null); // error
@@ -1492,7 +1492,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:169:2
 
-Cannot use operator `*` with operands null [1] and array type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `null` [1] and `Array<empty>` [2] [unsafe-arithmetic]
 
    all_arith.js:169:2
    169| (null * anArray); // error
@@ -1509,7 +1509,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:170:2
 
-Cannot use operator `*` with operands null [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `null` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:170:2
    170| (null * anObject); // error
@@ -1526,7 +1526,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:171:2
 
-Cannot use operator `*` with operands null [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `null` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:171:2
    171| (null * aMixed); // error
@@ -1543,7 +1543,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:176:2
 
-Cannot use operator `+` with operands array type [1] and array type [1] [unsafe-addition]
+Cannot use operator `+` with operands `Array<empty>` [1] and `Array<empty>` [1] [unsafe-addition]
 
    all_arith.js:176:2
    176| (anArray + anArray); // error
@@ -1557,7 +1557,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:177:2
 
-Cannot use operator `+` with operands array type [1] and object type [2] [unsafe-addition]
+Cannot use operator `+` with operands `Array<empty>` [1] and `{}` [2] [unsafe-addition]
 
    all_arith.js:177:2
    177| (anArray + anObject); // error
@@ -1574,7 +1574,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:178:2
 
-Cannot use operator `+` with operands array type [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `Array<empty>` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:178:2
    178| (anArray + aMixed); // error
@@ -1591,7 +1591,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:183:2
 
-Cannot use operator `*` with operands array type [1] and array type [1] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Array<empty>` [1] and `Array<empty>` [1] [unsafe-arithmetic]
 
    all_arith.js:183:2
    183| (anArray * anArray); // error
@@ -1605,7 +1605,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:184:2
 
-Cannot use operator `*` with operands array type [1] and object type [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Array<empty>` [1] and `{}` [2] [unsafe-arithmetic]
 
    all_arith.js:184:2
    184| (anArray * anObject); // error
@@ -1622,7 +1622,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:185:2
 
-Cannot use operator `*` with operands array type [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Array<empty>` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:185:2
    185| (anArray * aMixed); // error
@@ -1639,7 +1639,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:190:2
 
-Cannot use operator `+` with operands object type [1] and object type [1] [unsafe-addition]
+Cannot use operator `+` with operands `{}` [1] and `{}` [1] [unsafe-addition]
 
    all_arith.js:190:2
    190| (anObject + anObject); // error
@@ -1653,7 +1653,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:191:2
 
-Cannot use operator `+` with operands object type [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `{}` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:191:2
    191| (anObject + aMixed); // error
@@ -1670,7 +1670,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:196:2
 
-Cannot use operator `*` with operands object type [1] and object type [1] [unsafe-arithmetic]
+Cannot use operator `*` with operands `{}` [1] and `{}` [1] [unsafe-arithmetic]
 
    all_arith.js:196:2
    196| (anObject * anObject); // error
@@ -1684,7 +1684,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:197:2
 
-Cannot use operator `*` with operands object type [1] and `unknown` [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `{}` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:197:2
    197| (anObject * aMixed); // error

@@ -207,7 +207,7 @@ Found 3 errors
 === block 18 ===
 Error ---------------------------------------------------------------------- -:6:1
 
-This use of `invariant` is unnecessary because array type [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `Array<string>` [1] is always truthy. [unnecessary-invariant]
 
    -:6:1
    6| invariant(x); // Error

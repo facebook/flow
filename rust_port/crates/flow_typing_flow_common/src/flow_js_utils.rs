@@ -24,6 +24,7 @@ use flow_common::reason::VirtualReasonDesc;
 use flow_common_utils::utils_js;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::loc_sig::LocSig;
 use flow_parser_utils::signature_utils;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EArithmeticOperandData;
@@ -40,6 +41,8 @@ use flow_typing_errors::error_message::ETupleNonIntegerIndexData;
 use flow_typing_errors::error_message::ETupleOutOfBoundsData;
 use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::ErrorTypeReferenceData;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::intermediate_error_types::Explanation;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -82,6 +85,7 @@ use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
+use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
 use vec1::Vec1;
 
@@ -1629,6 +1633,33 @@ pub fn type_or_type_desc_for_error(t: &Type) -> TypeOrTypeDescT<ALoc> {
     }
 }
 
+/// Retains a type for error normalization alongside its stable rendered reference.
+pub fn type_reference_for_error(t: &Type) -> ErrorTypeReferenceData<ALoc> {
+    use flow_typing_type::type_util;
+
+    ErrorTypeReferenceData {
+        reference: ErrorReference::new(
+            type_util::ref_loc_of_t(t).dupe(),
+            type_util::reason_of_t(t).desc(false).clone(),
+        ),
+        type_desc: type_or_type_desc_for_error(t),
+    }
+}
+
+/// Retains a type for error normalization while preserving a selected reason as error identity.
+pub fn type_reference_with_reason_for_error(
+    t: &Type,
+    reason: Reason,
+) -> ErrorTypeReferenceWithReasonData<ALoc> {
+    use flow_typing_type::type_util;
+
+    ErrorTypeReferenceWithReasonData {
+        reason,
+        reference_loc: type_util::ref_loc_of_t(t).dupe(),
+        type_desc: type_or_type_desc_for_error(t),
+    }
+}
+
 /// Builds an `instanceof` RHS error while preserving descriptions that carry
 /// provenance not expressible by the normalized type.
 pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
@@ -1684,6 +1715,29 @@ pub fn invalid_prototype_error(loc: ALoc, t: &Type) -> ErrorMessage<ALoc> {
         loc,
         prototype_loc: type_util::ref_loc_of_t(t).dupe(),
         prototype_desc: type_or_type_desc_for_error(t),
+    }))
+}
+
+/// Builds an invalid React create-element error while preserving the React
+/// identifier referenced by the diagnostic's remediation text.
+pub fn invalid_react_create_element_error(
+    create_element_loc: ALoc,
+    react_t: &Type,
+) -> ErrorMessage<ALoc> {
+    use flow_common::reason::VirtualReasonDesc;
+    use flow_typing_errors::error_message::EInvalidReactCreateElementData;
+    use flow_typing_type::type_util;
+
+    let reason = type_util::reason_of_t(react_t);
+    let react_desc = if matches!(reason.desc(true), VirtualReasonDesc::RIdentifier(_)) {
+        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
+    } else {
+        type_or_type_desc_for_error(react_t)
+    };
+    ErrorMessage::EInvalidReactCreateElement(Box::new(EInvalidReactCreateElementData {
+        create_element_loc,
+        react_loc: type_util::ref_loc_of_t(react_t).dupe(),
+        react_desc,
     }))
 }
 
@@ -1744,9 +1798,26 @@ pub fn incompatible_types_error_with_branches(
     explanation: Option<Explanation<ALoc>>,
     branches: Vec<ErrorMessage<ALoc>>,
 ) -> ErrorMessage<ALoc> {
+    ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(incompatible_types_error_data(
+        lower,
+        upper,
+        use_op,
+        explanation,
+        branches,
+    )))
+}
+
+/// Builds the shared payload used by typed incompatibility error variants.
+pub fn incompatible_types_error_data(
+    lower: &Type,
+    upper: &Type,
+    use_op: UseOp,
+    explanation: Option<Explanation<ALoc>>,
+    branches: Vec<ErrorMessage<ALoc>>,
+) -> EIncompatibleTypesWithUseOpData<ALoc> {
     use flow_typing_type::type_util;
 
-    ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(EIncompatibleTypesWithUseOpData {
+    EIncompatibleTypesWithUseOpData {
         lower_loc: type_util::loc_of_t(lower).dupe(),
         lower_def_loc: type_util::ref_loc_of_t(lower).dupe(),
         upper_loc: type_util::loc_of_t(upper).dupe(),
@@ -1757,7 +1828,7 @@ pub fn incompatible_types_error_with_branches(
         explanation,
         example: None,
         branches,
-    }))
+    }
 }
 
 // [src_cx] is the context in which the error is created, and [dst_cx] the context
@@ -1808,6 +1879,24 @@ pub fn add_output_generic<'src, 'dst>(
 /// global libdefs.
 pub fn ordered_reasons(cx: &Context<'_>, reasons: (Reason, Reason)) -> (Reason, Reason) {
     flow_typing_errors::flow_error::ordered_reasons(reasons, |file| cx.is_global_libdef(file))
+}
+
+/// Orders types using the same blamability rule as [`ordered_reasons`].
+pub fn ordered_types<'a>(cx: &Context<'_>, types: (&'a Type, &'a Type)) -> (&'a Type, &'a Type) {
+    let is_blamable = |t: &Type| {
+        let reason = reason_of_t(t);
+        *reason.loc() != ALoc::none()
+            && !reason
+                .loc()
+                .source()
+                .is_some_and(|file| cx.is_global_libdef(file))
+    };
+    let (lower, upper) = types;
+    if is_blamable(upper) && !is_blamable(lower) {
+        (upper, lower)
+    } else {
+        (lower, upper)
+    }
 }
 
 pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
@@ -8332,19 +8421,25 @@ fn arithmetic_operand_error(t: &Type) -> ErrorMessage<ALoc> {
     use flow_typing_type::type_util;
 
     let reason = type_util::reason_of_t(t);
-    let operand_desc = if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
-        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
-    } else {
-        type_or_type_desc_for_error(t)
-    };
     ErrorMessage::EArithmeticOperand(Box::new(EArithmeticOperandData {
         loc: reason.loc().dupe(),
         operand: ErrorReference::new(
             type_util::ref_loc_of_t(t).dupe(),
             reason.desc(false).clone(),
         ),
-        operand_desc,
+        operand_desc: arithmetic_type_or_type_desc(t),
     }))
+}
+
+fn arithmetic_type_or_type_desc(t: &Type) -> TypeOrTypeDescT<ALoc> {
+    use flow_typing_type::type_util;
+
+    let reason = type_util::reason_of_t(t);
+    if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
+        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
+    } else {
+        type_or_type_desc_for_error(t)
+    }
 }
 
 pub fn flow_unary_arith<'cx>(
@@ -8463,6 +8558,7 @@ pub fn flow_arith<'cx>(
     use flow_typing_type::type_::empty_t;
     use flow_typing_type::type_::num_module_t;
     use flow_typing_type::type_::str_module_t;
+    use flow_typing_type::type_util;
     use flow_typing_type::type_util::reason_of_t;
 
     let op = kind.1;
@@ -8539,8 +8635,16 @@ pub fn flow_arith<'cx>(
                 env,
                 ErrorMessage::EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                     loc: reason.loc().dupe(),
-                    reason_l: reason_of_t(l).dupe(),
-                    reason_r: reason_of_t(r).dupe(),
+                    left: ErrorReference::new(
+                        type_util::ref_loc_of_t(l).dupe(),
+                        reason_of_t(l).desc(false).clone(),
+                    ),
+                    left_desc: arithmetic_type_or_type_desc(l),
+                    right: ErrorReference::new(
+                        type_util::ref_loc_of_t(r).dupe(),
+                        reason_of_t(r).desc(false).clone(),
+                    ),
+                    right_desc: arithmetic_type_or_type_desc(r),
                     kind,
                 })),
             )?;
@@ -8944,13 +9048,13 @@ pub mod render_types {
     use flow_typing_type::type_::any_t;
     use flow_typing_type::type_::type_collector::TypeCollector;
     use flow_typing_type::type_util::loc_of_t;
-    use flow_typing_type::type_util::reason_of_t;
     use flow_typing_type::type_util::union_of_ts;
     use flow_utils_concurrency::job_error::JobError;
     use vec1::Vec1;
 
     use crate::flow_js_utils::add_output_non_speculating;
     use crate::flow_js_utils::builtin_react_renders_exactly_nominal_id;
+    use crate::flow_js_utils::type_reference_for_error;
     use crate::type_subst;
     use crate::type_subst::Purpose;
 
@@ -8990,7 +9094,7 @@ pub mod render_types {
     }
 
     struct ErrorAcc {
-        potential_fixable_error_acc: Option<(Vec1<Reason>, PotentialFixableErrorKind)>,
+        potential_fixable_error_acc: Option<(Vec1<Type>, PotentialFixableErrorKind)>,
         normal_errors: Vec<ErrorMessage<ALoc>>,
     }
 
@@ -9011,7 +9115,7 @@ pub mod render_types {
 
     fn merge_error_acc_with_potential_fixable_error<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
-        new_error: (Reason, PotentialFixableErrorKind),
+        new_error: (Type, PotentialFixableErrorKind),
     ) where
         F: Fn(&Type) -> Result<Vec<Type>, JobError>,
         G: Fn(&Type) -> Result<bool, JobError>,
@@ -9047,7 +9151,7 @@ pub mod render_types {
 
     fn on_concretized_renders_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
-        resolved_elem_reason: &Reason,
+        resolved_elem: &Type,
         t: Type,
     ) -> Result<(), JobError>
     where
@@ -9055,7 +9159,7 @@ pub mod render_types {
         G: Fn(&Type) -> Result<bool, JobError>,
     {
         match t.deref() {
-            TypeInner::DefT(r, def_t) => match def_t.deref() {
+            TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::RendersT(renders_form) => match renders_form.deref() {
                     CanonicalRendersForm::NominalRenders { .. } => {
                         normalization_cx.type_collector.add(t.dupe());
@@ -9071,7 +9175,7 @@ pub mod render_types {
                             {
                                 on_concretized_renders_normalization(
                                     normalization_cx,
-                                    resolved_elem_reason,
+                                    resolved_elem,
                                     concretized,
                                 )?;
                             }
@@ -9089,7 +9193,7 @@ pub mod render_types {
                                         ),
                                         invalid_render_type_kind:
                                             InvalidRenderTypeKind::UncategorizedInvalidRenders,
-                                        invalid_type_reasons: Vec1::new(r.dupe()),
+                                        invalid_types: Vec1::new(type_reference_for_error(&t)),
                                     },
                                 )),
                             );
@@ -9110,7 +9214,7 @@ pub mod render_types {
                                     ),
                                     invalid_render_type_kind:
                                         InvalidRenderTypeKind::UncategorizedInvalidRenders,
-                                    invalid_type_reasons: Vec1::new(r.dupe()),
+                                    invalid_types: Vec1::new(type_reference_for_error(&t)),
                                 },
                             )),
                         );
@@ -9133,9 +9237,9 @@ pub mod render_types {
                     &normalization_cx.renders_variant,
                 ),
                 invalid_render_type_kind: InvalidRenderTypeKind::InvalidRendersStructural(
-                    reason_of_t(&t).dupe(),
+                    type_reference_for_error(&t),
                 ),
-                invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
+                invalid_types: Vec1::new(type_reference_for_error(resolved_elem)),
             })),
         );
         Ok(())
@@ -9143,7 +9247,7 @@ pub mod render_types {
 
     fn on_concretized_component_normalization<F, G>(
         normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
-        resolved_elem_reason: &Reason,
+        resolved_elem: &Type,
         t: Type,
     ) -> Result<(), JobError>
     where
@@ -9170,7 +9274,7 @@ pub mod render_types {
                     }
                     on_concretized_component_normalization(
                         normalization_cx,
-                        resolved_elem_reason,
+                        resolved_elem,
                         type_subst::subst(
                             normalization_cx.cx,
                             None,
@@ -9213,7 +9317,7 @@ pub mod render_types {
                     for concretized in (normalization_cx.concretize)(render_type)? {
                         on_concretized_renders_normalization(
                             normalization_cx,
-                            resolved_elem_reason,
+                            resolved_elem,
                             concretized,
                         )?;
                     }
@@ -9232,9 +9336,9 @@ pub mod render_types {
                                 ),
                                 invalid_render_type_kind:
                                     InvalidRenderTypeKind::InvalidRendersNonNominalElement(
-                                        reason_of_t(&t).dupe(),
+                                        type_reference_for_error(&t),
                                     ),
-                                invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
+                                invalid_types: Vec1::new(type_reference_for_error(resolved_elem)),
                             },
                         )),
                     );
@@ -9254,9 +9358,9 @@ pub mod render_types {
                             ),
                             invalid_render_type_kind:
                                 InvalidRenderTypeKind::InvalidRendersNonNominalElement(
-                                    reason_of_t(&t).dupe(),
+                                    type_reference_for_error(&t),
                                 ),
-                            invalid_type_reasons: Vec1::new(resolved_elem_reason.dupe()),
+                            invalid_types: Vec1::new(type_reference_for_error(resolved_elem)),
                         },
                     )),
                 );
@@ -9274,7 +9378,7 @@ pub mod render_types {
         G: Fn(&Type) -> Result<bool, JobError>,
     {
         match &*t {
-            TypeInner::DefT(invalid_type_reason, def_t)
+            TypeInner::DefT(_, def_t)
                 if matches!(
                     &**def_t,
                     DefTInner::SingletonBoolT { value: false, .. }
@@ -9288,20 +9392,15 @@ pub mod render_types {
                 merge_error_acc_with_potential_fixable_error(
                     normalization_cx,
                     (
-                        invalid_type_reason.dupe(),
+                        t.dupe(),
                         PotentialFixableErrorKind::InvalidRendersNullVoidFalse,
                     ),
                 );
             }
-            TypeInner::DefT(invalid_type_reason, def_t)
-                if matches!(&**def_t, DefTInner::ArrT(_)) =>
-            {
+            TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::ArrT(_)) => {
                 merge_error_acc_with_potential_fixable_error(
                     normalization_cx,
-                    (
-                        invalid_type_reason.dupe(),
-                        PotentialFixableErrorKind::InvalidRendersIterable,
-                    ),
+                    (t.dupe(), PotentialFixableErrorKind::InvalidRendersIterable),
                 );
             }
             _ => {
@@ -9311,10 +9410,7 @@ pub mod render_types {
                 if (normalization_cx.is_iterable_for_better_error)(&t)? {
                     merge_error_acc_with_potential_fixable_error(
                         normalization_cx,
-                        (
-                            reason_of_t(&t).dupe(),
-                            PotentialFixableErrorKind::InvalidRendersIterable,
-                        ),
+                        (t.dupe(), PotentialFixableErrorKind::InvalidRendersIterable),
                     );
                 } else {
                     merge_error_acc_with_normal_error(
@@ -9327,7 +9423,7 @@ pub mod render_types {
                                 ),
                                 invalid_render_type_kind:
                                     InvalidRenderTypeKind::UncategorizedInvalidRenders,
-                                invalid_type_reasons: Vec1::new(reason_of_t(&t).dupe()),
+                                invalid_types: Vec1::new(type_reference_for_error(&t)),
                             },
                         )),
                     );
@@ -9346,7 +9442,7 @@ pub mod render_types {
         G: Fn(&Type) -> Result<bool, JobError>,
     {
         match &*t {
-            TypeInner::GenericT(box GenericTData { reason, .. }) => {
+            TypeInner::GenericT(box GenericTData { .. }) => {
                 normalization_cx
                     .type_collector
                     .add(any_t::error(normalization_cx.result_reason.dupe()));
@@ -9359,7 +9455,7 @@ pub mod render_types {
                                 &normalization_cx.renders_variant,
                             ),
                             invalid_render_type_kind: InvalidRenderTypeKind::InvalidRendersGenericT,
-                            invalid_type_reasons: Vec1::new(reason.dupe()),
+                            invalid_types: Vec1::new(type_reference_for_error(&t)),
                         },
                     )),
                 );
@@ -9380,10 +9476,7 @@ pub mod render_types {
                 }
                 on_concretized_bad_non_element_normalization(normalization_cx, t.dupe())?;
             }
-            TypeInner::NominalT {
-                reason: element_r,
-                nominal_type,
-            } => {
+            TypeInner::NominalT { nominal_type, .. } => {
                 let nominal_id = &nominal_type.nominal_id;
                 let nominal_type_args = &nominal_type.nominal_type_args;
                 if builtin_react_renders_exactly_nominal_id(normalization_cx.cx).as_ref()
@@ -9393,7 +9486,7 @@ pub mod render_types {
                         for concretized in (normalization_cx.concretize)(component_t)? {
                             on_concretized_component_normalization(
                                 normalization_cx,
-                                element_r,
+                                &t,
                                 concretized,
                             )?;
                         }
@@ -9441,8 +9534,8 @@ pub mod render_types {
             on_concretized_element_normalization(&normalization_cx, concretized)?;
         }
         let error_acc = normalization_cx.error_acc_ref.into_inner();
-        if let Some((mut invalid_type_reasons, kind)) = error_acc.potential_fixable_error_acc {
-            invalid_type_reasons.reverse();
+        if let Some((mut invalid_types, kind)) = error_acc.potential_fixable_error_acc {
+            invalid_types.reverse();
             add_output_non_speculating(
                 cx,
                 ErrorMessage::EInvalidRendersTypeArgument(Box::new(
@@ -9459,7 +9552,13 @@ pub mod render_types {
                                 InvalidRenderTypeKind::InvalidRendersIterable
                             }
                         },
-                        invalid_type_reasons,
+                        invalid_types: Vec1::try_from_vec(
+                            invalid_types
+                                .into_iter()
+                                .map(|type_| type_reference_for_error(&type_))
+                                .collect(),
+                        )
+                        .unwrap(),
                     },
                 )),
             );

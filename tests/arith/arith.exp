@@ -28,7 +28,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:13:7
 
-Cannot use operator `+` with operands object literal [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands object literal [1] and `string` [2] [unsafe-addition]
 
    Arith.js:13:7
    13|   str(z+y); // error
@@ -45,7 +45,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:18:7
 
-Cannot use operator `+` with operands null or undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands null or undefined [1] and `number` [2] [unsafe-addition]
 
    Arith.js:18:7
    18|   num(x + y);
@@ -62,7 +62,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:21:7
 
-Cannot use operator `+` with operands number [1] and null or undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and null or undefined [2] [unsafe-addition]
 
    Arith.js:21:7
    21|   num(x + y);
@@ -79,7 +79,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:26:7
 
-Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands `void` [1] and `number` [2] [unsafe-addition]
 
    Arith.js:26:7
    26|   num(x + y);
@@ -96,7 +96,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:29:7
 
-Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `void` [2] [unsafe-addition]
 
    Arith.js:29:7
    29|   num(x + y);
@@ -113,7 +113,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:34:7
 
-Cannot use operator `+` with operands null or undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands `void` [1] and `number` [2] [unsafe-addition]
 
    Arith.js:34:7
    34|   num(x + y);
@@ -130,7 +130,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:34:7
 
-Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands null or undefined [1] and `number` [2] [unsafe-addition]
 
    Arith.js:34:7
    34|   num(x + y);
@@ -147,7 +147,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
 
-Cannot use operator `+` with operands number [1] and null or undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `void` [2] [unsafe-addition]
 
    Arith.js:37:7
    37|   num(x + y);
@@ -164,7 +164,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:37:7
 
-Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and null or undefined [2] [unsafe-addition]
 
    Arith.js:37:7
    37|   num(x + y);
@@ -181,7 +181,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:40:5
 
-Cannot use operator `+` with operands null [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `null` [2] [unsafe-addition]
 
    Arith.js:40:5
    40| num(null + null); // === 0
@@ -198,7 +198,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:41:5
 
-Cannot use operator `+` with operands undefined [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `void` [1] and `void` [2] [unsafe-addition]
 
    Arith.js:41:5
    41| num(undefined + undefined); // === NaN
@@ -215,7 +215,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:43:5
 
-Cannot use operator `+` with operands null [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `number` [2] [unsafe-addition]
 
    Arith.js:43:5
    43| num(null + 1); // === 1
@@ -232,7 +232,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:44:5
 
-Cannot use operator `+` with operands number [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `null` [2] [unsafe-addition]
 
    Arith.js:44:5
    44| num(1 + null); // === 1
@@ -249,7 +249,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:45:5
 
-Cannot use operator `+` with operands undefined [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands `void` [1] and `number` [2] [unsafe-addition]
 
    Arith.js:45:5
    45| num(undefined + 1); // === NaN
@@ -266,7 +266,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:46:5
 
-Cannot use operator `+` with operands number [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `void` [2] [unsafe-addition]
 
    Arith.js:46:5
    46| num(1 + undefined); // === NaN
@@ -283,7 +283,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:48:5
 
-Cannot use operator `+` with operands null [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `boolean` [2] [unsafe-addition]
 
    Arith.js:48:5
    48| num(null + true); // === 1
@@ -300,7 +300,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:49:5
 
-Cannot use operator `+` with operands boolean [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `null` [2] [unsafe-addition]
 
    Arith.js:49:5
    49| num(true + null); // === 1
@@ -317,7 +317,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:50:5
 
-Cannot use operator `+` with operands undefined [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `void` [1] and `boolean` [2] [unsafe-addition]
 
    Arith.js:50:5
    50| num(undefined + true); // === NaN
@@ -334,7 +334,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:51:5
 
-Cannot use operator `+` with operands boolean [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `void` [2] [unsafe-addition]
 
    Arith.js:51:5
    51| num(true + undefined); // === NaN
@@ -351,7 +351,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:53:5
 
-Cannot use operator `+` with operands string [1] and boolean [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `boolean` [2] [unsafe-addition]
 
    Arith.js:53:5
    53| str("foo" + true); // error
@@ -368,7 +368,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:54:5
 
-Cannot use operator `+` with operands boolean [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `boolean` [1] and `string` [2] [unsafe-addition]
 
    Arith.js:54:5
    54| str(true + "foo"); // error
@@ -385,7 +385,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:55:5
 
-Cannot use operator `+` with operands string [1] and null [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `null` [2] [unsafe-addition]
 
    Arith.js:55:5
    55| str("foo" + null); // error
@@ -402,7 +402,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:56:5
 
-Cannot use operator `+` with operands null [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `null` [1] and `string` [2] [unsafe-addition]
 
    Arith.js:56:5
    56| str(null + "foo"); // error
@@ -419,7 +419,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:57:5
 
-Cannot use operator `+` with operands string [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `void` [2] [unsafe-addition]
 
    Arith.js:57:5
    57| str("foo" + undefined); // error
@@ -436,7 +436,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:58:5
 
-Cannot use operator `+` with operands undefined [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `void` [1] and `string` [2] [unsafe-addition]
 
    Arith.js:58:5
    58| str(undefined + "foo"); // error
@@ -470,7 +470,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:63:6
 
-Cannot use operator `+` with operands `unknown` [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands `unknown` [1] and `number` [2] [unsafe-addition]
 
    Arith.js:63:6
    63|     (x + 0); // error
@@ -487,7 +487,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:64:6
 
-Cannot use operator `+` with operands number [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and `unknown` [2] [unsafe-addition]
 
    Arith.js:64:6
    64|     (0 + x); // error
@@ -504,7 +504,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:65:6
 
-Cannot use operator `+` with operands `unknown` [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `unknown` [1] and `string` [2] [unsafe-addition]
 
    Arith.js:65:6
    65|     (x + ""); // error
@@ -521,7 +521,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:66:6
 
-Cannot use operator `+` with operands string [1] and `unknown` [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and `unknown` [2] [unsafe-addition]
 
    Arith.js:66:6
    66|     ("" + x); // error
@@ -572,7 +572,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:72:6
 
-Cannot use operator `+` with operands number [1] and object literal [2] [unsafe-addition]
+Cannot use operator `+` with operands `number` [1] and object literal [2] [unsafe-addition]
 
    Arith.js:72:6
    72|     (1 + {}); // error
@@ -589,7 +589,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:73:6
 
-Cannot use operator `+` with operands object literal [1] and number [2] [unsafe-addition]
+Cannot use operator `+` with operands object literal [1] and `number` [2] [unsafe-addition]
 
    Arith.js:73:6
    73|     ({} + 1); // error
@@ -606,7 +606,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:74:6
 
-Cannot use operator `+` with operands string [1] and object literal [2] [unsafe-addition]
+Cannot use operator `+` with operands `string` [1] and object literal [2] [unsafe-addition]
 
    Arith.js:74:6
    74|     ("1" + {}); // error
@@ -623,7 +623,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:75:6
 
-Cannot use operator `+` with operands object literal [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands object literal [1] and `string` [2] [unsafe-addition]
 
    Arith.js:75:6
    75|     ({} + "1"); // error
@@ -669,8 +669,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- Arith.js:94:1
 
 All branches are incompatible: [incompatible-use]
- - Either cannot compare boolean [1] to number [2].
- - Or cannot compare string [3] to number [2].
+ - Either cannot compare `boolean` [1] to `number` [2].
+ - Or cannot compare `string` [3] to `number` [2].
 
    Arith.js:94:1
    94| aWeirdStringWithIntersection < 1; // error
@@ -691,8 +691,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- Arith.js:97:1
 
 All branches are incompatible: [incompatible-use]
- - Either cannot compare boolean [1] to string [2].
- - Or cannot compare number [3] to string [2].
+ - Either cannot compare `boolean` [1] to `string` [2].
+ - Or cannot compare `number` [3] to `string` [2].
 
    Arith.js:97:1
    97| aWeirdNumberWithIntersection < '1'; // error
@@ -712,7 +712,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exponent.js:7:1
 
-Cannot use operator `**=` with operands string [1] and number literal `2` [2] [unsafe-arithmetic]
+Cannot use operator `**=` with operands `string` [1] and `2` [2] [unsafe-arithmetic]
 
    exponent.js:7:1
    7| y **= 2; // error
@@ -811,7 +811,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:5:5
 
-Cannot use operator `*` with operands null [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `null` [1] and `number` [2] [unsafe-arithmetic]
 
    mult.js:5:5
    5| num(null * 1);
@@ -828,7 +828,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:6:5
 
-Cannot use operator `*` with operands number [1] and null [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `null` [2] [unsafe-arithmetic]
 
    mult.js:6:5
    6| num(1 * null);
@@ -845,7 +845,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mult.js:12:1
 
-Cannot use operator `*=` with operands string [1] and number literal `2` [2] [unsafe-arithmetic]
+Cannot use operator `*=` with operands `string` [1] and `2` [2] [unsafe-arithmetic]
 
    mult.js:12:1
    12| y *= 2; // error
@@ -862,7 +862,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:4:1
 
-Cannot compare number [1] to string [2]. [invalid-compare]
+Cannot compare `number` [1] to `string` [2]. [invalid-compare]
 
    relational.js:4:1
    4| 1 < 'foo'; // error
@@ -876,7 +876,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:5:1
 
-Cannot compare string [1] to number [2]. [invalid-compare]
+Cannot compare `string` [1] to `number` [2]. [invalid-compare]
 
    relational.js:5:1
    5| 'foo' < 1; // error
@@ -890,7 +890,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:7:1
 
-Cannot compare number [1] to object literal [2]. [invalid-compare]
+Cannot compare `number` [1] to object literal [2]. [invalid-compare]
 
    relational.js:7:1
    7| 1 < {foo: 1}; // error
@@ -904,7 +904,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ relational.js:8:2
 
-Cannot compare object literal [1] to number [2]. [invalid-compare]
+Cannot compare object literal [1] to `number` [2]. [invalid-compare]
 
    relational.js:8:2
    8| ({foo: 1}) < 1; // error
@@ -932,7 +932,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:10:1
 
-Cannot compare string [1] to object literal [2]. [invalid-compare]
+Cannot compare `string` [1] to object literal [2]. [invalid-compare]
 
    relational.js:10:1
    10| 'foo' < {foo: 1}; // error
@@ -946,7 +946,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:11:2
 
-Cannot compare object literal [1] to string [2]. [invalid-compare]
+Cannot compare object literal [1] to `string` [2]. [invalid-compare]
 
    relational.js:11:2
    11| ({foo: 1}) < 'foo'; // error
@@ -960,7 +960,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:14:1
 
-Cannot compare number [1] to null or undefined [2]. [invalid-compare]
+Cannot compare `number` [1] to `void` [2]. [invalid-compare]
 
    relational.js:14:1
    14| 1 < x; // 2 errors: null !~> number; undefined !~> number
@@ -974,7 +974,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:15:1
 
-Cannot compare null or undefined [1] to number [2]. [invalid-compare]
+Cannot compare `void` [1] to `number` [2]. [invalid-compare]
 
    relational.js:15:1
    15| x < 1; // 2 errors: null !~> number; undefined !~> number
@@ -991,7 +991,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:17:1
 
-Cannot compare null [1] to null [2]. [invalid-compare]
+Cannot compare `null` [1] to `null` [2]. [invalid-compare]
 
    relational.js:17:1
    17| null < null; // error
@@ -1005,7 +1005,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:18:1
 
-Cannot compare undefined [1] to null [2]. [invalid-compare]
+Cannot compare `void` [1] to `null` [2]. [invalid-compare]
 
    relational.js:18:1
    18| undefined < null; // error
@@ -1019,7 +1019,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:19:1
 
-Cannot compare null [1] to undefined [2]. [invalid-compare]
+Cannot compare `null` [1] to `void` [2]. [invalid-compare]
 
    relational.js:19:1
    19| null < undefined; // error
@@ -1033,7 +1033,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- relational.js:20:1
 
-Cannot compare undefined [1] to undefined [2]. [invalid-compare]
+Cannot compare `void` [1] to `void` [2]. [invalid-compare]
 
    relational.js:20:1
    20| undefined < undefined; // error

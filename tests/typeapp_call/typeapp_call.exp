@@ -80,7 +80,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- call.js:19:1
 
-Cannot call non-polymorphic function [1] with type arguments. [nonpolymorphic-type-arg]
+Cannot call non-polymorphic `() => void` [1] with type arguments. [nonpolymorphic-type-arg]
 
    call.js:19:1
    19| f<number>(); // error: expected polymorphic type

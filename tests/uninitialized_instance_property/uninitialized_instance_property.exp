@@ -818,7 +818,7 @@ It is unsafe to call a property function in the constructor before all class pro
 
 Error --------------------------------------------------------------------------------------------------- test.js:667:20
 
-Cannot use operator `+=` with operands number [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+=` with operands `number` [1] and `void` [2] [unsafe-addition]
 
    test.js:667:20
    667|     this.f = x => (this.p += x);
@@ -948,7 +948,7 @@ It is unsafe to call a property function in the constructor before all class pro
 
 Error --------------------------------------------------------------------------------------------------- test.js:770:38
 
-Cannot use operator `+=` with operands number [1] and undefined [2] [unsafe-addition]
+Cannot use operator `+=` with operands `number` [1] and `void` [2] [unsafe-addition]
 
    test.js:770:38
    770|   f = (x: number | void): number => (this.p += x);

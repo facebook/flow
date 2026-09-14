@@ -5324,7 +5324,8 @@ fn __flow_impl<'cx>(
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_callsite.loc().dupe(),
                         is_new: false,
-                        reason_arity: reason_fundef.dupe(),
+                        callee_loc: type_util::ref_loc_of_t(l).dupe(),
+                        callee_desc: flow_js_utils::type_or_type_desc_for_error(l),
                         expected_arity: 0,
                     })),
                 )?;
@@ -5725,7 +5726,8 @@ fn __flow_impl<'cx>(
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: annot_loc.dupe(),
                         is_new: true,
-                        reason_arity: reason_of_t(this).dupe(),
+                        callee_loc: type_util::ref_loc_of_t(this).dupe(),
+                        callee_desc: flow_js_utils::type_or_type_desc_for_error(this),
                         expected_arity: 0,
                     })),
                 )?;
@@ -8082,7 +8084,7 @@ fn __flow_impl<'cx>(
             rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
         }
         (
-            TypeInner::FunProtoBindT(lreason),
+            TypeInner::FunProtoBindT(_),
             UseTInner::CallT(box CallTData {
                 use_op,
                 reason: reason_op,
@@ -8101,7 +8103,8 @@ fn __flow_impl<'cx>(
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_op.loc().dupe(),
                         is_new: false,
-                        reason_arity: lreason.dupe(),
+                        callee_loc: type_util::ref_loc_of_t(l).dupe(),
+                        callee_desc: flow_js_utils::type_or_type_desc_for_error(l),
                         expected_arity: 0,
                     })),
                 )?;

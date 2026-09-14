@@ -69,10 +69,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- error_examples.js:7:5
 
-Cannot compare `values.greeting` [1] to `values` [2], because string [3] is not a subtype of object type [4] and object
-type [4] is not a subtype of string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `string` [1] to `{greeting: string}` [2], because `string` [3] is not a subtype of
+`{greeting: string}` [4] and `{greeting: string}` [4] is not a subtype of `string` [3]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
 
    error_examples.js:7:5
    7| if (values.greeting === values) {} // constant-condition error
@@ -429,10 +429,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------- regression_tests.js:147:7
 
-Cannot compare `values.greeting` [1] to `values` [2], because string [3] is not a subtype of object type [4] and object
-type [4] is not a subtype of string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
-relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `string` [1] to `{greeting: string}` [2], because `string` [3] is not a subtype of
+`{greeting: string}` [4] and `{greeting: string}` [4] is not a subtype of `string` [3]. In **rare** cases, these types
+may have overlapping values but lack a subtyping relationship. If that happens, you can cast one side to the union of
+both types to pass the flow check.  [invalid-compare]
 
    regression_tests.js:147:7
    147|   if (values.greeting === values) {  // constant-condition error

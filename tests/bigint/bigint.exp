@@ -69,7 +69,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:37:2
 
-Cannot compare bigint [1] to string [2]. [invalid-compare]
+Cannot compare `bigint` [1] to `string` [2]. [invalid-compare]
 
    bigint.js:37:2
    37| (0n > ""); // error
@@ -141,7 +141,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:54:3
 
-Cannot use operator `+` with operands bigint [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `string` [2] [unsafe-addition]
 
    bigint.js:54:3
    54|   1n + ''; // ERROR
@@ -158,7 +158,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:60:3
 
-Cannot use operator `+` with operands bigint [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `bigint` [1] and `string` [2] [unsafe-addition]
 
    bigint.js:60:3
    60|   b + ''; // ERROR
@@ -175,7 +175,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:66:3
 
-Cannot use operator `+` with operands bigint literal `1n` [1] and string [2] [unsafe-addition]
+Cannot use operator `+` with operands `1n` [1] and `string` [2] [unsafe-addition]
 
    bigint.js:66:3
    66|   b + ''; // ERROR

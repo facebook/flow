@@ -102,10 +102,9 @@ Cannot assign `1` to `R.zero` because property `zero` is not writable. [cannot-w
 
 Error --------------------------------------------------------------------------------------------- declaration.js:171:7
 
-Cannot compare `x` [1] to number literal `1` [2], because `R` [3] is not a subtype of number literal `1` [2] and number
-literal `1` [2] is not a subtype of `R` [3]. In **rare** cases, these types may have overlapping values but lack a
-subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
-[invalid-compare]
+Cannot compare `R` [1] to `1` [2], because `R` [3] is not a subtype of `1` [2] and `1` [2] is not a subtype of `R` [3].
+In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can
+cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    declaration.js:171:7
    171|   if (x === 1) {} // ERROR

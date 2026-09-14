@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- array.js:22:3
 
-Cannot cast `arr1` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr1` to tuple type because tuple element at index `0` is read-only in `Readonly<[1, 2, 3]>` [1] but
+writable in `[1, 2, 3]` [2]. [incompatible-variance]
 
    array.js:22:3
    22|   arr1 as [1, 2, 3]; // error cast to non-readonly
@@ -18,8 +18,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:22:3
 
-Cannot cast `arr1` to tuple type because tuple element at index `1` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr1` to tuple type because tuple element at index `1` is read-only in `Readonly<[1, 2, 3]>` [1] but
+writable in `[1, 2, 3]` [2]. [incompatible-variance]
 
    array.js:22:3
    22|   arr1 as [1, 2, 3]; // error cast to non-readonly
@@ -36,8 +36,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:22:3
 
-Cannot cast `arr1` to tuple type because tuple element at index `2` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr1` to tuple type because tuple element at index `2` is read-only in `Readonly<[1, 2, 3]>` [1] but
+writable in `[1, 2, 3]` [2]. [incompatible-variance]
 
    array.js:22:3
    22|   arr1 as [1, 2, 3]; // error cast to non-readonly
@@ -68,8 +68,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- array.js:29:17
 
-Cannot cast `_` to `typeof arr1` because tuple type [1] has 3 or more elements (inexact tuple) but const array
-literal [2] has 3 elements. [invalid-tuple-arity]
+Cannot cast `_` to `typeof arr1` because `Readonly<[1, 2, 3, ...]>` [1] has 3 or more elements (inexact tuple) but
+`Readonly<[1, 2, 3]>` [2] has 3 elements. [invalid-tuple-arity]
 
    array.js:29:17
    29|   _ as readonly [1, 2, 3, ...] as typeof arr1; // ERRROR: inexact ~> exact
@@ -113,8 +113,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:34:3
 
-Cannot cast `arr2` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr2` to tuple type because tuple element at index `0` is read-only in `Readonly<[number]>` [1] but
+writable in `[number]` [2]. [incompatible-variance]
 
    array.js:34:3
    34|   arr2 as [number]; // error cast to non-readonly
@@ -221,8 +221,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:65:3
 
-Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in `Readonly<[{readonly f: 1}]>` [1]
+but writable in `[{readonly f: 1}]` [2]. [incompatible-variance]
 
    array.js:65:3
    65|   arr6 as [{readonly f: 1}]; // error cast to non-readonly array
@@ -239,8 +239,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:66:3
 
-Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in `Readonly<[{readonly f: 1}]>` [1]
+but writable in `[{f: 1}]` [2]. [incompatible-variance]
 
    array.js:66:3
    66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
@@ -305,7 +305,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:84:8
 
-Cannot cast `_` to `typeof arr8` because tuple type [1] has 1 element but const array literal [2] has 0 elements.
+Cannot cast `_` to `typeof arr8` because `[1]` [1] has 1 element but `Readonly<[]>` [2] has 0 elements.
 [invalid-tuple-arity]
 
    array.js:84:8
@@ -320,7 +320,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:85:8
 
-Cannot cast `_` to `typeof arr8` because tuple type [1] has 0-1 elements but const array literal [2] has 0 elements.
+Cannot cast `_` to `typeof arr8` because `[a?: number]` [1] has 0-1 elements but `Readonly<[]>` [2] has 0 elements.
 [invalid-tuple-arity]
 
    array.js:85:8
@@ -335,8 +335,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- import-array.js:8:3
 
-Cannot cast `arr1` to tuple type because tuple element at index `2` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr1` to tuple type because tuple element at index `2` is read-only in `Readonly<[1, 2, 3]>` [1] but
+writable in `[readonly _: 1, readonly _: 2, 3]` [2]. [incompatible-variance]
 
    import-array.js:8:3
    8|   arr1 as [readonly _:1, readonly _:2, 3]; // error cast 3rd element to non-readonly
@@ -353,8 +353,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-array.js:14:17
 
-Cannot cast `_` to `typeof arr1` because tuple type [1] has 3 or more elements (inexact tuple) but const array
-literal [2] has 3 elements. [invalid-tuple-arity]
+Cannot cast `_` to `typeof arr1` because `Readonly<[1, 2, 3, ...]>` [1] has 3 or more elements (inexact tuple) but
+`Readonly<[1, 2, 3]>` [2] has 3 elements. [invalid-tuple-arity]
 
    import-array.js:14:17
    14|   _ as readonly [1, 2, 3, ...] as typeof arr1; // TODO error inexact ~> exact
@@ -398,8 +398,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:19:3
 
-Cannot cast `arr2` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr2` to tuple type because tuple element at index `0` is read-only in `Readonly<[number]>` [1] but
+writable in `[number]` [2]. [incompatible-variance]
 
    import-array.js:19:3
    19|   arr2 as [number]; // error cast to non-readonly
@@ -416,8 +416,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:26:3
 
-Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in const array literal [1] but writable
-in tuple type [2]. [incompatible-variance]
+Cannot cast `arr6` to tuple type because tuple element at index `0` is read-only in `Readonly<[{readonly f: 1}]>` [1]
+but writable in `[{readonly f: 1}]` [2]. [incompatible-variance]
 
    import-array.js:26:3
    26|   arr6 as [{readonly f: 1}]; // error cast to non-readonly array
@@ -482,7 +482,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:40:8
 
-Cannot cast `_` to `typeof arr8` because tuple type [1] has 1 element but const array literal [2] has 0 elements.
+Cannot cast `_` to `typeof arr8` because `[1]` [1] has 1 element but `Readonly<[]>` [2] has 0 elements.
 [invalid-tuple-arity]
 
    import-array.js:40:8
@@ -497,7 +497,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:41:8
 
-Cannot cast `_` to `typeof arr8` because tuple type [1] has 0-1 elements but const array literal [2] has 0 elements.
+Cannot cast `_` to `typeof arr8` because `[a?: number]` [1] has 0-1 elements but `Readonly<[]>` [2] has 0 elements.
 [invalid-tuple-arity]
 
    import-array.js:41:8

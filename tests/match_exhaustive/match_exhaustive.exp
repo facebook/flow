@@ -2166,7 +2166,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:59:5
 
-Cannot have number [1] in a match pattern position. Valid types for match patterns include string literals, number
+Cannot have `number` [1] in a match pattern position. Valid types for match patterns include string literals, number
 literals, bigint literals, boolean literals, enum members, null, or undefined. [match-invalid-pattern]
 
    pattern-errors.js:59:5
@@ -2196,7 +2196,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:72:5
 
-Cannot have number [1] in a match pattern position. Valid types for match patterns include string literals, number
+Cannot have `number` [1] in a match pattern position. Valid types for match patterns include string literals, number
 literals, bigint literals, boolean literals, enum members, null, or undefined. [match-invalid-pattern]
 
    pattern-errors.js:72:5

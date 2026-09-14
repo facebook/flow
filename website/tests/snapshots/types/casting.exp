@@ -7,10 +7,9 @@ No errors!
 === block 3 ===
 Error ------------------------------------------------------------------------------- -:2:1
 
-Cannot compare number literal `1` [1] to boolean [2], because number literal `1` [1] is not a subtype of boolean [2] and
-boolean [2] is not a subtype of number literal `1` [1]. In **rare** cases, these types may have overlapping values but
-lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
- [invalid-compare]
+Cannot compare `1` [1] to `boolean` [2], because `1` [1] is not a subtype of `boolean` [2] and `boolean` [2] is not a
+subtype of `1` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship. If
+that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
 
    -:2:1
    2| 1 === 1 as boolean; // Error!

@@ -60,6 +60,7 @@ use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLook
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::ESketchyNullLintData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
@@ -974,10 +975,10 @@ fn detect_constant_conditions<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
 }
 
 struct StrictComparisonResult {
-    l_reason: Reason,
-    r_reason: Reason,
+    left: ErrorTypeReferenceWithReasonData<ALoc>,
+    right: ErrorTypeReferenceWithReasonData<ALoc>,
     primary_loc: ALoc,
-    info: StrictComparisonInfo<ALoc>,
+    info: StrictComparisonInfo<ALoc, ErrorTypeReferenceWithReasonData<ALoc>>,
 }
 
 fn check_strict_comparison<'cx>(
@@ -1037,8 +1038,11 @@ fn check_strict_comparison<'cx>(
                 FlowJs::speculative_subtyping_succeeds(cx, &left_filtered, &right_expanded)
             }
             let banned = |info| StrictComparisonResult {
-                l_reason: l_reason.dupe(),
-                r_reason: r_reason.dupe(),
+                left: flow_js_utils::type_reference_with_reason_for_error(left_t, l_reason.dupe()),
+                right: flow_js_utils::type_reference_with_reason_for_error(
+                    right_t,
+                    r_reason.dupe(),
+                ),
                 primary_loc: loc.dupe(),
                 info,
             };
@@ -1054,12 +1058,18 @@ fn check_strict_comparison<'cx>(
                 }
                 (TypeInner::DefT(_, d), _) if matches!(d.deref(), DefTInner::EmptyT) => {
                     Some(banned(StrictComparisonInfo::Empty {
-                        empty: l_singleton_reason.dupe(),
+                        empty: flow_js_utils::type_reference_with_reason_for_error(
+                            &left_conc_t,
+                            l_singleton_reason.dupe(),
+                        ),
                     }))
                 }
                 (_, TypeInner::DefT(_, d)) if matches!(d.deref(), DefTInner::EmptyT) => {
                     Some(banned(StrictComparisonInfo::Empty {
-                        empty: r_singleton_reason.dupe(),
+                        empty: flow_js_utils::type_reference_with_reason_for_error(
+                            &right_conc_t,
+                            r_singleton_reason.dupe(),
+                        ),
                     }))
                 }
                 (_, TypeInner::DefT(_, d))
@@ -1068,7 +1078,10 @@ fn check_strict_comparison<'cx>(
                 {
                     Some(banned(StrictComparisonInfo::Null {
                         null_loc: r_singleton_reason.loc().dupe(),
-                        other: l_singleton_reason.dupe(),
+                        other: flow_js_utils::type_reference_with_reason_for_error(
+                            &left_conc_t,
+                            l_singleton_reason.dupe(),
+                        ),
                     }))
                 }
                 (TypeInner::DefT(_, d), _)
@@ -1077,7 +1090,10 @@ fn check_strict_comparison<'cx>(
                 {
                     Some(banned(StrictComparisonInfo::Null {
                         null_loc: l_singleton_reason.loc().dupe(),
-                        other: r_singleton_reason.dupe(),
+                        other: flow_js_utils::type_reference_with_reason_for_error(
+                            &right_conc_t,
+                            r_singleton_reason.dupe(),
+                        ),
                     }))
                 }
                 _ => {
@@ -1085,8 +1101,14 @@ fn check_strict_comparison<'cx>(
                         None
                     } else {
                         Some(banned(StrictComparisonInfo::General {
-                            left: l_singleton_reason.dupe(),
-                            right: r_singleton_reason.dupe(),
+                            left: flow_js_utils::type_reference_with_reason_for_error(
+                                &left_conc_t,
+                                l_singleton_reason.dupe(),
+                            ),
+                            right: flow_js_utils::type_reference_with_reason_for_error(
+                                &right_conc_t,
+                                r_singleton_reason.dupe(),
+                            ),
                         }))
                     }
                 }
@@ -1105,8 +1127,8 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobErr
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EComparison(Box::new(EComparisonData {
-                r1: result.l_reason,
-                r2: result.r_reason,
+                r1: result.left,
+                r2: result.right,
                 loc_opt: Some(result.primary_loc),
                 strict_comparison_opt: Some(result.info),
             })),

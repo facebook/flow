@@ -159,8 +159,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:67:3
 
-Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
-using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `Readonly<[]>` [1] to `symbol` [2] with a non-strict equality check. Make sure the arguments are valid,
+or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:67:3
    67|   x == s; // Error
@@ -177,8 +177,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:68:3
 
-Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
-using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `symbol` [1] to `Readonly<[]>` [2] with a non-strict equality check. Make sure the arguments are valid,
+or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:68:3
    68|   s == x; // Error
@@ -195,8 +195,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:69:3
 
-Cannot compare tuple type [1] to symbol [2] with a non-strict equality check. Make sure the arguments are valid, or try
-using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `Readonly<[]>` [1] to `symbol` [2] with a non-strict equality check. Make sure the arguments are valid,
+or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:69:3
    69|   x != s; // Error
@@ -213,8 +213,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:70:3
 
-Cannot compare symbol [1] to tuple type [2] with a non-strict equality check. Make sure the arguments are valid, or try
-using strict equality (`===` or `!==`) instead. [invalid-compare]
+Cannot compare `symbol` [1] to `Readonly<[]>` [2] with a non-strict equality check. Make sure the arguments are valid,
+or try using strict equality (`===` or `!==`) instead. [invalid-compare]
 
    symbol.js:70:3
    70|   s != x; // Error

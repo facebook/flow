@@ -1759,8 +1759,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:231:1
 
-Cannot cast `l3` to tuple type because array type [1] has an unknown number of elements, so is incompatible with tuple
-type [2]. [invalid-tuple-arity]
+Cannot cast `l3` to tuple type because `Array<string>` [1] has an unknown number of elements, so is incompatible with
+`[string]` [2]. [invalid-tuple-arity]
 
    inference.js:231:1
    231| l3 as [string]; // ERROR (string[] is wider than a fixed tuple)

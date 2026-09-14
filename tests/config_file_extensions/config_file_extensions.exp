@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- test.js.es6:6:10
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    test.js.es6:6:10
    6|   return x * 10;

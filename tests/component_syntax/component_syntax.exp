@@ -156,7 +156,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:54:59
 
-Cannot use number [1] as the type argument of renders type. [invalid-render]
+Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
    54| declare export const Export: component(x: number) renders number; // invalid-render
                                                                  ^^^^^^ [1]
@@ -1053,7 +1053,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:56:52
 
-Cannot use number [1] as the type argument of renders type. [invalid-render]
+Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
    56| declare export component Export(x: number) renders number;
                                                           ^^^^^^ [1]
@@ -2061,7 +2061,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- nested_with_function.js:5:27
 
-Cannot use string [1] as the type argument of renders type. [invalid-render]
+Cannot use `string` [1] as the type argument of renders type. [invalid-render]
 
    5|   component Foo() renders string { // invalid-render
                                 ^^^^^^ [1]
@@ -2069,7 +2069,7 @@ Cannot use string [1] as the type argument of renders type. [invalid-render]
 
 Error ------------------------------------------------------------------------------------ nested_with_function.js:11:25
 
-Cannot use number [1] as the type argument of renders type. [invalid-render]
+Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
    11| component Foo() renders number { // invalid-render
                                ^^^^^^ [1]
@@ -2129,7 +2129,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nominal.js:19:36
 
-Cannot use null [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
+Cannot use `null` [1] as the type argument of renders type. Only elements of a component-syntax components can appear in
 renders. If you want to express the idea of rendering zero or one item, please use `renders?` instead. [invalid-render]
 
    19| component Baz(foo: number) renders null { // invalid-render
@@ -2999,7 +2999,7 @@ statement must be included for all possible branches. [component-missing-return]
 
 Error --------------------------------------------------------------------------------------- render_constraints.js:1:34
 
-Cannot use object type [1] as the type argument of renders type. [invalid-render]
+Cannot use `{...}` [1] as the type argument of renders type. [invalid-render]
 
    1| component Foo(x: number) renders {...} { // ERROR, {...} not a subtype of React.Node
                                        ^^^^^ [1]
@@ -3007,7 +3007,7 @@ Cannot use object type [1] as the type argument of renders type. [invalid-render
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:1:21
 
-number [1] is not an object. [not-an-object]
+`number` [1] is not an object. [not-an-object]
 
    1| component Foo(...x: number) { return null; } // ERROR, not an object
                           ^^^^^^ [1]
@@ -3024,7 +3024,7 @@ Cannot use number [1] as a component rest param. Component rest params must use 
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:2:22
 
-number [1] is not an object. [not-an-object]
+`number` [1] is not an object. [not-an-object]
 
    2| component Bar(...x?: number) {return null; } // ERROR optional
                            ^^^^^^ [1]
@@ -3126,7 +3126,7 @@ You may only use an identifier or a destructured object as a component rest para
 
 Error ---------------------------------------------------------------------------------------- rest_constraints.js:17:54
 
-tuple type [1] is not an object. [not-an-object]
+`[number, number]` [1] is not an object. [not-an-object]
 
    17| component DestructuredArrWithArrAnnot(...[foo, bar]: [number, number]) { // ERROR destructure array, array not an object
                                                             ^^^^^^^^^^^^^^^^ [1]

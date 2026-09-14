@@ -93,7 +93,7 @@ not_flow.js with --all
 
 Error -------------------------------------------------------------------------------------------------- not_flow.js:1:1
 
-Cannot use operator `*` with operands number [1] and string [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `number` [1] and `string` [2] [unsafe-arithmetic]
 
    not_flow.js:1:1
    1| 1 * 'foo';

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- Bad.js:13:11
 
-Cannot use operator `*` with operands string [1] and number [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    Bad.js:13:11
    13|     buz: (buz * 2).toString(), // Error: string ~> number

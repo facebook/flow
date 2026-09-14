@@ -463,7 +463,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:18:13
 
-Cannot create exact type from number [1]. [invalid-exact]
+Cannot create exact type from `number` [1]. [invalid-exact]
 
    18| 0 as $Exact<number>;
                    ^^^^^^ [1]
@@ -471,7 +471,7 @@ Cannot create exact type from number [1]. [invalid-exact]
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:19:14
 
-Cannot create exact type from string [1]. [invalid-exact]
+Cannot create exact type from `string` [1]. [invalid-exact]
 
    19| '' as $Exact<string>;
                     ^^^^^^ [1]
@@ -479,7 +479,7 @@ Cannot create exact type from string [1]. [invalid-exact]
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:20:16
 
-Cannot create exact type from boolean [1]. [invalid-exact]
+Cannot create exact type from `boolean` [1]. [invalid-exact]
 
    20| true as $Exact<boolean>;
                       ^^^^^^^ [1]
@@ -495,7 +495,7 @@ Cannot create exact type from `A` [1]. [invalid-exact]
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:22:22
 
-Cannot create exact type from function type [1]. [invalid-exact]
+Cannot create exact type from `() => {}` [1]. [invalid-exact]
 
    22| (() => {}) as $Exact<() => {}>;
                             ^^^^^^^^ [1]
@@ -503,7 +503,7 @@ Cannot create exact type from function type [1]. [invalid-exact]
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:25:22
 
-Cannot create exact type from function [1]. [invalid-exact]
+Cannot create exact type from `() => void` [1]. [invalid-exact]
 
    25| (() => {}) as $Exact<typeof foo>;
                             ^^^^^^^^^^ [1]
