@@ -25,8 +25,8 @@ Cannot cast `promise` to `Promise` because in type argument `R` [1]: `HTMLDivEle
          ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2300:27
-   2300| declare class Promise<out R = unknown> {
+   <BUILTINS>/core.js:2288:27
+   2288| declare class Promise<out R = unknown> {
                                    ^ [1]
    test.js:2:24
       2| const promise: Promise<HTMLDivElement> = Promise.resolve(element);

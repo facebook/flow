@@ -1,5 +1,12 @@
 declare const sharedArrayBuffer: SharedArrayBuffer;
 
+const structuralArrayBuffer: ArrayBuffer = {
+  byteLength: 0,
+  slice: () => new ArrayBuffer(0),
+};
+structuralArrayBuffer.slice() as ArrayBuffer;
+ArrayBuffer as ArrayBufferConstructor;
+
 const lengthBacked = new Uint8Array(8);
 lengthBacked as Uint8Array<ArrayBuffer>;
 lengthBacked.buffer as ArrayBuffer;
@@ -83,7 +90,7 @@ arrayBacked.buffer as SharedArrayBuffer; // ERROR
 
 declare const sharedBacked: Uint8Array<SharedArrayBuffer>;
 sharedBacked.buffer as SharedArrayBuffer;
-sharedBacked.buffer as ArrayBuffer; // ERROR
+sharedBacked.buffer as ArrayBuffer;
 
 sharedBacked as ArrayBufferView<SharedArrayBuffer>;
 sharedBacked as ArrayBufferView<ArrayBufferLike>;

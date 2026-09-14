@@ -71,6 +71,22 @@ function from_test() {
   Array.from('abcd') as Array<empty>; // ERROR
 
   Array.from('abcd', x => x.length) as Array<number>; // OK
+
+  const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
+  Array.from(arrayLike) as Array<string>; // OK
+  Array.from(arrayLike, value => value.length) as Array<number>; // OK
+  Array.from<string, number>(arrayLike, value => value.length) as Array<number>; // OK
+  Array.from(arrayLike) as Array<number>; // ERROR
+  arrayLike as $ArrayLike<string>; // ERROR
+
+  const flowArrayLike: $ArrayLike<string> = ['hello'];
+  Array.from(flowArrayLike) as Array<string>; // OK
+
+  Array.from({length: 3}) as Array<unknown>; // OK
+  Array.from({length: 3}, (value, index) => {
+    value as unknown; // OK
+    return index;
+  }) as Array<number>; // OK
 }
 
 function of_test() {

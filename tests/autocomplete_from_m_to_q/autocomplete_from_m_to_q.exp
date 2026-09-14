@@ -328,7 +328,7 @@ Flags: --pretty
   "result":[
     {"name":"AggregateError","type":"typeof AggregateError"},
     {"name":"Array","type":"typeof Array"},
-    {"name":"ArrayBuffer","type":"typeof ArrayBuffer"},
+    {"name":"ArrayBuffer","type":"ArrayBufferConstructor"},
     {"name":"atob","type":"(encodedString: string) => string"},
     {
       "name":"Atomics",

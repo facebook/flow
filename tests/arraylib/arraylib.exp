@@ -102,8 +102,8 @@ References:
    array_lib.js:58:4
      58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1502:13
-   1502|     length: number;
+   <BUILTINS>/core.js:1490:13
+   1490|     length: number;
                      ^^^^^^ [2]
 
 
@@ -119,8 +119,8 @@ References:
    array_lib.js:59:4
      59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/core.js:1502:13
-   1502|     length: number;
+   <BUILTINS>/core.js:1490:13
+   1490|     length: number;
                      ^^^^^^ [2]
 
 
@@ -139,45 +139,94 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1235:37
-   1235|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1223:37
+   1223|     static from(str: string): Array<string>;
                                              ^^^^^^ [1]
    array_lib.js:71:31
      71|   Array.from('abcd') as Array<empty>; // ERROR
                                        ^^^^^ [2]
-   <BUILTINS>/core.js:1235:31
-   1235|     static from(str: string): Array<string>;
+   <BUILTINS>/core.js:1223:31
+   1223|     static from(str: string): Array<string>;
                                        ^^^^^^^^^^^^^ [3]
    array_lib.js:71:25
      71|   Array.from('abcd') as Array<empty>; // ERROR
                                  ^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:80:57
+Error ------------------------------------------------------------------------------------------------ array_lib.js:79:9
+
+Cannot call `Array.from` because: [incompatible-type]
+ - Either in type argument `T` [1]: `string` [2] is incompatible with `number` [3].
+ - Or `ArrayLike<string>` [4] is incompatible with `string` [5].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   array_lib.js:79:9
+     79|   Array.from(arrayLike) as Array<number>; // ERROR
+                 ^^^^
+
+References:
+   <BUILTINS>/core.js:3399:25
+   3399| interface ArrayLike<out T> {
+                                 ^ [1]
+   array_lib.js:75:30
+     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
+                                      ^^^^^^ [2]
+   array_lib.js:79:34
+     79|   Array.from(arrayLike) as Array<number>; // ERROR
+                                          ^^^^^^ [3]
+   array_lib.js:75:20
+     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
+                            ^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/core.js:1218:31
+   1218|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
+                                       ^^^^^^ [5]
+
+
+Error ------------------------------------------------------------------------------------------------ array_lib.js:80:3
+
+Cannot cast `arrayLike` to `$ArrayLike` because property `@@iterator` is missing in `ArrayLike` [1] but exists in
+`$ArrayLike` [2]. [incompatible-type]
+
+   array_lib.js:80:3
+   80|   arrayLike as $ArrayLike<string>; // ERROR
+         ^^^^^^^^^
+
+References:
+   array_lib.js:75:20
+   75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
+                          ^^^^^^^^^^^^^^^^^ [1]
+   array_lib.js:80:16
+   80|   arrayLike as $ArrayLike<string>; // ERROR
+                      ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- array_lib.js:96:57
 
 Cannot call `Array.of` because in array element: `1` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   array_lib.js:80:57
-   80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:96:57
+   96|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                ^ [1]
 
 References:
-   array_lib.js:80:38
-   80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:96:38
+   96|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------- array_lib.js:80:60
+Error ----------------------------------------------------------------------------------------------- array_lib.js:96:60
 
 Cannot call `Array.of` because in array element: `2` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   array_lib.js:80:60
-   80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:96:60
+   96|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                                                   ^ [1]
 
 References:
-   array_lib.js:80:38
-   80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+   array_lib.js:96:38
+   96|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
                                             ^^^^^^ [2]
 
 
@@ -267,8 +316,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                  ^^^^^^
 
 References:
-   <BUILTINS>/core.js:1502:13
-   1502|     length: number;
+   <BUILTINS>/core.js:1490:13
+   1490|     length: number;
                      ^^^^^^ [1]
    <BUILTINS>/core.js:1076:109
    1076|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
@@ -580,4 +629,4 @@ Cannot assign `7` to `t.length` because property `length` is not writable. [cann
 
 
 
-Found 27 errors
+Found 29 errors
