@@ -1,11 +1,3 @@
-Error ---------------------------------------------------------------------------------- <BUILTINS>/lib.dom.d.ts:14164:5
-
-Multiple indexers are not supported. [unsupported-syntax]
-
-   14164|     [name: string]: any;
-              ^^^^^^^^^^^^^^^^^^^
-
-
 Error ----------------------------------------------------------------------- <BUILTINS>/lib.es2015.generator.d.ts:24:22
 
 Cannot extend `IteratorObject` [1] with `Generator` because in property `next`: `empty` [2] is incompatible with
@@ -168,4 +160,4 @@ Cannot use declare global statements in a library file. The statement will be ig
 
 
 
-Found 9 errors
+Found 8 errors
