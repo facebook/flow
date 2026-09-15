@@ -154,6 +154,7 @@ pub enum MergeHashes {
 pub struct TypedParse {
     pub(crate) file_hash: u64,
     pub(crate) dts_file_kind: Option<DtsFileKind>,
+    pub(crate) has_ts_global_augmentation: bool,
     pub(crate) ast: Option<CompressedBytes>,
     pub(crate) docblock: Option<CompressedBytes>,
     pub(crate) aloc_table: Option<CompressedBytes>,
@@ -173,6 +174,7 @@ impl TypedParse {
     pub(crate) fn new(
         file_hash: u64,
         dts_file_kind: Option<DtsFileKind>,
+        has_ts_global_augmentation: bool,
         ast: Option<Arc<Program<Loc, Loc>>>,
         docblock: Option<Arc<Docblock>>,
         aloc_table: Option<Arc<PackedALocTable>>,
@@ -188,6 +190,7 @@ impl TypedParse {
         Self {
             file_hash,
             dts_file_kind,
+            has_ts_global_augmentation,
             ast: ast.map(|a| Arc::from(flow_heap_serialization::serialize_ast(&a))),
             docblock: docblock.map(|d| Arc::from(flow_heap_serialization::serialize_docblock(&d))),
             aloc_table: aloc_table
@@ -227,6 +230,11 @@ impl TypedParse {
 
     pub fn has_ast(&self) -> bool {
         self.ast.is_some()
+    }
+
+    /// Whether this source module contributes a direct TypeScript `declare global` block.
+    pub fn has_ts_global_augmentation(&self) -> bool {
+        self.has_ts_global_augmentation
     }
 
     pub fn tolerable_file_sig_unsafe(
@@ -371,6 +379,13 @@ impl Parse {
         match self {
             Parse::Typed(typed) => typed.dts_file_kind,
             Parse::Untyped(_) | Parse::Package(_) => None,
+        }
+    }
+
+    pub(crate) fn has_ts_global_augmentation(&self) -> bool {
+        match self {
+            Parse::Typed(typed) => typed.has_ts_global_augmentation,
+            Parse::Untyped(_) | Parse::Package(_) => false,
         }
     }
 }

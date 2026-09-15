@@ -278,6 +278,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         dirty_modules,
         all_unordered_libs,
         dts_file_kinds,
+        ts_global_augmentation_files,
     } = parse_results;
     assert!(changed.is_empty());
     let local_errors =
@@ -314,6 +315,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         package_json,
         all_unordered_libs,
         dts_file_kinds,
+        ts_global_augmentation_files,
     }
 }
 
@@ -330,6 +332,7 @@ struct CollatedParseResults {
     ),
     all_unordered_libs: BTreeSet<FlowSmolStr>,
     dts_file_kinds: BTreeMap<FileKey, DtsFileKind>,
+    ts_global_augmentation_files: FlowOrdSet<FileKey>,
 }
 
 impl CollatedParseResults {
@@ -1523,6 +1526,7 @@ pub(crate) mod recheck {
             package_json: _,
             all_unordered_libs: discovered_libs,
             dts_file_kinds: _,
+            ts_global_augmentation_files: _,
         } = reparse(pool, transaction, options, def_info, modified_next);
         check_recheck_canceled()?;
 
@@ -2768,6 +2772,7 @@ fn init_with_initial_state(
         package_json: _package_json,
         all_unordered_libs: discovered_libs,
         dts_file_kinds: _,
+        ts_global_augmentation_files: _,
     } = parse_results;
 
     let all_unordered_libs_set = Arc::new(discovered_libs);
@@ -3135,6 +3140,7 @@ pub fn init_from_scratch(
             package_json: (package_json_files_list, package_json_errors),
             all_unordered_libs: discovered_libs,
             dts_file_kinds: _,
+            ts_global_augmentation_files: _,
         } = parse_results;
         handle.join().unwrap();
 

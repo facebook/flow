@@ -33,6 +33,8 @@ use flow_parser::ast::Program;
 use flow_parser::dts_file_kind::DtsFileKind;
 use flow_parser::dts_file_kind::FileSemanticRole;
 use flow_parser::dts_file_kind::dts_file_kind;
+use flow_parser::dts_file_kind::has_top_level_declare_global;
+use flow_parser::dts_file_kind::is_external_module;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
@@ -59,6 +61,7 @@ pub enum ParseResult {
     ParseOk {
         ast: Program<Loc, Loc>,
         dts_file_kind: Option<DtsFileKind>,
+        has_ts_global_augmentation: bool,
         requires: Vec<FlowImportSpecifier>,
         file_sig: Arc<FileSig>,
         locs: flow_type_sig::compact_table::Table<Loc>,
@@ -115,6 +118,8 @@ pub struct ParseResults {
     pub all_unordered_libs: BTreeSet<FlowSmolStr>,
     // declaration file kinds encountered by parse attempts
     pub dts_file_kinds: BTreeMap<FileKey, DtsFileKind>,
+    // TypeScript external modules containing a direct `declare global` block
+    pub ts_global_augmentation_files: FlowOrdSet<FileKey>,
 }
 
 // **************************** internal ********************************
@@ -139,6 +144,19 @@ fn parse_source_file(
     });
 
     flow_parser::parse_program_file::<()>(false, None, parse_options, file.dupe(), content)
+}
+
+fn has_ts_global_augmentation(
+    enabled: bool,
+    is_lib_file: bool,
+    file: &FileKey,
+    ast: &Program<Loc, Loc>,
+) -> bool {
+    enabled
+        && !is_lib_file
+        && files::has_ts_ext(file)
+        && is_external_module(file, ast)
+        && has_top_level_declare_global(ast)
 }
 
 pub fn parse_package_json_file(
@@ -311,6 +329,12 @@ pub fn do_parse(
                     }
                 } else {
                     let dts_file_kind = dts_file_kind(file, &ast);
+                    let has_ts_global_augmentation = has_ts_global_augmentation(
+                        options.declare_global_support,
+                        is_lib_file,
+                        file,
+                        &ast,
+                    );
                     let arena = bumpalo::Bump::new();
                     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
                     let (sig_errors, locs, type_sig) = parse_type_sig(
@@ -345,6 +369,7 @@ pub fn do_parse(
                     ParseResult::ParseOk {
                         ast,
                         dts_file_kind,
+                        has_ts_global_augmentation,
                         requires,
                         file_sig,
                         locs,
@@ -547,6 +572,7 @@ fn reducer(
         ParseResult::ParseOk {
             ast,
             dts_file_kind: new_dts_file_kind,
+            has_ts_global_augmentation,
             requires: _,
             file_sig,
             locs,
@@ -559,6 +585,9 @@ fn reducer(
 
             if let Some(dts_file_kind) = new_dts_file_kind {
                 acc.dts_file_kinds.insert(file_key.dupe(), dts_file_kind);
+            }
+            if has_ts_global_augmentation {
+                acc.ts_global_augmentation_files.insert(file_key.dupe());
             }
 
             let aloc_table =
@@ -574,6 +603,7 @@ fn reducer(
                 file_key.dupe(),
                 hash,
                 new_dts_file_kind,
+                has_ts_global_augmentation,
                 haste_module_info,
                 Some(Arc::new(ast)),
                 Some(Arc::new(docblock)),
@@ -669,6 +699,8 @@ fn merge(a: &mut ParseResults, b: ParseResults) {
     a.dirty_modules.extend(b.dirty_modules);
     a.all_unordered_libs.extend(b.all_unordered_libs);
     a.dts_file_kinds.extend(b.dts_file_kinds);
+    a.ts_global_augmentation_files
+        .extend(b.ts_global_augmentation_files);
 }
 
 // ***************************** public ********************************

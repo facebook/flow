@@ -9,8 +9,6 @@ use dupe::Dupe;
 
 use crate::ast::Program;
 use crate::ast::statement::StatementInner;
-use crate::file_key::DCTS_EXT;
-use crate::file_key::DMTS_EXT;
 use crate::file_key::DTS_EXT;
 use crate::file_key::FileKey;
 use crate::file_key::has_dts_ext;
@@ -71,22 +69,32 @@ pub fn dts_file_kind(file: &FileKey, ast: &Program<Loc, Loc>) -> Option<DtsFileK
     let filename = file.as_str();
     if !has_dts_ext(filename) {
         None
-    } else if filename.ends_with(DMTS_EXT) || filename.ends_with(DCTS_EXT) {
+    } else if is_external_module(file, ast) {
         Some(DtsFileKind::ExternalModule)
     } else {
         debug_assert!(filename.ends_with(DTS_EXT));
-        Some(
-            if ast
-                .statements
-                .iter()
-                .any(|statement| is_external_module_statement(statement))
-            {
-                DtsFileKind::ExternalModule
-            } else {
-                DtsFileKind::GlobalLibdef
-            },
-        )
+        Some(DtsFileKind::GlobalLibdef)
     }
+}
+
+pub fn is_external_module(file: &FileKey, ast: &Program<Loc, Loc>) -> bool {
+    let filename = file.as_str();
+    filename.ends_with(".mts")
+        || filename.ends_with(".cts")
+        || ast
+            .statements
+            .iter()
+            .any(|statement| is_external_module_statement(statement))
+}
+
+pub fn has_top_level_declare_global(ast: &Program<Loc, Loc>) -> bool {
+    ast.statements.iter().any(|statement| {
+        matches!(
+            &**statement,
+            StatementInner::DeclareNamespace { inner, .. }
+                if matches!(inner.id, crate::ast::statement::declare_namespace::Id::Global(_))
+        )
+    })
 }
 
 fn is_external_module_statement(statement: &StatementInner<Loc, Loc>) -> bool {

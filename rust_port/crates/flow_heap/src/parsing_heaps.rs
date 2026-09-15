@@ -169,6 +169,12 @@ impl Transaction {
         self.get_parse(file).and_then(|parse| parse.dts_file_kind())
     }
 
+    /// Returns the persisted TypeScript global-augmentation marker for `file`.
+    pub fn has_ts_global_augmentation(&self, file: &FileKey) -> bool {
+        self.get_parse(file)
+            .is_some_and(|parse| parse.has_ts_global_augmentation())
+    }
+
     pub fn get_typed_parse(&self, file: &FileKey) -> Option<TypedParse> {
         self.get_parse(file).and_then(|p| match p {
             Parse::Typed(t) => Some(t),
@@ -621,6 +627,7 @@ impl Transaction {
         file: FileKey,
         file_hash: u64,
         dts_file_kind: Option<flow_parser::dts_file_kind::DtsFileKind>,
+        has_ts_global_augmentation: bool,
         haste_module_info: Option<HasteModuleInfo>,
         ast: Option<Arc<Program<Loc, Loc>>>,
         docblock: Option<Arc<Docblock>>,
@@ -665,6 +672,7 @@ impl Transaction {
             let typed_parse = TypedParse::new(
                 file_hash,
                 dts_file_kind,
+                has_ts_global_augmentation,
                 ast,
                 docblock,
                 aloc_table,
@@ -1057,6 +1065,7 @@ mod tests {
                     file.dupe(),
                     1,
                     None,
+                    false,
                     None,
                     None,
                     None,
@@ -1114,6 +1123,7 @@ mod tests {
                     file.dupe(),
                     1,
                     None,
+                    false,
                     None,
                     None,
                     None,
