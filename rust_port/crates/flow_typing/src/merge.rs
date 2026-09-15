@@ -1846,7 +1846,7 @@ fn convert_type_to_type_desc_in_errors<'cx>(
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) {
-    const ERROR_NORMALIZATION_MAX_SIZE: usize = 1_000;
+    const ERROR_NORMALIZATION_MAX_SIZE: usize = 250;
 
     let errors = cx.errors();
     if errors.is_empty() {
