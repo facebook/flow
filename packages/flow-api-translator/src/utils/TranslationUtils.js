@@ -17,6 +17,11 @@ export type Dep = string;
 export type TranslationOptions = {
   recoverFromErrors: boolean,
   mungeUnderscores?: boolean,
+  /**
+   * Name synthetic default exports after their referenced identifier, falling
+   * back to `$$default` for anonymous types. Defaults to false.
+   */
+  useSemanticDefaultExportNames?: boolean,
 };
 export type TranslationContext = {
   scopeManager: ScopeManager,

@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {SourceLocation} from 'flow-estree';
+import type {SourceLocation, TypeAnnotationType} from 'flow-estree';
 
 import * as TSESTree from './ts-estree-ast-types';
 
@@ -18,6 +18,51 @@ const DUMMY_LOC: SourceLocation = {
   start: {line: 1, column: 0},
   end: {line: 1, column: 0},
 };
+
+/**
+ * Returns the identifier referenced by a default-exported Flow type, unwrapping
+ * nullable types, or `null` when the type does not reference exactly one
+ * identifier.
+ *
+ * `$FlowFixMe` is rejected because it translates to `any`, so naming the
+ * binding after it would describe the recovery placeholder rather than the
+ * exported type.
+ */
+function inferDefaultExportName(
+  typeAnnotation: TypeAnnotationType,
+): string | null {
+  switch (typeAnnotation.type) {
+    case 'GenericTypeAnnotation':
+      return typeAnnotation.id.type === 'Identifier' &&
+        typeAnnotation.id.name !== '$FlowFixMe'
+        ? typeAnnotation.id.name
+        : null;
+    case 'NullableTypeAnnotation':
+      return inferDefaultExportName(typeAnnotation.typeAnnotation);
+    case 'TypeofTypeAnnotation':
+      return typeAnnotation.argument.type === 'Identifier' &&
+        typeAnnotation.argument.name !== '$FlowFixMe'
+        ? typeAnnotation.argument.name
+        : null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Returns the binding name to use when TypeScript requires a synthetic value
+ * for a Flow default export.
+ */
+export function getDefaultExportBindingName(
+  typeAnnotation: TypeAnnotationType,
+  useSemanticName: boolean,
+): string {
+  if (!useSemanticName) {
+    return '$$EXPORT_DEFAULT_DECLARATION$$';
+  }
+  const inferredName = inferDefaultExportName(typeAnnotation);
+  return inferredName == null ? '$$default' : `$$${inferredName}`;
+}
 
 /**
  * Extract statically known property key names from a list of TS type element

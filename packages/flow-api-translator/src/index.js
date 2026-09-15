@@ -11,6 +11,7 @@
 'use strict';
 
 import type {MapperOptions} from './flowImportTo';
+import type {TranslationOptions} from './utils/TranslationUtils';
 
 import {parse, print} from 'flow-transform';
 import {parse as parseTS} from '@typescript-eslint/parser';
@@ -20,6 +21,9 @@ import {flowDefToTSDef} from './flowDefToTSDef';
 import {flowToJS} from './flowToJS';
 import {flowImportTo} from './flowImportTo';
 import {TSDefToFlowDef} from './TSDefToFlowDef';
+
+// `recoverFromErrors` is deliberately not exposed: the entry points always recover.
+export type TranslateOptions = Omit<TranslationOptions, 'recoverFromErrors'>;
 
 export async function translateFlowToFlowDef(
   code: string,
@@ -39,18 +43,23 @@ export async function translateFlowToFlowDef(
 export async function translateFlowToTSDef(
   code: string,
   prettierOptions: {...} = {},
+  opts?: TranslateOptions,
 ): Promise<string> {
-  const flowDefCode = await translateFlowToFlowDef(code, prettierOptions);
+  const flowDefCode = await translateFlowToFlowDef(code, prettierOptions, {
+    mungeUnderscores: opts?.mungeUnderscores,
+  });
 
-  return translateFlowDefToTSDef(flowDefCode, prettierOptions);
+  return translateFlowDefToTSDef(flowDefCode, prettierOptions, opts);
 }
 
 export async function translateFlowDefToTSDef(
   code: string,
   prettierOptions: {...} = {},
+  opts?: TranslateOptions,
 ): Promise<string> {
   const {ast, scopeManager} = await parse(code);
   const [tsAST, mutatedCode] = flowDefToTSDef(code, ast, scopeManager, {
+    ...opts,
     recoverFromErrors: true,
   });
 

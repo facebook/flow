@@ -29,6 +29,7 @@ import {removeAtFlowFromDocblock} from './utils/DocblockUtils';
 import {
   ensureTypeIncludesUndefined,
   extractPropertyKeyLiterals,
+  getDefaultExportBindingName,
 } from './utils/TSNodeUtils';
 import {EOL} from 'os';
 
@@ -1430,7 +1431,10 @@ const getTransforms = (
           }
 
           default: {
-            const SPECIFIER = '$$EXPORT_DEFAULT_DECLARATION$$';
+            const SPECIFIER = getDefaultExportBindingName(
+              declaration,
+              opts.useSemanticDefaultExportNames === true,
+            );
             return [
               ...declareTypeAsVariable(SPECIFIER, declaration),
               {
