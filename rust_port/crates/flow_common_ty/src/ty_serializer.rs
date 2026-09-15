@@ -187,6 +187,10 @@ impl Serializer {
 
     pub fn type_<L: Dupe>(&self, t: &Arc<Ty<L>>) -> AstType {
         match t.as_ref() {
+            Ty::Truncated => ast::types::Type::new(TypeInner::Exists {
+                loc: LOC_NONE,
+                comments: None,
+            }),
             Ty::Bound(data) => {
                 let (_, name) = data.as_ref();
                 builtin_from_string(name, None)

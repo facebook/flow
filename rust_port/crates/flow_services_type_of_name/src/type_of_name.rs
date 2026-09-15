@@ -364,6 +364,7 @@ fn mk_normalizer_genv<'a, 'cx: 'a>(
         merge_bot_and_any_kinds: true,
         verbose_normalizer: false,
         max_depth: Some(10),
+        max_type_size: None,
         toplevel_is_type_identifier_reference: false,
     };
     let ref_type_bodies_tbl = Rc::new(RefCell::new(BTreeMap::new()));

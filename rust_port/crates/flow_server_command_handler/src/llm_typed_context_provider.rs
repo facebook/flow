@@ -62,6 +62,7 @@ fn normalize_type(
         merge_bot_and_any_kinds: true,
         verbose_normalizer: false,
         max_depth: Some(10),
+        max_type_size: None,
         toplevel_is_type_identifier_reference: false,
     };
     let genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig.clone());

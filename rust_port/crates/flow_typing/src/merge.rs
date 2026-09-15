@@ -1846,6 +1846,8 @@ fn convert_type_to_type_desc_in_errors<'cx>(
     file_sig: Arc<FileSig>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
 ) {
+    const ERROR_NORMALIZATION_MAX_SIZE: usize = 1_000;
+
     let errors = cx.errors();
     if errors.is_empty() {
         return;
@@ -1853,6 +1855,7 @@ fn convert_type_to_type_desc_in_errors<'cx>(
     let genv = crate::ty_normalizer_flow::mk_genv(
         flow_typing_ty_normalizer::env::Options {
             optimize_types: false,
+            max_type_size: Some(ERROR_NORMALIZATION_MAX_SIZE),
             ..flow_typing_ty_normalizer::env::Options::default()
         },
         cx,

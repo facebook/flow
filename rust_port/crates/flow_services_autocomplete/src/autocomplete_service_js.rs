@@ -202,6 +202,7 @@ fn lsp_completion_of_type(ty_: &Ty<ALoc>) -> LspCompletionItemKind {
         | Ty::Inter(..)
         | Ty::Bound(_)
         | Ty::Generic(_)
+        | Ty::Truncated
         | Ty::Any(_)
         | Ty::Top
         | Ty::Void

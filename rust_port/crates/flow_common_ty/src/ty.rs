@@ -84,6 +84,7 @@ pub enum Ty<L> {
         quasis: Arc<[FlowSmolStr]>,
         types: Arc<[Arc<Ty<L>>]>,
     },
+    Truncated,
 }
 
 /* Recursive variable */
@@ -1040,7 +1041,8 @@ pub fn mk_exact<L>(ty: Ty<L>) -> Ty<L> {
             Ty::Obj(Box::new(ObjT { obj_kind, ..*o }))
         }
         // Not applicable
-        Ty::Any(_)
+        Ty::Truncated
+        | Ty::Any(_)
         | Ty::Top
         | Ty::Bot(_)
         | Ty::Void
@@ -1170,7 +1172,8 @@ where
             Ty::Any(ak) => {
                 self.on_any_kind(env, ak);
             }
-            Ty::Top
+            Ty::Truncated
+            | Ty::Top
             | Ty::Void
             | Ty::Null
             | Ty::Symbol
@@ -1692,7 +1695,8 @@ where
             }
             (Ty::Generic(g1), Ty::Generic(g2)) => self.on_generic_t(env, g1, g2),
             (Ty::Any(ak1), Ty::Any(ak2)) => self.on_any_kind(env, ak1, ak2),
-            (Ty::Top, Ty::Top)
+            (Ty::Truncated, Ty::Truncated)
+            | (Ty::Top, Ty::Top)
             | (Ty::Void, Ty::Void)
             | (Ty::Null, Ty::Null)
             | (Ty::Symbol, Ty::Symbol)
@@ -2754,7 +2758,8 @@ where
             }
             Ty::Generic(g) => self.on_generic_t(env, g),
             Ty::Any(ak) => self.on_any_kind(env, ak),
-            Ty::Top
+            Ty::Truncated
+            | Ty::Top
             | Ty::Void
             | Ty::Null
             | Ty::Symbol
@@ -3230,7 +3235,8 @@ where
                 let ak_new = self.on_any_kind(env, ak.clone());
                 Arc::new(Ty::Any(ak_new))
             }
-            Ty::Top
+            Ty::Truncated
+            | Ty::Top
             | Ty::Void
             | Ty::Null
             | Ty::Symbol
@@ -4130,6 +4136,7 @@ pub fn tag_of_t<L>(_t: &Ty<L>) -> i32 {
         Ty::Component { .. } => 29,
         Ty::Renders { .. } => 30,
         Ty::TemplateLiteral { .. } => 31,
+        Ty::Truncated => 32,
     }
 }
 
@@ -4843,6 +4850,7 @@ impl<L: Dupe> Ty<L> {
         M: Dupe,
     {
         match self {
+            Ty::Truncated => Ty::Truncated,
             Ty::Bound(data) => {
                 let (loc, name) = data.as_ref();
                 Ty::Bound(Box::new((f(loc), name.clone())))

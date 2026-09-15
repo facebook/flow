@@ -122,6 +122,13 @@ mod tests {
     }
 
     #[test]
+    fn test_truncated_type() {
+        let opts = test_options();
+        let result = string_of_t(&Ty::<ALoc>::Truncated, &opts);
+        assert_eq!(result, "...");
+    }
+
+    #[test]
     fn test_variance_keywords() {
         let mk_field = |name: &str, polarity: Polarity, t: Ty<ALoc>| Prop::NamedProp {
             name: Name::new(name),

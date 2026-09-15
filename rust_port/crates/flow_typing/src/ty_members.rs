@@ -475,7 +475,8 @@ fn members_of_ty(ty: &Ty<ALoc>) -> (BTreeMap<Name, MemberInfo<ALocTy>>, Vec<Stri
                 dump_t_EXPOSES_ABSTRACT_LOCS(ty)
             )],
         ),
-        Ty::Any(_)
+        Ty::Truncated
+        | Ty::Any(_)
         | Ty::Top
         | Ty::Bot(_)
         | Ty::Void
@@ -515,6 +516,7 @@ pub fn extract<'a, 'cx>(
         merge_bot_and_any_kinds: true,
         verbose_normalizer: false,
         max_depth: Some(40),
+        max_type_size: None,
         toplevel_is_type_identifier_reference: false,
     };
     let genv = match imported_names {

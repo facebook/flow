@@ -376,6 +376,7 @@ fn binder_of_member_reference(
                 merge_bot_and_any_kinds: true,
                 verbose_normalizer: false,
                 max_depth: Some(MAX_DEPTH_OF_MEMBER_LOOKUP),
+                max_type_size: None,
                 toplevel_is_type_identifier_reference: false,
             },
             cx,
@@ -590,6 +591,7 @@ pub fn type_at_pos_type<'a>(
                     merge_bot_and_any_kinds: true,
                     verbose_normalizer,
                     max_depth: Some(max_depth),
+                    max_type_size: None,
                     toplevel_is_type_identifier_reference,
                 };
 
@@ -763,6 +765,7 @@ pub fn insert_type_normalize<'a, 'cx>(
         merge_bot_and_any_kinds: true,
         verbose_normalizer: false,
         max_depth: None,
+        max_type_size: None,
         toplevel_is_type_identifier_reference: false,
     };
     let genv = ty_normalizer_flow::mk_genv(options, cx, Some(typed_ast), file_sig);

@@ -85,6 +85,8 @@ pub struct Options {
     pub verbose_normalizer: bool,
     /// Maximum depth of recursion
     pub max_depth: Option<u32>,
+    /// Maximum number of nodes visited while normalizing a type.
+    pub max_type_size: Option<usize>,
     /// In typed AST for type references, we store the type as if it's read under the
     /// value namespace. In some places, we might want to record the fact that it's
     /// a type-namespace read.
@@ -102,6 +104,7 @@ impl Default for Options {
             optimize_types: true,
             verbose_normalizer: false,
             max_depth: Some(40),
+            max_type_size: None,
             toplevel_is_type_identifier_reference: false,
         }
     }
@@ -118,6 +121,7 @@ impl Options {
             merge_bot_and_any_kinds: false,
             verbose_normalizer: false,
             max_depth: None,
+            max_type_size: None,
             toplevel_is_type_identifier_reference: false,
         }
     }
@@ -230,6 +234,10 @@ impl<'a, 'cx> Env<'a, 'cx> {
 
     pub fn max_depth(&self) -> Option<u32> {
         self.genv.options.max_depth
+    }
+
+    pub fn max_type_size(&self) -> Option<usize> {
+        self.genv.options.max_type_size
     }
 
     pub fn merge_bot_and_any_kinds(&self) -> bool {

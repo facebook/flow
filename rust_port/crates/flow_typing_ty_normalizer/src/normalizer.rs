@@ -39,6 +39,7 @@ use flow_common_ty::ty_symbol::ImportMode;
 use flow_common_ty::ty_symbol::Provenance;
 use flow_common_ty::ty_symbol::Symbol;
 use flow_common_ty::ty_utils::simplify_elt;
+use flow_common_ty::ty_utils::size_of_type;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lazy::Lazy;
 use flow_parser::file_key::FileKeyInner;
@@ -101,6 +102,7 @@ pub enum ErrorKind {
     UnsupportedTypeCtor,
     UnsupportedUseCtor,
     RecursionLimit,
+    TypeSizeLimit,
     /// Worker cancellation surfaced from a non-speculating flow_js call inside the
     /// normalizer continuation. The continuation type A is generic, so we encode
     /// the cancel as an Error variant that callers must propagate.
@@ -134,6 +136,7 @@ impl fmt::Display for ErrorKind {
             ErrorKind::UnsupportedTypeCtor => write!(f, "Unsupported type constructor"),
             ErrorKind::UnsupportedUseCtor => write!(f, "Unsupported use constructor"),
             ErrorKind::RecursionLimit => write!(f, "recursion limit"),
+            ErrorKind::TypeSizeLimit => write!(f, "type size limit"),
             ErrorKind::WorkerCanceled => write!(f, "Worker canceled"),
             ErrorKind::TimedOut => write!(f, "Per-file budget exceeded"),
             ErrorKind::DebugThrow => write!(f, "$Flow$DebugThrow"),
@@ -325,6 +328,7 @@ pub struct State {
     pub rec_tvar_ids: BTreeSet<i32>,
     pub rec_eval_ids: BTreeSet<type_eval::Id>,
     pub found_computed_type: bool,
+    remaining_type_size: Option<usize>,
 }
 
 impl State {
@@ -333,11 +337,30 @@ impl State {
             rec_tvar_ids: BTreeSet::new(),
             rec_eval_ids: BTreeSet::new(),
             found_computed_type: false,
+            remaining_type_size: None,
         }
     }
 
     pub fn found_computed_type(&self) -> bool {
         self.found_computed_type
+    }
+
+    fn reset_type_size_budget(&mut self, max_type_size: Option<usize>) {
+        self.remaining_type_size = max_type_size;
+    }
+
+    fn consume_type_node(&mut self) -> Result<(), Error> {
+        match self.remaining_type_size {
+            None => Ok(()),
+            Some(0) => Err(Error::new(
+                ErrorKind::TypeSizeLimit,
+                String::from("Type size limit exceeded"),
+            )),
+            Some(remaining) => {
+                self.remaining_type_size = Some(remaining - 1);
+                Ok(())
+            }
+        }
     }
 }
 
@@ -569,17 +592,54 @@ fn remove_targs_matching_defaults(
     }
 }
 
-fn app_intersection<F>(mut f: F, types: Vec<Type>, state: &mut State) -> Result<ALocTy, Error>
+fn normalize_type_members<F>(
+    mut f: F,
+    types: Vec<Type>,
+    state: &mut State,
+    max_type_size: Option<usize>,
+) -> Result<Vec<ALocTy>, Error>
+where
+    F: FnMut(&Type, &mut State) -> Result<ALocTy, Error>,
+{
+    let mut results = Vec::new();
+    let mut size = 1usize;
+    for (index, t) in types.iter().enumerate() {
+        let result = match f(t, state) {
+            Ok(result) => result,
+            Err(error) if error.kind == ErrorKind::TypeSizeLimit => {
+                results.push(Arc::new(ty::Ty::Truncated));
+                break;
+            }
+            Err(error) => return Err(error),
+        };
+        if let Some(max_type_size) = max_type_size {
+            let has_more = index + 1 < types.len();
+            let reserved_size = size.saturating_add(usize::from(has_more));
+            let remaining = max_type_size.saturating_sub(reserved_size);
+            let Some(member_size) = size_of_type(Some(remaining), &result) else {
+                results.push(Arc::new(ty::Ty::Truncated));
+                break;
+            };
+            size += member_size;
+        }
+        results.push(result);
+    }
+    Ok(results)
+}
+
+fn app_intersection<F>(
+    f: F,
+    types: Vec<Type>,
+    state: &mut State,
+    max_type_size: Option<usize>,
+) -> Result<ALocTy, Error>
 where
     F: FnMut(&Type, &mut State) -> Result<ALocTy, Error>,
 {
     if types.is_empty() {
         return Ok(Arc::new(ty::Ty::Top));
     }
-    let mut results = Vec::new();
-    for t in &types {
-        results.push(f(t, state)?);
-    }
+    let results = normalize_type_members(f, types, state, max_type_size)?;
     match ty::mk_inter(results) {
         Some(arc_ty) => Ok(arc_ty),
         None => Ok(Arc::new(ty::Ty::Top)),
@@ -588,9 +648,10 @@ where
 
 fn app_union<F>(
     from_bounds: bool,
-    mut f: F,
+    f: F,
     types: Vec<Type>,
     state: &mut State,
+    max_type_size: Option<usize>,
 ) -> Result<ALocTy, Error>
 where
     F: FnMut(&Type, &mut State) -> Result<ALocTy, Error>,
@@ -598,10 +659,7 @@ where
     if types.is_empty() {
         return Ok(Arc::new(ty::Ty::Bot(BotKind::EmptyType)));
     }
-    let mut results = Vec::new();
-    for t in &types {
-        results.push(f(t, state)?);
-    }
+    let results = normalize_type_members(f, types, state, max_type_size)?;
     match ty::mk_union(from_bounds, results) {
         Some(arc_ty) => Ok(arc_ty),
         None => Ok(Arc::new(ty::Ty::Bot(BotKind::EmptyType))),
@@ -1238,6 +1296,7 @@ mod type_converter {
         id: Option<IdKey>,
         t: &Type,
     ) -> Result<ALocTy, Error> {
+        state.consume_type_node()?;
         descend(env, t)?;
         let depth = env.depth - 1;
         let result = if env.verbose() {
@@ -1580,16 +1639,24 @@ mod type_converter {
             TypeInner::OptionalT { type_, .. } => optional_t(type__::<I>, env, state, id, type_),
             TypeInner::UnionT(_, rep) => {
                 let types: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
+                let max_type_size = env.max_type_size();
                 app_union(
                     false,
                     |t, s| type__::<I>(env, s, id.clone(), t),
                     types,
                     state,
+                    max_type_size,
                 )
             }
             TypeInner::IntersectionT(_, rep) => {
                 let types: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
-                app_intersection(|t, s| type__::<I>(env, s, id.clone(), t), types, state)
+                let max_type_size = env.max_type_size();
+                app_intersection(
+                    |t, s| type__::<I>(env, s, id.clone(), t),
+                    types,
+                    state,
+                    max_type_size,
+                )
             }
             TypeInner::TypeAppT(box TypeAppTData {
                 type_,
@@ -5200,6 +5267,7 @@ mod expand_members {
             ),
             TypeInner::IntersectionT(_, rep) => {
                 let types: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
+                let max_type_size = env.max_type_size();
                 app_intersection(
                     |t, s| {
                         type__::<I>(
@@ -5216,10 +5284,12 @@ mod expand_members {
                     },
                     types,
                     state,
+                    max_type_size,
                 )
             }
             TypeInner::UnionT(_, rep) => {
                 let types: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
+                let max_type_size = env.max_type_size();
                 app_union(
                     false,
                     |t, s| {
@@ -5237,6 +5307,7 @@ mod expand_members {
                     },
                     types,
                     state,
+                    max_type_size,
                 )
             }
             TypeInner::TypeAppT(box TypeAppTData {
@@ -5448,16 +5519,24 @@ mod expand_literal_union {
             TypeInner::AnnotT(_, inner_t, _) => type__::<I>(env, state, id, inner_t),
             TypeInner::UnionT(_, rep) => {
                 let types: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
+                let max_type_size = env.max_type_size();
                 app_union(
                     false,
                     |t, s| type__::<I>(env, s, id.clone(), t),
                     types,
                     state,
+                    max_type_size,
                 )
             }
             TypeInner::IntersectionT(_, rep) => {
                 let types: Vec<Type> = rep.members_iter().map(|t| t.dupe()).collect();
-                app_intersection(|t, s| type__::<I>(env, s, id.clone(), t), types, state)
+                let max_type_size = env.max_type_size();
+                app_intersection(
+                    |t, s| type__::<I>(env, s, id.clone(), t),
+                    types,
+                    state,
+                    max_type_size,
+                )
             }
             TypeInner::TypeAppT(box TypeAppTData {
                 reason,
@@ -5565,13 +5644,19 @@ impl<I: NormalizerInput> Normalizer<I> {
     }
 
     pub fn run_type(genv: &Genv<'_, '_>, state: &mut State, t: &Type) -> Result<ALocElt, Error> {
-        Self::run_type_aux(
+        state.reset_type_size_budget(genv.options.max_type_size);
+        match Self::run_type_aux(
             genv,
             state,
             t,
             element_converter::convert_toplevel::<I>,
             simplify_elt,
-        )
+        ) {
+            Err(error) if error.kind == ErrorKind::TypeSizeLimit => {
+                Ok(ALocElt::Type(Arc::new(ty::Ty::Truncated)))
+            }
+            result => result,
+        }
     }
 
     pub fn run_module_type(

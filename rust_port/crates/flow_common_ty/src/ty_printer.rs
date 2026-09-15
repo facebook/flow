@@ -283,6 +283,7 @@ fn type_impl<L: Dupe>(
     size: &mut PrintState<L>,
 ) -> LayoutNode {
     match t {
+        Ty::Truncated => crop_atom(size),
         Ty::Bound(data) => {
             let (_, name) = data.as_ref();
             LayoutNode::atom(name.to_string())

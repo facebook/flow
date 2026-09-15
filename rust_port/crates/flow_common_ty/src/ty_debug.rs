@@ -63,6 +63,7 @@ pub fn string_of_polarity(p: Polarity) -> &'static str {
 
 pub fn string_of_ctor_t<L>(t: &Ty<L>) -> &'static str {
     match t {
+        Ty::Truncated => "Truncated",
         Ty::Bound(_) => "Bound",
         Ty::Generic(_) => "Generic",
         Ty::Any(AnyKind::Annotated(_)) => "Explicit Any",
@@ -560,6 +561,7 @@ fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
     }
     let depth = depth - 1;
     match t {
+        Ty::Truncated => "Truncated".to_string(),
         Ty::Bound(data) => {
             let (_, s) = data.as_ref();
             format!("Bound({})", s)
@@ -1382,6 +1384,7 @@ fn json_of_t_list<L: Debug + Clone + Dupe>(
     strip_root: Option<&Path>,
 ) -> Vec<(String, Json)> {
     match t {
+        Ty::Truncated => vec![("truncated".to_string(), Json::Bool(true))],
         Ty::Bound(data) => {
             let (_, name) = data.as_ref();
             vec![("bound".to_string(), Json::String(name.clone()))]
