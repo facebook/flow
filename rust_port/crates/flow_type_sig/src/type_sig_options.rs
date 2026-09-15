@@ -21,6 +21,7 @@ pub struct TypeSigOptions {
     pub enable_enums: bool,
     pub enable_component_syntax: bool,
     pub component_syntax_enabled_in_config: bool,
+    pub declare_global_support: bool,
     pub enable_ts_syntax: bool,
     pub enable_ts_utility_syntax: bool,
     pub hook_compatibility: bool,
@@ -77,6 +78,7 @@ impl TypeSigOptions {
             enable_enums: options.enums || flow_common::files::has_ts_ext(file),
             enable_component_syntax,
             component_syntax_enabled_in_config: options.component_syntax,
+            declare_global_support: options.declare_global_support,
             enable_ts_syntax: options.ts_syntax || flow_common::files::has_ts_ext(file),
             enable_ts_utility_syntax: options.ts_utility_syntax
                 || flow_common::files::has_ts_ext(file),
@@ -104,6 +106,7 @@ impl TypeSigOptions {
             enable_enums: options.enums,
             enable_component_syntax: true,
             component_syntax_enabled_in_config: options.component_syntax,
+            declare_global_support: options.declare_global_support,
             enable_ts_syntax: false,
             enable_ts_utility_syntax: true,
             hook_compatibility: options.hook_compatibility,

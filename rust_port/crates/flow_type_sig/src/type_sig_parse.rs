@@ -985,6 +985,11 @@ pub(super) mod scope {
             types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             modules: BTreeMap<FlowSmolStr, (LocNode<'arena>, Rc<RefCell<Exports<'arena, 'ast>>>)>,
         },
+        DeclareGlobal {
+            values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
+            types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
+            global_target: ScopeId,
+        },
         DeclareModule {
             values: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
             types: BTreeMap<FlowSmolStr, BindingNode<'arena, 'ast>>,
@@ -1060,6 +1065,45 @@ pub(super) mod scope {
         })
     }
 
+    pub(crate) fn push_declare_global<'arena, 'ast>(
+        scopes: &mut Scopes<'arena, 'ast>,
+        global_target: ScopeId,
+    ) -> ScopeId {
+        let (values, types) = match scopes.get(global_target) {
+            Scope::Global { values, types, .. } => (values.clone(), types.clone()),
+            _ => panic!("DeclareGlobal target must be a Global scope"),
+        };
+        scopes.push(Scope::DeclareGlobal {
+            values,
+            types,
+            global_target,
+        })
+    }
+
+    pub(crate) fn finalize_declare_global<'arena, 'ast>(
+        scopes: &mut Scopes<'arena, 'ast>,
+        scope: ScopeId,
+    ) {
+        let (values, types, global_target) = match scopes.get(scope) {
+            Scope::DeclareGlobal {
+                values,
+                types,
+                global_target,
+            } => (values.clone(), types.clone(), *global_target),
+            _ => panic!("Expected DeclareGlobal scope"),
+        };
+        let Scope::Global {
+            values: global_values,
+            types: global_types,
+            ..
+        } = scopes.get_mut(global_target)
+        else {
+            panic!("DeclareGlobal target must be a Global scope")
+        };
+        *global_values = values;
+        *global_types = types;
+    }
+
     pub(super) fn push_lex(scopes: &mut Scopes, parent: ScopeId) -> ScopeId {
         scopes.push(Scope::Lexical {
             parent,
@@ -1123,6 +1167,7 @@ pub(super) mod scope {
                 f(&mut exports.borrow_mut())
             }
             Scope::DeclareNamespace { .. }
+            | Scope::DeclareGlobal { .. }
             | Scope::Global { .. }
             | Scope::Lexical { .. }
             | Scope::ConditionalTypeExtends(_) => {}
@@ -1298,14 +1343,14 @@ pub(super) mod scope {
         incoming: IncomingBindingKind,
     ) {
         let existing = match scopes.get(id) {
-            Scope::Global { values, types, .. } => {
+            Scope::Global { values, types, .. } | Scope::DeclareGlobal { values, types, .. } => {
                 let map = if type_only { values } else { types };
-                match map.get(name) {
-                    Some(BindingNode::LocalBinding(node)) => node.dupe(),
-                    _ => return,
-                }
+                map.get(name).map(|binding| binding.dupe())
             }
-            _ => return,
+            _ => None,
+        };
+        let Some(BindingNode::LocalBinding(existing)) = existing else {
+            return;
         };
         let conflict = {
             let data = existing.0.data();
@@ -1373,12 +1418,14 @@ pub(super) mod scope {
         // class/enum-vs-type-alias rejection is handled by callers via
         // `report_cross_namespace_conflict` invoked before `bind` runs.
         fn scope_check_bind<'arena, 'ast>(
-            scope: &Scope<'arena, 'ast>,
+            scopes: &Scopes<'arena, 'ast>,
+            id: ScopeId,
             name: &FlowSmolStr,
             type_only: bool,
         ) -> CheckBindResult<'arena, 'ast> {
-            match scope {
+            match scopes.get(id) {
                 Scope::Global { values, types, .. }
+                | Scope::DeclareGlobal { values, types, .. }
                 | Scope::DeclareModule { values, types, .. }
                 | Scope::DeclareNamespace { values, types, .. }
                 | Scope::Module { values, types, .. }
@@ -1387,7 +1434,10 @@ pub(super) mod scope {
                     if let Some(existing) = map.get(name) {
                         CheckBindResult::SameKindExisting {
                             existing: existing.dupe(),
-                            in_global_scope: matches!(scope, Scope::Global { .. }),
+                            in_global_scope: matches!(
+                                scopes.get(id),
+                                Scope::Global { .. } | Scope::DeclareGlobal { .. }
+                            ),
                         }
                     } else {
                         CheckBindResult::Missing
@@ -1397,7 +1447,7 @@ pub(super) mod scope {
             }
         }
 
-        let new_binding = match scope_check_bind(scopes.get(id), name, type_only) {
+        let new_binding = match scope_check_bind(scopes, id, name, type_only) {
             CheckBindResult::SameKindExisting {
                 existing,
                 in_global_scope,
@@ -1417,6 +1467,7 @@ pub(super) mod scope {
         };
         match scopes.get_mut(id) {
             Scope::Global { values, types, .. }
+            | Scope::DeclareGlobal { values, types, .. }
             | Scope::DeclareModule { values, types, .. }
             | Scope::DeclareNamespace { values, types, .. }
             | Scope::Module { values, types, .. }
@@ -1451,6 +1502,14 @@ pub(super) mod scope {
                         id = *parent;
                     }
                 },
+                Scope::DeclareGlobal {
+                    values,
+                    global_target,
+                    ..
+                } => match values.get(name) {
+                    Some(binding) => return Some((binding.dupe(), id)),
+                    None => id = *global_target,
+                },
                 Scope::DeclareNamespace { parent, values, .. } => match values
                     .get(name)
                     .map(|binding| binding.dupe())
@@ -1466,15 +1525,24 @@ pub(super) mod scope {
     }
 
     fn lookup_value_in_scope<'arena, 'ast>(
-        scope: &Scope<'arena, 'ast>,
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
         name: &FlowSmolStr,
     ) -> Option<BindingNode<'arena, 'ast>> {
-        match scope {
+        match scopes.get(id) {
             Scope::Global { values, .. }
             | Scope::DeclareModule { values, .. }
             | Scope::DeclareNamespace { values, .. }
             | Scope::Module { values, .. }
             | Scope::Lexical { values, .. } => values.get(name).map(|binding| binding.dupe()),
+            Scope::DeclareGlobal {
+                values,
+                global_target,
+                ..
+            } => values
+                .get(name)
+                .map(|binding| binding.dupe())
+                .or_else(|| lookup_value_in_scope(scopes, *global_target, name)),
             Scope::ConditionalTypeExtends(_) => None,
         }
     }
@@ -1530,15 +1598,22 @@ pub(super) mod scope {
     }
 
     fn lookup_type_in_scope<'arena, 'ast>(
-        scope: &Scope<'arena, 'ast>,
+        scopes: &Scopes<'arena, 'ast>,
+        id: ScopeId,
         name: &FlowSmolStr,
     ) -> Option<BindingNode<'arena, 'ast>> {
-        match scope {
+        match scopes.get(id) {
             Scope::Global { values, types, .. }
             | Scope::DeclareModule { values, types, .. }
             | Scope::DeclareNamespace { values, types, .. }
             | Scope::Module { values, types, .. }
             | Scope::Lexical { values, types, .. } => lookup_scope(name, values, types),
+            Scope::DeclareGlobal {
+                values,
+                types,
+                global_target,
+            } => lookup_scope(name, values, types)
+                .or_else(|| lookup_type_in_scope(scopes, *global_target, name)),
             Scope::ConditionalTypeExtends(_) => None,
         }
     }
@@ -1558,7 +1633,10 @@ pub(super) mod scope {
                 | Scope::Lexical { parent, .. } => {
                     id = *parent;
                 }
-                Scope::Global { .. } | Scope::DeclareModule { .. } | Scope::Module { .. } => {
+                Scope::Global { .. }
+                | Scope::DeclareGlobal { .. }
+                | Scope::DeclareModule { .. }
+                | Scope::Module { .. } => {
                     path.reverse();
                     return if path.is_empty() {
                         None
@@ -1579,7 +1657,7 @@ pub(super) mod scope {
         for prefix_len in (1..=path.len()).rev() {
             let mut path = path.iter().take(prefix_len);
             let first = path.next()?;
-            let mut binding = lookup_type_in_scope(scopes.get(host), first)?;
+            let mut binding = lookup_type_in_scope(scopes, host, first)?;
             for namespace_name in path {
                 binding = namespace_member_type(scopes, binding, namespace_name)?;
             }
@@ -1599,7 +1677,7 @@ pub(super) mod scope {
         for prefix_len in (1..=path.len()).rev() {
             let mut path = path.iter().take(prefix_len);
             let first = path.next()?;
-            let mut binding = lookup_value_in_scope(scopes.get(host), first)?;
+            let mut binding = lookup_value_in_scope(scopes, host, first)?;
             for namespace_name in path {
                 binding = namespace_member_value(scopes, binding, namespace_name)?;
             }
@@ -1660,6 +1738,14 @@ pub(super) mod scope {
                         id = *parent;
                     }
                 },
+                Scope::DeclareGlobal {
+                    global_target,
+                    values,
+                    types,
+                } => match lookup_scope(name, values, types) {
+                    Some(binding) => return Some((binding, id)),
+                    None => id = *global_target,
+                },
             }
         }
     }
@@ -1718,6 +1804,7 @@ pub(super) mod scope {
     ) -> Option<BindingNode<'arena, 'ast>> {
         match scopes.get(id) {
             Scope::Global { types, .. }
+            | Scope::DeclareGlobal { types, .. }
             | Scope::DeclareModule { types, .. }
             | Scope::DeclareNamespace { types, .. }
             | Scope::Module { types, .. }
@@ -1733,6 +1820,7 @@ pub(super) mod scope {
     ) -> Option<BindingNode<'arena, 'ast>> {
         match scopes.get(id) {
             Scope::Global { values, .. }
+            | Scope::DeclareGlobal { values, .. }
             | Scope::DeclareModule { values, .. }
             | Scope::DeclareNamespace { values, .. }
             | Scope::Module { values, .. }
@@ -1745,6 +1833,7 @@ pub(super) mod scope {
         loop {
             match scopes.get(id) {
                 Scope::Global { .. }
+                | Scope::DeclareGlobal { .. }
                 | Scope::DeclareModule { .. }
                 | Scope::DeclareNamespace { .. }
                 | Scope::Module { .. } => return id,
@@ -1771,6 +1860,7 @@ pub(super) mod scope {
         loop {
             match scopes.get(id) {
                 Scope::Global { .. }
+                | Scope::DeclareGlobal { .. }
                 | Scope::DeclareModule { .. }
                 | Scope::DeclareNamespace { .. }
                 | Scope::Module { .. } => return None,
@@ -4321,6 +4411,7 @@ pub(super) mod scope {
                 }
             }
             Scope::DeclareNamespace { .. }
+            | Scope::DeclareGlobal { .. }
             | Scope::Global { .. }
             | Scope::Lexical { .. }
             | Scope::ConditionalTypeExtends(_) => {
@@ -5294,9 +5385,9 @@ pub(super) mod scope {
             }
             _ => panic!("The scope must be DeclareNamespace"),
         };
-
         let (values, types) = match scopes.get_mut(parent) {
             Scope::Global { values, types, .. }
+            | Scope::DeclareGlobal { values, types, .. }
             | Scope::DeclareModule { values, types, .. }
             | Scope::DeclareNamespace { values, types, .. }
             | Scope::Module { values, types, .. }
@@ -5410,6 +5501,7 @@ pub(super) mod scope {
                 let parent = *parent;
                 let (parent_values, parent_types) = match scopes.get_mut(parent) {
                     Scope::Global { values, types, .. }
+                    | Scope::DeclareGlobal { values, types, .. }
                     | Scope::DeclareModule { values, types, .. }
                     | Scope::DeclareNamespace { values, types, .. }
                     | Scope::Module { values, types, .. }
@@ -13271,11 +13363,34 @@ fn namespace_decl<'arena: 'ast, 'ast, F>(
             let name = id.name.dupe();
             let scope = scope::push_declare_namespace(scopes, scope, name.dupe());
             for s in decl.body.1.body.iter().filter(|stmt| {
-                ast_utils::acceptable_statement_in_declaration_context(true, stmt).is_ok()
+                ast_utils::acceptable_statement_in_declaration_context(
+                    ast_utils::DeclarationContext::DeclareNamespace,
+                    stmt,
+                )
+                .is_ok()
             }) {
                 visit_statement(opts, scope, scopes, tbls, s);
             }
             scope::finalize_declare_namespace_exn(scope, scopes, tbls, is_type_only, id_loc, name);
+        }
+    }
+}
+
+pub(crate) fn declare_global<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
+    augmentation_scope: ScopeId,
+    scopes: &mut scope::Scopes<'arena, 'ast>,
+    tbls: &mut Tables<'arena, 'ast>,
+    decl: &'ast ast::statement::DeclareNamespace<Loc, Loc>,
+) {
+    for stmt in decl.body.1.body.iter() {
+        if ast_utils::acceptable_statement_in_declaration_context(
+            ast_utils::DeclarationContext::DeclareGlobal,
+            stmt,
+        )
+        .is_ok()
+        {
+            statement(opts, augmentation_scope, scopes, tbls, stmt);
         }
     }
 }
@@ -13674,7 +13789,11 @@ fn declare_export_decl<'arena: 'ast, 'ast>(
                     let id_loc = tbls.push_loc(id.loc.dupe());
                     let name = id.name.dupe();
                     let stmts = ns.body.1.body.iter().filter(|stmt| {
-                        ast_utils::acceptable_statement_in_declaration_context(true, stmt).is_ok()
+                        ast_utils::acceptable_statement_in_declaration_context(
+                            ast_utils::DeclarationContext::DeclareNamespace,
+                            stmt,
+                        )
+                        .is_ok()
                     });
                     let ns_scope = scope::push_declare_namespace(scopes, scope, name.dupe());
                     for s in stmts {
@@ -14512,7 +14631,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
             let ast::statement::Block { body: stmts, .. } = block;
             for stmt in stmts.iter() {
                 match ast_utils::acceptable_statement_in_declaration_context(
-                    false, // in_declare_namespace
+                    ast_utils::DeclarationContext::DeclareModule,
                     stmt,
                 ) {
                     Ok(_) => {

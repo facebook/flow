@@ -214,6 +214,7 @@ fn builtin_sig_options() -> TypeSigOptions {
         enable_enums: true,
         enable_component_syntax: true,
         component_syntax_enabled_in_config: true,
+        declare_global_support: false,
         enable_ts_syntax: true,
         enable_ts_utility_syntax: true,
         hook_compatibility: true,
@@ -586,7 +587,7 @@ fn init_builtins(params: &Value) -> Result<Value, String> {
             .collect::<Result<Vec<_>, _>>()
     })?;
     let (_errors, master_cx) =
-        merge::merge_lib_files(&builtin_sig_options(), Arc::default(), &asts);
+        merge::merge_lib_files(&builtin_sig_options(), Arc::default(), &asts, &[]);
     STATE.with(|state| {
         state.borrow_mut().master_cx = Arc::new(master_cx);
     });

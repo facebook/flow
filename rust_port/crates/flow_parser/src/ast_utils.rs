@@ -632,8 +632,16 @@ pub fn is_super_member_access<M: Dupe, T: Dupe>(member: &expression::Member<M, T
     matches!(member.object.deref(), ExpressionInner::Super { .. })
 }
 
+/// The declaration construct whose body is being validated.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DeclarationContext {
+    DeclareModule,
+    DeclareNamespace,
+    DeclareGlobal,
+}
+
 pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
-    in_declare_namespace: bool,
+    context: DeclarationContext,
     x: &statement::Statement<M, T>,
 ) -> Result<(), &'static str> {
     match x.deref() {
@@ -648,12 +656,13 @@ pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
         statement::StatementInner::Debugger { .. } => Err("debugger"),
         statement::StatementInner::DoWhile { .. } => Err("do while"),
         statement::StatementInner::ExportDefaultDeclaration { .. } => Err("export default"),
-        statement::StatementInner::ExportNamedDeclaration { inner, .. } => {
-            match inner.export_kind {
+        statement::StatementInner::ExportNamedDeclaration { inner, .. } => match context {
+            DeclarationContext::DeclareGlobal => Err("export declaration"),
+            _ => match inner.export_kind {
                 statement::ExportKind::ExportValue => Err("value export"),
                 statement::ExportKind::ExportType => Ok(()),
-            }
-        }
+            },
+        },
         statement::StatementInner::Expression { .. } => Err("expression"),
         statement::StatementInner::For { .. } => Err("for"),
         statement::StatementInner::ForIn { .. } => Err("for in"),
@@ -681,18 +690,50 @@ pub fn acceptable_statement_in_declaration_context<M: Dupe, T: Dupe>(
         statement::StatementInner::While { .. } => Err("while"),
         statement::StatementInner::With { .. } => Err("with"),
         statement::StatementInner::ImportDeclaration { .. } => {
-            if in_declare_namespace {
-                Err("import declaration")
-            } else {
+            if context == DeclarationContext::DeclareModule {
                 Ok(())
+            } else {
+                Err("import declaration")
             }
         }
         statement::StatementInner::DeclareModuleExports { .. } => {
-            if in_declare_namespace {
-                Err("declare module.exports")
-            } else {
+            if context == DeclarationContext::DeclareModule {
                 Ok(())
+            } else {
+                Err("declare module.exports")
             }
+        }
+        statement::StatementInner::DeclareExportDeclaration { .. }
+            if context == DeclarationContext::DeclareGlobal =>
+        {
+            Err("declare export")
+        }
+        statement::StatementInner::ExportAssignment { .. }
+            if context == DeclarationContext::DeclareGlobal =>
+        {
+            Err("export assignment")
+        }
+        statement::StatementInner::NamespaceExportDeclaration { .. }
+            if context == DeclarationContext::DeclareGlobal =>
+        {
+            Err("namespace export")
+        }
+        statement::StatementInner::ImportEqualsDeclaration { .. }
+            if context == DeclarationContext::DeclareGlobal =>
+        {
+            Err("import-equals declaration")
+        }
+        statement::StatementInner::DeclareModule { inner, .. }
+            if context == DeclarationContext::DeclareGlobal
+                && matches!(inner.id, statement::declare_module::Id::Literal(_)) =>
+        {
+            Err("string-named module declaration")
+        }
+        statement::StatementInner::DeclareNamespace { inner, .. }
+            if context == DeclarationContext::DeclareGlobal
+                && matches!(inner.id, statement::declare_namespace::Id::Global(_)) =>
+        {
+            Err("nested declare global")
         }
         statement::StatementInner::DeclareClass { .. }
         | statement::StatementInner::DeclareComponent { .. }

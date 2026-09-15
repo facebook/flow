@@ -1018,6 +1018,19 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default, E> WithBindings<Loc, E> for 
         self.pop_ssa_env(bindings_map, old_ssa_env);
         result
     }
+
+    fn with_isolated_bindings<T>(
+        &mut self,
+        lexical: bool,
+        loc: Loc,
+        bindings: Bindings<Loc>,
+        visit: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
+        let outer_env = std::mem::take(&mut self.ssa_env);
+        let result = self.with_bindings(lexical, loc, bindings, visit);
+        self.ssa_env = outer_env;
+        result
+    }
 }
 
 impl<'ast, Loc: Dupe + Clone + Eq + Ord + Hash + Default>
@@ -1980,6 +1993,33 @@ impl<'ast, Loc: Dupe + Clone + Eq + Ord + Hash + Default>
         self.with_bindings(true, loc.dupe(), bindings, |this| {
             this.block(loc, body_block)
         })
+    }
+
+    fn declare_namespace(
+        &mut self,
+        _loc: &Loc,
+        namespace: &ast::statement::DeclareNamespace<Loc, Loc>,
+    ) -> Result<(), AbruptCompletion> {
+        use ast::statement::declare_namespace::Id;
+
+        let isolated = match &namespace.id {
+            Id::Global(_) => true,
+            Id::Local(id) => {
+                self.pattern_identifier(Some(ast::VariableKind::Const), id)?;
+                false
+            }
+        };
+        let (loc, body) = &namespace.body;
+        let bindings = {
+            let mut hoist = Hoister::new(self.enable_enums, true);
+            let Ok(()) = hoist.block(loc, body);
+            hoist.into_bindings()
+        };
+        if isolated {
+            self.with_isolated_bindings(true, loc.dupe(), bindings, |this| this.block(loc, body))
+        } else {
+            self.with_bindings(true, loc.dupe(), bindings, |this| this.block(loc, body))
+        }
     }
 
     fn call(

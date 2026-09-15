@@ -121,7 +121,7 @@ fn load_lib_files(
     let (builtin_exports, master_cx, cx_opt) = if ok {
         let sig_opts = TypeSigOptions::builtin_options(options);
         let (builtin_errors, master_cx) =
-            merge::merge_lib_files(&sig_opts, all_unordered_libs, &ordered_asts);
+            merge::merge_lib_files(&sig_opts, all_unordered_libs, &ordered_asts, &[]);
         match master_cx {
             MasterContext::EmptyMasterContext => {
                 (Exports::empty(), MasterContext::EmptyMasterContext, None)

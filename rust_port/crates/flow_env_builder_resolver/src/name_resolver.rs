@@ -463,6 +463,27 @@ mod full_env {
             }
         }
 
+        pub(super) fn isolated_globals(&self) -> Self {
+            let root_scope = self.scopes.first().expect("Missing global scope");
+            let value_local_stacked_env = root_scope
+                .value_local_stacked_env
+                .iter()
+                .filter_map(|(name, stack)| {
+                    stack
+                        .first()
+                        .map(|binding| (name.dupe(), vec![binding.dupe()]))
+                })
+                .collect();
+            FullEnv {
+                scopes: vec![FunctionScope {
+                    value_local_stacked_env,
+                    type_local_stacked_env: BTreeMap::new(),
+                    value_captured: Rc::new(RefCell::new(BTreeMap::new())),
+                    type_captured: Rc::new(RefCell::new(BTreeMap::new())),
+                }],
+            }
+        }
+
         pub(super) fn fold_current_function_scope_values<A, F>(&self, init: A, mut f: F) -> A
         where
             F: FnMut(A, &EnvVal) -> A,
@@ -1653,6 +1674,18 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> WithBindings<ALoc, AbruptCompletion>
         visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
     ) -> Result<T, AbruptCompletion> {
         self.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, visit)
+    }
+
+    fn with_isolated_bindings<T>(
+        &mut self,
+        _lexical: bool,
+        _loc: ALoc,
+        bindings: Bindings<ALoc>,
+        visit: impl FnOnce(&mut Self) -> Result<T, AbruptCompletion>,
+    ) -> Result<T, AbruptCompletion> {
+        self.with_isolated_env(|resolver| {
+            resolver.with_scoped_bindings(ThisSuperBindingEnv::FunctionEnv, &bindings, visit)
+        })
     }
 
     fn with_type_param_default<T>(
@@ -3045,6 +3078,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 Err(e)
             }
         }
+    }
+
+    fn with_isolated_env<T>(&mut self, visit: impl FnOnce(&mut Self) -> T) -> T {
+        let isolated_globals = self.env_state.env.isolated_globals();
+        let outer_env = std::mem::replace(&mut self.env_state.env, isolated_globals);
+        let result = visit(self);
+        self.env_state.env = outer_env;
+        result
     }
 
     fn run<
@@ -8244,6 +8285,17 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         .unwrap_or_default()
     }
 
+    fn statements_with_isolated_bindings(
+        &mut self,
+        loc: ALoc,
+        bindings: flow_analysis::bindings::Bindings<ALoc>,
+        statements: &[flow_parser::ast::statement::Statement<ALoc, ALoc>],
+    ) -> Option<AbruptCompletion> {
+        self.with_isolated_env(|resolver| {
+            resolver.statements_with_bindings(loc, bindings, statements)
+        })
+    }
+
     fn synthesize_read(&self, name: &FlowSmolStr) -> env_api::Read<ALoc> {
         let env_val = self.env_read(name);
         let v = if self.env_state.visiting_hoisted_type {
@@ -11175,7 +11227,11 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             None
         };
         let saved_exclude_syms = std::mem::take(&mut self.env_state.exclude_syms);
-        self.statements_with_bindings(block_loc.dupe(), bindings, statements);
+        let _completion = if matches!(m.id, Id::Global(_)) {
+            self.statements_with_isolated_bindings(block_loc.dupe(), bindings, statements)
+        } else {
+            self.statements_with_bindings(block_loc.dupe(), bindings, statements)
+        };
         self.env_state.exclude_syms = saved_exclude_syms;
         if let Some(saved_path) = saved_declare_namespace_path {
             self.env_state

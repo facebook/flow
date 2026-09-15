@@ -188,6 +188,7 @@ pub enum ContextDependentUnsupportedStatement {
     UnsupportedStatementInLibdef(FlowSmolStr),
     UnsupportedStatementInDeclareModule(FlowSmolStr),
     UnsupportedStatementInDeclareNamespace(FlowSmolStr),
+    UnsupportedStatementInDeclareGlobal(FlowSmolStr),
 }
 
 #[derive(

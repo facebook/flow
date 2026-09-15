@@ -2106,14 +2106,22 @@ fn merge_libs_from_ordered_asts(
         &ast::Program<Loc, Loc>,
         flow_common::type_strictness::TypeStrictnessKind,
     )],
+    global_augmentation_asts: &[(
+        &ast::Program<Loc, Loc>,
+        flow_common::type_strictness::TypeStrictnessKind,
+    )],
 ) -> (
     flow_error::ErrorSet,
     compact_table::Table<Loc>,
     flow_type_sig::packed_type_sig::Builtins<Loc>,
 ) {
     let arenas = bumpalo::Bump::new();
-    let (builtin_errors, builtin_locs, builtins) =
-        type_sig_utils::parse_and_pack_builtins(sig_opts, &arenas, ordered_asts);
+    let (builtin_errors, builtin_locs, builtins) = type_sig_utils::parse_and_pack_builtins(
+        sig_opts,
+        &arenas,
+        ordered_asts,
+        global_augmentation_asts,
+    );
     let builtin_errors: Vec<FlowError<ALoc>> = builtin_errors
         .into_iter()
         .filter_map(|err| match err {
@@ -2151,6 +2159,10 @@ pub fn merge_lib_files(
         flow_common::type_strictness::TypeStrictnessKind,
         Arc<ast::Program<Loc, Loc>>,
     )],
+    global_augmentation_asts: &[(
+        flow_common::type_strictness::TypeStrictnessKind,
+        Arc<ast::Program<Loc, Loc>>,
+    )],
 ) -> (flow_error::ErrorSet, MasterContext) {
     let global_libdefs: Arc<BTreeSet<FileKey>> = Arc::new(
         ordered_asts
@@ -2165,8 +2177,12 @@ pub fn merge_lib_files(
         .iter()
         .map(|(strictness_kind, ast)| (ast.as_ref(), *strictness_kind))
         .collect();
+    let global_augmentation_asts: Vec<_> = global_augmentation_asts
+        .iter()
+        .map(|(strictness_kind, ast)| (ast.as_ref(), *strictness_kind))
+        .collect();
     let (builtin_errors, builtin_locs, builtins) =
-        merge_libs_from_ordered_asts(sig_opts, &ordered_asts);
+        merge_libs_from_ordered_asts(sig_opts, &ordered_asts, &global_augmentation_asts);
     match builtin_leader_file_key {
         None => (builtin_errors, MasterContext::EmptyMasterContext),
         Some(builtin_leader_file_key) => (

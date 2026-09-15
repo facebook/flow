@@ -282,6 +282,7 @@ mod tests {
                 enable_enums: true,
                 enable_component_syntax: true,
                 component_syntax_enabled_in_config: true,
+                declare_global_support: false,
                 enable_ts_syntax: true,
                 enable_ts_utility_syntax: true,
                 hook_compatibility: true,
@@ -293,7 +294,7 @@ mod tests {
                 tslib_syntax: true,
                 is_lib_file: true,
             };
-            let (_, master_cx) = merge::merge_lib_files(&sig_opts, Arc::default(), &asts);
+            let (_, master_cx) = merge::merge_lib_files(&sig_opts, Arc::default(), &asts, &[]);
             Arc::new(master_cx)
         }
 

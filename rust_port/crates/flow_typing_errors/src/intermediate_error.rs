@@ -9175,6 +9175,13 @@ where
                             code("declare namespace"),
                             text(". The statement will be ignored."),
                         ]),
+                        UnsupportedStatementInDeclareGlobal(kind) => friendly::Message(vec![
+                            text("Cannot use "),
+                            text(kind),
+                            text(" statements within "),
+                            code("declare global"),
+                            text(". The statement will be ignored."),
+                        ]),
                     },
                     DeclareGlobal => friendly::Message(vec![
                         code("declare global"),

@@ -1,0 +1,34 @@
+Error -------------------------------------------------------------- node_modules/declare-global-package/index.d.ts:7:12
+
+Cannot resolve name `MissingType`. [cannot-resolve-name]
+
+   7|   type T = MissingType; // error: cannot resolve `MissingType`
+                 ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------- node_modules/declare-global-package/index.d.ts:8:31
+
+Cannot resolve name `missingValue`. [cannot-resolve-name]
+
+   8|   declare const value: typeof missingValue; // error: cannot resolve `missingValue`
+                                    ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------- node_modules/declare-global-package/index.d.ts:9:23
+
+Cannot resolve name `ModuleType`. [cannot-resolve-name]
+
+   9|   type CapturedType = ModuleType; // error: cannot capture module type
+                            ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------- node_modules/declare-global-package/index.d.ts:10:39
+
+Cannot resolve name `moduleValue`. [cannot-resolve-name]
+
+   10|   declare const capturedValue: typeof moduleValue; // error: cannot capture module value
+                                             ^^^^^^^^^^^
+
+
+
+Found 4 errors

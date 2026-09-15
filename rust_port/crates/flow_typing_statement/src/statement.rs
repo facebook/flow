@@ -4997,7 +4997,10 @@ fn declare_module<'a>(
     let elements_ast = statement_list(cx, elements)?;
     for stmt in elements_ast.iter() {
         let loc = stmt.loc();
-        match flow_parser::ast_utils::acceptable_statement_in_declaration_context(false, stmt) {
+        match flow_parser::ast_utils::acceptable_statement_in_declaration_context(
+            flow_parser::ast_utils::DeclarationContext::DeclareModule,
+            stmt,
+        ) {
             Ok(()) => {}
             Err(kind) => {
                 flow_js::add_output_non_speculating(
@@ -5100,14 +5103,17 @@ pub fn declare_namespace<'a>(
                 namespace_symbol,
                 reason,
                 &body_statements,
+                flow_parser::ast_utils::DeclarationContext::DeclareGlobal,
             );
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUnsupportedSyntax(Box::new((
-                    name_loc.dupe(),
-                    UnsupportedSyntax::DeclareGlobal,
-                ))),
-            );
+            if !cx.declare_global_support() {
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(Box::new((
+                        name_loc.dupe(),
+                        UnsupportedSyntax::DeclareGlobal,
+                    ))),
+                );
+            }
             flow_js::add_output_non_speculating(
                 cx,
                 ErrorMessage::EUndocumentedFeature {
@@ -5130,6 +5136,7 @@ pub fn declare_namespace<'a>(
                 namespace_symbol,
                 reason,
                 &body_statements,
+                flow_parser::ast_utils::DeclarationContext::DeclareNamespace,
             );
             (
                 t.dupe(),

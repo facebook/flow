@@ -1280,6 +1280,7 @@ pub fn analyze_declare_namespace<'a>(
     namespace_symbol: Symbol,
     reason: Reason,
     statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],
+    declaration_context: ast_utils::DeclarationContext,
 ) -> Type {
     let mut info = module_info::ModuleInfo {
         kind: module_info::Kind::Unknown,
@@ -1287,19 +1288,34 @@ pub fn analyze_declare_namespace<'a>(
         type_star: Vec::new(),
     };
     for stmt in statements {
-        match ast_utils::acceptable_statement_in_declaration_context(true, stmt) {
+        match ast_utils::acceptable_statement_in_declaration_context(declaration_context, stmt) {
             Ok(()) => {
                 visit_toplevel_statement(cx, &mut info, true, stmt);
             }
             Err(kind) => {
+                let unsupported_statement = match declaration_context {
+                    ast_utils::DeclarationContext::DeclareModule => {
+                        ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareModule(
+                            FlowSmolStr::from(kind),
+                        )
+                    }
+                    ast_utils::DeclarationContext::DeclareNamespace => {
+                        ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareNamespace(
+                            FlowSmolStr::from(kind),
+                        )
+                    }
+                    ast_utils::DeclarationContext::DeclareGlobal => {
+                        ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareGlobal(
+                            FlowSmolStr::from(kind),
+                        )
+                    }
+                };
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::EUnsupportedSyntax(Box::new((
                         stmt.loc().dupe(),
                         UnsupportedSyntax::ContextDependentUnsupportedStatement(
-                            ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareNamespace(
-                                FlowSmolStr::from(kind),
-                            ),
+                            unsupported_statement,
                         ),
                     ))),
                 );

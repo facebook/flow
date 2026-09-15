@@ -35,6 +35,7 @@ fn parse_libs<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
     ordered_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
+    global_augmentation_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
 ) -> (
     parse::scope::Scopes<'arena, 'ast>,
     parse::Tables<'arena, 'ast>,
@@ -63,6 +64,32 @@ fn parse_libs<'arena: 'ast, 'ast>(
         for stmt in ast.statements.iter() {
             parse::statement(opts, global_scope, &mut scopes, &mut tbls, stmt);
         }
+    }
+    if opts.declare_global_support {
+        let augmentation_scope = parse::scope::push_declare_global(&mut scopes, global_scope);
+        for (ast, strictness_kind) in global_augmentation_asts {
+            tbls.set_strictness_kind(*strictness_kind);
+            for stmt in ast.statements.iter() {
+                if let flow_parser::ast::statement::StatementInner::DeclareNamespace {
+                    inner: decl,
+                    ..
+                } = &**stmt
+                    && matches!(
+                        decl.id,
+                        flow_parser::ast::statement::declare_namespace::Id::Global(_)
+                    )
+                {
+                    parse::declare_global(
+                        opts,
+                        augmentation_scope,
+                        &mut scopes,
+                        &mut tbls,
+                        decl.as_ref(),
+                    );
+                }
+            }
+        }
+        parse::scope::finalize_declare_global(&mut scopes, augmentation_scope);
     }
     parse::scope::bind_global_this(&mut scopes, &mut tbls, global_scope, LOC_NONE);
     let builtins = parse::scope::builtins_exn(&scopes, global_scope);
@@ -313,8 +340,9 @@ pub fn parse_and_pack_builtins<'arena: 'ast, 'ast>(
     opts: &TypeSigOptions,
     arenas: &'arena bumpalo::Bump,
     ordered_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
+    global_augmentation_asts: &[(&'ast Program<Loc, Loc>, TypeStrictnessKind)],
 ) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, Builtins<Loc>) {
-    let (scopes, tbls, globals) = parse_libs(opts, arenas, ordered_asts);
+    let (scopes, tbls, globals) = parse_libs(opts, arenas, ordered_asts, global_augmentation_asts);
     pack_builtins(opts, scopes, tbls, globals)
 }
 

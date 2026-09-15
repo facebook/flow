@@ -47,6 +47,7 @@ fn default_sig_options() -> TypeSigOptions {
         enable_enums: true,
         enable_component_syntax: true,
         component_syntax_enabled_in_config: true,
+        declare_global_support: false,
         enable_ts_syntax: true,
         enable_ts_utility_syntax: true,
         hook_compatibility: true,
@@ -125,14 +126,28 @@ where
 }
 
 fn print_builtins(contents_list: Vec<&str>) -> String {
+    print_builtins_with_global_augmentations(contents_list, vec![])
+}
+
+fn print_builtins_with_global_augmentations(
+    contents_list: Vec<&str>,
+    global_augmentation_contents_list: Vec<&str>,
+) -> String {
     let mut asts = vec![];
     for contents in &contents_list {
         let contents_str = dedent_trim(contents);
         let (ast, _errors) = parse_program_without_file(false, None, None, Ok(&contents_str));
         asts.push(ast);
     }
+    let mut global_augmentation_asts = vec![];
+    for contents in &global_augmentation_contents_list {
+        let contents_str = dedent_trim(contents);
+        let (ast, _errors) = parse_program_without_file(false, None, None, Ok(&contents_str));
+        global_augmentation_asts.push(ast);
+    }
     let opts = TypeSigOptions {
         for_builtins: true,
+        declare_global_support: !global_augmentation_contents_list.is_empty(),
         ..default_sig_options()
     };
     let arena = bumpalo::Bump::new();
@@ -140,8 +155,21 @@ fn print_builtins(contents_list: Vec<&str>) -> String {
         .iter()
         .map(|ast| (ast, flow_common::type_strictness::TypeStrictnessKind::Flow))
         .collect();
-    let (errors, locs, builtins) =
-        type_sig_utils::parse_and_pack_builtins(&opts, &arena, &ast_refs);
+    let global_augmentation_ast_refs: Vec<_> = global_augmentation_asts
+        .iter()
+        .map(|ast| {
+            (
+                ast,
+                flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(true),
+            )
+        })
+        .collect();
+    let (errors, locs, builtins) = type_sig_utils::parse_and_pack_builtins(
+        &opts,
+        &arena,
+        &ast_refs,
+        &global_augmentation_ast_refs,
+    );
 
     let mut loc_string = String::new();
     for (i, loc) in locs.iter().enumerate() {
@@ -23122,6 +23150,389 @@ Builtin global value ns
     assert_eq!(
         dedent_trim(expected_output),
         dedent_trim(&print_builtins(vec![input]))
+    )
+}
+
+#[test]
+fn builtin_declare_global_scoping() {
+    let builtins = r#"
+        type ExistingGlobal = string;
+        declare const existingGlobalValue: number;
+    "#;
+    let augmentation = r#"
+        export type ModuleType = number;
+        export declare const moduleValue: number;
+        declare global {
+          type GlobalReference = ExistingGlobal;
+          declare const globalValueReference: typeof existingGlobalValue;
+          type ModuleReference = ModuleType;
+          declare const moduleValueReference: typeof moduleValue;
+          type LocalType = boolean;
+          type LocalReference = LocalType;
+          declare const localValue: string;
+          declare const localValueReference: typeof localValue;
+        }
+    "#;
+    let expected_output = r#"
+Locs:
+0. [1:5-19]
+1. [1:22-28]
+2. [2:14-33]
+3. [2:35-41]
+4. [4:7-22]
+5. [4:25-39]
+6. [5:16-36]
+7. [5:38-64]
+8. [5:45-64]
+9. [6:7-22]
+10. [6:25-35]
+11. [7:16-36]
+12. [7:38-56]
+13. [7:45-56]
+14. [8:7-16]
+15. [8:19-26]
+16. [9:7-21]
+17. [9:24-33]
+18. [10:16-26]
+19. [10:28-34]
+20. [11:16-35]
+21. [11:37-54]
+22. [11:44-54]
+23. [0:0]
+Local defs:
+0. TypeAlias(
+    DefTypeAlias {
+        id_loc: 0,
+        custom_error_loc_opt: None,
+        name: "ExistingGlobal",
+        tparams: Mono,
+        body: Annot(
+            String(
+                1,
+            ),
+        ),
+        strictness_kind: Flow,
+    },
+)
+1. Variable(
+    DefVariable {
+        id_loc: 2,
+        name: "existingGlobalValue",
+        def: Annot(
+            Number(
+                3,
+            ),
+        ),
+    },
+)
+2. TypeAlias(
+    DefTypeAlias {
+        id_loc: 4,
+        custom_error_loc_opt: None,
+        name: "GlobalReference",
+        tparams: Mono,
+        body: TyRef(
+            Unqualified(
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 5,
+                        index: 0,
+                    },
+                ),
+            ),
+        ),
+        strictness_kind: TypeScriptLoose,
+    },
+)
+3. Variable(
+    DefVariable {
+        id_loc: 6,
+        name: "globalValueReference",
+        def: Annot(
+            Typeof(
+                AnnotTypeof {
+                    loc: 7,
+                    qname: [
+                        "existingGlobalValue",
+                    ],
+                    t: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 8,
+                                index: 1,
+                            },
+                        ),
+                    ),
+                    targs: None,
+                },
+            ),
+        ),
+    },
+)
+4. TypeAlias(
+    DefTypeAlias {
+        id_loc: 9,
+        custom_error_loc_opt: None,
+        name: "ModuleReference",
+        tparams: Mono,
+        body: TyRef(
+            Unqualified(
+                BuiltinRef(
+                    PackedRefBuiltin {
+                        ref_loc: 10,
+                        type_ref: true,
+                        name: "ModuleType",
+                    },
+                ),
+            ),
+        ),
+        strictness_kind: TypeScriptLoose,
+    },
+)
+5. Variable(
+    DefVariable {
+        id_loc: 11,
+        name: "moduleValueReference",
+        def: Annot(
+            Typeof(
+                AnnotTypeof {
+                    loc: 12,
+                    qname: [
+                        "moduleValue",
+                    ],
+                    t: Ref(
+                        BuiltinRef(
+                            PackedRefBuiltin {
+                                ref_loc: 13,
+                                type_ref: false,
+                                name: "moduleValue",
+                            },
+                        ),
+                    ),
+                    targs: None,
+                },
+            ),
+        ),
+    },
+)
+6. TypeAlias(
+    DefTypeAlias {
+        id_loc: 14,
+        custom_error_loc_opt: None,
+        name: "LocalType",
+        tparams: Mono,
+        body: Annot(
+            Boolean(
+                15,
+            ),
+        ),
+        strictness_kind: TypeScriptLoose,
+    },
+)
+7. TypeAlias(
+    DefTypeAlias {
+        id_loc: 16,
+        custom_error_loc_opt: None,
+        name: "LocalReference",
+        tparams: Mono,
+        body: TyRef(
+            Unqualified(
+                LocalRef(
+                    PackedRefLocal {
+                        ref_loc: 17,
+                        index: 6,
+                    },
+                ),
+            ),
+        ),
+        strictness_kind: TypeScriptLoose,
+    },
+)
+8. Variable(
+    DefVariable {
+        id_loc: 18,
+        name: "localValue",
+        def: Annot(
+            String(
+                19,
+            ),
+        ),
+    },
+)
+9. Variable(
+    DefVariable {
+        id_loc: 20,
+        name: "localValueReference",
+        def: Annot(
+            Typeof(
+                AnnotTypeof {
+                    loc: 21,
+                    qname: [
+                        "localValue",
+                    ],
+                    t: Ref(
+                        LocalRef(
+                            PackedRefLocal {
+                                ref_loc: 22,
+                                index: 8,
+                            },
+                        ),
+                    ),
+                    targs: None,
+                },
+            ),
+        ),
+    },
+)
+10. NamespaceBinding(
+    DefNamespaceBinding {
+        id_loc: 23,
+        name: "globalThis",
+        values: {
+            "existingGlobalValue": (
+                2,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 2,
+                            index: 1,
+                        },
+                    ),
+                ),
+            ),
+            "globalThis": (
+                23,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 23,
+                            index: 10,
+                        },
+                    ),
+                ),
+            ),
+            "globalValueReference": (
+                6,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 6,
+                            index: 3,
+                        },
+                    ),
+                ),
+            ),
+            "localValue": (
+                18,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 18,
+                            index: 8,
+                        },
+                    ),
+                ),
+            ),
+            "localValueReference": (
+                20,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 20,
+                            index: 9,
+                        },
+                    ),
+                ),
+            ),
+            "moduleValueReference": (
+                11,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 11,
+                            index: 5,
+                        },
+                    ),
+                ),
+            ),
+        },
+        types: {
+            "ExistingGlobal": (
+                0,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 0,
+                            index: 0,
+                        },
+                    ),
+                ),
+            ),
+            "GlobalReference": (
+                4,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 4,
+                            index: 2,
+                        },
+                    ),
+                ),
+            ),
+            "LocalReference": (
+                16,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 16,
+                            index: 7,
+                        },
+                    ),
+                ),
+            ),
+            "LocalType": (
+                14,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 14,
+                            index: 6,
+                        },
+                    ),
+                ),
+            ),
+            "ModuleReference": (
+                9,
+                Ref(
+                    LocalRef(
+                        PackedRefLocal {
+                            ref_loc: 9,
+                            index: 4,
+                        },
+                    ),
+                ),
+            ),
+        },
+    },
+)
+Builtin global value existingGlobalValue
+Builtin global value globalThis
+Builtin global value globalValueReference
+Builtin global value localValue
+Builtin global value localValueReference
+Builtin global value moduleValueReference
+Builtin global type ExistingGlobal
+Builtin global type GlobalReference
+Builtin global type LocalReference
+Builtin global type LocalType
+Builtin global type ModuleReference
+    "#;
+    assert_eq!(
+        dedent_trim(expected_output),
+        dedent_trim(&print_builtins_with_global_augmentations(
+            vec![builtins],
+            vec![augmentation],
+        ))
     )
 }
 

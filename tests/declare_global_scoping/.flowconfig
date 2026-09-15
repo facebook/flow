@@ -1,0 +1,6 @@
+[options]
+all=true
+experimental.declare_global_support=true
+experimental.typescript_library_definition_support=true
+module.system=node
+node_modules_errors=true

@@ -1671,6 +1671,16 @@ pub trait WithBindings<Loc: Dupe, E> {
         visit: impl FnOnce(&mut Self) -> Result<T, E>,
     ) -> Result<T, E>;
 
+    fn with_isolated_bindings<T>(
+        &mut self,
+        lexical: bool,
+        loc: Loc,
+        bindings: Bindings<Loc>,
+        visit: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
+        self.with_bindings(lexical, loc, bindings, visit)
+    }
+
     fn with_type_param_default<T>(
         &mut self,
         visit: impl FnOnce(&mut Self) -> Result<T, E>,
@@ -1756,6 +1766,19 @@ impl<Loc: Dupe + Eq + Ord + Hash + Default, E> WithBindings<Loc, E> for ScopeBui
         self.uses = save_uses;
         self.current_scope = parent;
         self.counter = save_counter;
+        result
+    }
+
+    fn with_isolated_bindings<T>(
+        &mut self,
+        lexical: bool,
+        loc: Loc,
+        bindings: Bindings<Loc>,
+        visit: impl FnOnce(&mut Self) -> Result<T, E>,
+    ) -> Result<T, E> {
+        let outer_env = std::mem::replace(&mut self.env, Env::empty());
+        let result = self.with_bindings(lexical, loc, bindings, visit);
+        self.env = outer_env;
         result
     }
 }
@@ -2034,19 +2057,24 @@ impl<'ast, Loc: Dupe + Eq + Ord + Hash + Default> AstVisitor<'ast, Loc> for Scop
             keyword: _,
             comments: _,
         } = n;
-        match id {
-            ast::statement::declare_namespace::Id::Global(_) => {}
+        let isolated = match id {
+            ast::statement::declare_namespace::Id::Global(_) => true,
             ast::statement::declare_namespace::Id::Local(id) => {
                 let Ok(()) = self.pattern_identifier(Some(ast::VariableKind::Const), id);
+                false
             }
-        }
+        };
         let (loc, block) = body;
         let bindings = {
             let mut hoist = Hoister::new(self.enable_enums, self.with_types);
             let Ok(()) = hoist.block(loc, block);
             hoist.into_bindings()
         };
-        self.with_bindings(false, loc.dupe(), bindings, |this| this.block(loc, block))
+        if isolated {
+            self.with_isolated_bindings(false, loc.dupe(), bindings, |this| this.block(loc, block))
+        } else {
+            self.with_bindings(false, loc.dupe(), bindings, |this| this.block(loc, block))
+        }
     }
 
     fn conditional_type(

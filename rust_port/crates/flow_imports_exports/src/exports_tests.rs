@@ -58,6 +58,7 @@ fn sig_opts() -> TypeSigOptions {
         enable_enums: true,
         enable_component_syntax: true,
         component_syntax_enabled_in_config: true,
+        declare_global_support: false,
         enable_ts_syntax: true,
         enable_ts_utility_syntax: true,
         hook_compatibility: true,
@@ -93,7 +94,7 @@ fn print_builtins(contents_indent: &str) -> Vec<Export> {
     opts.for_builtins = true;
     let asts = [(&ast, flow_common::type_strictness::TypeStrictnessKind::Flow)];
     let (_errors, _locs, packed_sig) =
-        type_sig_utils::parse_and_pack_builtins(&opts, &arena, &asts);
+        type_sig_utils::parse_and_pack_builtins(&opts, &arena, &asts, &[]);
     let exports = of_builtins(&packed_sig);
     exports.iter().cloned().collect()
 }

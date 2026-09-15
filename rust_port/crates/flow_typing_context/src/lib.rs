@@ -157,6 +157,7 @@ pub struct FrozenMetadata {
     pub component_syntax: bool,
     pub async_component_syntax: bool,
     pub async_component_syntax_includes: Arc<[Regex]>,
+    pub declare_global_support: bool,
     pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub deprecated_utilities_excludes: Arc<[Regex]>,
     pub dev_only_refinement_info_as_errors: bool,
@@ -218,6 +219,7 @@ impl Default for FrozenMetadata {
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Arc::from([]),
+            declare_global_support: false,
             deprecated_utilities: Arc::new(BTreeMap::new()),
             deprecated_utilities_excludes: Arc::from([]),
             dev_only_refinement_info_as_errors: false,
@@ -604,6 +606,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             component_syntax: options.component_syntax,
             async_component_syntax: options.async_component_syntax,
             async_component_syntax_includes: options.async_component_syntax_includes.dupe(),
+            declare_global_support: options.declare_global_support,
             deprecated_utilities_excludes: options.deprecated_utilities_excludes.dupe(),
             hook_compatibility_excludes: options.hook_compatibility_excludes.dupe(),
             hook_compatibility_includes: options.hook_compatibility_includes.dupe(),
@@ -1411,6 +1414,10 @@ impl<'cx> Context<'cx> {
 
     pub fn typescript_library_definition_support(&self) -> bool {
         self.0.metadata.frozen.typescript_library_definition_support
+    }
+
+    pub fn declare_global_support(&self) -> bool {
+        self.0.metadata.frozen.declare_global_support
     }
 
     pub fn assert_operator_enabled(&self) -> bool {

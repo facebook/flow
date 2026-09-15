@@ -153,6 +153,7 @@ pub mod opts {
         pub component_syntax: bool,
         pub async_component_syntax: bool,
         pub async_component_syntax_includes: Vec<String>,
+        pub declare_global_support: bool,
         pub dev_only_refinement_info_as_errors: bool,
         pub emoji: Option<bool>,
         pub enable_const_params: Option<bool>,
@@ -310,6 +311,7 @@ pub mod opts {
             component_syntax: true,
             async_component_syntax: false,
             async_component_syntax_includes: Vec::new(),
+            declare_global_support: false,
             dev_only_refinement_info_as_errors: false,
             emoji: None,
             enable_const_params: None,
@@ -2171,6 +2173,16 @@ pub mod opts {
                     config,
                 )
             }),
+            ("experimental.declare_global_support", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.declare_global_support = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
             (
                 "experimental.deprecated_utilities.excludes",
                 |values, config| {
@@ -3629,42 +3641,6 @@ pub fn get_with_ignored_version(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn always_generalize_jsx_only_accepts_true() {
-        let parse_value = |value: &str| {
-            let mut config = empty_config();
-            parse(
-                &mut config,
-                vec![
-                    (1, "[options]".to_owned()),
-                    (2, format!("experimental.always_generalize_jsx={value}")),
-                ],
-                true,
-            )
-        };
-
-        assert!(parse_value("true").is_ok());
-        assert!(matches!(parse_value("false"), Err(Error(2, _))));
-    }
-
-    #[test]
-    fn new_this_typing_only_accepts_true() {
-        let parse_value = |value: &str| {
-            let mut config = empty_config();
-            parse(
-                &mut config,
-                vec![
-                    (1, "[options]".to_owned()),
-                    (2, format!("experimental.new_this_typing={value}")),
-                ],
-                true,
-            )
-        };
-
-        assert!(parse_value("true").is_ok());
-        assert!(matches!(parse_value("false"), Err(Error(2, _))));
-    }
 
     #[test]
     fn globs_have_the_expected_semantics() {
