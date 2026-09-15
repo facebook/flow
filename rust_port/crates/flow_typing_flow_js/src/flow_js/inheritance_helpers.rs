@@ -255,68 +255,6 @@ pub(super) fn inst_structural_subtype<'cx>(
         let ukey = &dict.key;
         let uvalue = &dict.value;
         let upolarity = &dict.dict_polarity;
-        match lower.deref() {
-            TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
-                if let Some(ref l_dict) = inst_t.inst.inst_dict {
-                    let lkey = &l_dict.key;
-                    let lvalue = &l_dict.value;
-                    let lpolarity = &l_dict.dict_polarity;
-                    subtyping_kit::rec_flow_p(
-                        cx,
-                        env,
-                        Some(trace),
-                        UseOp::Frame(
-                            Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
-                                lower: lreason.dupe(),
-                                upper: reason_struct.dupe(),
-                            }),
-                            Arc::new(use_op.dupe()),
-                        ),
-                        false,
-                        lreason,
-                        reason_struct,
-                        &PropRef::Computed(ukey.dupe()),
-                        &PropertyType::OrdinaryField {
-                            type_: lkey.dupe(),
-                            polarity: *lpolarity,
-                        },
-                        &PropertyType::OrdinaryField {
-                            type_: ukey.dupe(),
-                            polarity: *upolarity,
-                        },
-                    )?;
-                    subtyping_kit::rec_flow_p(
-                        cx,
-                        env,
-                        Some(trace),
-                        UseOp::Frame(
-                            Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
-                                PropertyCompatibilityData {
-                                    prop: None,
-                                    lower: lreason.dupe(),
-                                    upper: reason_struct.dupe(),
-                                },
-                            ))),
-                            Arc::new(use_op.dupe()),
-                        ),
-                        true,
-                        lreason,
-                        reason_struct,
-                        &PropRef::Computed(uvalue.dupe()),
-                        &PropertyType::OrdinaryField {
-                            type_: lvalue.dupe(),
-                            polarity: *lpolarity,
-                        },
-                        &PropertyType::OrdinaryField {
-                            type_: uvalue.dupe(),
-                            polarity: *upolarity,
-                        },
-                    )?;
-                }
-            }
-            _ => {}
-        }
-
         let indexer_subtyping = subtyping_kit::PropsToIndexerContext {
             cx,
             env,
@@ -330,6 +268,7 @@ pub(super) fn inst_structural_subtype<'cx>(
         };
         let mut lowers = vec![lower.dupe()];
         let mut seen = BTreeSet::new();
+        let mut lower_indexer_checked = false;
         while let Some(lower) = lowers.pop() {
             for lower in helpers::possible_concrete_types_for_inspection(
                 cx,
@@ -342,6 +281,63 @@ pub(super) fn inst_structural_subtype<'cx>(
                 {
                     if !seen.insert(inst_t.inst.class_id.dupe()) {
                         continue;
+                    }
+                    if !lower_indexer_checked && let Some(l_dict) = &inst_t.inst.inst_dict {
+                        lower_indexer_checked = true;
+                        let lkey = &l_dict.key;
+                        let lvalue = &l_dict.value;
+                        let lpolarity = &l_dict.dict_polarity;
+                        subtyping_kit::rec_flow_p(
+                            cx,
+                            env,
+                            Some(trace),
+                            UseOp::Frame(
+                                Arc::new(VirtualFrameUseOp::IndexerKeyCompatibility {
+                                    lower: lreason.dupe(),
+                                    upper: reason_struct.dupe(),
+                                }),
+                                Arc::new(use_op.dupe()),
+                            ),
+                            false,
+                            lreason,
+                            reason_struct,
+                            &PropRef::Computed(ukey.dupe()),
+                            &PropertyType::OrdinaryField {
+                                type_: lkey.dupe(),
+                                polarity: *lpolarity,
+                            },
+                            &PropertyType::OrdinaryField {
+                                type_: ukey.dupe(),
+                                polarity: *upolarity,
+                            },
+                        )?;
+                        subtyping_kit::rec_flow_p(
+                            cx,
+                            env,
+                            Some(trace),
+                            UseOp::Frame(
+                                Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
+                                    PropertyCompatibilityData {
+                                        prop: None,
+                                        lower: lreason.dupe(),
+                                        upper: reason_struct.dupe(),
+                                    },
+                                ))),
+                                Arc::new(use_op.dupe()),
+                            ),
+                            true,
+                            lreason,
+                            reason_struct,
+                            &PropRef::Computed(uvalue.dupe()),
+                            &PropertyType::OrdinaryField {
+                                type_: lvalue.dupe(),
+                                polarity: *lpolarity,
+                            },
+                            &PropertyType::OrdinaryField {
+                                type_: uvalue.dupe(),
+                                polarity: *upolarity,
+                            },
+                        )?;
                     }
                     let lower_props = cx.find_props(inst_t.inst.own_props.dupe());
                     let matching_props = lower_props.iter().try_fold(

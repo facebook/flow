@@ -99,6 +99,36 @@ interface A extends NumIndexer {
   x[1] = true; // OK
 }
 
+interface ParentValue {
+  parent: number;
+}
+interface ChildValue extends ParentValue {
+  child: string;
+}
+interface CovariantNumIndexer {
+  readonly [number]: ParentValue;
+}
+interface NarrowCovariantNumIndexer extends CovariantNumIndexer {
+  readonly [number]: ChildValue;
+}
+{
+  declare const x: NarrowCovariantNumIndexer;
+  x[1] as ChildValue; // OK
+  x[1] as string; // ERROR
+}
+
+interface ArrayLikeBase {
+  readonly length: number;
+  readonly [number]: string;
+}
+interface InheritedArrayLike extends ArrayLikeBase {}
+{
+  declare const x: InheritedArrayLike;
+  const values = Array.from(x);
+  values as Array<string>; // OK
+  values as Array<number>; // ERROR
+}
+
 interface StrIndexer {
   [string]: boolean;
 }

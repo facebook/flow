@@ -24,6 +24,7 @@ macro_rules! include_tslib {
 }
 
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
+pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
 
 pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.d.ts", include_tslib!("lib.d.ts")),
@@ -37,10 +38,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         include_tslib!("lib.dom.asynciterable.d.ts"),
     ),
     ("lib.dom.d.ts", LIB_DOM_D_TS),
-    (
-        "lib.dom.iterable.d.ts",
-        include_tslib!("lib.dom.iterable.d.ts"),
-    ),
+    ("lib.dom.iterable.d.ts", LIB_DOM_ITERABLE_D_TS),
     (
         "lib.es2015.collection.d.ts",
         include_tslib!("lib.es2015.collection.d.ts"),

@@ -305,76 +305,122 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:137:3
+Error ------------------------------------------------------------------------------------------------- indexer.js:117:3
+
+Cannot cast `x[1]` to string because `ChildValue` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   indexer.js:117:3
+   117|   x[1] as string; // ERROR
+          ^^^^
+
+References:
+   indexer.js:112:22
+   112|   readonly [number]: ChildValue;
+                             ^^^^^^^^^^ [1]
+   indexer.js:117:11
+   117|   x[1] as string; // ERROR
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:129:3
+
+Cannot cast `values` to array type because in array element: `string` [1] is not exactly the same as `number` [2].
+[incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<string>` [3] and `Array<number>` [4] exactly the same
+- Or make array type [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   indexer.js:129:3
+    129|   values as Array<number>; // ERROR
+           ^^^^^^
+
+References:
+   indexer.js:122:22
+    122|   readonly [number]: string;
+                              ^^^^^^ [1]
+   indexer.js:129:19
+    129|   values as Array<number>; // ERROR
+                           ^^^^^^ [2]
+   <BUILTINS>/core.js:1204:59
+   1204|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
+                                                                   ^^^^^^^^ [3]
+   indexer.js:129:13
+    129|   values as Array<number>; // ERROR
+                     ^^^^^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------------- indexer.js:167:3
 
 Cannot cast `x['bar']` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   indexer.js:137:3
-   137|   x['bar'] as empty; // ERROR
+   indexer.js:167:3
+   167|   x['bar'] as empty; // ERROR
           ^^^^^^^^
 
 References:
-   indexer.js:127:8
-   127|   bar: string;
+   indexer.js:157:8
+   157|   bar: string;
                ^^^^^^ [1]
-   indexer.js:137:15
-   137|   x['bar'] as empty; // ERROR
+   indexer.js:167:15
+   167|   x['bar'] as empty; // ERROR
                       ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:145:3
+Error ------------------------------------------------------------------------------------------------- indexer.js:175:3
 
 Cannot cast `x['foo']` to empty because `(this: D) => null` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   indexer.js:145:3
-   145|   x['foo'] as empty; // ERROR
+   indexer.js:175:3
+   175|   x['foo'] as empty; // ERROR
           ^^^^^^^^
 
 References:
-   indexer.js:128:3
-   128|   foo(): null;
+   indexer.js:158:3
+   158|   foo(): null;
           ^^^^^^^^^^^ [1]
-   indexer.js:145:15
-   145|   x['foo'] as empty; // ERROR
+   indexer.js:175:15
+   175|   x['foo'] as empty; // ERROR
                       ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:148:3
+Error ------------------------------------------------------------------------------------------------- indexer.js:178:3
 
 Cannot cast `x['xxx']` to empty because `() => number` [1] is incompatible with `empty` [2]. [incompatible-type]
 
-   indexer.js:148:3
-   148|   x['xxx'] as empty; // ERROR
+   indexer.js:178:3
+   178|   x['xxx'] as empty; // ERROR
           ^^^^^^^^
 
 References:
-   indexer.js:131:13
-   131|   [string]: () => number;
+   indexer.js:161:13
+   161|   [string]: () => number;
                     ^^^^^^^^^^^^ [1]
-   indexer.js:148:15
-   148|   x['xxx'] as empty; // ERROR
+   indexer.js:178:15
+   178|   x['xxx'] as empty; // ERROR
                       ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:178:5
+Error ------------------------------------------------------------------------------------------------- indexer.js:208:5
 
 Cannot assign `1` to `x['a']` because property `a` is not writable. [cannot-write]
 
-   178|   x['a'] = 1; // ERROR
+   208|   x['a'] = 1; // ERROR
             ^^^
 
 
-Error ------------------------------------------------------------------------------------------------- indexer.js:179:5
+Error ------------------------------------------------------------------------------------------------- indexer.js:209:5
 
 Cannot get `x[true]` because `true` [1] is incompatible with `Keys` [2]. [incompatible-type]
 
-   indexer.js:179:5
-   179|   x[true]; // ERROR
+   indexer.js:209:5
+   209|   x[true]; // ERROR
             ^^^^ [1]
 
 References:
-   indexer.js:175:41
-   175|   declare const x: Readonly<interface {[Keys]: number}>;
+   indexer.js:205:41
+   205|   declare const x: Readonly<interface {[Keys]: number}>;
                                                 ^^^^ [2]
 
 
@@ -1477,4 +1523,4 @@ References:
 
 
 
-Found 86 errors
+Found 88 errors

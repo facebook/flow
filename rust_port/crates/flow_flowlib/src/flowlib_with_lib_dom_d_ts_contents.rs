@@ -16,6 +16,10 @@ pub static CONTENTS: &[(&str, &str)] = &[
     ("core.js", flowlib_contents::CORE_JS),
     ("react.js", flowlib_contents::REACT_JS),
     ("lib.dom.d.ts", tslib_contents::LIB_DOM_D_TS),
+    (
+        "lib.dom.iterable.d.ts",
+        tslib_contents::LIB_DOM_ITERABLE_D_TS,
+    ),
 ];
 
 pub static HASH: LazyLock<String> = LazyLock::new(|| {

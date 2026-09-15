@@ -27,6 +27,7 @@ use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_common::flow_js_utils::get_prop_t_kit::IndexerFallbackMode;
 use flow_typing_flow_js::slice_utils;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_;
@@ -632,12 +633,11 @@ impl flow_js_utils::GetPropHelper for AnnotGetPropHelper {
         )
     }
 
-    fn prop_overlaps_with_indexer() -> Option<
+    fn key_overlaps_with_indexer() -> Option<
         fn(
             &Context,
             &FlowJsEnv,
-            &Name,
-            &Reason,
+            &Type,
             &Type,
         ) -> Result<bool, flow_utils_concurrency::job_error::JobError>,
     > {
@@ -2073,7 +2073,7 @@ fn elab_t_concrete<'cx>(
                                     &inst_t.inst,
                                     propref,
                                     reason_op,
-                                    true,
+                                    IndexerFallbackMode::PropertyAndIndexedAccess,
                                     _lreason,
                                 )
                                 // Annotation inference is never speculative

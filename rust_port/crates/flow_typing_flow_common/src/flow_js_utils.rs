@@ -6851,15 +6851,8 @@ pub trait GetPropHelper {
     // inference, so we allow this behavior to be disabled by passing None. Note that this will
     // likely introduce inconsistent semantics and is undesirable, but at the time of writing this
     // comment we had no alternative for annotation inference.
-    fn prop_overlaps_with_indexer() -> Option<
-        for<'b> fn(
-            &Context<'b>,
-            &FlowJsEnv,
-            &flow_common::reason::Name,
-            &Reason,
-            &Type,
-        ) -> Result<bool, JobError>,
-    >;
+    fn key_overlaps_with_indexer()
+    -> Option<for<'b> fn(&Context<'b>, &FlowJsEnv, &Type, &Type) -> Result<bool, JobError>>;
 }
 
 pub mod get_prop_t_kit {
@@ -6989,18 +6982,35 @@ pub mod get_prop_t_kit {
         reason_op: &Reason,
         key: &Type,
     ) -> Result<bool, FlowJsException> {
-        match F::prop_overlaps_with_indexer() {
-            Some(prop_overlaps_with_indexer) if !tvar_visitors::has_unresolved_tvars(cx, key) => {
-                Ok(prop_overlaps_with_indexer(cx, env, name, reason_op, key)?)
+        let name_t = type_of_key_name_with_env(env, name.dupe(), reason_op);
+        match F::key_overlaps_with_indexer() {
+            Some(key_overlaps_with_indexer) if !tvar_visitors::has_unresolved_tvars(cx, key) => {
+                Ok(key_overlaps_with_indexer(cx, env, &name_t, key)?)
             }
             _ => {
-                F::dict_read_check(
-                    cx,
-                    env,
-                    *trace,
-                    use_op,
-                    (&type_of_key_name_with_env(env, name.dupe(), reason_op), key),
-                )?;
+                F::dict_read_check(cx, env, *trace, use_op, (&name_t, key))?;
+                Ok(true)
+            }
+        }
+    }
+
+    fn computed_prop_matches_indexer<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
+        env: &FlowJsEnv,
+        trace: &DepthTrace,
+        use_op: &UseOp,
+        prop: &Type,
+        key: &Type,
+    ) -> Result<bool, FlowJsException> {
+        match F::key_overlaps_with_indexer() {
+            Some(key_overlaps_with_indexer)
+                if !tvar_visitors::has_unresolved_tvars(cx, prop)
+                    && !tvar_visitors::has_unresolved_tvars(cx, key) =>
+            {
+                Ok(key_overlaps_with_indexer(cx, env, prop, key)?)
+            }
+            _ => {
+                F::dict_read_check(cx, env, *trace, use_op, (prop, key))?;
                 Ok(true)
             }
         }
@@ -7117,11 +7127,20 @@ pub mod get_prop_t_kit {
         }
     }
 
+    /// Controls which indexer matches may be carried along a prototype-chain lookup.
+    #[derive(Clone, Copy)]
+    pub enum IndexerFallbackMode {
+        /// Do not carry an indexer match.
+        Disabled,
+        /// Carry indexers matched by property access syntax.
+        PropertyAccess,
+        /// Carry indexers matched by property or indexed access syntax.
+        PropertyAndIndexedAccess,
+    }
+
     /// Like [`get_instance_prop`], but for a lookup that will continue up the prototype
-    /// chain. An indexer that matched a named access must not resolve the access here: an
-    /// inherited declared property takes precedence over it. Such a candidate is returned
-    /// separately, to be carried by the lookup and applied only once the chain is
-    /// exhausted.
+    /// chain. An indexer that matched a named access may be returned separately so that an
+    /// inherited declaration can take precedence over it.
     pub fn get_instance_prop_for_lookup<'cx, F: GetPropHelper>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -7131,7 +7150,7 @@ pub mod get_prop_t_kit {
         inst: &InstType,
         propref: &PropRef,
         reason_op: &Reason,
-        can_defer: bool,
+        indexer_fallback_mode: IndexerFallbackMode,
         reason_obj: &Reason,
     ) -> Result<
         (
@@ -7140,31 +7159,88 @@ pub mod get_prop_t_kit {
         ),
         FlowJsException,
     > {
-        let property = get_instance_prop::<F>(
+        let defer_indexed_access = matches!(
+            (indexer_fallback_mode, propref),
+            (
+                IndexerFallbackMode::PropertyAndIndexedAccess,
+                PropRef::Named {
+                    from_indexed_access: true,
+                    ..
+                } | PropRef::Computed(_)
+            )
+        );
+        let mut property = get_instance_prop::<F>(
             cx,
             env,
             trace,
             use_op,
-            ignore_dicts,
+            ignore_dicts || defer_indexed_access,
             inst,
             propref,
             reason_op,
         )?;
+        if property.is_none()
+            && defer_indexed_access
+            && let Some(DictType {
+                key,
+                value,
+                dict_polarity,
+                ..
+            }) = &inst.inst_dict
+        {
+            let matches_indexer = match propref {
+                PropRef::Named { name, .. } => {
+                    named_prop_matches_indexer::<F>(cx, env, trace, use_op, name, reason_op, key)?
+                }
+                PropRef::Computed(prop) => {
+                    computed_prop_matches_indexer::<F>(cx, env, trace, use_op, prop, key)?
+                }
+            };
+            if matches_indexer {
+                property = Some((
+                    Property::new(PropertyInner::Field(Box::new(FieldData {
+                        preferred_def_locs: None,
+                        key_loc: None,
+                        type_: value.dupe(),
+                        polarity: *dict_polarity,
+                    }))),
+                    PropertySource::IndexerProperty,
+                ));
+            } else if !ignore_dicts {
+                let property = get_instance_prop::<F>(
+                    cx, env, trace, use_op, false, inst, propref, reason_op,
+                )?;
+                return Ok((property, None));
+            }
+        }
 
         let Some((property, PropertySource::IndexerProperty)) = property else {
             return Ok((property, None));
         };
-        let PropRef::Named {
-            from_indexed_access: false,
-            ..
-        } = propref
-        else {
+        let defer_property_access = matches!(
+            (indexer_fallback_mode, propref),
+            (
+                IndexerFallbackMode::PropertyAccess | IndexerFallbackMode::PropertyAndIndexedAccess,
+                PropRef::Named {
+                    from_indexed_access: false,
+                    ..
+                }
+            )
+        );
+        if !defer_indexed_access && !defer_property_access {
+            if matches!(
+                (indexer_fallback_mode, propref),
+                (
+                    IndexerFallbackMode::Disabled,
+                    PropRef::Named {
+                        from_indexed_access: false,
+                        ..
+                    }
+                )
+            ) {
+                return Ok((None, None));
+            }
             return Ok((Some((property, PropertySource::IndexerProperty)), None));
-        };
-        // Actions other than a plain read or write have nowhere to put a deferred
-        // candidate, so the indexer simply does not answer a named access for them.
-        if !can_defer {
-            return Ok((None, None));
         }
 
         Ok((
@@ -7207,7 +7283,7 @@ pub mod get_prop_t_kit {
             inst,
             propref,
             reason_op,
-            true,
+            IndexerFallbackMode::PropertyAndIndexedAccess,
             reason_of_t(instance_t),
         )?;
         if let Some(id) = id

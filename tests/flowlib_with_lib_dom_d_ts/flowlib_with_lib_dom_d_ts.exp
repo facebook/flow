@@ -1,40 +1,75 @@
-Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+Error ----------------------------------------------------------------------------------------------------- test.js:15:1
+
+Cannot cast `elements[index]` to number because `Element` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:15:1
+   15| elements[index] as number; // ERROR
+       ^^^^^^^^^^^^^^^
+
+References:
+   test.js:8:44
+    8| const elements = document.querySelectorAll<Element>('*');
+                                                  ^^^^^^^ [1]
+   test.js:15:20
+   15| elements[index] as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:16:1
+
+Cannot cast `htmlElements[index]` to number because `HTMLElement` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   test.js:16:1
+   16| htmlElements[index] as number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:9:48
+    9| const htmlElements = document.querySelectorAll<HTMLElement>('*');
+                                                      ^^^^^^^^^^^ [1]
+   test.js:16:24
+   16| htmlElements[index] as number; // ERROR
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:1
 
 Cannot cast `element.align` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   test.js:7:1
-       7| element.align as number; // ERROR
+   test.js:31:1
+      31| element.align as number; // ERROR
           ^^^^^^^^^^^^^
 
 References:
    <BUILTINS>/lib.dom.d.ts:13651:12
    13651|     align: string;
                      ^^^^^^ [1]
-   test.js:7:18
-       7| element.align as number; // ERROR
+   test.js:31:18
+      31| element.align as number; // ERROR
                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ test.js:8:1
+Error ----------------------------------------------------------------------------------------------------- test.js:32:1
 
 Cannot cast `promise` to `Promise` because in type argument `R` [1]: `HTMLDivElement` [2] is incompatible with
 `string` [3]. [incompatible-type]
 
-   test.js:8:1
-      8| promise as Promise<string>; // ERROR
+   test.js:32:1
+     32| promise as Promise<string>; // ERROR
          ^^^^^^^
 
 References:
    <BUILTINS>/core.js:2288:27
    2288| declare class Promise<out R = unknown> {
                                    ^ [1]
-   test.js:2:24
-      2| const promise: Promise<HTMLDivElement> = Promise.resolve(element);
+   test.js:6:24
+      6| const promise: Promise<HTMLDivElement> = Promise.resolve(element);
                                 ^^^^^^^^^^^^^^ [2]
-   test.js:8:20
-      8| promise as Promise<string>; // ERROR
+   test.js:32:20
+     32| promise as Promise<string>; // ERROR
                             ^^^^^^ [3]
 
 
 
-Found 2 errors
+Found 4 errors

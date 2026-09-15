@@ -21,6 +21,7 @@ use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
 use flow_typing_errors::error_message::EnumModificationData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
+use flow_typing_flow_common::flow_js_utils::get_prop_t_kit::IndexerFallbackMode;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::BindTData;
@@ -6173,13 +6174,11 @@ fn __flow_impl<'cx>(
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             let use_op = use_op_of_lookup_action(action);
-            // Only a plain read or write continues up the chain carrying a candidate; a
-            // batched subtyping lookup, which is the only action with several proprefs,
-            // has nowhere to put one.
-            let can_defer = matches!(
-                action.as_ref(),
-                LookupAction::ReadProp(_) | LookupAction::WriteProp(_)
-            );
+            let indexer_fallback_mode = match action.as_ref() {
+                LookupAction::ReadProp(_) => IndexerFallbackMode::PropertyAndIndexedAccess,
+                LookupAction::WriteProp(_) => IndexerFallbackMode::PropertyAccess,
+                _ => IndexerFallbackMode::Disabled,
+            };
             let mut indexer_fallback = indexer_fallback.clone();
             let mut missing = vec![];
             for (propref, up) in lookup_targets(propref, action) {
@@ -6193,7 +6192,7 @@ fn __flow_impl<'cx>(
                         inst,
                         propref,
                         reason_op,
-                        can_defer,
+                        indexer_fallback_mode,
                         lreason,
                     )?;
                 // A candidate found closer to the access wins: it is the one an
@@ -8308,7 +8307,7 @@ fn __flow_impl<'cx>(
             // (e.g. `Record<string, number>`) are excluded: structural_subtype
             // would silently accept indexer-free classes, since
             // inst_structural_subtype only enforces the upper indexer when the
-            // lower InstanceT carries inst_dict.
+            // lower instance hierarchy carries inst_dict.
             let ObjType {
                 props_tmap,
                 flags: _,
