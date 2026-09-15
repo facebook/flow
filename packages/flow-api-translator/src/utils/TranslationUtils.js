@@ -14,7 +14,18 @@ import type {Identifier, JSXIdentifier} from 'flow-estree';
 import type {ScopeManager, Variable} from 'flow-eslint';
 
 export type Dep = string;
+
+/**
+ * Where the documentation for a default-exported value should end up.
+ *
+ * TypeScript resolves a default re-export to the synthetic `export default`
+ * symbol rather than the declaration it aliases, so consumers that care about
+ * doc comments surviving a re-export need `'export'` or `'both'`.
+ */
+export type DefaultExportDocPlacement = 'both' | 'declaration' | 'export';
+
 export type TranslationOptions = {
+  defaultExportDocPlacement?: DefaultExportDocPlacement,
   recoverFromErrors: boolean,
   mungeUnderscores?: boolean,
   /**

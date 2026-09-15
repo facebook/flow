@@ -29,6 +29,23 @@ await fs.writeFile('output/myFile.d.ts', translate.translateFlowToTSDef(sourceFi
 await fs.writeFile('output/myFile.js', translate.translateFlowToJS(sourceFile, prettierConfig));
 ```
 
+By default, documentation remains attached to the declaration it originally
+described. To associate that documentation with a generated default-export
+symbol, pass `defaultExportDocPlacement` to either definition translator:
+
+```
+await fs.writeFile(
+  'output/myFile.d.ts',
+  translate.translateFlowToTSDef(sourceFile, prettierConfig, {
+    defaultExportDocPlacement: 'export',
+  }),
+);
+```
+
+The supported placements are `declaration` (the default), `export`, and `both`.
+`both` retains the documentation on the original declaration as well as
+attaching it to the default export.
+
 ### Flow (with Haste modules) -> TS Lib
 
 Haste module paths are commonly used with Flow libraries. TypeScript does not support this so they needs to be converted back to relative paths first:

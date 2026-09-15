@@ -8,19 +8,27 @@
  * @format
  */
 
+import type {DefaultExportDocPlacement} from '../src/utils/TranslationUtils';
+
 import flowToFlowDef from '../src/flowToFlowDef';
 // $FlowExpectedError[cannot-resolve-module]
 import prettierConfig from '../../.prettierrc.json';
 import {parse, print} from 'flow-transform';
 import {trimToBeCode} from './utils/inlineCodeHelpers';
 
+type TranslateOptions = {
+  defaultExportDocPlacement?: DefaultExportDocPlacement,
+  mungeUnderscores?: boolean,
+};
+
 async function translate(
   code: string,
-  opts?: {mungeUnderscores?: boolean},
+  opts?: TranslateOptions,
 ): Promise<string> {
   const {ast, scopeManager} = await parse(code);
 
   const [flowDefAst, mutatedCode] = flowToFlowDef(ast, code, scopeManager, {
+    defaultExportDocPlacement: opts?.defaultExportDocPlacement,
     recoverFromErrors: false,
     mungeUnderscores: opts?.mungeUnderscores,
   });
@@ -31,8 +39,9 @@ async function translate(
 async function expectTranslate(
   expectCode: string,
   toBeCode: string,
+  opts?: TranslateOptions,
 ): Promise<void> {
-  const expectTranslateCode = await translate(expectCode);
+  const expectTranslateCode = await translate(expectCode, opts);
   expect(expectTranslateCode).toBe(trimToBeCode(toBeCode));
 }
 async function expectTranslateUnchanged(expectCode: string): Promise<void> {
@@ -216,6 +225,129 @@ describe('flowToFlowDef', () => {
         `declare function foo(): void;
          declare export default typeof foo;`,
       );
+    });
+    describe('doc comments', () => {
+      const source = `'use strict';
+        /** Foo documentation */
+        function Foo(): void {}
+        export default Foo;`;
+      const namedExportSource = `'use strict';
+        /** Foo documentation */
+        export function Foo(): void {}
+        export default Foo;`;
+
+      it('leaves the declaration comment unchanged by default', async () => {
+        const expected = trimToBeCode(`/** Foo documentation */
+          declare function Foo(): void;
+          declare export default typeof Foo;`);
+
+        expect(await translate(source)).toBe(expected);
+        expect(
+          await translate(source, {defaultExportDocPlacement: 'declaration'}),
+        ).toBe(expected);
+      });
+
+      it('moves the declaration comment to the default export', async () => {
+        await expectTranslate(
+          source,
+          `declare function Foo(): void;
+           /** Foo documentation */
+           declare export default typeof Foo;`,
+          {defaultExportDocPlacement: 'export'},
+        );
+      });
+
+      it('clones the declaration comment onto the default export', async () => {
+        await expectTranslate(
+          source,
+          `/** Foo documentation */
+           declare function Foo(): void;
+           /** Foo documentation */
+           declare export default typeof Foo;`,
+          {defaultExportDocPlacement: 'both'},
+        );
+      });
+
+      it('leaves a named export comment unchanged by default', async () => {
+        const expected = trimToBeCode(`/** Foo documentation */
+          declare export function Foo(): void;
+          declare export default typeof Foo;`);
+
+        expect(await translate(namedExportSource)).toBe(expected);
+        expect(
+          await translate(namedExportSource, {
+            defaultExportDocPlacement: 'declaration',
+          }),
+        ).toBe(expected);
+      });
+
+      // Moving leaves the named export itself undocumented, which is what
+      // `export` means; `both` is the placement that documents each symbol.
+      it('moves a named export comment to the default export', async () => {
+        await expectTranslate(
+          namedExportSource,
+          `declare export function Foo(): void;
+           /** Foo documentation */
+           declare export default typeof Foo;`,
+          {defaultExportDocPlacement: 'export'},
+        );
+      });
+
+      it('preserves a named export comment when cloning', async () => {
+        await expectTranslate(
+          namedExportSource,
+          `/** Foo documentation */
+           declare export function Foo(): void;
+           /** Foo documentation */
+           declare export default typeof Foo;`,
+          {defaultExportDocPlacement: 'both'},
+        );
+      });
+
+      it('does not override a comment already on the default export', async () => {
+        await expectTranslate(
+          `'use strict';
+           /** Declaration documentation */
+           function Foo(): void {}
+           /** Export documentation */
+           export default Foo;`,
+          `/** Declaration documentation */
+           declare function Foo(): void;
+           /** Export documentation */
+           declare export default typeof Foo;`,
+          {defaultExportDocPlacement: 'export'},
+        );
+      });
+
+      it('leaves a directly exported class comment on the class', async () => {
+        await expectTranslate(
+          `'use strict';
+           /** Foo documentation */
+           class Foo {}
+           export default Foo;`,
+          `/** Foo documentation */
+           declare class Foo {}
+           declare export default typeof Foo;`,
+          {defaultExportDocPlacement: 'export'},
+        );
+      });
+
+      it('uses a wrapper display name to find the documented declaration', async () => {
+        const result = await translate(
+          `'use strict';
+           /** Foo documentation */
+           function Foo(): void {}
+           const MemoedFoo: typeof Foo = Foo;
+           MemoedFoo.displayName = 'Foo';
+           export default MemoedFoo;`,
+          {defaultExportDocPlacement: 'export'},
+        );
+
+        expect(result.split('Foo documentation')).toHaveLength(2);
+        expect(result).toMatch(
+          /declare const MemoedFoo: typeof Foo;\s+\/\*\* Foo documentation \*\/\s+declare export default typeof MemoedFoo;/,
+        );
+      });
     });
     it('export default object expression', async () => {
       await expectTranslate(

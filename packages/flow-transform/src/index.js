@@ -23,6 +23,10 @@ export {print} from './transform/print';
 export * as t from './generated/node-types';
 export {asDetachedNode} from './detachedNode';
 export {
+  cloneCommentWithMarkers,
   cloneJSDocCommentsToNewNode,
+  getCommentsForNode,
+  getLeadingCommentsForNode,
   makeCommentOwnLine,
+  setCommentsOnNode,
 } from './transform/comments/comments';

@@ -22,8 +22,10 @@ import type {
   ComponentDeclaration,
   ComponentParameter,
   ComponentTypeParameter,
+  Comment,
   DeclareClass,
   DeclareComponent,
+  DeclareExportDeclaration,
   DeclareHook,
   DeclareFunction,
   DeclareOpaqueType,
@@ -68,6 +70,7 @@ import type {
 import type {ScopeManager} from 'flow-eslint';
 import type {DetachedNode} from 'flow-transform';
 import type {
+  DefaultExportDocPlacement,
   Dep,
   TranslationContext,
   TranslationOptions,
@@ -79,7 +82,14 @@ import {
   analyzeTypeDependencies,
 } from './utils/FlowAnalyze';
 import {createTranslationContext} from './utils/TranslationUtils';
-import {asDetachedNode} from 'flow-transform';
+import {
+  asDetachedNode,
+  cloneCommentWithMarkers,
+  getCommentsForNode,
+  getLeadingCommentsForNode,
+  makeCommentOwnLine,
+  setCommentsOnNode,
+} from 'flow-transform';
 import {translationError, flowFixMeOrError} from './utils/ErrorUtils';
 import {
   isExpression,
@@ -102,6 +112,223 @@ type TranslatedResultArray<T> = [
 type TranslatedResult<T> = [DetachedNode<T>, TranslatedDeps];
 
 type ProgramStatement = Statement | ModuleDeclaration;
+
+type DefaultExport = ExportDefaultDeclaration | DeclareExportDeclaration;
+
+type DeclarationMatch = {
+  kind: string,
+  statement: ProgramStatement,
+};
+
+/**
+ * A JSDoc-style block comment (`/** ... *\/`), excluding the license/pragma
+ * docblock, which describes the module rather than the exported value.
+ */
+function isDocComment(comment: Comment): boolean {
+  return (
+    comment.type === 'Block' &&
+    comment.value.startsWith('*') &&
+    !/@(flow|noflow|format)\b/.test(comment.value) &&
+    !comment.value.includes('Copyright')
+  );
+}
+
+function findDefaultExport(
+  body: ReadonlyArray<ProgramStatement>,
+): ?DefaultExport {
+  for (const statement of body) {
+    if (
+      statement.type === 'ExportDefaultDeclaration' ||
+      (statement.type === 'DeclareExportDeclaration' &&
+        statement.default === true)
+    ) {
+      return statement;
+    }
+  }
+  return null;
+}
+
+/**
+ * Name of the exported identifier, unwrapping `as` casts and the `typeof X`
+ * form. Returns `null` for inline/anonymous declarations.
+ */
+function getExportedIdentifierName(defaultExport: DefaultExport): ?string {
+  const declaration = defaultExport.declaration;
+  if (declaration == null) {
+    return null;
+  }
+
+  let node: ESNode = declaration;
+  while (node.type === 'AsExpression' || node.type === 'TypeCastExpression') {
+    node = node.expression;
+  }
+  if (node.type === 'TypeofTypeAnnotation') {
+    return node.argument.type === 'Identifier' ? node.argument.name : null;
+  }
+  return node.type === 'Identifier' ? node.name : null;
+}
+
+function findDeclarationByName(
+  body: ReadonlyArray<ProgramStatement>,
+  name: string,
+): ?DeclarationMatch {
+  for (const statement of body) {
+    const declaration =
+      statement.type === 'ExportNamedDeclaration' &&
+      statement.declaration != null
+        ? statement.declaration
+        : statement;
+
+    if (
+      (declaration.type === 'ClassDeclaration' ||
+        declaration.type === 'FunctionDeclaration' ||
+        declaration.type === 'ComponentDeclaration') &&
+      declaration.id != null &&
+      declaration.id.name === name
+    ) {
+      return {kind: declaration.type, statement};
+    }
+
+    // `DeclareVariable` is `declare const X` in an already-declaration input
+    if (
+      declaration.type === 'VariableDeclaration' ||
+      declaration.type === 'DeclareVariable'
+    ) {
+      for (const declarator of declaration.declarations) {
+        if (
+          declarator.id.type === 'Identifier' &&
+          declarator.id.name === name
+        ) {
+          return {kind: declaration.type, statement};
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function findDisplayName(
+  body: ReadonlyArray<ProgramStatement>,
+  name: string,
+): ?string {
+  for (const statement of body) {
+    if (
+      statement.type === 'ExpressionStatement' &&
+      statement.expression.type === 'AssignmentExpression'
+    ) {
+      const {left, right} = statement.expression;
+      if (
+        left.type === 'MemberExpression' &&
+        left.object.type === 'Identifier' &&
+        left.object.name === name &&
+        left.property.type === 'Identifier' &&
+        left.property.name === 'displayName' &&
+        right.type === 'Literal' &&
+        typeof right.value === 'string'
+      ) {
+        return right.value;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Associate a declaration's documentation with the module's default export.
+ *
+ * Stripping the runtime implementation leaves the documentation on the
+ * declaration the `export default` aliases via `typeof`, which is not the
+ * symbol TypeScript resolves a default re-export to. Returns the (possibly
+ * mutated) source text, since cloned comments need a range that makes prettier
+ * print them on their own line.
+ */
+function applyDefaultExportDocPlacement(
+  body: ReadonlyArray<ProgramStatement>,
+  translatedStatements: Map<ProgramStatement, DetachedNode<ProgramStatement>>,
+  placement: DefaultExportDocPlacement,
+  code: string,
+): string {
+  if (placement === 'declaration') {
+    return code;
+  }
+
+  const defaultExport = findDefaultExport(body);
+  if (
+    defaultExport == null ||
+    // Leave already-documented (and inline) default exports untouched.
+    getLeadingCommentsForNode(defaultExport).some(isDocComment)
+  ) {
+    return code;
+  }
+
+  const exportedName = getExportedIdentifierName(defaultExport);
+  if (exportedName == null) {
+    return code;
+  }
+
+  const exportedDeclaration = findDeclarationByName(body, exportedName);
+  // A directly-exported class keeps its declaration, where TypeScript already
+  // resolves the documentation; moving it would hide it.
+  if (exportedDeclaration?.kind === 'ClassDeclaration') {
+    return code;
+  }
+
+  // Statements whose leading comment may document the default export, in
+  // priority order.
+  const sources: Array<DeclarationMatch> = [];
+  if (exportedDeclaration != null) {
+    sources.push(exportedDeclaration);
+  }
+  // Renamed wrappers (e.g. `memo`-wrapped) carry the documentation on the
+  // declaration matching the display name.
+  const displayName = findDisplayName(body, exportedName);
+  if (displayName != null && displayName !== exportedName) {
+    const displayNameDeclaration = findDeclarationByName(body, displayName);
+    if (displayNameDeclaration != null) {
+      sources.push(displayNameDeclaration);
+    }
+  }
+
+  const translatedDefaultExport = translatedStatements.get(defaultExport);
+  if (translatedDefaultExport == null) {
+    return code;
+  }
+
+  for (const source of sources) {
+    const docComments = getLeadingCommentsForNode(source.statement).filter(
+      isDocComment,
+    );
+    if (docComments.length === 0) {
+      continue;
+    }
+
+    let mutatedCode = code;
+    const clonedComments = docComments.map(comment => {
+      const clonedComment = cloneCommentWithMarkers(comment);
+      mutatedCode = makeCommentOwnLine(mutatedCode, clonedComment);
+      return clonedComment;
+    });
+    setCommentsOnNode(translatedDefaultExport, [
+      ...getCommentsForNode(translatedDefaultExport),
+      ...clonedComments,
+    ]);
+
+    if (placement === 'export') {
+      const translatedSource = translatedStatements.get(source.statement);
+      if (translatedSource != null) {
+        setCommentsOnNode(
+          translatedSource,
+          getCommentsForNode(translatedSource).filter(
+            comment => !docComments.includes(comment),
+          ),
+        );
+      }
+    }
+    return mutatedCode;
+  }
+
+  return code;
+}
 
 function convertArray<TIn, TOut>(
   items: ReadonlyArray<TIn>,
@@ -246,9 +473,17 @@ export default function flowToFlowDef(
         context,
       );
       transferProgramStatementProperties(optimizedStatement, stmt);
+      storeTranslatedStatement(optimizedStatement, stmt);
       translatedBody.push(optimizedStatement);
     }
   }
+
+  const outputCode = applyDefaultExportDocPlacement(
+    ast.body,
+    translatedStatements,
+    opts.defaultExportDocPlacement ?? 'declaration',
+    code,
+  );
 
   return [
     t.Program({
@@ -259,7 +494,7 @@ export default function flowToFlowDef(
       tokens: ast.tokens,
       docblock: ast.docblock,
     }),
-    code,
+    outputCode,
   ];
 }
 

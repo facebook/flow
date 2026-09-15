@@ -10,7 +10,7 @@
 
 // $FlowExpectedError[cannot-resolve-module]
 import prettierConfig from '../../../.prettierrc.json';
-import {translateFlowDefToTSDef} from '../../src';
+import {translateFlowDefToTSDef, translateFlowToTSDef} from '../../src';
 import path from 'path';
 import {testFixtures} from '../utils/snapshotTestUtils';
 
@@ -49,5 +49,25 @@ describe('flowDefToTSDef optional members include undefined', () => {
     expect(result).not.toContain('| undefined | undefined');
     // Required members are untouched.
     expect(result).toContain('required: number;');
+  });
+});
+
+describe('flowToTSDef default export doc comments', () => {
+  test('moves documentation to the synthetic default export', async () => {
+    const result = await translateFlowToTSDef(
+      `'use strict';
+       /** Foo documentation */
+       function Foo(): void {}
+       export default Foo;`,
+      prettierConfig,
+      {defaultExportDocPlacement: 'export'},
+    );
+
+    expect(result.split('Foo documentation')).toHaveLength(2);
+    expect(result).toContain(
+      `declare function Foo(): void;
+/** Foo documentation */
+declare const $$EXPORT_DEFAULT_DECLARATION$$: typeof Foo;`,
+    );
   });
 });
