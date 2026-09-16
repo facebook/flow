@@ -79,7 +79,6 @@ use crate::glean_schema::member_declaration;
 use crate::glean_schema::member_declaration_info;
 use crate::glean_schema::member_declaration_reference;
 use crate::glean_schema::module_;
-use crate::glean_schema::module_doc;
 use crate::glean_schema::module_docblock_range;
 use crate::glean_schema::module_export;
 use crate::glean_schema::module_type_export;
@@ -1464,45 +1463,26 @@ fn local_declaration_references(
     acc
 }
 
-struct ModuleDocumentationFacts {
-    module_docs: Vec<Value>,
-    module_docblock_ranges: Vec<Value>,
-}
-
 fn module_documentations(
     root: &str,
     write_root: &str,
     ast: &ast::Program<Loc, Loc>,
     file: &FileKey,
     offset_table_of_file_key: &OffsetTableOfFileKey<'_>,
-) -> ModuleDocumentationFacts {
+) -> Vec<Value> {
     match (
         module_::of_file_key(root, write_root, file),
         find_documentation::module_doc_loc(ast),
     ) {
-        (module_::T::File(file), Some(documentation)) => ModuleDocumentationFacts {
-            module_docs: vec![module_doc::to_json(
-                root,
-                write_root,
-                offset_table_of_file_key,
-                &module_doc::T {
-                    documentation: documentation.clone(),
-                    file: file.clone(),
-                },
-            )],
-            module_docblock_ranges: vec![module_docblock_range::to_json(
-                offset_table_of_file_key,
-                &module_docblock_range::T {
-                    module_: module_::T::File(file.clone()),
-                    file,
-                    span: documentation,
-                },
-            )],
-        },
-        _ => ModuleDocumentationFacts {
-            module_docs: vec![],
-            module_docblock_ranges: vec![],
-        },
+        (module_::T::File(file), Some(documentation)) => vec![module_docblock_range::to_json(
+            offset_table_of_file_key,
+            &module_docblock_range::T {
+                module_: module_::T::File(file.clone()),
+                file,
+                span: documentation,
+            },
+        )],
+        _ => vec![],
     }
 }
 
@@ -2138,14 +2118,8 @@ impl codemod_runner::SimpleTypedRunnerConfig for GleanRunnerConfig {
                     out_channel.write_all(b",").unwrap();
                     output_facts(
                         &mut out_channel,
-                        &flow_pred("ModuleDoc"),
-                        &module_documentation.module_docs,
-                    );
-                    out_channel.write_all(b",").unwrap();
-                    output_facts(
-                        &mut out_channel,
                         &flow_pred("ModuleDocblockRange"),
-                        &module_documentation.module_docblock_ranges,
+                        &module_documentation,
                     );
                     out_channel.write_all(b",").unwrap();
                     output_facts(&mut out_channel, "src.FileLines.1", &file_lines);

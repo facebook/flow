@@ -497,36 +497,6 @@ pub(crate) mod member_declaration_info {
     }
 }
 
-pub(crate) mod module_doc {
-    use serde_json::Value;
-    use serde_json::json;
-
-    use super::OffsetTable;
-    use super::documentation;
-    use super::key;
-    use super::src;
-
-    pub(crate) struct T {
-        pub(crate) documentation: documentation::T,
-        pub(crate) file: src::file::T,
-    }
-
-    pub(crate) fn to_json(
-        root: &str,
-        write_root: &str,
-        offset_table_of_file_key: &dyn Fn(&flow_parser::file_key::FileKey) -> Option<OffsetTable>,
-        T {
-            documentation: doc,
-            file,
-        }: &T,
-    ) -> Value {
-        key(json!({
-            "file": src::file::to_json(file),
-            "documentation": documentation::to_json(root, write_root, offset_table_of_file_key, doc),
-        }))
-    }
-}
-
 pub(crate) mod module_docblock_range {
     use flow_parser::loc::Loc;
     use serde_json::Value;
