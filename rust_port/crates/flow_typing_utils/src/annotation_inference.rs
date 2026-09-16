@@ -2270,6 +2270,7 @@ fn elab_t_concrete<'cx>(
                             elem_t,
                             tuple_view,
                             react_dro: _,
+                            strictness_kind,
                         }) => Type::new(TypeInner::DefT(
                             r.dupe(),
                             type_::DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -2277,6 +2278,7 @@ fn elab_t_concrete<'cx>(
                                     react_dro: dro,
                                     elem_t: elem_t.dupe(),
                                     tuple_view: tuple_view.clone(),
+                                    strictness_kind: *strictness_kind,
                                 },
                             ))))),
                         )),

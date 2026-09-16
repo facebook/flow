@@ -4946,6 +4946,7 @@ pub struct ArrayATData {
     pub react_dro: Option<ReactDro>,
     pub elem_t: Type,
     pub tuple_view: Option<TupleView>,
+    pub strictness_kind: TypeStrictnessKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

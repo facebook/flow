@@ -1794,6 +1794,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             react_dro,
             elem_t,
             tuple_view,
+            strictness_kind,
         }) => {
             let elem_t_prime = mapper.type_(cx, map_cx, elem_t.dupe());
             let tuple_view_prime = option_utils::ident_map(
@@ -1830,6 +1831,7 @@ pub fn arr_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
                     react_dro: react_dro.clone(),
                     elem_t: elem_t_prime,
                     tuple_view: tuple_view_prime,
+                    strictness_kind: *strictness_kind,
                 })))
             }
         }

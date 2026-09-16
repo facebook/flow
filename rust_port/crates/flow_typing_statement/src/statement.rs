@@ -7067,6 +7067,7 @@ fn expression_<'a>(
                         elem_t,
                         tuple_view: Some(type_::empty_tuple_view()),
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
@@ -7088,6 +7089,7 @@ fn expression_<'a>(
                         elem_t,
                         tuple_view: Some(type_::empty_tuple_view()),
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     }));
                     let t = Type::new(TypeInner::DefT(
                         reason,
@@ -14400,6 +14402,7 @@ fn static_method_call_object<'a>(
                         elem_t: keys_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     },
                 ))))),
             ));
@@ -14425,6 +14428,7 @@ fn static_method_call_object<'a>(
                         elem_t: values_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     },
                 ))))),
             ));
@@ -14491,6 +14495,7 @@ fn static_method_call_object<'a>(
                         elem_t: entry_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     },
                 ))))),
             ));

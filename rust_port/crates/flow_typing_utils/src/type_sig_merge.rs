@@ -1954,6 +1954,9 @@ fn merge_annot<'cx>(
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: TypeStrictnessKind::from_is_typescript(
+                            loc.source().is_some_and(flow_common::files::has_ts_ext),
+                        ),
                     }),
                 )))),
             ))
@@ -3246,6 +3249,7 @@ fn merge_value<'cx>(
                     elem_t,
                     tuple_view: None,
                     react_dro: None,
+                    strictness_kind: inner.strictness_kind,
                 }))
             };
             Type::new(type_::TypeInner::DefT(

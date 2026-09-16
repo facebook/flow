@@ -23,7 +23,9 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::ArrT(arr) => match arr.deref() {
-                ArrType::ArrayAT(box ArrayATData { .. }) => {
+                ArrType::ArrayAT(box ArrayATData {
+                    strictness_kind, ..
+                }) => {
                     return Type::new(TypeInner::DefT(
                         r.dupe(),
                         DefT::new(DefTInner::ArrT(Rc::new(ArrType::ArrayAT(Box::new(
@@ -31,6 +33,7 @@ pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type 
                                 elem_t: any.dupe(),
                                 tuple_view: None,
                                 react_dro: None,
+                                strictness_kind: *strictness_kind,
                             },
                         ))))),
                     ));

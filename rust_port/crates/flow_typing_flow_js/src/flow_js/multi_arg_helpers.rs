@@ -695,6 +695,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                             elem_t: any_t::why(any_src, reason_op.dupe()),
                             tuple_view: None,
                             react_dro: None,
+                            strictness_kind: cx.type_strictness_kind(),
                         },
                     ))))),
                 )),
@@ -922,6 +923,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                 elem_t: elem_t.dupe(),
                                 tuple_view: None,
                                 react_dro: None,
+                                strictness_kind: cx.type_strictness_kind(),
                             }))
                         };
                         Type::new(TypeInner::DefT(
@@ -950,6 +952,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                             inexact: inexact_spread,
                                         }),
                                         react_dro: None,
+                                        strictness_kind: cx.type_strictness_kind(),
                                     },
                                 ))))),
                             ))
@@ -961,6 +964,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                                         elem_t: elem_t.dupe(),
                                         tuple_view: None,
                                         react_dro: None,
+                                        strictness_kind: cx.type_strictness_kind(),
                                     },
                                 ))))),
                             ))
@@ -1197,6 +1201,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     }))
                 }
             };

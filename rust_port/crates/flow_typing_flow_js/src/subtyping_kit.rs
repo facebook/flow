@@ -2565,6 +2565,7 @@ fn array_flow<'cx>(
     trace: DepthTrace,
     use_op: UseOp,
     lit1: bool,
+    strictness_kind: TypeStrictnessKind,
     _r1: &Reason,
     r2: &Reason,
     l: &Type,
@@ -2591,7 +2592,7 @@ fn array_flow<'cx>(
                             upper_array_t: u.dupe(),
                             upper_array_reason: r2.dupe(),
                         },
-                        lit1,
+                        lit1 || strictness_kind.is_typescript_loose(),
                         e1,
                         e2,
                     )?;
@@ -2610,7 +2611,7 @@ fn array_flow<'cx>(
                         upper_array_t: u.dupe(),
                         upper_array_reason: r2.dupe(),
                     },
-                    lit1,
+                    lit1 || strictness_kind.is_typescript_loose(),
                     e1,
                     e2,
                 )?;
@@ -2623,7 +2624,7 @@ fn array_flow<'cx>(
                     trace,
                     use_op.dupe(),
                     UnifyCause::Uncategorized,
-                    lit1,
+                    lit1 || strictness_kind.is_typescript_loose(),
                     t1_elem,
                     t2_elem,
                 )?;
@@ -5457,11 +5458,13 @@ pub fn rec_sub_t<'cx>(
                     ArrType::ArrayAT(box ArrayATData {
                         elem_t: t1,
                         tuple_view: tv1,
+                        strictness_kind: strictness_kind1,
                         ..
                     }),
                     ArrType::ArrayAT(box ArrayATData {
                         elem_t: t2,
                         tuple_view: tv2,
+                        strictness_kind: strictness_kind2,
                         ..
                     }),
                 ) = (arr1.as_ref(), arr2.as_ref()) =>
@@ -5495,7 +5498,22 @@ pub fn rec_sub_t<'cx>(
                 .as_ref()
                 .map(|tv| type_util::tuple_ts_of_elements(&tv.elements))
                 .unwrap_or_default();
-            array_flow(cx, env, trace, use_op, lit1, r1, r2, l, u, &ts1, t1, &ts2, t2)
+            array_flow(
+                cx,
+                env,
+                trace,
+                use_op,
+                lit1,
+                strictness_kind1.join(*strictness_kind2),
+                r1,
+                r2,
+                l,
+                u,
+                &ts1,
+                t1,
+                &ts2,
+                t2,
+            )
         }
         // Tuples can flow to tuples with the same arity
         (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
@@ -5672,6 +5690,34 @@ pub fn rec_sub_t<'cx>(
             Ok(())
         }
 
+        // TypeScript treats mutable arrays covariantly, including tuples used as arrays.
+        (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
+            if let DefTInner::ArrT(arr1) = ld.deref()
+                && let DefTInner::ArrT(arr2) = ud.deref()
+                && let ArrType::TupleAT(box TupleATData {
+                    elem_t: t1,
+                    strictness_kind: strictness_kind1,
+                    ..
+                }) = arr1.as_ref()
+                && let ArrType::ArrayAT(box ArrayATData {
+                    elem_t: t2,
+                    strictness_kind: strictness_kind2,
+                    ..
+                }) = arr2.as_ref()
+                && strictness_kind1
+                    .join(*strictness_kind2)
+                    .is_typescript_loose() =>
+        {
+            let use_op = VirtualUseOp::Frame(
+                Arc::new(VirtualFrameUseOp::ArrayElementCompatibility {
+                    lower: r1.dupe(),
+                    upper: r2.dupe(),
+                }),
+                Arc::new(use_op),
+            );
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)
+        }
+
         // Arrays with known elements can flow to tuples
         (TypeInner::DefT(r1, ld), TypeInner::DefT(r2, ud))
             if let DefTInner::ArrT(arr1) = ld.deref()
@@ -5679,6 +5725,7 @@ pub fn rec_sub_t<'cx>(
                     elem_t: t1,
                     tuple_view,
                     react_dro,
+                    ..
                 }) = arr1.as_ref()
                 && let DefTInner::ArrT(arr2) = ud.deref()
                 && let ArrType::TupleAT(box TupleATData {

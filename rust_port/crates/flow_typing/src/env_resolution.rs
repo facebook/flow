@@ -1421,6 +1421,7 @@ fn resolve_binding<'cx>(
                                     elem_t,
                                     tuple_view: Some(type_::empty_tuple_view()),
                                     react_dro: None,
+                                    strictness_kind: cx.type_strictness_kind(),
                                 },
                             ))))),
                         ))
@@ -1852,6 +1853,7 @@ fn resolve_binding<'cx>(
                         elem_t,
                         tuple_view,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     },
                 ))))),
             ));

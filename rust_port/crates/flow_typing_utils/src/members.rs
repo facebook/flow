@@ -321,6 +321,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     inexact: inexact1,
                                 }),
                             react_dro: dro1,
+                            strictness_kind: strictness_kind1,
                         }),
                         ArrType::ArrayAT(box ArrayATData {
                             elem_t: et2,
@@ -331,6 +332,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     inexact: inexact2,
                                 }),
                             react_dro: dro2,
+                            strictness_kind: strictness_kind2,
                         }),
                     ) if arity1 == arity2
                         && inexact1 == inexact2
@@ -377,6 +379,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                     } else {
                                         None
                                     },
+                                    strictness_kind: strictness_kind1.join(*strictness_kind2),
                                 },
                             ))))),
                         ))
@@ -385,11 +388,13 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                         ArrType::ArrayAT(box ArrayATData {
                             elem_t: et1,
                             react_dro: dro1,
+                            strictness_kind: strictness_kind1,
                             ..
                         }),
                         ArrType::ArrayAT(box ArrayATData {
                             elem_t: et2,
                             react_dro: dro2,
+                            strictness_kind: strictness_kind2,
                             ..
                         }),
                     ) => Type::new(TypeInner::DefT(
@@ -403,6 +408,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                                 } else {
                                     None
                                 },
+                                strictness_kind: strictness_kind1.join(*strictness_kind2),
                             },
                         ))))),
                     )),

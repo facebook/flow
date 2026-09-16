@@ -198,12 +198,12 @@ fn __unify_inner<'cx>(
                             ArrType::ArrayAT(box ArrayATData {
                                 elem_t: elem_t1,
                                 tuple_view: tv1,
-                                react_dro: _,
+                                ..
                             }),
                             ArrType::ArrayAT(box ArrayATData {
                                 elem_t: elem_t2,
                                 tuple_view: tv2,
-                                react_dro: _,
+                                ..
                             }),
                         ) => {
                             let ts1 = tv1

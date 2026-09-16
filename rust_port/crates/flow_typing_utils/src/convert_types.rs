@@ -936,6 +936,7 @@ fn arrtype_to_json<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, arrtype: &ArrType)
             react_dro: _,
             elem_t,
             tuple_view: _,
+            strictness_kind: _,
         }) => {
             json!({"kind": "ArrayAT", "elem_t": type_to_json(cx, depth - 1, elem_t)})
         }

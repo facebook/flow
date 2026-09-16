@@ -1736,6 +1736,53 @@ References:
                ^ [2]
 
 
+Error --------------------------------------------------------------------------------- ts_interop_arrays_usage.js:12:20
+
+Cannot call `acceptsFlowStrings` with `flowTuple` bound to `values` because `[string, string]` [1] is incompatible with
+`Array<string>` [2]. [incompatible-type]
+
+   ts_interop_arrays_usage.js:12:20
+   12| acceptsFlowStrings(flowTuple); // ERROR
+                          ^^^^^^^^^
+
+References:
+   ts_interop_arrays_usage.js:3:18
+    3| const flowTuple: [string, string] = ['a', 'b'];
+                        ^^^^^^^^^^^^^^^^ [1]
+   ts_interop_arrays_usage.js:9:37
+    9| function acceptsFlowStrings(values: Array<string>): void {}
+                                           ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- ts_interop_arrays_usage.js:13:25
+
+Cannot call `acceptsFlowStringArrays` with `flowTupleArray` bound to `values` because in array element:
+`[string, string]` [1] is not exactly the same as `Array<string>` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
+- Either make `Array<[string, string]>` [3] and `Array<Array<string>>` [4] exactly the same
+- Or make array type [4] a `ReadonlyArray`.
+See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
+
+   ts_interop_arrays_usage.js:13:25
+   13| acceptsFlowStringArrays(flowTupleArray); // ERROR
+                               ^^^^^^^^^^^^^^
+
+References:
+   ts_interop_arrays_usage.js:4:29
+    4| const flowTupleArray: Array<[string, string]> = [flowTuple];
+                                   ^^^^^^^^^^^^^^^^ [1]
+   ts_interop_arrays_usage.js:10:48
+   10| function acceptsFlowStringArrays(values: Array<Array<string>>): void {}
+                                                      ^^^^^^^^^^^^^ [2]
+   ts_interop_arrays_usage.js:4:23
+    4| const flowTupleArray: Array<[string, string]> = [flowTuple];
+                             ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   ts_interop_arrays_usage.js:10:42
+   10| function acceptsFlowStringArrays(values: Array<Array<string>>): void {}
+                                                ^^^^^^^^^^^^^^^^^^^^ [4]
+
+
 Error -------------------------------------------------------------------------------- type_keyword_dotted_access.js:7:1
 
 Cannot cast `x` to empty because `infer` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -2097,4 +2144,4 @@ References:
 
 
 
-Found 140 errors
+Found 142 errors

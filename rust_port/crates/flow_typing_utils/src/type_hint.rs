@@ -1100,6 +1100,7 @@ fn type_of_hint_decomposition<'cx>(
                                 elem_t: elem_t.dupe(),
                                 tuple_view: Some(empty_tuple_view()),
                                 react_dro: None,
+                                strictness_kind: cx.type_strictness_kind(),
                             },
                         ))))),
                     ));

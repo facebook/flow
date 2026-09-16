@@ -1393,6 +1393,7 @@ fn convert_inner<'a>(
                             react_dro: None,
                             elem_t: elem_t.dupe(),
                             tuple_view: None,
+                            strictness_kind: cx.type_strictness_kind(),
                         }),
                     )))),
                 ));
@@ -1498,6 +1499,7 @@ fn convert_inner<'a>(
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     }),
                 )))),
             ));
@@ -2168,6 +2170,7 @@ fn convert_inner<'a>(
                                             react_dro: None,
                                             elem_t,
                                             tuple_view: None,
+                                            strictness_kind: cx.type_strictness_kind(),
                                         })),
                                     ))),
                                 )),

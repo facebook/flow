@@ -7797,6 +7797,7 @@ pub fn array_elem_check<'cx>(
             elem_t,
             tuple_view,
             react_dro,
+            ..
         }) => {
             let elements = tuple_view.as_ref().map(|tv| tv.elements.dupe());
             let elem_t = union_void_if_instructed(elem_t.dupe());
@@ -8702,6 +8703,35 @@ pub fn flow_arith<'cx>(
                     r_def.deref(),
                     DefTInner::StrGeneralT { .. } | DefTInner::SingletonStrT { .. }
                 ))) =>
+        {
+            Ok(str_module_t::why(reason))
+        }
+        (TypeInner::TemplateLiteralT { .. }, TypeInner::TemplateLiteralT { .. })
+            if op == ArithKindInner::Plus =>
+        {
+            Ok(str_module_t::why(reason))
+        }
+        (TypeInner::TemplateLiteralT { .. }, TypeInner::DefT(_, r_def))
+            if op == ArithKindInner::Plus
+                && matches!(
+                    r_def.deref(),
+                    DefTInner::StrGeneralT { .. }
+                        | DefTInner::SingletonStrT { .. }
+                        | DefTInner::NumGeneralT { .. }
+                        | DefTInner::SingletonNumT { .. }
+                ) =>
+        {
+            Ok(str_module_t::why(reason))
+        }
+        (TypeInner::DefT(_, l_def), TypeInner::TemplateLiteralT { .. })
+            if op == ArithKindInner::Plus
+                && matches!(
+                    l_def.deref(),
+                    DefTInner::StrGeneralT { .. }
+                        | DefTInner::SingletonStrT { .. }
+                        | DefTInner::NumGeneralT { .. }
+                        | DefTInner::SingletonNumT { .. }
+                ) =>
         {
             Ok(str_module_t::why(reason))
         }

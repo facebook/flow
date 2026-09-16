@@ -1072,6 +1072,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
                 elem_t,
                 tuple_view: None,
                 react_dro: None,
+                strictness_kind: cx.type_strictness_kind(),
             }));
             let reason_out = reason
                 .dupe()

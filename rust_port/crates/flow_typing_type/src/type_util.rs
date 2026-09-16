@@ -79,6 +79,7 @@ use crate::type_::TypeArgCompatibilityData;
 use crate::type_::TypeDestructorT;
 use crate::type_::TypeDestructorTInner;
 use crate::type_::TypeInner;
+use crate::type_::TypeStrictnessKind;
 use crate::type_::UseOp;
 use crate::type_::UseT;
 use crate::type_::UseTInner;
@@ -2620,6 +2621,7 @@ pub fn normalize_jsx_children_prop(
                             inexact: false,
                         }),
                         react_dro: None,
+                        strictness_kind: TypeStrictnessKind::Flow,
                     },
                 ))))),
             )))

@@ -1544,6 +1544,7 @@ fn __flow_impl<'cx>(
                     elem_t,
                     tuple_view,
                     react_dro: _,
+                    strictness_kind,
                 }) = arr.as_ref() =>
         {
             let ReactDro(dro_loc, dro_type) = dro;
@@ -1554,6 +1555,7 @@ fn __flow_impl<'cx>(
                         react_dro: Some(ReactDro(dro_loc.dupe(), dro_type.clone())),
                         elem_t: elem_t.dupe(),
                         tuple_view: tuple_view.clone(),
+                        strictness_kind: *strictness_kind,
                     },
                 ))))),
             ));
@@ -3860,6 +3862,7 @@ fn __flow_impl<'cx>(
                                 elem_t: any_t::error(reason.dupe()),
                                 tuple_view: None,
                                 react_dro: None,
+                                strictness_kind: cx.type_strictness_kind(),
                             }))
                         }
                         _ => (**arrtype).clone(),
@@ -3937,6 +3940,7 @@ fn __flow_impl<'cx>(
                         elem_t,
                         tuple_view: None,
                         react_dro: None,
+                        strictness_kind: cx.type_strictness_kind(),
                     }))
                 }
             };
@@ -4099,19 +4103,23 @@ fn __flow_impl<'cx>(
                                             elem_t,
                                             tuple_view: Some(_),
                                             react_dro,
+                                            strictness_kind,
                                         }) => ArrType::ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
+                                            strictness_kind: *strictness_kind,
                                         })),
                                         ArrType::TupleAT(box TupleATData {
                                             elem_t,
                                             react_dro,
+                                            strictness_kind,
                                             ..
                                         }) => ArrType::ArrayAT(Box::new(ArrayATData {
                                             elem_t: elem_t.dupe(),
                                             tuple_view: None,
                                             react_dro: react_dro.clone(),
+                                            strictness_kind: *strictness_kind,
                                         })),
                                         // These cannot
                                         ArrType::ArrayAT(box ArrayATData {
@@ -7632,6 +7640,7 @@ fn __flow_impl<'cx>(
                     elem_t,
                     tuple_view: Some(tuple_view),
                     react_dro,
+                    strictness_kind,
                 }) => {
                     let elements = tuple_view.elements[i.min(tuple_view.elements.len())..].to_vec();
                     let (num_req, num_total) = tuple_view.arity;
@@ -7647,6 +7656,7 @@ fn __flow_impl<'cx>(
                             inexact: tuple_view.inexact,
                         }),
                         react_dro: react_dro.clone(),
+                        strictness_kind: *strictness_kind,
                     }))
                 }
                 ArrType::TupleAT(box TupleATData {
@@ -7973,6 +7983,7 @@ fn __flow_impl<'cx>(
                     elem_t,
                     tuple_view,
                     react_dro,
+                    strictness_kind,
                 }) => {
                     let mapped_elem_t = f(elem_t, None, false)?;
                     let mapped_tuple_view = match tuple_view.as_ref() {
@@ -8004,6 +8015,7 @@ fn __flow_impl<'cx>(
                         elem_t: array_elem(mapped_elem_t)?,
                         react_dro: react_dro.clone(),
                         tuple_view: mapped_tuple_view,
+                        strictness_kind: *strictness_kind,
                     }))
                 }
                 ArrType::TupleAT(box TupleATData {
@@ -10399,6 +10411,7 @@ fn __flow_impl<'cx>(
                     elem_t,
                     react_dro: Some(ReactDro(dro_loc, dro_type)),
                     tuple_view,
+                    strictness_kind,
                 }) = arr.deref()
                 && matches!(
                     u.deref(),
@@ -10451,6 +10464,7 @@ fn __flow_impl<'cx>(
                                 elem_t: elem_t.dupe(),
                                 react_dro: None,
                                 tuple_view: tuple_view.clone(),
+                                strictness_kind: *strictness_kind,
                             },
                         ))))),
                     ));
@@ -10494,6 +10508,7 @@ fn __flow_impl<'cx>(
                                 elem_t: elem_t.dupe(),
                                 react_dro: None,
                                 tuple_view: tuple_view.clone(),
+                                strictness_kind: *strictness_kind,
                             },
                         ))))),
                     ));
