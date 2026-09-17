@@ -273,5 +273,73 @@ References:
                  ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- import_typeof_generics.js:15:19
 
-Found 19 errors
+Cannot assign `k1(...)` to `k1s` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_typeof_generics.js:15:19
+   15| var k1s: string = k1(42); // Error: number ~> string
+                         ^^^^^^
+
+References:
+   import_typeof_generics.js:15:22
+   15| var k1s: string = k1(42); // Error: number ~> string
+                            ^^ [1]
+   import_typeof_generics.js:15:10
+   15| var k1s: string = k1(42); // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- import_typeof_generics.js:21:19
+
+Cannot assign `k3(...)` to `k3s` because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_typeof_generics.js:21:19
+   21| var k3s: string = k3(42); // Error: number ~> string
+                         ^^^^^^
+
+References:
+   import_typeof_generics.js:20:20
+   20| var k3: genericFnT<number> = genericFn;
+                          ^^^^^^ [1]
+   import_typeof_generics.js:21:10
+   21| var k3s: string = k3(42); // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- import_typeof_generics.js:32:19
+
+Cannot assign `l1(...)` to `l1s` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_typeof_generics.js:32:19
+   32| var l1s: string = l1(42); // Error: number ~> string
+                         ^^^^^^
+
+References:
+   import_typeof_generics.js:32:22
+   32| var l1s: string = l1(42); // Error: number ~> string
+                            ^^ [1]
+   import_typeof_generics.js:32:10
+   32| var l1s: string = l1(42); // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- import_typeof_generics.js:40:19
+
+Cannot assign `l2(...)` to `l2s` because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   import_typeof_generics.js:40:19
+   40| var l2s: string = l2(42); // Error: number ~> string
+                         ^^^^^^
+
+References:
+   import_typeof_generics.js:40:22
+   40| var l2s: string = l2(42); // Error: number ~> string
+                            ^^ [1]
+   import_typeof_generics.js:40:10
+   40| var l2s: string = l2(42); // Error: number ~> string
+                ^^^^^^ [2]
+
+
+
+Found 23 errors

@@ -149,6 +149,34 @@ References:
                        ^^^^^^^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- import_typeof_renders.js:12:25
+
+Cannot assign `<NotPoly />` to `bad1` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
+
+   import_typeof_renders.js:12:25
+   12| const bad1: U_direct = <NotPoly />; // ERROR
+                               ^^^^^^^ [1]
+
+References:
+   import_typeof_renders.js:12:13
+   12| const bad1: U_direct = <NotPoly />; // ERROR
+                   ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- import_typeof_renders.js:13:25
+
+Cannot assign `<NotPoly />` to `bad2` because `NotPoly` element [1] does not render `Poly` [2]. [incompatible-type]
+
+   import_typeof_renders.js:13:25
+   13| const bad2: U_typeof = <NotPoly />; // ERROR
+                               ^^^^^^^ [1]
+
+References:
+   import_typeof_renders.js:13:13
+   13| const bad2: U_typeof = <NotPoly />; // ERROR
+                   ^^^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- interop.js:6:25
 
 Cannot use `() => React.Node` [1] as the type argument of renders type. [invalid-render]
@@ -1814,4 +1842,4 @@ Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
 
 
-Found 139 errors
+Found 141 errors
