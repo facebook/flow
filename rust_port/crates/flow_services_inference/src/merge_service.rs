@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::path::Path;
 use std::rc::Rc;
+use std::rc::Weak;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -89,6 +90,11 @@ pub fn sig_hash(
     component: &[(FileKey, TypedParse)],
 ) -> (u64, Vec<MergeHashes>) {
     type ComponentRec = Rc<OnceCell<Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>>>>;
+
+    fn upgrade_file(file: &Weak<type_sig_hash::File>) -> Rc<type_sig_hash::File> {
+        file.upgrade()
+            .expect("signature hash file should remain alive while it is traversed")
+    }
 
     fn hash_file_key(file_key: &FileKey) -> u64 {
         xx::hash(file_key.as_str().as_bytes(), 0)
@@ -243,9 +249,10 @@ pub fn sig_hash(
                         let hash_w = hash.dupe();
                         let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
                         let texport = texport.clone();
-                        let file = file.dupe();
+                        let file = Rc::downgrade(file);
                         let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                             Box::new(move |edge, _dep_edge| {
+                                let file = upgrade_file(&file);
                                 type_sig_hash::visit_type_export(edge, &file, &texport);
                             });
                         Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
@@ -260,9 +267,10 @@ pub fn sig_hash(
                     let hash_w = hash.dupe();
                     let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
                     let packed = packed.clone();
-                    let file = file.dupe();
+                    let file = Rc::downgrade(file);
                     let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                         Box::new(move |edge, dep_edge| {
+                            let file = upgrade_file(&file);
                             type_sig_hash::visit_packed(edge, dep_edge, &file, &packed);
                         });
                     Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
@@ -277,7 +285,7 @@ pub fn sig_hash(
                 let te_nodes_for_ns = type_export_nodes.clone();
                 let exp_node_for_ns = exports_node.clone();
                 let type_stars = info.type_stars.clone();
-                let file_for_ns = file.dupe();
+                let file_for_ns = Rc::downgrade(file);
                 let ns_visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                     Box::new(move |edge, dep_edge| {
                         for te in &te_nodes_for_ns {
@@ -286,6 +294,7 @@ pub fn sig_hash(
                         if let Some(exp) = &exp_node_for_ns {
                             edge(exp.dupe());
                         }
+                        let file_for_ns = upgrade_file(&file_for_ns);
                         for (_, index) in &type_stars {
                             type_sig_hash::edge_import_ns(edge, dep_edge, &file_for_ns, *index);
                         }
@@ -323,9 +332,10 @@ pub fn sig_hash(
                         let hash_w = hash.dupe();
                         let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
                         let texport = texport.clone();
-                        let file = file.dupe();
+                        let file = Rc::downgrade(file);
                         let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                             Box::new(move |edge, _dep_edge| {
+                                let file = upgrade_file(&file);
                                 type_sig_hash::visit_type_export(edge, &file, &texport);
                             });
                         Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
@@ -342,9 +352,10 @@ pub fn sig_hash(
                         let hash_w = hash.dupe();
                         let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
                         let export = export.clone();
-                        let file = file.dupe();
+                        let file = Rc::downgrade(file);
                         let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                             Box::new(move |edge, dep_edge| {
+                                let file = upgrade_file(&file);
                                 type_sig_hash::visit_export(edge, dep_edge, &file, &export);
                             });
                         Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
@@ -361,9 +372,10 @@ pub fn sig_hash(
                         let hash_w = hash.dupe();
                         let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
                         let pending = pending.clone();
-                        let file = file.dupe();
+                        let file = Rc::downgrade(file);
                         let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                             Box::new(move |edge, dep_edge| {
+                                let file = upgrade_file(&file);
                                 type_sig_hash::visit_ts_pending_export(
                                     edge, dep_edge, &file, &pending,
                                 );
@@ -383,7 +395,7 @@ pub fn sig_hash(
                 let ts_pending_nodes_for_ns = ts_pending_nodes.clone();
                 let type_stars = info.type_stars.clone();
                 let stars = info.stars.clone();
-                let file_for_ns = file.dupe();
+                let file_for_ns = Rc::downgrade(file);
                 let ns_visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                     Box::new(move |edge, dep_edge| {
                         for te in &te_nodes_for_ns {
@@ -395,6 +407,7 @@ pub fn sig_hash(
                         for tp in &ts_pending_nodes_for_ns {
                             edge(tp.dupe());
                         }
+                        let file_for_ns = upgrade_file(&file_for_ns);
                         for (_, index) in &type_stars {
                             type_sig_hash::edge_import_ns(edge, dep_edge, &file_for_ns, *index);
                         }
@@ -444,9 +457,14 @@ pub fn sig_hash(
                             None => Dependency::Unchecked,
                             Some(dep_parse) => {
                                 if let Some(&i) = component_map.get(&dep_file) {
-                                    let component_rec = component_rec.dupe();
+                                    let component_rec = Rc::downgrade(component_rec);
                                     Dependency::Cyclic(LazyCell::new(Box::new(move || {
-                                        component_rec.get().unwrap()[i].dupe()
+                                        component_rec
+                                            .upgrade()
+                                            .expect("signature hash component should remain alive while it is traversed")
+                                            .get()
+                                            .expect("signature hash component should be initialized before traversal")[i]
+                                            .dupe()
                                     })))
                                 } else {
                                     let dep_key = dep_file.dupe();
@@ -466,7 +484,10 @@ pub fn sig_hash(
                           component_map: &BTreeMap<FileKey, usize>,
                           file_key: &FileKey,
                           parse: &TypedParse|
-     -> Rc<CheckedDep<Rc<cycle_hash::Node>>> {
+     -> (
+        Rc<CheckedDep<Rc<cycle_hash::Node>>>,
+        Rc<type_sig_hash::File>,
+    ) {
         let module = parse.type_sig_unsafe(file_key);
 
         let resolved_modules_map: BTreeMap<Userland, ResolvedModule> = {
@@ -491,102 +512,101 @@ pub fn sig_hash(
             }
         });
 
-        let file_cell: Rc<OnceCell<Rc<type_sig_hash::File>>> = Rc::new(OnceCell::new());
+        let file = Rc::new_cyclic(|file: &Weak<type_sig_hash::File>| {
+            let local_defs = {
+                let dirty_indices = &module.dirty_local_defs;
+                Table::init(module.local_defs.len(), |i| {
+                    let def = module.local_defs.get(Index::<()>::new(i));
+                    let mut hash_val = content_hash_of(def);
+                    if check_dirty_set && dirty_indices.contains(&i) {
+                        hash_val = !hash_val;
+                    }
+                    let hash = Rc::new(Cell::new(hash_val));
+                    let hash_r = hash.dupe();
+                    let read_hash: ReadHash = Box::new(move || hash_r.get());
+                    let hash_w = hash.dupe();
+                    let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                    let def = def.clone();
+                    let file = file.clone();
+                    let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                        Box::new(move |edge, dep_edge| {
+                            let file = upgrade_file(&file);
+                            type_sig_hash::visit_def(edge, dep_edge, &file, &def);
+                        });
+                    Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                })
+            };
 
-        let local_defs = {
-            let dirty_indices = &module.dirty_local_defs;
-            Table::init(module.local_defs.len(), |i| {
-                let def = module.local_defs.get(Index::<()>::new(i));
-                let mut hash_val = content_hash_of(def);
-                if check_dirty_set && dirty_indices.contains(&i) {
-                    hash_val = !hash_val;
-                }
+            let remote_refs = Table::init(module.remote_refs.len(), |i| {
+                let rref = module.remote_refs.get(Index::<()>::new(i));
+                let hash_val = content_hash_of(rref);
                 let hash = Rc::new(Cell::new(hash_val));
                 let hash_r = hash.dupe();
                 let read_hash: ReadHash = Box::new(move || hash_r.get());
                 let hash_w = hash.dupe();
                 let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
-                let def = def.clone();
-                let file_cell = file_cell.dupe();
+                let rref = rref.clone();
+                let file = file.clone();
                 let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
                     Box::new(move |edge, dep_edge| {
-                        let file = file_cell.get().unwrap();
-                        type_sig_hash::visit_def(edge, dep_edge, file, &def);
+                        let file = upgrade_file(&file);
+                        type_sig_hash::visit_remote_ref(edge, dep_edge, &file, &rref);
                     });
                 Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
-            })
-        };
+            });
 
-        let remote_refs = Table::init(module.remote_refs.len(), |i| {
-            let rref = module.remote_refs.get(Index::<()>::new(i));
-            let hash_val = content_hash_of(rref);
-            let hash = Rc::new(Cell::new(hash_val));
-            let hash_r = hash.dupe();
-            let read_hash: ReadHash = Box::new(move || hash_r.get());
-            let hash_w = hash.dupe();
-            let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
-            let rref = rref.clone();
-            let file_cell = file_cell.dupe();
-            let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
-                Box::new(move |edge, dep_edge| {
-                    let file = file_cell.get().unwrap();
-                    type_sig_hash::visit_remote_ref(edge, dep_edge, file, &rref);
-                });
-            Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
-        });
+            let pattern_defs = {
+                let dirty_indices = &module.dirty_pattern_defs;
+                Table::init(module.pattern_defs.len(), |i| {
+                    let pdef = module.pattern_defs.get(Index::<()>::new(i));
+                    let mut hash_val = content_hash_of(pdef);
+                    if check_dirty_set && dirty_indices.contains(&i) {
+                        hash_val = !hash_val;
+                    }
+                    let hash = Rc::new(Cell::new(hash_val));
+                    let hash_r = hash.dupe();
+                    let read_hash: ReadHash = Box::new(move || hash_r.get());
+                    let hash_w = hash.dupe();
+                    let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                    let pdef = pdef.clone();
+                    let file = file.clone();
+                    let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                        Box::new(move |edge, dep_edge| {
+                            let file = upgrade_file(&file);
+                            type_sig_hash::visit_packed(edge, dep_edge, &file, &pdef);
+                        });
+                    Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                })
+            };
 
-        let pattern_defs = {
-            let dirty_indices = &module.dirty_pattern_defs;
-            Table::init(module.pattern_defs.len(), |i| {
-                let pdef = module.pattern_defs.get(Index::<()>::new(i));
-                let mut hash_val = content_hash_of(pdef);
-                if check_dirty_set && dirty_indices.contains(&i) {
-                    hash_val = !hash_val;
-                }
+            let patterns = Table::init(module.patterns.len(), |i| {
+                let pattern = module.patterns.get(Index::<()>::new(i));
+                let hash_val = content_hash_of(pattern);
                 let hash = Rc::new(Cell::new(hash_val));
                 let hash_r = hash.dupe();
                 let read_hash: ReadHash = Box::new(move || hash_r.get());
                 let hash_w = hash.dupe();
                 let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
-                let pdef = pdef.clone();
-                let file_cell = file_cell.dupe();
+                let pattern = pattern.clone();
+                let file = file.clone();
                 let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
-                    Box::new(move |edge, dep_edge| {
-                        let file = file_cell.get().unwrap();
-                        type_sig_hash::visit_packed(edge, dep_edge, file, &pdef);
+                    Box::new(move |edge, _dep_edge| {
+                        let file = upgrade_file(&file);
+                        type_sig_hash::visit_pattern(edge, &file, &pattern);
                     });
                 Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
-            })
-        };
+            });
 
-        let patterns = Table::init(module.patterns.len(), |i| {
-            let pattern = module.patterns.get(Index::<()>::new(i));
-            let hash_val = content_hash_of(pattern);
-            let hash = Rc::new(Cell::new(hash_val));
-            let hash_r = hash.dupe();
-            let read_hash: ReadHash = Box::new(move || hash_r.get());
-            let hash_w = hash.dupe();
-            let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
-            let pattern = pattern.clone();
-            let file_cell = file_cell.dupe();
-            let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
-                Box::new(move |edge, _dep_edge| {
-                    let file = file_cell.get().unwrap();
-                    type_sig_hash::visit_pattern(edge, file, &pattern);
-                });
-            Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+            type_sig_hash::File {
+                dependencies,
+                local_defs,
+                remote_refs,
+                pattern_defs,
+                patterns,
+            }
         });
 
-        let file = Rc::new(type_sig_hash::File {
-            dependencies,
-            local_defs,
-            remote_refs,
-            pattern_defs,
-            patterns,
-        });
-        assert!(file_cell.set(file.dupe()).is_ok(), "Should be initialized");
-
-        Rc::new(cyclic_dep(file_key, parse, &file))
+        (Rc::new(cyclic_dep(file_key, parse, &file)), file)
     };
 
     if component.is_empty() {
@@ -600,9 +620,16 @@ pub fn sig_hash(
         .collect();
 
     let component_rec: ComponentRec = Rc::new(OnceCell::new());
-    let files: Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>> = component
+    let component_files: Vec<(
+        Rc<CheckedDep<Rc<cycle_hash::Node>>>,
+        Rc<type_sig_hash::File>,
+    )> = component
         .iter()
         .map(|(file_key, parse)| component_file(&component_rec, &component_map, file_key, parse))
+        .collect();
+    let files = component_files
+        .iter()
+        .map(|(checked_dep, _file)| checked_dep.dupe())
         .collect();
     assert!(component_rec.set(files).is_ok(), "Should be initialized");
 
@@ -655,6 +682,13 @@ pub fn sig_hash(
             },
         })
         .collect();
+
+    debug_assert_eq!(Rc::strong_count(&component_rec), 1);
+    debug_assert!(
+        component_files
+            .iter()
+            .all(|(_checked_dep, file)| Rc::strong_count(file) == 1)
+    );
 
     (component_hash, merge_hashes)
 }
