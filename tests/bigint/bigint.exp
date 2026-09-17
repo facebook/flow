@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- bigint.js:11:5
 
-Cannot assign `x` to `z` because bigint [1] is incompatible with bigint literal `10n` [2]. [incompatible-type]
+Cannot assign `x` to `z` because `bigint` [1] is incompatible with `10n` [2]. [incompatible-type]
 
    bigint.js:11:5
    11| z = x; // error, bigint </: 10n
@@ -101,8 +101,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:47:3
 
-Cannot cast `x` to `typeof b` because at least one member of union type [1], e.g. bigint literal `0n` [2], is
-incompatible with bigint literal `1n` [3]. [incompatible-type]
+Cannot cast `x` to `typeof b` because in at least one member of union type [1]: `0n` [2] is incompatible with `1n` [3].
+[incompatible-type]
 
    bigint.js:47:3
    47|   x as typeof b; // ERROR typeof b is `1n`
@@ -192,8 +192,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:75:3
 
-Cannot cast `x` to bigint literal `1n` because bigint literal `-1n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `x` to bigint literal `1n` because `-1n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    bigint.js:75:3
    75|   x as 1n; // ERROR
@@ -210,8 +209,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:82:3
 
-Cannot cast `x` to bigint literal `1n` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `x` to bigint literal `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    bigint.js:82:3
    82|   x as 1n; // ERROR
@@ -228,8 +226,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:85:3
 
-Cannot cast `y` to bigint literal `-1n` because bigint literal `2n` [1] is incompatible with bigint literal `-1n` [2].
-[incompatible-type]
+Cannot cast `y` to bigint literal `-1n` because `-2n` [1] is incompatible with `-1n` [2]. [incompatible-type]
 
    bigint.js:85:3
    85|   y as -1n; // ERROR
@@ -246,8 +243,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:94:3
 
-Cannot cast `x` to bigint literal `1n` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `x` to bigint literal `1n` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    bigint.js:94:3
    94|   x as 1n; // ERROR
@@ -264,8 +260,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:97:3
 
-Cannot cast `y` to bigint literal `-1n` because bigint literal `-2n` [1] is incompatible with bigint literal `-1n` [2].
-[incompatible-type]
+Cannot cast `y` to bigint literal `-1n` because `-2n` [1] is incompatible with `-1n` [2]. [incompatible-type]
 
    bigint.js:97:3
    97|   y as -1n; // ERROR

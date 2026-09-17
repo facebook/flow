@@ -68,7 +68,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:11:2
 
-Cannot access `$JSXIntrinsics` [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access `$JSXIntrinsics` [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    strings.js:11:2
    11| <Str />; // Error: string ~> keys of JSXIntrinsics
@@ -144,7 +144,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:15:2
 
-Cannot access `$JSXIntrinsics` [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access `$JSXIntrinsics` [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    strings.js:15:2
    15| <Str />; // Error: string ~> keys of JSXIntrinsics

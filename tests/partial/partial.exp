@@ -75,8 +75,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:25
 
-Cannot assign object literal to `b9` because property `z` is extra in object literal [1] but missing in `Foo` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `b9` because property `z` is extra in object literal [1] but missing in
+`{x?: string, y?: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:11:25
    11| let b9 : Partial<Foo> = {z : ""}; // error

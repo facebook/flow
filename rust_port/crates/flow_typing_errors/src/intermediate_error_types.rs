@@ -1574,8 +1574,9 @@ pub struct MessageOnlyDefaultExportData {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropExtraAgainstExactObjectData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
+    pub upper_is_record: bool,
     pub props: Vec1<FlowSmolStr>,
 }
 
@@ -1653,7 +1654,7 @@ pub struct MessageTupleElementNotWritableData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageTupleIndexOutOfBoundData<L: Dupe> {
-    pub reason_op: VirtualReason<L>,
+    pub tuple: MessageTypeReferenceData<L>,
     pub inexact: bool,
     pub length: i32,
     pub index: FlowSmolStr,
@@ -1742,8 +1743,8 @@ pub enum Message<L: Dupe> {
     MessageCannotAccessEnumMember(Box<MessageCannotAccessEnumMemberData<L>>),
 
     MessageCannotAccessObjectWithComputedProp {
-        reason_obj: VirtualReason<L>,
-        reason_prop: VirtualReason<L>,
+        object: MessageTypeReferenceData<L>,
+        property: MessageTypeReferenceData<L>,
         kind: InvalidObjKey,
     },
 
@@ -1780,7 +1781,7 @@ pub enum Message<L: Dupe> {
         enum_name: Option<FlowSmolStr>,
     },
 
-    MessageCannotCallReactComponent(VirtualReason<L>),
+    MessageCannotCallReactComponent(MessageTypeReferenceData<L>),
 
     MessageCannotCallReactHookConditionally(L),
     MessageCannotCallReactHookInDefinitelyNonComponentOrHook(L),
@@ -1828,7 +1829,7 @@ pub enum Message<L: Dupe> {
         Box<MessageCannotExhaustivelyCheckEnumWithUnknownsData<L>>,
     ),
 
-    MessageCannotImplementNonInterface(VirtualReasonDesc<L>),
+    MessageCannotImplementNonInterface(Box<MessageTypeReferenceData<L>>),
 
     MessageCannotInstantiateObjectUtilTypeWithEnum(
         Box<MessageCannotInstantiateObjectUtilTypeWithEnumData<L>>,
@@ -1858,8 +1859,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageCannotPerformArithOnNonNumbersOrBigInt(Box<MessageArithmeticOperandData<L>>),
-    MessageCannotPerformBigIntRShift3(VirtualReason<L>),
-    MessageCannotPerformBigIntUnaryPlus(VirtualReason<L>),
+    MessageCannotPerformBigIntRShift3(Box<MessageArithmeticOperandData<L>>),
+    MessageCannotPerformBigIntUnaryPlus(Box<MessageArithmeticOperandData<L>>),
 
     MessageCannotPerformBinaryArith {
         kind: flow_typing_type::type_::arith_kind::ArithKind,
@@ -1935,8 +1936,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageCannotUsePrimitiveAsInterface {
-        reason: VirtualReason<L>,
-        interface_reason: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
         kind: PrimitiveKind,
     },
 
@@ -2083,8 +2084,8 @@ pub enum Message<L: Dupe> {
     MessageIncompatibleTupleArity(Box<MessageIncompatibleTupleArityData<L>>),
 
     MessageIncompatibleClassToObject {
-        reason_class: VirtualReason<L>,
-        reason_obj: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
         kind: ClassKind,
     },
 
@@ -2122,18 +2123,18 @@ pub enum Message<L: Dupe> {
     },
 
     MessageIncompatibleNonTypeGuardToTypeGuard {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
     MessageIncompatibleReactHooksDueToUniqueness {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
     MessageIncompatibleReactHooksWithNonReactHook {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
         lower_is_hook: bool,
         hook_is_annot: bool,
     },
@@ -2213,7 +2214,7 @@ pub enum Message<L: Dupe> {
         reason_optional: VirtualReason<L>,
     },
 
-    MessageInvalidTupleTypeSpread(VirtualReason<L>),
+    MessageInvalidTupleTypeSpread(Box<MessageTypeReferenceData<L>>),
     MessageTupleElementAfterInexactSpread,
 
     MessageInternalType(InternalType),
@@ -2246,7 +2247,7 @@ pub enum Message<L: Dupe> {
     MessageLowerIsNotInstanceType(VirtualReason<L>),
     MessageLowerIsNotObject(VirtualReason<L>),
     MessageLowerIsNotPolymorphicType(VirtualReason<L>),
-    MessageLowerIsNotReactComponent(VirtualReason<L>),
+    MessageLowerIsNotReactComponent(Box<MessageTypeReferenceData<L>>),
 
     MessageLowerIsNotWithPrintedType {
         lower: Box<MessageTypeReferenceData<L>>,
@@ -2288,6 +2289,11 @@ pub enum Message<L: Dupe> {
 
     MessagePropMissing(Box<MessagePropMissingData<L>>),
 
+    MessagePrivatePropMissing {
+        object: MessageTypeReferenceData<L>,
+        prop: FlowSmolStr,
+    },
+
     MessageConstructSignatureMissing(Box<MessageConstructSignatureMissingData<L>>),
 
     MessagePropsMissing(Box<MessagePropsMissingData<L>>),
@@ -2316,7 +2322,7 @@ pub enum Message<L: Dupe> {
     MessageShouldNotBeCoerced(VirtualReason<L>),
     MessageShouldUseArrayLiteral,
 
-    MessageSketchyNumber(VirtualReason<L>),
+    MessageSketchyNumber(MessageTypeReferenceData<L>),
 
     MessageSketchyNullCheck(Box<MessageSketchyNullCheckData<L>>),
 

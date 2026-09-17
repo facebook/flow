@@ -782,7 +782,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either `number` [1] is incompatible with `true` [2].
  - Or `string` [3] is incompatible with `true` [2].
- - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
+ - Or `false` [4] is incompatible with `true` [2].
 
    errors_intersection.js:104:1
    104| any as number & (string & false) as true; // Error: should be flattened
@@ -807,7 +807,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either `string` [1] is incompatible with `true` [2].
- - Or boolean literal `false` [3] is incompatible with boolean literal `true` [2].
+ - Or `false` [3] is incompatible with `true` [2].
  - Or `number` [4] is incompatible with `true` [2].
 
    errors_intersection.js:105:1
@@ -834,7 +834,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either `number` [1] is incompatible with `true` [2].
  - Or `string` [3] is incompatible with `true` [2].
- - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
+ - Or `false` [4] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -863,7 +863,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either `number` [1] is incompatible with `true` [2].
  - Or `string` [3] is incompatible with `true` [2].
- - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
+ - Or `false` [4] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -892,7 +892,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `any` to boolean literal `true` because: [incompatible-type]
  - Either `number` [1] is incompatible with `true` [2].
  - Or `string` [3] is incompatible with `true` [2].
- - Or boolean literal `false` [4] is incompatible with boolean literal `true` [2].
+ - Or `false` [4] is incompatible with `true` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2145,7 +2145,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `true` to union type because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `string` [3].
- - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
+ - Or `true` [1] is incompatible with `false` [4].
 
    errors_union.js:86:1
    86| true as number | (string | false); // Error: should be flattened
@@ -2167,7 +2167,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `true` to union type because: [incompatible-type]
  - Either `true` [1] is incompatible with `string` [2].
- - Or boolean literal `true` [1] is incompatible with boolean literal `false` [3].
+ - Or `true` [1] is incompatible with `false` [3].
  - Or `true` [1] is incompatible with `number` [4].
 
    errors_union.js:87:1
@@ -2191,7 +2191,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `true` to union type because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `string` [3].
- - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
+ - Or `true` [1] is incompatible with `false` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2217,7 +2217,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `true` to union type because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `string` [3].
- - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
+ - Or `true` [1] is incompatible with `false` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2243,7 +2243,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `true` to union type because: [incompatible-type]
  - Either `true` [1] is incompatible with `number` [2].
  - Or `true` [1] is incompatible with `string` [3].
- - Or boolean literal `true` [1] is incompatible with boolean literal `false` [4].
+ - Or `true` [1] is incompatible with `false` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2623,7 +2623,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- exported_bad_evalt.js:8:26
 
-Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access `{foo: string}` [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    exported_bad_evalt.js:8:26
    8| export type Bad = C<Obj2[string]>;
@@ -2841,7 +2841,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:42:1
 
 Cannot call `e` because: [incompatible-type]
- - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `42` [1], a primitive, cannot be used as a subtype of `interface {p: string}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `42` [1] is incompatible with `X` [3].
 
@@ -2945,7 +2945,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:51:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `42` [1], a primitive, cannot be used as a subtype of `interface {p: string}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `42` [1] is incompatible with `ReadonlyArray<string>` [3].
 
@@ -3856,7 +3856,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:34:1
 
 Cannot cast `42` to `E` because: [incompatible-type]
- - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `42` [1], a primitive, cannot be used as a subtype of `interface {p: string}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `42` [1] is incompatible with `X` [3].
 
@@ -3948,7 +3948,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:41:1
 
 Cannot cast `42` to `F` because: [incompatible-type]
- - Either number literal `42` [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `42` [1], a primitive, cannot be used as a subtype of `interface {p: string}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `42` [1] is incompatible with `ReadonlyArray<string>` [3].
 

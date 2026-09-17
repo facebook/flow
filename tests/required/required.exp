@@ -105,7 +105,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
 Cannot cast object literal to required of `A` because property `extra` is extra in object literal [1] but missing in
-`A` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{x: number, y: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:13:2
    13| ({x: 1, y: 1, extra: 1}) as Required<A>; // ERROR

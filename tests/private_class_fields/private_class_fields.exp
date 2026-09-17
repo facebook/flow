@@ -304,8 +304,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:160:7
 
-Cannot cast `this.p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `this.p` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:160:7
    160|       this.p as 3; // Error, this.#p doesn't refine this.p
@@ -322,8 +321,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:164:7
 
-Cannot cast `this.#p` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot cast `this.#p` to number literal `4` because `3` [1] is incompatible with `4` [2]. [incompatible-type]
 
    test.js:164:7
    164|       this.#p as 4; // Error, this.p doesnt refine this.#p
@@ -340,8 +338,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:167:7
 
-Cannot cast `this.p` to number literal `3` because number literal `4` [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `this.p` to number literal `3` because `4` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:167:7
    167|       this.p as 3; // Error, this.#p doesnt refine this.p
@@ -358,8 +355,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:170:5
 
-Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `this.#p` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:170:5
    170|     this.#p as 3; // Error, Havoc happens as normal
@@ -376,7 +372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:7
 
-Cannot cast `RefinementClashes.q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+Cannot cast `RefinementClashes.q` to number literal `3` because `number` [1] is incompatible with `3` [2].
 [incompatible-type]
 
    test.js:174:7
@@ -394,8 +390,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:178:7
 
-Cannot cast `RefinementClashes.#q` to number literal `4` because number literal `3` [1] is incompatible with number
-literal `4` [2]. [incompatible-type]
+Cannot cast `RefinementClashes.#q` to number literal `4` because `3` [1] is incompatible with `4` [2].
+[incompatible-type]
 
    test.js:178:7
    178|       RefinementClashes.#q as 4; // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
@@ -412,8 +408,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:181:7
 
-Cannot cast `RefinementClashes.q` to number literal `3` because number literal `4` [1] is incompatible with number
-literal `3` [2]. [incompatible-type]
+Cannot cast `RefinementClashes.q` to number literal `3` because `4` [1] is incompatible with `3` [2].
+[incompatible-type]
 
    test.js:181:7
    181|       RefinementClashes.q as 3; // Error, RefinementClashes.#q doesnt refine RefinementClashes.q
@@ -430,7 +426,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:184:5
 
-Cannot cast `RefinementClashes.#q` to number literal `3` because number [1] is incompatible with number literal `3` [2].
+Cannot cast `RefinementClashes.#q` to number literal `3` because `number` [1] is incompatible with `3` [2].
 [incompatible-type]
 
    test.js:184:5
@@ -448,8 +444,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:190:7
 
-Cannot cast `this.#p` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `this.#p` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:190:7
    190|       this.#p as 3; // Error, other.#p does havoc this.#p

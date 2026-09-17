@@ -61,8 +61,7 @@ No errors!
 === block 5 ===
 Error ------------------------------------------------------------------------------- -:3:25
 
-Cannot assign `3.14` to `num2` because number literal `3.14` [1] is incompatible with number literal `42` [2].
-[incompatible-type]
+Cannot assign `3.14` to `num2` because `3.14` [1] is incompatible with `42` [2]. [incompatible-type]
 
    -:3:25
    3| let num2: typeof num1 = 3.14;    // Error!
@@ -75,8 +74,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:6:27
 
-Cannot assign `false` to `bool2` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot assign `false` to `bool2` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    -:6:27
    6| let bool2: typeof bool1 = false; // Error!

@@ -95,7 +95,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:1
 
-Cannot get `tup['2']` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+Cannot get `tup['2']` because `[number, string]` [1] only has 2 elements, so index 2 is out of bounds.
+[invalid-tuple-index]
 
    test.js:43:1
    43| tup['2']; // ERROR: out of bounds
@@ -123,8 +124,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:1
 
-Cannot cast `tup['length']` to number literal `3` because length `2` (number) of tuple [1] is incompatible with number
-literal `3` [2]. [incompatible-type]
+Cannot cast `tup['length']` to number literal `3` because `2` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:47:1
    47| tup['length'] as 3; // ERROR: the length is 2, not 3

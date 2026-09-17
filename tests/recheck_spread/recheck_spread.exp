@@ -19,8 +19,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:14
 
-Cannot assign object literal to `x` because property `foo` is extra in object literal [1] but missing in `X` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `x` because property `foo` is extra in object literal [1] but missing in
+`{bar: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:5:14
    5| const x: X = {foo: 3};

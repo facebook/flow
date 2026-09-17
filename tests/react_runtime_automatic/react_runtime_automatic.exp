@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:8:12
 
-Cannot create `Component` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact objects
-do not accept extra props. [incompatible-type]
+Cannot create `Component` element because property `bar` is extra in `{bar: 3}` [1] but missing in `Props` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    test.js:8:12
    8| const y = <Component bar={3} />; // Error missing foo, got bar
@@ -54,8 +54,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:22
 
-Cannot create `Component2` element because property `foo` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `Component2` element because property `foo` is extra in `{foo: 3}` [1] but missing in `{bar: number}` [2].
+Exact objects do not accept extra props. [incompatible-type]
 
    test.js:13:22
    13| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo

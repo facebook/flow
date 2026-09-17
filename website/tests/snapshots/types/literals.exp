@@ -1,8 +1,7 @@
 === block 1 ===
 Error ----------------------------------------------------------------------------- -:5:12
 
-Cannot call `acceptsTwo` with `3` bound to `value` because number literal `3` [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot call `acceptsTwo` with `3` bound to `value` because `3` [1] is incompatible with `2` [2]. [incompatible-type]
 
    -:5:12
    5| acceptsTwo(3);   // Error!
@@ -58,8 +57,7 @@ Found 1 error
 === block 4 ===
 Error ------------------------------------------------------------------------------ -:6:1
 
-Cannot cast `o.x` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `o.x` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    -:6:1
    6| o.x as 1;      // Error — o.x is number

@@ -84,8 +84,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:31:3
 
-Cannot cast `noFoo` to object type because object type [1] is not a subtype of object type [2]. Class instances are not
-subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `noFoo` to object type because `interface {bar: number; baz: number}` [1] is not a subtype of
+`{bar: number, baz: number, ...}` [2]. Class instances are not subtypes of object types; consider rewriting
+`{bar: number, baz: number, ...}` [2] as an interface. [class-object-subtyping]
 
    omit.js:31:3
    31|   noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
@@ -116,8 +117,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:47:3
 
-Cannot cast `noFoo` to object type because object type [1] is not a subtype of object type [2]. Class instances are not
-subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `noFoo` to object type because `interface {bar: number; baz: number}` [1] is not a subtype of
+`{bar: number, baz: number, ...}` [2]. Class instances are not subtypes of object types; consider rewriting
+`{bar: number, baz: number, ...}` [2] as an interface. [class-object-subtyping]
 
    omit.js:47:3
    47|   noFoo as {bar: number; baz: number, ...}; // ERROR: interface not object
@@ -328,8 +330,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- record.js:5:1
 
-Cannot cast `exact` to object type because property `bar` is extra in `Record` [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `exact` to object type because property `bar` is extra in object type [1] but missing in
+`{foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    record.js:5:1
    5| exact as {foo: number}; // ERROR, mising bar

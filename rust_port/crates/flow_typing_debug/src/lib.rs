@@ -84,12 +84,14 @@ use flow_typing_errors::error_message::EMissingPlatformSupportWithAvailablePlatf
 use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::ENegativeTypeGuardConsistencyData;
 use flow_typing_errors::error_message::ENonStrictEqualityComparisonData;
+use flow_typing_errors::error_message::ENotAReactComponentData;
 use flow_typing_errors::error_message::EObjectComputedPropertyAccessData;
 use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwriteData;
 use flow_typing_errors::error_message::EOverrideData;
 use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLookupFailedData;
 use flow_typing_errors::error_message::EPolarityMismatchData;
 use flow_typing_errors::error_message::EPrimitiveAsInterfaceData;
+use flow_typing_errors::error_message::EPrivateLookupFailedData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropNotReadableData;
@@ -150,6 +152,7 @@ use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
 use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
@@ -2057,38 +2060,53 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EExpectedNumberLit(box EExpectedNumberLitData {
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             use_op,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
-                "EExpectedNumberLit(Box::new(EExpectedNumberLitData {{ reason_lower = {}; reason_upper = {}; use_op = {} }}))",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                "EExpectedNumberLit(Box::new(EExpectedNumberLitData {{ lower = {}; upper = {}; use_op = {} }}))",
+                dump_type(lower),
+                dump_type(upper),
                 string_of_use_op(use_op)
             )
         }
         ErrorMessage::EExpectedBooleanLit(box EExpectedBooleanLitData {
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             use_op,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
-                "EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {{ reason_lower = {}; reason_upper = {}; use_op = {} }}))",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                "EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {{ lower = {}; upper = {}; use_op = {} }}))",
+                dump_type(lower),
+                dump_type(upper),
                 string_of_use_op(use_op)
             )
         }
         ErrorMessage::EExpectedBigIntLit(box EExpectedBigIntLitData {
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             use_op,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
-                "EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {{ reason_lower = {}; reason_upper = {}; use_op = {} }}))",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                "EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {{ lower = {}; upper = {}; use_op = {} }}))",
+                dump_type(lower),
+                dump_type(upper),
                 string_of_use_op(use_op)
             )
         }
@@ -2213,16 +2231,21 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EPropsExtraAgainstExactObject(box EPropsExtraAgainstExactObjectData {
             prop_names,
-            reason_l_obj,
-            reason_r_obj,
+            lower,
+            upper,
             use_op,
         }) => {
             let names: Vec<String> = prop_names.iter().map(|n| n.to_string()).collect();
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
                 "EPropsExtraAgainstExactObject ([{}], {}, {}, {})",
                 names.join(", "),
-                dump_reason(cx, reason_l_obj),
-                dump_reason(cx, reason_r_obj),
+                dump_type(lower),
+                dump_type(upper),
                 string_of_use_op(use_op)
             )
         }
@@ -2339,12 +2362,21 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 libdef_name
             )
         }
-        ErrorMessage::EPrivateLookupFailed(box ((reason1, reason2), x, use_op)) => {
+        ErrorMessage::EPrivateLookupFailed(box EPrivateLookupFailedData {
+            loc,
+            object,
+            prop_name,
+            use_op,
+        }) => {
+            let object = match &object.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
             format!(
                 "EPrivateLookupFailed(Box::new(({}, {}), {}, {}))",
-                string_of_aloc(None, reason1),
-                dump_reason(cx, reason2),
-                x,
+                string_of_aloc(None, loc),
+                object,
+                prop_name,
                 string_of_use_op(use_op)
             )
         }
@@ -2455,27 +2487,35 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
             spread_loc,
-            reason_arg,
+            argument,
         }) => {
+            let argument_type = match &argument.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
             format!(
-                "ETupleInvalidTypeSpread(Box::new(ETupleInvalidTypeSpreadData {{reason_spread = {}; reason_arg = {}}}))",
+                "ETupleInvalidTypeSpread(Box::new(ETupleInvalidTypeSpreadData {{reason_spread = {}; argument = {}}}))",
                 string_of_aloc(None, spread_loc),
-                dump_reason(cx, reason_arg)
+                argument_type
             )
         }
         ErrorMessage::ETupleOutOfBounds(box ETupleOutOfBoundsData {
             use_op,
             loc,
-            reason_op,
+            tuple,
             inexact,
             length,
             index,
         }) => {
+            let tuple_type = match &tuple.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
             format!(
-                "ETupleOutOfBounds(Box::new(ETupleOutOfBoundsData {{ use_op = {}; reason = {}; reason_op = {}; inexact = {}; length = {}; index = {} }}))",
+                "ETupleOutOfBounds(Box::new(ETupleOutOfBoundsData {{ use_op = {}; reason = {}; tuple = {}; inexact = {}; length = {}; index = {} }}))",
                 string_of_use_op(use_op),
                 string_of_aloc(None, loc),
-                dump_reason(cx, reason_op),
+                tuple_type,
                 inexact,
                 length,
                 index
@@ -2768,7 +2808,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc)
             )
         }
-        ErrorMessage::ETypeGuardFuncIncompatibility { use_op, reasons: _ } => {
+        ErrorMessage::ETypeGuardFuncIncompatibility { use_op, .. } => {
             format!(
                 "ETypeGuardFuncIncompatibility ({})",
                 string_of_use_op(use_op)
@@ -3024,14 +3064,19 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
-            reason_obj,
-            reason_prop,
+            object,
+            property,
             kind,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
-                "EObjectComputedPropertyAccess (reason_obj={}, reason_prop={}, kind={})",
-                dump_reason(cx, reason_obj),
-                dump_reason(cx, reason_prop),
+                "EObjectComputedPropertyAccess (object={}, property={}, kind={})",
+                dump_type(object),
+                dump_type(property),
                 kind.str_of_kind()
             )
         }
@@ -3092,17 +3137,25 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::EUnsupportedImplements(reason) => {
+        ErrorMessage::EUnsupportedImplements(type_) => {
+            let type_desc = match &type_.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
             format!(
                 "EUnsupportedImplements ({} {:?})",
-                string_of_aloc(None, &reason.loc),
-                reason.desc
+                string_of_aloc(None, &type_.reference.loc),
+                type_desc,
             )
         }
-        ErrorMessage::ENotAReactComponent { reason, use_op } => {
+        ErrorMessage::ENotAReactComponent(box ENotAReactComponentData { component, use_op }) => {
+            let component_type = match &component.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
             format!(
-                "ENotAReactComponent {{ reason = {}; use_op = {} }}",
-                dump_reason(cx, reason),
+                "ENotAReactComponent {{ component = {}; use_op = {} }}",
+                component_type,
                 string_of_use_op(use_op)
             )
         }
@@ -3241,15 +3294,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, falsy_loc)
             )
         }
-        ErrorMessage::ESketchyNumberLint(kind, reason) => {
+        ErrorMessage::ESketchyNumberLint(kind, value) => {
             let kind_str = match kind {
                 SketchyNumberKind::And => "SketchyNumberAnd",
             };
-            format!(
-                "ESketchyNumberLint ({}) ({})",
-                kind_str,
-                dump_reason(cx, reason)
-            )
+            let value = match &value.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!("ESketchyNumberLint ({}) ({})", kind_str, value)
         }
         ErrorMessage::EInvalidConstructor(box EInvalidConstructorData {
             loc, value_desc, ..
@@ -3375,15 +3428,20 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EPrimitiveAsInterface(box EPrimitiveAsInterfaceData {
             use_op,
-            reason,
-            interface_reason,
+            lower,
+            upper,
             kind: _,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
                 "EPrimitiveAsInterface ({}) ({}) ({})",
                 string_of_use_op(use_op),
-                dump_reason(cx, reason),
-                dump_reason(cx, interface_reason)
+                dump_type(lower),
+                dump_type(upper)
             )
         }
         ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData {
@@ -3890,11 +3948,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             upper,
             ..
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
                 "EHookIncompatible ({}) ({}) ({})",
                 string_of_use_op(use_op),
-                dump_reason(cx, lower),
-                dump_reason(cx, upper)
+                dump_type(lower),
+                dump_type(upper)
             )
         }
         ErrorMessage::EHookUniqueIncompatible(box EHookUniqueIncompatibleData {
@@ -3902,11 +3965,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             lower,
             upper,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
                 "EHookUniqueIncompatible ({}) ({}) ({})",
                 string_of_use_op(use_op),
-                dump_reason(cx, lower),
-                dump_reason(cx, upper)
+                dump_type(lower),
+                dump_type(upper)
             )
         }
         ErrorMessage::EHookRuleViolation(box EHookRuleViolationData { .. }) => {
@@ -3973,11 +4041,19 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             "EReactIntrinsicOverlap (_, _, _)".to_string()
         }
         ErrorMessage::EReactRefInRender { .. } => "EReactRefInRender _".to_string(),
-        ErrorMessage::EBigIntRShift3(reason) => {
-            format!("EBigIntRShift3 ({})", dump_reason(cx, reason))
+        ErrorMessage::EBigIntRShift3(operand) => {
+            let operand_desc = match &operand.operand_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!("EBigIntRShift3 ({})", operand_desc)
         }
-        ErrorMessage::EBigIntNumCoerce(reason) => {
-            format!("EBigIntNumCoerce ({})", dump_reason(cx, reason))
+        ErrorMessage::EBigIntNumCoerce(operand) => {
+            let operand_desc = match &operand.operand_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!("EBigIntNumCoerce ({})", operand_desc)
         }
         ErrorMessage::EInvalidCatchParameterAnnotation {
             loc,
@@ -4104,8 +4180,12 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 arg,
             )
         }
-        ErrorMessage::ECannotCallReactComponent { reason } => {
-            format!("ECannotCallReactComponent ({})", dump_reason(cx, reason))
+        ErrorMessage::ECannotCallReactComponent { component } => {
+            let component = match &component.type_desc {
+                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            };
+            format!("ECannotCallReactComponent ({component})")
         }
         ErrorMessage::ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
             return_reason,

@@ -18,8 +18,9 @@ Found 1 error
 === block 2 ===
 Error -------------------------------------------------------------------------- -:18:12
 
-Cannot call `acceptsObj` with `foo` bound to `x` because `Foo` [1] is not a subtype of object type [2]. Class instances
-are not subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot call `acceptsObj` with `foo` bound to `x` because `Foo` [1] is not a subtype of `{a: number, ...}` [2]. Class
+instances are not subtypes of object types; consider rewriting `{a: number, ...}` [2] as an interface.
+[class-object-subtyping]
 
    -:18:12
    18| acceptsObj(foo); // Error!
@@ -107,9 +108,9 @@ No errors!
 === block 14 ===
 Error ---------------------------------------------------------------------------- -:7:8
 
-Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
-subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
-subtype of an interface. [incompatible-type]
+Cannot call `logAll` with `msgs` bound to `items` because `"foo"` [1], a primitive, cannot be used as a subtype of
+`$Iterable<string, void, void>` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    -:7:8
    7| logAll(msgs); // Error: `string` is not a subtype of `Iterable<string>`

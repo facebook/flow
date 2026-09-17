@@ -226,7 +226,7 @@ No errors!
 Error ------------------------------------------------------------------------------- -:4:8
 
 Cannot call `method` with object literal bound to `obj` because property `bar` is extra in object literal [1] but
-missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+missing in `{foo: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    -:4:8
    4| method({foo: "test", bar: 42}); // Error!
@@ -445,7 +445,7 @@ No errors!
 === block 37 ===
 Error ------------------------------------------------------------------------------- -:5:5
 
-Cannot access object literal [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access object literal [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    -:5:5
    5| obj[key]; // Error! Can't use string to index into an object with known keys.

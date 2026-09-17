@@ -2473,8 +2473,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:1
 
-Cannot call `o3.foo` because property `foo` is extra in object literal [1] but missing in object type [2]. Exact objects
-do not accept extra props. [incompatible-type]
+Cannot call `o3.foo` because property `foo` is extra in object literal [1] but missing in `{y: number}` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    test.js:43:1
    43| o3.foo(); // error, foo is missing in type of this
@@ -2511,7 +2511,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:45:13
 
-Cannot call `o3.foo.bind` because property `foo` is extra in object literal [1] but missing in object type [2]. Exact
+Cannot call `o3.foo.bind` because property `foo` is extra in object literal [1] but missing in `{y: number}` [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
    test.js:45:13

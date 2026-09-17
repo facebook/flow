@@ -8007,8 +8007,8 @@ Error --------------------------------------------------------------------------
 
 Cannot yield object literal because: [incompatible-type]
  - Either in property `type`: string [1] is incompatible with string literal `DONE` [2].
- - Or property `value` is extra in object literal [3] but missing in object type [4]. Exact objects do not accept extra
-   props.
+ - Or property `value` is extra in object literal [3] but missing in `{readonly type: "PENDING"}` [4]. Exact objects do
+   not accept extra props.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -8913,8 +8913,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mixed.js:9:5
 
-Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `!x` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    mixed.js:9:5
    9|     !x as false; // error: we don't know the truthiness of x
@@ -9036,8 +9035,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:22:5
 
-Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `!x` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    mixed.js:22:5
    22|     !x as false; // error: we don't know the truthiness of x
@@ -9159,8 +9157,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:35:5
 
-Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `x` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2]. [incompatible-type]
 
    mixed.js:35:5
    35|     x as true; // error: we don't know the truthiness of x
@@ -10041,8 +10038,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:41:5
 
-Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `!x` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    not.js:41:5
    41|     !x as false; // error, strings are not always truthy
@@ -10056,8 +10052,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:44:5
 
-Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `!x` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    not.js:44:5
    44|     !x as false; // error, numbers are not always truthy
@@ -10071,8 +10066,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:47:5
 
-Cannot cast `!x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `!x` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    not.js:47:5
    47|     !x as false; // error, bools are not always truthy
@@ -10151,8 +10145,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- number.js:8:5
 
-Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
-[incompatible-type]
+Cannot cast `x` to number literal `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    number.js:8:5
    8|     x as 0; // error
@@ -10169,8 +10162,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:13:7
 
-Cannot cast `x` to number literal `0` because number [1] is incompatible with number literal `0` [2].
-[incompatible-type]
+Cannot cast `x` to number literal `0` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    number.js:13:7
    13|       x as 0; // error
@@ -10450,7 +10442,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:61:12
 
-Cannot return `x.foo` because number [1] is incompatible with number literal `0` [2]. [incompatible-type]
+Cannot return `x.foo` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    number.js:61:12
    61|     return x.foo; // error
@@ -10605,7 +10597,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:114:14
 
-Cannot return `x` because number [1] is incompatible with number literal `0` [2]. [incompatible-type]
+Cannot return `x` because `number` [1] is incompatible with `0` [2]. [incompatible-type]
 
    number.js:114:14
    114|       return x; // error
@@ -10681,8 +10673,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:126:5
 
-Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
-[incompatible-type]
+Cannot cast `x` to number literal `-1` because `number` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    number.js:126:5
    126|     x as -1; // error
@@ -10699,8 +10690,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:131:7
 
-Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
-[incompatible-type]
+Cannot cast `x` to number literal `-1` because `number` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    number.js:131:7
    131|       x as -1; // error
@@ -10717,8 +10707,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:133:5
 
-Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
-[incompatible-type]
+Cannot cast `x` to number literal `-1` because `number` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    number.js:133:5
    133|     x as -1; // error
@@ -10835,7 +10824,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:168:12
 
-Cannot return `x` because number literal `0` [1] is incompatible with number literal `-1` [2]. [incompatible-type]
+Cannot return `x` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    number.js:168:12
    168|     return x;
@@ -13981,8 +13970,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:150:7
 
-Cannot cast `x.num` to number literal `456` because number literal `123` [1] is incompatible with number literal
-`456` [2]. [incompatible-type]
+Cannot cast `x.num` to number literal `456` because `123` [1] is incompatible with `456` [2]. [incompatible-type]
 
    tagged_union.js:150:7
    150|       x.num as 456; // error: 123 !~> 456
@@ -14013,8 +14001,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:153:7
 
-Cannot cast `x.boolean` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean
-literal `false` [2]. [incompatible-type]
+Cannot cast `x.boolean` to boolean literal `false` because `true` [1] is incompatible with `false` [2].
+[incompatible-type]
 
    tagged_union.js:153:7
    153|       x.boolean as false; // error: true !~> false
@@ -15174,7 +15162,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:30:5
 
-Cannot get `a[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+Cannot get `a[2]` because `[number, number]` [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
    tuple.js:30:5
    30|     a[2] as number; // Error: one of the variants has only 2 elements.
@@ -15575,7 +15563,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:52:7
 
-Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+Cannot get `x[2]` because `[true, number]` [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
    tuple_union.js:52:7
    52|   if (x[2]) { // Unlike for objects, we error here. We can consider not in the future.
@@ -15679,7 +15667,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:64:7
 
-Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+Cannot get `x[2]` because `[true, number]` [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
    tuple_union.js:64:7
    64|   if (x[2]) { // ERROR: element not readable
@@ -16203,8 +16191,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:121:5
 
-Cannot cast `x` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `x` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2]. [incompatible-type]
 
    typeof.js:121:5
    121|     x as true;

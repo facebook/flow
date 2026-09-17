@@ -13,7 +13,8 @@ No errors!
 === block 5 ===
 Error ------------------------------------------------------------------------------- -:4:14
 
-Cannot get `tuple[3]` because tuple type [1] only has 3 elements, so index 3 is out of bounds. [invalid-tuple-index]
+Cannot get `tuple[3]` because `[number, boolean, string]` [1] only has 3 elements, so index 3 is out of bounds.
+[invalid-tuple-index]
 
    -:4:14
    4| const none = tuple[3]; // Error!

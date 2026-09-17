@@ -1,7 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
 
-Cannot assign array literal to `x` because in index `1`: number [1] is incompatible with number literal `20` [2].
-[incompatible-type]
+Cannot assign array literal to `x` because in index `1`: `number` [1] is incompatible with `20` [2]. [incompatible-type]
 
    test.js:29:31
    29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
@@ -18,8 +17,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
 
-Cannot assign array literal to `x` because in index `3`: number [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot assign array literal to `x` because in index `3`: `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    test.js:29:31
    29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
@@ -36,8 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
 
-Cannot assign array literal to `x` because in index `4`: number [1] is incompatible with number literal `5` [2].
-[incompatible-type]
+Cannot assign array literal to `x` because in index `4`: `number` [1] is incompatible with `5` [2]. [incompatible-type]
 
    test.js:29:31
    29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
@@ -54,8 +51,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:41
 
-Cannot assign array literal to `x` because in index `2`: number literal `3` [1] is incompatible with number literal
-`30` [2]. [incompatible-type]
+Cannot assign array literal to `x` because in index `2`: `3` [1] is incompatible with `30` [2]. [incompatible-type]
 
    test.js:29:41
    29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
@@ -69,8 +65,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:50
 
-Cannot assign array literal to `x` because in index `5`: number literal `6` [1] is incompatible with number literal
-`60` [2]. [incompatible-type]
+Cannot assign array literal to `x` because in index `5`: `6` [1] is incompatible with `60` [2]. [incompatible-type]
 
    test.js:29:50
    29|   const x: [1,20,30,4,5,60] = [1, ...a, 3, ...b, 6]; // error
@@ -84,8 +79,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:3
 
-Cannot cast `ret1[0]` to number literal `2` because number [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `ret1[0]` to number literal `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    test.js:44:3
    44|   ret1[0] as 2; // error
@@ -102,8 +96,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:3
 
-Cannot cast `ret2[0]` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `ret2[0]` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    test.js:45:3
    45|   ret2[0] as 3; // error
@@ -156,7 +149,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:63:5
 
-string literal `hello` [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in
+`"hello"` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, any, any>` [2]. You can wrap it in
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    test.js:63:5

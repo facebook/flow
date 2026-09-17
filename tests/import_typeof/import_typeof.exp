@@ -232,7 +232,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:146:2
 
-Cannot cast object literal to `E` because property `a` is extra in object literal [1] but missing in exports [2]. Exact
+Cannot cast object literal to `E` because property `a` is extra in object literal [1] but missing in `{}` [2]. Exact
 objects do not accept extra props. [incompatible-type]
 
    import_typeof.js:146:2

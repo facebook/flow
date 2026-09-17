@@ -969,3 +969,11 @@ class ThisInJsxTag extends React.Component<{tag: () => React.MixedElement, ...}>
   declare function div(): React.Node;
   <div />; // Error
 }
+
+type WiderConfig = {foo: number, bar: number};
+declare const widerConfig: WiderConfig;
+const FunctionExact_Config = (props: {config: {foo: number}}) => any;
+<FunctionExact_Config
+  // $FlowFixMe[incompatible-type]
+  config={widerConfig}
+/>;

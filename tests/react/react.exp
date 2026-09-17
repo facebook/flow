@@ -161,7 +161,7 @@ References:
 Error ------------------------------------------------------------------------------------------ element_config.js:31:29
 
 Cannot initialize property `defaultProps` with object literal because property `p` is extra in object literal [1] but
-missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:31:29
    31|   static defaultProps: {} = {p: 42}; // Error: extra property `p`
@@ -294,7 +294,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:71:2
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is extra in object literal [1] but missing in
-props of class `F` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:71:2
    71| ({p: 42}) as React.ElementConfig<typeof F>; // Error: extra property `p`
@@ -309,7 +309,7 @@ References:
 Error ------------------------------------------------------------------------------------------- element_config.js:72:2
 
 Cannot cast object literal to `React.ElementConfig` because property `p` is extra in object literal [1] but missing in
-props of class `F` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:72:2
    72| ({p: 'foo'}) as React.ElementConfig<typeof F>; // Error: extra property `p`
@@ -528,8 +528,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:39:2
 
-Cannot create `Wrapped` element because property `nonsense` is extra in props [1] but missing in props of component [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot create `Wrapped` element because property `nonsense` is extra in `{nonsense: "what"}` [1] but missing in
+`{readonly foo: number, readonly ref?: React.RefSetter<unknown>}` [2]. Exact objects do not accept extra props.
+[incompatible-type]
 
    hoc.js:39:2
    39| <Wrapped nonsense="what" />; // Error: `foo` is required.
@@ -908,7 +909,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `MyComponent` element because: [incompatible-use]
  - Either property `foo` is missing in props [1] but exists in object type [2].
- - Or object type [3] is not a React component.
+ - Or `{someStatic: boolean, ...}` [3] is not a React component.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2391,8 +2392,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ use_hook.js:20:22
 
-Cannot assign `use(...)` to `notAny2` because number literal `42` [1] is incompatible with number literal `0` [2].
-[incompatible-type]
+Cannot assign `use(...)` to `notAny2` because `42` [1] is incompatible with `0` [2]. [incompatible-type]
 
    use_hook.js:20:22
    20|   const notAny2: 0 = use(AnswerPromise);
@@ -2465,7 +2465,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- use_hook.js:26:7
 
 Cannot call `use` with `0` bound to `usable` because: [incompatible-type]
- - Either number literal `0` [1], a primitive, cannot be used as a subtype of `Thenable` [2]. You can wrap it in
+ - Either `0` [1], a primitive, cannot be used as a subtype of `Thenable<any>` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `0` [1] is incompatible with `React.Context<any>` [3].
 

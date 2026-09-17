@@ -558,7 +558,7 @@ References:
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:188:7
 
 Cannot call `foo` with object literal bound to `x` because property `bar` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+`{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    implicit_instantiation.js:188:7
    188|   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
@@ -1122,8 +1122,8 @@ An annotation on `v` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:42
 
-Cannot assign object literal to `x` because property `42` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `x` because property `42` is extra in object literal [1] but missing in
+`{A: (number) => number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    unions.js:7:42
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR

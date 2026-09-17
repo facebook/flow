@@ -10,8 +10,7 @@ No errors!
 === block 4 ===
 Error --------------------------------------------------------------------------- -:5:11
 
-Cannot call `acceptTwo` with `1` bound to `x` because number literal `1` [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot call `acceptTwo` with `1` bound to `x` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    -:5:11
    5| acceptTwo(1); // Error!

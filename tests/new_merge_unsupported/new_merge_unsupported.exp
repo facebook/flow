@@ -225,7 +225,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:8:27
 
-Cannot access mapped type [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access mapped type [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    ops_on_eval_mapped_type.js:8:27
    8| export const x3 = t['' as string]; // error: unsafe string key access
@@ -375,8 +375,8 @@ References:
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
 
 Cannot get `t['']` because: [incompatible-use]
- - Either cannot access statics of `C` [1] with computed property using string [2].
- - Or cannot access statics of `D` [3] with computed property using string [2].
+ - Either cannot access `{f: any, name: string, ...}` [1] with computed property using `string` [2].
+ - Or cannot access `{f: any, name: string, ...}` [3] with computed property using `string` [2].
 
    ops_on_intersection.js:17:19
    17| export const x3 = t['' as string];
@@ -590,7 +590,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:27
 
-Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access `{f?: number, g: number}` [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    ops_on_react_config.js:16:27
    16| export const x3 = t['' as string];

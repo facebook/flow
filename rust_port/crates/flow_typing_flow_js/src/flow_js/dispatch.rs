@@ -12,6 +12,7 @@ use flow_typing_debug::verbose::print_types_if_verbose;
 use flow_typing_errors::error_message::ECallTypeArityData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
+use flow_typing_errors::error_message::EPrivateLookupFailedData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
@@ -3854,7 +3855,11 @@ fn __flow_impl<'cx>(
                                 ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
                                         spread_loc: reason_op.loc().dupe(),
-                                        reason_arg: reason.dupe(),
+                                        argument:
+                                            flow_js_utils::type_reference_with_reason_for_error(
+                                                l,
+                                                reason.dupe(),
+                                            ),
                                     },
                                 )),
                             )?;
@@ -3928,7 +3933,11 @@ fn __flow_impl<'cx>(
                                 ErrorMessage::ETupleInvalidTypeSpread(Box::new(
                                     ETupleInvalidTypeSpreadData {
                                         spread_loc: reason_op.loc().dupe(),
-                                        reason_arg: reason.dupe(),
+                                        argument:
+                                            flow_js_utils::type_reference_with_reason_for_error(
+                                                l,
+                                                reason.dupe(),
+                                            ),
                                     },
                                 )),
                             )?;
@@ -5233,7 +5242,9 @@ fn __flow_impl<'cx>(
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::ECannotCallReactComponent { reason: r.dupe() },
+                ErrorMessage::ECannotCallReactComponent {
+                    component: flow_js_utils::type_reference_with_reason_for_error(l, r.dupe()),
+                },
             )?;
             let any_err = any_t::error(reason.dupe());
             let open_tout = Type::new(TypeInner::OpenT(calltype.call_tout.dupe()));
@@ -6352,11 +6363,12 @@ fn __flow_impl<'cx>(
             add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::EPrivateLookupFailed(Box::new((
-                    (spp_data.reason.loc().dupe(), reason_c.dupe()),
-                    Name::new(spp_data.name.dupe()),
-                    spp_data.use_op.dupe(),
-                ))),
+                ErrorMessage::EPrivateLookupFailed(Box::new(EPrivateLookupFailedData {
+                    loc: spp_data.reason.loc().dupe(),
+                    object: flow_js_utils::type_reference_with_reason_for_error(l, reason_c.dupe()),
+                    prop_name: Name::new(spp_data.name.dupe()),
+                    use_op: spp_data.use_op.dupe(),
+                })),
             )?;
         }
         (TypeInner::DefT(reason_c, def_t), UseTInner::SetPrivatePropT(box spp_data))
@@ -6399,11 +6411,17 @@ fn __flow_impl<'cx>(
                         add_output_with_env(
                             cx,
                             env,
-                            ErrorMessage::EPrivateLookupFailed(Box::new((
-                                (spp_data.reason.loc().dupe(), reason_c.dupe()),
-                                name,
-                                spp_data.use_op.dupe(),
-                            ))),
+                            ErrorMessage::EPrivateLookupFailed(Box::new(
+                                EPrivateLookupFailedData {
+                                    loc: spp_data.reason.loc().dupe(),
+                                    object: flow_js_utils::type_reference_with_reason_for_error(
+                                        l,
+                                        reason_c.dupe(),
+                                    ),
+                                    prop_name: name,
+                                    use_op: spp_data.use_op.dupe(),
+                                },
+                            )),
                         )?;
                     }
                     Some(p) => {
@@ -7546,6 +7564,7 @@ fn __flow_impl<'cx>(
                 env,
                 write_action,
                 never_union_void_on_computed_prop_access,
+                obj,
                 l,
                 use_op.dupe(),
                 reason,
@@ -8342,11 +8361,10 @@ fn __flow_impl<'cx>(
             )?;
         }
         (_, UseTInner::ImplementsT(_, _)) => {
-            let reason = reason_of_t(l);
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::EUnsupportedImplements(reason.to_error_reference()),
+                ErrorMessage::EUnsupportedImplements(flow_js_utils::type_reference_for_error(l)),
             )?;
         }
 

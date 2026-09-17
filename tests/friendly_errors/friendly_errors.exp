@@ -1144,7 +1144,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- misc-incompatibles.js:8:3
 
-Cannot access object type [1] with computed property using boolean literal `true` [2]. [invalid-computed-prop]
+Cannot access `{...}` [1] with computed property using `true` [2]. [invalid-computed-prop]
 
    misc-incompatibles.js:8:3
    8| o[true];

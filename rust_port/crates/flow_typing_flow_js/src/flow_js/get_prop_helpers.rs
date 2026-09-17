@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use flow_typing_errors::error_message::EPrivateLookupFailedData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_flow_common::flow_js_utils::CgLookupArgs;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -236,11 +237,12 @@ pub(super) fn get_private_prop<'cx>(
         [] => flow_js_utils::add_output_with_env(
             cx,
             env,
-            ErrorMessage::EPrivateLookupFailed(Box::new((
-                (reason_op.loc().dupe(), reason_c.dupe()),
-                Name::new(prop_name.dupe()),
-                use_op.dupe(),
-            ))),
+            ErrorMessage::EPrivateLookupFailed(Box::new(EPrivateLookupFailedData {
+                loc: reason_op.loc().dupe(),
+                object: flow_js_utils::type_reference_with_reason_for_error(l, reason_c.dupe()),
+                prop_name: Name::new(prop_name.dupe()),
+                use_op: use_op.dupe(),
+            })),
         ),
         [scope, rest_scopes @ ..] => {
             if scope.class_binding_id != instance.class_id {
@@ -307,11 +309,17 @@ pub(super) fn get_private_prop<'cx>(
                             None => flow_js_utils::add_output_with_env(
                                 cx,
                                 env,
-                                ErrorMessage::EPrivateLookupFailed(Box::new((
-                                    (reason_op.loc().dupe(), reason_c.dupe()),
-                                    name,
-                                    use_op.dupe(),
-                                ))),
+                                ErrorMessage::EPrivateLookupFailed(Box::new(
+                                    EPrivateLookupFailedData {
+                                        loc: reason_op.loc().dupe(),
+                                        object: flow_js_utils::type_reference_with_reason_for_error(
+                                            l,
+                                            reason_c.dupe(),
+                                        ),
+                                        prop_name: name,
+                                        use_op: use_op.dupe(),
+                                    },
+                                )),
                             ),
                         }
                     }

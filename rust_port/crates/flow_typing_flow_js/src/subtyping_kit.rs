@@ -493,6 +493,8 @@ fn funt_to_funt_check<'cx>(
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
+    lower: &Type,
+    upper: &Type,
     lreason: &Reason,
     ft1: &flow_typing_type::type_::FunType,
     ureason: &Reason,
@@ -545,8 +547,14 @@ fn funt_to_funt_check<'cx>(
                 env,
                 ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
                     use_op: use_op.dupe(),
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                        lower,
+                        lreason.dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        upper,
+                        ureason.dupe(),
+                    ),
                     lower_is_hook: true,
                     hook_is_annot: ft1.effect_ == ReactEffectType::HookAnnot,
                 })),
@@ -561,8 +569,14 @@ fn funt_to_funt_check<'cx>(
                 env,
                 ErrorMessage::EHookIncompatible(Box::new(EHookIncompatibleData {
                     use_op: use_op.dupe(),
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                        lower,
+                        lreason.dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        upper,
+                        ureason.dupe(),
+                    ),
                     lower_is_hook: false,
                     hook_is_annot: ft2.effect_ == ReactEffectType::HookAnnot,
                 })),
@@ -577,8 +591,14 @@ fn funt_to_funt_check<'cx>(
                 env,
                 ErrorMessage::EHookUniqueIncompatible(Box::new(EHookUniqueIncompatibleData {
                     use_op: use_op.dupe(),
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                        lower,
+                        lreason.dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        upper,
+                        ureason.dupe(),
+                    ),
                 })),
             )?;
         }
@@ -606,7 +626,14 @@ fn funt_to_funt_check<'cx>(
                 env,
                 ErrorMessage::ETypeGuardFuncIncompatibility {
                     use_op: use_op.dupe(),
-                    reasons: (lreason.dupe(), ureason.dupe()),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                        lower,
+                        lreason.dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        upper,
+                        ureason.dupe(),
+                    ),
                 },
             )?;
         }
@@ -689,6 +716,8 @@ fn bivariant_param_flow<'cx>(
                             env,
                             trace,
                             use_op.dupe(),
+                            &lower_resolved,
+                            &upper_resolved,
                             lreason,
                             ft1,
                             ureason,
@@ -898,6 +927,8 @@ fn funt_to_funt_method_bivariant<'cx>(
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
+    lower: &Type,
+    upper: &Type,
     lreason: &Reason,
     ft1: &flow_typing_type::type_::FunType,
     ureason: &Reason,
@@ -908,6 +939,8 @@ fn funt_to_funt_method_bivariant<'cx>(
         env,
         trace,
         use_op,
+        lower,
+        upper,
         lreason,
         ft1,
         ureason,
@@ -957,7 +990,7 @@ fn try_method_bivariant<'cx>(
                     (ld.deref(), ud.deref()) =>
             {
                 funt_to_funt_method_bivariant(
-                    cx, env, trace, use_op, lreason_f, ft1, ureason_f, ft2,
+                    cx, env, trace, use_op, lt, ut, lreason_f, ft1, ureason_f, ft2,
                 )?;
                 Ok(true)
             }
@@ -1056,7 +1089,16 @@ fn try_method_bivariant<'cx>(
                             (ld.deref(), ud.deref()) =>
                     {
                         funt_to_funt_method_bivariant(
-                            cx, env, trace, use_op, lreason_f, ft1, ureason_f, ft2,
+                            cx,
+                            env,
+                            trace,
+                            use_op,
+                            &inner1_subst,
+                            &inner2_subst,
+                            lreason_f,
+                            ft1,
+                            ureason_f,
+                            ft2,
                         )?;
                     }
                     _ => {
@@ -1660,14 +1702,28 @@ fn flow_obj_to_obj<'cx>(
             .into_iter()
             .collect();
         if let Ok(missing_props) = Vec1::try_from_vec(missing_props) {
+            let l_t = Type::new(TypeInner::DefT(
+                lreason.dupe(),
+                DefT::new(DefTInner::ObjT(l_obj.dupe())),
+            ));
+            let u_t = Type::new(TypeInner::DefT(
+                ureason.dupe(),
+                DefT::new(DefTInner::ObjT(u_obj.dupe())),
+            ));
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
                 ErrorMessage::EPropsExtraAgainstExactObject(Box::new(
                     EPropsExtraAgainstExactObjectData {
                         prop_names: missing_props,
-                        reason_l_obj: lreason.dupe(),
-                        reason_r_obj: ureason.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                            &l_t,
+                            lreason.dupe(),
+                        ),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                            &u_t,
+                            ureason.dupe(),
+                        ),
                         use_op: use_op.dupe(),
                     },
                 )),
@@ -3299,8 +3355,8 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
-                        reason_lower: rl.dupe(),
-                        reason_upper: ru.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, rl.dupe()),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, ru.dupe()),
                         use_op,
                     })),
                 )?;
@@ -3416,8 +3472,8 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
-                        reason_lower: rl,
-                        reason_upper: ru,
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                         use_op,
                     })),
                 )?;
@@ -3433,8 +3489,8 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EExpectedNumberLit(Box::new(EExpectedNumberLitData {
-                    reason_lower: rl,
-                    reason_upper: ru,
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                     use_op,
                 })),
             )?;
@@ -3454,8 +3510,8 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
-                        reason_lower: rl,
-                        reason_upper: ru,
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                         use_op,
                     })),
                 )?;
@@ -3471,8 +3527,8 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EExpectedBooleanLit(Box::new(EExpectedBooleanLitData {
-                    reason_lower: rl,
-                    reason_upper: ru,
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                     use_op,
                 })),
             )
@@ -3491,8 +3547,8 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
-                        reason_lower: rl,
-                        reason_upper: ru,
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                         use_op,
                     })),
                 )?;
@@ -3508,8 +3564,8 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EExpectedBigIntLit(Box::new(EExpectedBigIntLitData {
-                    reason_lower: rl,
-                    reason_upper: ru,
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                     use_op,
                 })),
             )
@@ -5063,6 +5119,8 @@ pub fn rec_sub_t<'cx>(
                 cx, env,
                 trace,
                 use_op,
+                l,
+                u,
                 lreason,
                 ft1,
                 ureason,
@@ -5163,8 +5221,14 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EClassToObject(Box::new(EClassToObjectData {
-                        reason_class: lreason.dupe(),
-                        reason_obj: ureason.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                            l,
+                            lreason.dupe(),
+                        ),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                            u,
+                            ureason.dupe(),
+                        ),
                         use_op: use_op.dupe(),
                         kind: error_kind,
                     })),
@@ -6140,8 +6204,11 @@ pub fn rec_sub_t<'cx>(
                 cx,env,
                 ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
-                    reason: reason.dupe(),
-                    interface_reason: interface_reason.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, reason.dupe()),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        u,
+                        interface_reason.dupe(),
+                    ),
                     kind: intermediate_error_types::PrimitiveKind::Boolean,
                 })),
             )
@@ -6156,8 +6223,11 @@ pub fn rec_sub_t<'cx>(
                 cx,env,
                 ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
-                    reason: reason.dupe(),
-                    interface_reason: interface_reason.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, reason.dupe()),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        u,
+                        interface_reason.dupe(),
+                    ),
                     kind: intermediate_error_types::PrimitiveKind::Number,
                 })),
             )
@@ -6172,8 +6242,11 @@ pub fn rec_sub_t<'cx>(
                 cx,env,
                 ErrorMessage::EPrimitiveAsInterface(Box::new(EPrimitiveAsInterfaceData {
                     use_op,
-                    reason: reason.dupe(),
-                    interface_reason: interface_reason.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, reason.dupe()),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        u,
+                        interface_reason.dupe(),
+                    ),
                     kind: intermediate_error_types::PrimitiveKind::String,
                 })),
             )

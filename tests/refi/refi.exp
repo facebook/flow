@@ -117,8 +117,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- filter_primitives.js:13:5
 
-Cannot cast `2` to `typeof maybeNum` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `2` to `typeof maybeNum` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    filter_primitives.js:13:5
    13|     2 as typeof maybeNum; // error 2 ~> 1
@@ -132,8 +131,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- filter_primitives.js:18:5
 
-Cannot cast `false` to `typeof maybeBool` because boolean literal `false` [1] is incompatible with boolean literal
-`true` [2]. [incompatible-type]
+Cannot cast `false` to `typeof maybeBool` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    filter_primitives.js:18:5
    18|     false as typeof maybeBool; // error false ~> true
@@ -147,8 +145,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- filter_primitives.js:23:5
 
-Cannot cast `2n` to `typeof maybeBigInt` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `2n` to `typeof maybeBigInt` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    filter_primitives.js:23:5
    23|     2n as typeof maybeBigInt; // error 2n ~> 1n

@@ -33,10 +33,10 @@ References:
 
 Error --------------------------------------------------------------------------------- class_implements_object.ts:66:28
 
-Cannot implement `Record` because it is not an interface. [cannot-implement]
+Cannot implement object type [1] because it is not an interface. [cannot-implement]
 
    66| class NoIndexer implements Record<string, number> { // ERROR: indexed ObjT not accepted
-                                  ^^^^^^^^^^^^^^^^^^^^^^
+                                  ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:18:1
@@ -235,8 +235,9 @@ Cannot resolve name `T`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------ object_slice_consumer.js:40:1
 
-Cannot cast `flowTypeSpreadOfFlow` to `FlowWideValue` because property `extra` is extra in `FlowTypeSpreadOfFlow` [1]
-but missing in `FlowWideValue` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `flowTypeSpreadOfFlow` to `FlowWideValue` because property `extra` is extra in
+`{extra: string, value: FlowDog}` [1] but missing in `FlowWideValue` [2]. Exact objects do not accept extra props.
+[incompatible-type]
 
    object_slice_consumer.js:40:1
    40| flowTypeSpreadOfFlow as FlowWideValue; // ERROR: Flow type-spread target and operand

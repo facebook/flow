@@ -286,8 +286,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ extraction.js:5:3
 
-Cannot cast `true` to `Extract` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `true` to `Extract` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    extraction.js:5:3
    5|   true as Extract<3>; // error: true ~> false
@@ -371,7 +370,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:25:33
 
-Cannot access number literal `0` on `Parameters` because tuple type [1] only has 0 elements, so index 0 is out of
+Cannot access number literal `0` on `Parameters` because `Readonly<[]>` [1] only has 0 elements, so index 0 is out of
 bounds. [invalid-tuple-index]
 
    extraction.js:25:33
@@ -869,8 +868,8 @@ References:
 
 Error -------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:2:1
 
-Cannot cast `true` to `MaybeStringExtendsString` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-type]
+Cannot cast `true` to `MaybeStringExtendsString` because `true` [1] is incompatible with `false` [2].
+[incompatible-type]
 
    non_generic_maybe_nullable_tests.js:2:1
    2| true as MaybeStringExtendsString; // error
@@ -884,8 +883,8 @@ References:
 
 Error -------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:7:3
 
-Cannot cast `true` to `OptionalStringExtendsString` because boolean literal `true` [1] is incompatible with boolean
-literal `false` [2]. [incompatible-type]
+Cannot cast `true` to `OptionalStringExtendsString` because `true` [1] is incompatible with `false` [2].
+[incompatible-type]
 
    non_generic_maybe_nullable_tests.js:7:3
    7|   true as OptionalStringExtendsString; // error
@@ -899,8 +898,8 @@ References:
 
 Error ------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:13:1
 
-Cannot cast `false` to `StringExtendsMaybeString` because boolean literal `false` [1] is incompatible with boolean
-literal `true` [2]. [incompatible-type]
+Cannot cast `false` to `StringExtendsMaybeString` because `false` [1] is incompatible with `true` [2].
+[incompatible-type]
 
    non_generic_maybe_nullable_tests.js:13:1
    13| false as StringExtendsMaybeString; // error
@@ -914,8 +913,8 @@ References:
 
 Error ------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:16:1
 
-Cannot cast `true` to `StringOrNullOrVoidExtendsString` because boolean literal `true` [1] is incompatible with boolean
-literal `false` [2]. [incompatible-type]
+Cannot cast `true` to `StringOrNullOrVoidExtendsString` because `true` [1] is incompatible with `false` [2].
+[incompatible-type]
 
    non_generic_maybe_nullable_tests.js:16:1
    16| true as StringOrNullOrVoidExtendsString; // error
@@ -929,8 +928,8 @@ References:
 
 Error ------------------------------------------------------------------------- non_generic_maybe_nullable_tests.js:21:1
 
-Cannot cast `false` to `StringExtendsStringOrNullOrVoid` because boolean literal `false` [1] is incompatible with
-boolean literal `true` [2]. [incompatible-type]
+Cannot cast `false` to `StringExtendsStringOrNullOrVoid` because `false` [1] is incompatible with `true` [2].
+[incompatible-type]
 
    non_generic_maybe_nullable_tests.js:21:1
    21| false as StringExtendsStringOrNullOrVoid; // error

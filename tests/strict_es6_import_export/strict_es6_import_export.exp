@@ -239,7 +239,9 @@ References:
 
 Error ----------------------------------------------------------------------------------- import_star_invalid_use.js:9:2
 
-Cannot create `Foo` element because module `./foo` [1] is not a React component. [not-a-component]
+Cannot create `Foo` element because
+`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] is not a
+React component. [not-a-component]
 
    import_star_invalid_use.js:9:2
    9| <Foo></Foo>;
@@ -345,7 +347,9 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:37:27
 
-Cannot access module `./foo` [1] with computed property using number [2]. [invalid-computed-prop]
+Cannot access
+`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] with
+computed property using `number` [2]. [invalid-computed-prop]
 
    import_star_invalid_use.js:37:27
    37| const {named1: renamed4, [1 + 2]: computed1} = Foo;
@@ -373,7 +377,9 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:38:15
 
-Cannot access module `./foo` [1] with computed property using number [2]. [invalid-computed-prop]
+Cannot access
+`{readonly ClassExport: typeof ClassExport, readonly ComponentExport: () => string, readonly default:...` [1] with
+computed property using `number` [2]. [invalid-computed-prop]
 
    import_star_invalid_use.js:38:15
    38| ({named1: x, [1 + 2]: z}) = Foo;

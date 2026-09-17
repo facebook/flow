@@ -185,7 +185,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o` to union type because: [incompatible-type]
  - Either in property `bar`: `number` [1] is incompatible with `empty` [2].
- - Or property `bar` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
+ - Or property `bar` is extra in mapped type [3] but missing in `{foo: empty}` [4]. Exact objects do not accept extra
    props.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -214,7 +214,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o` to union type because: [incompatible-type]
  - Either in property `foo`: `number` [1] is incompatible with `empty` [2].
- - Or property `foo` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
+ - Or property `foo` is extra in mapped type [3] but missing in `{bar: empty}` [4]. Exact objects do not accept extra
    props.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -241,8 +241,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- distributivity.js:15:3
 
-Cannot cast `o` to object type because property `foo` is extra in mapped type [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `o` to object type because property `foo` is extra in mapped type [1] but missing in `{}` [2]. Exact objects
+do not accept extra props. [incompatible-type]
 
    distributivity.js:15:3
    15|   o as {}; // ERROR
@@ -1335,8 +1335,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:89:3
 
 Cannot cast `homomorphic` to union type because: [incompatible-type]
- - Either property `bar` is extra in object type [1] but missing in object type [2]. Exact objects do not accept extra
-   props.
+ - Either property `bar` is extra in object type [1] but missing in `{foo: number}` [2]. Exact objects do not accept
+   extra props.
  - Or property `bar` is read-only in object type [1] but writable in object type [3].
 
    import.js:89:3
@@ -1359,7 +1359,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `homomorphic` to union type because: [incompatible-type]
  - Either property `foo` is read-only in object type [1] but writable in object type [2].
- - Or property `foo` is extra in object type [1] but missing in object type [3]. Exact objects do not accept extra
+ - Or property `foo` is extra in object type [1] but missing in `{bar: number}` [3]. Exact objects do not accept extra
    props.
 
    import.js:89:3
@@ -1398,8 +1398,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:10:3
 
-Cannot cast `i` to object type because object type [1] is not a subtype of object type [2]. Class instances are not
-subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `i` to object type because object type [1] is not a subtype of `{readonly foo: number, ...}` [2]. Class
+instances are not subtypes of object types; consider rewriting `{readonly foo: number, ...}` [2] as an interface.
+[class-object-subtyping]
 
    instancet.js:10:3
    10|   i as {readonly foo: number, ...}; // ERROR (class object subtyping)
@@ -2145,7 +2146,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
 Cannot call `omitInput` with object literal bound to `x` because property `foo` is extra in object literal [1] but
-missing in `Omit` [2]. Exact objects do not accept extra props. [incompatible-type]
+missing in mapped type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    pick_and_omit.js:49:47
    49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
@@ -2174,7 +2175,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
 Cannot call `pickInput` with object literal bound to `x` because property `bar` is extra in object literal [1] but
-missing in `Pick` [2]. Exact objects do not accept extra props. [incompatible-type]
+missing in mapped type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    pick_and_omit.js:83:47
    83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
@@ -2377,8 +2378,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot cast `badKey` to `Mapped` because property `bar` is extra in object type [1] but missing in `Mapped` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `badKey` to `Mapped` because property `bar` is extra in `{bar: {contents: number}}` [1] but missing in
+mapped type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:42:3
    42|   badKey as Mapped<O>; // ERROR

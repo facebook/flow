@@ -1538,8 +1538,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:136:1
 
-Cannot cast `false` to `IN1` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `false` to `IN1` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    inference.js:136:1
    136| false as IN1; // ERROR
@@ -1553,8 +1552,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:138:1
 
-Cannot cast `true` to `IN2` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `true` to `IN2` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    inference.js:138:1
    138| true as IN2; // ERROR
@@ -1583,8 +1581,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:152:1
 
-Cannot cast `false` to `SW1` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `false` to `SW1` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    inference.js:152:1
    152| false as SW1; // ERROR
@@ -1598,8 +1595,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:156:1
 
-Cannot cast `true` to `SW2` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `true` to `SW2` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    inference.js:156:1
    156| true as SW2; // ERROR
@@ -1613,8 +1609,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:161:1
 
-Cannot cast `false` to `EW1` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `false` to `EW1` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    inference.js:161:1
    161| false as EW1; // ERROR
@@ -1628,8 +1623,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:165:1
 
-Cannot cast `true` to `EW2` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `true` to `EW2` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    inference.js:165:1
    165| true as EW2; // ERROR
@@ -1643,8 +1637,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:172:1
 
-Cannot cast `false` to `IP1` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `false` to `IP1` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    inference.js:172:1
    172| false as IP1; // ERROR
@@ -1658,8 +1651,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:176:1
 
-Cannot cast `true` to `IP2` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `true` to `IP2` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    inference.js:176:1
    176| true as IP2; // ERROR

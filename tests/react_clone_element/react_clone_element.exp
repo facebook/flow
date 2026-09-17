@@ -134,8 +134,9 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: `Class<A>` [2] is incompatible with `string` [3].
- - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
-   props.
+ - Or property `bar` is extra in object literal [4] but missing in
+   `{readonly foo?: number, readonly key?: React.Key, readonly ref?: React.RefSetter<A>}` [5]. Exact objects do not
+   accept extra props.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -479,8 +480,8 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.cloneElement` because: [incompatible-type]
  - Either in type argument `ElementType` [1]: `(x: {foo: number}) => void` [2] is incompatible with `string` [3].
- - Or property `bar` is extra in object literal [4] but missing in object type [5]. Exact objects do not accept extra
-   props.
+ - Or property `bar` is extra in object literal [4] but missing in
+   `{readonly foo?: number, readonly key?: React.Key}` [5]. Exact objects do not accept extra props.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

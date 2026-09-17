@@ -34,8 +34,8 @@ Found 2 errors
 === block 3 ===
 Error ------------------------------------------------------------------------------ -:5:31
 
-Cannot assign `new MyClass()` to `foo` because `MyClass` [1] is not a subtype of object type [2]. Class instances are
-not subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot assign `new MyClass()` to `foo` because `MyClass` [1] is not a subtype of `{x: number, ...}` [2]. Class instances
+are not subtypes of object types; consider rewriting `{x: number, ...}` [2] as an interface. [class-object-subtyping]
 
    -:5:31
    5| const foo: {x: number, ...} = new MyClass(); // Error!

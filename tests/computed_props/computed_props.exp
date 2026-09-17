@@ -77,8 +77,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:17:4
 
-Cannot add computed property because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:17:4
    17|   [y]: v2, // error 2 ~> 1
@@ -95,8 +94,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:18:4
 
-Cannot add computed property because number literal `3` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:18:4
    18|   [z]: v3, // error 3 ~> 1
@@ -132,8 +130,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:23:4
 
-Cannot add computed property because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:23:4
    23|   [y]: v2,
@@ -150,8 +147,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:24:4
 
-Cannot add computed property because number literal `3` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:24:4
    24|   [z]: v3,
@@ -168,8 +164,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:29:4
 
-Cannot add computed property because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:29:4
    29|   [y]: v2, // error 2 ~> 1
@@ -186,8 +181,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:39:4
 
-Cannot add computed property because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:39:4
    39|   [y]: v2, // error 2 ~> 1
@@ -223,8 +217,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:44:4
 
-Cannot add computed property because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot add computed property because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    hints.js:44:4
    44|   [y]: v2, // values okay

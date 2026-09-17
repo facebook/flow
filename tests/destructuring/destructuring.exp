@@ -248,7 +248,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- computed.js:5:8
 
-Cannot access object literal [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access object literal [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    computed.js:5:8
    5| var { [key]: val2 } = { key: "val" }; // error: unsafe string key access
@@ -282,8 +282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- computed.js:14:1
 
-Cannot cast `foo` to number literal `42` because number literal `17` [1] is incompatible with number literal `42` [2].
-[incompatible-type]
+Cannot cast `foo` to number literal `42` because `17` [1] is incompatible with `42` [2]. [incompatible-type]
 
    computed.js:14:1
    14| foo as 42; // error 17 ~> 42
@@ -1434,8 +1433,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_defaults.js:14:14
 
-Cannot assign number literal `999999` to `n` because number literal `999999` [1] is incompatible with number literal
-`1` [2]. [incompatible-type]
+Cannot assign number literal `999999` to `n` because `999999` [1] is incompatible with `1` [2]. [incompatible-type]
 
    literal_defaults.js:14:14
    14|   const {n = 999999} = o; // ERROR
@@ -1449,8 +1447,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_defaults.js:19:14
 
-Cannot assign boolean literal `false` to `b` because boolean literal `false` [1] is incompatible with boolean literal
-`true` [2]. [incompatible-type]
+Cannot assign boolean literal `false` to `b` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    literal_defaults.js:19:14
    19|   const {b = false} = o; // ERROR
@@ -1464,8 +1461,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- literal_defaults.js:24:14
 
-Cannot assign bigint literal `999999n` to `i` because bigint literal `999999n` [1] is incompatible with bigint literal
-`1n` [2]. [incompatible-type]
+Cannot assign bigint literal `999999n` to `i` because `999999n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    literal_defaults.js:24:14
    24|   const {i = 999999n} = o; // ERROR

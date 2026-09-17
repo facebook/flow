@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:25:2
 
-Cannot create `ClassExact_NoProps` element because property `foo` is extra in props [1] but missing in props of class
-`ClassExact_NoProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `ClassExact_NoProps` element because property `foo` is extra in `{foo: 42}` [1] but missing in
+`{readonly ref?: React.RefSetter<ClassExact_NoProps>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:25:2
    25| <ClassExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
@@ -18,8 +18,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:37:2
 
-Cannot create `FunctionExact_NoProps` element because property `foo` is extra in props [1] but missing in
-`Props_NoProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `FunctionExact_NoProps` element because property `foo` is extra in `{foo: 42}` [1] but missing in
+`{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:37:2
    37| <FunctionExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
@@ -36,8 +36,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:2
 
-Cannot create `AbstractExact_NoProps` element because property `foo` is extra in props [1] but missing in
-`Props_NoProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `AbstractExact_NoProps` element because property `foo` is extra in `{foo: 42}` [1] but missing in
+`{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:45:2
    45| <AbstractExact_NoProps foo={42} />; // Error: Exact type does not have `foo`.
@@ -217,8 +217,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:142:2
 
-Cannot create `ClassExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in props [1]
-but missing in props of class `ClassExact_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `ClassExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
+`{a: 1, b: 2, boolean1: true, boolean2: false, c: 3, number: 42, string1: "foo", string2: "bar"}` [1] but missing in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    test.js:142:2
    142| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -342,8 +344,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:175:2
 
-Cannot create `ClassExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in props [1]
-but missing in props of class `ClassExact_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `ClassExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
+`{a: 1, b: 2, boolean1: true, boolean2: false, c: 3, number: 42, string1: "foo", string2: "bar"}` [1] but missing in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    test.js:175:2
    175| <ClassExact_ManyProps // Error: Extra props are not allowed.
@@ -706,7 +710,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:328:2
 
 Cannot create `FunctionExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
-props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{a: 1, b: 2, boolean1: true, boolean2: false, c: 3, number: 42, string1: "foo", string2: "bar"}` [1] but missing in
+`{boolean1: boolean, boolean2: boolean, number: number, string1: string, string2: string}` [2]. Exact objects do not
+accept extra props. [incompatible-type]
 
    test.js:328:2
    328| <FunctionExact_ManyProps // Error: extra props `a`, `b`, `c` not allowed on exact-props component
@@ -831,7 +837,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:361:2
 
 Cannot create `FunctionExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
-props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{a: 1, b: 2, boolean1: true, boolean2: false, c: 3, number: 42, string1: "foo", string2: "bar"}` [1] but missing in
+`{boolean1: boolean, boolean2: boolean, number: number, string1: string, string2: string}` [2]. Exact objects do not
+accept extra props. [incompatible-type]
 
    test.js:361:2
    361| <FunctionExact_ManyProps // Error: Extra props are not allowed.
@@ -1049,7 +1057,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:453:2
 
 Cannot create `AbstractExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
-props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{a: 1, b: 2, boolean1: true, boolean2: false, c: 3, number: 42, string1: "foo", string2: "bar"}` [1] but missing in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    test.js:453:2
    453| <AbstractExact_ManyProps // Error: Other props are not allowed.
@@ -1174,7 +1184,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:486:2
 
 Cannot create `AbstractExact_ManyProps` element because property `a`, property `b`, and property `c` are extra in
-props [1] but missing in `Props_ManyProps` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{a: 1, b: 2, boolean1: true, boolean2: false, c: 3, number: 42, string1: "foo", string2: "bar"}` [1] but missing in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    test.js:486:2
    486| <AbstractExact_ManyProps // Error: Extra props are not allowed.

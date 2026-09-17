@@ -34,8 +34,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- forof.js:24:17
 
-string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
-it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+`string` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, unknown, empty>` [2]. You can wrap it in
+`new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    forof.js:24:17
      24|   for (var x of str) {

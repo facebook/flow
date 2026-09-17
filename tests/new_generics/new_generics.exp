@@ -402,7 +402,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:16:5
 
-Cannot access object type [1] with computed property using `X` [2]. [invalid-computed-prop]
+Cannot access `{prop: number, ...}` [1] with computed property using `X` [2]. [invalid-computed-prop]
 
    computed_keys.js:16:5
    16|   b[x]; // nope

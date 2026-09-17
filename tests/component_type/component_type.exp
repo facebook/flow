@@ -417,8 +417,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13
 
-Cannot create `WrappedBoth` element because property `bar` is extra in props [1] but missing in props of class
-`MyComponent` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `WrappedBoth` element because property `bar` is extra in `{bar: 43, foo: 42}` [1] but missing in
+`{readonly foo: number, readonly ref?: React.RefSetter<MyComponent>}` [2]. Exact objects do not accept extra props.
+[incompatible-type]
 
    double_wrapped.js:23:13
    23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
@@ -626,8 +627,8 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:7:1
 
-Cannot cast `Foo` to component because property `ref` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `Foo` to component because property `ref` is extra in `{bar: string, ref: React.RefSetter<void>}` [1] but
+missing in `{bar: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    function_to_component_type.js:7:1
    7| Foo as component(bar: string, ref: React.RefSetter<void>); // error: extra ref prop
@@ -644,8 +645,8 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:8:1
 
-Cannot cast `Foo` to component because property `ref` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `Foo` to component because property `ref` is extra in `{bar: string, ref: React.RefSetter<string>}` [1] but
+missing in `{bar: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    function_to_component_type.js:8:1
     8| Foo as component( // error: void ~> string
@@ -666,8 +667,8 @@ References:
 
 Error ------------------------------------------------------------------------------- function_to_component_type.js:12:1
 
-Cannot cast `Foo` to component because property `ref` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `Foo` to component because property `ref` is extra in `{bar: string, ref: ImNotARefSetter}` [1] but missing
+in `{bar: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    function_to_component_type.js:12:1
    12| Foo as component( // error again due to bad ref
@@ -688,7 +689,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- get_set_elem.js:5:3
 
-Cannot access `React.AbstractComponentStatics` [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access `React.AbstractComponentStatics` [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    get_set_elem.js:5:3
     5| x[y]; // error
@@ -1033,9 +1034,8 @@ References:
 
 Error ------------------------------------------------------------------------- ref_prop_implicit_instantiation.js:14:18
 
-Cannot call `extractRefSetter` with `ComponentNoRef` bound to `c` because property `ref` is extra in props of
-component [1] but missing in props of component ComponentNoRef [2]. Exact objects do not accept extra props.
-[incompatible-type]
+Cannot call `extractRefSetter` with `ComponentNoRef` bound to `c` because property `ref` is extra in
+`{readonly ref?: any}` [1] but missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    ref_prop_implicit_instantiation.js:14:18
    14| extractRefSetter(ComponentNoRef); // error: {ref?: ?} ~> {}

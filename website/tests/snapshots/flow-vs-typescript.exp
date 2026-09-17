@@ -36,8 +36,8 @@ No errors!
 === block 5 ===
 Error ------------------------------------------------------------------------ -:15:33
 
-Cannot assign `e` to `baseExact` because property `timestamp` is extra in `LogEntry` [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot assign `e` to `baseExact` because property `timestamp` is extra in `LogEntry` [1] but missing in
+`{id: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    -:15:33
    15| const baseExact: {id: string} = e; // ERROR
@@ -138,10 +138,10 @@ Found 2 errors
 === block 7 ===
 Error ------------------------------------------------------------------------- -:4:20
 
-Cannot implement `ObjType` because it is not an interface. [cannot-implement]
+Cannot implement `ObjType` [1] because it is not an interface. [cannot-implement]
 
    4| class C implements ObjType { // ERROR: [cannot-implement]
-                         ^^^^^^^
+                         ^^^^^^^ [1]
 
 Error ------------------------------------------------------------------------- -:8:11
 
@@ -162,9 +162,9 @@ Found 2 errors
 === block 8 ===
 Error -------------------------------------------------------------------------- -:9:8
 
-Cannot call `logAll` with `msgs` bound to `items` because string literal `foo` [1], a primitive, cannot be used as a
-subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a
-subtype of an interface. [incompatible-type]
+Cannot call `logAll` with `msgs` bound to `items` because `"foo"` [1], a primitive, cannot be used as a subtype of
+`$Iterable<string, void, void>` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    -:9:8
    9| logAll(msgs); // ERROR: `string` is not a subtype of `Iterable<string>`
@@ -739,8 +739,8 @@ Found 2 errors
 === block 36 ===
 Error ------------------------------------------------------------------------- -:18:8
 
-Cannot call `callIt` with `useToggle` bound to `fn` because function [1] is a React hook but function type [2] is not a
-hook. [react-rule-hook-incompatible]
+Cannot call `callIt` with `useToggle` bound to `fn` because `hook (initial: boolean) => [boolean, () => void]` [1] is a
+React hook but `(boolean) => [boolean, () => void]` [2] is not a hook. [react-rule-hook-incompatible]
 
 React hooks and other functions are not compatible with each other, because hooks cannot be called conditionally.
 

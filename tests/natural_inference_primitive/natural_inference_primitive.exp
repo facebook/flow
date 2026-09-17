@@ -1,7 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:13
 
-Cannot create `Foo` element because in property `bar`: number literal `43` [1] is incompatible with number literal
-`42` [2]. [incompatible-type]
+Cannot create `Foo` element because in property `bar`: `43` [1] is incompatible with `42` [2]. [incompatible-type]
 
    custom-jsx.js:16:13
    16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
@@ -30,8 +29,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- custom-jsx.js:17:6
 
-Cannot create `Foo` element because number literal `43` [1] is incompatible with number literal `42` [2].
-[incompatible-type]
+Cannot create `Foo` element because `43` [1] is incompatible with `42` [2]. [incompatible-type]
 
    custom-jsx.js:17:6
    17|     {43 /* error 43 ~> 42 */}
@@ -78,8 +76,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:49:3
 
-Cannot cast `one` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `one` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    imported.js:49:3
    49|   one as 2 // error 1 ~> 2
@@ -96,8 +93,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:51:3
 
-Cannot cast `minusOne` to number literal `0` because number literal `-1` [1] is incompatible with number literal
-`0` [2]. [incompatible-type]
+Cannot cast `minusOne` to number literal `0` because `-1` [1] is incompatible with `0` [2]. [incompatible-type]
 
    imported.js:51:3
    51|   minusOne as 0; // error -1 ~> 0
@@ -114,8 +110,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:53:8
 
-Cannot cast `_` to `typeof one` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof one` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:53:8
    53|   _ as 2 as typeof one; // error 2 ~> 1
@@ -129,8 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:55:8
 
-Cannot cast `_` to `typeof minusOne` because number literal `0` [1] is incompatible with number literal `-1` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof minusOne` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    imported.js:55:8
    55|   _ as 0 as typeof minusOne; // error 0 ~> -1
@@ -144,8 +138,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:60:3
 
-Cannot cast `tru` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-type]
+Cannot cast `tru` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    imported.js:60:3
    60|   tru as false // error true ~> false
@@ -162,8 +155,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:62:3
 
-Cannot cast `notTru` to boolean literal `true` because boolean literal `false` [1] is incompatible with boolean literal
-`true` [2]. [incompatible-type]
+Cannot cast `notTru` to boolean literal `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:62:3
    62|   notTru as true // error false ~> true
@@ -180,8 +172,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:64:8
 
-Cannot cast `_` to `typeof tru` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof tru` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:64:8
    64|   _ as false as typeof tru; // error false ~> true
@@ -195,8 +186,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:65:8
 
-Cannot cast `_` to `typeof notTru` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof notTru` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    imported.js:65:8
    65|   _ as true as typeof notTru; // error true ~> false
@@ -210,8 +200,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:71:3
 
-Cannot cast `bigOne` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
-`2n` [2]. [incompatible-type]
+Cannot cast `bigOne` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    imported.js:71:3
    71|   bigOne as 2n // error 1n ~> 2n
@@ -228,8 +217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:73:8
 
-Cannot cast `_` to `typeof bigOne` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof bigOne` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:73:8
    73|   _ as 2n as typeof bigOne; // error 2n ~> 1n
@@ -276,8 +264,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:85:3
 
-Cannot cast `oneRef` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `oneRef` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    imported.js:85:3
    85|   oneRef as 2 // error 1 ~> 2
@@ -294,8 +281,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:87:8
 
-Cannot cast `_` to `typeof oneRef` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof oneRef` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:87:8
    87|   _ as 2 as typeof oneRef; // error 2 ~> 1
@@ -309,8 +295,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:92:3
 
-Cannot cast `truRef` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-type]
+Cannot cast `truRef` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    imported.js:92:3
    92|   truRef as false // error true ~> false
@@ -327,8 +312,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:94:8
 
-Cannot cast `_` to `typeof truRef` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof truRef` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    imported.js:94:8
    94|   _ as false as typeof truRef; // error false ~> true
@@ -342,8 +326,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:99:3
 
-Cannot cast `bigOneRef` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
-`2n` [2]. [incompatible-type]
+Cannot cast `bigOneRef` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    imported.js:99:3
    99|   bigOneRef as 2n // error 1n ~> 2n
@@ -360,8 +343,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:101:8
 
-Cannot cast `_` to `typeof bigOneRef` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof bigOneRef` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:101:8
    101|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
@@ -393,8 +375,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:106:3
 
-Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `obj.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:106:3
    106|   obj.one as 1; // error number ~> 1
@@ -411,7 +392,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:107:3
 
-Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `obj.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
 [incompatible-type]
 
    imported.js:107:3
@@ -429,8 +410,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:108:3
 
-Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `obj.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    imported.js:108:3
    108|   obj.bigOne as 1n; // error bigint ~> 1n
@@ -465,8 +445,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:113:3
 
-Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `spread.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:113:3
    113|   spread.one as 1; // error number ~> 1
@@ -483,7 +462,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:114:3
 
-Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `spread.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
 [incompatible-type]
 
    imported.js:114:3
@@ -501,7 +480,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:115:3
 
-Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+Cannot cast `spread.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2].
 [incompatible-type]
 
    imported.js:115:3
@@ -919,8 +898,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:210:3
 
-Cannot cast `n_` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `n_` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:210:3
    210|   n_ as 1; // error number ~> 1
@@ -937,8 +915,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:218:7
 
-Cannot call `set` with `2` bound to `y` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot call `set` with `2` bound to `y` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:218:7
    218|   set(2); // error 2 ~> 1
@@ -952,8 +929,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:225:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `2` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    imported.js:225:11
    225|   set({f: 2}); // error
@@ -1012,8 +989,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:249:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `2` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    imported.js:249:11
    249|   set({f: 2}); // error 2 ~> 1
@@ -1027,8 +1004,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:250:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number literal `3` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `3` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    imported.js:250:11
    250|   set({f: 3}); // error 3 ~> 1
@@ -1042,8 +1019,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:269:5
 
-Cannot cast `v` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `v` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    imported.js:269:5
    269|     v as 1; // error number ~> 1
@@ -1255,8 +1231,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:44:3
 
-Cannot cast `one` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `one` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:44:3
    44|   one as 2 // error 1 ~> 2
@@ -1273,8 +1248,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:46:3
 
-Cannot cast `minusOne` to number literal `0` because number literal `-1` [1] is incompatible with number literal
-`0` [2]. [incompatible-type]
+Cannot cast `minusOne` to number literal `0` because `-1` [1] is incompatible with `0` [2]. [incompatible-type]
 
    local.js:46:3
    46|   minusOne as 0; // error -1 ~> 0
@@ -1291,8 +1265,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:48:8
 
-Cannot cast `_` to `typeof one` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof one` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:48:8
    48|   _ as 2 as typeof one; // error 2 ~> 1
@@ -1306,8 +1279,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:50:8
 
-Cannot cast `_` to `typeof minusOne` because number literal `0` [1] is incompatible with number literal `-1` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof minusOne` because `0` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    local.js:50:8
    50|   _ as 0 as typeof minusOne; // error 0 ~> -1
@@ -1321,8 +1293,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:55:3
 
-Cannot cast `tru` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-type]
+Cannot cast `tru` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    local.js:55:3
    55|   tru as false // error true ~> false
@@ -1339,8 +1310,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:57:3
 
-Cannot cast `notTru` to boolean literal `true` because boolean literal `false` [1] is incompatible with boolean literal
-`true` [2]. [incompatible-type]
+Cannot cast `notTru` to boolean literal `true` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:57:3
    57|   notTru as true // error false ~> true
@@ -1357,8 +1327,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:59:8
 
-Cannot cast `_` to `typeof tru` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof tru` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:59:8
    59|   _ as false as typeof tru; // error false ~> true
@@ -1372,8 +1341,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:60:8
 
-Cannot cast `_` to `typeof notTru` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof notTru` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    local.js:60:8
    60|   _ as true as typeof notTru; // error true ~> false
@@ -1387,8 +1355,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:66:3
 
-Cannot cast `bigOne` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
-`2n` [2]. [incompatible-type]
+Cannot cast `bigOne` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    local.js:66:3
    66|   bigOne as 2n // error 1n ~> 2n
@@ -1405,8 +1372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:68:8
 
-Cannot cast `_` to `typeof bigOne` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof bigOne` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:68:8
    68|   _ as 2n as typeof bigOne; // error 2n ~> 1n
@@ -1453,8 +1419,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:80:3
 
-Cannot cast `oneRef` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `oneRef` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:80:3
    80|   oneRef as 2 // error 1 ~> 2
@@ -1471,8 +1436,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:82:8
 
-Cannot cast `_` to `typeof oneRef` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof oneRef` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:82:8
    82|   _ as 2 as typeof oneRef; // error 2 ~> 1
@@ -1486,8 +1450,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:87:3
 
-Cannot cast `truRef` to boolean literal `false` because boolean literal `true` [1] is incompatible with boolean literal
-`false` [2]. [incompatible-type]
+Cannot cast `truRef` to boolean literal `false` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    local.js:87:3
    87|   truRef as false // error true ~> false
@@ -1504,8 +1467,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:89:8
 
-Cannot cast `_` to `typeof truRef` because boolean literal `false` [1] is incompatible with boolean literal `true` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof truRef` because `false` [1] is incompatible with `true` [2]. [incompatible-type]
 
    local.js:89:8
    89|   _ as false as typeof truRef; // error false ~> true
@@ -1519,8 +1481,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:94:3
 
-Cannot cast `bigOneRef` to bigint literal `2n` because bigint literal `1n` [1] is incompatible with bigint literal
-`2n` [2]. [incompatible-type]
+Cannot cast `bigOneRef` to bigint literal `2n` because `1n` [1] is incompatible with `2n` [2]. [incompatible-type]
 
    local.js:94:3
    94|   bigOneRef as 2n // error 1n ~> 2n
@@ -1537,8 +1498,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:96:8
 
-Cannot cast `_` to `typeof bigOneRef` because bigint literal `2n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof bigOneRef` because `2n` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:96:8
    96|   _ as 2n as typeof bigOneRef; // error 2n ~> 1n
@@ -1570,8 +1530,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:101:3
 
-Cannot cast `obj.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `obj.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:101:3
    101|   obj.one as 1; // error number ~> 1
@@ -1588,7 +1547,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:102:3
 
-Cannot cast `obj.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `obj.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
 [incompatible-type]
 
    local.js:102:3
@@ -1606,8 +1565,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:103:3
 
-Cannot cast `obj.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `obj.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2]. [incompatible-type]
 
    local.js:103:3
    103|   obj.bigOne as 1n; // error bigint ~> 1n
@@ -1642,8 +1600,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:108:3
 
-Cannot cast `spread.one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `spread.one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:108:3
    108|   spread.one as 1; // error number ~> 1
@@ -1660,7 +1617,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:109:3
 
-Cannot cast `spread.tru` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `spread.tru` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
 [incompatible-type]
 
    local.js:109:3
@@ -1678,7 +1635,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:110:3
 
-Cannot cast `spread.bigOne` to bigint literal `1n` because bigint [1] is incompatible with bigint literal `1n` [2].
+Cannot cast `spread.bigOne` to bigint literal `1n` because `bigint` [1] is incompatible with `1n` [2].
 [incompatible-type]
 
    local.js:110:3
@@ -2175,8 +2132,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:222:3
 
-Cannot cast `n_` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `n_` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:222:3
    222|   n_ as 1; // error number ~> 1
@@ -2193,8 +2149,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:230:7
 
-Cannot call `set` with `2` bound to `y` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot call `set` with `2` bound to `y` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:230:7
    230|   set(2); // error 2 ~> 1
@@ -2208,8 +2163,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:237:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `2` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    local.js:237:11
    237|   set({f: 2}); // error
@@ -2268,8 +2223,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:261:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `2` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    local.js:261:11
    261|   set({f: 2}); // error 2 ~> 1
@@ -2283,8 +2238,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:262:11
 
-Cannot call `set` with object literal bound to `y` because in property `f`: number literal `3` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: `3` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    local.js:262:11
    262|   set({f: 3}); // error 3 ~> 1
@@ -2298,8 +2253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:281:5
 
-Cannot cast `v` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `v` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:281:5
    281|     v as 1; // error number ~> 1
@@ -2555,8 +2509,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:476:3
 
-Cannot cast `one` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `one` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    local.js:476:3
    476|   one as 1; // error number ~> 1
@@ -2573,8 +2526,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:477:3
 
-Cannot cast `one` to number literal `2` because number [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `one` to number literal `2` because `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:477:3
    477|   one as 2; // error number ~> 2
@@ -2640,8 +2592,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:572:3
 
-Cannot cast `x2` to number literal `-3` because number literal `-2` [1] is incompatible with number literal `-3` [2].
-[incompatible-type]
+Cannot cast `x2` to number literal `-3` because `-2` [1] is incompatible with `-3` [2]. [incompatible-type]
 
    local.js:572:3
    572|   x2 as -3; // error -2 ~> -3
@@ -2658,8 +2609,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:575:3
 
-Cannot cast `x3` to number literal `-2` because number literal `2` [1] is incompatible with number literal `-2` [2].
-[incompatible-type]
+Cannot cast `x3` to number literal `-2` because `2` [1] is incompatible with `-2` [2]. [incompatible-type]
 
    local.js:575:3
    575|   x3 as -2; // error 2 ~> -2
@@ -2676,8 +2626,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:581:3
 
-Cannot cast `objx2.x2` to number literal `-2` because number [1] is incompatible with number literal `-2` [2].
-[incompatible-type]
+Cannot cast `objx2.x2` to number literal `-2` because `number` [1] is incompatible with `-2` [2]. [incompatible-type]
 
    local.js:581:3
    581|   objx2.x2 as -2; // error number ~> -2
@@ -2694,8 +2643,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:587:3
 
-Cannot cast `b2` to bigint literal `-3n` because bigint literal `-2n` [1] is incompatible with bigint literal `-3n` [2].
-[incompatible-type]
+Cannot cast `b2` to bigint literal `-3n` because `-2n` [1] is incompatible with `-3n` [2]. [incompatible-type]
 
    local.js:587:3
    587|   b2 as -3n; // error -2n ~> -3n
@@ -2712,8 +2660,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:590:3
 
-Cannot cast `b3` to bigint literal `-2n` because bigint literal `2n` [1] is incompatible with bigint literal `-2n` [2].
-[incompatible-type]
+Cannot cast `b3` to bigint literal `-2n` because `2n` [1] is incompatible with `-2n` [2]. [incompatible-type]
 
    local.js:590:3
    590|   b3 as -2n; // error 2n ~> -2n
@@ -2849,8 +2796,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:27:50
 
-Cannot call `f` with `42` bound to `literalValue` because number literal `42` [1] is incompatible with number literal
-`43` [2]. [incompatible-type]
+Cannot call `f` with `42` bound to `literalValue` because `42` [1] is incompatible with `43` [2]. [incompatible-type]
 
    nested_generic_calls.js:27:50
    27|   const x3: {f: {f: <V>(x: V) => {f: 43}}} = g(f(42)); // error
@@ -2864,8 +2810,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:61
 
-Cannot call `f` with object literal bound to `literalValue` because in index `f[0]`: number literal `42` [1] is
-incompatible with number literal `43` [2]. [incompatible-type]
+Cannot call `f` with object literal bound to `literalValue` because in index `f[0]`: `42` [1] is incompatible with
+`43` [2]. [incompatible-type]
 
    nested_generic_calls.js:33:61
    33|   const x6: {f: {f: <V>(x: V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error

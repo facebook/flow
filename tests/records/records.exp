@@ -141,8 +141,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:212:3
 
-Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Records are not subtypes of object
-types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `x` to object type because `R` [1] is not a subtype of `{readonly a: number}` [2]. Records are not subtypes
+of object types; consider rewriting `{readonly a: number}` [2] as an interface. [class-object-subtyping]
 
    declaration.js:212:3
    212|   x as {readonly a: number}; // ERROR
@@ -159,8 +159,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:213:3
 
-Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Records are not subtypes of object
-types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `x` to object type because `R` [1] is not a subtype of `{readonly a: number, ...}` [2]. Records are not
+subtypes of object types; consider rewriting `{readonly a: number, ...}` [2] as an interface. [class-object-subtyping]
 
    declaration.js:213:3
    213|   x as {readonly a: number, ...}; // ERROR
@@ -224,10 +224,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declaration.js:399:22
 
-Cannot implement `R` because it is not an interface. [cannot-implement]
+Cannot implement `R` [1] because it is not an interface. [cannot-implement]
 
    399|   class D implements R { // ERROR
-                             ^
+                             ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- declaration.js:411:29
@@ -310,8 +310,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:421:7
 
-Cannot call `fun` with `x` bound to `x` because `R` [1] is not a subtype of `Omit` [2]. Records are not subtypes of
-object types; consider rewriting `Omit` [2] as an interface. [class-object-subtyping]
+Cannot call `fun` with `x` bound to `x` because `R` [1] is not a subtype of `{}` [2]. Records are not subtypes of object
+types; consider rewriting `{}` [2] as an interface. [class-object-subtyping]
 
    declaration.js:421:7
    421|   fun(x); // ERROR
@@ -328,8 +328,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:435:4
 
-Cannot cast object literal to `OmitObjR` because property `a` is extra in object literal [1] but missing in `Omit` [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to `OmitObjR` because property `a` is extra in object literal [1] but missing in
+`{b: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    declaration.js:435:4
    435|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
@@ -380,7 +380,7 @@ References:
 Error --------------------------------------------------------------------------------------------- declaration.js:480:9
 
 Cannot call `R` with `oExtra` bound to the first parameter because property `xxx` is extra in object literal [1] but
-missing in record `R` [2]. Records do not accept extra props. [incompatible-type]
+missing in `{readonly a: number, readonly b: string}` [2]. Records do not accept extra props. [incompatible-type]
 
    declaration.js:480:9
    480|   new R(oExtra); // ERROR
@@ -398,7 +398,7 @@ References:
 Error -------------------------------------------------------------------------------------------- declaration.js:481:12
 
 Cannot call `ROpt` with `oExtra` bound to the first parameter because property `xxx` is extra in object literal [1] but
-missing in record `ROpt` [2]. Records do not accept extra props. [incompatible-type]
+missing in `{readonly a?: number, readonly b?: string}` [2]. Records do not accept extra props. [incompatible-type]
 
    declaration.js:481:12
    481|   new ROpt(oExtra); // ERROR
@@ -468,8 +468,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ expression.js:7:5
 
-Cannot create record `R` because property `xxx` is extra in record properties [1] but missing in record `R` [2]. Records
-do not accept extra props. [incompatible-type]
+Cannot create record `R` because property `xxx` is extra in `{xxx: 0}` [1] but missing in `{}` [2]. Records do not
+accept extra props. [incompatible-type]
 
    expression.js:7:5
    7|   R {xxx: 0}; // ERROR: extra field `xxx`
@@ -542,8 +542,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:54:5
 
-Cannot create record `R` because property `b` is extra in record properties [1] but missing in record `R` [2]. Records
-do not accept extra props. [incompatible-type]
+Cannot create record `R` because property `b` is extra in `{a: 1, b: "s"}` [1] but missing in
+`{readonly a: number}` [2]. Records do not accept extra props. [incompatible-type]
 
    expression.js:54:5
    54|   R {a: 1, b: 's'}; // ERROR: extra field `b`
@@ -631,8 +631,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:17:10
 
-Cannot create record `RNamed` because property `xxx` is extra in record properties [1] but missing in record
-`RNamed` [2]. Records do not accept extra props. [incompatible-type]
+Cannot create record `RNamed` because property `xxx` is extra in `{a: 1, b: "s", xxx: true}` [1] but missing in
+`{readonly a: number, readonly b?: string}` [2]. Records do not accept extra props. [incompatible-type]
 
    imported.js:17:10
    17|   RNamed {a: 1, b: 's', xxx: true}; // ERROR
@@ -693,8 +693,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:29:12
 
-Cannot create record `RDefault` because property `xxx` is extra in record properties [1] but missing in record
-`RDefault` [2]. Records do not accept extra props. [incompatible-type]
+Cannot create record `RDefault` because property `xxx` is extra in `{a: 1, b: "s", xxx: true}` [1] but missing in
+`{readonly a: number, readonly b?: string}` [2]. Records do not accept extra props. [incompatible-type]
 
    imported.js:29:12
    29|   RDefault {a: 1, b: 's', xxx: true}; // ERROR

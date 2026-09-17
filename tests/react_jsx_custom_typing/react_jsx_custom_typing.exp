@@ -1,7 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:4:3
 
-Cannot cast `<Com />` to number literal `1` because number literal `3` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `<Com />` to number literal `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:4:3
    4|   <Com foo="">{1}{2}</Com> as 1; // missing React, jsx still checked
@@ -26,8 +25,7 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:3
 
-Cannot cast `<Com />` to number literal `1` because number literal `3` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `<Com />` to number literal `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:9:3
    9|   <Com foo="">{1}{2}</Com> as 1; // missing createElement, jsx still checked
@@ -74,8 +72,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:3
 
-Cannot cast `<Com />` to number literal `1` because number literal `3` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `<Com />` to number literal `1` because `3` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:14:3
    14|   <Com foo="">{1}{2}</Com> as 1; // bad createElement, jsx still checked
@@ -108,8 +105,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot cast `<Com />` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot cast `<Com />` to number literal `4` because `3` [1] is incompatible with `4` [2]. [incompatible-type]
 
    test.js:21:3
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
@@ -126,8 +122,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:4
 
-Cannot create `Com` element because in the second argument: property `bar` is extra in props [1] but missing in object
-type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `Com` element because in the second argument: property `bar` is extra in `{bar: "", foo: 3}` [1] but
+missing in `{foo: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:21:4
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
@@ -159,8 +155,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:24
 
-Cannot create `Com` element because in the third argument: number literal `2` [1] is incompatible with number literal
-`1` [2]. [incompatible-type]
+Cannot create `Com` element because in the third argument: `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    test.js:21:24
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
@@ -174,8 +169,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:27
 
-Cannot create `Com` element because in the fourth argument: number literal `3` [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot create `Com` element because in the fourth argument: `3` [1] is incompatible with `2` [2]. [incompatible-type]
 
    test.js:21:27
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error

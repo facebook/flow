@@ -105,8 +105,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:43:1
 
-Cannot cast `c` to object type because `C` [1] is not a subtype of object type [2]. Class instances are not subtypes of
-object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `c` to object type because `C` [1] is not a subtype of `{...}` [2]. Class instances are not subtypes of
+object types; consider rewriting `{...}` [2] as an interface. [class-object-subtyping]
 
    test.js:43:1
    43| c as { ...}; // error

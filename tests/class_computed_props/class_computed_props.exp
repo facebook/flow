@@ -25,8 +25,7 @@ annotation at property `s2`: [signature-verification-failure]
 
 Error ------------------------------------------------------------------------------------------------- consumer.js:10:1
 
-Cannot cast `e.foo` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `e.foo` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    consumer.js:10:1
    10| e.foo as 2; // ERROR: 1 is not 2
@@ -94,8 +93,7 @@ simple key in object: [signature-verification-failure]
 
 Error ---------------------------------------------------------------------------------------------------- local.js:18:1
 
-Cannot cast `c.foo` to number literal `2` because number literal `1` [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `c.foo` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    local.js:18:1
    18| c.foo as 2; // ERROR: 1 is not 2

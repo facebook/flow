@@ -1136,7 +1136,10 @@ pub mod operators {
                                 env,
                                 ErrorMessage::ESketchyNumberLint(
                                     flow_lint_settings::lints::SketchyNumberKind::And,
-                                    reason.dupe(),
+                                    flow_js_utils::type_reference_with_reason_for_error(
+                                        left,
+                                        reason.dupe(),
+                                    ),
                                 ),
                             )?;
                         }

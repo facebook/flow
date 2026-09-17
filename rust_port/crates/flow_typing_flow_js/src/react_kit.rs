@@ -18,6 +18,7 @@ use flow_common::reason::mk_reason;
 use flow_common::reason::react_element_desc_of_component_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::ENotAReactComponentData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_flow_common::flow_js_utils;
@@ -85,12 +86,13 @@ pub fn err_incompatible<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
+    component: &Type,
     reason: &Reason,
 ) -> Result<(), FlowJsException> {
-    let err = ErrorMessage::ENotAReactComponent {
-        reason: reason.dupe(),
+    let err = ErrorMessage::ENotAReactComponent(Box::new(ENotAReactComponentData {
+        component: flow_js_utils::type_reference_with_reason_for_error(component, reason.dupe()),
         use_op,
-    };
+    }));
     flow_js_utils::add_output_with_env(cx, env, err)
 }
 
@@ -480,7 +482,7 @@ fn props_to_tout<'cx>(
                         FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, &tout)?;
                     }
                     _ => {
-                        err_incompatible(cx, env, unknown_use(), r)?;
+                        err_incompatible(cx, env, unknown_use(), component, r)?;
                         FlowJs::rec_flow_t_with_env(
                             cx,
                             env,
@@ -508,7 +510,7 @@ fn props_to_tout<'cx>(
                     let modified = type_util::mod_reason_of_t(&|_| r.dupe(), &call_t);
                     props_to_tout(cx, env, trace, &modified, use_op, reason_op, tout)?;
                 } else {
-                    err_incompatible(cx, env, unknown_use(), r)?;
+                    err_incompatible(cx, env, unknown_use(), component, r)?;
                     FlowJs::rec_flow_t_with_env(
                         cx,
                         env,
@@ -601,7 +603,13 @@ fn props_to_tout<'cx>(
             }
             // ...otherwise, error.
             _ => {
-                err_incompatible(cx, env, use_op.dupe(), type_util::reason_of_t(component))?;
+                err_incompatible(
+                    cx,
+                    env,
+                    use_op.dupe(),
+                    component,
+                    type_util::reason_of_t(component),
+                )?;
                 FlowJs::rec_flow_t_with_env(
                     cx,
                     env,
@@ -627,7 +635,13 @@ fn props_to_tout<'cx>(
         }
         _ => {
             // ...otherwise, error.
-            err_incompatible(cx, env, use_op.dupe(), type_util::reason_of_t(component))?;
+            err_incompatible(
+                cx,
+                env,
+                use_op.dupe(),
+                component,
+                type_util::reason_of_t(component),
+            )?;
             FlowJs::rec_flow_t_with_env(
                 cx,
                 env,
@@ -847,7 +861,7 @@ pub(super) fn run_with_env<'cx>(
                             }
                         }
                         _ => {
-                            err_incompatible(cx, env, unknown_use(), r)?;
+                            err_incompatible(cx, env, unknown_use(), component, r)?;
                             FlowJs::rec_flow_t_with_env(
                                 cx,
                                 env,
@@ -876,7 +890,7 @@ pub(super) fn run_with_env<'cx>(
                         let modified = type_util::mod_reason_of_t(&|_| r.dupe(), &call_t);
                         return tin_to_props(cx, env, trace, use_op, reason_op, &modified, tin);
                     }
-                    err_incompatible(cx, env, unknown_use(), r)?;
+                    err_incompatible(cx, env, unknown_use(), component, r)?;
                     FlowJs::rec_flow_t_with_env(
                         cx,
                         env,
@@ -931,7 +945,7 @@ pub(super) fn run_with_env<'cx>(
                 // ...otherwise, error.
                 _ => {
                     let reason = type_util::reason_of_t(component);
-                    err_incompatible(cx, env, use_op.dupe(), reason)?;
+                    err_incompatible(cx, env, use_op.dupe(), component, reason)?;
                     FlowJs::rec_flow_t_with_env(
                         cx,
                         env,
@@ -957,7 +971,7 @@ pub(super) fn run_with_env<'cx>(
             // ...otherwise, error.
             _ => {
                 let reason = type_util::reason_of_t(component);
-                err_incompatible(cx, env, use_op.dupe(), reason)?;
+                err_incompatible(cx, env, use_op.dupe(), component, reason)?;
                 FlowJs::rec_flow_t_with_env(
                     cx,
                     env,

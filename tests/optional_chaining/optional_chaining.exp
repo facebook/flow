@@ -2252,8 +2252,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:110:3
 
-Cannot cast `b.x` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `b.x` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    refinements.js:110:3
    110|   b.x as false; // nope
@@ -2358,7 +2357,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:134:3
 
-Cannot cast `b.y` to boolean literal `false` because `void` [1] is incompatible with `false` [2]. [incompatible-type]
+Cannot cast `b.y` to boolean literal `false` because `boolean` [1] is incompatible with `false` [2]. [incompatible-type]
 
    refinements.js:134:3
    134|   b.y as false; // nope
@@ -2375,8 +2374,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:134:3
 
-Cannot cast `b.y` to boolean literal `false` because boolean [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot cast `b.y` to boolean literal `false` because `void` [1] is incompatible with `false` [2]. [incompatible-type]
 
    refinements.js:134:3
    134|   b.y as false; // nope

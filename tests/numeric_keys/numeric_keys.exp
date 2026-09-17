@@ -186,7 +186,7 @@ making positive the number literal. Consider using a string literal key name to 
 
 Error ---------------------------------------------------------------------------------------- non_literal_number.js:5:5
 
-Cannot access object type [1] with computed property using number [2]. [invalid-computed-prop]
+Cannot access `{foo: 1}` [1] with computed property using `number` [2]. [invalid-computed-prop]
 
    non_literal_number.js:5:5
    5|   o[n]; // ERROR
@@ -203,8 +203,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- non_literal_number.js:22:3
 
-Cannot cast `o2` to object type because in the indexer property: boolean [1] is incompatible with boolean literal
-`true` [2]. [incompatible-type]
+Cannot cast `o2` to object type because in the indexer property: `boolean` [1] is incompatible with `true` [2].
+[incompatible-type]
 
    non_literal_number.js:22:3
    22|   o2 as {readonly [number]: true}; // OK
@@ -271,8 +271,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:3
 
-Cannot cast `o` to object type because property `2` is extra in object literal [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `o` to object type because property `2` is extra in object literal [1] but missing in `{"1": boolean}` [2].
+Exact objects do not accept extra props. [incompatible-type]
 
    test.js:16:3
    16|   o as {[1]: boolean}; // ERROR
@@ -293,8 +293,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:3
 
-Cannot cast `o` to object type because property `2` is extra in object literal [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot cast `o` to object type because property `2` is extra in object literal [1] but missing in `{"1": boolean}` [2].
+Exact objects do not accept extra props. [incompatible-type]
 
    test.js:17:3
    17|   o as {['1']: boolean}; // ERROR
@@ -315,7 +315,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because in property `1`: boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `o` to object type because in property `1`: `boolean` [1] is incompatible with `true` [2].
 [incompatible-type]
 
    test.js:20:3
@@ -333,7 +333,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because in property `2`: boolean [1] is incompatible with boolean literal `false` [2].
+Cannot cast `o` to object type because in property `2`: `boolean` [1] is incompatible with `false` [2].
 [incompatible-type]
 
    test.js:20:3
@@ -756,8 +756,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:181:5
 
-Cannot access object literal [1] with computed property using number literal `1.1` [2]. Only integer-like number
-literals are allowed. [invalid-computed-prop]
+Cannot access object literal [1] with computed property using `1.1` [2]. Only integer-like number literals are allowed.
+[invalid-computed-prop]
 
    test.js:181:5
    181|   x[1.1]; // ERROR
@@ -771,8 +771,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:182:5
 
-Cannot access object literal [1] with computed property using number literal `9007199254740992` [2]. Number literals
-must not be larger than `Number.MAX_SAFE_INTEGER`. [invalid-computed-prop]
+Cannot access object literal [1] with computed property using `9007199254740992` [2]. Number literals must not be larger
+than `Number.MAX_SAFE_INTEGER`. [invalid-computed-prop]
 
    test.js:182:5
    182|   x[9007199254740992]; // ERROR

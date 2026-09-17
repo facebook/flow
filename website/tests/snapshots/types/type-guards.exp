@@ -182,8 +182,9 @@ References:
 
 Error ------------------------------------------------------------------------- -:24:38
 
-Cannot return `response.type === 'success'` because property `value` is extra in object type [1] but missing in object
-type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot return `response.type === 'success'` because property `value` is extra in
+`{readonly type: "success", readonly value: 23}` [1] but missing in
+`{readonly error: string, readonly type: "error"}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
 The type of `response` [3] at the return expression `response.type === 'success'` [4] needs to be compatible with the
 guard type `Error` [2]. See 1. in
@@ -511,8 +512,8 @@ No errors!
 === block 27 ===
 Error -------------------------------------------------------------------------- -:7:10
 
-Cannot return `x.tag === 'known'` because property `data` is extra in `Dynamic` [1] but missing in `Known` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot return `x.tag === 'known'` because property `data` is extra in `{data: number, tag: T}` [1] but missing in
+`Known` [2]. Exact objects do not accept extra props. [incompatible-type]
 
 The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
 `Known` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.

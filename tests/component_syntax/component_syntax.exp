@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ annotation.js:5:2
 
-Cannot create `Basic` element because property `foo` is extra in props [1] but missing in props of component [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `Basic` element because property `foo` is extra in `{foo: 42}` [1] but missing in `{}` [2]. Exact objects
+do not accept extra props. [incompatible-type]
 
    annotation.js:5:2
    5| <Basic foo={42} /> // error
@@ -864,8 +864,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- declared.js:5:2
 
-Cannot create `Basic` element because property `foo` is extra in props [1] but missing in props of component Basic [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot create `Basic` element because property `foo` is extra in `{foo: 42}` [1] but missing in `{}` [2]. Exact objects
+do not accept extra props. [incompatible-type]
 
    declared.js:5:2
    5| <Basic foo={42} /> // error
@@ -1476,8 +1476,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:28
 
-Cannot create `RenamedParams` element because property `baz` is extra in props [1] but missing in props of component
-RenamedParams [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `RenamedParams` element because property `baz` is extra in `{bar: 3, baz: "str", foo: "str"}` [1] but
+missing in `{readonly bar: string, readonly foo: number, readonly "non-ident": string}` [2]. Exact objects do not accept
+extra props. [incompatible-type]
 
    import.js:17:28
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -2111,8 +2112,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- nominal.js:17:1
 
-Cannot cast `Foo` to `React.ComponentType` because property `foo` is extra in object type [1] but missing in props of
-component Foo [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `Foo` to `React.ComponentType` because property `foo` is extra in `{readonly foo: number}` [1] but missing
+in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    nominal.js:17:1
    17| Foo as React.ComponentType<{foo: number}>; // ERROR
@@ -3266,8 +3267,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:41:28
 
-Cannot create `RenamedParams` element because property `baz` is extra in props [1] but missing in props of component
-RenamedParams [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `RenamedParams` element because property `baz` is extra in `{bar: 3, baz: "str", foo: "str"}` [1] but
+missing in `{readonly bar: string, readonly foo: number, readonly "non-ident": string}` [2]. Exact objects do not accept
+extra props. [incompatible-type]
 
    signature.js:41:28
    41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz

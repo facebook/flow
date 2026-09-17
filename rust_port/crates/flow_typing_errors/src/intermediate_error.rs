@@ -149,6 +149,7 @@ use crate::error_message::IncompatibleInvariantSubtypingData;
 use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
 use crate::error_message::IncompatibleTypesWithExampleData;
+use crate::error_message::PrivatePropMissingInLookupData;
 use crate::error_message::PropMissingInLookupData;
 use crate::error_message::PropMissingInSubtypingData;
 use crate::error_message::PropPolarityMismatchData;
@@ -599,49 +600,49 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                     )))
             }
             FlowErrorMessage::EExpectedNumberLit(box EExpectedNumberLitData {
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 use_op,
             }) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
+                let ((lower_new, upper_new), use_op_new) =
+                    dedupe_by_flip(lower.clone(), upper.clone(), use_op.clone());
+                lower == &lower_new
                     || is_not_duplicate(FlowErrorMessage::EExpectedNumberLit(Box::new(
                         EExpectedNumberLitData {
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
+                            lower: lower_new,
+                            upper: upper_new,
                             use_op: use_op_new,
                         },
                     )))
             }
             FlowErrorMessage::EExpectedBooleanLit(box EExpectedBooleanLitData {
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 use_op,
             }) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
+                let ((lower_new, upper_new), use_op_new) =
+                    dedupe_by_flip(lower.clone(), upper.clone(), use_op.clone());
+                lower == &lower_new
                     || is_not_duplicate(FlowErrorMessage::EExpectedBooleanLit(Box::new(
                         EExpectedBooleanLitData {
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
+                            lower: lower_new,
+                            upper: upper_new,
                             use_op: use_op_new,
                         },
                     )))
             }
             FlowErrorMessage::EExpectedBigIntLit(box EExpectedBigIntLitData {
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 use_op,
             }) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
+                let ((lower_new, upper_new), use_op_new) =
+                    dedupe_by_flip(lower.clone(), upper.clone(), use_op.clone());
+                lower == &lower_new
                     || is_not_duplicate(FlowErrorMessage::EExpectedBigIntLit(Box::new(
                         EExpectedBigIntLitData {
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
+                            lower: lower_new,
+                            upper: upper_new,
                             use_op: use_op_new,
                         },
                     )))
@@ -3790,6 +3791,21 @@ where
 
         (
             None,
+            FriendlyMessageRecipe::PrivatePropMissingInLookup(box PrivatePropMissingInLookupData {
+                loc,
+                object,
+                prop,
+                use_op,
+            }),
+        ) => mk_use_op_error(
+            loc_of_aloc(&loc),
+            use_op,
+            None,
+            Message::MessagePrivatePropMissing { object, prop },
+        ),
+
+        (
+            None,
             FriendlyMessageRecipe::PropMissingInSubtyping(box PropMissingInSubtypingData {
                 prop,
                 reason_lower,
@@ -3864,19 +3880,22 @@ where
             FriendlyMessageRecipe::PropsExtraAgainstExactObject(
                 box PropsExtraAgainstExactObjectData {
                     props,
-                    reason_l_obj,
-                    reason_r_obj,
+                    loc,
+                    lower,
+                    upper,
+                    upper_is_record,
                     use_op,
                 },
             ),
         ) => mk_use_op_error(
-            loc_of_aloc(&reason_l_obj.loc),
+            loc_of_aloc(&loc),
             use_op,
             None,
             Message::MessagePropExtraAgainstExactObject(Box::new(
                 MessagePropExtraAgainstExactObjectData {
-                    lower: reason_l_obj,
-                    upper: reason_r_obj,
+                    lower,
+                    upper,
+                    upper_is_record,
                     props: Vec1::try_from_vec(
                         props.iter().map(|s| FlowSmolStr::new(s.as_str())).collect(),
                     )
@@ -5354,13 +5373,27 @@ where
                 };
                 let (lower_parts, upper_parts) = if *lower_is_hook {
                     (
-                        vec![ref_(lower), text(" is a React "), hook_wording],
-                        vec![ref_(upper), text(" is not a hook")],
+                        vec![
+                            ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                            text(" is a React "),
+                            hook_wording,
+                        ],
+                        vec![
+                            ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                            text(" is not a hook"),
+                        ],
                     )
                 } else {
                     (
-                        vec![ref_(lower), text(" is not a React hook")],
-                        vec![ref_(upper), text(" is a "), hook_wording],
+                        vec![
+                            ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                            text(" is not a React hook"),
+                        ],
+                        vec![
+                            ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                            text(" is a "),
+                            hook_wording,
+                        ],
                     )
                 };
                 let mut parts = lower_parts;
@@ -5381,8 +5414,8 @@ where
                 ref_(upper),
             ]),
             MessageCannotAccessObjectWithComputedProp {
-                reason_obj,
-                reason_prop,
+                object,
+                property,
                 kind,
             } => {
                 use super::intermediate_error_types::InvalidObjKey;
@@ -5406,9 +5439,9 @@ where
                 };
                 let mut features = vec![
                     text("Cannot access "),
-                    ref_(reason_obj),
+                    ref_of_ty_or_desc(&object.loc, &object.desc),
                     text(" with computed property using "),
-                    ref_(reason_prop),
+                    ref_of_ty_or_desc(&property.loc, &property.desc),
                     text("."),
                 ];
                 features.extend(suffix);
@@ -5552,9 +5585,9 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotCallReactComponent(reason) => friendly::Message(vec![
+            MessageCannotCallReactComponent(component) => friendly::Message(vec![
                 text("Cannot call "),
-                ref_(reason),
+                ref_of_ty_or_desc(&component.loc, &component.desc),
                 text(" because React components cannot be called. Use JSX instead. "),
                 text("(https://react.dev/reference/rules/react-calls-components-and-hooks)"),
             ]),
@@ -5809,9 +5842,9 @@ where
                 code("default"),
                 text(" case to cover those members."),
             ]),
-            MessageCannotImplementNonInterface(i) => friendly::Message(vec![
+            MessageCannotImplementNonInterface(type_) => friendly::Message(vec![
                 text("Cannot implement "),
-                friendly::desc_of_reason_desc(i),
+                ref_of_ty_or_desc(&type_.loc, &type_.desc),
                 text(" because it is not an interface."),
             ]),
             MessageCannotInstantiateObjectUtilTypeWithEnum(
@@ -6000,15 +6033,15 @@ where
                     text(" is not a number or bigint."),
                 ])
             }
-            MessageCannotPerformBigIntRShift3(reason) => friendly::Message(vec![
+            MessageCannotPerformBigIntRShift3(operand) => friendly::Message(vec![
                 text("Cannot perform unsigned right shift because "),
-                ref_(reason),
+                ref_of_ty_or_desc(&operand.operand.loc, &operand.operand_desc),
                 text(" "),
                 text("is a bigint, and all bigints are signed."),
             ]),
-            MessageCannotPerformBigIntUnaryPlus(reason) => friendly::Message(vec![
+            MessageCannotPerformBigIntUnaryPlus(operand) => friendly::Message(vec![
                 text("Cannot perform unary plus because a "),
-                ref_(reason),
+                ref_of_ty_or_desc(&operand.operand.loc, &operand.operand_desc),
                 text(" "),
                 text("cannot be coerced to number."),
             ]),
@@ -6347,8 +6380,8 @@ where
                 }
             }
             MessageCannotUsePrimitiveAsInterface {
-                reason,
-                interface_reason,
+                lower,
+                upper,
                 kind,
             } => {
                 let kind_str = match kind {
@@ -6357,9 +6390,9 @@ where
                     super::intermediate_error_types::PrimitiveKind::String => "String",
                 };
                 friendly::Message(vec![
-                    ref_(reason),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(", a primitive, cannot be used as a subtype of "),
-                    ref_(interface_reason),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                     text(". "),
                     text("You can wrap it in "),
                     code(&format!("new {}(...))", kind_str)),
@@ -7293,8 +7326,8 @@ where
                 ])
             }
             MessageIncompatibleClassToObject {
-                reason_class,
-                reason_obj,
+                lower,
+                upper,
                 kind,
             } => {
                 let kind_str = match kind {
@@ -7302,13 +7335,13 @@ where
                     super::intermediate_error_types::ClassKind::Record => "Records",
                 };
                 friendly::Message(vec![
-                    ref_(reason_class),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(" is not a subtype of "),
-                    ref_(reason_obj),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                     text(". "),
                     text(kind_str),
                     text(" are not subtypes of object types; consider rewriting "),
-                    ref_(reason_obj),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                     text(" as an interface"),
                 ])
             }
@@ -7319,16 +7352,16 @@ where
                 ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
             MessageIncompatibleNonTypeGuardToTypeGuard { lower, upper } => friendly::Message(vec![
-                ref_(lower),
+                ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 text(", a non-type-guard function, is incompatible with "),
-                ref_(upper),
+                ref_of_ty_or_desc(&upper.loc, &upper.desc),
                 text(", which is a type-guard function"),
             ]),
             MessageIncompatibleReactHooksDueToUniqueness { lower, upper } => {
                 friendly::Message(vec![
-                    ref_(lower),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(" and "),
-                    ref_(upper),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                     text(" are different React hooks"),
                 ])
             }
@@ -7695,7 +7728,7 @@ where
             ]),
             MessageInvalidTupleTypeSpread(reason_arg) => friendly::Message(vec![
                 text("Cannot spread non-tuple ("),
-                ref_(reason_arg),
+                ref_of_ty_or_desc(&reason_arg.loc, &reason_arg.desc),
                 text(") into tuple type."),
             ]),
             MessageTupleElementAfterInexactSpread => friendly::Message(vec![text(
@@ -7916,7 +7949,10 @@ where
                 friendly::Message(vec![ref_(lower), text(" is not a polymorphic type")])
             }
             MessageLowerIsNotReactComponent(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not a React component")])
+                friendly::Message(vec![
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    text(" is not a React component"),
+                ])
             }
             MessageLowerIsNotWithPrintedType {
                 lower,
@@ -8092,6 +8128,15 @@ where
                         }
                     }
                 }
+            }
+            MessagePrivatePropMissing { object, prop } => {
+                use super::error_message::mk_prop_message;
+                let mut features = mk_prop_message(Some(prop.as_str()));
+                features.extend(vec![
+                    text(" is missing in "),
+                    ref_of_ty_or_desc(&object.loc, &object.desc),
+                ]);
+                friendly::Message(features)
             }
             MessageConstructSignatureMissing(box MessageConstructSignatureMissingData {
                 lower,
@@ -8366,11 +8411,11 @@ where
                 code("new Array(...)"),
                 text("."),
             ]),
-            MessageSketchyNumber(reason) => friendly::Message(vec![
+            MessageSketchyNumber(value) => friendly::Message(vec![
                 text("Avoid using "),
                 code("&&"),
                 text(" to check the value of "),
-                ref_(reason),
+                ref_of_ty_or_desc(&value.loc, &value.desc),
                 text(". "),
                 text(
                     "Consider handling falsy values (0 and NaN) by using a conditional to choose an ",
@@ -8800,7 +8845,7 @@ where
                 friendly::Message(features)
             }
             MessageTupleIndexOutOfBound(box MessageTupleIndexOutOfBoundData {
-                reason_op,
+                tuple,
                 inexact,
                 length,
                 index,
@@ -8813,7 +8858,7 @@ where
                     "out of bounds"
                 };
                 friendly::Message(vec![
-                    ref_(reason_op),
+                    ref_of_ty_or_desc(&tuple.loc, &tuple.desc),
                     text(&format!(
                         " only has {} element{}{}, so index {} is {}",
                         length, plural, explicit, index, bounds_msg
@@ -10254,6 +10299,7 @@ where
             MessagePropExtraAgainstExactObject(box MessagePropExtraAgainstExactObjectData {
                 lower,
                 upper,
+                upper_is_record,
                 props,
             }) => {
                 let number_to_check = props.len();
@@ -10277,7 +10323,7 @@ where
                     friendly::conjunction_concat(items, "and", None).0
                 };
                 let plural = props.len() > 1;
-                let upper_kind = if flow_common::reason::is_record_reason(upper) {
+                let upper_kind = if *upper_is_record {
                     "Records"
                 } else {
                     "Exact objects"
@@ -10286,9 +10332,9 @@ where
                 result.push(text(" "));
                 result.push(text(if plural { "are" } else { "is" }));
                 result.push(text(" extra in "));
-                result.push(ref_(lower));
+                result.push(ref_of_ty_or_desc(&lower.loc, &lower.desc));
                 result.push(text(" but missing in "));
-                result.push(ref_(upper));
+                result.push(ref_of_ty_or_desc(&upper.loc, &upper.desc));
                 result.push(text(". "));
                 result.push(text(upper_kind));
                 result.push(text(" do not accept extra props"));

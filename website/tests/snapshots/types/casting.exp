@@ -65,8 +65,7 @@ Found 1 error
 === block 6 ===
 Error ------------------------------------------------------------------------------- -:9:1
 
-Cannot cast `newValue` to number literal `42` because number [1] is incompatible with number literal `42` [2].
-[incompatible-type]
+Cannot cast `newValue` to number literal `42` because `number` [1] is incompatible with `42` [2]. [incompatible-type]
 
    -:9:1
    9| newValue as 42;     // Error!

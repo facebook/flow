@@ -149,8 +149,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:20:13
 
-Cannot create `LazyFunctionComponent` element because property `bar` is extra in props [1] but missing in `Props` [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot create `LazyFunctionComponent` element because property `bar` is extra in `{bar: 3, foo: 3}` [1] but missing in
+`{readonly foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    lazy.js:20:13
    20| const _c = <LazyFunctionComponent foo={3} bar={3} />; // Error extra bar
@@ -200,8 +200,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:29:13
 
-Cannot create `LazyClassComponent` element because property `bar` is extra in props [1] but missing in props of class
-`ClassComponent` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `LazyClassComponent` element because property `bar` is extra in `{bar: 3, foo: 3}` [1] but missing in
+`{readonly foo: number, readonly ref?: React.RefSetter<ClassComponent>}` [2]. Exact objects do not accept extra props.
+[incompatible-type]
 
    lazy.js:29:13
    29| const _g = <LazyClassComponent foo={3} bar={3} />; // Error extra bar
@@ -265,8 +266,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:13:13
 
-Cannot create `MemoComponent` element because property `bar` is extra in props [1] but missing in `Props` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `MemoComponent` element because property `bar` is extra in `{bar: 3, foo: 3}` [1] but missing in
+`{readonly foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    memo.js:13:13
    13| const _c = <MemoComponent foo={3} bar={3} />; // Error extra bar
@@ -316,8 +317,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:20:13
 
-Cannot create `MemoComponentWithEqual` element because property `bar` is extra in props [1] but missing in `Props` [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot create `MemoComponentWithEqual` element because property `bar` is extra in `{bar: 3, foo: 3}` [1] but missing in
+`{readonly foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    memo.js:20:13
    20| const _g = <MemoComponentWithEqual foo={3} bar={3} />; // Error extra bar

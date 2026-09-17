@@ -310,8 +310,8 @@ Flow does not support `abstract` methods. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------- deprecated/excluded_dir/readonly.js:7:23
 
-Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in
+`{readonly a?: ?number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    deprecated/excluded_dir/readonly.js:7:23
    7| let a: exportedType = {b: 1}; // ERROR
@@ -326,7 +326,7 @@ References:
 Error -------------------------------------------------------------------- deprecated/excluded_dir/readonly_type.js:6:23
 
 Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in
-`exportedType` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{readonly a?: ?number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    deprecated/excluded_dir/readonly_type.js:6:23
    6| let a: exportedType = {b: 1}; // ERROR
@@ -393,8 +393,8 @@ The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-
 
 Error -------------------------------------------------------------------------------------- deprecated/readonly.js:7:23
 
-Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in
+`{readonly a?: ?number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    deprecated/readonly.js:7:23
    7| let a: exportedType = {b: 1}; // ERROR
@@ -425,7 +425,7 @@ The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-
 Error --------------------------------------------------------------------------------- deprecated/readonly_type.js:6:23
 
 Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in
-`exportedType` [2]. Exact objects do not accept extra props. [incompatible-type]
+`{readonly a?: ?number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    deprecated/readonly_type.js:6:23
    6| let a: exportedType = {b: 1}; // ERROR

@@ -157,8 +157,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- literal.js:3:7
 
-Cannot assign `p` to `o.p` because property `r` is extra in object type [1] but missing in object literal [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot assign `p` to `o.p` because property `r` is extra in `{q: number, r: number, ...}` [1] but missing in object
+literal [2]. Exact objects do not accept extra props. [incompatible-type]
 
    literal.js:3:7
    3| o.p = p; // error
@@ -176,7 +176,8 @@ References:
 Error ------------------------------------------------------------------------------------------- multiple_props.js:10:1
 
 Cannot cast `foo` to object type because property `a`, property `b`, property `c`, property `d`, and 2 others are extra
-in object type [1] but missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+in `{a: string, b: string, c: string, d: string, e: string, f: string}` [1] but missing in `{}` [2]. Exact objects do
+not accept extra props. [incompatible-type]
 
    multiple_props.js:10:1
    10| foo as {}; // error
@@ -519,8 +520,8 @@ Cannot create exact type from `A` [1]. [invalid-exact]
 
 Error -------------------------------------------------------------------------------------------------- objmap.js:10:36
 
-Cannot assign object literal to `doesError` because in property `a`: number literal `3` [1] is incompatible with number
-literal `2` [2]. [incompatible-type]
+Cannot assign object literal to `doesError` because in property `a`: `3` [1] is incompatible with `Map1To2` [2].
+[incompatible-type]
 
    objmap.js:10:36
    10| const doesError: MappedThing = {a: 3};
@@ -588,8 +589,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- other_utilities.js:20:13
 
-Cannot assign object literal to `c1` because property `f` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `c1` because property `f` is extra in object literal [1] but missing in
+`{d: ?{e: ?number}}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    other_utilities.js:20:13
                    v
@@ -607,8 +608,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- other_utilities.js:24:21
 
-Cannot assign object literal to `c2` because property `f` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot assign object literal to `c2` because property `f` is extra in object literal [1] but missing in
+`{d: ?{e: ?number}}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    other_utilities.js:24:21
                            v
@@ -654,8 +655,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:3:2
 
-Cannot cast object literal to union type because property `q` is extra in object literal [1] but missing in object
-type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to union type because property `q` is extra in object literal [1] but missing in
+`{p: "A"}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    union.js:3:2
    3| ({p:'A',q:0} as {p:'A'}|{p:'B'}); // error: extra prop

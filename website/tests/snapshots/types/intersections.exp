@@ -110,7 +110,7 @@ Found 2 errors
 Error ------------------------------------------------------------------------- -:4:6
 
 Cannot call `func` with object literal bound to `obj` because property `a` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+`{b: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    -:4:6
    4| func({a: 1}); // Error!
@@ -152,7 +152,7 @@ References:
 Error ------------------------------------------------------------------------- -:5:6
 
 Cannot call `func` with object literal bound to `obj` because property `b` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+`{a: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    -:5:6
    5| func({b: 'hi'}); // Error!
@@ -166,7 +166,7 @@ References:
 Error ------------------------------------------------------------------------- -:6:6
 
 Cannot call `func` with object literal bound to `obj` because property `a` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+`{b: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    -:6:6
    6| func({a: 1, b: 'hi'}); // Error!
@@ -180,7 +180,7 @@ References:
 Error ------------------------------------------------------------------------- -:6:6
 
 Cannot call `func` with object literal bound to `obj` because property `b` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+`{a: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    -:6:6
    6| func({a: 1, b: 'hi'}); // Error!

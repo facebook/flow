@@ -2734,6 +2734,7 @@ fn elab_t_concrete<'cx>(
                         env,
                         false,
                         *from_annot,
+                        &source_type,
                         &t,
                         use_op.dupe(),
                         reason_op,

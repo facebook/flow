@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------- error_positioning/error_positioning.js:30:36
 
-`MockFn` [1] is not a React component. [not-a-component]
+`{(...args: [{user: unknown}]): React.MixedElement, mock: {calls: Array<[{user: unknown}]>}}` [1] is not a React
+component. [not-a-component]
 
    error_positioning/error_positioning.js:30:36
    30| let RefetchContainer = HOC<any, _>(Component); // Error, mock is not a Component

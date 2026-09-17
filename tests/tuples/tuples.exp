@@ -141,8 +141,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:30:3
 
-Cannot cast `a` to number literal `10` because number literal `1` [1] is incompatible with number literal `10` [2].
-[incompatible-type]
+Cannot cast `a` to number literal `10` because `1` [1] is incompatible with `10` [2]. [incompatible-type]
 
    array.js:30:3
    30|   a as 10; // error
@@ -159,8 +158,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:31:3
 
-Cannot cast `b` to number literal `20` because number literal `2` [1] is incompatible with number literal `20` [2].
-[incompatible-type]
+Cannot cast `b` to number literal `20` because `2` [1] is incompatible with `20` [2]. [incompatible-type]
 
    array.js:31:3
    31|   b as 20; // error
@@ -177,8 +175,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:32:3
 
-Cannot cast `rest` to tuple type because in index `1`: number literal `4` [1] is incompatible with number literal
-`40` [2]. [incompatible-type]
+Cannot cast `rest` to tuple type because in index `1`: `4` [1] is incompatible with `40` [2]. [incompatible-type]
 
    array.js:32:3
    32|   rest as [3,40]; // error
@@ -195,7 +192,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- array.js:38:12
 
-Cannot get `tup[3]` because tuple type [1] only has 2 elements, so index 3 is out of bounds. [invalid-tuple-index]
+Cannot get `tup[3]` because `[number, number]` [1] only has 2 elements, so index 3 is out of bounds.
+[invalid-tuple-index]
 
    array.js:38:12
    38|     return tup[3]; // error
@@ -299,8 +297,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:8
 
-Cannot cast array literal to `T` because in index `2`: number literal `9` [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot cast array literal to `T` because in index `2`: `9` [1] is incompatible with `2` [2]. [incompatible-type]
 
    import.js:7:8
    7| [0, 1, 9] as T; // ERROR
@@ -361,8 +358,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- inexact.js:19:3
 
-Cannot get `x[1]` because tuple type [1] only has 1 element explicitly defined, so index 1 is unknown or out of bounds.
-[invalid-tuple-index]
+Cannot get `x[1]` because `[number, ...]` [1] only has 1 element explicitly defined, so index 1 is unknown or out of
+bounds. [invalid-tuple-index]
 
    inexact.js:19:3
    19|   x[1]; // ERROR - out of bounds
@@ -466,8 +463,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- inexact.js:50:3
 
-Cannot cast `x.length` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `x.length` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    inexact.js:50:3
    50|   x.length as 1; // ERROR - length is just `number`
@@ -499,8 +495,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- inexact.js:79:3
 
-Cannot get `x[2]` because tuple type [1] only has 2 elements explicitly defined, so index 2 is unknown or out of bounds.
-[invalid-tuple-index]
+Cannot get `x[2]` because `[number, string, ...]` [1] only has 2 elements explicitly defined, so index 2 is unknown or
+out of bounds. [invalid-tuple-index]
 
    inexact.js:79:3
    79|   x[2]; // ERROR - out of bounds
@@ -514,7 +510,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- inexact.js:79:3
 
-Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+Cannot get `x[2]` because `[boolean, string]` [1] only has 2 elements, so index 2 is out of bounds.
+[invalid-tuple-index]
 
    inexact.js:79:3
    79|   x[2]; // ERROR - out of bounds
@@ -893,7 +890,7 @@ Cannot assign `123` to `tup[0]` because the index must be statically known to wr
 
 Error --------------------------------------------------------------------------------------------- number-index.js:10:3
 
-Cannot get `x[2]` because tuple type [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
+Cannot get `x[2]` because `[1, 2]` [1] only has 2 elements, so index 2 is out of bounds. [invalid-tuple-index]
 
    number-index.js:10:3
    10|   x[2]; // error
@@ -907,7 +904,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- number-index.js:11:3
 
-Cannot get `x[-1]` because tuple type [1] only has 2 elements, so index -1 is out of bounds. [invalid-tuple-index]
+Cannot get `x[-1]` because `[1, 2]` [1] only has 2 elements, so index -1 is out of bounds. [invalid-tuple-index]
 
    number-index.js:11:3
    11|   x[-1]; // error
@@ -1001,8 +998,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:25:3
 
-Cannot cast `withOpt.length` to number literal `2` because length `1` (number) of tuple [1] is incompatible with number
-literal `2` [2]. [incompatible-type]
+Cannot cast `withOpt.length` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    optional.js:25:3
    25|   withOpt.length as 2; // ERROR
@@ -1416,8 +1412,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:116:3
 
-Cannot cast `rest0` to tuple type because in index `0`: number literal `2` [1] is incompatible with number literal
-`1` [2]. [incompatible-type]
+Cannot cast `rest0` to tuple type because in index `0`: `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    optional.js:116:3
    116|   rest0 as [a: 1, b?: 3, c?: 4]; // ERROR
@@ -1578,8 +1573,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- readonly-array.js:27:5
 
-Cannot cast `readOnlyRef[0]` to number literal `1` because number literal `2` [1] is incompatible with number literal
-`1` [2]. [incompatible-type]
+Cannot cast `readOnlyRef[0]` to number literal `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    readonly-array.js:27:5
    27|     readOnlyRef[0] as 1; // error
@@ -1643,8 +1637,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:13:7
 
-Cannot cast array literal to `Same` because in index `1`: number literal `99` [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot cast array literal to `Same` because in index `1`: `99` [1] is incompatible with `2` [2]. [incompatible-type]
 
    spread.js:13:7
    13|   [1, 99] as Same; // ERROR: element type
@@ -1691,8 +1684,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:25:10
 
-Cannot cast array literal to `Middle` because in index `2`: number literal `99` [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot cast array literal to `Middle` because in index `2`: `99` [1] is incompatible with `2` [2]. [incompatible-type]
 
    spread.js:25:10
    25|   [0, 1, 99, 3] as Middle; // ERROR: element type
@@ -1758,7 +1750,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:41:23
 
-Cannot spread non-tuple (number literal `2` [1]) into tuple type. [tuple-invalid-type-spread]
+Cannot spread non-tuple (`2` [1]) into tuple type. [tuple-invalid-type-spread]
 
    spread.js:41:23
    41| type InvalidSpread1 = [1, ...2]; // ERROR
@@ -1786,7 +1778,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:52:20
 
-Cannot spread non-tuple (array type [1]) into tuple type. [tuple-invalid-type-spread]
+Cannot spread non-tuple (`Array<unknown>` [1]) into tuple type. [tuple-invalid-type-spread]
 
    spread.js:52:20
    52| type ArraySpread = [...Array<unknown>]; // ERROR
@@ -1800,7 +1792,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:57:22
 
-Cannot spread non-tuple (read-only array type [1]) into tuple type. [tuple-invalid-type-spread]
+Cannot spread non-tuple (`ReadonlyArray<unknown>` [1]) into tuple type. [tuple-invalid-type-spread]
 
    spread.js:57:22
    57| type ROArraySpread = [...ReadonlyArray<unknown>]; // ERROR
@@ -1814,8 +1806,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:87:8
 
-Cannot cast array literal to `WithTail` because in index `2`: number literal `66` [1] is incompatible with number
-literal `3` [2]. [incompatible-type]
+Cannot cast array literal to `WithTail` because in index `2`: `66` [1] is incompatible with `3` [2]. [incompatible-type]
 
    spread.js:87:8
    87| [1, 2, 66] as WithTail<[2, 3]>; // ERROR
@@ -1847,8 +1838,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:101:7
 
-Cannot call `tail` with array literal bound to `xs` because in index `0`: number literal `666` [1] is incompatible with
-number literal `1` [2]. [incompatible-type]
+Cannot call `tail` with array literal bound to `xs` because in index `0`: `666` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    spread.js:101:7
    101| tail([666, 2, 3]); // ERROR
@@ -1992,7 +1983,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:10:5
 
-Cannot get `t[1]` because tuple type [1] only has 1 element, so index 1 is out of bounds. [invalid-tuple-index]
+Cannot get `t[1]` because `[number]` [1] only has 1 element, so index 1 is out of bounds. [invalid-tuple-index]
 
    tuples.js:10:5
    10|     t[1]; // error, out of bounds
@@ -2006,7 +1997,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:11:5
 
-Cannot get `t[-1]` because tuple type [1] only has 1 element, so index -1 is out of bounds. [invalid-tuple-index]
+Cannot get `t[-1]` because `[number]` [1] only has 1 element, so index -1 is out of bounds. [invalid-tuple-index]
 
    tuples.js:11:5
    11|     t[-1]; // error, out of bounds
@@ -2122,8 +2113,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:46:5
 
-Cannot cast `a_len` to number literal `2` because length `1` (number) of tuple [1] is incompatible with number literal
-`2` [2]. [incompatible-type]
+Cannot cast `a_len` to number literal `2` because `1` [1] is incompatible with `2` [2]. [incompatible-type]
 
    tuples.js:46:5
    46|     a_len as 2;
@@ -2176,8 +2166,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:8:3
 
-Cannot cast `y` to `Readonly` because in index `3`: number literal `3` [1] is incompatible with number literal
-`999` [2]. [incompatible-type]
+Cannot cast `y` to `Readonly` because in index `3`: `3` [1] is incompatible with `999` [2]. [incompatible-type]
 
    value-spread.js:8:3
    8|   y as Readonly<[0, 1, 2, 999]>; // ERROR
@@ -2591,8 +2580,7 @@ Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:83:11
 
-Cannot cast `[...]` to tuple type because in index `0`: number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `[...]` to tuple type because in index `0`: `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    variance.js:83:11
    83| [1, 2] as [1, 2] as [number, number]; // ERROR
@@ -2609,8 +2597,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ variance.js:83:11
 
-Cannot cast `[...]` to tuple type because in index `1`: number [1] is incompatible with number literal `2` [2].
-[incompatible-type]
+Cannot cast `[...]` to tuple type because in index `1`: `number` [1] is incompatible with `2` [2]. [incompatible-type]
 
    variance.js:83:11
    83| [1, 2] as [1, 2] as [number, number]; // ERROR

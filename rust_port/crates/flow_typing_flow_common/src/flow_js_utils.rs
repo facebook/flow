@@ -6966,6 +6966,7 @@ pub mod get_prop_t_kit {
     use super::method_property_for_read;
     use super::tvar_visitors;
     use super::type_of_key_name_with_env;
+    use crate::flow_js_utils::type_reference_with_reason_for_error;
     use crate::obj_type;
 
     pub fn perform_read_prop_action<'cx, F: GetPropHelper>(
@@ -7733,8 +7734,8 @@ pub mod get_prop_t_kit {
                                     cx,
                                     env,
                                     flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
-                                        reason_obj: reason_obj.dupe(),
-                                        reason_prop,
+                                        object: type_reference_with_reason_for_error(&l, reason_obj.dupe()),
+                                        property: type_reference_with_reason_for_error(elem_t, reason_prop),
                                         kind,
                                     })),
                                 )?;
@@ -7756,8 +7757,8 @@ pub mod get_prop_t_kit {
                                     cx,
                                     env,
                                     flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
-                                        reason_obj: reason_obj.dupe(),
-                                        reason_prop,
+                                        object: type_reference_with_reason_for_error(&l, reason_obj.dupe()),
+                                        property: type_reference_with_reason_for_error(elem_t, reason_prop),
                                         kind,
                                     })),
                                 )?;
@@ -7772,8 +7773,8 @@ pub mod get_prop_t_kit {
                                     cx,
                                     env,
                                     flow_typing_errors::error_message::ErrorMessage::EObjectComputedPropertyAccess(Box::new(EObjectComputedPropertyAccessData {
-                                        reason_obj: reason_obj.dupe(),
-                                        reason_prop,
+                                        object: type_reference_with_reason_for_error(&l, reason_obj.dupe()),
+                                        property: type_reference_with_reason_for_error(elem_t, reason_prop),
                                         kind: flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
                                     })),
                                 )?;
@@ -7795,6 +7796,7 @@ pub fn array_elem_check<'cx>(
     env: &FlowJsEnv,
     write_action: bool,
     never_union_void_on_computed_prop_access: bool,
+    tuple: &Type,
     l: &Type,
     use_op: UseOp,
     reason: &Reason,
@@ -7974,7 +7976,10 @@ pub fn array_elem_check<'cx>(
                                                     ETupleOutOfBoundsData {
                                                         use_op: use_op.dupe(),
                                                         loc: reason.loc().dupe(),
-                                                        reason_op: reason_tup.dupe(),
+                                                        tuple: type_reference_with_reason_for_error(
+                                                            tuple,
+                                                            reason_tup.dupe(),
+                                                        ),
                                                         inexact: tuple_is_inexact,
                                                         length: elements.len() as i32,
                                                         index: index_string.clone().into(),
@@ -8547,18 +8552,22 @@ pub fn unary_negate_bigint_lit(
     (reason, (value, raw))
 }
 
-fn arithmetic_operand_error(t: &Type) -> ErrorMessage<ALoc> {
+fn arithmetic_operand_data(t: &Type) -> EArithmeticOperandData<ALoc> {
     use flow_typing_type::type_util;
 
     let reason = type_util::reason_of_t(t);
-    ErrorMessage::EArithmeticOperand(Box::new(EArithmeticOperandData {
+    EArithmeticOperandData {
         loc: reason.loc().dupe(),
         operand: ErrorReference::new(
             type_util::ref_loc_of_t(t).dupe(),
             reason.desc(false).clone(),
         ),
         operand_desc: arithmetic_type_or_type_desc(t),
-    }))
+    }
+}
+
+fn arithmetic_operand_error(t: &Type) -> ErrorMessage<ALoc> {
+    ErrorMessage::EArithmeticOperand(Box::new(arithmetic_operand_data(t)))
 }
 
 fn arithmetic_type_or_type_desc(t: &Type) -> TypeOrTypeDescT<ALoc> {
@@ -8625,7 +8634,7 @@ pub fn flow_unary_arith<'cx>(
             add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::EBigIntNumCoerce(reason_bigint.dupe()),
+                ErrorMessage::EBigIntNumCoerce(Box::new(arithmetic_operand_data(l))),
             )?;
             Ok(any_t::error(reason))
         }
@@ -8714,14 +8723,18 @@ pub fn flow_arith<'cx>(
         {
             Ok(num_module_t::why(reason))
         }
-        (TypeInner::DefT(bigint_reason, def_t), _)
+        (TypeInner::DefT(_, def_t), _)
             if op == ArithKindInner::RShift3
                 && matches!(
                     def_t.deref(),
                     DefTInner::BigIntGeneralT { .. } | DefTInner::SingletonBigIntT { .. }
                 ) =>
         {
-            add_output_with_env(cx, env, ErrorMessage::EBigIntRShift3(bigint_reason.dupe()))?;
+            add_output_with_env(
+                cx,
+                env,
+                ErrorMessage::EBigIntRShift3(Box::new(arithmetic_operand_data(l))),
+            )?;
             Ok(any_t::error(reason))
         }
         (TypeInner::DefT(_, l_def), TypeInner::DefT(_, r_def))

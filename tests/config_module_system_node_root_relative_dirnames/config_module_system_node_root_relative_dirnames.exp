@@ -156,8 +156,7 @@ Cannot resolve module `subdir/nonexistent`. [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:1
 
-Cannot cast `require(...)` to number literal `4` because number [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot cast `require(...)` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    test.js:44:1
    44| require('js_flow') as 4 // resolved, but number ~> 4 error

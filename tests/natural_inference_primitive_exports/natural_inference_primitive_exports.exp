@@ -54,8 +54,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:21:3
 
-Cannot cast `cjs_obj.bar` to number literal `1` because number [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `cjs_obj.bar` to number literal `1` because `number` [1] is incompatible with `1` [2]. [incompatible-type]
 
    main.js:21:3
    21|   cjs_obj.bar as 1; // error number ~> 1
@@ -72,7 +71,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:22:3
 
-Cannot cast `cjs_obj.baz` to boolean literal `true` because boolean [1] is incompatible with boolean literal `true` [2].
+Cannot cast `cjs_obj.baz` to boolean literal `true` because `boolean` [1] is incompatible with `true` [2].
 [incompatible-type]
 
    main.js:22:3

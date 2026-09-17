@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ inexact_config.js:12:13
 
-Cannot create `Component2` element because property `bar` and property `foo` are extra in props [1] but missing in
-`Props` [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `Component2` element because property `bar` and property `foo` are extra in `{bar: 3, foo: 3}` [1] but
+missing in `Props` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    inexact_config.js:12:13
    12| const _c = <Component2 foo={3} bar={3} />; // error
@@ -18,8 +18,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:13:13
 
-Cannot create `Component2` element because property `children` is extra in props [1] but missing in `Props` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `Component2` element because property `children` is extra in `{children: "foo"}` [1] but missing in
+`Props` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    inexact_config.js:13:13
    13| const _d = <Component2>{"foo"}</Component2>; //error
@@ -36,8 +36,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:22:13
 
-Cannot create `Component4` element because property `bar` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `Component4` element because property `bar` is extra in `{bar: 3, foo: 3}` [1] but missing in
+`{foo: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    inexact_config.js:22:13
    22| const _g = <Component4 foo={3} bar={3} />; //error
@@ -72,8 +72,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- inexact_props.js:19:2
 
-Cannot create `B` element because property `z` is extra in props [1] but missing in props of class `B` [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `B` element because property `z` is extra in `{x: 4, y: "hello", z: 3}` [1] but missing in
+`{readonly ref?: React.RefSetter<B>, readonly x: number, readonly y: string}` [2]. Exact objects do not accept extra
+props. [incompatible-type]
 
    inexact_props.js:19:2
    19| <B x={4} y={"hello"} z={3}></B>; // error

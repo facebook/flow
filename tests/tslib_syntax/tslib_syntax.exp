@@ -432,8 +432,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:25:1
 
-Cannot cast `n` to number literal `20` because number literal `10` [1] is incompatible with number literal `20` [2].
-[incompatible-type]
+Cannot cast `n` to number literal `20` because `10` [1] is incompatible with `20` [2]. [incompatible-type]
 
    declare_var_extras.js:25:1
    25| n as 20; // ERROR - 10 !== 20
@@ -450,8 +449,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:26:1
 
-Cannot cast `bi` to bigint literal `200n` because bigint literal `100n` [1] is incompatible with bigint literal
-`200n` [2]. [incompatible-type]
+Cannot cast `bi` to bigint literal `200n` because `100n` [1] is incompatible with `200n` [2]. [incompatible-type]
 
    declare_var_extras.js:26:1
    26| bi as 200n; // ERROR - 100n !== 200n
@@ -1566,8 +1564,7 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:18:1
 
-Cannot cast `c.neg` to number literal `1` because number literal `-1` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `c.neg` to number literal `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
 
    property_value_initializer.js:18:1
    18| c.neg as 1; // ERROR - -1 !== 1
@@ -1584,8 +1581,7 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:20:1
 
-Cannot cast `c.big` to bigint literal `0n` because bigint literal `100n` [1] is incompatible with bigint literal
-`0n` [2]. [incompatible-type]
+Cannot cast `c.big` to bigint literal `0n` because `100n` [1] is incompatible with `0n` [2]. [incompatible-type]
 
    property_value_initializer.js:20:1
    20| c.big as 0n; // ERROR - incompatible literal types
@@ -1602,8 +1598,7 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:22:1
 
-Cannot cast `c.negBig` to bigint literal `100n` because bigint literal `-100n` [1] is incompatible with bigint literal
-`100n` [2]. [incompatible-type]
+Cannot cast `c.negBig` to bigint literal `100n` because `-100n` [1] is incompatible with `100n` [2]. [incompatible-type]
 
    property_value_initializer.js:22:1
    22| c.negBig as 100n; // ERROR - incompatible literal types
@@ -1702,8 +1697,8 @@ References:
 
 Error ------------------------------------------------------------------------- property_value_initializer_import.js:7:1
 
-Cannot cast `ExportedConstants.BUFFER_SIZE` to number literal `0` because number literal `256` [1] is incompatible with
-number literal `0` [2]. [incompatible-type]
+Cannot cast `ExportedConstants.BUFFER_SIZE` to number literal `0` because `256` [1] is incompatible with `0` [2].
+[incompatible-type]
 
    property_value_initializer_import.js:7:1
    7| ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
@@ -1720,8 +1715,7 @@ References:
 
 Error ------------------------------------------------------------------------- property_value_initializer_import.js:9:1
 
-Cannot cast `e.neg` to number literal `1` because number literal `-1` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `e.neg` to number literal `1` because `-1` [1] is incompatible with `1` [2]. [incompatible-type]
 
    property_value_initializer_import.js:9:1
    9| e.neg as 1; // ERROR

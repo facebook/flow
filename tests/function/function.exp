@@ -1,8 +1,8 @@
 Error ------------------------------------------------------------------------------------------ apply-array-like.js:5:1
 
-Cannot call `test.apply` because in the `this` parameter: string [1], a primitive, cannot be used as a subtype of
-interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype
-of an interface. [incompatible-type]
+Cannot call `test.apply` because in the `this` parameter: `string` [1], a primitive, cannot be used as a subtype of
+`interface {length: number}` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it
+as a subtype of an interface. [incompatible-type]
 
    apply-array-like.js:5:1
    5| test.apply("", "foo"); // ERROR
@@ -19,9 +19,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
 
-Cannot call `test.apply` because in type argument `A`: string [1], a primitive, cannot be used as a subtype of
-`$ArrayLike` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of
-an interface. [incompatible-type]
+Cannot call `test.apply` because in type argument `A`: `string` [1], a primitive, cannot be used as a subtype of
+`interface {readonly length: number; readonly [indexer: number]: unknown}` [2]. You can wrap it in `new String(...))` to
+turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply-array-like.js:5:16
      5| test.apply("", "foo"); // ERROR
@@ -51,8 +51,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:5:16
 
-string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
-it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+`string` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, any, any>` [2]. You can wrap it in
+`new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply-array-like.js:5:16
       5| test.apply("", "foo"); // ERROR
@@ -116,9 +116,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:14:1
 
-Cannot call `test.apply` because in the `this` parameter: string [1], a primitive, cannot be used as a subtype of
-interface type [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype
-of an interface. [incompatible-type]
+Cannot call `test.apply` because in the `this` parameter: `string` [1], a primitive, cannot be used as a subtype of
+`interface {length: number}` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it
+as a subtype of an interface. [incompatible-type]
 
    apply-array-like.js:14:1
    14| test.apply("", y); // ERROR
@@ -380,9 +380,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:22:16
 
-Cannot call `test.apply` because in type argument `A`: string [1], a primitive, cannot be used as a subtype of
-`$ArrayLike` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of
-an interface. [incompatible-type]
+Cannot call `test.apply` because in type argument `A`: `string` [1], a primitive, cannot be used as a subtype of
+`interface {readonly length: number; readonly [indexer: number]: unknown}` [2]. You can wrap it in `new String(...))` to
+turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply.js:22:16
     22| test.apply("", "not array"); // error: string ~> object
@@ -412,8 +412,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:22:16
 
-string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
-it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+`string` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, any, any>` [2]. You can wrap it in
+`new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply.js:22:16
      22| test.apply("", "not array"); // error: string ~> object
@@ -852,8 +852,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:51:11
 
-Cannot call `f` with object literal bound to `y` because in property `x`: number literal `234` [1] is incompatible with
-number literal `123` [2]. [incompatible-type]
+Cannot call `f` with object literal bound to `y` because in property `x`: `234` [1] is incompatible with `123` [2].
+[incompatible-type]
 
    call.js:51:11
    51|     f({x: 234}); // error, 234 !~> 123
@@ -867,8 +867,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:57:11
 
-Cannot call `f` with object literal bound to `y` because in property `x`: boolean literal `true` [1] is incompatible
-with boolean literal `false` [2]. [incompatible-type]
+Cannot call `f` with object literal bound to `y` because in property `x`: `true` [1] is incompatible with `false` [2].
+[incompatible-type]
 
    call.js:57:11
    57|     f({x: true}); // error, true !~> false

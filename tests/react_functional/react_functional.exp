@@ -32,7 +32,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:17:2
 
-Cannot create `Z` element because number [1] is not a React component. [not-a-component]
+Cannot create `Z` element because `number` [1] is not a React component. [not-a-component]
 
    test.js:17:2
    17| <Z />; // error, expected React component

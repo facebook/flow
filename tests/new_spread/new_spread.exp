@@ -270,7 +270,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:50:2
 
-Cannot cast object literal to `O5` because property `q` is extra in object literal [1] but missing in object type [2].
+Cannot cast object literal to `O5` because property `q` is extra in object literal [1] but missing in `{p: T}` [2].
 Exact objects do not accept extra props. [incompatible-type]
 
    type.js:50:2
@@ -970,8 +970,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:21:2
 
-Cannot cast object literal to `O2` because property `p` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to `O2` because property `p` is extra in object literal [1] but missing in `{}` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    type_void.js:21:2
    21| ({p:x} as O2); // error
@@ -1039,8 +1039,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:37:2
 
-Cannot cast object literal to `O4` because property `p` is extra in object literal [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to `O4` because property `p` is extra in object literal [1] but missing in `{}` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    type_void.js:37:2
    37| ({p:x} as O4); // error

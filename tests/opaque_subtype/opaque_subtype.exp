@@ -134,7 +134,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `o` to `A` because: [incompatible-type]
  - Either in property `value`: `string` [1] is incompatible with `number` [2].
- - Or in property `tag`: `O` [3] is incompatible with number literal `2` [4].
+ - Or in property `tag`: `1` [3] is incompatible with `2` [4].
 
    distribute.js:9:1
    9| o as A<number>; // error
@@ -147,9 +147,9 @@ References:
    distribute.js:9:8
    9| o as A<number>; // error
              ^^^^^^ [2]
-   distribute.js:7:18
-   7| declare const o: O;
-                       ^ [3]
+   distribute.js:3:29
+   3| type A<T> = { readonly tag: 1, value: T } | { readonly tag: 2, value: T };
+                                  ^ [3]
    distribute.js:3:61
    3| type A<T> = { readonly tag: 1, value: T } | { readonly tag: 2, value: T };
                                                                   ^ [4]
@@ -158,7 +158,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ distribute.js:9:1
 
 Cannot cast `o` to `A` because: [incompatible-type]
- - Either in property `tag`: `O` [1] is incompatible with number literal `1` [2].
+ - Either in property `tag`: `2` [1] is incompatible with `1` [2].
  - Or in property `value`: `string` [3] is incompatible with `number` [4].
 
    distribute.js:9:1
@@ -166,9 +166,9 @@ Cannot cast `o` to `A` because: [incompatible-type]
       ^
 
 References:
-   distribute.js:7:18
-   7| declare const o: O;
-                       ^ [1]
+   distribute.js:3:61
+   3| type A<T> = { readonly tag: 1, value: T } | { readonly tag: 2, value: T };
+                                                                  ^ [1]
    distribute.js:3:29
    3| type A<T> = { readonly tag: 1, value: T } | { readonly tag: 2, value: T };
                                   ^ [2]

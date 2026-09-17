@@ -744,7 +744,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:25
 
-Cannot access `Obj` [1] with computed property using string [2]. [invalid-computed-prop]
+Cannot access `Obj` [1] with computed property using `string` [2]. [invalid-computed-prop]
 
    test.js:47:25
    47| type Nonexistant2 = Obj[string]; // Error

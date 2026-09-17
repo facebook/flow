@@ -108,10 +108,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:36:21
 
-Cannot implement `C1` because it is not an interface. [cannot-implement]
+Cannot implement `C1` [1] because it is not an interface. [cannot-implement]
 
    36| class C7 implements C1 {} // error: C1 is a class, expected an interface
-                           ^^
+                           ^^ [1]
 
 
 

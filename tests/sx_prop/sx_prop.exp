@@ -1,7 +1,8 @@
 Error ------------------------------------------------------------------------------------------------- no_import.js:5:2
 
-Cannot create `div` element because property `sx` is extra in props [1] but missing in props of `div` [2]. Exact objects
-do not accept extra props. [incompatible-type]
+Cannot create `div` element because property `sx` is extra in `{sx: Array<1 | 2 | 3>}` [1] but missing in
+`{className?: string, ref?: React.RefSetter<HTMLDivElement>, style?: {[string]: string | number}}` [2]. Exact objects do
+not accept extra props. [incompatible-type]
 
    no_import.js:5:2
    5| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div
@@ -79,8 +80,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:14:2
 
-Cannot create `MyComponent` element because property `sx` is extra in props [1] but missing in object type [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot create `MyComponent` element because property `sx` is extra in `{name: "hello", sx: Array<{color: string}>}` [1]
+but missing in `{name: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    uppercase.js:14:2
    14| <MyComponent name="hello" sx={[styles.foo]} />; // ERROR — sx is not in MyComponent's props
@@ -97,8 +98,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- wrong_import.js:6:2
 
-Cannot create `div` element because property `sx` is extra in props [1] but missing in props of `div` [2]. Exact objects
-do not accept extra props. [incompatible-type]
+Cannot create `div` element because property `sx` is extra in `{sx: Array<1 | 2 | 3>}` [1] but missing in
+`{className?: string, ref?: React.RefSetter<HTMLDivElement>, style?: {[string]: string | number}}` [2]. Exact objects do
+not accept extra props. [incompatible-type]
 
    wrong_import.js:6:2
    6| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div

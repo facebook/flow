@@ -90,8 +90,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- satisfies.js:130:4
 
-Cannot cast object literal to object type because property `b` is extra in object literal [1] but missing in object
-type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast object literal to object type because property `b` is extra in object literal [1] but missing in
+`{readonly a: number}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    satisfies.js:130:4
    130|   ({a: 1, b: 2}) satisfies {readonly a: number}; // ERROR: extra `b`

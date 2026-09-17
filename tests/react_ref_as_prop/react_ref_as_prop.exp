@@ -245,8 +245,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_checking.js:8:2
 
-Cannot create `FnWithoutRefProp` element because property `ref` is extra in props [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot create `FnWithoutRefProp` element because property `ref` is extra in `{foo: "bar", ref: (_: ?any) => void}` [1]
+but missing in `{foo: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    jsx_checking.js:8:2
    8| <FnWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
@@ -320,8 +320,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- jsx_checking.js:18:2
 
-Cannot create `CompWithoutRefProp` element because property `ref` is extra in props [1] but missing in props of
-component CompWithoutRefProp [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot create `CompWithoutRefProp` element because property `ref` is extra in `{foo: "bar", ref: (_: ?any) => void}` [1]
+but missing in `{readonly foo: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    jsx_checking.js:18:2
    18| <CompWithoutRefProp foo="bar" ref={(_: ?HTMLElement) => {}} />; // error: extra ref prop
@@ -362,8 +362,9 @@ Cannot resolve name `HTMLElement`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------- subtyping.js:6:1
 
-Cannot cast `FnWithoutRefProp` to component because property `ref` is extra in props [1] but missing in object type [2].
-Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `FnWithoutRefProp` to component because property `ref` is extra in
+`{foo: string, ref: React.RefSetter<unknown>}` [1] but missing in `{foo: string}` [2]. Exact objects do not accept extra
+props. [incompatible-type]
 
    subtyping.js:6:1
    6| FnWithoutRefProp as component(foo: string, ref: React.RefSetter<unknown>); // error, since {ref: React.RefSetter<unknown>} ~> {} should be an error
@@ -416,8 +417,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:18:1
 
-Cannot cast `CompWithoutRefProp` to component because property `ref` is extra in props of component [1] but missing in
-props of component CompWithoutRefProp [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `CompWithoutRefProp` to component because property `ref` is extra in
+`{readonly foo: string, readonly ref: React.RefSetter<unknown>}` [1] but missing in `{readonly foo: string}` [2]. Exact
+objects do not accept extra props. [incompatible-type]
 
    subtyping.js:18:1
    18| CompWithoutRefProp as component(foo: string, ref: React.RefSetter<unknown>); // error: React.RefSetter<unknown> ~> void

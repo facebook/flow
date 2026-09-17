@@ -268,8 +268,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:70:5
 
-Cannot cast `x9_1` to number literal `1` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `x9_1` to number literal `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    function_typeof.js:70:5
    70|     x9_1 as 1; // error 2 ~> 1
@@ -286,8 +285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:73:5
 
-Cannot cast `x9_2` to number literal `1` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `x9_2` to number literal `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    function_typeof.js:73:5
    73|     x9_2 as 1; // error 2 ~> 1
@@ -488,8 +486,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:62:5
 
-Cannot cast `x9_1` to number literal `1` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `x9_1` to number literal `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    function_typeof_import.js:62:5
    62|     x9_1 as 1; // error 2 ~> 1
@@ -506,8 +503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:65:5
 
-Cannot cast `x9_2` to number literal `1` because number literal `2` [1] is incompatible with number literal `1` [2].
-[incompatible-type]
+Cannot cast `x9_2` to number literal `1` because `2` [1] is incompatible with `1` [2]. [incompatible-type]
 
    function_typeof_import.js:65:5
    65|     x9_2 as 1; // error 2 ~> 1

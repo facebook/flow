@@ -323,8 +323,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:117:5
 
-Cannot cast `x.a` to number literal `0` because number literal `1` [1] is incompatible with number literal `0` [2].
-[incompatible-type]
+Cannot cast `x.a` to number literal `0` because `1` [1] is incompatible with `0` [2]. [incompatible-type]
 
    refinement.js:117:5
    117|     x.a as 0; // ERROR: is optional so unknown
@@ -359,8 +358,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:126:5
 
-Cannot cast `x` to interface type because in property `a`: number literal `0` [1] is incompatible with number literal
-`1` [2]. [incompatible-type]
+Cannot cast `x` to interface type because in property `a`: `0` [1] is incompatible with `1` [2]. [incompatible-type]
 
    refinement.js:126:5
    126|     x as interface {a: 1, b: void}; // ERROR: could exist

@@ -471,8 +471,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:46:20
 
-Cannot assign `{...}` to `x` because property `a` is extra in object type [1] but missing in object literal [2]. Exact
-objects do not accept extra props. [incompatible-type]
+Cannot assign `{...}` to `x` because property `a` is extra in `{a: number, ...}` [1] but missing in object literal [2].
+Exact objects do not accept extra props. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.

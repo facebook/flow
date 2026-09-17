@@ -104,8 +104,8 @@ Redundant argument. This argument doesn't change any lint settings. [lint-settin
 
 Error --------------------------------------------------------------------------------------- simple_sketchies.js:120:20
 
-Avoid using `&&` to check the value of number [1]. Consider handling falsy values (0 and NaN) by using a conditional to
-choose an explicit default instead. [sketchy-number-and]
+Avoid using `&&` to check the value of `number` [1]. Consider handling falsy values (0 and NaN) by using a conditional
+to choose an explicit default instead. [sketchy-number-and]
 
    simple_sketchies.js:120:20
    120| var sketchyFalse = val2 && false; /* sketchy */ /*flowlint-next-line sketchy-null:error*/ /* flowlint-line sketchy-null:error */

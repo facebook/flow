@@ -164,8 +164,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:40:5
 
-Cannot extend `C` [1] with `D1` because in property `m`: function [2], a non-type-guard function, is incompatible with
-function [3], which is a type-guard function. [function-predicate]
+Cannot extend `C` [1] with `D1` because in property `m`: `(this: this, x: unknown) => boolean` [2], a non-type-guard
+function, is incompatible with `(this: this, x: unknown) => x is number` [3], which is a type-guard function.
+[function-predicate]
 
    classes.js:40:5
            v------------------------------------------------------
@@ -299,8 +300,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:107:5
 
-Cannot extend `C` [1] with `D1` because in property `m`: function [2], a non-type-guard function, is incompatible with
-function type [3], which is a type-guard function. [function-predicate]
+Cannot extend `C` [1] with `D1` because in property `m`: `(this: this, x: unknown) => boolean` [2], a non-type-guard
+function, is incompatible with `(this: this, x: unknown) => x is number` [3], which is a type-guard function.
+[function-predicate]
 
    classes.js:107:5
             v------------------------------------------------------
@@ -939,8 +941,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:29:5
 
-Cannot call `takesGuardTwoParams` with function bound to `fn` because function [1], a non-type-guard function, is
-incompatible with function type [2], which is a type-guard function. [function-predicate]
+Cannot call `takesGuardTwoParams` with function bound to `fn` because
+`(value: unknown, otherValue: any) => boolean` [1], a non-type-guard function, is incompatible with
+`(x: unknown, y: unknown) => implies x is number` [2], which is a type-guard function. [function-predicate]
 
    inferred.js:29:5
            v--------------------------------------------
@@ -966,8 +969,9 @@ An annotation on `otherValue` is required because Flow cannot infer its type fro
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:34:5
 
-Cannot call `takesGuardTwoParams` with function bound to `fn` because function [1], a non-type-guard function, is
-incompatible with function type [2], which is a type-guard function. [function-predicate]
+Cannot call `takesGuardTwoParams` with function bound to `fn` because
+`(value: unknown, otherValue: unknown) => boolean` [1], a non-type-guard function, is incompatible with
+`(x: unknown, y: unknown) => implies x is number` [2], which is a type-guard function. [function-predicate]
 
    inferred.js:34:5
    34|     (value: unknown, otherValue: unknown) => typeof value === "number" // error can only infer type guard
@@ -1080,8 +1084,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:60:3
 
-Cannot cast `fn` to function type because function [1], a non-type-guard function, is incompatible with function
-type [2], which is a type-guard function. [function-predicate]
+Cannot cast `fn` to function type because `(value: unknown) => boolean` [1], a non-type-guard function, is incompatible
+with `(value: unknown) => implies value is number` [2], which is a type-guard function. [function-predicate]
 
    inferred.js:60:3
    60|   fn as (value: unknown) => implies value is number; // error non type guard
@@ -1098,8 +1102,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:61:3
 
-Cannot cast `fn` to function type because function [1], a non-type-guard function, is incompatible with function
-type [2], which is a type-guard function. [function-predicate]
+Cannot cast `fn` to function type because `(value: unknown) => boolean` [1], a non-type-guard function, is incompatible
+with `(value: unknown) => value is number` [2], which is a type-guard function. [function-predicate]
 
    inferred.js:61:3
    61|   fn as (value: unknown) => value is number; // error non type guard
@@ -1133,8 +1137,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:80:3
 
-Cannot cast `u2` to number literal `4` because number [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot cast `u2` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    inferred.js:80:3
    80|   u2 as 4; // TODO(T225771563) okay
@@ -1151,8 +1154,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:81:3
 
-Cannot cast `u2` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `u2` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    inferred.js:81:3
    81|   u2 as 3; // error 4 ~> 3
@@ -1169,8 +1171,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:93:3
 
-Cannot cast `u1` to number literal `4` because number [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot cast `u1` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    inferred.js:93:3
    93|   u1 as 4; // TODO(T225771563) okay
@@ -1187,8 +1188,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:94:3
 
-Cannot cast `u1` to number literal `3` because number [1] is incompatible with number literal `3` [2].
-[incompatible-type]
+Cannot cast `u1` to number literal `3` because `number` [1] is incompatible with `3` [2]. [incompatible-type]
 
    inferred.js:94:3
    94|   u1 as 3; // error 4 ~> 3
@@ -1205,8 +1205,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:99:3
 
-Cannot cast `u2` to number literal `4` because number [1] is incompatible with number literal `4` [2].
-[incompatible-type]
+Cannot cast `u2` to number literal `4` because `number` [1] is incompatible with `4` [2]. [incompatible-type]
 
    inferred.js:99:3
    99|   u2 as 4; // error number ~> 4
@@ -1231,8 +1230,8 @@ An annotation on `x` is required because Flow cannot infer its type from local c
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:142:5
 
-Cannot call `takesGuard` with function bound to `guard` because function [1], a non-type-guard function, is incompatible
-with function type [2], which is a type-guard function. [function-predicate]
+Cannot call `takesGuard` with function bound to `guard` because `(z: number) => number` [1], a non-type-guard function,
+is incompatible with `(x: number) => implies x is any` [2], which is a type-guard function. [function-predicate]
 
    inferred.js:142:5
    142|     (z) => z, // error non type guard function
@@ -1318,8 +1317,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
 
-Cannot cast `fn` to function type because function [1], a non-type-guard function, is incompatible with function
-type [2], which is a type-guard function. [function-predicate]
+Cannot cast `fn` to function type because `(x: unknown) => void | false | boolean` [1], a non-type-guard function, is
+incompatible with `(x: unknown) => implies x is unknown` [2], which is a type-guard function. [function-predicate]
 
    inferred.js:186:3
    186|   fn as (x: unknown) => implies x is unknown; // error non-type guard function
@@ -1504,8 +1503,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
 
-boolean [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Boolean(...))` to turn
-it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+`boolean` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, empty, empty>` [2]. You can wrap it in
+`new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    invalid.js:19:34
      19| function *generator(x: unknown): x is number { // error
@@ -2835,8 +2834,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:10:10
 
-Cannot return `f` because function type [1], a non-type-guard function, is incompatible with function type [2], which is
-a type-guard function. [function-predicate]
+Cannot return `f` because `(x: unknown) => boolean` [1], a non-type-guard function, is incompatible with
+`(x: unknown) => x is number` [2], which is a type-guard function. [function-predicate]
 
    subtyping.js:10:10
    10|   return f; // error non type predicate
@@ -3404,8 +3403,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:181:6
 
-Cannot call `fn` with `new B` bound to `cb` because in property `m`: function type [1], a non-type-guard function, is
-incompatible with function type [2], which is a type-guard function. [function-predicate]
+Cannot call `fn` with `new B` bound to `cb` because in property `m`: `(this: B) => boolean` [1], a non-type-guard
+function, is incompatible with `(this: interface {}) => this is D` [2], which is a type-guard function.
+[function-predicate]
 
    this.js:181:6
    181|   fn(new B); // error no type-guard
@@ -3854,8 +3854,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:103:5
 
-Cannot extend `A` [1] with `Dropped` because in property `isB`: function [2], a non-type-guard function, is incompatible
-with function [3], which is a type-guard function. [function-predicate]
+Cannot extend `A` [1] with `Dropped` because in property `isB`: `(this: this) => boolean` [2], a non-type-guard
+function, is incompatible with `(this: this) => this is B` [3], which is a type-guard function. [function-predicate]
 
    this_classes.js:103:5
             v-------------------------------------------
@@ -4152,8 +4152,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:291:8
 
-Cannot call `want` with `new NoGuard()` bound to `x` because in property `isB`: function [1], a non-type-guard function,
-is incompatible with function type [2], which is a type-guard function. [function-predicate]
+Cannot call `want` with `new NoGuard()` bound to `x` because in property `isB`: `(this: NoGuard) => boolean` [1], a
+non-type-guard function, is incompatible with `(this: interface {}) => this is B` [2], which is a type-guard function.
+[function-predicate]
 
    this_classes.js:291:8
    291|   want(new NoGuard()); // error no type-guard
@@ -4173,8 +4174,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- this_classes.js:305:5
 
-Cannot implement `I` [1] with `BadImpl` because in property `isB`: function [2], a non-type-guard function, is
-incompatible with function type [3], which is a type-guard function. [function-predicate]
+Cannot implement `I` [1] with `BadImpl` because in property `isB`: `(this: this) => boolean` [2], a non-type-guard
+function, is incompatible with `(this: this) => this is B` [3], which is a type-guard function. [function-predicate]
 
    this_classes.js:305:5
             v-------------------------------------------
@@ -4251,8 +4252,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:333:14
 
-Cannot return `(typeof this.a) === 'number'` because `A` [1] is not a subtype of object type [2]. Class instances are
-not subtypes of object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot return `(typeof this.a) === 'number'` because `A` [1] is not a subtype of `{a: number, ...}` [2]. Class instances
+are not subtypes of object types; consider rewriting `{a: number, ...}` [2] as an interface. [class-object-subtyping]
 
 The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
 type object type [2]. See 1. in
@@ -4293,8 +4294,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:338:14
 
-Cannot return `true` because `A` [1] is not a subtype of object type [2]. Class instances are not subtypes of object
-types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot return `true` because `A` [1] is not a subtype of `{...}` [2]. Class instances are not subtypes of object types;
+consider rewriting `{...}` [2] as an interface. [class-object-subtyping]
 
 The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -4342,8 +4343,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:348:14
 
-Cannot return `true` because `A` [1] is not a subtype of object type [2]. Class instances are not subtypes of object
-types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot return `true` because `A` [1] is not a subtype of `{zzz: string, ...}` [2]. Class instances are not subtypes of
+object types; consider rewriting `{zzz: string, ...}` [2] as an interface. [class-object-subtyping]
 
 The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.

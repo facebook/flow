@@ -989,9 +989,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:5:3
 
-Cannot cast `1` to interface type because number literal `1` [1], a primitive, cannot be used as a subtype of interface
-type [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an
-interface. [incompatible-type]
+Cannot cast `1` to interface type because `1` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You
+can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    primitives.js:5:3
    5|   1 as interface {}; // ERROR
@@ -1005,7 +1005,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitives.js:7:3
 
-Cannot cast `x` to interface type because number [1], a primitive, cannot be used as a subtype of interface type [2].
+Cannot cast `x` to interface type because `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1024,9 +1024,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:13:3
 
-Cannot cast `true` to interface type because boolean literal `true` [1], a primitive, cannot be used as a subtype of
-interface type [2]. You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype
-of an interface. [incompatible-type]
+Cannot cast `true` to interface type because `true` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
+You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    primitives.js:13:3
    13|   true as interface {}; // ERROR
@@ -1040,7 +1040,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:15:3
 
-Cannot cast `x` to interface type because boolean [1], a primitive, cannot be used as a subtype of interface type [2].
+Cannot cast `x` to interface type because `boolean` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1076,7 +1076,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:4:1
 
-Cannot cast `s` to interface type because string [1], a primitive, cannot be used as a subtype of interface type [2].
+Cannot cast `s` to interface type because `string` [1], a primitive, cannot be used as a subtype of `interface {}` [2].
 You can wrap it in `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
 [incompatible-type]
 
@@ -1095,8 +1095,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:5:17
 
-string [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new String(...))` to turn
-it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+`string` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, unknown, empty>` [2]. You can wrap it in
+`new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    string.js:5:17
       5| for (const c of s) {} // ERROR

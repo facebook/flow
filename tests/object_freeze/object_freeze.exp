@@ -161,8 +161,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:29:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in frozen object literal [1] but
-missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in
+`{readonly bar: "12345", readonly baz: number}` [1] but missing in `{readonly bar: "12345"}` [2]. Exact objects do not
+accept extra props. [incompatible-type]
 
    downstream.js:29:1
    29| frozenObjectWithSpread as {readonly bar: '12345', }; // error baz is missing in frozenObjectWithSpread
@@ -205,8 +206,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:39:1
 
-Cannot cast `frozenNegativeNumber.foo` to number literal `1` because number literal `-1` [1] is incompatible with number
-literal `1` [2]. [incompatible-type]
+Cannot cast `frozenNegativeNumber.foo` to number literal `1` because `-1` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    downstream.js:39:1
    39| frozenNegativeNumber.foo as 1; // error -1 ~> 1
@@ -223,8 +224,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:41:1
 
-Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number literal `1` [1] is incompatible with number literal
-`-1` [2]. [incompatible-type]
+Cannot cast `1` to `typeof frozenNegativeNumber.foo` because `1` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    downstream.js:41:1
    41| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1
@@ -419,8 +419,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:35:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in frozen object literal [1] but
-missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `frozenObjectWithSpread` to object type because property `baz` is extra in
+`{readonly bar: "12345", readonly baz: number}` [1] but missing in `{readonly bar: "12345"}` [2]. Exact objects do not
+accept extra props. [incompatible-type]
 
    object_freeze.js:35:1
    35| frozenObjectWithSpread as {readonly bar: '12345', }; // error baz is missing in frozenObjectWithSpread
@@ -463,8 +464,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:45:1
 
-Cannot cast `frozenNegativeNumber.foo` to number literal `1` because number literal `-1` [1] is incompatible with number
-literal `1` [2]. [incompatible-type]
+Cannot cast `frozenNegativeNumber.foo` to number literal `1` because `-1` [1] is incompatible with `1` [2].
+[incompatible-type]
 
    object_freeze.js:45:1
    45| frozenNegativeNumber.foo as 1; // error -1 ~> 1
@@ -481,8 +482,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:47:1
 
-Cannot cast `1` to `typeof frozenNegativeNumber.foo` because number literal `1` [1] is incompatible with number literal
-`-1` [2]. [incompatible-type]
+Cannot cast `1` to `typeof frozenNegativeNumber.foo` because `1` [1] is incompatible with `-1` [2]. [incompatible-type]
 
    object_freeze.js:47:1
    47| 1 as typeof frozenNegativeNumber.foo; // error 1 ~> -1

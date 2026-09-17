@@ -42,8 +42,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unary.js:28:10
 
-Cannot return `!a` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot return `!a` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    unary.js:28:10
    28|   return !a; // error, true ~> false
@@ -57,8 +56,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unary.js:36:10
 
-Cannot return `!a` because boolean literal `true` [1] is incompatible with boolean literal `false` [2].
-[incompatible-type]
+Cannot return `!a` because `true` [1] is incompatible with `false` [2]. [incompatible-type]
 
    unary.js:36:10
    36|   return !a; // error, true ~> false
@@ -72,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unary.js:64:11
 
-Cannot perform unary plus because a bigint [1] cannot be coerced to number. [bigint-num-coerce]
+Cannot perform unary plus because a `bigint` [1] cannot be coerced to number. [bigint-num-coerce]
 
    unary.js:64:11
    64|   return +y; // error, bigint cannot be coerced to number

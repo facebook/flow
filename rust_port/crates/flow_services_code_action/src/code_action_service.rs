@@ -1407,15 +1407,11 @@ pub fn ast_transforms_of_error(
                 vec![]
             }
         }
-        ErrorMessage::EClassToObject(box EClassToObjectData {
-            reason_class,
-            reason_obj,
-            ..
-        }) => {
-            let error_loc = reason_class.loc().dupe();
+        ErrorMessage::EClassToObject(box EClassToObjectData { lower, upper, .. }) => {
+            let error_loc = lower.reason.loc().dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                let obj_loc = reason_obj.def_loc().dupe();
-                let original = flow_common::reason::string_of_desc::<Loc>(&reason_obj.desc);
+                let obj_loc = upper.reason.def_loc().dupe();
+                let original = flow_common::reason::string_of_desc::<Loc>(&upper.reason.desc);
                 let title = format!("Rewrite {} as an interface", original);
                 vec![AstTransformOfError {
                     title,

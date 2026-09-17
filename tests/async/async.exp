@@ -256,8 +256,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- generator.js:26:12
 
-Cannot yield `1` because number [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in
-`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+Cannot yield `1` because `number` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, empty, void>` [2].
+You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    generator.js:26:12
      26|     yield* 1; // error non iterable

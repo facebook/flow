@@ -339,7 +339,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakref.js:17:23
 
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
- - Either boolean [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `boolean` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `boolean` [1] is incompatible with `symbol` [3].
 
@@ -362,7 +362,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakref.js:18:23
 
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
- - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
@@ -385,7 +385,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakref.js:19:23
 
 Cannot call `WeakRef` because in type argument `T`: [incompatible-type]
- - Either string [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `string` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `string` [1] is incompatible with `symbol` [3].
 
@@ -408,7 +408,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:24
 
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
- - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
@@ -431,7 +431,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:27
 
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
- - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
@@ -454,7 +454,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:14:30
 
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
- - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 
@@ -477,7 +477,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- weakset.js:31:15
 
 Cannot call `WeakSet` because in type argument `T`: [incompatible-type]
- - Either number [1], a primitive, cannot be used as a subtype of interface type [2]. You can wrap it in
+ - Either `number` [1], a primitive, cannot be used as a subtype of `interface {}` [2]. You can wrap it in
    `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
  - Or `number` [1] is incompatible with `symbol` [3].
 

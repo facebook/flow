@@ -18,8 +18,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
 
-Cannot cast `obj` to object type because property `special` is extra in object literal [1] but missing in object
-type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot cast `obj` to object type because property `special` is extra in object literal [1] but missing in
+`{other: string}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    defs.js:13:1
    13| obj as {['other']: string}; // error: 'other' missing, 'special' extra
