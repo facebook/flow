@@ -9,11 +9,13 @@
 //! These tests document existing behaviors (including unimplemented/error branches)
 //! and are intended to anchor the Rust implementation before any fork/divergence.
 //!
-//! Each test lowers a fixture and compares the printed result against a golden string,
+//! Most tests lower a fixture and compare the printed result against a golden string,
 //! so the expected output in the test *is* the documentation of the transform. Printing
 //! goes through `flow_parser_utils_output`, a test-only dependency; its formatting differs
 //! from Babel's, so these goldens are not byte-identical to the snapshots in
 //! `fbcode/flow/packages/flow-parser/__tests__/*-test.js`, only equivalent modulo layout.
+//! Tests for source locations compare checked-in ESTree JSON instead, since printed JavaScript
+//! omits them.
 //!
 //! Error paths and `BabelMetadata` have no printed form and are asserted directly.
 
@@ -25,7 +27,9 @@ use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::function;
 use flow_parser::ast::statement;
 use flow_parser::ast::statement::StatementInner;
+use flow_parser::estree_translator;
 use flow_parser::loc::Loc;
+use flow_parser::offset_utils::OffsetTable;
 use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::pretty_printer;
 
@@ -76,6 +80,61 @@ fn print(program: &Program) -> String {
     pretty_printer::print(false, &layout).contents()
 }
 
+fn print_estree(source: &str, program: &Program) -> String {
+    let offset_table = OffsetTable::make(source);
+    let config = estree_translator::Config {
+        include_locs: true,
+        include_filename: true,
+        offset_style: estree_translator::OffsetStyle::JsIndices,
+    };
+    format!(
+        "{:#}\n",
+        estree_translator::program(&offset_table, &config, program)
+    )
+}
+
+fn test_resource_dir(resource: &str, cargo_path: &str) -> std::path::PathBuf {
+    match buck_resources::get(resource) {
+        Ok(resource_dir) => resource_dir.join(cargo_path),
+        Err(_) => {
+            let Some(cargo_manifest_dir) = option_env!("CARGO_MANIFEST_DIR") else {
+                panic!("test resources should be available from Buck or Cargo");
+            };
+            std::path::Path::new(cargo_manifest_dir).join(cargo_path)
+        }
+    }
+}
+
+fn fixture_dir() -> std::path::PathBuf {
+    test_resource_dir(
+        "flow/rust_port/crates/flow_parser_wasm/test_fixtures",
+        "tests/fixtures",
+    )
+}
+
+fn snapshot_dir() -> std::path::PathBuf {
+    test_resource_dir(
+        "flow/rust_port/crates/flow_parser_wasm/test_snapshots",
+        "tests/__snapshots__",
+    )
+}
+
+fn read_test_data(path: &std::path::Path) -> String {
+    std::fs::read_to_string(path)
+        .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()))
+}
+
+fn assert_snapshot(name: &str, actual: &str) {
+    let path = snapshot_dir().join(name);
+    let expected = read_test_data(&path);
+    assert_eq!(
+        actual,
+        expected.as_str(),
+        "snapshot mismatch for {}",
+        path.display()
+    );
+}
+
 fn assert_lowering_error(
     source: &str,
     expected_message: &str,
@@ -112,6 +171,17 @@ const SymbolE = require("flow-enums-runtime")(
 );
 const BigIntE = require("flow-enums-runtime")({ A: 1n, B: 2n });
 "#
+    );
+}
+
+#[test]
+fn enum_lowering_preserves_source_locations_in_estree() {
+    let source = read_test_data(&fixture_dir().join("enum_lowering/source.js"));
+    let lowered = enum_lowering::lower_program(&parse(&source), EnumRuntime::Default);
+    assert_snapshot("enum_lowering/lowered.js", &print(&lowered));
+    assert_snapshot(
+        "enum_lowering/estree.json",
+        &print_estree(&source, &lowered),
     );
 }
 

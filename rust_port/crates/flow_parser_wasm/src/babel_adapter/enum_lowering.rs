@@ -65,6 +65,18 @@ impl EnumLowerer {
         }
     }
 
+    fn member_loc(member: &statement::enum_declaration::Member<Loc>) -> &Loc {
+        use statement::enum_declaration::Member;
+
+        match member {
+            Member::BooleanMember(member) => &member.loc,
+            Member::NumberMember(member) => &member.loc,
+            Member::StringMember(member) => &member.loc,
+            Member::BigIntMember(member) => &member.loc,
+            Member::DefaultedMember(member) => &member.loc,
+        }
+    }
+
     fn member_key(
         member: &statement::enum_declaration::Member<Loc>,
     ) -> expression::object::Key<Loc, Loc> {
@@ -87,12 +99,16 @@ impl EnumLowerer {
         }
     }
 
+    /// `construct_loc` is the span of the whole `enum ... { ... }` statement. Nodes that
+    /// correspond to a specific piece of source (an object property key) take that piece's
+    /// location instead; only scaffolding with no source counterpart — the runtime callee, the
+    /// call, the `const` wrapper — falls back to the construct.
     fn map_enum(
         &mut self,
+        construct_loc: &Loc,
         declaration: &statement::EnumDeclaration<Loc, Loc>,
     ) -> statement::Statement<Loc, Loc> {
-        let construct_loc = builders::generated_loc();
-        let runtime = self.runtime_expression(&construct_loc);
+        let runtime = self.runtime_expression(construct_loc);
         let mirrored = declaration.body.members.first().is_none_or(|member| {
             matches!(
                 member,
@@ -113,14 +129,14 @@ impl EnumLowerer {
                 .iter()
                 .map(|member| {
                     ast_builder::expressions::array_expression(builders::string_literal(
-                        &construct_loc,
+                        Self::member_loc(member),
                         Self::member_name(member).as_str(),
                     ))
                 })
                 .collect();
             builders::call(
-                &construct_loc,
-                builders::member(&construct_loc, runtime, "Mirrored"),
+                construct_loc,
+                builders::member(construct_loc, runtime, "Mirrored"),
                 vec![ast_builder::expressions::array(
                     Some(construct_loc.dupe()),
                     None,
@@ -133,27 +149,28 @@ impl EnumLowerer {
                 .members
                 .iter()
                 .map(|member| {
+                    let member_loc = Self::member_loc(member);
                     let value =
                         builders::expression_from_enum_member(member).unwrap_or_else(|| {
                             builders::call(
-                                &construct_loc,
-                                builders::identifier(&construct_loc, "Symbol"),
+                                member_loc,
+                                builders::identifier(member_loc, "Symbol"),
                                 vec![builders::string_literal(
-                                    &construct_loc,
+                                    member_loc,
                                     Self::member_name(member).as_str(),
                                 )],
                             )
                         });
                     ast_builder::expressions::object_property(
                         Some(false),
-                        Some(builders::generated_loc()),
+                        Some(member_loc.dupe()),
                         Self::member_key(member),
                         value,
                     )
                 })
                 .collect();
             builders::call(
-                &construct_loc,
+                construct_loc,
                 runtime,
                 vec![ast_builder::expressions::object_(
                     None,
@@ -164,10 +181,10 @@ impl EnumLowerer {
         };
 
         ast_builder::statements::const_declaration(
-            Some(builders::generated_loc()),
+            Some(construct_loc.dupe()),
             None,
             vec![ast_builder::statements::variable_declarator_generic(
-                Some(builders::generated_loc()),
+                Some(construct_loc.dupe()),
                 builders::identifier_pattern(&declaration.id),
                 Some(value),
             )],
@@ -189,7 +206,7 @@ impl<'ast> AstVisitor<'ast, Loc> for EnumLowerer {
         statement: &'ast statement::Statement<Loc, Loc>,
     ) -> statement::Statement<Loc, Loc> {
         match &**statement {
-            StatementInner::EnumDeclaration { inner, .. } => self.map_enum(inner),
+            StatementInner::EnumDeclaration { loc, inner } => self.map_enum(loc, inner),
             _ => ast_visitor::map_statement_default(self, statement),
         }
     }
@@ -204,11 +221,13 @@ impl<'ast> AstVisitor<'ast, Loc> for EnumLowerer {
                 && let statement::export_default_declaration::Declaration::Declaration(declaration) =
                     &inner.declaration
                 && let StatementInner::EnumDeclaration {
+                    loc: enum_loc,
                     inner: enum_declaration,
-                    ..
                 } = &**declaration
             {
-                lowered.push(self.map_enum(enum_declaration));
+                // `loc` above is the `export default` statement; the synthesized `const` binding
+                // belongs to the enum itself, which has its own narrower span.
+                lowered.push(self.map_enum(enum_loc, enum_declaration));
                 lowered.push(statement::Statement::new(
                     StatementInner::ExportDefaultDeclaration {
                         loc: loc.dupe(),

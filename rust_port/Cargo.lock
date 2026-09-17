@@ -1230,6 +1230,7 @@ dependencies = [
 name = "flow_parser_wasm"
 version = "0.0.0"
 dependencies = [
+ "buck-resources",
  "dupe",
  "flow_data_structure_wrapper",
  "flow_parser",

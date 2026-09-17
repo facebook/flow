@@ -1,0 +1,685 @@
+{
+  "body": [
+    {
+      "declarations": [
+        {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 12,
+                "line": 1
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 5,
+                "line": 1
+              }
+            },
+            "name": "SymbolE",
+            "optional": false,
+            "range": [
+              5,
+              12
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "init": {
+            "arguments": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 4
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 0,
+                    "line": 1
+                  }
+                },
+                "properties": [
+                  {
+                    "computed": false,
+                    "key": {
+                      "loc": {
+                        "end": {
+                          "column": 3,
+                          "line": 2
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 2
+                        }
+                      },
+                      "name": "A",
+                      "optional": false,
+                      "range": [
+                        27,
+                        28
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "kind": "init",
+                    "loc": {
+                      "end": {
+                        "column": 3,
+                        "line": 2
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 2
+                      }
+                    },
+                    "method": false,
+                    "range": [
+                      27,
+                      28
+                    ],
+                    "shorthand": false,
+                    "type": "Property",
+                    "value": {
+                      "arguments": [
+                        {
+                          "loc": {
+                            "end": {
+                              "column": 3,
+                              "line": 2
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 2
+                            }
+                          },
+                          "range": [
+                            27,
+                            28
+                          ],
+                          "raw": "\"A\"",
+                          "type": "Literal",
+                          "value": "A"
+                        }
+                      ],
+                      "callee": {
+                        "loc": {
+                          "end": {
+                            "column": 3,
+                            "line": 2
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 2
+                          }
+                        },
+                        "name": "Symbol",
+                        "optional": false,
+                        "range": [
+                          27,
+                          28
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 3,
+                          "line": 2
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 2
+                        }
+                      },
+                      "optional": false,
+                      "range": [
+                        27,
+                        28
+                      ],
+                      "type": "CallExpression",
+                      "typeArguments": null
+                    }
+                  },
+                  {
+                    "computed": false,
+                    "key": {
+                      "loc": {
+                        "end": {
+                          "column": 3,
+                          "line": 3
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 3
+                        }
+                      },
+                      "name": "B",
+                      "optional": false,
+                      "range": [
+                        32,
+                        33
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "kind": "init",
+                    "loc": {
+                      "end": {
+                        "column": 3,
+                        "line": 3
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 3
+                      }
+                    },
+                    "method": false,
+                    "range": [
+                      32,
+                      33
+                    ],
+                    "shorthand": false,
+                    "type": "Property",
+                    "value": {
+                      "arguments": [
+                        {
+                          "loc": {
+                            "end": {
+                              "column": 3,
+                              "line": 3
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 3
+                            }
+                          },
+                          "range": [
+                            32,
+                            33
+                          ],
+                          "raw": "\"B\"",
+                          "type": "Literal",
+                          "value": "B"
+                        }
+                      ],
+                      "callee": {
+                        "loc": {
+                          "end": {
+                            "column": 3,
+                            "line": 3
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 3
+                          }
+                        },
+                        "name": "Symbol",
+                        "optional": false,
+                        "range": [
+                          32,
+                          33
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 3,
+                          "line": 3
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 3
+                        }
+                      },
+                      "optional": false,
+                      "range": [
+                        32,
+                        33
+                      ],
+                      "type": "CallExpression",
+                      "typeArguments": null
+                    }
+                  }
+                ],
+                "range": [
+                  0,
+                  36
+                ],
+                "type": "ObjectExpression"
+              }
+            ],
+            "callee": {
+              "arguments": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 1,
+                      "line": 4
+                    },
+                    "source": "lowering-test.js",
+                    "start": {
+                      "column": 0,
+                      "line": 1
+                    }
+                  },
+                  "range": [
+                    0,
+                    36
+                  ],
+                  "raw": "\"flow-enums-runtime\"",
+                  "type": "Literal",
+                  "value": "flow-enums-runtime"
+                }
+              ],
+              "callee": {
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 4
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 0,
+                    "line": 1
+                  }
+                },
+                "name": "require",
+                "optional": false,
+                "range": [
+                  0,
+                  36
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "loc": {
+                "end": {
+                  "column": 1,
+                  "line": 4
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 0,
+                  "line": 1
+                }
+              },
+              "optional": false,
+              "range": [
+                0,
+                36
+              ],
+              "type": "CallExpression",
+              "typeArguments": null
+            },
+            "loc": {
+              "end": {
+                "column": 1,
+                "line": 4
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 0,
+                "line": 1
+              }
+            },
+            "optional": false,
+            "range": [
+              0,
+              36
+            ],
+            "type": "CallExpression",
+            "typeArguments": null
+          },
+          "loc": {
+            "end": {
+              "column": 1,
+              "line": 4
+            },
+            "source": "lowering-test.js",
+            "start": {
+              "column": 0,
+              "line": 1
+            }
+          },
+          "range": [
+            0,
+            36
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 4
+        },
+        "source": "lowering-test.js",
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        36
+      ],
+      "type": "VariableDeclaration"
+    },
+    {
+      "declarations": [
+        {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 29,
+                "line": 5
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 20,
+                "line": 5
+              }
+            },
+            "name": "MirroredE",
+            "optional": false,
+            "range": [
+              57,
+              66
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "init": {
+            "arguments": [
+              {
+                "elements": [
+                  {
+                    "loc": {
+                      "end": {
+                        "column": 3,
+                        "line": 6
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 6
+                      }
+                    },
+                    "range": [
+                      71,
+                      72
+                    ],
+                    "raw": "\"C\"",
+                    "type": "Literal",
+                    "value": "C"
+                  },
+                  {
+                    "loc": {
+                      "end": {
+                        "column": 3,
+                        "line": 7
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 7
+                      }
+                    },
+                    "range": [
+                      76,
+                      77
+                    ],
+                    "raw": "\"D\"",
+                    "type": "Literal",
+                    "value": "D"
+                  }
+                ],
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 8
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 15,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  52,
+                  80
+                ],
+                "trailingComma": false,
+                "type": "ArrayExpression"
+              }
+            ],
+            "callee": {
+              "computed": false,
+              "loc": {
+                "end": {
+                  "column": 1,
+                  "line": 8
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 15,
+                  "line": 5
+                }
+              },
+              "object": {
+                "arguments": [
+                  {
+                    "loc": {
+                      "end": {
+                        "column": 1,
+                        "line": 8
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 15,
+                        "line": 5
+                      }
+                    },
+                    "range": [
+                      52,
+                      80
+                    ],
+                    "raw": "\"flow-enums-runtime\"",
+                    "type": "Literal",
+                    "value": "flow-enums-runtime"
+                  }
+                ],
+                "callee": {
+                  "loc": {
+                    "end": {
+                      "column": 1,
+                      "line": 8
+                    },
+                    "source": "lowering-test.js",
+                    "start": {
+                      "column": 15,
+                      "line": 5
+                    }
+                  },
+                  "name": "require",
+                  "optional": false,
+                  "range": [
+                    52,
+                    80
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 8
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 15,
+                    "line": 5
+                  }
+                },
+                "optional": false,
+                "range": [
+                  52,
+                  80
+                ],
+                "type": "CallExpression",
+                "typeArguments": null
+              },
+              "optional": false,
+              "property": {
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 8
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 15,
+                    "line": 5
+                  }
+                },
+                "name": "Mirrored",
+                "optional": false,
+                "range": [
+                  52,
+                  80
+                ],
+                "type": "Identifier",
+                "typeAnnotation": null
+              },
+              "range": [
+                52,
+                80
+              ],
+              "type": "MemberExpression"
+            },
+            "loc": {
+              "end": {
+                "column": 1,
+                "line": 8
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 15,
+                "line": 5
+              }
+            },
+            "optional": false,
+            "range": [
+              52,
+              80
+            ],
+            "type": "CallExpression",
+            "typeArguments": null
+          },
+          "loc": {
+            "end": {
+              "column": 1,
+              "line": 8
+            },
+            "source": "lowering-test.js",
+            "start": {
+              "column": 15,
+              "line": 5
+            }
+          },
+          "range": [
+            52,
+            80
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 8
+        },
+        "source": "lowering-test.js",
+        "start": {
+          "column": 15,
+          "line": 5
+        }
+      },
+      "range": [
+        52,
+        80
+      ],
+      "type": "VariableDeclaration"
+    },
+    {
+      "declaration": {
+        "loc": {
+          "end": {
+            "column": 29,
+            "line": 5
+          },
+          "source": "lowering-test.js",
+          "start": {
+            "column": 20,
+            "line": 5
+          }
+        },
+        "name": "MirroredE",
+        "optional": false,
+        "range": [
+          57,
+          66
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "exportKind": "value",
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 8
+        },
+        "source": "lowering-test.js",
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        37,
+        80
+      ],
+      "type": "ExportDefaultDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 1,
+      "line": 8
+    },
+    "source": "lowering-test.js",
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    80
+  ],
+  "type": "Program"
+}

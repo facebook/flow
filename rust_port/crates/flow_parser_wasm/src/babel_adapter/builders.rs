@@ -69,9 +69,16 @@ pub fn member(
     object: expression::Expression<Loc, Loc>,
     property: &str,
 ) -> expression::Expression<Loc, Loc> {
+    // Built from `members::identifier` rather than `members::identifier_by_name`, because the
+    // latter hardcodes `None` for the property identifier's location, which resolves to
+    // `LOC_NONE`. The property needs `loc` like every other node here.
     ast_builder::expressions::member(
         Some(loc.dupe()),
-        ast_builder::expressions::members::identifier_by_name(None, property, object),
+        ast_builder::expressions::members::identifier(
+            None,
+            ast_builder::identifiers::identifier(Some(loc.dupe()), property),
+            object,
+        ),
     )
 }
 
