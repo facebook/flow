@@ -5,7 +5,7 @@ ts_interop_arrays.d.ts
 
 [options]
 all=true
-no_flowlib=false
+builtin_lib=flowlib
 experimental.ts_syntax=true
 experimental.tslib_syntax=true
 module.file_ext=.js

@@ -1,5 +1,5 @@
 [options]
-no_flowlib=false
+builtin_lib=flowlib
 all=true
 dev_only.refinement_info_as_errors=true
 

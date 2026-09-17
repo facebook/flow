@@ -10,6 +10,6 @@
 all=true
 component_syntax=true
 enums=true
-no_flowlib=false
+builtin_lib=flowlib
 
 [strict]

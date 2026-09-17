@@ -8,7 +8,7 @@
 
 [options]
 all=true
-no_flowlib=true
+builtin_lib=prelude
 lazy_mode=true
 
 [strict]

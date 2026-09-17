@@ -193,7 +193,7 @@ fn make_options(
     flow_command_utils::file_options(
         flowconfig,
         root,
-        true,
+        Some("prelude"),
         temp_dir.as_path(),
         ignores,
         includes,

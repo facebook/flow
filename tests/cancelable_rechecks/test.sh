@@ -12,7 +12,7 @@ cp sleep.js.ignored sleep.js
 
 # Don't wait for init - this server is going to hang
 assert_ok "$FLOW" start . \
-  --all --no-flowlib \
+  --all --builtin-lib prelude \
   --file-watcher "none" \
   --log-file "$FLOW_LOG_FILE" \
   --monitor-log-file "$FLOW_MONITOR_LOG_FILE"

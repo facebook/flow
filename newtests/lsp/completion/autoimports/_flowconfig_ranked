@@ -7,4 +7,4 @@ autoimports_ranked_by_usage=true
 autoimports_ranked_by_usage.experimental.boost_exact_match_min_length=5
 
 ; disabling the builtins prevents this test from failing every time they change
-no_flowlib=true
+builtin_lib=prelude

@@ -254,7 +254,7 @@ pub fn daemonize(
     let cli_overrides = &monitor_options.cli_overrides;
     let args = DaemonizeArgs {
         flowconfig_name: server_options.flowconfig_name.to_string(),
-        no_flowlib: monitor_options.no_flowlib,
+        builtin_lib: monitor_options.builtin_lib.clone(),
         ignore_version: monitor_options.ignore_version,
         include_suppressions: server_options.include_suppressions,
         all: server_options.all,

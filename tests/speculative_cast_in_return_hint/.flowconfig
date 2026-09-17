@@ -4,7 +4,7 @@ lib.iterable.d.ts
 
 [options]
 all=true
-no_flowlib=false
+builtin_lib=flowlib
 experimental.tslib_syntax=true
 module.file_ext=.js
 module.file_ext=.d.ts

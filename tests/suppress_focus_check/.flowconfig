@@ -9,4 +9,4 @@
 [options]
 all=true
 include_warnings=true
-no_flowlib=true
+builtin_lib=prelude

@@ -87,6 +87,22 @@ const props = {name: 'Alice'};
 
 The default value for `ban_spread_key_props` is `false`.
 
+### builtin_lib {#toc-builtin-lib}
+
+Type: `flowlib | flowlib-with-lib-dom-d-ts | prelude | experimental.tslib`
+
+Selects the builtin library definitions that Flow loads:
+
+- `flowlib` loads Flow's standard JavaScript and React definitions.
+- `flowlib-with-lib-dom-d-ts` loads Flow's core and React definitions together
+  with TypeScript's DOM, DOM iterable, and DOM async iterable definitions.
+- `prelude` loads only the minimal definitions that Flow needs to run.
+- `experimental.tslib` loads the TypeScript standard library definitions.
+
+You can override this setting for a command with `--builtin-lib`.
+
+The default value is `flowlib`.
+
 ### component_syntax {#toc-component-syntax}
 
 Type: `boolean`
@@ -592,15 +608,6 @@ refers to.
 The name is also included in Flow's internal logging for diagnostic purposes.
 
 There is no default value for `name`.
-
-### no_flowlib {#toc-no-flowlib}
-
-Type: `boolean`
-
-Flow has builtin library definitions. Setting this to `true` will tell Flow to
-ignore the builtin library definitions.
-
-The default value is `false`.
 
 ### no_unchecked_indexed_access {#toc-no-unchecked-indexed-access}
 

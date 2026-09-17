@@ -36,7 +36,7 @@ static SERVER_OPTIONS_BUILDER: OnceLock<ServerOptionsBuilder> = OnceLock::new();
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct ServerDaemonArgs {
     pub flowconfig_name: String,
-    pub no_flowlib: bool,
+    pub builtin_lib: String,
     pub ignore_version: bool,
     pub include_suppressions: bool,
     pub all: bool,
@@ -69,13 +69,13 @@ impl ServerDaemonArgs {
     pub fn of_options(
         options: &Options,
         lazy_mode: Option<String>,
-        no_flowlib: bool,
+        builtin_lib: String,
         ignore_version: bool,
         cli_overrides: &CliOverrides,
     ) -> Self {
         Self {
             flowconfig_name: options.flowconfig_name.to_string(),
-            no_flowlib,
+            builtin_lib,
             ignore_version,
             include_suppressions: options.include_suppressions,
             all: options.all,
@@ -250,7 +250,7 @@ pub fn daemonize(
     log_file: &str,
     argv: &[String],
     lazy_mode: Option<String>,
-    no_flowlib: bool,
+    builtin_lib: String,
     ignore_version: bool,
     options: Arc<Options>,
     file_watcher_pid: Option<u32>,
@@ -276,7 +276,7 @@ pub fn daemonize(
         daemon_args: ServerDaemonArgs::of_options(
             &options,
             lazy_mode,
-            no_flowlib,
+            builtin_lib,
             ignore_version,
             cli_overrides,
         ),

@@ -980,28 +980,19 @@ fn add_include_pattern(matcher: &mut PathMatcher, root: &Path, include: &Flowcon
         .expect("flowconfig glob should have been validated while parsing");
 }
 
-fn flowlib_builtin_lib(
-    builtin_lib: ConfigBuiltinLib,
-    cli_no_flowlib: bool,
-) -> flow_flowlib::BuiltinLib {
-    if cli_no_flowlib {
-        flow_flowlib::BuiltinLib::Prelude
-    } else {
-        match builtin_lib {
-            ConfigBuiltinLib::Flowlib => flow_flowlib::BuiltinLib::Flowlib,
-            ConfigBuiltinLib::FlowlibWithLibDomDts => {
-                flow_flowlib::BuiltinLib::FlowlibWithLibDomDts
-            }
-            ConfigBuiltinLib::Prelude => flow_flowlib::BuiltinLib::Prelude,
-            ConfigBuiltinLib::Tslib => flow_flowlib::BuiltinLib::Tslib,
-        }
+fn flowlib_builtin_lib(builtin_lib: ConfigBuiltinLib) -> flow_flowlib::BuiltinLib {
+    match builtin_lib {
+        ConfigBuiltinLib::Flowlib => flow_flowlib::BuiltinLib::Flowlib,
+        ConfigBuiltinLib::FlowlibWithLibDomDts => flow_flowlib::BuiltinLib::FlowlibWithLibDomDts,
+        ConfigBuiltinLib::Prelude => flow_flowlib::BuiltinLib::Prelude,
+        ConfigBuiltinLib::Tslib => flow_flowlib::BuiltinLib::Tslib,
     }
 }
 
 pub fn file_options(
     flowconfig: &FlowConfig,
     root: &Path,
-    no_flowlib: bool,
+    builtin_lib_override: Option<&str>,
     temp_dir: &Path,
     ignores: Vec<(String, Option<String>)>,
     includes: Vec<String>,
@@ -1011,7 +1002,11 @@ pub fn file_options(
 ) -> Arc<flow_common::files::FileOptions> {
     use flow_common::files::FileOptions;
 
-    let builtin_lib = flowlib_builtin_lib(flowconfig.options.builtin_lib, no_flowlib);
+    let builtin_lib = flowlib_builtin_lib(
+        builtin_lib_override
+            .and_then(config_builtin_lib_of_arg)
+            .unwrap_or(flowconfig.options.builtin_lib),
+    );
     let flowlib_dir = flow_flowlib::libdir(builtin_lib, temp_dir);
     let default_lib_dir = Some(match flowlib_dir {
         flow_flowlib::LibDir::Prelude(path) => flow_common::files::LibDir::Prelude(path),
@@ -1195,7 +1190,7 @@ pub fn file_options_of_flowconfig(
     file_options(
         flowconfig,
         root,
-        true,
+        Some("prelude"),
         temp_dir.as_path(),
         vec![],
         vec![],
@@ -1422,7 +1417,7 @@ pub struct OptionsFlags {
     pub max_workers: Option<i32>,
     pub merge_timeout: Option<i32>,
     pub munge_underscore_members: bool,
-    pub no_flowlib: bool,
+    pub builtin_lib: Option<String>,
     pub profile: bool,
     pub quiet: bool,
     pub slow_to_check_logging: flow_common::slow_to_check_logging::SlowToCheckLogging,
@@ -1449,6 +1444,37 @@ pub struct SavedStateFlags {
 #[derive(Clone, Debug)]
 pub struct BaseFlags {
     pub flowconfig_name: String,
+}
+
+fn builtin_lib_flag() -> arg_spec::FlagType<Option<String>> {
+    arg_spec::enum_flag(vec![
+        ("flowlib", "flowlib".to_owned()),
+        (
+            "flowlib-with-lib-dom-d-ts",
+            "flowlib-with-lib-dom-d-ts".to_owned(),
+        ),
+        ("prelude", "prelude".to_owned()),
+        ("experimental.tslib", "experimental.tslib".to_owned()),
+    ])
+}
+
+fn config_builtin_lib_of_arg(value: &str) -> Option<ConfigBuiltinLib> {
+    match value {
+        "flowlib" => Some(ConfigBuiltinLib::Flowlib),
+        "flowlib-with-lib-dom-d-ts" => Some(ConfigBuiltinLib::FlowlibWithLibDomDts),
+        "prelude" => Some(ConfigBuiltinLib::Prelude),
+        "experimental.tslib" => Some(ConfigBuiltinLib::Tslib),
+        _ => None,
+    }
+}
+
+pub fn builtin_lib_arg(builtin_lib: ConfigBuiltinLib) -> &'static str {
+    match builtin_lib {
+        ConfigBuiltinLib::Flowlib => "flowlib",
+        ConfigBuiltinLib::FlowlibWithLibDomDts => "flowlib-with-lib-dom-d-ts",
+        ConfigBuiltinLib::Prelude => "prelude",
+        ConfigBuiltinLib::Tslib => "experimental.tslib",
+    }
 }
 
 pub(crate) fn parse_lints_flag(
@@ -1501,10 +1527,10 @@ pub fn add_options_flags(spec: flow_command_spec::Spec) -> flow_command_spec::Sp
         None,
     )
     .flag(
-        "--no-flowlib",
-        &arg_spec::truthy(),
-        "Do not include embedded declarations",
-        Some("NO_FLOWLIB"),
+        "--builtin-lib",
+        &builtin_lib_flag(),
+        "Select the embedded library definitions",
+        Some("FLOW_BUILTIN_LIB"),
     )
     .flag(
         "--munge-underscore-members",
@@ -1616,7 +1642,7 @@ pub fn get_options_flags(args: &arg_spec::Values) -> OptionsFlags {
             &arg_spec::truthy(),
         )
         .unwrap(),
-        no_flowlib: flow_command_spec::get(args, "--no-flowlib", &arg_spec::truthy()).unwrap(),
+        builtin_lib: flow_command_spec::get(args, "--builtin-lib", &builtin_lib_flag()).unwrap(),
         profile: flow_command_spec::get(args, "--profile", &arg_spec::truthy()).unwrap(),
         quiet: flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
         slow_to_check_logging: flow_common::slow_to_check_logging::SlowToCheckLogging {
@@ -2048,7 +2074,7 @@ pub fn make_options(
         max_workers: max_workers_override,
         merge_timeout: merge_timeout_override,
         munge_underscore_members: munge_underscore_members_override,
-        no_flowlib: cli_no_flowlib,
+        builtin_lib: builtin_lib_override,
         profile: profile_override,
         quiet: quiet_override,
         slow_to_check_logging: slow_to_check_logging_override,
@@ -2089,7 +2115,7 @@ pub fn make_options(
     let file_options = file_options(
         &flowconfig,
         &root,
-        cli_no_flowlib,
+        builtin_lib_override.as_deref(),
         std::path::Path::new(&temp_dir),
         ignores_override
             .into_iter()
@@ -2305,7 +2331,12 @@ pub fn make_options(
             .collect(),
     );
 
-    let builtin_lib = flowlib_builtin_lib(builtin_lib, cli_no_flowlib);
+    let builtin_lib = flowlib_builtin_lib(
+        builtin_lib_override
+            .as_deref()
+            .and_then(config_builtin_lib_of_arg)
+            .unwrap_or(builtin_lib),
+    );
     let flowlib_dir = flow_flowlib::libdir(builtin_lib, &std::path::PathBuf::from(&temp_dir));
     flow_flowlib::extract(&flowlib_dir);
     let flowlib_path = flow_flowlib::path_of_libdir(&flowlib_dir).to_path_buf();

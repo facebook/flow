@@ -2,5 +2,5 @@
 lib.js
 
 [options]
-no_flowlib=false
+builtin_lib=flowlib
 all=true

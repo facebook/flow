@@ -70,6 +70,9 @@ fn main(
     let flowconfig_path = server_files_js::config_file(&flowconfig_name, &root);
     let (flowconfig, flowconfig_hash) =
         flow_command_utils::read_config_and_hash_or_exit(&flowconfig_path, !ignore_version);
+    let builtin_lib = options_flags.builtin_lib.clone().unwrap_or_else(|| {
+        flow_command_utils::builtin_lib_arg(flowconfig.options.builtin_lib).to_owned()
+    });
     flow_event_logger::set_server_config(
         flowconfig.options.log_saving.get("timeout").copied(),
         &flowconfig_name,
@@ -141,7 +144,7 @@ fn main(
             .map(|file_watcher_timeout| file_watcher_timeout as u32);
     match monitor::daemonize(monitor::DaemonizeArgs {
         flowconfig_name,
-        no_flowlib: options_flags.no_flowlib,
+        builtin_lib,
         ignore_version,
         include_suppressions: options_flags.include_suppressions,
         all: options_flags.all,

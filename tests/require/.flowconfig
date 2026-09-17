@@ -7,4 +7,4 @@
 [options]
 all=true
 module.system=haste
-no_flowlib=false
+builtin_lib=flowlib

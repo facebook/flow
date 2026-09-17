@@ -2645,20 +2645,6 @@ pub mod opts {
                     config,
                 )
             }),
-            ("no_flowlib", |values, config| {
-                parse_boolean(
-                    |opts, v| {
-                        opts.builtin_lib = if v {
-                            BuiltinLib::Prelude
-                        } else {
-                            BuiltinLib::Flowlib
-                        };
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )
-            }),
             ("no_implicit_override", |values, config| {
                 parse_boolean(
                     |opts, v| {

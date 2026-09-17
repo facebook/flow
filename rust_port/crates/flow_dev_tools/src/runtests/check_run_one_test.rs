@@ -235,14 +235,12 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
 
         // Determine flowlib - check .flowconfig in the working directory (after cwd applied)
         // Matches bash behavior: the check happens after `pushd "$cwd"`
-        let mut no_flowlib = true; // JS: let noFlowlib = true;
+        let mut use_prelude = true;
         let flowconfig_path = work_dir.join(".flowconfig"); // JS: const flowconfigPath = join(workDir, '.flowconfig');
         if exists(&flowconfig_path) {
             let flowconfig_content = fs::read_to_string(flowconfig_path)?;
-            if flowconfig_content.contains("no_flowlib")
-                || flowconfig_content.contains("builtin_lib")
-            {
-                no_flowlib = false;
+            if flowconfig_content.contains("builtin_lib") {
+                use_prelude = false;
             }
 
             let all_re = Regex::new(r"(?m)^[ \t]*all=(true|false)\b").map_err(io::Error::other)?;
@@ -299,6 +297,9 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
         env = initial_env.clone(); // JS: env = {...process.env,
         let tests_bin_dir = scripts_dir.join("tests_bin"); // JS: const testsBinDir = join(resolve(__dirname, '../../../../scripts'), 'tests_bin');
         env.insert("FLOW_TEMP_DIR".to_owned(), tmp_parent.display().to_string());
+        if use_prelude {
+            env.insert("FLOW_BUILTIN_LIB".to_owned(), "prelude".to_owned());
+        }
         env.insert("IN_FLOW_TEST".to_owned(), "1".to_owned());
         env.insert("FLOW_LOG_LEVEL".to_owned(), "debug".to_owned());
         env.insert("FLOW_LOG_FILE".to_owned(), log_file.display().to_string());
@@ -335,8 +336,8 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
                 });
             }
             let mut args = vec!["full-check".to_owned(), ".".to_owned()];
-            if no_flowlib {
-                args.push("--no-flowlib".to_owned());
+            if use_prelude {
+                args.extend(["--builtin-lib".to_owned(), "prelude".to_owned()]);
             }
             args.extend(["--strip-root".to_owned(), "--show-all-errors".to_owned()]);
             let command_result = exec_file(
@@ -382,7 +383,7 @@ pub(super) fn run_one_test(opts: RunOneTestOptions) -> io::Result<TestResult> {
             let annotate_result = run_annotate_exports(AnnotateExportsOptions {
                 flow_bin: flow_bin.clone(),
                 test_dir: work_dir.clone(),
-                no_flowlib,
+                use_prelude,
                 cmd_args: command_args,
                 log_file: log_file.clone(),
                 monitor_log_file: monitor_log_file.clone(),
@@ -612,10 +613,6 @@ exit $_script_exit
             // Run as bash script (original test.sh)
             let script_path = work_dir.join(&config.shell);
             let mut script_env = env.clone();
-            if no_flowlib {
-                script_env.insert("NO_FLOWLIB".to_owned(), "1".to_owned());
-            }
-            // Construct the flowlib bash variable from the boolean
             // Pass all dynamic values via environment variables to avoid
             // shell injection when paths contain spaces or special characters.
             for (key, value) in [
@@ -632,7 +629,12 @@ exit $_script_exit
                 ),
                 (
                     "_CT_FLOWLIB",
-                    if no_flowlib { " --no-flowlib" } else { "" }.to_owned(),
+                    if use_prelude {
+                        " --builtin-lib prelude"
+                    } else {
+                        ""
+                    }
+                    .to_owned(),
                 ),
                 ("_CT_WAIT_FOR_RECHECK", config.wait_for_recheck.clone()),
                 ("_CT_FILE_WATCHER", config.file_watcher.clone()),
@@ -695,8 +697,8 @@ exit $_script_exit
             // General cmd mode
             if config.auto_start {
                 let mut start_args = vec!["start".to_owned(), ".".to_owned()]; // JS: const startArgs = ['start', '.'];
-                if no_flowlib {
-                    start_args.push("--no-flowlib".to_owned());
+                if use_prelude {
+                    start_args.extend(["--builtin-lib".to_owned(), "prelude".to_owned()]);
                 }
                 start_args.push("--wait".to_owned());
                 if saved_state {
@@ -714,7 +716,7 @@ exit $_script_exit
                         test_dir: &work_dir,
                         log_file: &log_file,
                         monitor_log_file: &monitor_log_file,
-                        no_flowlib,
+                        use_prelude,
                         wait_for_recheck: &config.wait_for_recheck,
                         file_watcher: &config.file_watcher,
                         env: &env,

@@ -6,7 +6,7 @@
 
 [options]
 all=false
-no_flowlib=false
+builtin_lib=flowlib
 enums=true
 format.single_quotes=true
 autoimports_ranked_by_usage=true

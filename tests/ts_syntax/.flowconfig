@@ -3,7 +3,7 @@ unused_ts_shim.js
 
 [options]
 all=true
-no_flowlib=false
+builtin_lib=flowlib
 
 experimental.deprecated_utilities.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
 

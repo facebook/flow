@@ -70,8 +70,8 @@ pub struct MonitorOptions {
     pub cli_overrides: flow_common::cli_overrides::CliOverrides,
     // The explicit lazy-mode CLI override, if one was provided.
     pub lazy_mode: Option<String>,
-    // Whether bundled flowlib should be disabled when the monitor spawns servers.
-    pub no_flowlib: bool,
+    // The builtin library selection to use when the monitor spawns servers.
+    pub builtin_lib: String,
     // Whether version checks should be ignored when the monitor spawns servers.
     pub ignore_version: bool,
     // The argv of the process which created the server monitor

@@ -24,14 +24,6 @@ pub enum BuiltinLib {
     Tslib,
 }
 
-pub fn builtin_lib_of_no_flowlib(no_flowlib: bool) -> BuiltinLib {
-    if no_flowlib {
-        BuiltinLib::Prelude
-    } else {
-        BuiltinLib::Flowlib
-    }
-}
-
 fn hash(lib: BuiltinLib) -> String {
     match lib {
         BuiltinLib::Flowlib => flowlib_contents::HASH.to_string(),
@@ -50,8 +42,8 @@ fn contents(lib: BuiltinLib) -> &'static [(&'static str, &'static str)] {
     }
 }
 
-pub fn contents_list(no_flowlib: bool) -> Vec<(&'static str, &'static str)> {
-    contents(builtin_lib_of_no_flowlib(no_flowlib)).to_vec()
+pub fn contents_list(lib: BuiltinLib) -> Vec<(&'static str, &'static str)> {
+    contents(lib).to_vec()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,9 +64,8 @@ fn get_euid() -> u32 {
     0
 }
 
-/// [libdir ~no_flowlib parent_dir] returns the directory under [parent_dir]
-/// within which the flowlib files will be extracted. This directory is
-/// named uniquely based on the flowlib contents, as well as the effective
+/// Returns the directory under `parent_dir` within which the flowlib files will
+/// be extracted. This directory is named uniquely based on the flowlib contents, as well as the effective
 /// user ID (euid) of the current process. The euid is used to ensure that
 /// the directory is writable by the current user.
 pub fn libdir(builtin_lib: BuiltinLib, parent_dir: &Path) -> LibDir {

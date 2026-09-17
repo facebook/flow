@@ -8,7 +8,7 @@
 
 [options]
 all=false
-no_flowlib=false
+builtin_lib=flowlib
 include_warnings=true
 enums=true
 

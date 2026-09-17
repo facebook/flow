@@ -19,7 +19,7 @@ pub(super) struct TestContextOptions<'a> {
     pub(super) test_dir: &'a Path,
     pub(super) log_file: &'a Path,
     pub(super) monitor_log_file: &'a Path,
-    pub(super) no_flowlib: bool,
+    pub(super) use_prelude: bool,
     pub(super) wait_for_recheck: &'a str,
     pub(super) file_watcher: &'a str,
     pub(super) env: &'a HashMap<String, String>,
@@ -30,7 +30,7 @@ pub(super) struct TestContext<'a> {
     test_dir: &'a Path,
     log_file: &'a Path,
     monitor_log_file: &'a Path,
-    no_flowlib: bool,
+    use_prelude: bool,
     wait_for_recheck: &'a str,
     file_watcher: &'a str,
     env: &'a HashMap<String, String>,
@@ -43,7 +43,7 @@ impl<'a> TestContext<'a> {
             test_dir: opts.test_dir,
             log_file: opts.log_file,
             monitor_log_file: opts.monitor_log_file,
-            no_flowlib: opts.no_flowlib,
+            use_prelude: opts.use_prelude,
             wait_for_recheck: opts.wait_for_recheck,
             file_watcher: opts.file_watcher,
             env: opts.env,
@@ -65,8 +65,8 @@ impl<'a> TestContext<'a> {
 
     pub(super) fn create_saved_state(&self, root: &Path, flowconfig_name: &str) -> bool {
         let mut start_args = vec!["start".to_owned(), root.display().to_string()];
-        if self.no_flowlib {
-            start_args.push("--no-flowlib".to_owned());
+        if self.use_prelude {
+            start_args.extend(["--builtin-lib".to_owned(), "prelude".to_owned()]);
         }
         start_args.extend([
             "--wait".to_owned(),

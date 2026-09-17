@@ -2,7 +2,7 @@
 all=true
 component_syntax=true
 react.runtime=automatic
-no_flowlib=false
+builtin_lib=flowlib
 experimental.tslib_syntax=true
 module.file_ext=.js
 module.file_ext=.d.ts

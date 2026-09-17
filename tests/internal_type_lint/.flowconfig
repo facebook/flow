@@ -1,4 +1,4 @@
 [options]
 all=true
 enums=true
-no_flowlib=false
+builtin_lib=flowlib

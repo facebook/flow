@@ -1,4 +1,4 @@
 [options]
-no_flowlib=false
+builtin_lib=flowlib
 lazy_mode=fs
 all=true

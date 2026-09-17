@@ -7,4 +7,4 @@ nonstrict-import
 
 [options]
 all=true
-no_flowlib=true
+builtin_lib=prelude

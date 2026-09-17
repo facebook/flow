@@ -2,4 +2,4 @@
 all=true
 experimental.assert_operator=specialized
 experimental.ts_syntax=true
-no_flowlib=false
+builtin_lib=flowlib

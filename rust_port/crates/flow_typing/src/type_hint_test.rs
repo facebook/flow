@@ -258,7 +258,7 @@ mod tests {
             let asts: Vec<(
                 flow_common::type_strictness::TypeStrictnessKind,
                 Arc<ast::Program<Loc, Loc>>,
-            )> = flow_flowlib::contents_list(false)
+            )> = flow_flowlib::contents_list(flow_flowlib::BuiltinLib::Flowlib)
                 .into_iter()
                 .rev()
                 .map(|(filename, lib_content)| {

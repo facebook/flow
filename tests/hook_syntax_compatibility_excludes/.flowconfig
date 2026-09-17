@@ -7,4 +7,4 @@ experimental.component_syntax.hook_compatibility.excludes=<PROJECT_ROOT>/exclude
 experimental.component_syntax.hook_compatibility.includes=<PROJECT_ROOT>.*/__tests__/in.*
 experimental.component_syntax.hook_compatibility.excludes=<PROJECT_ROOT>.*/__tests__/.*
 all=true
-no_flowlib=false
+builtin_lib=flowlib

@@ -194,7 +194,7 @@ pub(crate) fn full_check_json(flowconfig_name: &str, root: &Path) -> serde_json:
             max_workers: None,
             merge_timeout: None,
             munge_underscore_members: false,
-            no_flowlib: false,
+            builtin_lib: None,
             profile: false,
             quiet: true,
             slow_to_check_logging: Default::default(),

@@ -1,4 +1,4 @@
 [options]
-no_flowlib=false
+builtin_lib=flowlib
 all=true
 babel_loose_array_spread=true

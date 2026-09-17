@@ -1,5 +1,5 @@
 [options]
 all=true
 module.system=haste
-no_flowlib=true
+builtin_lib=prelude
 enums=true

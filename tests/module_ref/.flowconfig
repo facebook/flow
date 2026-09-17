@@ -6,7 +6,7 @@
 
 [options]
 all=false
-no_flowlib=true
+builtin_lib=prelude
 module.system=haste
 module.system.haste.module_ref_prefix=m#
 

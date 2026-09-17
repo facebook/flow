@@ -1,4 +1,4 @@
 [options]
-no_flowlib=false
+builtin_lib=flowlib
 all=true
 experimental.tslib_syntax=true

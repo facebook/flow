@@ -11,6 +11,6 @@ fbt.js.flow
 all=true
 facebook.fbt=FbtElement
 component_syntax=true
-no_flowlib=false
+builtin_lib=flowlib
 
 [strict]

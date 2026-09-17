@@ -1,4 +1,4 @@
 [options]
 all=true
-no_flowlib=false
+builtin_lib=flowlib
 experimental.opaque_type_new_bound_syntax=true

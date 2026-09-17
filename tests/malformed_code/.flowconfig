@@ -6,4 +6,4 @@
 
 [options]
 all=false
-no_flowlib=true
+builtin_lib=prelude

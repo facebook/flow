@@ -209,7 +209,7 @@ pub(super) struct AnnotateExportsResult {
 pub(super) struct AnnotateExportsOptions {
     pub(super) flow_bin: PathBuf,
     pub(super) test_dir: PathBuf,
-    pub(super) no_flowlib: bool,
+    pub(super) use_prelude: bool,
     pub(super) cmd_args: String,
     pub(super) log_file: PathBuf,
     pub(super) monitor_log_file: PathBuf,
@@ -224,7 +224,7 @@ pub(super) fn run_annotate_exports(
     let AnnotateExportsOptions {
         flow_bin,
         test_dir,
-        no_flowlib,
+        use_prelude,
         cmd_args,
         log_file,
         monitor_log_file,
@@ -255,8 +255,8 @@ pub(super) fn run_annotate_exports(
     }
 
     // Run codemod annotate-exports
-    let flowlib_args = if no_flowlib {
-        vec!["--no-flowlib".to_owned()]
+    let flowlib_args = if use_prelude {
+        vec!["--builtin-lib".to_owned(), "prelude".to_owned()]
     } else {
         Vec::new()
     };

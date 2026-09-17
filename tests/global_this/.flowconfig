@@ -3,4 +3,4 @@ globals.js
 
 [options]
 all=true
-no_flowlib=false
+builtin_lib=flowlib
