@@ -15,6 +15,10 @@ use crate::tslib_contents;
 pub static CONTENTS: &[(&str, &str)] = &[
     ("core.js", flowlib_contents::CORE_JS),
     ("react.js", flowlib_contents::REACT_JS),
+    (
+        "lib.dom.asynciterable.d.ts",
+        tslib_contents::LIB_DOM_ASYNCITERABLE_D_TS,
+    ),
     ("lib.dom.d.ts", tslib_contents::LIB_DOM_D_TS),
     (
         "lib.dom.iterable.d.ts",
