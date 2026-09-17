@@ -243,6 +243,7 @@ export default class FlowParserDeserializer {
         }`,
       );
     }
+    // $FlowFixMe[invalid-this-arg]
     const node = deserializeNode.call(this);
     if (this.extendedLocationHeaders) {
       this.addExtendedRange(node);

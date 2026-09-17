@@ -12,13 +12,13 @@
 
 declare module '@babel/code-frame' {
   declare export interface SourceLocation {
-    +start: interface {
-      +line: number,
-      +column: number,
+    readonly start: interface {
+      readonly line: number,
+      readonly column: number,
     };
-    +end?: interface {
-      +line: number,
-      +column: number,
+    readonly end?: interface {
+      readonly line: number,
+      readonly column: number,
     };
   }
   declare export function codeFrameColumns(

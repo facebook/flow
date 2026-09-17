@@ -68,7 +68,7 @@ export const DEFAULT_SKIP_STATEMENTS: ReadonlyArray<StatementTypes> = [
   ...LOOP_ONLY_STATEMENTS,
 ];
 
-export async function parseAndGetAstAndNode<T: ESNode = ESNode>(
+export async function parseAndGetAstAndNode<T extends ESNode = ESNode>(
   type: ESNode['type'],
   code: string,
 ): Promise<{

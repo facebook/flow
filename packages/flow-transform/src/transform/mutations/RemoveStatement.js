@@ -14,6 +14,7 @@ import type {DetachedNode} from '../../detachedNode';
 
 import {astArrayMutationHelpers} from 'flow-parser';
 import {getStatementParent} from './utils/getStatementParent';
+import {getParentProperty, setParentProperty} from './utils/parentProperty';
 import * as t from '../../generated/node-types';
 
 export type RemoveStatementMutation = Readonly<{
@@ -40,12 +41,17 @@ export function performRemoveStatementMutation(
   mutationContext.markMutation(removalParent.parent, removalParent.key);
 
   if (removalParent.type === 'array') {
-    const parent: interface {
-      [string]: ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
-    } = removalParent.parent;
-    parent[removalParent.key] = astArrayMutationHelpers.removeFromArray(
-      parent[removalParent.key],
-      removalParent.targetIndex,
+    const parent = removalParent.parent;
+    const statements = getParentProperty<
+      ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
+    >(parent, removalParent.key);
+    setParentProperty(
+      parent,
+      removalParent.key,
+      astArrayMutationHelpers.removeFromArray(
+        statements,
+        removalParent.targetIndex,
+      ),
     );
   } else {
     // The parent has a 1:1 relationship on this key, so we can't just
@@ -60,8 +66,7 @@ export function performRemoveStatementMutation(
       parent: removalParent.parent,
     });
 
-    (removalParent.parent as interface {[string]: unknown})[removalParent.key] =
-      blockStatement;
+    setParentProperty(removalParent.parent, removalParent.key, blockStatement);
   }
 
   return removalParent.parent;

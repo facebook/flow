@@ -31,7 +31,7 @@
 // upstream behavior.
 
 type ModuleExports = interface {
-  +[string]: unknown,
+  readonly [string]: unknown,
 };
 
 const ours: ModuleExports = require('flow-parser');

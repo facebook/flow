@@ -16,6 +16,7 @@ import {getVisitorKeys, isNode, astArrayMutationHelpers} from 'flow-parser';
 import {moveCommentsToNewNode} from '../comments/comments';
 import {InvalidReplacementError} from '../Errors';
 import {getOriginalNode} from '../../detachedNode';
+import {getParentProperty, setParentProperty} from './utils/parentProperty';
 
 export type ReplaceNodeMutation = Readonly<{
   type: 'replaceNode',
@@ -52,18 +53,26 @@ export function performReplaceNodeMutation(
   // TODO: maybe add some runtime checks based on codegenned predicates?
 
   if (replacementParent.type === 'array') {
-    const parent: interface {
-      [string]: ReadonlyArray<DetachedNode<ESNode>>,
-    } = replacementParent.parent;
-    parent[replacementParent.key] = astArrayMutationHelpers.replaceInArray(
-      parent[replacementParent.key],
-      replacementParent.targetIndex,
-      [mutation.nodeToReplaceWith],
+    const parent = replacementParent.parent;
+    const nodes = getParentProperty<ReadonlyArray<DetachedNode<ESNode>>>(
+      parent,
+      replacementParent.key,
+    );
+    setParentProperty(
+      parent,
+      replacementParent.key,
+      astArrayMutationHelpers.replaceInArray(
+        nodes,
+        replacementParent.targetIndex,
+        [mutation.nodeToReplaceWith],
+      ),
     );
   } else {
-    (replacementParent.parent as interface {[string]: unknown})[
-      replacementParent.key
-    ] = mutation.nodeToReplaceWith;
+    setParentProperty(
+      replacementParent.parent,
+      replacementParent.key,
+      mutation.nodeToReplaceWith,
+    );
   }
 
   if (mutation.keepComments) {

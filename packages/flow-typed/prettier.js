@@ -413,7 +413,7 @@ declare module 'prettier' {
   declare export type SupportOptionType = 'int' | 'boolean' | 'choice' | 'path';
 
   declare export type BaseSupportOption<Type: SupportOptionType> = {
-    +name?: string | void,
+    readonly name?: string | void,
     since: string,
     /**
      * Usually you can use {@link CoreCategoryType}
@@ -748,7 +748,7 @@ declare module 'prettier' {
       /** @see [align](https://github.com/prettier/prettier/blob/main/commands.md#align) */
       align(widthOrString: Align['n'], doc: Doc): Align,
       /** @see [breakParent](https://github.com/prettier/prettier/blob/main/commands.md#breakparent) */
-      +breakParent: BreakParent,
+      readonly breakParent: BreakParent,
       /**
        * @see [concat](https://github.com/prettier/prettier/blob/main/commands.md#deprecated-concat)
        * @deprecated use `Doc[]` instead
@@ -765,9 +765,9 @@ declare module 'prettier' {
       /** @see [group](https://github.com/prettier/prettier/blob/main/commands.md#group) */
       group(doc: Doc, opts?: GroupOptions): Group,
       /** @see [hardline](https://github.com/prettier/prettier/blob/main/commands.md#hardline) */
-      +hardline: Concat,
+      readonly hardline: Concat,
       /** @see [hardlineWithoutBreakParent](https://github.com/prettier/prettier/blob/main/commands.md#hardlinewithoutbreakparent-and-literallinewithoutbreakparent) */
-      +hardlineWithoutBreakParent: HardlineWithoutBreakParent,
+      readonly hardlineWithoutBreakParent: HardlineWithoutBreakParent,
       /** @see [ifBreak](https://github.com/prettier/prettier/blob/main/commands.md#ifbreak) */
       ifBreak(
         ifBreak: Doc,
@@ -786,23 +786,23 @@ declare module 'prettier' {
       /** @see [label](https://github.com/prettier/prettier/blob/main/commands.md#label) */
       label(label: string, doc: Doc): Label,
       /** @see [line](https://github.com/prettier/prettier/blob/main/commands.md#line) */
-      +line: Line,
+      readonly line: Line,
       /** @see [lineSuffix](https://github.com/prettier/prettier/blob/main/commands.md#linesuffix) */
       lineSuffix(suffix: Doc): LineSuffix,
       /** @see [lineSuffixBoundary](https://github.com/prettier/prettier/blob/main/commands.md#linesuffixboundary) */
-      +lineSuffixBoundary: LineSuffixBoundary,
+      readonly lineSuffixBoundary: LineSuffixBoundary,
       /** @see [literalline](https://github.com/prettier/prettier/blob/main/commands.md#literalline) */
-      +literalline: Concat,
+      readonly literalline: Concat,
       /** @see [literallineWithoutBreakParent](https://github.com/prettier/prettier/blob/main/commands.md#hardlinewithoutbreakparent-and-literallinewithoutbreakparent) */
-      +literallineWithoutBreakParent: LiterallineWithoutBreakParent,
+      readonly literallineWithoutBreakParent: LiterallineWithoutBreakParent,
       /** @see [markAsRoot](https://github.com/prettier/prettier/blob/main/commands.md#markasroot) */
       markAsRoot(doc: Doc): Align,
       /** @see [softline](https://github.com/prettier/prettier/blob/main/commands.md#softline) */
-      +softline: Softline,
+      readonly softline: Softline,
       /** @see [trim](https://github.com/prettier/prettier/blob/main/commands.md#trim) */
-      +trim: Trim,
+      readonly trim: Trim,
       /** @see [cursor](https://github.com/prettier/prettier/blob/main/commands.md#cursor) */
-      +cursor: Cursor,
+      readonly cursor: Cursor,
     },
     debug: {
       printDocToDebug(doc: Doc): string,

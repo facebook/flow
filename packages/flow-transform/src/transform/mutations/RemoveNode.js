@@ -34,6 +34,7 @@ import type {DetachedNode} from '../../detachedNode';
 
 import {astArrayMutationHelpers} from 'flow-parser';
 import {InvalidRemovalError} from '../Errors';
+import {getParentProperty, setParentProperty} from './utils/parentProperty';
 
 export type RemoveNodeMutation = Readonly<{
   type: 'removeNode',
@@ -303,12 +304,14 @@ export function performRemoveNodeMutation(
   mutationContext.markDeletion(mutation.node);
   mutationContext.markMutation(removalParent.parent, removalParent.key);
 
-  const parent: interface {
-    [string]: ReadonlyArray<DetachedNode<RemoveNodeMutation['node']>>,
-  } = removalParent.parent;
-  parent[removalParent.key] = astArrayMutationHelpers.removeFromArray(
-    parent[removalParent.key],
-    removalParent.targetIndex,
+  const parent = removalParent.parent;
+  const nodes = getParentProperty<
+    ReadonlyArray<DetachedNode<RemoveNodeMutation['node']>>,
+  >(parent, removalParent.key);
+  setParentProperty(
+    parent,
+    removalParent.key,
+    astArrayMutationHelpers.removeFromArray(nodes, removalParent.targetIndex),
   );
 
   return removalParent.parent;

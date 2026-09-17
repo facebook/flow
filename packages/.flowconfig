@@ -3,7 +3,6 @@
 
 [ignore]
 **/dist/**
-**/node_modules/**
 babel-plugin-transform-flow-enums/**
 flow-api-translator/__tests__/flowDefToTSDef/fixtures/**
 flow-api-translator/__tests__/flowToJS/fixtures/**
@@ -39,7 +38,6 @@ module.name_mapper='^hermes-estree$' -> '<PROJECT_ROOT>/flow-estree/src/index.js
 
 enums=true
 component_syntax=false
-experimental.pattern_matching=false
 
 [lints]
 untyped-type-import=error

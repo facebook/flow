@@ -15,6 +15,7 @@ import type {DetachedNode} from '../../detachedNode';
 import {astArrayMutationHelpers} from 'flow-parser';
 import {getStatementParent} from './utils/getStatementParent';
 import {isValidModuleDeclarationParent} from './utils/isValidModuleDeclarationParent';
+import {getParentProperty, setParentProperty} from './utils/parentProperty';
 import {moveCommentsToNewNode} from '../comments/comments';
 import {InvalidReplacementError} from '../Errors';
 import * as t from '../../generated/node-types';
@@ -74,13 +75,18 @@ export function performReplaceStatementWithManyMutation(
   }
 
   if (replacementParent.type === 'array') {
-    const parent: interface {
-      [string]: ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
-    } = replacementParent.parent;
-    parent[replacementParent.key] = astArrayMutationHelpers.replaceInArray(
-      parent[replacementParent.key],
-      replacementParent.targetIndex,
-      mutation.nodesToReplaceWith,
+    const parent = replacementParent.parent;
+    const statements = getParentProperty<
+      ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
+    >(parent, replacementParent.key);
+    setParentProperty(
+      parent,
+      replacementParent.key,
+      astArrayMutationHelpers.replaceInArray(
+        statements,
+        replacementParent.targetIndex,
+        mutation.nodesToReplaceWith,
+      ),
     );
 
     return replacementParent.parent;
@@ -96,9 +102,11 @@ export function performReplaceStatementWithManyMutation(
     parent: replacementParent.parent,
   });
 
-  (replacementParent.parent as interface {[string]: unknown})[
-    replacementParent.key
-  ] = blockStatement;
+  setParentProperty(
+    replacementParent.parent,
+    replacementParent.key,
+    blockStatement,
+  );
 
   return replacementParent.parent;
 }

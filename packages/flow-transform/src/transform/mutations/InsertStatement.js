@@ -15,6 +15,7 @@ import type {DetachedNode} from '../../detachedNode';
 import {astArrayMutationHelpers} from 'flow-parser';
 import {getStatementParent} from './utils/getStatementParent';
 import {isValidModuleDeclarationParent} from './utils/isValidModuleDeclarationParent';
+import {getParentProperty, setParentProperty} from './utils/parentProperty';
 import {InvalidInsertionError} from '../Errors';
 import * as t from '../../generated/node-types';
 
@@ -68,24 +69,33 @@ export function performInsertStatementMutation(
   mutationContext.markMutation(insertionParent.parent, insertionParent.key);
 
   if (insertionParent.type === 'array') {
-    const parent: interface {
-      [string]: ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
-    } = insertionParent.parent;
+    const parent = insertionParent.parent;
+    const statements = getParentProperty<
+      ReadonlyArray<DetachedNode<Statement | ModuleDeclaration>>,
+    >(parent, insertionParent.key);
     switch (mutation.side) {
       case 'before': {
-        parent[insertionParent.key] = astArrayMutationHelpers.insertInArray(
-          parent[insertionParent.key],
-          insertionParent.targetIndex,
-          mutation.nodesToInsert,
+        setParentProperty(
+          parent,
+          insertionParent.key,
+          astArrayMutationHelpers.insertInArray(
+            statements,
+            insertionParent.targetIndex,
+            mutation.nodesToInsert,
+          ),
         );
         break;
       }
 
       case 'after': {
-        parent[insertionParent.key] = astArrayMutationHelpers.insertInArray(
-          parent[insertionParent.key],
-          insertionParent.targetIndex + 1,
-          mutation.nodesToInsert,
+        setParentProperty(
+          parent,
+          insertionParent.key,
+          astArrayMutationHelpers.insertInArray(
+            statements,
+            insertionParent.targetIndex + 1,
+            mutation.nodesToInsert,
+          ),
         );
         break;
       }
@@ -111,9 +121,11 @@ export function performInsertStatementMutation(
     parent: insertionParent.parent,
   });
 
-  (insertionParent.parent as interface {[string]: unknown})[
-    insertionParent.key
-  ] = blockStatement;
+  setParentProperty(
+    insertionParent.parent,
+    insertionParent.key,
+    blockStatement,
+  );
   statementToWrap.parent = blockStatement;
 
   return insertionParent.parent;
