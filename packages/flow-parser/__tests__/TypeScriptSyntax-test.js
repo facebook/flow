@@ -26,7 +26,7 @@ import {
   isTemplateLiteralTypeAnnotation,
   isTupleTypeElement,
 } from 'flow-estree';
-import {parse} from '../__test_utils__/parse';
+import {parse, printForSnapshotBabel} from '../__test_utils__/parse';
 
 describe('TypeScript-compatible syntax', () => {
   test('template literal type annotations', () => {
@@ -339,4 +339,109 @@ describe('TypeScript-compatible syntax', () => {
 
     expect(namespace.declaration).toMatchObject({type: 'DeclareNamespace'});
   });
+});
+
+test('Babel output treats `satisfies` like an `as` cast', async () => {
+  expect(
+    await printForSnapshotBabel('const value = expression satisfies SomeType;'),
+  ).toMatchInlineSnapshot(`"const value = (expression: SomeType);"`);
+});
+
+test('Babel output removes abstract and override class syntax', async () => {
+  expect(
+    await printForSnapshotBabel(`
+      abstract class Base {
+        abstract property: string;
+        abstract method(value: number): string;
+      }
+      class Derived extends Base {
+        override property: string;
+        override method(value: number): string {
+          return value.toString();
+        }
+      }
+    `),
+  ).toMatchInlineSnapshot(`
+   "class Base {}
+
+   class Derived extends Base {
+     property: string;
+
+     method(value: number): string {
+       return value.toString();
+     }
+
+   }"
+  `);
+});
+
+test('Babel output lowers TypeScript CommonJS imports and exports', async () => {
+  expect(
+    await printForSnapshotBabel(`
+      import Module = require("module");
+      import Alias = Namespace.Member;
+      export import Exported = Namespace.Member;
+      import type TypeOnly = require("types");
+      export = Module;
+    `),
+  ).toMatchInlineSnapshot(`
+    "const Module = require(\"module\");
+
+    var Alias = Namespace.Member;
+    export var Exported = Namespace.Member;
+    module.exports = Module;"
+  `);
+});
+
+test('Babel output drops namespace exports and splits mixed exports', async () => {
+  expect(
+    await printForSnapshotBabel(`
+      export as namespace Namespace;
+      const value = 1;
+      type T = number;
+      export {value, type T};
+    `),
+  ).toMatchInlineSnapshot(`
+    "const value = 1;
+    type T = number;
+    export { value };
+    export type { T };"
+  `);
+});
+
+test('Babel output lowers ambient function export assignments', async () => {
+  expect(
+    await printForSnapshotBabel(`
+      declare module "module" {
+        export = function fn(value: number): string;
+      }
+    `),
+  ).toMatchInlineSnapshot(`
+    "declare module \"module\" {
+      declare function fn(value: number): string;
+      declare module.exports: typeof fn
+    }"
+  `);
+});
+
+test('Babel output keeps import-equals and export assignments ambient', async () => {
+  expect(
+    await printForSnapshotBabel(`
+      declare module "commonjs" {
+        import Dependency = require("dependency");
+        export = Dependency;
+      }
+      declare module "esm" {
+        export import Alias = Namespace.Member;
+      }
+    `),
+  ).toMatchInlineSnapshot(`
+    "declare module \"commonjs\" {
+      declare var Dependency: any;
+      declare module.exports: typeof Dependency
+    }
+    declare module \"esm\" {
+      declare export var Alias: any;
+    }"
+  `);
 });

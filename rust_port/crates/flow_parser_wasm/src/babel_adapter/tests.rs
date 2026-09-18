@@ -587,6 +587,26 @@ declare const N: any;
 }
 
 #[test]
+fn strip_flow_removes_abstract_class_members() {
+    let program = parse(
+        "abstract class Base {\n\
+         abstract property: string;\n\
+         abstract method(value: number): string;\n\
+         concrete(): void {}\n\
+         }",
+    );
+    let lowered = strip_flow::lower_program(&program);
+
+    assert_eq!(
+        print(&lowered),
+        r#"abstract class Base {
+  concrete(): void {}
+}
+"#
+    );
+}
+
+#[test]
 fn babel_adapter_honors_enum_option_and_runs_the_complete_pipeline() {
     let source = "enum E {A}\nrecord R {value: number}\ncomponent Foo(value: R) { const record = R {value}; }";
     let program = parse(source);

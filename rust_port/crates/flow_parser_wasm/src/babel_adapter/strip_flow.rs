@@ -9,6 +9,8 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_parser::ast;
+use flow_parser::ast::class;
+use flow_parser::ast::expression;
 use flow_parser::ast::function;
 use flow_parser::ast::pattern;
 use flow_parser::ast::statement;
@@ -17,8 +19,16 @@ use flow_parser::ast::types;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc::Loc;
+use flow_parser_utils::ast_builder;
 
-struct StripFlow;
+use super::builders;
+
+struct StripFlow {
+    // Import-equals declarations and export assignments do not record whether they are inside a
+    // `declare module`, but that context determines whether lowering emits declarations or runtime
+    // statements.
+    ambient: bool,
+}
 
 impl StripFlow {
     fn any(loc: &Loc) -> types::Type<Loc, Loc> {
@@ -45,10 +55,313 @@ impl StripFlow {
         })
     }
 
-    fn declare_variable(
+    fn generic_identifier_expression(
+        id: &types::generic::Identifier<Loc, Loc>,
+    ) -> Option<expression::Expression<Loc, Loc>> {
+        match id {
+            types::generic::Identifier::Unqualified(id) => Some(expression::Expression::new(
+                expression::ExpressionInner::Identifier {
+                    loc: id.loc.dupe(),
+                    inner: id.dupe(),
+                },
+            )),
+            types::generic::Identifier::Qualified(qualified) => {
+                let object = Self::generic_identifier_expression(&qualified.qualification)?;
+                Some(expression::Expression::new(
+                    expression::ExpressionInner::Member {
+                        loc: qualified.loc.dupe(),
+                        inner: Arc::new(expression::Member {
+                            object,
+                            property: expression::member::Property::PropertyIdentifier(
+                                qualified.id.dupe(),
+                            ),
+                            comments: None,
+                        }),
+                    },
+                ))
+            }
+            types::generic::Identifier::ImportTypeAnnot(_) => None,
+        }
+    }
+
+    fn expression_typeof_target(
+        expression: &expression::Expression<Loc, Loc>,
+    ) -> Option<types::typeof_::Target<Loc, Loc>> {
+        match &**expression {
+            expression::ExpressionInner::Identifier { inner, .. } => {
+                Some(types::typeof_::Target::Unqualified(inner.dupe()))
+            }
+            expression::ExpressionInner::Member { loc, inner } => {
+                let expression::member::Property::PropertyIdentifier(id) = &inner.property else {
+                    return None;
+                };
+                Some(types::typeof_::Target::Qualified(Arc::new(
+                    types::typeof_::Qualified {
+                        loc: loc.dupe(),
+                        qualification: Self::expression_typeof_target(&inner.object)?,
+                        id: id.dupe(),
+                    },
+                )))
+            }
+            _ => None,
+        }
+    }
+
+    fn declare_export_variable(
+        loc: &Loc,
+        declaration_loc: &Loc,
+        declaration: statement::DeclareVariable<Loc, Loc>,
+        comments: Option<ast::Syntax<Loc, ()>>,
+    ) -> statement::Statement<Loc, Loc> {
+        statement::Statement::new(StatementInner::DeclareExportDeclaration {
+            loc: loc.dupe(),
+            inner: Arc::new(statement::DeclareExportDeclaration {
+                default: None,
+                declaration: Some(
+                    statement::declare_export_declaration::Declaration::Variable {
+                        loc: declaration_loc.dupe(),
+                        declaration: Arc::new(declaration),
+                    },
+                ),
+                specifiers: None,
+                source: None,
+                comments,
+            }),
+        })
+    }
+
+    fn declare_module_exports(
+        loc: &Loc,
+        annotation: types::Type<Loc, Loc>,
+        comments: Option<ast::Syntax<Loc, ()>>,
+    ) -> statement::Statement<Loc, Loc> {
+        statement::Statement::new(StatementInner::DeclareModuleExports {
+            loc: loc.dupe(),
+            inner: Arc::new(statement::DeclareModuleExports {
+                annot: types::Annotation {
+                    loc: loc.dupe(),
+                    annotation,
+                },
+                comments,
+            }),
+        })
+    }
+
+    fn import_equals_declaration(
+        &mut self,
+        loc: &Loc,
+        declaration: &statement::ImportEqualsDeclaration<Loc, Loc>,
+    ) -> statement::Statement<Loc, Loc> {
+        if self.ambient {
+            let mut variable = Self::declare_variable_inner(loc, &declaration.id);
+            if declaration.is_export {
+                return Self::declare_export_variable(
+                    loc,
+                    loc,
+                    variable,
+                    declaration.comments.dupe(),
+                );
+            }
+            variable.comments = declaration.comments.dupe();
+            return statement::Statement::new(StatementInner::DeclareVariable {
+                loc: loc.dupe(),
+                inner: Arc::new(variable),
+            });
+        }
+
+        let (kind, initializer) = match &declaration.module_reference {
+            statement::import_equals_declaration::ModuleReference::ExternalModuleReference(
+                reference_loc,
+                literal,
+            ) => {
+                let literal =
+                    expression::Expression::new(expression::ExpressionInner::StringLiteral {
+                        loc: reference_loc.dupe(),
+                        inner: Arc::new(literal.clone()),
+                    });
+                (
+                    ast::VariableKind::Const,
+                    builders::call(
+                        reference_loc,
+                        builders::identifier(reference_loc, "require"),
+                        vec![literal],
+                    ),
+                )
+            }
+            statement::import_equals_declaration::ModuleReference::Identifier(identifier) => {
+                let initializer = Self::generic_identifier_expression(identifier)
+                    .unwrap_or_else(|| builders::identifier(loc, "undefined"));
+                (ast::VariableKind::Var, initializer)
+            }
+        };
+        let comments = declaration.comments.dupe();
+        let variable = ast_builder::statements::variable_declaration(
+            Some(kind),
+            Some(loc.dupe()),
+            if declaration.is_export {
+                None
+            } else {
+                comments.dupe()
+            },
+            vec![ast_builder::statements::variable_declarator_generic(
+                Some(loc.dupe()),
+                builders::identifier_pattern(&declaration.id),
+                Some(initializer),
+            )],
+        );
+
+        if declaration.is_export {
+            statement::Statement::new(StatementInner::ExportNamedDeclaration {
+                loc: loc.dupe(),
+                inner: Arc::new(statement::ExportNamedDeclaration {
+                    declaration: Some(variable),
+                    specifiers: None,
+                    source: None,
+                    export_kind: statement::ExportKind::ExportValue,
+                    comments,
+                }),
+            })
+        } else {
+            variable
+        }
+    }
+
+    fn export_assignment(
+        &mut self,
+        loc: &Loc,
+        assignment: &statement::ExportAssignment<Loc, Loc>,
+    ) -> Vec<statement::Statement<Loc, Loc>> {
+        match &assignment.rhs {
+            statement::ExportAssignmentRhs::Expression(rhs) => {
+                if self.ambient {
+                    let annotation = Self::expression_typeof_target(rhs)
+                        .map(|argument| {
+                            types::Type::new(types::TypeInner::Typeof {
+                                loc: loc.dupe(),
+                                inner: Arc::new(types::Typeof {
+                                    argument,
+                                    targs: None,
+                                    comments: None,
+                                }),
+                            })
+                        })
+                        .unwrap_or_else(|| Self::any(loc));
+                    return vec![Self::declare_module_exports(
+                        loc,
+                        annotation,
+                        assignment.comments.dupe(),
+                    )];
+                }
+
+                let member = builders::member(loc, builders::identifier(loc, "module"), "exports");
+                let left = pattern::Pattern::Expression {
+                    loc: loc.dupe(),
+                    inner: Arc::new(member),
+                };
+                let assignment_expression = ast_builder::expressions::assignment(
+                    Some(loc.dupe()),
+                    None,
+                    left,
+                    None,
+                    self.map_expression(rhs),
+                );
+                vec![ast_builder::statements::expression(
+                    Some(loc.dupe()),
+                    None,
+                    assignment.comments.dupe(),
+                    assignment_expression,
+                )]
+            }
+            statement::ExportAssignmentRhs::DeclareFunction(function_loc, function) => {
+                let function = self.map_declare_function(function_loc, function);
+                let export_type = match function.id.as_ref() {
+                    Some(id) => types::Type::new(types::TypeInner::Typeof {
+                        loc: loc.dupe(),
+                        inner: Arc::new(types::Typeof {
+                            argument: types::typeof_::Target::Unqualified(id.dupe()),
+                            targs: None,
+                            comments: None,
+                        }),
+                    }),
+                    None => function.annot.annotation.dupe(),
+                };
+                let module_exports =
+                    Self::declare_module_exports(loc, export_type, assignment.comments.dupe());
+                match function.id {
+                    Some(_) => vec![
+                        statement::Statement::new(StatementInner::DeclareFunction {
+                            loc: function_loc.dupe(),
+                            inner: Arc::new(function),
+                        }),
+                        module_exports,
+                    ],
+                    None => vec![module_exports],
+                }
+            }
+        }
+    }
+
+    fn split_type_export(
+        loc: &Loc,
+        declaration: &statement::ExportNamedDeclaration<Loc, Loc>,
+    ) -> Option<Vec<statement::Statement<Loc, Loc>>> {
+        let Some(statement::export_named_declaration::Specifier::ExportSpecifiers(specifiers)) =
+            &declaration.specifiers
+        else {
+            return None;
+        };
+        if !specifiers
+            .iter()
+            .any(|specifier| specifier.export_kind == statement::ExportKind::ExportType)
+        {
+            return None;
+        }
+
+        let value_specifiers = specifiers
+            .iter()
+            .filter(|specifier| specifier.export_kind == statement::ExportKind::ExportValue)
+            .cloned()
+            .collect::<Vec<_>>();
+        let type_specifiers = specifiers
+            .iter()
+            .filter(|specifier| specifier.export_kind == statement::ExportKind::ExportType)
+            .map(|specifier| {
+                let mut specifier = specifier.clone();
+                specifier.export_kind = statement::ExportKind::ExportValue;
+                specifier
+            })
+            .collect::<Vec<_>>();
+
+        [
+            (value_specifiers, statement::ExportKind::ExportValue),
+            (type_specifiers, statement::ExportKind::ExportType),
+        ]
+        .into_iter()
+        .filter(|(specifiers, _)| !specifiers.is_empty())
+        .map(|(specifiers, export_kind)| {
+            statement::Statement::new(StatementInner::ExportNamedDeclaration {
+                loc: loc.dupe(),
+                inner: Arc::new(statement::ExportNamedDeclaration {
+                    declaration: declaration.declaration.dupe(),
+                    specifiers: Some(
+                        statement::export_named_declaration::Specifier::ExportSpecifiers(
+                            specifiers,
+                        ),
+                    ),
+                    source: declaration.source.clone(),
+                    export_kind,
+                    comments: declaration.comments.dupe(),
+                }),
+            })
+        })
+        .collect::<Vec<_>>()
+        .into()
+    }
+
+    fn declare_variable_inner(
         loc: &Loc,
         id: &ast::Identifier<Loc, Loc>,
-    ) -> statement::Statement<Loc, Loc> {
+    ) -> statement::DeclareVariable<Loc, Loc> {
         let pattern = pattern::Pattern::Identifier {
             loc: id.loc.dupe(),
             inner: Arc::new(pattern::Identifier {
@@ -60,17 +373,24 @@ impl StripFlow {
                 optional: false,
             }),
         };
+        statement::DeclareVariable {
+            declarations: Arc::from([statement::variable::Declarator {
+                loc: loc.dupe(),
+                id: pattern,
+                init: None,
+            }]),
+            kind: ast::VariableKind::Const,
+            comments: None,
+        }
+    }
+
+    fn declare_variable(
+        loc: &Loc,
+        id: &ast::Identifier<Loc, Loc>,
+    ) -> statement::Statement<Loc, Loc> {
         statement::Statement::new(StatementInner::DeclareVariable {
             loc: loc.dupe(),
-            inner: Arc::new(statement::DeclareVariable {
-                declarations: Arc::from([statement::variable::Declarator {
-                    loc: loc.dupe(),
-                    id: pattern,
-                    init: None,
-                }]),
-                kind: ast::VariableKind::Const,
-                comments: None,
-            }),
+            inner: Arc::new(Self::declare_variable_inner(loc, id)),
         })
     }
 
@@ -115,6 +435,42 @@ impl<'ast> AstVisitor<'ast, Loc> for StripFlow {
                 Self::any(loc)
             }
             _ => ast_visitor::map_type_default(self, type_),
+        }
+    }
+
+    fn map_expression(
+        &mut self,
+        expression: &'ast expression::Expression<Loc, Loc>,
+    ) -> expression::Expression<Loc, Loc> {
+        match &**expression {
+            expression::ExpressionInner::TSSatisfies { loc, inner } => {
+                expression::Expression::new(expression::ExpressionInner::AsExpression {
+                    loc: loc.dupe(),
+                    inner: Arc::new(expression::AsExpression {
+                        expression: self.map_expression(&inner.expression),
+                        annot: self.map_type_annotation(&inner.annot),
+                        comments: self.map_syntax_opt(inner.comments.as_ref()),
+                    }),
+                })
+            }
+            _ => ast_visitor::map_expression_default(self, expression),
+        }
+    }
+
+    fn map_class_body(&mut self, body: &'ast class::Body<Loc, Loc>) -> class::Body<Loc, Loc> {
+        class::Body {
+            loc: body.loc.dupe(),
+            body: body
+                .body
+                .iter()
+                .filter_map(|element| match element {
+                    class::BodyElement::AbstractMethod(_)
+                    | class::BodyElement::AbstractProperty(_) => None,
+                    _ => Some(self.map_class_element(element)),
+                })
+                .collect::<Vec<_>>()
+                .into(),
+            comments: self.map_syntax_opt(body.comments.as_ref()),
         }
     }
 
@@ -166,6 +522,50 @@ impl<'ast> AstVisitor<'ast, Loc> for StripFlow {
         Self::strip_this_param(ast_visitor::map_function_default(self, loc, function))
     }
 
+    fn map_declare_module(
+        &mut self,
+        loc: &'ast Loc,
+        declaration: &'ast statement::DeclareModule<Loc, Loc>,
+    ) -> statement::DeclareModule<Loc, Loc> {
+        let ambient = self.ambient;
+        self.ambient = true;
+        let declaration = ast_visitor::map_declare_module_default(self, loc, declaration);
+        self.ambient = ambient;
+        declaration
+    }
+
+    fn map_statement_list(
+        &mut self,
+        statements: &'ast Arc<[statement::Statement<Loc, Loc>]>,
+    ) -> Arc<[statement::Statement<Loc, Loc>]> {
+        statements
+            .iter()
+            .flat_map(|statement| match &**statement {
+                StatementInner::ImportEqualsDeclaration { loc, inner } => {
+                    if inner.import_kind == statement::ImportKind::ImportValue {
+                        vec![self.import_equals_declaration(loc, inner)]
+                    } else {
+                        Vec::new()
+                    }
+                }
+                StatementInner::ExportAssignment { loc, inner } => {
+                    self.export_assignment(loc, inner)
+                }
+                _ => {
+                    let statement = self.map_statement(statement);
+                    match &*statement {
+                        StatementInner::NamespaceExportDeclaration { .. } => Vec::new(),
+                        StatementInner::ExportNamedDeclaration { loc, inner } => {
+                            Self::split_type_export(loc, inner).unwrap_or_else(|| vec![statement])
+                        }
+                        _ => vec![statement],
+                    }
+                }
+            })
+            .collect::<Vec<_>>()
+            .into()
+    }
+
     fn map_statement(
         &mut self,
         statement: &'ast statement::Statement<Loc, Loc>,
@@ -185,5 +585,5 @@ impl<'ast> AstVisitor<'ast, Loc> for StripFlow {
 }
 
 pub fn lower_program(program: &ast::Program<Loc, Loc>) -> ast::Program<Loc, Loc> {
-    StripFlow.map_program(program)
+    StripFlow { ambient: false }.map_program(program)
 }
