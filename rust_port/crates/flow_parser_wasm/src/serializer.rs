@@ -2306,7 +2306,7 @@ impl<'a> Serializer<'a> {
 
     fn serialize_class(&mut self, loc: &Loc, class: &ast::class::Class<Loc, Loc>, kind: NodeKind) {
         // 22/84: ClassDeclaration/ClassExpression
-        // id typeParameters superClass implements body superTypeArguments decorators
+        // id typeParameters superClass implements body superTypeArguments decorators abstract
         self.write_node_header(
             if self.is_babel() {
                 if kind == NodeKind::ClassDeclaration {
@@ -2350,6 +2350,9 @@ impl<'a> Serializer<'a> {
             // 90: Decorator — expression(Node)
             self.write_node_header(NodeKind::Decorator, &dec.loc);
             self.serialize_expression(&dec.expression);
+        }
+        if !self.is_babel() {
+            self.write_bool(class.abstract_);
         }
     }
 
@@ -2577,7 +2580,7 @@ impl<'a> Serializer<'a> {
                 );
             }
             ast::class::BodyElement::IndexSignature(indexer) => {
-                // 150: ObjectTypeIndexer — id key value static variance
+                // 150: ObjectTypeIndexer — id key value static variance optional
                 self.write_node_header(NodeKind::ObjectTypeIndexer, &indexer.loc);
                 match &indexer.id {
                     Some(id) => self.serialize_identifier_node(id),
@@ -2590,6 +2593,7 @@ impl<'a> Serializer<'a> {
                     Some(v) => self.serialize_variance(v),
                     None => self.write_null_node(),
                 }
+                self.write_bool(indexer.optional);
             }
         }
     }
@@ -3007,13 +3011,14 @@ impl<'a> Serializer<'a> {
                     ) => {
                         self.buf.push(specs.len() as u32);
                         for spec in specs.iter() {
-                            // 39: ExportSpecifier — exported(Node) local(Node)
+                            // 39: ExportSpecifier — exported(Node) local(Node) exportKind(String)
                             self.write_node_header(NodeKind::ExportSpecifier, &spec.loc);
                             match &spec.exported {
                                 Some(exported) => self.serialize_identifier_node(exported),
                                 None => self.serialize_identifier_node(&spec.local),
                             }
                             self.serialize_identifier_node(&spec.local);
+                            self.write_str(export_kind_str(spec.export_kind));
                         }
                     }
                     None => self.buf.push(0),
@@ -3189,15 +3194,25 @@ impl<'a> Serializer<'a> {
                     self.serialize_type(&sp.argument);
                 }
                 ast::types::object::Property::MappedType(mt) => {
-                    // 152: ObjectTypeMappedTypeProperty — keyTparam propType sourceType variance optional
+                    // 152: ObjectTypeMappedTypeProperty — keyTparam propType sourceType nameType
+                    // variance varianceOp optional
                     self.write_node_header(NodeKind::ObjectTypeMappedTypeProperty, &mt.loc);
                     self.serialize_type_parameter(&mt.key_tparam);
                     self.serialize_type(&mt.prop_type);
                     self.serialize_type(&mt.source_type);
+                    match &mt.name_type {
+                        Some(name_type) => self.serialize_type(name_type),
+                        None => self.write_null_node(),
+                    }
                     match &mt.variance {
                         Some(v) => self.serialize_variance(v),
                         None => self.write_null_node(),
                     }
+                    self.write_str_opt(match mt.variance_op {
+                        Some(ast::types::object::MappedTypeVarianceOp::Add) => Some("+"),
+                        Some(ast::types::object::MappedTypeVarianceOp::Remove) => Some("-"),
+                        None => None,
+                    });
                     // optional: matches OCaml string()/null (no "none")
                     let optional_str = match mt.optional {
                         ast::types::object::MappedTypeOptionalFlag::PlusOptional => {
@@ -3241,6 +3256,7 @@ impl<'a> Serializer<'a> {
                     Some(v) => self.serialize_variance(v),
                     None => self.write_null_node(),
                 }
+                self.write_bool(idx.optional);
             }
         }
         // Serialize callProperties NodeList
@@ -3282,6 +3298,7 @@ impl<'a> Serializer<'a> {
 
     fn serialize_object_type_property(&mut self, p: &ast::types::object::NormalProperty<Loc, Loc>) {
         // 148: ObjectTypeProperty — key value method optional static proto variance kind
+        // abstract override tsAccessibility init
         self.write_node_header(NodeKind::ObjectTypeProperty, &p.loc);
         self.serialize_object_key(&p.key);
         // value: depends on PropertyValue variant
@@ -3311,6 +3328,21 @@ impl<'a> Serializer<'a> {
             None => self.write_null_node(),
         }
         self.write_str(kind);
+        self.write_bool(p.abstract_);
+        self.write_bool(p.override_);
+        self.write_str_opt(p.ts_accessibility.as_ref().map(|accessibility| {
+            use ast::class::ts_accessibility::Kind;
+
+            match accessibility.kind {
+                Kind::Private => "private",
+                Kind::Protected => "protected",
+                Kind::Public => "public",
+            }
+        }));
+        match &p.init {
+            Some(init) => self.serialize_expression(init),
+            None => self.write_null_node(),
+        }
     }
 
     fn serialize_constructor_type(
@@ -3935,13 +3967,14 @@ impl<'a> Serializer<'a> {
             Some(ast::statement::export_named_declaration::Specifier::ExportSpecifiers(specs)) => {
                 self.buf.push(specs.len() as u32);
                 for spec in specs.iter() {
-                    // 39: ExportSpecifier — exported local
+                    // 39: ExportSpecifier — exported local exportKind
                     self.write_node_header(NodeKind::ExportSpecifier, &spec.loc);
                     match &spec.exported {
                         Some(exported) => self.serialize_identifier_node(exported),
                         None => self.serialize_identifier_node(&spec.local),
                     }
                     self.serialize_identifier_node(&spec.local);
+                    self.write_str(export_kind_str(spec.export_kind));
                 }
             }
             Some(ast::statement::export_named_declaration::Specifier::ExportBatchSpecifier(
@@ -4129,9 +4162,15 @@ impl<'a> Serializer<'a> {
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
             self.write_bool(inner.implicit_declare);
         } else {
-            // 99: DeclareFunction — id(Node) implicitDeclare(Boolean) predicate(Node)
+            // 99: DeclareFunction — id(Node) typeAnnotation(Node)
+            // implicitDeclare(Boolean) predicate(Node)
             self.write_node_header(NodeKind::DeclareFunction, loc);
             self.serialize_typed_identifier_opt(&inner.id, &inner.annot);
+            if inner.id.is_none() {
+                self.serialize_type_annotation(&inner.annot);
+            } else {
+                self.write_null_node();
+            }
             self.write_bool(inner.implicit_declare);
             match &inner.predicate {
                 Some(pred) => self.serialize_predicate(pred),
@@ -4146,7 +4185,7 @@ impl<'a> Serializer<'a> {
         inner: &ast::statement::DeclareClass<Loc, Loc>,
     ) {
         // 100: DeclareClass — id typeParameters extends implements mixins body
-        // implicitDeclare(Boolean)
+        // implicitDeclare(Boolean) abstract(TrueBoolean)
         self.write_node_header(NodeKind::DeclareClass, loc);
         self.serialize_identifier_node(&inner.id);
         self.serialize_type_params_opt(&inner.tparams);
@@ -4178,6 +4217,7 @@ impl<'a> Serializer<'a> {
         }
         self.serialize_type_object(&inner.body.0, &inner.body.1);
         self.write_bool(self.implicit_declare_from_loc(loc));
+        self.write_bool(inner.abstract_);
     }
 
     fn serialize_declare_component(

@@ -544,6 +544,7 @@ define_nodes! {
         body: Node,
         superTypeArguments: Node,
         decorators: NodeList,
+        abstract: TrueBoolean,
     } from Statement::ClassDeclaration { loc, inner }
         {=> self.serialize_class(loc, inner, NodeKind::ClassDeclaration)},
     ComponentDeclaration = 23 {
@@ -647,6 +648,7 @@ define_nodes! {
     ExportSpecifier = 39 {
         exported: Node,
         local: Node,
+        exportKind: String,
     },
     ExportNamespaceSpecifier = 40 {
         exported: Node,
@@ -980,6 +982,7 @@ define_nodes! {
         body: Node,
         superTypeArguments: Node,
         decorators: NodeList,
+        abstract: TrueBoolean,
     } from Expression::Class { loc, inner }
         {=> self.serialize_class(loc, inner, NodeKind::ClassExpression)},
     ClassBody = 85 {
@@ -1043,16 +1046,16 @@ define_nodes! {
         key: Node,
         value: Node,
         computed: Boolean,
-        override: Boolean,
-        tsAccessibility: String,
+        override: TrueBoolean,
+        tsAccessibility: MaybeString,
     },
     AbstractPropertyDefinition = 94 {
         key: Node,
         value: Node,
         computed: Boolean,
         variance: Node,
-        override: Boolean,
-        tsAccessibility: String,
+        override: TrueBoolean,
+        tsAccessibility: MaybeString,
     },
 
     // ---------------------------------------------------------------
@@ -1083,6 +1086,7 @@ define_nodes! {
         {=> self.serialize_declare_variable(loc, inner)},
     DeclareFunction = 99 {
         id: Node,
+        typeAnnotation: OptionalNode,
         implicitDeclare: Boolean,
         predicate: Node,
     } from Statement::DeclareFunction { loc, inner }
@@ -1095,6 +1099,7 @@ define_nodes! {
         mixins: NodeList,
         body: Node,
         implicitDeclare: Boolean,
+        abstract: TrueBoolean,
     } from Statement::DeclareClass { loc, inner }
         {=> self.serialize_declare_class(loc, inner)},
     DeclareComponent = 101 {
@@ -1352,6 +1357,10 @@ define_nodes! {
         proto: Boolean,
         variance: Node,
         kind: String,
+        abstract: TrueBoolean,
+        override: TrueBoolean,
+        tsAccessibility: MaybeString,
+        init: OptionalNode,
     },
     ObjectTypeSpreadProperty = 149 {
         argument: Node,
@@ -1362,6 +1371,7 @@ define_nodes! {
         value: Node,
         static: Boolean,
         variance: Node,
+        optional: Boolean,
     },
     ObjectTypeCallProperty = 151 {
         value: Node,
@@ -1371,7 +1381,9 @@ define_nodes! {
         keyTparam: Node,
         propType: Node,
         sourceType: Node,
+        nameType: Node,
         variance: Node,
+        varianceOp: String,
         optional: String,
     },
     ObjectTypeInternalSlot = 153 {

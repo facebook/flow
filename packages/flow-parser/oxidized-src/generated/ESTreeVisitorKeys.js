@@ -623,6 +623,7 @@ module.exports = {
     'keyTparam',
     'propType',
     'sourceType',
+    'nameType',
     'variance',
   ],
   ObjectTypePrivateField: [

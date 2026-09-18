@@ -171,6 +171,8 @@ function mapRecordDeclaration(
     computed: false,
     static: false,
     decorators: [],
+    override: false,
+    tsAccessibility: null,
     value: {
       type: 'FunctionExpression',
       id: null,
@@ -237,6 +239,8 @@ function mapRecordDeclaration(
       computed: false,
       declare: false,
       optional: false,
+      override: false,
+      tsAccessibility: null,
       ...etc(),
       parent: EMPTY_PARENT,
     }));

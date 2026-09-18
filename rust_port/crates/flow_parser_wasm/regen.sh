@@ -40,6 +40,7 @@ fi
 cd "${fbsource_root}/fbcode"
 
 export FLOW_ESTREE_TYPES_JS="${FLOW_ESTREE_TYPES_JS:-${fbsource_root}/fbcode/flow/packages/flow-estree/src/types.js}"
+export HERMES_ESTREE_SELECTOR_TYPES_JS="${HERMES_ESTREE_SELECTOR_TYPES_JS:-${fbsource_root}/xplat/static_h/tools/hermes-parser/js/hermes-estree/src/generated/HermesESTreeSelectorTypes.js.flow}"
 
 codegen_target="fbcode//flow/rust_port/crates/flow_parser_wasm:codegen"
 parser_pkg="flow/packages/flow-parser/oxidized-src"

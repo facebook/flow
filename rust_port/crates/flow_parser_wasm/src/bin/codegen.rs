@@ -881,7 +881,7 @@ module.exports = {{
 
     for def in SCHEMA.iter() {
         // Skip Literal subtypes that upstream collapses into `Literal: []`.
-        if LITERAL_COLLAPSED_KINDS.contains(&def.name) {
+        if def.name.starts_with("Babel") || LITERAL_COLLAPSED_KINDS.contains(&def.name) {
             continue;
         }
         // Literal itself is custom-encoded and has no Node/NodeList children
@@ -925,7 +925,7 @@ module.exports = {{
     // Per-node insertions for upstream-only fields not in the Rust schema
     // (synthesized by the JS adapter — see `extra_visitor_inserts`).
     for def in SCHEMA.iter() {
-        if LITERAL_COLLAPSED_KINDS.contains(&def.name) {
+        if def.name.starts_with("Babel") || LITERAL_COLLAPSED_KINDS.contains(&def.name) {
             continue;
         }
         let inserts = extra_visitor_inserts(def.estree_type);
@@ -979,8 +979,8 @@ module.exports = {{
 }
 
 /// Generate the Flow companion `ESTreeVisitorKeys.js.flow`. This is a fixed
-/// file (no schema content) that exports `VisitorKeys` as a `$ReadOnly<{[string]:
-/// $ReadOnlyArray<string>}>` and declares the `module.exports` shape. Mirrors
+/// file (no schema content) that exports `VisitorKeys` as a `Readonly<{[string]:
+/// ReadonlyArray<string>}>` and declares the `module.exports` shape. Mirrors
 /// upstream `xplat/static_h/tools/hermes-parser/js/hermes-parser/src/generated/ESTreeVisitorKeys.js.flow`
 /// byte-for-byte (with our regen header instead of the hand-written one).
 ///
@@ -1012,7 +1012,7 @@ fn generate_estree_visitor_keys_flow() {
 
 'use strict';
 
-export type VisitorKeys = $ReadOnly<{{[string]: $ReadOnlyArray<string>}}>;
+export type VisitorKeys = Readonly<{{[string]: ReadonlyArray<string>}}>;
 
 declare module.exports: VisitorKeys;
 ",
@@ -1084,25 +1084,11 @@ const KNOWN_TYPES_WITHOUT_INTERFACE: &[&str] = &[
     // MemberExpression with `+optional: boolean`.
     "OptionalCallExpression",
     "OptionalMemberExpression",
-    // TS-only kinds in the Rust schema (mirror OCaml's full type space; not
-    // surfaced via the Flow-only adapter).
-    "ImportEqualsDeclaration",
-    "ExternalModuleReference",
-    "ExportAssignment",
+    // TS-only kinds that are not surfaced via the Flow parser adapter.
     "ExportNamespaceSpecifier",
-    "NamespaceExportDeclaration",
-    "SatisfiesExpression",
     "NonNullExpression",
     "ParameterProperty",
     "DeclareMethodDefinition",
-    "AbstractMethodDefinition",
-    "AbstractPropertyDefinition",
-    "DeclareClassExtendsCall",
-    "ConstructorTypeAnnotation",
-    "ObjectTypePrivateField",
-    "TupleTypeElement",
-    "ImportType",
-    "TemplateLiteralTypeAnnotation",
     "RendersMaybeType",
     "RendersStarType",
     "EnumBody",
@@ -1206,10 +1192,8 @@ const PREDICATE_SPECIAL_NODES: &[&str] = &["Identifier", "JSXIdentifier", "JSXTe
 /// - **`EnumBody`** — upstream models this as a union of the per-type bodies
 ///   (`Enum{BigInt,Boolean,Number,String,Symbol}Body`); the union has no
 ///   predicate.
-/// - **TS-only kinds** — upstream Hermes parses TypeScript; these kinds exist
-///   in our SCHEMA only because the Rust serializer kind list mirrors the
-///   OCaml binary protocol's full type space. Flow-only consumers will never
-///   see them via the flow-parser adapter.
+/// - **Unsupported TS-only kinds** — upstream Hermes parses TypeScript; these
+///   kinds are not emitted by the Flow parser adapter.
 const PREDICATE_EXCLUDED_TYPES: &[&str] = &[
     // Optional-chain refinements collapsed into Call/Member by upstream.
     "OptionalCallExpression",
@@ -1218,25 +1202,12 @@ const PREDICATE_EXCLUDED_TYPES: &[&str] = &[
     "RendersType",
     // Enum body union — upstream emits per-type body predicates only.
     "EnumBody",
-    // TS-only kinds (mirror OCaml's full type space; not surfaced via the
-    // Flow-only adapter, so upstream JSON has no entry).
-    "ImportEqualsDeclaration",
-    "ExternalModuleReference",
-    "ExportAssignment",
+    // TS-only kinds not surfaced via the Flow parser adapter, so upstream JSON
+    // has no entry.
     "ExportNamespaceSpecifier",
-    "NamespaceExportDeclaration",
-    "SatisfiesExpression",
     "NonNullExpression",
     "ParameterProperty",
     "DeclareMethodDefinition",
-    "AbstractMethodDefinition",
-    "AbstractPropertyDefinition",
-    "DeclareClassExtendsCall",
-    "ConstructorTypeAnnotation",
-    "ObjectTypePrivateField",
-    "TupleTypeElement",
-    "ImportType",
-    "TemplateLiteralTypeAnnotation",
     "RendersMaybeType",
     "RendersStarType",
     // Flow-only kinds that exist in our SCHEMA but not in upstream Hermes
@@ -1405,6 +1376,9 @@ fn generate_estree_predicates() {
     // without an upstream predicate).
     let mut bare_nodes: Vec<&'static str> = Vec::new();
     for def in SCHEMA.iter() {
+        if def.name.starts_with("Babel") {
+            continue;
+        }
         if LITERAL_COLLAPSED_KINDS.contains(&def.name) {
             continue;
         }

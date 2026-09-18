@@ -779,6 +779,7 @@ function mapStatementList(
                         type: 'ExportSpecifier',
                         exported: shallowCloneNode(componentOrRef),
                         local: shallowCloneNode(componentOrRef),
+                        exportKind: 'value',
                         loc: node.loc,
                         range: node.range,
                         parent: EMPTY_PARENT,

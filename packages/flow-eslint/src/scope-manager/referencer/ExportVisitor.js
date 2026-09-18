@@ -79,7 +79,11 @@ class ExportVisitor extends Visitor {
   }
 
   ExportSpecifier(node: ExportSpecifier): void {
-    this.visit(node.local);
+    if (node.exportKind === 'type' || this._exportNode.exportKind === 'type') {
+      this._referencer.currentScope().referenceType(node.local);
+    } else {
+      this._referencer.currentScope().referenceDualValueType(node.local);
+    }
   }
 }
 

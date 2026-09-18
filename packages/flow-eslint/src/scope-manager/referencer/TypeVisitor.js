@@ -14,6 +14,7 @@ import type {
   ComponentTypeAnnotation,
   ComponentTypeParameter,
   DeclareClass,
+  DeclareClassExtendsCall,
   DeclaredPredicate,
   DeclareExportDeclaration,
   DeclareComponent,
@@ -35,12 +36,14 @@ import type {
   InterfaceDeclaration,
   ObjectTypeIndexer,
   ObjectTypeInternalSlot,
+  ObjectTypePrivateField,
   ObjectTypeProperty,
   ObjectTypeMappedTypeProperty,
   OpaqueType,
   QualifiedTypeIdentifier,
   QualifiedTypeofIdentifier,
   TypeAlias,
+  TupleTypeElement,
   TypeofTypeAnnotation,
   TypeParameter,
 } from 'flow-estree';
@@ -180,6 +183,11 @@ class TypeVisitor extends Visitor {
     }
   }
 
+  DeclareClassExtendsCall(node: DeclareClassExtendsCall): void {
+    this.visit(node.callee);
+    this.visit(node.argument);
+  }
+
   DeclaredPredicate(_: DeclaredPredicate): void {
     // Declared predicates are complicated - they can technically reference external
     // **values** and they can also reference the function type parameters.
@@ -202,8 +210,11 @@ class TypeVisitor extends Visitor {
       }
     } else {
       for (const specifier of node.specifiers) {
-        // can only reference values
-        this._referencer.currentScope().referenceValue(specifier.local);
+        if (specifier.exportKind === 'type') {
+          this._referencer.currentScope().referenceType(specifier.local);
+        } else {
+          this._referencer.currentScope().referenceValue(specifier.local);
+        }
         // also ignore the exported name
       }
     }
@@ -231,13 +242,24 @@ class TypeVisitor extends Visitor {
   }
 
   DeclareFunction(node: DeclareFunction): void {
-    this._referencer
-      .currentScope()
-      .defineIdentifier(node.id, new FunctionNameDefinition(node.id, node));
-
-    // the function type is stored as an annotation on the ID
-    this.visit(node.id.typeAnnotation);
+    const id = node.id;
+    if (id != null) {
+      this._referencer
+        .currentScope()
+        .defineIdentifier(id, new FunctionNameDefinition(id, node));
+      this.visit(id.typeAnnotation);
+    } else {
+      this.visit(node.typeAnnotation);
+    }
     this.visit(node.predicate);
+  }
+
+  ObjectTypePrivateField(node: ObjectTypePrivateField): void {
+    this.visit(node.key);
+  }
+
+  TupleTypeElement(node: TupleTypeElement): void {
+    this.visit(node.elementType);
   }
 
   DeclareHook(node: DeclareHook): void {
@@ -402,6 +424,7 @@ class TypeVisitor extends Visitor {
     // Visit remaining properties.
     this.visit(node.propType);
     this.visit(node.sourceType);
+    this.visit(node.nameType);
     this.visit(node.variance);
 
     this._referencer.close(node);
@@ -415,7 +438,7 @@ class TypeVisitor extends Visitor {
     // Only the first component of a qualified type identifier is a reference,
     // e.g. 'Foo' in `type T = Foo.Bar.Baz`.
     let currentNode = node.qualification;
-    while (currentNode.type !== 'Identifier') {
+    while (currentNode.type === 'QualifiedTypeIdentifier') {
       currentNode = currentNode.qualification;
     }
 
@@ -428,18 +451,22 @@ class TypeVisitor extends Visitor {
     // meaning this is also valid
     //     import type Foo from 'foo';
     //     type T = Foo.Class;
-    this._referencer.currentScope().referenceDualValueType(currentNode);
+    if (currentNode.type === 'Identifier') {
+      this._referencer.currentScope().referenceDualValueType(currentNode);
+    }
   }
 
   QualifiedTypeofIdentifier(node: QualifiedTypeofIdentifier): void {
     // Only the first component of a qualified type identifier is a reference,
     // e.g. 'Foo' in `type T = Foo.Bar.Baz`.
     let currentNode = node.qualification;
-    while (currentNode.type !== 'Identifier') {
+    while (currentNode.type === 'QualifiedTypeofIdentifier') {
       currentNode = currentNode.qualification;
     }
 
-    this._referencer.currentScope().referenceDualValueType(currentNode);
+    if (currentNode.type === 'Identifier') {
+      this._referencer.currentScope().referenceDualValueType(currentNode);
+    }
   }
 
   TypeAlias(node: TypeAlias): void {
@@ -447,16 +474,14 @@ class TypeVisitor extends Visitor {
   }
 
   TypeofTypeAnnotation(node: TypeofTypeAnnotation): void {
-    const identifier = (() => {
-      let currentNode: QualifiedTypeofIdentifier | Identifier = node.argument;
-      while (currentNode.type !== 'Identifier') {
-        currentNode = currentNode.qualification;
-      }
-      return currentNode;
-    })();
-
-    // typeof annotations can only reference values!
-    this._referencer.currentScope().referenceValue(identifier);
+    let currentNode = node.argument;
+    while (currentNode.type === 'QualifiedTypeofIdentifier') {
+      currentNode = currentNode.qualification;
+    }
+    if (currentNode.type === 'Identifier') {
+      // typeof annotations can only reference values!
+      this._referencer.currentScope().referenceValue(currentNode);
+    }
     this.visit(node.typeArguments);
   }
 

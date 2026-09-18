@@ -29,6 +29,7 @@ import type {
   DestructuringObjectPropertyWithShorthandStaticName,
   DestructuringObjectPropertyWithNonShorthandStaticName,
   ClassMember,
+  ClassMemberWithNonComputedName,
   ClassDeclaration,
   ClassExpression,
   Literal,
@@ -58,13 +59,26 @@ export function isPropertyDefinitionWithNonComputedName(
 }
 
 export function isClassMember(node /*: ESNode */) /*: implies node is ClassMember */ {
-  return node.type === 'PropertyDefinition' || node.type === 'MethodDefinition';
+  return (
+    node.type === 'PropertyDefinition' ||
+    node.type === 'MethodDefinition' ||
+    node.type === 'AbstractMethodDefinition' ||
+    node.type === 'AbstractPropertyDefinition' ||
+    node.type === 'ObjectTypeIndexer' ||
+    node.type === 'StaticBlock'
+  );
 }
 
 export function isClassMemberWithNonComputedName(
   node /*: ESNode */,
-) /*: implies node is (PropertyDefinitionWithNonComputedName | MethodDefinitionConstructor | MethodDefinitionWithNonComputedName) */ {
-  return (node.type === 'PropertyDefinition' || node.type === 'MethodDefinition') && node.computed === false;
+) /*: implies node is ClassMemberWithNonComputedName */ {
+  return (
+    (node.type === 'PropertyDefinition' ||
+      node.type === 'MethodDefinition' ||
+      node.type === 'AbstractMethodDefinition' ||
+      node.type === 'AbstractPropertyDefinition') &&
+    node.computed === false
+  );
 }
 
 export function isComment(node /*: ESNode | Token */) /*: implies node is (MostTokens | BlockComment | LineComment) */ {
@@ -159,6 +173,7 @@ export function isExpression(node /*: ESNode */) /*: implies node is Expression 
     node.type === 'TypeCastExpression' ||
     node.type === 'AsExpression' ||
     node.type === 'AsConstExpression' ||
+    node.type === 'SatisfiesExpression' ||
     node.type === 'JSXFragment' ||
     node.type === 'JSXElement' ||
     node.type === 'MatchExpression' ||

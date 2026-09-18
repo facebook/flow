@@ -75,6 +75,7 @@ import type {
   Property,
   RecordDeclaration,
   RecordExpression,
+  SatisfiesExpression,
   SwitchStatement,
   TaggedTemplateExpression,
   TypeAlias,
@@ -406,6 +407,11 @@ class Referencer extends Visitor {
   }
 
   AsExpression(node: AsExpression): void {
+    this.visit(node.expression);
+    this.visitType(node.typeAnnotation);
+  }
+
+  SatisfiesExpression(node: SatisfiesExpression): void {
     this.visit(node.expression);
     this.visitType(node.typeAnnotation);
   }

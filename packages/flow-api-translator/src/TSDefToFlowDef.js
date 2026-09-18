@@ -391,6 +391,7 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
             type: 'ExportSpecifier',
             local: Transform.Identifier(specifier.local),
             exported: Transform.Identifier(specifier.exported),
+            exportKind: specifier.exportKind ?? 'value',
           }),
         );
         return constructFlowNode<FlowESTree.DeclareExportDeclarationNamedWithSpecifiers>(
@@ -465,6 +466,7 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
                   type: 'ExportSpecifier',
                   local: decl.id,
                   exported: decl.id,
+                  exportKind: 'value',
                 }),
               ],
             }),
@@ -1063,10 +1065,18 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
       if (node.qualifier == null) {
         return base;
       }
-      let qualifier = Transform.EntityNameToTypeIdentifier(node.qualifier);
+      let qualifier:
+        FlowESTree.Identifier | FlowESTree.QualifiedTypeIdentifier =
+        Transform.EntityNameToTypeIdentifier(node.qualifier);
       const namesRev: Array<string> = [];
       while (qualifier.type !== 'Identifier') {
         namesRev.push(qualifier.id.name);
+        if (qualifier.qualification.type === 'ImportType') {
+          return unsupportedAnnotation(
+            node,
+            'nested import types in import type qualifiers',
+          );
+        }
         qualifier = qualifier.qualification;
       }
       namesRev.push(qualifier.name);
@@ -1267,13 +1277,19 @@ const getTransforms = (originalCode: string, opts: TranslationOptions) => {
         keyTparam,
         propType: Transform.TSTypeAnnotationOpt(node.typeAnnotation),
         sourceType,
+        nameType:
+          node.nameType == null
+            ? null
+            : Transform.TSTypeAnnotation(node.nameType),
         variance:
-          node.readonly === '+' || Boolean(node.readonly)
+          node.readonly != null && node.readonly !== false
             ? constructFlowNode<FlowESTree.Variance>({
                 type: 'Variance',
                 kind: 'plus',
               })
             : null,
+        varianceOp:
+          node.readonly === '+' ? '+' : node.readonly === '-' ? '-' : null,
         optional:
           node.optional === '+'
             ? 'PlusOptional'

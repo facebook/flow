@@ -35,6 +35,8 @@ import type {
   Identifier,
   JSXIdentifier,
   JSXText,
+  AbstractMethodDefinition,
+  AbstractPropertyDefinition,
   AnyTypeAnnotation,
   ArrayExpression,
   ArrayPattern,
@@ -64,9 +66,11 @@ import type {
   ComponentTypeParameter,
   ConditionalExpression,
   ConditionalTypeAnnotation,
+  ConstructorTypeAnnotation,
   ContinueStatement,
   DebuggerStatement,
   DeclareClass,
+  DeclareClassExtendsCall,
   DeclareComponent,
   DeclaredPredicate,
   DeclareEnum,
@@ -98,10 +102,12 @@ import type {
   EnumSymbolBody,
   ExistsTypeAnnotation,
   ExportAllDeclaration,
+  ExportAssignment,
   ExportDefaultDeclaration,
   ExportNamedDeclaration,
   ExportSpecifier,
   ExpressionStatement,
+  ExternalModuleReference,
   ForInStatement,
   ForOfStatement,
   ForStatement,
@@ -116,9 +122,11 @@ import type {
   ImportAttribute,
   ImportDeclaration,
   ImportDefaultSpecifier,
+  ImportEqualsDeclaration,
   ImportExpression,
   ImportNamespaceSpecifier,
   ImportSpecifier,
+  ImportType,
   IndexedAccessType,
   InferredPredicate,
   InferTypeAnnotation,
@@ -164,6 +172,7 @@ import type {
   MetaProperty,
   MethodDefinition,
   MixedTypeAnnotation,
+  NamespaceExportDeclaration,
   NeverTypeAnnotation,
   NewExpression,
   NullableTypeAnnotation,
@@ -177,6 +186,7 @@ import type {
   ObjectTypeIndexer,
   ObjectTypeInternalSlot,
   ObjectTypeMappedTypeProperty,
+  ObjectTypePrivateField,
   ObjectTypeProperty,
   ObjectTypeSpreadProperty,
   OpaqueType,
@@ -196,6 +206,7 @@ import type {
   RecordExpressionProperties,
   RestElement,
   ReturnStatement,
+  SatisfiesExpression,
   SequenceExpression,
   SpreadElement,
   StaticBlock,
@@ -208,11 +219,13 @@ import type {
   TaggedTemplateExpression,
   TemplateElement,
   TemplateLiteral,
+  TemplateLiteralTypeAnnotation,
   ThisExpression,
   ThisTypeAnnotation,
   ThrowStatement,
   TryStatement,
   TupleTypeAnnotation,
+  TupleTypeElement,
   TupleTypeLabeledElement,
   TupleTypeSpreadElement,
   TypeAlias,
@@ -258,6 +271,16 @@ export function isJSXText(node /*: ESNode | Token */) /*: implies node is (JSXTe
   return node.type === 'JSXText';
 }
   
+
+export function isAbstractMethodDefinition(node /*: ESNode | Token */) /*: implies node is AbstractMethodDefinition */ {
+  return node.type === 'AbstractMethodDefinition';
+}
+    
+
+export function isAbstractPropertyDefinition(node /*: ESNode | Token */) /*: implies node is AbstractPropertyDefinition */ {
+  return node.type === 'AbstractPropertyDefinition';
+}
+    
 
 export function isAnyTypeAnnotation(node /*: ESNode | Token */) /*: implies node is AnyTypeAnnotation */ {
   return node.type === 'AnyTypeAnnotation';
@@ -404,6 +427,11 @@ export function isConditionalTypeAnnotation(node /*: ESNode | Token */) /*: impl
 }
     
 
+export function isConstructorTypeAnnotation(node /*: ESNode | Token */) /*: implies node is ConstructorTypeAnnotation */ {
+  return node.type === 'ConstructorTypeAnnotation';
+}
+    
+
 export function isContinueStatement(node /*: ESNode | Token */) /*: implies node is ContinueStatement */ {
   return node.type === 'ContinueStatement';
 }
@@ -416,6 +444,11 @@ export function isDebuggerStatement(node /*: ESNode | Token */) /*: implies node
 
 export function isDeclareClass(node /*: ESNode | Token */) /*: implies node is DeclareClass */ {
   return node.type === 'DeclareClass';
+}
+    
+
+export function isDeclareClassExtendsCall(node /*: ESNode | Token */) /*: implies node is DeclareClassExtendsCall */ {
+  return node.type === 'DeclareClassExtendsCall';
 }
     
 
@@ -574,6 +607,11 @@ export function isExportAllDeclaration(node /*: ESNode | Token */) /*: implies n
 }
     
 
+export function isExportAssignment(node /*: ESNode | Token */) /*: implies node is ExportAssignment */ {
+  return node.type === 'ExportAssignment';
+}
+    
+
 export function isExportDefaultDeclaration(node /*: ESNode | Token */) /*: implies node is ExportDefaultDeclaration */ {
   return node.type === 'ExportDefaultDeclaration';
 }
@@ -591,6 +629,11 @@ export function isExportSpecifier(node /*: ESNode | Token */) /*: implies node i
 
 export function isExpressionStatement(node /*: ESNode | Token */) /*: implies node is ExpressionStatement */ {
   return node.type === 'ExpressionStatement';
+}
+    
+
+export function isExternalModuleReference(node /*: ESNode | Token */) /*: implies node is ExternalModuleReference */ {
+  return node.type === 'ExternalModuleReference';
 }
     
 
@@ -664,6 +707,11 @@ export function isImportDefaultSpecifier(node /*: ESNode | Token */) /*: implies
 }
     
 
+export function isImportEqualsDeclaration(node /*: ESNode | Token */) /*: implies node is ImportEqualsDeclaration */ {
+  return node.type === 'ImportEqualsDeclaration';
+}
+    
+
 export function isImportExpression(node /*: ESNode | Token */) /*: implies node is ImportExpression */ {
   return node.type === 'ImportExpression';
 }
@@ -676,6 +724,11 @@ export function isImportNamespaceSpecifier(node /*: ESNode | Token */) /*: impli
 
 export function isImportSpecifier(node /*: ESNode | Token */) /*: implies node is ImportSpecifier */ {
   return node.type === 'ImportSpecifier';
+}
+    
+
+export function isImportType(node /*: ESNode | Token */) /*: implies node is ImportType */ {
+  return node.type === 'ImportType';
 }
     
 
@@ -904,6 +957,11 @@ export function isMixedTypeAnnotation(node /*: ESNode | Token */) /*: implies no
 }
     
 
+export function isNamespaceExportDeclaration(node /*: ESNode | Token */) /*: implies node is NamespaceExportDeclaration */ {
+  return node.type === 'NamespaceExportDeclaration';
+}
+    
+
 export function isNeverTypeAnnotation(node /*: ESNode | Token */) /*: implies node is NeverTypeAnnotation */ {
   return node.type === 'NeverTypeAnnotation';
 }
@@ -966,6 +1024,11 @@ export function isObjectTypeInternalSlot(node /*: ESNode | Token */) /*: implies
 
 export function isObjectTypeMappedTypeProperty(node /*: ESNode | Token */) /*: implies node is ObjectTypeMappedTypeProperty */ {
   return node.type === 'ObjectTypeMappedTypeProperty';
+}
+    
+
+export function isObjectTypePrivateField(node /*: ESNode | Token */) /*: implies node is ObjectTypePrivateField */ {
+  return node.type === 'ObjectTypePrivateField';
 }
     
 
@@ -1064,6 +1127,11 @@ export function isReturnStatement(node /*: ESNode | Token */) /*: implies node i
 }
     
 
+export function isSatisfiesExpression(node /*: ESNode | Token */) /*: implies node is SatisfiesExpression */ {
+  return node.type === 'SatisfiesExpression';
+}
+    
+
 export function isSequenceExpression(node /*: ESNode | Token */) /*: implies node is SequenceExpression */ {
   return node.type === 'SequenceExpression';
 }
@@ -1124,6 +1192,11 @@ export function isTemplateLiteral(node /*: ESNode | Token */) /*: implies node i
 }
     
 
+export function isTemplateLiteralTypeAnnotation(node /*: ESNode | Token */) /*: implies node is TemplateLiteralTypeAnnotation */ {
+  return node.type === 'TemplateLiteralTypeAnnotation';
+}
+    
+
 export function isThisExpression(node /*: ESNode | Token */) /*: implies node is ThisExpression */ {
   return node.type === 'ThisExpression';
 }
@@ -1146,6 +1219,11 @@ export function isTryStatement(node /*: ESNode | Token */) /*: implies node is T
 
 export function isTupleTypeAnnotation(node /*: ESNode | Token */) /*: implies node is TupleTypeAnnotation */ {
   return node.type === 'TupleTypeAnnotation';
+}
+    
+
+export function isTupleTypeElement(node /*: ESNode | Token */) /*: implies node is TupleTypeElement */ {
+  return node.type === 'TupleTypeElement';
 }
     
 

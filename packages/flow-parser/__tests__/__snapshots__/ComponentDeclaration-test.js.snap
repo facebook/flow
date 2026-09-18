@@ -1872,6 +1872,7 @@ exports[`ComponentDeclaration ref and normal params named exported Babel 1`] = `
       "source": null,
       "specifiers": [
         {
+          "exportKind": "value",
           "exported": {
             "name": "Foo",
             "type": "Identifier",

@@ -746,6 +746,66 @@ const getTransforms = (
     return () => `$$IMPORT_TYPEOF_${++typeof_import_count}$$`;
   })();
 
+  function transformImportTypeReference(
+    node:
+      | FlowESTree.ImportType
+      | FlowESTree.Identifier
+      | FlowESTree.QualifiedTypeIdentifier
+      | FlowESTree.QualifiedTypeofIdentifier,
+    typeArguments: TSESTree.TSTypeParameterInstantiation | null = null,
+  ): TSESTree.TSImportType | null {
+    const names: Array<FlowESTree.Identifier> = [];
+    let current = node;
+    while (
+      current.type === 'QualifiedTypeIdentifier' ||
+      current.type === 'QualifiedTypeofIdentifier'
+    ) {
+      names.unshift(current.id);
+      current = current.qualification;
+    }
+    if (current.type !== 'ImportType') {
+      return null;
+    }
+
+    let qualifier: TSESTree.EntityName | null = null;
+    for (const name of names) {
+      const identifier: TSESTree.Identifier = {
+        type: 'Identifier',
+        loc: DUMMY_LOC,
+        name: name.name,
+      };
+      qualifier =
+        qualifier == null
+          ? identifier
+          : {
+              type: 'TSQualifiedName',
+              loc: DUMMY_LOC,
+              left: qualifier,
+              right: identifier,
+            };
+    }
+
+    const source: TSESTree.StringLiteral = {
+      type: 'Literal',
+      loc: DUMMY_LOC,
+      raw: current.argument.raw,
+      value: current.argument.value,
+    };
+    return {
+      type: 'TSImportType',
+      loc: DUMMY_LOC,
+      argument: {
+        type: 'TSLiteralType',
+        loc: DUMMY_LOC,
+        literal: source,
+      },
+      options: null,
+      qualifier,
+      source,
+      typeArguments,
+    };
+  }
+
   const transformTypeAnnotationType = (
     node: FlowESTree.TypeAnnotationType,
   ): TSESTree.TypeNode => {
@@ -800,8 +860,12 @@ const getTransforms = (
         return transform.SymbolTypeAnnotation(node);
       case 'ThisTypeAnnotation':
         return transform.ThisTypeAnnotation(node);
+      case 'TemplateLiteralTypeAnnotation':
+        return transform.TemplateLiteralTypeAnnotation(node);
       case 'TupleTypeAnnotation':
         return transform.TupleTypeAnnotation(node);
+      case 'TupleTypeElement':
+        return transform.TupleTypeElement(node);
       case 'TypeofTypeAnnotation':
         return transform.TypeofTypeAnnotation(node);
       case 'UnionTypeAnnotation':
@@ -812,6 +876,8 @@ const getTransforms = (
         return transform.TypePredicateAnnotation(node);
       case 'ConditionalTypeAnnotation':
         return transform.ConditionalTypeAnnotation(node);
+      case 'ConstructorTypeAnnotation':
+        return transform.ConstructorTypeAnnotation(node);
       case 'InferTypeAnnotation':
         return transform.InferTypeAnnotation(node);
       case 'KeyofTypeAnnotation':
@@ -1205,6 +1271,29 @@ const getTransforms = (
       }
 
       const superClass = node.extends.length > 0 ? node.extends[0] : undefined;
+      let superClassExpression: TSESTree.LeftHandSideExpression | null = null;
+      let superTypeArguments: TSESTree.TSTypeParameterInstantiation | void;
+      if (superClass != null) {
+        switch (superClass.type) {
+          case 'DeclareClassExtendsCall':
+            return unsupportedDeclaration(
+              superClass,
+              'mixin class extends clauses',
+              node.id,
+              true,
+              node.typeParameters,
+            );
+          case 'InterfaceExtends':
+            superClassExpression =
+              superClass.id.type === 'QualifiedTypeIdentifier'
+                ? transform.QualifiedTypeIdentifier(superClass.id)
+                : transform.Identifier(superClass.id as $FlowFixMe, false);
+            superTypeArguments = transform.TypeParameterInstantiation(
+              superClass.typeParameters,
+            );
+            break;
+        }
+      }
 
       return {
         type: 'ClassDeclaration',
@@ -1220,15 +1309,8 @@ const getTransforms = (
           node.implements == null
             ? undefined
             : node.implements.map(transform.ClassImplements),
-        superClass:
-          superClass == null
-            ? null
-            : superClass.id.type === 'QualifiedTypeIdentifier'
-              ? transform.QualifiedTypeIdentifier(superClass.id)
-              : transform.Identifier(superClass.id as $FlowFixMe, false),
-        superTypeArguments: transform.TypeParameterInstantiation(
-          superClass?.typeParameters,
-        ),
+        superClass: superClassExpression,
+        superTypeArguments,
         typeParameters:
           node.typeParameters == null
             ? undefined
@@ -1287,6 +1369,14 @@ const getTransforms = (
           // TS doesn't support direct default export for declare'd functions
           case 'DeclareFunction': {
             const functionDecl = transform.DeclareFunction(declaration);
+            if (declaration.id == null) {
+              return {
+                type: 'ExportDefaultDeclaration',
+                loc: DUMMY_LOC,
+                declaration: functionDecl,
+                exportKind: 'value',
+              };
+            }
             const name = declaration.id.name;
             return [
               functionDecl,
@@ -1506,6 +1596,17 @@ const getTransforms = (
                   {
                     declaration: transform.DeclareInterface(node.declaration),
                     exportKind: 'type',
+                  },
+                ];
+              case 'DeclareNamespace':
+                return [
+                  {
+                    declaration: unsupportedDeclaration(
+                      node.declaration,
+                      'namespaces',
+                      node.declaration.id,
+                    ),
+                    exportKind: 'value',
                   },
                 ];
               case 'DeclareOpaqueType':
@@ -1802,11 +1903,12 @@ const getTransforms = (
     DeclareFunction(
       node: FlowESTree.DeclareFunction,
     ): TSESTree.TSDeclareFunction {
-      // the function information is stored as an annotation on the ID...
-      const id = transform.Identifier(node.id, false);
-      const functionInfo = transform.FunctionTypeAnnotation(
-        node.id.typeAnnotation.typeAnnotation,
-      );
+      const annotation = node.id?.typeAnnotation ?? node.typeAnnotation;
+      if (annotation == null) {
+        throw translationError(node, 'Declare function is missing its type');
+      }
+      const functionType = annotation.typeAnnotation;
+      const functionInfo = transform.FunctionTypeAnnotation(functionType);
 
       return {
         type: 'TSDeclareFunction',
@@ -1816,11 +1918,14 @@ const getTransforms = (
         declare: true,
         expression: false,
         generator: false,
-        id: {
-          type: 'Identifier',
-          loc: DUMMY_LOC,
-          name: id.name,
-        },
+        id:
+          node.id == null
+            ? null
+            : {
+                type: 'Identifier',
+                loc: DUMMY_LOC,
+                name: node.id.name,
+              },
         params: functionInfo.params,
         returnType: functionInfo.returnType,
         typeParameters: functionInfo.typeParameters,
@@ -2157,8 +2262,48 @@ const getTransforms = (
         loc: DUMMY_LOC,
         exported: transform.Identifier(node.exported, false),
         local: transform.Identifier(node.local, false),
-        // flow does not support inline exportKind for named exports
-        exportKind: 'value',
+        exportKind: node.exportKind,
+      };
+    },
+    ConstructorTypeAnnotation(
+      node: FlowESTree.ConstructorTypeAnnotation,
+    ): TSESTree.TSConstructorType {
+      const params = node.params.map(transform.FunctionTypeParam);
+      if (node.rest != null) {
+        const rest = node.rest;
+        params.push({
+          type: 'RestElement',
+          loc: DUMMY_LOC,
+          argument:
+            rest.name == null
+              ? {
+                  type: 'Identifier',
+                  loc: DUMMY_LOC,
+                  name: '$$REST$$',
+                }
+              : transform.Identifier(rest.name, false),
+          typeAnnotation: {
+            type: 'TSTypeAnnotation',
+            loc: DUMMY_LOC,
+            typeAnnotation: transformTypeAnnotationType(rest.typeAnnotation),
+          },
+        });
+      }
+
+      return {
+        type: 'TSConstructorType',
+        loc: DUMMY_LOC,
+        abstract: node.abstract,
+        params,
+        returnType: {
+          type: 'TSTypeAnnotation',
+          loc: DUMMY_LOC,
+          typeAnnotation: transformTypeAnnotationType(node.returnType),
+        },
+        typeParameters:
+          node.typeParameters == null
+            ? undefined
+            : transform.TypeParameterDeclaration(node.typeParameters),
       };
     },
     FunctionTypeAnnotation(
@@ -2207,7 +2352,10 @@ const getTransforms = (
         returnType: {
           type: 'TSTypeAnnotation',
           loc: DUMMY_LOC,
-          typeAnnotation: transformTypeAnnotationType(node.returnType),
+          typeAnnotation:
+            node.returnType == null
+              ? {type: 'TSAnyKeyword', loc: DUMMY_LOC}
+              : transformTypeAnnotationType(node.returnType),
         },
         typeParameters:
           node.typeParameters == null
@@ -2234,6 +2382,14 @@ const getTransforms = (
     GenericTypeAnnotation(
       node: FlowESTree.GenericTypeAnnotation,
     ): TSESTree.TypeNode {
+      const importType = transformImportTypeReference(
+        node.id,
+        transform.TypeParameterInstantiation(node.typeParameters) ?? null,
+      );
+      if (importType != null) {
+        return importType;
+      }
+
       const [fullTypeName, baseId] = (() => {
         let names: Array<string> = [];
         let currentNode = node.id;
@@ -3260,13 +3416,19 @@ const getTransforms = (
         }
       }
 
+      const typeName =
+        node.id.type === 'Identifier'
+          ? transform.Identifier(node.id, false)
+          : node.id.type === 'QualifiedTypeIdentifier'
+            ? transform.QualifiedTypeIdentifier(node.id)
+            : null;
+      if (typeName == null) {
+        throw unexpectedTranslationError(node, 'Unreachable import type');
+      }
       return {
         type: 'TSTypeReference',
         loc: DUMMY_LOC,
-        typeName:
-          node.id.type === 'Identifier'
-            ? transform.Identifier(node.id, false)
-            : transform.QualifiedTypeIdentifier(node.id),
+        typeName,
         typeArguments: transform.TypeParameterInstantiation(
           node.typeParameters,
         ),
@@ -3574,11 +3736,15 @@ const getTransforms = (
           },
           constraint: transformTypeAnnotationType(prop.sourceType),
           readonly:
-            prop.variance?.kind === 'plus' ||
-            prop.variance?.kind === 'readonly',
+            prop.varianceOp ??
+            (prop.variance?.kind === 'plus' ||
+              prop.variance?.kind === 'readonly'),
           optional: prop.optional === 'Optional',
           typeAnnotation: transformTypeAnnotationType(prop.propType),
-          nameType: null,
+          nameType:
+            prop.nameType == null
+              ? null
+              : transformTypeAnnotationType(prop.nameType),
         };
 
         return tsProp;
@@ -3626,6 +3792,10 @@ const getTransforms = (
               property,
               'object type with mapped type property along with other properties',
             );
+          }
+
+          if (property.type === 'ObjectTypePrivateField') {
+            return unsupportedAnnotation(property, 'private type fields');
           }
 
           members.push({
@@ -3749,6 +3919,8 @@ const getTransforms = (
               property,
               'object type with mapped type property',
             );
+          } else if (property.type === 'ObjectTypePrivateField') {
+            return unsupportedAnnotation(property, 'private type fields');
           } else {
             members.push({
               start: property.range[0],
@@ -3843,6 +4015,9 @@ const getTransforms = (
       node: FlowESTree.ObjectTypeIndexer,
     ): TSESTree.TSIndexSignature | TSESTree.TSPropertySignatureComputedName {
       if (node.key.type === 'GenericTypeAnnotation') {
+        if (node.key.id.type === 'ImportType') {
+          throw translationError(node, 'Unsupported import type indexer key');
+        }
         const ident =
           node.key.id.type === 'Identifier' ? node.key.id : node.key.id.id;
         return {
@@ -4046,14 +4221,18 @@ const getTransforms = (
       node: FlowESTree.QualifiedTypeIdentifier,
     ): TSESTree.TSQualifiedName {
       const qual = node.qualification;
+      if (qual.type === 'ImportType') {
+        throw unexpectedTranslationError(qual, 'Unreachable import type');
+      }
+      const left =
+        qual.type === 'Identifier'
+          ? transform.Identifier(qual, false)
+          : transform.QualifiedTypeIdentifier(qual);
 
       return {
         type: 'TSQualifiedName',
         loc: DUMMY_LOC,
-        left:
-          qual.type === 'Identifier'
-            ? transform.Identifier(qual, false)
-            : transform.QualifiedTypeIdentifier(qual),
+        left,
         right: transform.Identifier(node.id, false),
       };
     },
@@ -4061,14 +4240,18 @@ const getTransforms = (
       node: FlowESTree.QualifiedTypeofIdentifier,
     ): TSESTree.TSQualifiedName {
       const qual = node.qualification;
+      if (qual.type === 'ImportType') {
+        throw unexpectedTranslationError(qual, 'Unreachable import type');
+      }
+      const left =
+        qual.type === 'Identifier'
+          ? transform.Identifier(qual, false)
+          : transform.QualifiedTypeofIdentifier(qual);
 
       return {
         type: 'TSQualifiedName',
         loc: DUMMY_LOC,
-        left:
-          qual.type === 'Identifier'
-            ? transform.Identifier(qual, false)
-            : transform.QualifiedTypeofIdentifier(qual),
+        left,
         right: transform.Identifier(node.id, false),
       };
     },
@@ -4128,6 +4311,24 @@ const getTransforms = (
       return {
         type: 'TSThisType',
         loc: DUMMY_LOC,
+      };
+    },
+    TemplateLiteralTypeAnnotation(
+      node: FlowESTree.TemplateLiteralTypeAnnotation,
+    ): TSESTree.TSTemplateLiteralType {
+      return {
+        type: 'TSTemplateLiteralType',
+        loc: DUMMY_LOC,
+        quasis: node.quasis.map(quasi => ({
+          type: 'TemplateElement',
+          loc: DUMMY_LOC,
+          tail: quasi.tail,
+          value: {
+            cooked: quasi.value.cooked,
+            raw: quasi.value.raw,
+          },
+        })),
+        types: node.types.map(transformTypeAnnotationType),
       };
     },
     TupleTypeAnnotation(
@@ -4212,6 +4413,16 @@ const getTransforms = (
           }
         : tupleAnnot;
     },
+    TupleTypeElement(node: FlowESTree.TupleTypeElement): TSESTree.TypeNode {
+      const elementType = transformTypeAnnotationType(node.elementType);
+      return node.optional
+        ? {
+            type: 'TSOptionalType',
+            loc: DUMMY_LOC,
+            typeAnnotation: elementType,
+          }
+        : elementType;
+    },
     TypeAlias(node: FlowESTree.TypeAlias): TSESTree.TSTypeAliasDeclaration {
       return transform.DeclareTypeAlias(node);
     },
@@ -4225,6 +4436,30 @@ const getTransforms = (
     TypeofTypeAnnotation(
       node: FlowESTree.TypeofTypeAnnotation,
     ): TSESTree.TSTypeQuery {
+      if (node.argument.type === 'ImportType') {
+        const importType = transformImportTypeReference(node.argument);
+        if (importType == null) {
+          throw unexpectedTranslationError(node, 'Invalid import type');
+        }
+        return {
+          type: 'TSTypeQuery',
+          loc: DUMMY_LOC,
+          exprName: importType,
+          typeArguments: undefined,
+        };
+      }
+      const importType =
+        node.argument.type === 'QualifiedTypeofIdentifier'
+          ? transformImportTypeReference(node.argument)
+          : null;
+      if (importType != null) {
+        return {
+          type: 'TSTypeQuery',
+          loc: DUMMY_LOC,
+          exprName: importType,
+          typeArguments: undefined,
+        };
+      }
       switch (node.argument.type) {
         case 'Identifier':
           return {
@@ -4240,6 +4475,11 @@ const getTransforms = (
             exprName: transform.QualifiedTypeofIdentifier(node.argument),
             typeArguments: undefined,
           };
+        default:
+          throw unexpectedTranslationError(
+            node.argument,
+            'Unexpected typeof annotation argument',
+          );
       }
     },
     TypeParameter(node: FlowESTree.TypeParameter): TSESTree.TSTypeParameter {
@@ -4397,8 +4637,15 @@ const getTransforms = (
         typeAnnotation: transformTypeAnnotationType(node.argument),
       };
     },
-    TypeOperator(node: FlowESTree.RendersType): TSESTree.TypeNode {
+    TypeOperator(node: FlowESTree.TypeOperator): TSESTree.TypeNode {
       switch (node.operator) {
+        case 'unique':
+          return {
+            type: 'TSTypeOperator',
+            loc: DUMMY_LOC,
+            operator: 'unique',
+            typeAnnotation: transformTypeAnnotationType(node.typeAnnotation),
+          };
         case 'renders':
         case 'renders?':
         case 'renders*': {

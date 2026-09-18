@@ -11,12 +11,15 @@
 'use strict';
 
 import type {
+  AbstractMethodDefinition,
+  AbstractPropertyDefinition,
   ClassBody,
   ClassDeclaration,
   ClassExpression,
   ESNode,
   Identifier,
   MethodDefinition,
+  ObjectTypeIndexer,
   PropertyDefinition,
   StaticBlock,
 } from 'flow-estree';
@@ -155,6 +158,25 @@ class ClassVisitor extends Visitor {
 
   MethodDefinition(node: MethodDefinition): void {
     this.visitMethod(node);
+  }
+
+  AbstractMethodDefinition(node: AbstractMethodDefinition): void {
+    if (node.computed) {
+      this._referencer.visit(node.key);
+    }
+    this.visitType(node.value);
+  }
+
+  AbstractPropertyDefinition(node: AbstractPropertyDefinition): void {
+    if (node.computed) {
+      this._referencer.visit(node.key);
+    }
+    this.visitType(node.value);
+    this.visitType(node.variance);
+  }
+
+  ObjectTypeIndexer(node: ObjectTypeIndexer): void {
+    this.visitType(node);
   }
 
   StaticBlock(node: StaticBlock): void {

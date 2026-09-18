@@ -1,5 +1,72 @@
 [
   {
+    "name": "AbstractMethodDefinition",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "computed",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "override",
+        "optional": true
+      },
+      {
+        "type": "NodeString",
+        "name": "tsAccessibility",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "AbstractPropertyDefinition",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "value",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "computed",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "variance",
+        "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "override",
+        "optional": true
+      },
+      {
+        "type": "NodeString",
+        "name": "tsAccessibility",
+        "optional": true
+      }
+    ]
+  },
+  {
     "name": "AnyTypeAnnotation",
     "base": "Flow",
     "arguments": []
@@ -367,6 +434,11 @@
         "type": "NodePtr",
         "name": "body",
         "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "abstract",
+        "optional": true
       }
     ]
   },
@@ -408,6 +480,11 @@
         "type": "NodePtr",
         "name": "body",
         "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "abstract",
+        "optional": true
       }
     ]
   },
@@ -579,6 +656,37 @@
     ]
   },
   {
+    "name": "ConstructorTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeBoolean",
+        "name": "abstract",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "params",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "returnType",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "rest",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeParameters",
+        "optional": true
+      }
+    ]
+  },
+  {
     "name": "ContinueStatement",
     "base": "Statement",
     "arguments": [
@@ -626,6 +734,27 @@
       {
         "type": "NodePtr",
         "name": "body",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "abstract",
+        "optional": true
+      }
+    ]
+  },
+  {
+    "name": "DeclareClassExtendsCall",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "callee",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "argument",
         "optional": false
       }
     ]
@@ -1133,6 +1262,17 @@
     "arguments": []
   },
   {
+    "name": "ExportAssignment",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "ExportAllDeclaration",
     "base": "Base",
     "arguments": [
@@ -1203,6 +1343,11 @@
         "type": "NodePtr",
         "name": "local",
         "optional": false
+      },
+      {
+        "type": "NodeLabel",
+        "name": "exportKind",
+        "optional": false
       }
     ]
   },
@@ -1219,6 +1364,17 @@
         "type": "NodeString",
         "name": "directive",
         "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ExternalModuleReference",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
       }
     ]
   },
@@ -1613,6 +1769,32 @@
     ]
   },
   {
+    "name": "ImportEqualsDeclaration",
+    "base": "Statement",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "moduleReference",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "importKind",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "isExport",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "ImportExpression",
     "base": "Base",
     "arguments": [
@@ -1656,6 +1838,17 @@
       {
         "type": "NodeLabel",
         "name": "importKind",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "ImportType",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "argument",
         "optional": false
       }
     ]
@@ -2353,6 +2546,16 @@
         "type": "NodeList",
         "name": "decorators",
         "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "override",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "tsAccessibility",
+        "optional": true
       }
     ]
   },
@@ -2360,6 +2563,17 @@
     "name": "MixedTypeAnnotation",
     "base": "Flow",
     "arguments": []
+  },
+  {
+    "name": "NamespaceExportDeclaration",
+    "base": "Base",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "id",
+        "optional": false
+      }
+    ]
   },
   {
     "name": "NeverTypeAnnotation",
@@ -2547,6 +2761,11 @@
         "type": "NodePtr",
         "name": "variance",
         "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
+        "optional": false
       }
     ]
   },
@@ -2602,13 +2821,34 @@
       },
       {
         "type": "NodePtr",
+        "name": "nameType",
+        "optional": true
+      },
+      {
+        "type": "NodePtr",
         "name": "variance",
+        "optional": true
+      },
+      {
+        "type": "NodeString",
+        "name": "varianceOp",
         "optional": true
       },
       {
         "type": "NodeString",
         "name": "optional",
         "optional": true
+      }
+    ]
+  },
+  {
+    "name": "ObjectTypePrivateField",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "key",
+        "optional": false
       }
     ]
   },
@@ -2837,6 +3077,16 @@
         "type": "NodePtr",
         "name": "tsModifiers",
         "optional": true
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "override",
+        "optional": false
+      },
+      {
+        "type": "NodeString",
+        "name": "tsAccessibility",
+        "optional": true
       }
     ]
   },
@@ -3038,6 +3288,22 @@
     ]
   },
   {
+    "name": "SatisfiesExpression",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "expression",
+        "optional": false
+      },
+      {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "SequenceExpression",
     "base": "Base",
     "arguments": [
@@ -3198,6 +3464,22 @@
     ]
   },
   {
+    "name": "TemplateLiteralTypeAnnotation",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodeList",
+        "name": "quasis",
+        "optional": false
+      },
+      {
+        "type": "NodeList",
+        "name": "types",
+        "optional": false
+      }
+    ]
+  },
+  {
     "name": "ThisExpression",
     "base": "Base",
     "arguments": []
@@ -3251,6 +3533,22 @@
       {
         "type": "NodeBoolean",
         "name": "inexact",
+        "optional": false
+      }
+    ]
+  },
+  {
+    "name": "TupleTypeElement",
+    "base": "Flow",
+    "arguments": [
+      {
+        "type": "NodePtr",
+        "name": "elementType",
+        "optional": false
+      },
+      {
+        "type": "NodeBoolean",
+        "name": "optional",
         "optional": false
       }
     ]

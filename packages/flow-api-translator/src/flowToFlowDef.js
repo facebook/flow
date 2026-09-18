@@ -1428,6 +1428,13 @@ function convertSuperClass(
           : superClass.typeAnnotation;
 
       if (typeAnnotation.type === 'GenericTypeAnnotation') {
+        if (typeAnnotation.id.type === 'ImportType') {
+          throw translationError(
+            superClass,
+            'SuperClass: Import type not supported',
+            context,
+          );
+        }
         return convertSuperClassHelper(
           asDetachedNode(typeAnnotation.id),
           typeAnnotation,

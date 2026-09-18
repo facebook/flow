@@ -23,6 +23,8 @@
 
 import type {
   ESNode,
+  AbstractMethodDefinition as AbstractMethodDefinitionType,
+  AbstractPropertyDefinition as AbstractPropertyDefinitionType,
   AnyTypeAnnotation as AnyTypeAnnotationType,
   ArrayExpression as ArrayExpressionType,
   ArrayPattern as ArrayPatternType,
@@ -50,9 +52,11 @@ import type {
   ComponentTypeParameter as ComponentTypeParameterType,
   ConditionalExpression as ConditionalExpressionType,
   ConditionalTypeAnnotation as ConditionalTypeAnnotationType,
+  ConstructorTypeAnnotation as ConstructorTypeAnnotationType,
   ContinueStatement as ContinueStatementType,
   DebuggerStatement as DebuggerStatementType,
   DeclareClass as DeclareClassType,
+  DeclareClassExtendsCall as DeclareClassExtendsCallType,
   DeclareComponent as DeclareComponentType,
   DeclaredPredicate as DeclaredPredicateType,
   DeclareEnum as DeclareEnumType,
@@ -80,10 +84,12 @@ import type {
   EnumStringMember as EnumStringMemberType,
   EnumSymbolBody as EnumSymbolBodyType,
   ExistsTypeAnnotation as ExistsTypeAnnotationType,
+  ExportAssignment as ExportAssignmentType,
   ExportAllDeclaration as ExportAllDeclarationType,
   ExportDefaultDeclaration as ExportDefaultDeclarationType,
   ExportSpecifier as ExportSpecifierType,
   ExpressionStatement as ExpressionStatementType,
+  ExternalModuleReference as ExternalModuleReferenceType,
   ForInStatement as ForInStatementType,
   ForOfStatement as ForOfStatementType,
   ForStatement as ForStatementType,
@@ -98,9 +104,11 @@ import type {
   ImportAttribute as ImportAttributeType,
   ImportDeclaration as ImportDeclarationType,
   ImportDefaultSpecifier as ImportDefaultSpecifierType,
+  ImportEqualsDeclaration as ImportEqualsDeclarationType,
   ImportExpression as ImportExpressionType,
   ImportNamespaceSpecifier as ImportNamespaceSpecifierType,
   ImportSpecifier as ImportSpecifierType,
+  ImportType as ImportTypeType,
   IndexedAccessType as IndexedAccessTypeType,
   InferredPredicate as InferredPredicateType,
   InferTypeAnnotation as InferTypeAnnotationType,
@@ -147,6 +155,7 @@ import type {
   MetaProperty as MetaPropertyType,
   MethodDefinition as MethodDefinitionType,
   MixedTypeAnnotation as MixedTypeAnnotationType,
+  NamespaceExportDeclaration as NamespaceExportDeclarationType,
   NeverTypeAnnotation as NeverTypeAnnotationType,
   NewExpression as NewExpressionType,
   NullableTypeAnnotation as NullableTypeAnnotationType,
@@ -160,6 +169,7 @@ import type {
   ObjectTypeIndexer as ObjectTypeIndexerType,
   ObjectTypeInternalSlot as ObjectTypeInternalSlotType,
   ObjectTypeMappedTypeProperty as ObjectTypeMappedTypePropertyType,
+  ObjectTypePrivateField as ObjectTypePrivateFieldType,
   ObjectTypeSpreadProperty as ObjectTypeSpreadPropertyType,
   OpaqueType as OpaqueTypeType,
   OptionalIndexedAccessType as OptionalIndexedAccessTypeType,
@@ -177,6 +187,7 @@ import type {
   RecordExpressionProperties as RecordExpressionPropertiesType,
   RestElement as RestElementType,
   ReturnStatement as ReturnStatementType,
+  SatisfiesExpression as SatisfiesExpressionType,
   SequenceExpression as SequenceExpressionType,
   SpreadElement as SpreadElementType,
   StaticBlock as StaticBlockType,
@@ -188,11 +199,13 @@ import type {
   SymbolTypeAnnotation as SymbolTypeAnnotationType,
   TaggedTemplateExpression as TaggedTemplateExpressionType,
   TemplateLiteral as TemplateLiteralType,
+  TemplateLiteralTypeAnnotation as TemplateLiteralTypeAnnotationType,
   ThisExpression as ThisExpressionType,
   ThisTypeAnnotation as ThisTypeAnnotationType,
   ThrowStatement as ThrowStatementType,
   TryStatement as TryStatementType,
   TupleTypeAnnotation as TupleTypeAnnotationType,
+  TupleTypeElement as TupleTypeElementType,
   TupleTypeLabeledElement as TupleTypeLabeledElementType,
   TupleTypeSpreadElement as TupleTypeSpreadElementType,
   TypeAlias as TypeAliasType,
@@ -224,6 +237,25 @@ import {
   detachedProps,
   setParentPointersInDirectChildren,
 } from '../detachedNode';
+
+export type AbstractMethodDefinitionProps = {
+  readonly key: MaybeDetachedNode<AbstractMethodDefinitionType['key']>,
+  readonly value: MaybeDetachedNode<AbstractMethodDefinitionType['value']>,
+  readonly computed: AbstractMethodDefinitionType['computed'],
+  readonly override?: ?AbstractMethodDefinitionType['override'],
+  readonly tsAccessibility?: ?AbstractMethodDefinitionType['tsAccessibility'],
+};
+
+export type AbstractPropertyDefinitionProps = {
+  readonly key: MaybeDetachedNode<AbstractPropertyDefinitionType['key']>,
+  readonly value?: ?MaybeDetachedNode<AbstractPropertyDefinitionType['value']>,
+  readonly computed: AbstractPropertyDefinitionType['computed'],
+  readonly variance?: ?MaybeDetachedNode<
+    AbstractPropertyDefinitionType['variance'],
+  >,
+  readonly override?: ?AbstractPropertyDefinitionType['override'],
+  readonly tsAccessibility?: ?AbstractPropertyDefinitionType['tsAccessibility'],
+};
 
 export type AnyTypeAnnotationProps = {};
 
@@ -339,6 +371,7 @@ export type ClassExpressionProps = {
     MaybeDetachedNode<ClassExpressionType['decorators'][number]>,
   >,
   readonly body: MaybeDetachedNode<ClassExpressionType['body']>,
+  readonly abstract?: ?ClassExpressionType['abstract'],
 };
 
 export type ClassImplementsProps = {
@@ -413,6 +446,20 @@ export type ConditionalTypeAnnotationProps = {
   >,
 };
 
+export type ConstructorTypeAnnotationProps = {
+  readonly abstract: ConstructorTypeAnnotationType['abstract'],
+  readonly params: ReadonlyArray<
+    MaybeDetachedNode<ConstructorTypeAnnotationType['params'][number]>,
+  >,
+  readonly returnType: MaybeDetachedNode<
+    ConstructorTypeAnnotationType['returnType'],
+  >,
+  readonly rest?: ?MaybeDetachedNode<ConstructorTypeAnnotationType['rest']>,
+  readonly typeParameters?: ?MaybeDetachedNode<
+    ConstructorTypeAnnotationType['typeParameters'],
+  >,
+};
+
 export type ContinueStatementProps = {
   readonly label?: ?MaybeDetachedNode<ContinueStatementType['label']>,
 };
@@ -434,6 +481,12 @@ export type DeclareClassProps = {
     MaybeDetachedNode<DeclareClassType['mixins'][number]>,
   >,
   readonly body: MaybeDetachedNode<DeclareClassType['body']>,
+  readonly abstract?: ?DeclareClassType['abstract'],
+};
+
+export type DeclareClassExtendsCallProps = {
+  readonly callee: MaybeDetachedNode<DeclareClassExtendsCallType['callee']>,
+  readonly argument: MaybeDetachedNode<DeclareClassExtendsCallType['argument']>,
 };
 
 export type DeclareComponentProps = {
@@ -600,6 +653,10 @@ export type EnumSymbolBodyProps = {
 
 export type ExistsTypeAnnotationProps = {};
 
+export type ExportAssignmentProps = {
+  readonly expression: MaybeDetachedNode<ExportAssignmentType['expression']>,
+};
+
 export type ExportAllDeclarationProps = {
   readonly exported?: ?MaybeDetachedNode<ExportAllDeclarationType['exported']>,
   readonly source: MaybeDetachedNode<ExportAllDeclarationType['source']>,
@@ -615,11 +672,18 @@ export type ExportDefaultDeclarationProps = {
 export type ExportSpecifierProps = {
   readonly exported: MaybeDetachedNode<ExportSpecifierType['exported']>,
   readonly local: MaybeDetachedNode<ExportSpecifierType['local']>,
+  readonly exportKind: ExportSpecifierType['exportKind'],
 };
 
 export type ExpressionStatementProps = {
   readonly expression: MaybeDetachedNode<ExpressionStatementType['expression']>,
   readonly directive?: ?ExpressionStatementType['directive'],
+};
+
+export type ExternalModuleReferenceProps = {
+  readonly expression: MaybeDetachedNode<
+    ExternalModuleReferenceType['expression'],
+  >,
 };
 
 export type ForInStatementProps = {
@@ -755,6 +819,15 @@ export type ImportDefaultSpecifierProps = {
   readonly local: MaybeDetachedNode<ImportDefaultSpecifierType['local']>,
 };
 
+export type ImportEqualsDeclarationProps = {
+  readonly id: MaybeDetachedNode<ImportEqualsDeclarationType['id']>,
+  readonly moduleReference: MaybeDetachedNode<
+    ImportEqualsDeclarationType['moduleReference'],
+  >,
+  readonly importKind: ImportEqualsDeclarationType['importKind'],
+  readonly isExport: ImportEqualsDeclarationType['isExport'],
+};
+
 export type ImportExpressionProps = {
   readonly source: MaybeDetachedNode<ImportExpressionType['source']>,
   readonly options?: ?MaybeDetachedNode<ImportExpressionType['options']>,
@@ -768,6 +841,10 @@ export type ImportSpecifierProps = {
   readonly imported: MaybeDetachedNode<ImportSpecifierType['imported']>,
   readonly local: MaybeDetachedNode<ImportSpecifierType['local']>,
   readonly importKind: ImportSpecifierType['importKind'],
+};
+
+export type ImportTypeProps = {
+  readonly argument: MaybeDetachedNode<ImportTypeType['argument']>,
 };
 
 export type IndexedAccessTypeProps = {
@@ -1028,9 +1105,15 @@ export type MethodDefinitionProps = {
   readonly decorators: ReadonlyArray<
     MaybeDetachedNode<MethodDefinitionType['decorators'][number]>,
   >,
+  readonly override: MethodDefinitionType['override'],
+  readonly tsAccessibility?: ?MethodDefinitionType['tsAccessibility'],
 };
 
 export type MixedTypeAnnotationProps = {};
+
+export type NamespaceExportDeclarationProps = {
+  readonly id: MaybeDetachedNode<NamespaceExportDeclarationType['id']>,
+};
 
 export type NeverTypeAnnotationProps = {};
 
@@ -1102,6 +1185,7 @@ export type ObjectTypeIndexerProps = {
   readonly value: MaybeDetachedNode<ObjectTypeIndexerType['value']>,
   readonly static: ObjectTypeIndexerType['static'],
   readonly variance?: ?MaybeDetachedNode<ObjectTypeIndexerType['variance']>,
+  readonly optional: ObjectTypeIndexerType['optional'],
 };
 
 export type ObjectTypeInternalSlotProps = {
@@ -1122,10 +1206,18 @@ export type ObjectTypeMappedTypePropertyProps = {
   readonly sourceType: MaybeDetachedNode<
     ObjectTypeMappedTypePropertyType['sourceType'],
   >,
+  readonly nameType?: ?MaybeDetachedNode<
+    ObjectTypeMappedTypePropertyType['nameType'],
+  >,
   readonly variance?: ?MaybeDetachedNode<
     ObjectTypeMappedTypePropertyType['variance'],
   >,
+  readonly varianceOp?: ?ObjectTypeMappedTypePropertyType['varianceOp'],
   readonly optional?: ?ObjectTypeMappedTypePropertyType['optional'],
+};
+
+export type ObjectTypePrivateFieldProps = {
+  readonly key: MaybeDetachedNode<ObjectTypePrivateFieldType['key']>,
 };
 
 export type ObjectTypeSpreadPropertyProps = {
@@ -1182,6 +1274,8 @@ export type PropertyDefinitionProps = {
   readonly typeAnnotation?: ?MaybeDetachedNode<
     PropertyDefinitionType['typeAnnotation'],
   >,
+  readonly override: PropertyDefinitionType['override'],
+  readonly tsAccessibility?: ?PropertyDefinitionType['tsAccessibility'],
 };
 
 export type QualifiedTypeIdentifierProps = {
@@ -1266,6 +1360,13 @@ export type ReturnStatementProps = {
   readonly argument?: ?MaybeDetachedNode<ReturnStatementType['argument']>,
 };
 
+export type SatisfiesExpressionProps = {
+  readonly expression: MaybeDetachedNode<SatisfiesExpressionType['expression']>,
+  readonly typeAnnotation: MaybeDetachedNode<
+    SatisfiesExpressionType['typeAnnotation'],
+  >,
+};
+
 export type SequenceExpressionProps = {
   readonly expressions: ReadonlyArray<
     MaybeDetachedNode<SequenceExpressionType['expressions'][number]>,
@@ -1321,6 +1422,15 @@ export type TemplateLiteralProps = {
   >,
 };
 
+export type TemplateLiteralTypeAnnotationProps = {
+  readonly quasis: ReadonlyArray<
+    MaybeDetachedNode<TemplateLiteralTypeAnnotationType['quasis'][number]>,
+  >,
+  readonly types: ReadonlyArray<
+    MaybeDetachedNode<TemplateLiteralTypeAnnotationType['types'][number]>,
+  >,
+};
+
 export type ThisExpressionProps = {};
 
 export type ThisTypeAnnotationProps = {};
@@ -1340,6 +1450,11 @@ export type TupleTypeAnnotationProps = {
     MaybeDetachedNode<TupleTypeAnnotationType['elementTypes'][number]>,
   >,
   readonly inexact: TupleTypeAnnotationType['inexact'],
+};
+
+export type TupleTypeElementProps = {
+  readonly elementType: MaybeDetachedNode<TupleTypeElementType['elementType']>,
+  readonly optional: TupleTypeElementType['optional'],
 };
 
 export type TupleTypeLabeledElementProps = {
@@ -1476,6 +1591,45 @@ export type YieldExpressionProps = {
   readonly argument?: ?MaybeDetachedNode<YieldExpressionType['argument']>,
   readonly delegate?: ?YieldExpressionType['delegate'],
 };
+
+export function AbstractMethodDefinition(props: {
+  ...AbstractMethodDefinitionProps,
+  readonly parent?: ESNode,
+}): DetachedNode<AbstractMethodDefinitionType> {
+  const node = detachedProps<AbstractMethodDefinitionType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'AbstractMethodDefinition',
+      key: asDetachedNodeForCodeGen(props.key),
+      value: asDetachedNodeForCodeGen(props.value),
+      computed: props.computed,
+      override: props.override,
+      tsAccessibility: props.tsAccessibility,
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
+export function AbstractPropertyDefinition(props: {
+  ...AbstractPropertyDefinitionProps,
+  readonly parent?: ESNode,
+}): DetachedNode<AbstractPropertyDefinitionType> {
+  const node = detachedProps<AbstractPropertyDefinitionType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'AbstractPropertyDefinition',
+      key: asDetachedNodeForCodeGen(props.key),
+      value: asDetachedNodeForCodeGen(props.value),
+      computed: props.computed,
+      variance: asDetachedNodeForCodeGen(props.variance),
+      override: props.override,
+      tsAccessibility: props.tsAccessibility,
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
 
 export function AnyTypeAnnotation(
   props: {
@@ -1742,6 +1896,7 @@ export function ClassExpression(props: {
     implements: props.implements.map(n => asDetachedNodeForCodeGen(n)),
     decorators: props.decorators.map(n => asDetachedNodeForCodeGen(n)),
     body: asDetachedNodeForCodeGen(props.body),
+    abstract: props.abstract,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -1867,6 +2022,25 @@ export function ConditionalTypeAnnotation(props: {
   return node;
 }
 
+export function ConstructorTypeAnnotation(props: {
+  ...ConstructorTypeAnnotationProps,
+  readonly parent?: ESNode,
+}): DetachedNode<ConstructorTypeAnnotationType> {
+  const node = detachedProps<ConstructorTypeAnnotationType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'ConstructorTypeAnnotation',
+      abstract: props.abstract,
+      params: props.params.map(n => asDetachedNodeForCodeGen(n)),
+      returnType: asDetachedNodeForCodeGen(props.returnType),
+      rest: asDetachedNodeForCodeGen(props.rest),
+      typeParameters: asDetachedNodeForCodeGen(props.typeParameters),
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
 export function ContinueStatement(props: {
   ...ContinueStatementProps,
   readonly parent?: ESNode,
@@ -1904,7 +2078,24 @@ export function DeclareClass(props: {
     implements: props.implements.map(n => asDetachedNodeForCodeGen(n)),
     mixins: props.mixins.map(n => asDetachedNodeForCodeGen(n)),
     body: asDetachedNodeForCodeGen(props.body),
+    abstract: props.abstract,
   });
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
+export function DeclareClassExtendsCall(props: {
+  ...DeclareClassExtendsCallProps,
+  readonly parent?: ESNode,
+}): DetachedNode<DeclareClassExtendsCallType> {
+  const node = detachedProps<DeclareClassExtendsCallType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'DeclareClassExtendsCall',
+      callee: asDetachedNodeForCodeGen(props.callee),
+      argument: asDetachedNodeForCodeGen(props.argument),
+    },
+  );
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
 }
@@ -2279,6 +2470,18 @@ export function ExistsTypeAnnotation(
   });
 }
 
+export function ExportAssignment(props: {
+  ...ExportAssignmentProps,
+  readonly parent?: ESNode,
+}): DetachedNode<ExportAssignmentType> {
+  const node = detachedProps<ExportAssignmentType>(props.parent as $FlowFixMe, {
+    type: 'ExportAssignment',
+    expression: asDetachedNodeForCodeGen(props.expression),
+  });
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
 export function ExportAllDeclaration(props: {
   ...ExportAllDeclarationProps,
   readonly parent?: ESNode,
@@ -2319,6 +2522,7 @@ export function ExportSpecifier(props: {
     type: 'ExportSpecifier',
     exported: asDetachedNodeForCodeGen(props.exported),
     local: asDetachedNodeForCodeGen(props.local),
+    exportKind: props.exportKind,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -2334,6 +2538,21 @@ export function ExpressionStatement(props: {
       type: 'ExpressionStatement',
       expression: asDetachedNodeForCodeGen(props.expression),
       directive: props.directive,
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
+export function ExternalModuleReference(props: {
+  ...ExternalModuleReferenceProps,
+  readonly parent?: ESNode,
+}): DetachedNode<ExternalModuleReferenceType> {
+  const node = detachedProps<ExternalModuleReferenceType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'ExternalModuleReference',
+      expression: asDetachedNodeForCodeGen(props.expression),
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -2575,6 +2794,24 @@ export function ImportDefaultSpecifier(props: {
   return node;
 }
 
+export function ImportEqualsDeclaration(props: {
+  ...ImportEqualsDeclarationProps,
+  readonly parent?: ESNode,
+}): DetachedNode<ImportEqualsDeclarationType> {
+  const node = detachedProps<ImportEqualsDeclarationType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'ImportEqualsDeclaration',
+      id: asDetachedNodeForCodeGen(props.id),
+      moduleReference: asDetachedNodeForCodeGen(props.moduleReference),
+      importKind: props.importKind,
+      isExport: props.isExport,
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
 export function ImportExpression(props: {
   ...ImportExpressionProps,
   readonly parent?: ESNode,
@@ -2612,6 +2849,18 @@ export function ImportSpecifier(props: {
     imported: asDetachedNodeForCodeGen(props.imported),
     local: asDetachedNodeForCodeGen(props.local),
     importKind: props.importKind,
+  });
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
+export function ImportType(props: {
+  ...ImportTypeProps,
+  readonly parent?: ESNode,
+}): DetachedNode<ImportTypeType> {
+  const node = detachedProps<ImportTypeType>(props.parent as $FlowFixMe, {
+    type: 'ImportType',
+    argument: asDetachedNodeForCodeGen(props.argument),
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -3259,6 +3508,8 @@ export function MethodDefinition(props: {
     computed: props.computed,
     static: props.static,
     decorators: props.decorators.map(n => asDetachedNodeForCodeGen(n)),
+    override: props.override,
+    tsAccessibility: props.tsAccessibility,
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
@@ -3272,6 +3523,21 @@ export function MixedTypeAnnotation(
   return detachedProps<MixedTypeAnnotationType>(props.parent as $FlowFixMe, {
     type: 'MixedTypeAnnotation',
   });
+}
+
+export function NamespaceExportDeclaration(props: {
+  ...NamespaceExportDeclarationProps,
+  readonly parent?: ESNode,
+}): DetachedNode<NamespaceExportDeclarationType> {
+  const node = detachedProps<NamespaceExportDeclarationType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'NamespaceExportDeclaration',
+      id: asDetachedNodeForCodeGen(props.id),
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
 }
 
 export function NeverTypeAnnotation(
@@ -3428,6 +3694,7 @@ export function ObjectTypeIndexer(props: {
       value: asDetachedNodeForCodeGen(props.value),
       static: props.static,
       variance: asDetachedNodeForCodeGen(props.variance),
+      optional: props.optional,
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -3464,8 +3731,25 @@ export function ObjectTypeMappedTypeProperty(props: {
       keyTparam: asDetachedNodeForCodeGen(props.keyTparam),
       propType: asDetachedNodeForCodeGen(props.propType),
       sourceType: asDetachedNodeForCodeGen(props.sourceType),
+      nameType: asDetachedNodeForCodeGen(props.nameType),
       variance: asDetachedNodeForCodeGen(props.variance),
+      varianceOp: props.varianceOp,
       optional: props.optional,
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
+export function ObjectTypePrivateField(props: {
+  ...ObjectTypePrivateFieldProps,
+  readonly parent?: ESNode,
+}): DetachedNode<ObjectTypePrivateFieldType> {
+  const node = detachedProps<ObjectTypePrivateFieldType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'ObjectTypePrivateField',
+      key: asDetachedNodeForCodeGen(props.key),
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -3570,6 +3854,8 @@ export function PropertyDefinition(props: {
       optional: props.optional,
       variance: asDetachedNodeForCodeGen(props.variance),
       typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
+      override: props.override,
+      tsAccessibility: props.tsAccessibility,
     },
   );
   setParentPointersInDirectChildren(node as $FlowFixMe);
@@ -3744,6 +4030,22 @@ export function ReturnStatement(props: {
   return node;
 }
 
+export function SatisfiesExpression(props: {
+  ...SatisfiesExpressionProps,
+  readonly parent?: ESNode,
+}): DetachedNode<SatisfiesExpressionType> {
+  const node = detachedProps<SatisfiesExpressionType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'SatisfiesExpression',
+      expression: asDetachedNodeForCodeGen(props.expression),
+      typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
 export function SequenceExpression(props: {
   ...SequenceExpressionProps,
   readonly parent?: ESNode,
@@ -3884,6 +4186,22 @@ export function TemplateLiteral(props: {
   return node;
 }
 
+export function TemplateLiteralTypeAnnotation(props: {
+  ...TemplateLiteralTypeAnnotationProps,
+  readonly parent?: ESNode,
+}): DetachedNode<TemplateLiteralTypeAnnotationType> {
+  const node = detachedProps<TemplateLiteralTypeAnnotationType>(
+    props.parent as $FlowFixMe,
+    {
+      type: 'TemplateLiteralTypeAnnotation',
+      quasis: props.quasis.map(n => asDetachedNodeForCodeGen(n)),
+      types: props.types.map(n => asDetachedNodeForCodeGen(n)),
+    },
+  );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
 export function ThisExpression(
   props: {
     readonly parent?: ESNode,
@@ -3942,6 +4260,19 @@ export function TupleTypeAnnotation(props: {
       inexact: props.inexact,
     },
   );
+  setParentPointersInDirectChildren(node as $FlowFixMe);
+  return node;
+}
+
+export function TupleTypeElement(props: {
+  ...TupleTypeElementProps,
+  readonly parent?: ESNode,
+}): DetachedNode<TupleTypeElementType> {
+  const node = detachedProps<TupleTypeElementType>(props.parent as $FlowFixMe, {
+    type: 'TupleTypeElement',
+    elementType: asDetachedNodeForCodeGen(props.elementType),
+    optional: props.optional,
+  });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;
 }

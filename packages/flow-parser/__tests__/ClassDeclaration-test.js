@@ -11,6 +11,7 @@
 'use strict';
 
 import {
+  parse,
   parseForSnapshotBabel,
   parseForSnapshotESTree,
 } from '../__test_utils__/parse';
@@ -101,5 +102,98 @@ describe('Super type arguments', () => {
        "type": "Program",
      }
     `);
+  });
+});
+
+describe('abstract classes', () => {
+  test('preserves abstract class declarations', () => {
+    const [declaration] = parse('abstract class Base {}').body;
+
+    expect(declaration).toMatchObject({
+      type: 'ClassDeclaration',
+      abstract: true,
+    });
+  });
+
+  test('preserves abstract class expressions', () => {
+    const [expression] = parse('const Expression = abstract class {};').body;
+    if (expression.type !== 'VariableDeclaration') {
+      throw new Error('expected a variable declaration');
+    }
+
+    expect(expression.declarations[0].init).toMatchObject({
+      type: 'ClassExpression',
+      abstract: true,
+    });
+  });
+
+  test('preserves abstract ambient classes', () => {
+    const [ambient] = parse('declare abstract class Ambient {}').body;
+
+    expect(ambient).toMatchObject({type: 'DeclareClass', abstract: true});
+  });
+
+  test('omits abstract from concrete classes', () => {
+    const [concrete] = parse('class Concrete {}').body;
+
+    expect(concrete).not.toHaveProperty('abstract');
+  });
+
+  test('preserves abstract property definitions', () => {
+    const [base] = parse(
+      'abstract class Base { abstract value: number; }',
+    ).body;
+    if (base.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    expect(base.body.body[0]).toMatchObject({
+      type: 'AbstractPropertyDefinition',
+    });
+    expect(base.body.body[0]).not.toHaveProperty('override');
+    expect(base.body.body[0]).not.toHaveProperty('tsAccessibility');
+  });
+
+  test('preserves abstract method definitions', () => {
+    const [base] = parse(
+      'abstract class Base { abstract method(x: number): string; }',
+    ).body;
+    if (base.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    expect(base.body.body[0]).toMatchObject({type: 'AbstractMethodDefinition'});
+    expect(base.body.body[0]).not.toHaveProperty('override');
+    expect(base.body.body[0]).not.toHaveProperty('tsAccessibility');
+  });
+
+  test('preserves abstract property modifiers', () => {
+    const [extended] = parse(
+      'abstract class Extended extends Base { public abstract override value: number; }',
+    ).body;
+    if (extended.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    expect(extended.body.body[0]).toMatchObject({
+      type: 'AbstractPropertyDefinition',
+      override: true,
+      tsAccessibility: 'public',
+    });
+  });
+
+  test('preserves abstract method modifiers', () => {
+    const [extended] = parse(
+      'abstract class Extended extends Base { protected abstract override method(x: number): string; }',
+    ).body;
+    if (extended.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    expect(extended.body.body[0]).toMatchObject({
+      type: 'AbstractMethodDefinition',
+      override: true,
+      tsAccessibility: 'protected',
+    });
   });
 });

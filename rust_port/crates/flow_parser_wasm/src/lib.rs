@@ -711,13 +711,21 @@ mod tests {
         kind: NodeKind,
         prop_name: &str,
     ) -> &'a str {
+        optional_string_prop(buffers, kind, prop_name).expect("string property should be non-null")
+    }
+
+    fn optional_string_prop<'a>(
+        buffers: &'a crate::serializer::SerializerBuffers,
+        kind: NodeKind,
+        prop_name: &str,
+    ) -> Option<&'a str> {
         let idx = node_property_idx(&buffers.program_buffer, kind, prop_name);
-        let offset = buffers.program_buffer[idx]
-            .checked_sub(1)
-            .expect("string property should be non-null") as usize;
+        let offset = buffers.program_buffer[idx].checked_sub(1)? as usize;
         let len = buffers.program_buffer[idx + 1] as usize;
-        std::str::from_utf8(&buffers.string_buffer[offset..offset + len])
-            .expect("serialized strings should be UTF-8")
+        Some(
+            std::str::from_utf8(&buffers.string_buffer[offset..offset + len])
+                .expect("serialized strings should be UTF-8"),
+        )
     }
 
     /// Returns true if any u32 in the buffer equals (kind as u32 + 1),
@@ -729,6 +737,61 @@ mod tests {
 
     fn encoded_kind(kind: NodeKind) -> u32 {
         kind as u32 + 1
+    }
+
+    #[test]
+    fn mapped_type_serializes_readonly_polarity_and_key_remapping() {
+        for (source, expected_op) in [
+            ("type T<O> = { readonly [K in keyof O]: O[K] };", None),
+            ("type T<O> = { +readonly [K in keyof O]: O[K] };", Some("+")),
+            ("type T<O> = { -readonly [K in keyof O]: O[K] };", Some("-")),
+        ] {
+            let buffers = parse_and_serialize_with_filename(source, "");
+            assert_eq!(
+                optional_string_prop(
+                    &buffers,
+                    NodeKind::ObjectTypeMappedTypeProperty,
+                    "varianceOp",
+                ),
+                expected_op,
+            );
+        }
+
+        let buffers = parse_and_serialize("type T<O> = { [K in keyof O as K]: O[K] };");
+        let name_type_idx =
+            node_property_idx(&buffers, NodeKind::ObjectTypeMappedTypeProperty, "nameType");
+        assert_eq!(
+            buffers[name_type_idx],
+            encoded_kind(NodeKind::GenericTypeAnnotation),
+            "ObjectTypeMappedTypeProperty.nameType should serialize the remapping type",
+        );
+    }
+
+    #[test]
+    fn class_nodes_serialize_abstract_modifier() {
+        let declaration = parse_and_serialize("abstract class C {}");
+        assert!(bool_prop(
+            &declaration,
+            NodeKind::ClassDeclaration,
+            "abstract",
+        ));
+
+        let expression = parse_and_serialize("const C = abstract class {};");
+        assert!(bool_prop(
+            &expression,
+            NodeKind::ClassExpression,
+            "abstract",
+        ));
+
+        let ambient = parse_and_serialize("declare abstract class C {}");
+        assert!(bool_prop(&ambient, NodeKind::DeclareClass, "abstract"));
+
+        let concrete = parse_and_serialize("class C {}");
+        assert!(!bool_prop(
+            &concrete,
+            NodeKind::ClassDeclaration,
+            "abstract",
+        ));
     }
 
     #[test]

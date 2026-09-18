@@ -3545,16 +3545,23 @@ fn object_type(
                         }
                     };
                     if variance_allows && object_key_after_current_in_normal_mode(env, is_class) {
-                        let variance_op = match &variance {
-                            Some(v) if v.kind == VarianceKind::Plus => {
-                                Some(types::object::MappedTypeVarianceOp::Add)
-                            }
-                            Some(v) if v.kind == VarianceKind::Minus => {
-                                Some(types::object::MappedTypeVarianceOp::Remove)
-                            }
-                            _ => None,
+                        let (variance_op, variance_op_loc) = match &variance {
+                            Some(v) if v.kind == VarianceKind::Plus => (
+                                Some(types::object::MappedTypeVarianceOp::Add),
+                                Some(v.loc.dupe()),
+                            ),
+                            Some(v) if v.kind == VarianceKind::Minus => (
+                                Some(types::object::MappedTypeVarianceOp::Remove),
+                                Some(v.loc.dupe()),
+                            ),
+                            _ => (None, None),
                         };
                         variance = maybe_variance(env, true, false)?;
+                        if let (Some(variance_op_loc), Some(variance)) =
+                            (variance_op_loc, variance.as_mut())
+                        {
+                            variance.loc = Loc::between(&variance_op_loc, &variance.loc);
+                        }
                         return property(
                             env,
                             start_loc,

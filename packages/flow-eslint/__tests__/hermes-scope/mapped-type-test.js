@@ -17,7 +17,7 @@ describe('MappedType', () => {
   test('Key exists within mapped type scope', () => {
     const {scopeManager} = parseForESLint(`
       type Union = 'foo' | 'bar' | 'baz';
-      type MappedType = {[key in Union]: O[key]};
+      type MappedType = {[key in Union as Prefix<key>]: O[key]};
     `);
 
     // Verify there is a module scope, variable, and reference
@@ -31,26 +31,27 @@ describe('MappedType', () => {
     const typeScope = scopeManager.scopes[2];
     expect(typeScope.type).toEqual(ScopeType.Type);
     expect(typeScope.variables).toHaveLength(1);
-    expect(typeScope.references).toHaveLength(3);
+    expect(typeScope.references).toHaveLength(5);
 
     const variable = typeScope.variables.find(v => v.name === 'key');
     expect(variable).not.toBeNull();
 
-    const reference = typeScope.references.find(
-      r => r.identifier.name === 'key',
+    const references = typeScope.references.filter(
+      reference => reference.identifier.name === 'key',
     );
-    expect(reference).not.toBeNull();
+    expect(references).toHaveLength(2);
 
-    if (variable == null || reference == null) {
-      throw new Error('Expected variable and reference to be defined');
+    if (variable == null) {
+      throw new Error('Expected variable to be defined');
     }
 
-    // Verify that reference is resolved
-    expect(variable.references).toHaveLength(1);
-    expect(variable.references[0]).toBe(reference);
-    expect(reference.resolved).toBe(variable);
-    expect(reference.isValueReference).toBe(false);
-    expect(reference.isTypeReference).toBe(true);
+    // Verify that references are resolved
+    expect(variable.references).toEqual(references);
+    for (const reference of references) {
+      expect(reference.resolved).toBe(variable);
+      expect(reference.isValueReference).toBe(false);
+      expect(reference.isTypeReference).toBe(true);
+    }
 
     // Verify there is one definition
     expect(variable.defs).toHaveLength(1);

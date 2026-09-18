@@ -1180,6 +1180,7 @@ describe('TupleTypeAnnotation', () => {
                    "key": {
                      "type": "StringTypeAnnotation",
                    },
+                   "optional": false,
                    "static": false,
                    "type": "ObjectTypeIndexer",
                    "value": {
@@ -1225,6 +1226,7 @@ describe('TupleTypeAnnotation', () => {
                    "key": {
                      "type": "StringTypeAnnotation",
                    },
+                   "optional": false,
                    "static": false,
                    "type": "ObjectTypeIndexer",
                    "value": {

@@ -52,6 +52,51 @@ describe('flowDefToTSDef optional members include undefined', () => {
   });
 });
 
+describe('flowDefToTSDef TypeScript-compatible syntax', () => {
+  test('preserves mapped names', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        'type Mapped<O> = {[K in keyof O as `get${K}`]: O[K]};',
+        prettierConfig,
+      ),
+    ).resolves.toContain(
+      'type Mapped<O> = {[K in keyof O as `get${K}`]: O[K]};',
+    );
+  });
+
+  test('preserves optional tuple elements', async () => {
+    await expect(
+      translateFlowDefToTSDef('type Tuple = [string?];', prettierConfig),
+    ).resolves.toContain('type Tuple = [string?];');
+  });
+
+  test('preserves constructor types', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        'type Constructor = new (x: string) => Result;',
+        prettierConfig,
+      ),
+    ).resolves.toContain('type Constructor = new (x: string) => Result;');
+  });
+
+  test('preserves abstract constructor types', async () => {
+    await expect(
+      translateFlowDefToTSDef(
+        'type AbstractConstructor = abstract new (x: string) => Result;',
+        prettierConfig,
+      ),
+    ).resolves.toContain(
+      'type AbstractConstructor = abstract new (x: string) => Result;',
+    );
+  });
+
+  test('preserves inline type exports', async () => {
+    await expect(
+      translateFlowDefToTSDef('declare export {type Foo};', prettierConfig),
+    ).resolves.toContain('export {type Foo};');
+  });
+});
+
 describe('flowToTSDef default export doc comments', () => {
   test('moves documentation to the synthetic default export', async () => {
     const result = await translateFlowToTSDef(

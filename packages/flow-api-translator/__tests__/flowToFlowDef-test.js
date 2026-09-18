@@ -982,6 +982,11 @@ describe('flowToFlowDef', () => {
         `declare export class Foo<T> extends X {}`,
       );
     });
+    it('rejects an import type cast expression', async () => {
+      await expect(
+        translate(`export class Foo extends (Bar as import('module')) {}`),
+      ).rejects.toThrow('SuperClass: Import type not supported');
+    });
   });
   describe('Expression', () => {
     async function expectTranslateExpression(

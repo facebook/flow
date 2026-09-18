@@ -249,17 +249,19 @@ module.exports = [
 
   // 22: ClassDeclaration
   function () {
-    return {
+    const node = {
       type: 'ClassDeclaration',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      superClass: this.deserializeNode(),
-      implements: this.deserializeNodeList(),
-      body: this.deserializeNode(),
-      superTypeArguments: this.deserializeNode(),
-      decorators: this.deserializeNodeList(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.superClass = this.deserializeNode();
+    node.implements = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    node.superTypeArguments = this.deserializeNode();
+    node.decorators = this.deserializeNodeList();
+    if (this.deserializeBoolean()) node['abstract'] = true;
+    return node;
   },
 
   // 23: ComponentDeclaration
@@ -447,6 +449,7 @@ module.exports = [
       loc: this.addEmptyLoc(),
       exported: this.deserializeNode(),
       local: this.deserializeNode(),
+      exportKind: this.deserializeString(),
     };
   },
 
@@ -944,17 +947,19 @@ module.exports = [
 
   // 84: ClassExpression
   function () {
-    return {
+    const node = {
       type: 'ClassExpression',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      superClass: this.deserializeNode(),
-      implements: this.deserializeNodeList(),
-      body: this.deserializeNode(),
-      superTypeArguments: this.deserializeNode(),
-      decorators: this.deserializeNodeList(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.superClass = this.deserializeNode();
+    node.implements = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    node.superTypeArguments = this.deserializeNode();
+    node.decorators = this.deserializeNodeList();
+    if (this.deserializeBoolean()) node['abstract'] = true;
+    return node;
   },
 
   // 85: ClassBody
@@ -1064,29 +1069,37 @@ module.exports = [
 
   // 93: AbstractMethodDefinition
   function () {
-    return {
+    const node = {
       type: 'AbstractMethodDefinition',
       loc: this.addEmptyLoc(),
-      key: this.deserializeNode(),
-      value: this.deserializeNode(),
-      computed: this.deserializeBoolean(),
-      override: this.deserializeBoolean(),
-      tsAccessibility: this.deserializeString(),
     };
+    node.key = this.deserializeNode();
+    node.value = this.deserializeNode();
+    node.computed = this.deserializeBoolean();
+    if (this.deserializeBoolean()) node['override'] = true;
+    {
+      const value = this.deserializeString();
+      if (value != null) node['tsAccessibility'] = value;
+    }
+    return node;
   },
 
   // 94: AbstractPropertyDefinition
   function () {
-    return {
+    const node = {
       type: 'AbstractPropertyDefinition',
       loc: this.addEmptyLoc(),
-      key: this.deserializeNode(),
-      value: this.deserializeNode(),
-      computed: this.deserializeBoolean(),
-      variance: this.deserializeNode(),
-      override: this.deserializeBoolean(),
-      tsAccessibility: this.deserializeString(),
     };
+    node.key = this.deserializeNode();
+    node.value = this.deserializeNode();
+    node.computed = this.deserializeBoolean();
+    node.variance = this.deserializeNode();
+    if (this.deserializeBoolean()) node['override'] = true;
+    {
+      const value = this.deserializeString();
+      if (value != null) node['tsAccessibility'] = value;
+    }
+    return node;
   },
 
   // 95: SwitchCase
@@ -1133,28 +1146,35 @@ module.exports = [
 
   // 99: DeclareFunction
   function () {
-    return {
+    const node = {
       type: 'DeclareFunction',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
-      predicate: this.deserializeNode(),
     };
+    node.id = this.deserializeNode();
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['typeAnnotation'] = value;
+    }
+    node.implicitDeclare = this.deserializeBoolean();
+    node.predicate = this.deserializeNode();
+    return node;
   },
 
   // 100: DeclareClass
   function () {
-    return {
+    const node = {
       type: 'DeclareClass',
       loc: this.addEmptyLoc(),
-      id: this.deserializeNode(),
-      typeParameters: this.deserializeNode(),
-      extends: this.deserializeNodeList(),
-      implements: this.deserializeNodeList(),
-      mixins: this.deserializeNodeList(),
-      body: this.deserializeNode(),
-      implicitDeclare: this.deserializeBoolean(),
     };
+    node.id = this.deserializeNode();
+    node.typeParameters = this.deserializeNode();
+    node.extends = this.deserializeNodeList();
+    node.implements = this.deserializeNodeList();
+    node.mixins = this.deserializeNodeList();
+    node.body = this.deserializeNode();
+    node.implicitDeclare = this.deserializeBoolean();
+    if (this.deserializeBoolean()) node['abstract'] = true;
+    return node;
   },
 
   // 101: DeclareComponent
@@ -1623,18 +1643,29 @@ module.exports = [
 
   // 148: ObjectTypeProperty
   function () {
-    return {
+    const node = {
       type: 'ObjectTypeProperty',
       loc: this.addEmptyLoc(),
-      key: this.deserializeNode(),
-      value: this.deserializeNode(),
-      method: this.deserializeBoolean(),
-      optional: this.deserializeBoolean(),
-      static: this.deserializeBoolean(),
-      proto: this.deserializeBoolean(),
-      variance: this.deserializeNode(),
-      kind: this.deserializeString(),
     };
+    node.key = this.deserializeNode();
+    node.value = this.deserializeNode();
+    node.method = this.deserializeBoolean();
+    node.optional = this.deserializeBoolean();
+    node.static = this.deserializeBoolean();
+    node.proto = this.deserializeBoolean();
+    node.variance = this.deserializeNode();
+    node.kind = this.deserializeString();
+    if (this.deserializeBoolean()) node['abstract'] = true;
+    if (this.deserializeBoolean()) node['override'] = true;
+    {
+      const value = this.deserializeString();
+      if (value != null) node['tsAccessibility'] = value;
+    }
+    {
+      const value = this.deserializeNode();
+      if (value != null) node['init'] = value;
+    }
+    return node;
   },
 
   // 149: ObjectTypeSpreadProperty
@@ -1656,6 +1687,7 @@ module.exports = [
       value: this.deserializeNode(),
       static: this.deserializeBoolean(),
       variance: this.deserializeNode(),
+      optional: this.deserializeBoolean(),
     };
   },
 
@@ -1677,7 +1709,9 @@ module.exports = [
       keyTparam: this.deserializeNode(),
       propType: this.deserializeNode(),
       sourceType: this.deserializeNode(),
+      nameType: this.deserializeNode(),
       variance: this.deserializeNode(),
+      varianceOp: this.deserializeString(),
       optional: this.deserializeString(),
     };
   },
