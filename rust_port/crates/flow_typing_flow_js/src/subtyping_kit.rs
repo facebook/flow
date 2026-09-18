@@ -220,6 +220,27 @@ fn property_type_for_subtyping(
     }
 }
 
+fn try_property_method_bivariant<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    lower_property: &Property,
+    upper_property: &Property,
+) -> Result<bool, FlowJsException> {
+    let PropertyInner::Method { type_: ut, .. } = upper_property.deref() else {
+        return Ok(false);
+    };
+    let lt = match lower_property.deref() {
+        PropertyInner::Field(field) => &field.type_,
+        PropertyInner::Method { type_, .. } => type_,
+        _ => return Ok(false),
+    };
+    let lt = cx.find_resolved(lt).unwrap_or_else(|| lt.dupe());
+    let ut = cx.find_resolved(ut).unwrap_or_else(|| ut.dupe());
+    try_method_bivariant(cx, env, trace, use_op, &lt, &ut)
+}
+
 fn rec_flow_p_inner<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -236,15 +257,13 @@ fn rec_flow_p_inner<'cx>(
 ) -> Result<Vec<(Option<Name>, (Polarity, Polarity))>, FlowJsException> {
     if let Some((lower_property, upper_property)) = lower_upper_property
         && strictness_kind.is_typescript_loose()
-        && let (PropertyInner::Method { type_: lt, .. }, PropertyInner::Method { type_: ut, .. }) =
-            (lower_property.deref(), upper_property.deref())
-        && try_method_bivariant(
+        && try_property_method_bivariant(
             cx,
             env,
             trace.unwrap_or_else(DepthTrace::dummy_trace),
             use_op.dupe(),
-            lt,
-            ut,
+            lower_property,
+            upper_property,
         )?
     {
         return Ok(vec![]);
@@ -1822,15 +1841,7 @@ fn flow_obj_to_obj<'cx>(
                     if lit {
                         // prop from unaliased LB: check <:
                         let bivariant_handled = if strictness_kind.is_typescript_loose() {
-                            if let (
-                                PropertyInner::Method { type_: lt, .. },
-                                PropertyInner::Method { type_: ut, .. },
-                            ) = (lp.deref(), up.deref())
-                            {
-                                try_method_bivariant(cx, env, trace, mk_use_op(), lt, ut)?
-                            } else {
-                                false
-                            }
+                            try_property_method_bivariant(cx, env, trace, mk_use_op(), &lp, up)?
                         } else {
                             false
                         };
@@ -1857,15 +1868,7 @@ fn flow_obj_to_obj<'cx>(
                     } else {
                         // prop from aliased LB
                         let bivariant_handled = if strictness_kind.is_typescript_loose() {
-                            if let (
-                                PropertyInner::Method { type_: lt, .. },
-                                PropertyInner::Method { type_: ut, .. },
-                            ) = (lp.deref(), up.deref())
-                            {
-                                try_method_bivariant(cx, env, trace, mk_use_op(), lt, ut)?
-                            } else {
-                                false
-                            }
+                            try_property_method_bivariant(cx, env, trace, mk_use_op(), &lp, up)?
                         } else {
                             false
                         };
@@ -5291,15 +5294,14 @@ pub fn rec_sub_t<'cx>(
                                 Arc::new(use_op.dupe()),
                             );
                             let bivariant_handled = if strictness_kind.is_typescript_loose() {
-                                if let (
-                                    PropertyInner::Method { type_: lt, .. },
-                                    PropertyInner::Method { type_: ut, .. },
-                                ) = (lp.deref(), up.deref())
-                                {
-                                    try_method_bivariant(cx, env, trace, prop_use_op.dupe(), lt, ut)?
-                                } else {
-                                    false
-                                }
+                                try_property_method_bivariant(
+                                    cx,
+                                    env,
+                                    trace,
+                                    prop_use_op.dupe(),
+                                    lp,
+                                    up,
+                                )?
                             } else {
                                 false
                             };

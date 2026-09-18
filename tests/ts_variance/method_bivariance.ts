@@ -8,11 +8,11 @@
 // Two sibling cases proving method-syntax is bivariant in .ts while
 // arrow-property syntax remains contravariant.
 //
-// Note: bivariance only kicks in when BOTH sides use method syntax.
-// One-sided cases (Method on the supertype, Field/arrow on the
-// subtype) take Flow's existing contravariant path. TS accepts the
-// Method-target/arrow-source case, so that negative below intentionally
-// guards Flow's current narrower relaxation.
+// Bivariance kicks in when the target uses method syntax. The source may use
+// either method or arrow-property syntax, matching TypeScript.
+// Function-typed target properties remain contravariant, so this relaxation
+// stays tied to TypeScript's method declaration syntax rather than applying
+// to every callback type.
 
 export declare class Animal {
   name: string;
@@ -154,16 +154,17 @@ type RestTarget = {
 declare const restNumberSource: {cb(...ys: number[]): void};
 const restRestMismatch: RestTarget = restNumberSource; // ERROR: bivariance still requires related types
 
-// One-sided method/field shapes must still take the existing contravariant
-// path -- bivariance only kicks in when BOTH sides use method syntax.
-// Here the target uses method syntax but the source uses arrow-property
-// (Field), so the safe contravariant direction is the only one accepted;
-// the unsafe direction errors.
-type MethodTarget = {
+// A method target marks its parameter types as bivariant even when the source
+// uses arrow-property syntax.
+export type MethodTarget = {
   cb(x: Animal): void;
 };
 const oneSidedOk: MethodTarget = {cb: (x: Animal): void => {}}; // OK: same param type, no variance to check
-const oneSidedErr: MethodTarget = {cb: (x: Dog): void => {}}; // ERROR: arrow source, no bivariance
+const oneSidedNarrow: MethodTarget = {cb: (x: Dog): void => {}}; // OK: method-target bivariance
+
+export interface EventListenerObjectLike {
+  handleEvent(event: Animal): unknown;
+}
 
 interface BaseEventMap {
   base: Animal;

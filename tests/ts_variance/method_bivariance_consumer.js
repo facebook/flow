@@ -2,6 +2,8 @@
 
 import {
   type Animal as TypeScriptAnimal,
+  type EventListenerObjectLike,
+  type MethodTarget,
   aliasedMethodSource,
   classMethodSource,
   literalMethodSource,
@@ -43,3 +45,20 @@ type FlowFunctionIndexer = {
 };
 
 const methodAsFlowFunctionIndexer: FlowFunctionIndexer = literalMethodSource; // OK
+
+interface TypeScriptDog extends TypeScriptAnimal {
+  bark(): void;
+}
+
+declare const narrowFlowField: {
+  cb: (x: TypeScriptDog) => void,
+};
+const flowFieldAsTypeScriptMethod: MethodTarget = narrowFlowField; // OK
+
+type FlowEventHandler = (x: TypeScriptDog) => unknown;
+declare const flowListenerObject: {
+  handleEvent: FlowEventHandler,
+  ...
+};
+const flowListenerObjectAsTypeScriptListener: EventListenerObjectLike =
+  flowListenerObject; // OK
