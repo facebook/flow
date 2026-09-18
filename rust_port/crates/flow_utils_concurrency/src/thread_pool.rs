@@ -12,6 +12,8 @@ use std::env;
 use std::num::NonZeroUsize;
 use std::str::FromStr;
 use std::sync::LazyLock;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::OnceLock;
 
 #[cfg(not(target_arch = "wasm32"))]
 use human_bytes::human_bytes;
@@ -65,9 +67,26 @@ impl FromStr for ThreadCount {
 
 static THREADS: LazyLock<Mutex<ThreadCount>> = LazyLock::new(|| Mutex::new(ThreadCount::default()));
 
+#[cfg(not(target_arch = "wasm32"))]
+static RAYON_GLOBAL_THREAD_POOL: OnceLock<()> = OnceLock::new();
+
 /// Set up the global thread pool.
 pub fn init_thread_pool(threads: ThreadCount) {
     *THREADS.lock() = threads;
+}
+
+/// Initializes Rayon's global pool with the requested worker count.
+///
+/// Call this before using Rayon's global APIs. The global pool can only be initialized once per
+/// process.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn init_rayon_global_thread_pool(threads: NonZeroUsize) {
+    RAYON_GLOBAL_THREAD_POOL.get_or_init(|| {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(threads.get())
+            .build_global()
+            .expect("global Rayon thread pool should not already be initialized");
+    });
 }
 
 fn logical_parallelism() -> NonZeroUsize {

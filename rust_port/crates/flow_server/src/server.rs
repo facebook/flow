@@ -6,6 +6,7 @@
  */
 
 use std::collections::BTreeSet;
+use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -57,6 +58,13 @@ pub type CheckOncePrintErrors<'a> = Box<dyn FnOnce(&ProfilingFinished) + 'a>;
 
 type ProfilingRunning = profiling_js::Running;
 pub type ProfilingFinished = profiling_js::Finished;
+
+fn worker_threads(options: &Options) -> NonZeroUsize {
+    usize::try_from(options.max_workers)
+        .ok()
+        .and_then(NonZeroUsize::new)
+        .unwrap_or(NonZeroUsize::MIN)
+}
 
 fn with_profiling<F, R>(label: &str, should_print_summary: bool, f: F) -> (ProfilingFinished, R)
 where
@@ -312,6 +320,8 @@ fn serve(genv: &Genv, orchestrator: &server_orchestrator::ServerOrchestratorHand
 }
 
 pub fn create_program_init(options: Arc<Options>) -> Genv {
+    flow_utils_concurrency::thread_pool::init_rayon_global_thread_pool(worker_threads(&options));
+
     file_key::set_project_root(&options.root.display().to_string());
     match &options.file_options.default_lib_dir {
         Some(
@@ -405,6 +415,8 @@ fn run(
     monitor_channels: Option<monitor_rpc::Channels>,
     start_cause: server_status::StartCause,
 ) {
+    flow_tokio_runtime::init_worker_threads(worker_threads(&options));
+
     // Check if the current operating system is supported
     check_supported_operating_system(&options);
 

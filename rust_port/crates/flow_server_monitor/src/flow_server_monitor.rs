@@ -6,6 +6,7 @@
  */
 
 use std::io::Write;
+use std::num::NonZeroUsize;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -193,6 +194,8 @@ fn internal_start(
     options: Arc<Options>,
     args: StartArgs,
 ) -> Result<(), String> {
+    flow_tokio_runtime::init_worker_threads(NonZeroUsize::MIN);
+
     if matches!(args.file_watcher, FileWatcher::EdenFS(_)) {
         crate::startup_initializer::init();
     }

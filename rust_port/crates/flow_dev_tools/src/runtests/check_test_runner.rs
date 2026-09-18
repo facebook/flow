@@ -10,6 +10,7 @@ use std::fs;
 use std::io;
 use std::io::IsTerminal;
 use std::io::Write;
+use std::num::NonZeroUsize;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -134,7 +135,7 @@ pub(super) fn check_test_runner(args: RunnerArgs) -> io::Result<bool> {
         value: &str,
         only_if_unset: bool,
     ) {
-        if only_if_unset && env.contains_key(key) {
+        if only_if_unset && env.get(key).is_some_and(|value| !value.is_empty()) {
             return;
         }
         saved_env.insert(key.to_owned(), env.get(key).cloned());
@@ -143,6 +144,13 @@ pub(super) fn check_test_runner(args: RunnerArgs) -> io::Result<bool> {
     set_env_if_needed(&mut env, &mut saved_env, "IN_FLOW_TEST", "1", false);
     set_env_if_needed(&mut env, &mut saved_env, "FLOW_LOG_LEVEL", "debug", false);
     set_env_if_needed(&mut env, &mut saved_env, "FLOW_MAX_WORKERS", "2", true);
+    if let Some(worker_threads) = env
+        .get("FLOW_MAX_WORKERS")
+        .and_then(|value| value.parse::<usize>().ok())
+        .and_then(NonZeroUsize::new)
+    {
+        flow_tokio_runtime::init_worker_threads(worker_threads);
+    }
 
     // Set git binary
     if !env.contains_key("FLOW_GIT_BINARY") {

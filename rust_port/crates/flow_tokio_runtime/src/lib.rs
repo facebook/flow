@@ -6,15 +6,22 @@
  */
 
 use std::future::Future;
+use std::num::NonZeroUsize;
 use std::sync::LazyLock;
+use std::sync::OnceLock;
 
 use tokio::runtime::Handle;
 use tokio::runtime::Runtime;
 use tokio::task::JoinHandle;
 
-static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
+static RUNTIME: OnceLock<Runtime> = OnceLock::new();
+
+fn build_runtime(worker_threads: Option<NonZeroUsize>) -> Runtime {
     let mut builder = tokio::runtime::Builder::new_multi_thread();
     builder.enable_all().thread_name("flow-tokio-runtime");
+    if let Some(worker_threads) = worker_threads {
+        builder.worker_threads(worker_threads.get());
+    }
     // Blocking-pool threads run parallelizable LSP workloads and deep `Env` drops, both of
     // which recurse as deeply as the type checker. Tokio's 2MiB default overflows on them.
     #[cfg(not(target_arch = "wasm32"))]
@@ -22,7 +29,25 @@ static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
     builder
         .build()
         .expect("failed to create tokio runtime for Flow")
-});
+}
+
+fn runtime() -> &'static Runtime {
+    RUNTIME.get_or_init(|| {
+        let worker_threads = std::env::var("FLOW_MAX_WORKERS")
+            .ok()
+            .and_then(|value| value.parse::<usize>().ok())
+            .and_then(NonZeroUsize::new);
+        build_runtime(worker_threads)
+    })
+}
+
+/// Initializes Flow's shared Tokio runtime with an explicit worker count.
+///
+/// This must be called before the runtime is first used. Repeated calls are harmless; the first
+/// initialization determines the worker count for the process.
+pub fn init_worker_threads(worker_threads: NonZeroUsize) {
+    RUNTIME.get_or_init(|| build_runtime(Some(worker_threads)));
+}
 
 static BLOCKING_POOL_PREWARMED: LazyLock<()> = LazyLock::new(|| {
     let runtime_handle = handle();
@@ -44,7 +69,7 @@ static BLOCKING_POOL_PREWARMED: LazyLock<()> = LazyLock::new(|| {
 
 /// Returns Flow's shared Tokio runtime handle.
 pub fn handle() -> Handle {
-    RUNTIME.handle().clone()
+    runtime().handle().clone()
 }
 
 pub fn prewarm_blocking_pool() {
@@ -74,13 +99,19 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::num::NonZeroUsize;
     use std::sync::mpsc;
     use std::time::Duration;
 
+    use super::handle;
+    use super::init_worker_threads;
     use super::spawn;
 
     #[test]
     fn spawn_runs_without_current_tokio_runtime() {
+        init_worker_threads(NonZeroUsize::new(2).expect("2 is non-zero"));
+        assert_eq!(handle().metrics().num_workers(), 2);
+
         let (tx, rx) = mpsc::channel();
         spawn(async move {
             tx.send(())
