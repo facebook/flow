@@ -1271,7 +1271,7 @@ pub enum ObjKind {
 pub struct MessageAlreadyExhaustivelyCheckOneEnumMemberData<L: Dupe> {
     pub member_name: FlowSmolStr,
     pub prev_check_loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1279,7 +1279,7 @@ pub struct MessageCannotAccessEnumMemberData<L: Dupe> {
     pub member_name: Option<Name>,
     pub suggestion: Option<FlowSmolStr>,
     pub description: VirtualReasonDesc<L>,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1317,13 +1317,13 @@ pub struct MessageCannotExhaustivelyCheckAbstractEnumsData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotInstantiateObjectUtilTypeWithEnumData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
 
@@ -1359,7 +1359,7 @@ pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseEnumMemberUsedAsTypeData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1508,14 +1508,14 @@ pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
     pub description: VirtualReasonDesc<L>,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
     pub left_to_check: Vec<FlowSmolStr>,
     pub default_case_loc: Option<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidEnumMemberCheckData<L: Dupe> {
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
     pub enum_name: Option<FlowSmolStr>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
@@ -1600,6 +1600,14 @@ pub struct MessagePropsMissingData<L: Dupe> {
     pub lower: VirtualReason<L>,
     pub upper: VirtualReason<L>,
     pub props: Vec1<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessageIndexerCheckFailedData<L: Dupe> {
+    pub prop: FlowSmolStr,
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
+    pub indexer: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1728,7 +1736,7 @@ pub enum Message<L: Dupe> {
     ),
 
     MessageAlreadyExhaustivelyCheckAllEnumMembers {
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageAmbiguousNumericKeyWithVariance,
@@ -1777,7 +1785,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotCallObjectFunctionOnEnum {
         reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
         enum_name: Option<FlowSmolStr>,
     },
 
@@ -1794,7 +1802,7 @@ pub enum Message<L: Dupe> {
         param_count: i32,
     },
 
-    MessageCannotChangeEnumMember(VirtualReason<L>),
+    MessageCannotChangeEnumMember(MessageTypeReferenceData<L>),
 
     MessageCannotCompare(Box<MessageCannotCompareData<L>>),
 
@@ -1836,12 +1844,12 @@ pub enum Message<L: Dupe> {
     ),
 
     MessageCannotIterateEnum {
-        description: VirtualReasonDesc<L>,
+        enum_: MessageTypeReferenceData<L>,
         enum_name: Option<FlowSmolStr>,
     },
 
     MessageCannotIterateEnumForIn {
-        reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
         enum_name: Option<FlowSmolStr>,
     },
 
@@ -1909,7 +1917,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotSpreadInterface {
         spread_reason: VirtualReason<L>,
-        interface_reason: VirtualReason<L>,
+        interface: MessageTypeReferenceData<L>,
     },
 
     MessageCannotUseAsConstructor(Box<MessageTypeReferenceData<L>>),
@@ -2298,6 +2306,8 @@ pub enum Message<L: Dupe> {
 
     MessagePropsMissing(Box<MessagePropsMissingData<L>>),
 
+    MessageIndexerCheckFailed(Box<MessageIndexerCheckFailedData<L>>),
+
     MessagePropPolarityMismatch(Box<MessagePropPolarityMismatchData<L>>),
 
     MessagePropNotReadable(Option<Name>),
@@ -2432,7 +2442,7 @@ pub enum Message<L: Dupe> {
     MessageVariableOnlyAssignedByNull(Box<MessageVariableOnlyAssignedByNullData<L>>),
 
     MessageMatchNotExhaustive {
-        examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
+        examples: Vec<(FlowSmolStr, Vec<MessageTypeReferenceData<L>>)>,
     },
 
     MessageMatchUnnecessaryPattern {
@@ -2486,7 +2496,7 @@ pub enum Message<L: Dupe> {
 
     MessageRecordBannedTypeUtil {
         reason_op: VirtualReason<L>,
-        reason_record: VirtualReason<L>,
+        record: MessageTypeReferenceData<L>,
     },
 
     MessageRecordInvalidNew {

@@ -32,10 +32,10 @@ An annotation on `x` is required because Flow cannot infer its type from local c
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:2:17
 
-Enum `A` is not an iterable. You can use `A.members()` to get an iterator for the enum's members. [not-iterable]
+enum `A` [1] is not an iterable. You can use `A.members()` to get an iterator for the enum's members. [not-iterable]
 
    2| for (const x of A) {} // Error: not iterable, but there should be no enforcement errors
-                      ^
+                      ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- enums.js:4:10

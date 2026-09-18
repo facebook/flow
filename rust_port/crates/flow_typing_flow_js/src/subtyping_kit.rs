@@ -1482,8 +1482,18 @@ impl PropsToIndexerContext<'_, '_> {
                         env,
                         ErrorMessage::EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
                             prop_name: name.dupe(),
-                            reason_lower: ureason.dupe(),
-                            reason_upper: lreason.dupe(),
+                            lower: flow_js_utils::type_reference_with_reason_or_desc_for_error(
+                                self.lower_upper_subtyping_obj_ts
+                                    .as_ref()
+                                    .map(|(_, upper)| upper),
+                                ureason.dupe(),
+                            ),
+                            upper: flow_js_utils::type_reference_with_reason_or_desc_for_error(
+                                self.lower_upper_subtyping_obj_ts
+                                    .as_ref()
+                                    .map(|(lower, _)| lower),
+                                lreason.dupe(),
+                            ),
                             indexer: ErrorReference::new(
                                 type_util::ref_loc_of_t(key).dupe(),
                                 type_util::reason_of_t(key).desc(false).clone(),
@@ -5183,11 +5193,12 @@ pub fn rec_sub_t<'cx>(
                     .join(obj.strictness_kind)
                     .is_typescript_loose() =>
         {
-            let reasons = flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
+            let (lower_reason, upper_reason) =
+                flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EIncompatibleWithExact(
-                    reasons,
+                    (lower_reason, upper_reason),
                     use_op,
                     intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
                 ),

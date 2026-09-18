@@ -154,8 +154,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- omit_alias_return_fn.js:11:8
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. `Omit` [2] cannot be spread
-because interfaces do not track the own-ness of their properties. Try using an object type instead.
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `interface {}` [2] cannot be
+spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
 [cannot-spread-interface]
 
    omit_alias_return_fn.js:11:8

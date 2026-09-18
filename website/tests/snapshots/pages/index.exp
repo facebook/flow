@@ -44,7 +44,7 @@ Found 1 error
 Error -------------------------------------------------------------------------------- -:7:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'remove', id: _}`
-to match object type [1]. [match-not-exhaustive]
+to match `{id: string, type: "remove"}` [1]. [match-not-exhaustive]
 
    -:7:14
    7| const desc = match (action) { // ERROR: 'remove' missing
@@ -62,7 +62,7 @@ Found 1 error
 Error -------------------------------------------------------------------------------- -:9:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'remove', id: _}`
-to match object type [1]. [match-not-exhaustive]
+to match `{id: string, type: "remove"}` [1]. [match-not-exhaustive]
 
    -:9:14
    9| const desc = match (action) { // ERROR

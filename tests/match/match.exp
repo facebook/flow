@@ -553,8 +553,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ matching.js:14:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `'s'` to match string literal `s` [1]
-- `-2` to match number literal `-2` [2] [match-not-exhaustive]
+- `'s'` to match `"s"` [1]
+- `-2` to match `-2` [2] [match-not-exhaustive]
 
    matching.js:14:14
    14|   const e2 = match (x) { // ERROR: not all members checked
@@ -571,8 +571,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:34:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
-literal `2` [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match `2` [1].
+[match-not-exhaustive]
 
    matching.js:34:14
    34|   const e2 = match (x) { // ERROR: `2` not checked
@@ -587,7 +587,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ matching.js:48:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `undefined` to match
-undefined [1]. [match-not-exhaustive]
+`void` [1]. [match-not-exhaustive]
 
    matching.js:48:14
    48|   const e2 = match (x) { // ERROR: `undefined` not checked
@@ -602,8 +602,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ matching.js:63:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `null` to match null or undefined [1]
-- `undefined` to match null or undefined [1] [match-not-exhaustive]
+- `null` to match `null` [1]
+- `undefined` to match `void` [1] [match-not-exhaustive]
 
    matching.js:63:14
    63|   const e2 = match (x) { // ERROR: `null` and `undefined` not checked
@@ -617,8 +617,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ matching.js:82:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
-literal `2` [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match `2` [1].
+[match-not-exhaustive]
 
    matching.js:82:14
    82|   const e2 = match (x) { // ERROR: `2` not checked
@@ -632,8 +632,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:131:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
-literal `2` [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match `2` [1].
+[match-not-exhaustive]
 
    matching.js:131:14
    131|   const e2 = match (f(0)) { // ERROR: `2` not checked
@@ -647,8 +647,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:144:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `3` to match number
-literal `3` [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `3` to match `3` [1].
+[match-not-exhaustive]
 
    matching.js:144:14
    144|   const e2 = match (x) { // ERROR: `3` not checked
@@ -662,8 +662,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:155:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match number
-literal `2` [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match `2` [1].
+[match-not-exhaustive]
 
    matching.js:155:14
    155|   const e1 = match (x) { // ERROR: `2` not checked
@@ -678,7 +678,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:218:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'baz', val: _}` to
-match object type [1]. [match-not-exhaustive]
+match `{type: "baz", val: boolean}` [1]. [match-not-exhaustive]
 
    matching.js:218:14
    218|   const e2 = match (x) { // ERROR: `type: 'baz'` not checked
@@ -693,7 +693,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:263:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
-`{type: 'bar', n: 2, val: _}` to match object type [1]. [match-not-exhaustive]
+`{type: 'bar', n: 2, val: _}` to match `{n: 2, type: "bar", val: boolean}` [1]. [match-not-exhaustive]
 
    matching.js:263:14
    263|   const e3 = match (x) { // ERROR: `type: 'bar', n: 2` not checked
@@ -708,7 +708,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:289:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'bar', val: _}` to
-match object type [1]. [match-not-exhaustive]
+match `{type: "bar", val: string}` [1]. [match-not-exhaustive]
 
    matching.js:289:14
    289|   const e2 = match (x) { // ERROR: `type: 'bar'` not checked
@@ -723,7 +723,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:306:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['baz', _]` to match
-tuple type [1]. [match-not-exhaustive]
+`["baz", boolean]` [1]. [match-not-exhaustive]
 
    matching.js:306:14
    306|   const e2 = match (x) { // ERROR: `'baz'` element not checked
@@ -788,8 +788,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:377:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_]` to match tuple
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_]` to match
+`[a: 0, b?: 1, c?: 2]` [1]. [match-not-exhaustive]
 
    matching.js:377:14
    377|   const e2 = match (x) { // ERROR: does not match all possibilities
@@ -804,8 +804,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:381:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `[_, _, _]` to match tuple type [1]
-- `[_, _]` to match tuple type [1] [match-not-exhaustive]
+- `[_, _, _]` to match `[a: 0, b?: 1, c?: 2]` [1]
+- `[_, _]` to match `[a: 0, b?: 1, c?: 2]` [1] [match-not-exhaustive]
 
    matching.js:381:14
    381|   const e3 = match (x) { // ERROR: does not match all possibilities
@@ -820,8 +820,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- matching.js:385:14
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing patterns:
-- `[_, _]` to match tuple type [1]
-- `[_]` to match tuple type [1] [match-not-exhaustive]
+- `[_, _]` to match `[a: 0, b?: 1, c?: 2]` [1]
+- `[_]` to match `[a: 0, b?: 1, c?: 2]` [1] [match-not-exhaustive]
 
    matching.js:385:14
    385|   const e4 = match (x) { // ERROR: does not match all possibilities
@@ -835,8 +835,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:398:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, ...]` to match tuple
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[_, ...]` to match
+`[a: 0, ...]` [1]. [match-not-exhaustive]
 
    matching.js:398:14
    398|   const e2 = match (x) { // ERROR: does not match all elements
@@ -850,8 +850,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- matching.js:408:14
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: 2}` to match object
-type [1]. [match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{foo: 2}` to match
+`{foo: 2}` [1]. [match-not-exhaustive]
 
    matching.js:408:14
    408|   const e1 = match (x) {

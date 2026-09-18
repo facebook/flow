@@ -787,7 +787,8 @@ No errors!
 Error ------------------------------------------------------------------------ -:11:29
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
-`{type: 'filter', mode: 'done'}` to match object type [1]. [match-not-exhaustive]
+`{type: 'filter', mode: 'done'}` to match `{mode: "all" | "active" | "done", type: "filter"}` [1].
+[match-not-exhaustive]
 
    -:11:29
    11| const description: string = match (action) { // ERROR: missing `{type: 'filter', mode: 'done'}`

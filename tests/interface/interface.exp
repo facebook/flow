@@ -769,9 +769,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:47:2
 
-Cannot cast object literal to interface type because property `x` is missing in interface type [1] but exists in object
-literal [2]. Any property that does not exist in interface type [1] must be compatible with its indexer `number` [3].
-[incompatible-type]
+Cannot cast object literal to interface type because property `x` is missing in `{[number]: number}` [1] but exists in
+object literal [2]. Any property that does not exist in `{[number]: number}` [1] must be compatible with its indexer
+`number` [3]. [incompatible-type]
 
    interface.js:47:2
    47| ({x : 3} as interface {[number] : number}); // error

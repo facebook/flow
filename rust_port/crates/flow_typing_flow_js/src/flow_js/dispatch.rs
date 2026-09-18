@@ -9026,7 +9026,10 @@ fn __flow_impl<'cx>(
                         member_name: None,
                         suggestion: None,
                         reason: reason.to_error_reference(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            l,
+                            enum_reason.dupe(),
+                        ),
                     },
                 ))),
             )?;
@@ -9044,7 +9047,10 @@ fn __flow_impl<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
                     EnumModificationData {
                         loc: op_reason.loc().dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            l,
+                            enum_reason.dupe(),
+                        ),
                     },
                 ))),
             )?;
@@ -9070,7 +9076,10 @@ fn __flow_impl<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
                     EnumModificationData {
                         loc: op_reason.loc().dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            l,
+                            enum_reason.dupe(),
+                        ),
                     },
                 ))),
             )?;
@@ -9088,7 +9097,10 @@ fn __flow_impl<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
                     EnumInvalidObjectUtilTypeData {
                         reason: op_reason.to_error_reference(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            l,
+                            enum_reason.dupe(),
+                        ),
                         enum_name: enum_info.enum_name().map(Dupe::dupe),
                     },
                 ))),
@@ -9105,7 +9117,10 @@ fn __flow_impl<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(Box::new(
                     EnumInvalidObjectFunctionData {
                         reason: reason.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            l,
+                            enum_reason.dupe(),
+                        ),
                         enum_name: enum_info.enum_name().map(Dupe::dupe),
                     },
                 ))),

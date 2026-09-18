@@ -36,6 +36,7 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumNotIterableData;
 use flow_typing_errors::error_message::EnumNotIterableForInData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::ErrorTypeReferenceData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InvalidThisArgKind;
 use flow_typing_errors::error_message::MatchErrorKind;
@@ -2672,7 +2673,10 @@ pub mod type_assertions {
                                 env,
                                 ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
                                     Box::new(EnumNotIterableForInData {
-                                        reason: enum_reason.dupe(),
+                                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                                            t,
+                                            enum_reason.dupe(),
+                                        ),
                                         enum_name: enum_info.enum_name().map(Dupe::dupe),
                                     }),
                                 )),
@@ -2897,7 +2901,10 @@ pub mod type_assertions {
                             env,
                             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(Box::new(
                                 EnumNotIterableData {
-                                    reason: enum_reason.to_error_reference(),
+                                    enum_: ErrorTypeReferenceData {
+                                        reference: enum_reason.to_error_reference(),
+                                        type_desc: flow_js_utils::type_or_type_desc_for_error(ti),
+                                    },
                                     enum_name: enum_info.enum_name().map(Dupe::dupe),
                                 },
                             ))),

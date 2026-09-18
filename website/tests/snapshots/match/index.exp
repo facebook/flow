@@ -11,7 +11,7 @@ No errors!
 Error --------------------------------------------------------------------------------- -:4:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `'details'` to match
-string literal `details` [1]. [match-not-exhaustive]
+`"details"` [1]. [match-not-exhaustive]
 
    -:4:1
    4| match (tab) { // ERROR [match-not-exhaustive]
@@ -29,7 +29,7 @@ Found 1 error
 Error --------------------------------------------------------------------------------- -:4:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{type: 'ok', value: _}`
-to match object type [1]. [match-not-exhaustive]
+to match `{type: "ok", value: number}` [1]. [match-not-exhaustive]
 
    -:4:1
    4| match (result) { // ERROR
@@ -47,7 +47,7 @@ Found 1 error
 Error -------------------------------------------------------------------------------- -:6:10
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `['end', 'below']` to
-match const array literal [1]. [match-not-exhaustive]
+match `Readonly<["start" | "end", "above" | "below"]>` [1]. [match-not-exhaustive]
 
    -:6:10
    6|   return match ([align, position]) { // ERROR

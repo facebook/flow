@@ -917,18 +917,18 @@ References:
 
 Error --------------------------------------------------------------------------------------------- enum-object.js:57:17
 
-Enum `E` is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
+enum `E` [1] is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
 
    57| for (const x of E) {
-                       ^
+                       ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- enum-object.js:65:10
 
-Enum `E` is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
+enum `E` [1] is not an iterable. You can use `E.members()` to get an iterator for the enum's members. [not-iterable]
 
    65|   yield* E; // Error
-                ^
+                ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- enum-object.js:71:17

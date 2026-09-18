@@ -1660,6 +1660,20 @@ pub fn type_reference_with_reason_for_error(
     }
 }
 
+pub fn type_reference_with_reason_or_desc_for_error(
+    t: Option<&Type>,
+    reason: Reason,
+) -> ErrorTypeReferenceWithReasonData<ALoc> {
+    match t {
+        Some(t) => type_reference_with_reason_for_error(t, reason),
+        None => ErrorTypeReferenceWithReasonData {
+            reference_loc: reason.loc().dupe(),
+            type_desc: TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone())),
+            reason,
+        },
+    }
+}
+
 /// Builds an `instanceof` RHS error while preserving descriptions that carry
 /// provenance not expressible by the normalized type.
 pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
@@ -3794,6 +3808,7 @@ pub mod value_to_type_reference_transform {
     use super::add_output_with_env;
     use super::fix_this_instance;
     use super::lookup_builtin_type_with_env;
+    use super::type_reference_with_reason_for_error;
     use crate::type_subst::Purpose;
     use crate::type_subst::subst;
 
@@ -3993,7 +4008,7 @@ pub mod value_to_type_reference_transform {
                         ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(Box::new(
                             EnumMemberUsedAsTypeData {
                                 reason: reason_op.to_error_reference(),
-                                enum_reason: reason.dupe(),
+                                enum_: type_reference_with_reason_for_error(&t, reason.dupe()),
                             },
                         ))),
                     )?;
@@ -7418,7 +7433,10 @@ pub mod get_prop_t_kit {
                                 member_name: Some(member_name.dupe()),
                                 suggestion,
                                 reason: member_reason.to_error_reference(),
-                                enum_reason: enum_reason.dupe(),
+                                enum_: type_reference_with_reason_for_error(
+                                    &enum_object_t,
+                                    enum_reason.dupe(),
+                                ),
                             }),
                         ),
                     ),

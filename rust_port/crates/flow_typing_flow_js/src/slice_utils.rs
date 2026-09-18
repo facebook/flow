@@ -2240,7 +2240,10 @@ fn resolve_with_env<'cx, A>(
                             ErrorMessage::ECannotSpreadInterface(Box::new(
                                 ECannotSpreadInterfaceData {
                                     spread_reason: reason.dupe(),
-                                    interface_reason: r.dupe(),
+                                    interface: flow_js_utils::type_reference_with_reason_for_error(
+                                        &t,
+                                        r.dupe(),
+                                    ),
                                     use_op: use_op.dupe(),
                                 },
                             )),
@@ -2268,7 +2271,10 @@ fn resolve_with_env<'cx, A>(
                             env,
                             ErrorMessage::ERecordError(RecordErrorKind::RecordBannedTypeUtil {
                                 reason_op,
-                                reason_record: r.dupe(),
+                                record: flow_js_utils::type_reference_with_reason_for_error(
+                                    &t,
+                                    r.dupe(),
+                                ),
                             }),
                         )?;
                         return_(cx, use_op, any_t::error(reason.dupe()))

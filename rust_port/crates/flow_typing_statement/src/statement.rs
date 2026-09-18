@@ -20691,6 +20691,7 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                     env,
                     check_reason,
                     enum_reason,
+                    concrete,
                     enum_info,
                     possible_checks,
                     checks,
@@ -20815,7 +20816,10 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                         ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(Box::new(
                             flow_typing_errors::error_message::EnumInvalidCheckData {
                                 loc: loc.dupe(),
-                                enum_reason: enum_reason.dupe(),
+                                enum_: flow_js_utils::type_reference_with_reason_for_error(
+                                    concrete,
+                                    enum_reason.dupe(),
+                                ),
                                 enum_name: enum_info.enum_name().map(Dupe::dupe),
                                 example_member: example_member.dupe(),
                                 from_match: false,
@@ -20895,6 +20899,7 @@ fn perform_enum_exhaustive_check<'cx>(
     env: &FlowJsEnv,
     check_reason: &Reason,
     enum_reason: &Reason,
+    enum_t: &Type,
     enum_info: &EnumConcreteInfo,
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
     checks: &[EnumCheck],
@@ -20938,7 +20943,10 @@ fn perform_enum_exhaustive_check<'cx>(
                     flow_typing_errors::error_message::EnumMemberAlreadyCheckedData {
                         case_test_loc: case_test_loc.dupe(),
                         prev_check_loc: seen[member_name].dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            enum_t,
+                            enum_reason.dupe(),
+                        ),
                         member_name: member_name.dupe(),
                     },
                 ))),
@@ -20956,7 +20964,10 @@ fn perform_enum_exhaustive_check<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(Box::new(
                     flow_typing_errors::error_message::EnumNotAllCheckedData {
                         reason: check_reason.to_error_reference(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            enum_t,
+                            enum_reason.dupe(),
+                        ),
                         left_to_check: left_over.keys().duped().collect(),
                         default_case_loc,
                     },
@@ -20971,7 +20982,10 @@ fn perform_enum_exhaustive_check<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(Box::new(
                     flow_typing_errors::error_message::EnumUnknownNotCheckedData {
                         reason: check_reason.to_error_reference(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            enum_t,
+                            enum_reason.dupe(),
+                        ),
                     },
                 ))),
             )?;
@@ -20985,7 +20999,10 @@ fn perform_enum_exhaustive_check<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(Box::new(
                     flow_typing_errors::error_message::EnumAllMembersAlreadyCheckedData {
                         loc: default_case_loc,
-                        enum_reason: enum_reason.dupe(),
+                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                            enum_t,
+                            enum_reason.dupe(),
+                        ),
                     },
                 ))),
             )?;

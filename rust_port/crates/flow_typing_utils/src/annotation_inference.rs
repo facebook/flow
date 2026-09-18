@@ -1270,14 +1270,16 @@ fn elab_t_concrete<'cx>(
                 // an enum object value annotation becomes the enum value type
                 DefTInner::EnumObjectT { enum_value_t, .. } => enum_value_t.dupe(),
                 DefTInner::EnumValueT(_) => {
-                    let enum_reason = def_reason.dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EEnumError(
                             flow_typing_errors::error_message::EnumErrorKind::EnumMemberUsedAsType(
                                 Box::new(EnumMemberUsedAsTypeData {
                                     reason: reason.to_error_reference(),
-                                    enum_reason,
+                                    enum_: flow_js_utils::type_reference_with_reason_for_error(
+                                        &t,
+                                        def_reason.dupe(),
+                                    ),
                                 }),
                             ),
                         ),
@@ -2881,7 +2883,10 @@ fn elab_t_concrete<'cx>(
                             member_name: None,
                             suggestion: None,
                             reason: reason.to_error_reference(),
-                            enum_reason: enum_reason.dupe(),
+                            enum_: flow_js_utils::type_reference_with_reason_for_error(
+                                &t,
+                                enum_reason.dupe(),
+                            ),
                         }),
                     ),
                 ),

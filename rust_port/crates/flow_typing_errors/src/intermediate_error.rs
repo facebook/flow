@@ -108,6 +108,7 @@ use super::intermediate_error_types::MessageIncompatibleDueToInvariantSubtypingD
 use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use super::intermediate_error_types::MessageIncompatibleTupleArityData;
 use super::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
+use super::intermediate_error_types::MessageIndexerCheckFailedData;
 use super::intermediate_error_types::MessageInvalidArgumentWithPrintedTypeData;
 use super::intermediate_error_types::MessageInvalidEnumMemberCheckData;
 use super::intermediate_error_types::MessageInvalidKeyPropertyInSpreadData;
@@ -149,6 +150,7 @@ use crate::error_message::IncompatibleInvariantSubtypingData;
 use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
 use crate::error_message::IncompatibleTypesWithExampleData;
+use crate::error_message::IndexerCheckFailedData;
 use crate::error_message::PrivatePropMissingInLookupData;
 use crate::error_message::PropMissingInLookupData;
 use crate::error_message::PropMissingInSubtypingData;
@@ -3806,6 +3808,27 @@ where
 
         (
             None,
+            FriendlyMessageRecipe::IndexerCheckFailed(box IndexerCheckFailedData {
+                prop,
+                lower,
+                upper,
+                indexer,
+                use_op,
+            }),
+        ) => mk_use_op_error(
+            loc_of_aloc(&lower.loc),
+            use_op,
+            None,
+            Message::MessageIndexerCheckFailed(Box::new(MessageIndexerCheckFailedData {
+                prop,
+                lower,
+                upper,
+                indexer,
+            })),
+        ),
+
+        (
+            None,
             FriendlyMessageRecipe::PropMissingInSubtyping(box PropMissingInSubtypingData {
                 prop,
                 reason_lower,
@@ -5184,7 +5207,7 @@ where
             MessageAlreadyExhaustivelyCheckOneEnumMember(
                 box MessageAlreadyExhaustivelyCheckOneEnumMemberData {
                     prev_check_loc,
-                    enum_reason,
+                    enum_,
                     member_name,
                 },
             ) => friendly::Message(vec![
@@ -5192,18 +5215,18 @@ where
                 text("case checks for enum member "),
                 code(member_name),
                 text(" of "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(", but member "),
                 code(member_name),
                 text(" was already checked at "),
                 friendly::hardcoded_string_desc_ref("case", loc_of_aloc(prev_check_loc)),
                 text("."),
             ]),
-            MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason } => {
+            MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_ } => {
                 friendly::Message(vec![
                     text("Invalid exhaustive check: "),
                     text("default case checks for additional enum members of "),
-                    ref_(enum_reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(", but all of its members have already been checked."),
                 ])
             }
@@ -5252,7 +5275,7 @@ where
                 member_name,
                 suggestion,
                 description,
-                enum_reason,
+                enum_,
             }) => {
                 let mut features = vec![
                     text("Cannot access "),
@@ -5264,7 +5287,7 @@ where
                             text(" because "),
                             code(&name.display_smol_str()),
                             text(" is not a member of "),
-                            ref_(enum_reason),
+                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                             text("."),
                         ]);
                         if let Some(sugg) = suggestion {
@@ -5278,7 +5301,7 @@ where
                     None => {
                         features.extend(vec![
                             text(" on "),
-                            ref_(enum_reason),
+                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                             text(" because computed access is not allowed on enums."),
                         ]);
                     }
@@ -5558,7 +5581,7 @@ where
             ]),
             MessageCannotCallObjectFunctionOnEnum {
                 reason,
-                enum_reason,
+                enum_,
                 enum_name,
             } => {
                 let suggestion = match enum_name {
@@ -5579,7 +5602,7 @@ where
                     text("Cannot call function "),
                     ref_(reason),
                     text(" with argument "),
-                    ref_(enum_reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" because it is not an object."),
                 ];
                 features.extend(suggestion);
@@ -5642,9 +5665,9 @@ where
                 };
                 friendly::Message(vec![text(&msg), text(" "), ref_(def_reason)])
             }
-            MessageCannotChangeEnumMember(enum_reason) => friendly::Message(vec![
+            MessageCannotChangeEnumMember(enum_) => friendly::Message(vec![
                 text("Cannot change member of "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(" because enums are frozen."),
             ]),
             MessageCannotCompare(box MessageCannotCompareData {
@@ -5827,7 +5850,7 @@ where
             MessageCannotExhaustivelyCheckEnumWithUnknowns(
                 box MessageCannotExhaustivelyCheckEnumWithUnknownsData {
                     description,
-                    enum_reason,
+                    enum_,
                 },
             ) => friendly::Message(vec![
                 text("Missing "),
@@ -5835,7 +5858,7 @@ where
                 text(" case in the check of "),
                 friendly::desc_of_reason_desc(description),
                 text(". "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(" has unknown members (specified using "),
                 code("..."),
                 text(") so checking it requires the use of a "),
@@ -5850,7 +5873,7 @@ where
             MessageCannotInstantiateObjectUtilTypeWithEnum(
                 box MessageCannotInstantiateObjectUtilTypeWithEnumData {
                     description,
-                    enum_reason,
+                    enum_,
                     enum_name,
                 },
             ) => {
@@ -5867,13 +5890,13 @@ where
                     text("Cannot instantiate "),
                     friendly::desc_of_reason_desc(description),
                     text(" because "),
-                    ref_(enum_reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" is not an object."),
                 ];
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateEnumForIn { reason, enum_name } => {
+            MessageCannotIterateEnumForIn { enum_, enum_name } => {
                 let suggestion = match enum_name {
                     Some(enum_name) => vec![
                         text(" "),
@@ -5887,14 +5910,14 @@ where
                     text("Cannot iterate using a "),
                     code("for...in"),
                     text(" loop because "),
-                    ref_(reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" is not an object, null, or undefined."),
                 ];
                 features.extend(suggestion);
                 friendly::Message(features)
             }
             MessageCannotIterateEnum {
-                description,
+                enum_,
                 enum_name,
             } => {
                 let suggestion = match enum_name {
@@ -5907,7 +5930,7 @@ where
                     None => vec![],
                 };
                 let mut features = vec![
-                    friendly::desc_of_reason_desc(description),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" is not an iterable."),
                 ];
                 features.extend(suggestion);
@@ -6257,12 +6280,12 @@ where
             ]),
             MessageCannotSpreadInterface {
                 spread_reason,
-                interface_reason,
+                interface,
             } => friendly::Message(vec![
                 text("Flow cannot determine a type for "),
                 ref_(spread_reason),
                 text(". "),
-                ref_(interface_reason),
+                ref_of_ty_or_desc(&interface.loc, &interface.desc),
                 text(" cannot be spread because interfaces do not "),
                 text("track the own-ness of their properties. Try using an object type instead"),
             ]),
@@ -6306,7 +6329,7 @@ where
             MessageCannotUseEnumMemberUsedAsType(
                 box MessageCannotUseEnumMemberUsedAsTypeData {
                     description,
-                    enum_reason,
+                    enum_,
                 },
             ) => friendly::Message(vec![
                 text("Cannot use "),
@@ -6314,7 +6337,7 @@ where
                 text(" as a type. "),
                 text("Enum members are not separate types. "),
                 text("Only the enum itself, "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(", is a type."),
             ]),
             MessageCannotUseExportInNonLegalToplevelContext(name) => friendly::Message(vec![
@@ -7372,7 +7395,7 @@ where
             ]),
             MessageIncompleteExhausiveCheckEnum(box MessageIncompleteExhausiveCheckEnumData {
                 description,
-                enum_reason,
+                enum_,
                 left_to_check,
                 default_case_loc,
             }) => {
@@ -7382,7 +7405,7 @@ where
                             text("the member "),
                             code(left_to_check[0].as_str()),
                             text(" of enum "),
-                            ref_(enum_reason),
+                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                             text(" has"),
                         ]
                     } else {
@@ -7410,7 +7433,11 @@ where
                             };
                         let mut features = vec![text("the members ")];
                         features.extend(members_features);
-                        features.extend(vec![text(" of enum "), ref_(enum_reason), text(" have")]);
+                        features.extend(vec![
+                            text(" of enum "),
+                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                            text(" have"),
+                        ]);
                         features
                     };
                 let default_features: Vec<friendly::MessageFeature<Loc>> = match default_case_loc {
@@ -7521,7 +7548,7 @@ where
                 text(" return value."),
             ]),
             MessageInvalidEnumMemberCheck(box MessageInvalidEnumMemberCheckData {
-                enum_reason,
+                enum_,
                 enum_name,
                 example_member,
                 from_match,
@@ -7551,7 +7578,7 @@ where
                 let mut features = vec![
                     text(&format!("Invalid enum member check at {}. ", at)),
                     text("The format must be dot-access of a member of "),
-                    ref_(enum_reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text("."),
                 ];
                 features.extend(suggestion);
@@ -8135,6 +8162,26 @@ where
                 features.extend(vec![
                     text(" is missing in "),
                     ref_of_ty_or_desc(&object.loc, &object.desc),
+                ]);
+                friendly::Message(features)
+            }
+            MessageIndexerCheckFailed(box MessageIndexerCheckFailedData {
+                prop,
+                lower,
+                upper,
+                indexer,
+            }) => {
+                use super::error_message::mk_prop_message;
+                let mut features = mk_prop_message(Some(prop.as_str()));
+                features.extend(vec![
+                    text(" is missing in "),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    text(" but exists in "),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    text(". Any property that does not exist in "),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                    text(" must be compatible with its indexer "),
+                    ref_of_ty_or_desc(&indexer.loc, &indexer.desc),
                 ]);
                 friendly::Message(features)
             }
@@ -9536,7 +9583,12 @@ where
                     .map(|(pattern, reasons)| {
                         let reason_refs: Vec<friendly::Message<Loc>> = reasons
                             .iter()
-                            .map(|reason| friendly::Message(vec![ref_(reason)]))
+                            .map(|reason| {
+                                friendly::Message(vec![ref_of_ty_or_desc(
+                                    &reason.loc,
+                                    &reason.desc,
+                                )])
+                            })
                             .collect();
                         let friendly::Message(concat_result) =
                             friendly::conjunction_concat(reason_refs, "and", Some(3));
@@ -9912,12 +9964,12 @@ where
             // MessageRecord* variants
             MessageRecordBannedTypeUtil {
                 reason_op,
-                reason_record,
+                record,
             } => friendly::Message(vec![
                 text("Operation "),
                 ref_(reason_op),
                 text(" is not allowed on record "),
-                ref_(reason_record),
+                ref_of_ty_or_desc(&record.loc, &record.desc),
                 text(". "),
                 text("To fix, turn the record type into an object type first using "),
                 code("{...MyRecord}"),

@@ -221,8 +221,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Cannot cast `o` to object type because property `1` is missing in object type [1] but exists in object literal [2]. Any
-property that does not exist in object type [1] must be compatible with its indexer `symbol` [3]. [incompatible-type]
+Cannot cast `o` to object type because property `1` is missing in `{[symbol]: boolean}` [1] but exists in object
+literal [2]. Any property that does not exist in `{[symbol]: boolean}` [1] must be compatible with its indexer
+`symbol` [3]. [incompatible-type]
 
    test.js:8:3
    8|   o as {[symbol]: boolean}; // ERROR
@@ -246,8 +247,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:3
 
-Cannot cast `o` to object type because property `2` is missing in object type [1] but exists in object literal [2]. Any
-property that does not exist in object type [1] must be compatible with its indexer `symbol` [3]. [incompatible-type]
+Cannot cast `o` to object type because property `2` is missing in `{[symbol]: boolean}` [1] but exists in object
+literal [2]. Any property that does not exist in `{[symbol]: boolean}` [1] must be compatible with its indexer
+`symbol` [3]. [incompatible-type]
 
    test.js:8:3
    8|   o as {[symbol]: boolean}; // ERROR
@@ -573,9 +575,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:105:3
 
-Cannot cast `o` to object type because property `1.0234` is missing in object type [1] but exists in object literal [2].
-Any property that does not exist in object type [1] must be compatible with its indexer `number` [3].
-[incompatible-type]
+Cannot cast `o` to object type because property `1.0234` is missing in `{[number]: boolean}` [1] but exists in object
+literal [2]. Any property that does not exist in `{[number]: boolean}` [1] must be compatible with its indexer
+`number` [3]. [incompatible-type]
 
    test.js:105:3
    105|   o as {[number]: boolean}; // ERROR
@@ -598,9 +600,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:114:3
 
-Cannot cast `o` to object type because property `9007199254740992` is missing in object type [1] but exists in object
-literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer `number` [3].
-[incompatible-type]
+Cannot cast `o` to object type because property `9007199254740992` is missing in `{[number]: boolean}` [1] but exists in
+object literal [2]. Any property that does not exist in `{[number]: boolean}` [1] must be compatible with its indexer
+`number` [3]. [incompatible-type]
 
    test.js:114:3
    114|   o as {[number]: boolean}; // ERROR

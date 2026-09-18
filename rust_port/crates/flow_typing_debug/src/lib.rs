@@ -2210,8 +2210,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EIndexerCheckFailed(box EIndexerCheckFailedData {
             prop_name,
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             indexer_desc,
             use_op,
             ..
@@ -2220,11 +2220,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
                 "EIndexerCheckFailed ({}, {}, {}, {}, {})",
                 prop_name,
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                dump_type(lower),
+                dump_type(upper),
                 indexer,
                 string_of_use_op(use_op)
             )
@@ -3446,13 +3451,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::ECannotSpreadInterface(box ECannotSpreadInterfaceData {
             spread_reason,
-            interface_reason,
+            interface,
             use_op,
         }) => {
             format!(
                 "ECannotSpreadInterface ({}) ({}) ({})",
                 dump_reason(cx, spread_reason),
-                dump_reason(cx, interface_reason),
+                dump_reason(cx, &interface.reason),
                 string_of_use_op(use_op)
             )
         }
@@ -3553,7 +3558,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 member_name,
                 suggestion,
                 reason,
-                enum_reason,
+                enum_,
             }) => {
                 let member_str = match member_name {
                     Some(n) => n.to_string(),
@@ -3568,14 +3573,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     member_str,
                     suggestion_str,
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
-            EnumErrorKind::EnumModification(box EnumModificationData { loc, enum_reason }) => {
+            EnumErrorKind::EnumModification(box EnumModificationData { loc, enum_ }) => {
                 format!(
                     "EEnumError (EnumModification ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
             EnumErrorKind::EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
@@ -3592,66 +3597,66 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }
             EnumErrorKind::EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
                 reason,
-                enum_reason,
+                enum_,
                 ..
             }) => {
                 format!(
                     "EEnumError (EnumInvalidObjectUtilType ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
             EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
                 reason,
-                enum_reason,
+                enum_,
                 ..
             }) => {
                 format!(
                     "EEnumError (EnumInvalidObjectFunction ({}) ({}))",
                     dump_reason(cx, reason),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
-            EnumErrorKind::EnumNotIterable(box EnumNotIterableData { reason, .. }) => {
+            EnumErrorKind::EnumNotIterable(box EnumNotIterableData { enum_, .. }) => {
                 format!(
                     "EEnumError (EnumNotIterable ({} {:?}))",
-                    string_of_aloc(None, &reason.loc),
-                    reason.desc
+                    string_of_aloc(None, &enum_.reference.loc),
+                    enum_.reference.desc
                 )
             }
-            EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData {
-                reason, ..
-            }) => format!(
-                "EEnumError (EnumNotIterableForIn ({}))",
-                dump_reason(cx, reason)
-            ),
+            EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData { enum_, .. }) => {
+                format!(
+                    "EEnumError (EnumNotIterableForIn ({}))",
+                    dump_reason(cx, &enum_.reason)
+                )
+            }
             EnumErrorKind::EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
                 case_test_loc,
                 prev_check_loc,
-                enum_reason,
+                enum_,
                 member_name,
             }) => {
                 format!(
                     "EEnumError (EnumMemberAlreadyChecked ({}) ({}) ({}) ({}))",
                     string_of_aloc(None, case_test_loc),
                     string_of_aloc(None, prev_check_loc),
-                    dump_reason(cx, enum_reason),
+                    dump_reason(cx, &enum_.reason),
                     member_name
                 )
             }
             EnumErrorKind::EnumAllMembersAlreadyChecked(box EnumAllMembersAlreadyCheckedData {
                 loc,
-                enum_reason,
+                enum_,
             }) => {
                 format!(
                     "EEnumError (EnumAllMembersAlreadyChecked ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
             EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {
                 reason,
-                enum_reason,
+                enum_,
                 left_to_check,
                 default_case_loc,
             }) => {
@@ -3662,24 +3667,24 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumNotAllChecked ({}) ({}) ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, enum_reason),
+                    dump_reason(cx, &enum_.reason),
                     left_to_check.join(", "),
                     default_str
                 )
             }
             EnumErrorKind::EnumUnknownNotChecked(box EnumUnknownNotCheckedData {
                 reason,
-                enum_reason,
+                enum_,
             }) => {
                 format!(
                     "EEnumError (EnumUnknownNotChecked ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
             EnumErrorKind::EnumInvalidCheck(box EnumInvalidCheckData {
                 loc,
-                enum_reason,
+                enum_,
                 example_member,
                 from_match,
                 ..
@@ -3691,19 +3696,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumInvalidCheck ({}) ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_reason(cx, &enum_.reason),
                     member_str,
                     from_match
                 )
             }
-            EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
-                reason,
-                enum_reason,
-            }) => {
+            EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData { reason, enum_ }) => {
                 format!(
                     "EEnumError (EnumMemberUsedAsType ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, enum_reason)
+                    dump_reason(cx, &enum_.reason)
                 )
             }
             EnumErrorKind::EnumIncompatible(box EIncompatibleTypesWithUseOpData {
@@ -4336,14 +4338,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }
         },
         ErrorMessage::ERecordError(e) => match e {
-            RecordErrorKind::RecordBannedTypeUtil {
-                reason_op,
-                reason_record,
-            } => {
+            RecordErrorKind::RecordBannedTypeUtil { reason_op, record } => {
                 format!(
                     "ERecordBannedTypeUtil ({}) ({})",
                     dump_reason(cx, reason_op),
-                    dump_reason(cx, reason_record)
+                    dump_reason(cx, &record.reason)
                 )
             }
             RecordErrorKind::RecordInvalidName { name, loc } => {

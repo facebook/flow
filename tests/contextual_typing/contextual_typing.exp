@@ -1095,9 +1095,9 @@ An annotation on `y` is required because Flow cannot infer its type from local c
 
 Error --------------------------------------------------------------------------------------------------- unions.js:4:48
 
-Cannot assign object literal to `x` because property `42` is missing in object type [1] but exists in object
-literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer `"A" | "B"` [3].
-[incompatible-type]
+Cannot assign object literal to `x` because property `42` is missing in `{["A" | "B"]: (number) => number}` [1] but
+exists in object literal [2]. Any property that does not exist in `{["A" | "B"]: (number) => number}` [1] must be
+compatible with its indexer `"A" | "B"` [3]. [incompatible-type]
 
    unions.js:4:48
    4|   const x: {['A' | 'B']: (number) => number} = {[42]: v => v}; // ERROR

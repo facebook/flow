@@ -19,3 +19,14 @@ var test4: string = 123; // This error should be suppressed
  * $FlowFixMe[incompatible-type]
  */
 var test5: string = 123;
+
+type ReadonlyNested = {readonly value: string};
+type WritableNested = {value: string};
+
+declare function consumeNested(value: {nested: WritableNested}): void;
+declare const readonlyNested: ReadonlyNested;
+
+consumeNested({
+  // $FlowFixMe[incompatible-variance]
+  nested: readonlyNested,
+});

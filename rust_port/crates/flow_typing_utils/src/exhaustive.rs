@@ -28,6 +28,7 @@ use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumInvalidCheckData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidIdentOrMemberPatternData;
 use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
@@ -372,7 +373,10 @@ pub mod pattern_union_builder {
                                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
                                     Box::new(EnumInvalidCheckData {
                                         loc: loc.dupe(),
-                                        enum_reason: reason_of_t(t).dupe(),
+                                        enum_: flow_js_utils::type_reference_with_reason_for_error(
+                                            t,
+                                            reason_of_t(t).dupe(),
+                                        ),
                                         enum_name: Some(enum_info.enum_name.dupe()),
                                         example_member,
                                         from_match: true,
@@ -2332,115 +2336,143 @@ pub fn analyze<'cx>(
             enum_unknown_members,
             inexhaustible,
         } = &value_left;
-        let mut examples: Vec<(FlowSmolStr, Vec<Reason>)> = Vec::new();
+        let mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<ALoc>>)> =
+            Vec::new();
         let mut asts: Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)> = Vec::new();
-        for leaf::Leaf(reason, leaf_ctor) in leafs.iter() {
+        for leaf in leafs.iter() {
+            let leaf::Leaf(reason, leaf_ctor) = leaf;
             let example: FlowSmolStr = leaf_ctor.to_string().into();
-            examples.push((example, vec![reason.dupe()]));
+            examples.push((
+                example,
+                vec![flow_js_utils::type_reference_with_reason_for_error(
+                    &leaf.to_type(),
+                    reason.dupe(),
+                )],
+            ));
             asts.push(leaf_ctor.to_ast());
         }
 
         // Sort examples based on their original order
-        let mut tuple_patterns: Vec<pattern_object::PatternObject> =
-            tuples.iter().map(|vo| vo.to_pattern(cx)).collect();
-        tuple_patterns.sort();
-        // Build up map of example to reason set
+        let mut tuple_patterns: Vec<(pattern_object::PatternObject, Type)> = tuples
+            .iter()
+            .map(|vo| (vo.to_pattern(cx), vo.to_original_type()))
+            .collect();
+        tuple_patterns.sort_by(|(p1, _), (p2, _)| p1.cmp(p2));
         let mut tuple_examples_map: BTreeMap<
             FlowSmolStr,
-            (usize, pattern_object::PatternObject, BTreeSet<Reason>),
+            (usize, pattern_object::PatternObject, BTreeMap<Reason, Type>),
         > = BTreeMap::new();
-        for (i, tuple_pattern) in tuple_patterns.into_iter().enumerate() {
+        for (i, (tuple_pattern, tuple_t)) in tuple_patterns.into_iter().enumerate() {
             let pattern_object::PatternObject(ref reason, _) = tuple_pattern;
             let example: FlowSmolStr = tuple_pattern.to_string().into();
             tuple_examples_map
                 .entry(example)
-                .and_modify(|(_, _, reasons)| {
-                    reasons.insert(reason.dupe());
+                .and_modify(|(_, _, types_by_reason)| {
+                    types_by_reason.insert(reason.dupe(), tuple_t.dupe());
                 })
                 .or_insert_with(|| {
-                    let mut reasons = BTreeSet::new();
-                    reasons.insert(reason.dupe());
-                    (i, tuple_pattern.dupe(), reasons)
+                    let mut types_by_reason = BTreeMap::new();
+                    types_by_reason.insert(reason.dupe(), tuple_t);
+                    (i, tuple_pattern.dupe(), types_by_reason)
                 });
         }
         // Add the the pattern that matches all arrays to the tuple examples map
         if let Some(value_object::ValueObject(reason, _)) = arrays.front() {
-            let reasons: BTreeSet<Reason> = arrays
+            let types_by_reason: BTreeMap<Reason, Type> = arrays
                 .iter()
-                .map(|value_object::ValueObject(r, _)| r.dupe())
+                .map(|value_object| (value_object.0.dupe(), value_object.to_original_type()))
                 .collect();
             let i = tuples.len();
             let pattern = match_pattern_ir::empty_inexact_tuple_pattern(reason.dupe());
             let example: FlowSmolStr = pattern.to_string().into();
             tuple_examples_map
                 .entry(example)
-                .and_modify(|(_, _, existing_reasons)| {
-                    existing_reasons.extend(reasons.iter().map(|r| r.dupe()));
+                .and_modify(|(_, _, existing_types_by_reason)| {
+                    existing_types_by_reason
+                        .extend(types_by_reason.iter().map(|(r, t)| (r.dupe(), t.dupe())));
                 })
-                .or_insert_with(|| (i, pattern, reasons));
+                .or_insert_with(|| (i, pattern, types_by_reason));
         }
         // Turn the map into a list of examples
         let mut tuple_entries: Vec<(
             FlowSmolStr,
-            (usize, pattern_object::PatternObject, BTreeSet<Reason>),
+            (usize, pattern_object::PatternObject, BTreeMap<Reason, Type>),
         )> = tuple_examples_map.into_iter().collect();
         tuple_entries.sort_by_key(|(_, (a, _, _))| *a);
-        for (example, (_, pattern, reasons)) in tuple_entries {
-            let reasons_vec: Vec<Reason> = reasons.into_iter().collect();
-            examples.push((example, reasons_vec));
+        for (example, (_, pattern, types_by_reason)) in tuple_entries {
+            let type_refs = types_by_reason
+                .into_iter()
+                .map(|(reason, t)| flow_js_utils::type_reference_with_reason_for_error(&t, reason))
+                .collect();
+            examples.push((example, type_refs));
             asts.push(pattern.to_ast());
         }
         // Compute the list of object examples
-        let mut object_patterns: Vec<pattern_object::PatternObject> =
-            objects.iter().map(|vo| vo.to_pattern(cx)).collect();
-        object_patterns.sort();
+        let mut object_patterns: Vec<(pattern_object::PatternObject, Type)> = objects
+            .iter()
+            .map(|vo| (vo.to_pattern(cx), vo.to_original_type()))
+            .collect();
+        object_patterns.sort_by(|(p1, _), (p2, _)| p1.cmp(p2));
         let mut object_examples_map: BTreeMap<
             FlowSmolStr,
-            (usize, pattern_object::PatternObject, BTreeSet<Reason>),
+            (usize, pattern_object::PatternObject, BTreeMap<Reason, Type>),
         > = BTreeMap::new();
-        for (i, object_pattern) in object_patterns.into_iter().enumerate() {
+        for (i, (object_pattern, object_t)) in object_patterns.into_iter().enumerate() {
             let pattern_object::PatternObject(ref reason, _) = object_pattern;
             let example: FlowSmolStr = object_pattern.to_string().into();
             object_examples_map
                 .entry(example)
-                .and_modify(|(_, _, reasons)| {
-                    reasons.insert(reason.dupe());
+                .and_modify(|(_, _, types_by_reason)| {
+                    types_by_reason.insert(reason.dupe(), object_t.dupe());
                 })
                 .or_insert_with(|| {
-                    let mut reasons = BTreeSet::new();
-                    reasons.insert(reason.dupe());
-                    (i, object_pattern.dupe(), reasons)
+                    let mut types_by_reason = BTreeMap::new();
+                    types_by_reason.insert(reason.dupe(), object_t);
+                    (i, object_pattern.dupe(), types_by_reason)
                 });
         }
         let mut object_entries: Vec<(
             FlowSmolStr,
-            (usize, pattern_object::PatternObject, BTreeSet<Reason>),
+            (usize, pattern_object::PatternObject, BTreeMap<Reason, Type>),
         )> = object_examples_map.into_iter().collect();
         object_entries.sort_by_key(|(_, (a, _, _))| *a);
-        for (example, (_, pattern, reasons)) in object_entries {
-            let reasons_vec: Vec<Reason> = reasons.into_iter().collect();
-            examples.push((example, reasons_vec));
+        for (example, (_, pattern, types_by_reason)) in object_entries {
+            let type_refs = types_by_reason
+                .into_iter()
+                .map(|(reason, t)| flow_js_utils::type_reference_with_reason_for_error(&t, reason))
+                .collect();
+            examples.push((example, type_refs));
             asts.push(pattern.to_ast());
         }
         let wildcard_example =
             |reason: Reason,
-             mut examples: Vec<(FlowSmolStr, Vec<Reason>)>,
+             mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<ALoc>>)>,
              mut asts: Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)>|
              -> (
-                Vec<(FlowSmolStr, Vec<Reason>)>,
+                Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<ALoc>>)>,
                 Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)>,
             ) {
                 let pattern = match_pattern_ir::wildcard_pattern(reason);
                 let example: FlowSmolStr = pattern.to_string().into();
-                let mut reasons: BTreeSet<Reason> = inexhaustible
+                let mut types_by_reason: BTreeMap<Reason, Type> = inexhaustible
                     .iter()
-                    .map(|t| reason_of_t(t).dupe())
+                    .map(|t| (reason_of_t(t).dupe(), t.dupe()))
                     .collect();
-                for (r, _) in enum_unknown_members.iter() {
-                    reasons.insert(r.dupe());
+                for (r, leafs) in enum_unknown_members.iter() {
+                    let t = type_util::union_of_ts(
+                        r.dupe(),
+                        leafs.iter().map(|leaf| leaf.to_type()).collect(),
+                        None,
+                    );
+                    types_by_reason.insert(r.dupe(), t);
                 }
-                let reasons_vec: Vec<Reason> = reasons.into_iter().collect();
-                examples.push((example, reasons_vec));
+                let type_refs = types_by_reason
+                    .into_iter()
+                    .map(|(reason, t)| {
+                        flow_js_utils::type_reference_with_reason_for_error(&t, reason)
+                    })
+                    .collect();
+                examples.push((example, type_refs));
                 asts.push(pattern.to_ast());
                 (examples, asts)
             };
