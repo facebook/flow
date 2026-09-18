@@ -1,3 +1,47 @@
+### 0.332.0
+
+Breaking Changes:
+* `no_flowlib` option is removed. Use `builtin_lib=flowlib` (default) or `builtin_lib=prelude` instead.
+
+Likely to cause new Flow errors:
+* Render types no longer accept exact react element as arguments. See https://flow.org/en/docs/react/render-types/ for supported cases
+* Flow will now always infer a react jsx element to be a render type if it's an element of a component-syntax component, or `React.MixedElement` otherwise. Legacy code that requires exact react element will see new errors.
+* Add an option for rejecting dynamic imports in Haste modules.
+
+New Features:
+* `Symbol()` and `Symbol.for()` create a `unique symbol` when they initialize a `const`, so symbols can be used as property keys without explicit declarations.
+
+Notable bug fixes:
+* Bound error type normalization to prevent excessive memory use
+* Release temporary signature-hash graphs after Flow merges.
+* Using `import typeof` of a generic value without type arguments keeps its polymorphism instead of reporting missing-type-args, and `renders` accepts `import typeof` of a generic component.
+
+Parser:
+* Parse [deferred imports](https://github.com/tc39/proposal-defer-import-eval): `import defer * as ns from "m"` and `import.defer("m")` now set the ESTree `phase` property to `"defer"`.
+
+IDE:
+* Hover on members accessed through `super` shows the declaration
+* Hover on destructuring keys shows the member declaration
+* Hover on enum members shows the member declaration
+* Hover on signature labels and indexer keys shows the parameter
+* Hover on component attribute names shows the prop declaration
+* Hover on import/export sources shows the module
+* Hover on this-parameters shows the parameter
+* Hover on indexed-access literals shows the member
+* Hover on polymorphic JSX elements no longer exposes overly precise literal types when no annotation demands that precision
+* Hover on a call to an overloaded function reports how many other signatures the function has
+* Hover lists the signatures of an overloaded declaration instead of printing their intersection
+* Component hovers no longer drop indexer rest props
+* Align multiline union members in hover type declarations
+* Render hover definition links in a compact Rust-style navigation row.
+* Expand rest-prop aliases in top-level component hovers.
+
+Library Definitions:
+* React ref callbacks now have a stricter return type
+* `import.meta` will no longer have `url` property and arbitrary unknown property. To add them back, you can do so through declaration merging (e.g. adding `interface ImportMeta { url: string }` to your global library definitions.
+* `ArrayLike` and `ArrayBuffer` now follow TypeScript definitions
+* Stricter typing for `Array(length)` and `Array(items)`
+
 ### 0.331.0
 
 Likely to cause new Flow errors:
