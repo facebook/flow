@@ -47,17 +47,15 @@
 //!     fbcode/flow/packages/flow-parser/oxidized-src/generated/ESTreeVisitorKeys.js.flow
 //! ```
 //!
-//! ## ESTree Flow types (`--estree-types`)
+//! ## ESTree Flow types (`--check-estree-types`)
 //!
-//! Generates `types.js` for the flow-estree package by mirroring
-//! upstream `hermes-estree/src/types.js`. Run from the `fbsource` root so
-//! the default upstream path resolves; alternatively set
-//! `HERMES_ESTREE_TYPES_JS` to an absolute path:
+//! Validates the Flow-owned `flow-estree/src/types.js` against the serializer
+//! schema. Run from the `fbsource` root so the default path resolves;
+//! alternatively set `FLOW_ESTREE_TYPES_JS` to an absolute path:
 //!
 //! ```sh
 //! buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
-//!     --estree-types > \
-//!     fbcode/flow/packages/flow-estree/src/types.js
+//!     --check-estree-types
 //! ```
 //!
 //! ## ESTree predicates (`--estree-predicates`)
@@ -105,8 +103,8 @@ fn main() {
         generate_estree_visitor_keys_flow();
     } else if args.iter().any(|a| a == "--estree-visitor-keys") {
         generate_estree_visitor_keys();
-    } else if args.iter().any(|a| a == "--estree-types") {
-        generate_estree_types();
+    } else if args.iter().any(|a| a == "--check-estree-types") {
+        check_estree_types();
     } else if args.iter().any(|a| a == "--estree-predicates") {
         generate_estree_predicates();
     } else if args.iter().any(|a| a == "--estree-selectors") {
@@ -1045,35 +1043,30 @@ fn print_visitor_keys_entry(name: &str, props: &[&str]) {
 }
 
 // ---------------------------------------------------------------------------
-// ESTree Flow types codegen (`--estree-types`)
+// ESTree Flow types validation (`--check-estree-types`)
 // ---------------------------------------------------------------------------
 
-/// Default fbsource-relative path to upstream `hermes-estree/src/types.js`,
-/// used when `HERMES_ESTREE_TYPES_JS` is not set. Resolved against the
-/// process's current working directory — the standard regen workflow runs
-/// `buck run` from the `fbsource` root so this path resolves cleanly.
-const DEFAULT_HERMES_ESTREE_TYPES_PATH: &str =
-    "xplat/static_h/tools/hermes-parser/js/hermes-estree/src/types.js";
+/// Default fbsource-relative path to Flow's ESTree types, used when
+/// `FLOW_ESTREE_TYPES_JS` is not set.
+const DEFAULT_FLOW_ESTREE_TYPES_PATH: &str =
+    "fbcode/flow/packages/flow-estree/src/types.js";
 
-/// Names of NodeKinds that the Rust schema models but upstream
-/// `hermes-estree/src/types.js` does not surface as a single
+/// Names of NodeKinds that Flow's `types.js` does not surface as a single
 /// `export interface` declaration. Each entry is verified by hand:
 ///
-/// - **Refinement splits** — upstream models the node as multiple refined
+/// - **Refinement splits** — Flow models the node as multiple refined
 ///   interfaces (each with the same `+type:` literal) plus a union alias.
 ///   Our schema has the single concrete kind; the union is the consumer
 ///   type. e.g. `MemberExpression` exists upstream as
 ///   `MemberExpressionWith{Computed,NonComputed}Name` plus
 ///   `export type MemberExpression = …`.
-/// - **TS-only nodes** — upstream Hermes parses TypeScript; these kinds
-///   exist in our SCHEMA only because the Rust serializer kind list mirrors
-///   the OCaml binary protocol's full type space. Flow-only consumers will
-///   never see them via the flow-parser adapter.
+/// - **Unsupported TS-only nodes** — these kinds are not emitted by the Flow
+///   parser adapter.
 /// - **Custom-encoded** — `Literal` (the only `custom_emit` kind) is
-///   modeled upstream as the `Literal` union over BigInt/Boolean/Null/
+///   modeled as the `Literal` union over BigInt/Boolean/Null/
 ///   Numeric/RegExp/StringLiteral, not as a standalone interface.
 const KNOWN_TYPES_WITHOUT_INTERFACE: &[&str] = &[
-    // Refinement splits: upstream emits multiple interfaces sharing the
+    // Refinement splits: types.js defines multiple interfaces sharing the
     // `+type` discriminant plus a union alias.
     "BinaryExpression",          // → BinaryExpressionWithoutIn | BinaryExpressionIn
     "MemberExpression",          // → MemberExpressionWith{,Non}ComputedName
@@ -1087,7 +1080,7 @@ const KNOWN_TYPES_WITHOUT_INTERFACE: &[&str] = &[
     "RendersType",               // → Renders{,Star,Question}TypeOperator (same union)
     // Custom-encoded literal collapse.
     "Literal",                   // → Literal = BigIntLiteral | BooleanLiteral | …
-    // Optional-chain refinements: upstream merges these into CallExpression /
+    // Optional-chain refinements: types.js merges these into CallExpression /
     // MemberExpression with `+optional: boolean`.
     "OptionalCallExpression",
     "OptionalMemberExpression",
@@ -1118,11 +1111,11 @@ const KNOWN_TYPES_WITHOUT_INTERFACE: &[&str] = &[
 /// Pure cross-check: returns the list of NodeDef `estree_type` names from
 /// `schema` that have no matching `export interface <name>` /
 /// `export interface <name>\n` / `export type <name> =` declaration in
-/// `upstream`, are not Babel-only nodes, AND are not in
+/// `types_source`, are not Babel-only nodes, AND are not in
 /// `KNOWN_TYPES_WITHOUT_INTERFACE`. Caller decides whether to hard-fail.
-/// Extracted so a unit test can verify the hard-fail path without invoking
+/// Extracted so unit tests can verify the hard-fail path without invoking
 /// `std::process::exit`.
-fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'static str> {
+fn estree_types_missing_kinds(schema: &[NodeDef], types_source: &str) -> Vec<&'static str> {
     let mut missing: Vec<&'static str> = Vec::new();
     for def in schema.iter() {
         if def.name.starts_with("Babel")
@@ -1134,9 +1127,9 @@ fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'stati
         let iface_needle = format!("export interface {} ", def.estree_type);
         let iface_extends = format!("export interface {}\n", def.estree_type);
         let union_needle = format!("export type {} =", def.estree_type);
-        if !upstream.contains(&iface_needle)
-            && !upstream.contains(&iface_extends)
-            && !upstream.contains(&union_needle)
+        if !types_source.contains(&iface_needle)
+            && !types_source.contains(&iface_extends)
+            && !types_source.contains(&union_needle)
         {
             missing.push(def.estree_type);
         }
@@ -1144,10 +1137,10 @@ fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'stati
     missing
 }
 
-/// Generate the `flow-estree/src/types.js` content.
+/// Validate the Flow-owned `flow-estree/src/types.js` against the Rust schema.
 ///
-/// The upstream `hermes-estree/src/types.js` is overwhelmingly hand-written
-/// Flow — per-node `interface` declarations, hand-curated unions
+/// The file contains hand-written per-node `interface` declarations and
+/// hand-curated unions
 /// (`ESNode`, `Statement`, `Expression`, `BindingName`, `AFunction`,
 /// `Property`, `ChainElement`, `ModuleDeclaration`, `MemberExpression`,
 /// `BinaryExpression`, …), discriminator-refined splits
@@ -1157,142 +1150,33 @@ fn estree_types_missing_kinds(schema: &[NodeDef], upstream: &str) -> Vec<&'stati
 /// types (`Token`, `Comment`, `Position`, `SourceLocation`, `BaseNode`, …)
 /// that the Rust schema does not encode.
 ///
-/// Rather than reimplement that file with partial schema-driven generation
-/// (which would lose the hand-curated refinements the downstream consumers
-/// depend on), this codegen mode emits the upstream file *verbatim* with our
-/// own header (Copyright + @flow strict + @generated + regen instructions).
-/// This is **not** schema-derived generation — it is a verbatim mirror of the
-/// upstream Flow types with a SCHEMA cross-check.
-///
-/// The cross-check enforces a single invariant: every concrete NodeDef in
-/// SCHEMA must have a matching `export interface <name>` or
-/// `export type <name> =` in upstream's types.js (or appear in
-/// `KNOWN_TYPES_WITHOUT_INTERFACE` with attribution). On any drift, codegen
-/// **hard-fails with a non-zero exit** so the build cannot silently produce
-/// a types.js that omits a Flow-only NodeKind. There is no synthesis or
-/// soft-warning path — protecting against future SCHEMA/upstream drift IS
-/// the hard-fail.
-///
-/// The Rust schema is the source of truth for *binary serialization* between
-/// the Rust parser and the JS deserializer (kinds + property order); the
-/// Flow type surface is the source of truth for *consumer typings*. Forking
-/// the upstream Flow types in lockstep with upstream is the right
-/// abstraction boundary here.
-fn generate_estree_types() {
-    let path = std::env::var("HERMES_ESTREE_TYPES_JS")
-        .unwrap_or_else(|_| DEFAULT_HERMES_ESTREE_TYPES_PATH.to_string());
-    let upstream = std::fs::read_to_string(&path).unwrap_or_else(|err| {
+/// The Rust schema owns serialized node kinds and property order, while
+/// Flow's `types.js` owns the richer public consumer types. This check only
+/// verifies that every serialized node kind has a corresponding public type;
+/// it does not validate property shapes or unions.
+fn check_estree_types() {
+    let path = std::env::var("FLOW_ESTREE_TYPES_JS")
+        .unwrap_or_else(|_| DEFAULT_FLOW_ESTREE_TYPES_PATH.to_string());
+    let types_source = std::fs::read_to_string(&path).unwrap_or_else(|err| {
         panic!(
-            "failed to read upstream hermes-estree types.js at {path:?}: {err}\n\
-             hint: run from the fbsource root, or set HERMES_ESTREE_TYPES_JS to \
+            "failed to read Flow ESTree types at {path:?}: {err}\n\
+             hint: run from the fbsource root, or set FLOW_ESTREE_TYPES_JS to \
              an absolute path"
         )
     });
 
-    // Cross-check: every concrete NodeDef in SCHEMA must appear as an
-    // `export interface <name> ...` or `export type <name> =` in the
-    // upstream file (the latter covers refinement splits). Any kind with
-    // no matching upstream declaration AND no entry in
-    // `KNOWN_TYPES_WITHOUT_INTERFACE` is a build-breaking drift error.
-    //
-    // Single failure mode: codegen hard-fails with a non-zero exit. There
-    // is no synthesis path — upstream's types.js currently contains all
-    // Flow-only nodes (e.g. `MatchStatement`, `ComponentDeclaration`,
-    // `HookDeclaration`, `EnumDeclaration`, …), so the cross-check exists
-    // solely to prevent future drift between the Rust SCHEMA and the
-    // upstream Flow types.
-    let missing = estree_types_missing_kinds(SCHEMA, &upstream);
+    let missing = estree_types_missing_kinds(SCHEMA, &types_source);
     if !missing.is_empty() {
-        eprintln!("error: SCHEMA NodeKinds missing from upstream {path}:");
+        eprintln!("error: SCHEMA NodeKinds missing from Flow ESTree types at {path}:");
         for name in &missing {
             eprintln!("  - {name}");
         }
         eprintln!(
-            "Either add upstream interfaces, or extend \
+            "Either add Flow-owned interfaces, or extend \
              KNOWN_TYPES_WITHOUT_INTERFACE in codegen.rs with attribution."
         );
         std::process::exit(1);
     }
-
-    // Replace the upstream file header (lines 1-9: `Copyright … @flow strict @format`)
-    // with ours: same Copyright plus `@generated`, plus regen instructions
-    // and the design rationale required by the team-lead pushback.
-    // The `@generated` tag is split via interpolation so this Rust file itself
-    // is not tagged as generated.
-    let header = format!(
-        "\
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow strict
- * @format
- * @{tag}
- */
-
-/*
- * !!! GENERATED FILE !!!
- *
- * DESIGN NOTE — please read before editing.
- *
- * This file is a VERBATIM MIRROR of upstream
- *   xplat/static_h/tools/hermes-parser/js/hermes-estree/src/types.js
- * with our header swapped in. It is **not** schema-derived generation —
- * the body is byte-for-byte from upstream after the upstream header is
- * stripped. The `@{tag}` tag means \"do not hand-edit\" — to update,
- * edit upstream's types.js (or upstream the change first) and re-run the
- * regeneration command below.
- *
- * The codegen step ALSO performs a SCHEMA cross-check: every concrete
- * NodeDef in `node_kinds.rs` must have a matching `export interface` or
- * `export type` in upstream's types.js (or appear in
- * `KNOWN_TYPES_WITHOUT_INTERFACE` in codegen.rs with attribution). On any
- * drift, codegen FAILS the build with a non-zero exit and lists the
- * missing kinds. There is no synthesis or soft-warning path — upstream
- * already contains all Flow-only nodes today, so the cross-check exists
- * solely to prevent future drift between the Rust SCHEMA and upstream.
- *
- * Schema-derivable per-node interfaces are NOT independently generated
- * because upstream's interfaces carry hand-curated child unions (e.g.
- * `Expression`, `Statement`, `BindingName`, `MemberExpression` refinement
- * splits, `MethodDefinition` discriminator splits, per-property
- * nullability) that the Rust schema does not encode and should not encode
- * — the Rust schema is the source of truth for *binary serialization*
- * between the Rust parser and the JS deserializer; the upstream Flow
- * types are the source of truth for *consumer typings*. See
- * `generate_estree_types` in `flow_parser_wasm/src/bin/codegen.rs` for
- * the implementation.
- *
- * To regenerate (run from the fbsource root):
- *
- *   buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \\
- *     --estree-types > \\
- *     fbcode/flow/packages/flow-estree/src/types.js
- *
- * To regenerate against a different upstream copy, set
- * `HERMES_ESTREE_TYPES_JS` to an absolute path before invoking codegen.
- */
-",
-        tag = "generated"
-    );
-
-    // Strip the upstream header (everything up to and including the closing
-    // `*/` on line 9, followed by the blank line). The upstream file always
-    // begins with `/**` and ends its header with ` */\n\n`.
-    let body = if upstream.starts_with("/**") {
-        match upstream.find("*/\n") {
-            Some(end) => upstream[end + 3..].trim_start_matches('\n'),
-            None => upstream.as_str(),
-        }
-    } else {
-        upstream.as_str()
-    };
-
-    // Emit header, then the upstream body verbatim. Trailing newline
-    // behavior of `body` depends on upstream; `print!` handles either.
-    print!("{header}\n{body}");
 }
 
 // ---------------------------------------------------------------------------
@@ -1307,7 +1191,7 @@ const PREDICATE_SPECIAL_NODES: &[&str] = &["Identifier", "JSXIdentifier", "JSXTe
 /// ESTree type names that the Rust SCHEMA models but upstream's
 /// `genPredicateFunctions.js` does NOT emit predicates for. Distinct from
 /// `KNOWN_TYPES_WITHOUT_INTERFACE` (which is the cross-check exclusion set
-/// for `--estree-types`): some kinds in that list (e.g. `MemberExpression`,
+/// for `--check-estree-types`): some kinds in that list (e.g. `MemberExpression`,
 /// `MethodDefinition`, `Property`, `BinaryExpression`) DO get upstream
 /// predicates because their union name is exported from `types.js`.
 ///
@@ -1733,12 +1617,11 @@ fn generate_estree_selectors() {
 mod tests {
     use super::*;
 
-    /// Verifies the `--estree-types` cross-check fires when a SCHEMA NodeKind
-    /// has no matching upstream declaration. This is the protection against
-    /// future SCHEMA/upstream drift the team-lead and reviewer required.
+    /// Verifies the `--check-estree-types` cross-check fires when a SCHEMA
+    /// NodeKind has no matching Flow-owned declaration.
     #[test]
     fn estree_types_cross_check_flags_missing_kind() {
-        // Synthetic SCHEMA with one kind that upstream does not declare.
+        // Synthetic SCHEMA with one kind that the type source does not declare.
         let synthetic_schema: &[NodeDef] = &[NodeDef {
             kind_id: 9999,
             name: "FlowOnlyTotallyMadeUpKind",
@@ -1749,18 +1632,17 @@ mod tests {
             nested_object_props: &[],
             custom_emit: false,
         }];
-        // Upstream that declares only some other interface.
-        let upstream = "export interface SomeOtherKind extends BaseNode {}\n";
+        let types_source = "export interface SomeOtherKind extends BaseNode {}\n";
 
-        let missing = estree_types_missing_kinds(synthetic_schema, upstream);
+        let missing = estree_types_missing_kinds(synthetic_schema, types_source);
         assert_eq!(
             missing,
             vec!["FlowOnlyTotallyMadeUpKind"],
-            "cross-check should flag a SCHEMA kind absent from upstream",
+            "cross-check should flag a SCHEMA kind absent from the type source",
         );
     }
 
-    /// Negative case: upstream contains the kind, so cross-check passes.
+    /// Negative case: the type source contains the kind, so the check passes.
     #[test]
     fn estree_types_cross_check_passes_when_present() {
         let synthetic_schema: &[NodeDef] = &[NodeDef {
@@ -1773,12 +1655,12 @@ mod tests {
             nested_object_props: &[],
             custom_emit: false,
         }];
-        let upstream = "export interface PresentKind extends BaseNode {}\n";
+        let types_source = "export interface PresentKind extends BaseNode {}\n";
 
-        let missing = estree_types_missing_kinds(synthetic_schema, upstream);
+        let missing = estree_types_missing_kinds(synthetic_schema, types_source);
         assert!(
             missing.is_empty(),
-            "cross-check should pass when upstream declares the kind, got {missing:?}",
+            "cross-check should pass when the type source declares the kind, got {missing:?}",
         );
     }
 
@@ -1798,35 +1680,31 @@ mod tests {
             nested_object_props: &[],
             custom_emit: false,
         }];
-        let upstream = ""; // empty — would otherwise flag
+        let types_source = ""; // empty — would otherwise flag
 
-        let missing = estree_types_missing_kinds(synthetic_schema, upstream);
+        let missing = estree_types_missing_kinds(synthetic_schema, types_source);
         assert!(
             missing.is_empty(),
             "kinds in KNOWN_TYPES_WITHOUT_INTERFACE should be exempt, got {missing:?}",
         );
     }
 
-    /// Today's invariant: against the real upstream types.js, every SCHEMA
-    /// NodeKind is either declared or in the exclusion list. If this test
-    /// breaks, either upstream regressed or a new Flow-only NodeKind was
-    /// added without a corresponding upstream entry.
+    /// Today's invariant: every SCHEMA NodeKind is declared in Flow's types.js
+    /// or is in the exclusion list.
     #[test]
     fn estree_types_cross_check_passes_for_real_schema_today() {
-        let path = std::env::var("HERMES_ESTREE_TYPES_JS")
-            .unwrap_or_else(|_| DEFAULT_HERMES_ESTREE_TYPES_PATH.to_string());
-        let Ok(upstream) = std::fs::read_to_string(&path) else {
-            // Skip if upstream file isn't readable from the test sandbox.
-            // The codegen binary panics in that case (with a clearer error),
-            // which is what we want for actual regen — the unit test is just
-            // a smoke check.
+        let path = std::env::var("FLOW_ESTREE_TYPES_JS")
+            .unwrap_or_else(|_| DEFAULT_FLOW_ESTREE_TYPES_PATH.to_string());
+        let Ok(types_source) = std::fs::read_to_string(&path) else {
+            // The validation command checks this unconditionally; the unit
+            // test skips when the source is outside its sandbox.
             return;
         };
-        let missing = estree_types_missing_kinds(SCHEMA, &upstream);
+        let missing = estree_types_missing_kinds(SCHEMA, &types_source);
         assert!(
             missing.is_empty(),
-            "SCHEMA NodeKinds missing from upstream {path}: {missing:?}\n\
-             Either add an upstream interface or extend \
+            "SCHEMA NodeKinds missing from Flow ESTree types at {path}: {missing:?}\n\
+             Either add a Flow-owned interface or extend \
              KNOWN_TYPES_WITHOUT_INTERFACE in codegen.rs with attribution.",
         );
     }

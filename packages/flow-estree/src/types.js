@@ -6,50 +6,6 @@
  *
  * @flow strict
  * @format
- * @generated
- */
-
-/*
- * !!! GENERATED FILE !!!
- *
- * DESIGN NOTE — please read before editing.
- *
- * This file is a VERBATIM MIRROR of upstream
- *   xplat/static_h/tools/hermes-parser/js/hermes-estree/src/types.js
- * with our header swapped in. It is **not** schema-derived generation —
- * the body is byte-for-byte from upstream after the upstream header is
- * stripped. The `@generated` tag means "do not hand-edit" — to update,
- * edit upstream's types.js (or upstream the change first) and re-run the
- * regeneration command below.
- *
- * The codegen step ALSO performs a SCHEMA cross-check: every concrete
- * NodeDef in `node_kinds.rs` must have a matching `export interface` or
- * `export type` in upstream's types.js (or appear in
- * `KNOWN_TYPES_WITHOUT_INTERFACE` in codegen.rs with attribution). On any
- * drift, codegen FAILS the build with a non-zero exit and lists the
- * missing kinds. There is no synthesis or soft-warning path — upstream
- * already contains all Flow-only nodes today, so the cross-check exists
- * solely to prevent future drift between the Rust SCHEMA and upstream.
- *
- * Schema-derivable per-node interfaces are NOT independently generated
- * because upstream's interfaces carry hand-curated child unions (e.g.
- * `Expression`, `Statement`, `BindingName`, `MemberExpression` refinement
- * splits, `MethodDefinition` discriminator splits, per-property
- * nullability) that the Rust schema does not encode and should not encode
- * — the Rust schema is the source of truth for *binary serialization*
- * between the Rust parser and the JS deserializer; the upstream Flow
- * types are the source of truth for *consumer typings*. See
- * `generate_estree_types` in `flow_parser_wasm/src/bin/codegen.rs` for
- * the implementation.
- *
- * To regenerate (run from the fbsource root):
- *
- *   buck run fbcode//flow/rust_port/crates/flow_parser_wasm:codegen -- \
- *     --estree-types > \
- *     fbcode/flow/packages/flow-estree/src/types.js
- *
- * To regenerate against a different upstream copy, set
- * `HERMES_ESTREE_TYPES_JS` to an absolute path before invoking codegen.
  */
 
 'use strict';

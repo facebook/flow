@@ -5,14 +5,12 @@
 # LICENSE file in the root directory of this source tree.
 
 # Regenerate every codegen artifact produced by the flow_parser_wasm:codegen
-# binary. The single source of truth for all artifacts is the SCHEMA in
+# binary. The source of truth for generated artifacts is the SCHEMA in
 #   fbcode/flow/rust_port/crates/flow_parser_wasm/src/node_kinds.rs
-# (plus the upstream hermes-estree types.js for the --estree-types mirror).
+# Flow owns flow-estree/src/types.js; this script validates it against SCHEMA.
 #
-# Run from anywhere; this script cd's into the fbsource root before invoking
-# buck. The --estree-types mode reads upstream's hermes-estree types.js — by
-# default the path resolves against the fbsource root; override with
-# HERMES_ESTREE_TYPES_JS=/abs/path if you keep upstream elsewhere.
+# Run from anywhere; this script locates the fbsource root before invoking
+# buck. Override FLOW_ESTREE_TYPES_JS to validate another Flow-owned types file.
 #
 # Each artifact is written to a sibling .tmp file first; on codegen success
 # the temp file is atomically renamed into place, on failure the script exits
@@ -41,11 +39,7 @@ fi
 
 cd "${fbsource_root}/fbcode"
 
-# The --estree-types mode resolves the upstream hermes-estree path relative to
-# the fbsource root by default. We cd into fbcode for output-path convenience
-# (relative paths below), so always pass HERMES_ESTREE_TYPES_JS explicitly as
-# an absolute fbsource-rooted path unless the caller has already overridden it.
-export HERMES_ESTREE_TYPES_JS="${HERMES_ESTREE_TYPES_JS:-${fbsource_root}/xplat/static_h/tools/hermes-parser/js/hermes-estree/src/types.js}"
+export FLOW_ESTREE_TYPES_JS="${FLOW_ESTREE_TYPES_JS:-${fbsource_root}/fbcode/flow/packages/flow-estree/src/types.js}"
 
 codegen_target="fbcode//flow/rust_port/crates/flow_parser_wasm:codegen"
 parser_pkg="flow/packages/flow-parser/oxidized-src"
@@ -101,13 +95,9 @@ run_codegen "ESTree visitor keys (.flow companion)" \
     --estree-visitor-keys-flow
 run_arc_f "${parser_pkg}/generated/ESTreeVisitorKeys.js.flow"
 
-# 4. ESTree types (--estree-types) — verbatim upstream mirror + SCHEMA cross-check
-#    Hard-fails (non-zero exit) if any SCHEMA NodeKind is missing from upstream
-#    types.js AND not in KNOWN_TYPES_WITHOUT_INTERFACE. No synthesis path —
-#    upstream contains all Flow-only nodes today; the cross-check exists solely
-#    to prevent future drift between the Rust SCHEMA and upstream.
-run_codegen "ESTree types" "${estree_pkg}/types.js" --estree-types
-run_arc_f "${estree_pkg}/types.js"
+# 4. Validate the Flow-owned ESTree types against SCHEMA.
+echo "[regen] validate ESTree types -> ${estree_pkg}/types.js" >&2
+buck2 run @fbcode//mode/dev-nosan "${codegen_target}" -- --check-estree-types
 
 # 5. ESTree predicates (--estree-predicates) — for flow-estree
 run_codegen "ESTree predicates" \
