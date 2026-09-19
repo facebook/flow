@@ -17,6 +17,7 @@ use flow_common::reason::mk_id;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
+use flow_typing_context::elab_open_memo_key;
 use flow_typing_errors::error_message::EAnnotationInferenceData;
 use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
@@ -827,8 +828,16 @@ fn elab_open<'cx>(
             //
             // This lazy indirection allows the type of `x` to be resolved, before we
             // attempt to force the constraint for `x.p`.
-            let mut seen2 = seen.dupe();
-            seen2.insert(id);
+            //
+            // Share one indirection per demand: re-demands (e.g. while
+            // forcing) reuse it instead of expanding forever.
+            let memo_key = elab_open_memo_key(&op, id);
+            if let Some(key) = &memo_key
+                && let Some(t) = cx.elab_open_memo_get(key)
+            {
+                return t;
+            }
+            let seen2 = FlowOrdSet::singleton(id);
             let op2 = op.dupe();
             let env_for_resolved = env.dupe();
             let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
@@ -845,7 +854,11 @@ fn elab_open<'cx>(
                 )
             })
                 as Box<dyn FnOnce(&Context<'cx>) -> Type>));
-            mk_sig_tvar_with_env(cx, env, op.reason(), resolved)
+            let t = mk_sig_tvar_with_env(cx, env, op.reason(), resolved);
+            if let Some(key) = memo_key {
+                cx.elab_open_memo_insert(key, t.dupe());
+            }
+            t
         }
         Some(constraint) => match constraint.deref() {
             AConstraintInner::AnnotUnresolved { .. } | AConstraintInner::AnnotOp { .. } => {

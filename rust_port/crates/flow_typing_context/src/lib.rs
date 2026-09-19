@@ -54,6 +54,7 @@ use flow_common::subst_name::SubstName;
 use flow_common::type_strictness::TypeStrictnessKind;
 use flow_common::verbose::Verbose;
 use flow_data_structure_wrapper::int_map::IntHashMap;
+use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -78,20 +79,31 @@ use flow_typing_loc_env::node_cache::NodeCache;
 use flow_typing_spread_cache::SpreadCache;
 use flow_typing_type::type_;
 use flow_typing_type::type_::ConstFoldMap;
+use flow_typing_type::type_::DroType;
 use flow_typing_type::type_::EvalIdCacheMap;
 use flow_typing_type::type_::EvalReposCacheMap;
 use flow_typing_type::type_::FixCacheMap;
 use flow_typing_type::type_::IdCacheMap;
+use flow_typing_type::type_::IndexerFallbackData;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::ModuleType;
+use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeContext;
 use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::TypeTKind;
+use flow_typing_type::type_::UnaryArithKind;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::aconstraint::AConstraint;
+use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
+use flow_typing_type::type_::aconstraint::Op;
+use flow_typing_type::type_::aconstraint::OpInner;
 use flow_typing_type::type_::any_t;
+use flow_typing_type::type_::arith_kind::ArithKind;
 use flow_typing_type::type_::constraint::forcing_state::ForcingState;
+use flow_typing_type::type_::object::ResolveTool;
+use flow_typing_type::type_::object::Tool;
 use flow_utils_concurrency::check_budget::CheckBudget;
 use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::TvarNotFound;
@@ -458,6 +470,9 @@ pub struct ComponentT<'cx> {
     env_type_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
     // map from annot tvar ids to nodes used during annotation processing
     annot_graph: RefCell<IntHashMap<i32, AConstraint<'cx>>>,
+    // Shares one lazy indirection per `elab_open` demand so that repeated
+    // demands tie the knot instead of expanding forever.
+    elab_open_memo: RefCell<MultiLevelMap<ElabOpenMemoKey, Type>>,
     // Used to power an autofix that takes the lower bounds of types where we emit missing-local-annot
     // and turn them into annotations. This has to exist outside of the tvar graph because we will
     // eventually not use unresolved tvars to represent unannotated parameters. We use an ALocFuzzyMap
@@ -797,6 +812,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         spread_cache: RefCell::new(SpreadCache::new()),
         const_fold_cache: RefCell::new(Default::default()),
         annot_graph: RefCell::new(IntHashMap::default()),
+        elab_open_memo: RefCell::new(MultiLevelMap::new()),
         exhaustive_checks: RefCell::new(ALocMap::new()),
         signature_help_callee: RefCell::new(ALocMap::new()),
         ctor_callee: RefCell::new(ALocMap::new()),
@@ -921,6 +937,8 @@ impl<'cx> Context<'cx> {
             .post_component_tvar_forcing_states
             .borrow_mut()
             .clear();
+
+        self.0.ccx.elab_open_memo.borrow_mut().clear();
 
         // constraint_cache contains (Type, UseT) pairs. UseT variants like
         // CallT, GetPropT, ConstructorT embed LazyHintT(Rc<dyn Fn>) closures
@@ -2300,6 +2318,172 @@ pub struct CacheSnapshot {
     snapshot_evaluated: type_::eval::Map<Type>,
 }
 
+/// Memoizes `elab_open` demands so cyclic annotations terminate instead
+/// of overflowing the stack. Each variant must key all data that can
+/// change elaboration (`use_op`/`reason` only affect error text and are
+/// excluded). Unkeyable or side-effecting ops skip via `None`.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ElabOpenMemoTag {
+    GetProp {
+        prop_ref: PropRef,
+    },
+    Lookup {
+        prop_ref: PropRef,
+        type_: Type,
+        indexer_fallback: Option<Box<IndexerFallbackData>>,
+    },
+    // `AnnotThisSpecializeT.type_` is never read during elaboration (all
+    // arms match `{ reason, .. }`), so the tag needs no fields.
+    ThisSpecialize,
+    // `AnnotSpecializeT.types` selects the specialization: same avar
+    // specialized with different type args must not share an indirection.
+    // `use_op`/`reason`/`reason2` are error text only.
+    Specialize {
+        types: Option<Rc<[Type]>>,
+        operation: AnnotationInferenceOperation,
+    },
+    // Every op with elaboration-relevant data gets a precise variant:
+    // sharing an indirection across different payloads produces wrong
+    // types. `use_op`/`reason` are error text only and always excluded.
+    ImportTypeof {
+        name: FlowSmolStr,
+    },
+    AssertExportIsType {
+        name: Name,
+    },
+    UseTType {
+        kind: TypeTKind,
+    },
+    GetTypeFromNamespace {
+        name: Name,
+    },
+    GetElem {
+        key: Type,
+    },
+    Elem {
+        from_annot: bool,
+        source: Type,
+    },
+    ObjKit {
+        resolve_tool: ResolveTool,
+        tool: Tool,
+    },
+    Arith {
+        flip: bool,
+        rhs_t: Type,
+        kind: ArithKind,
+    },
+    UnaryArith {
+        kind: UnaryArithKind,
+    },
+    DeepReadOnly {
+        loc: ALoc,
+        dro_type: DroType,
+    },
+    ToString {
+        orig_t: Option<Type>,
+    },
+    ObjRest {
+        keys: Rc<[FlowSmolStr]>,
+    },
+    // Payload-free ops: the variant alone identifies the demand.
+    ConcretizeForCJS,
+    GetEnum,
+    GetStatics,
+    ObjTestProto,
+    Mixin,
+    Not,
+    ObjKeyMirror,
+    GetKeys,
+    GetKeysDictKey,
+    GetValues,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ElabOpenMemoKey {
+    pub tag: ElabOpenMemoTag,
+    pub id: i32,
+}
+
+/// Key for `elab_open`'s memo: the annotation variable and operation identify
+/// the semantic demand. `seen` is deliberately excluded: it is checked before
+/// lookup, and memoized thunks start with a canonical set containing only their
+/// own id. `use_op` and `reason` are error text only and are excluded. `None`
+/// keeps old behavior for the two concretize ops: one applies an opaque closure
+/// (unkeyable), the other writes to its collector (memoizing would skip
+/// collection on re-demands). The match is exhaustive so new op kinds fail to
+/// compile until classified.
+pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey> {
+    let tag = match &**op {
+        OpInner::AnnotGetPropT(data) => ElabOpenMemoTag::GetProp {
+            prop_ref: data.prop_ref.clone(),
+        },
+        OpInner::AnnotLookupT(data) => ElabOpenMemoTag::Lookup {
+            prop_ref: data.prop_ref.clone(),
+            type_: data.type_.dupe(),
+            indexer_fallback: data.indexer_fallback.clone(),
+        },
+        OpInner::AnnotThisSpecializeT { .. } => ElabOpenMemoTag::ThisSpecialize,
+        OpInner::AnnotSpecializeT(data) => ElabOpenMemoTag::Specialize {
+            types: data.types.clone(),
+            operation: data.operation.dupe(),
+        },
+        OpInner::AnnotImportTypeofT { name, .. } => {
+            ElabOpenMemoTag::ImportTypeof { name: name.clone() }
+        }
+        OpInner::AnnotAssertExportIsTypeT { name, .. } => {
+            ElabOpenMemoTag::AssertExportIsType { name: name.clone() }
+        }
+        OpInner::AnnotUseTTypeT { kind, .. } => ElabOpenMemoTag::UseTType { kind: *kind },
+        OpInner::AnnotGetTypeFromNamespaceT(data) => ElabOpenMemoTag::GetTypeFromNamespace {
+            name: data.prop_ref.1.clone(),
+        },
+        OpInner::AnnotGetElemT { key, .. } => ElabOpenMemoTag::GetElem { key: key.dupe() },
+        OpInner::AnnotElemT {
+            from_annot, source, ..
+        } => ElabOpenMemoTag::Elem {
+            from_annot: *from_annot,
+            source: source.dupe(),
+        },
+        OpInner::AnnotObjKitT(data) => ElabOpenMemoTag::ObjKit {
+            resolve_tool: data.resolve_tool.clone(),
+            tool: data.tool.clone(),
+        },
+        OpInner::AnnotArithT(data) => ElabOpenMemoTag::Arith {
+            flip: data.flip,
+            rhs_t: data.rhs_t.dupe(),
+            kind: data.kind.clone(),
+        },
+        OpInner::AnnotUnaryArithT { kind, .. } => ElabOpenMemoTag::UnaryArith { kind: *kind },
+        OpInner::AnnotDeepReadOnlyT(data) => ElabOpenMemoTag::DeepReadOnly {
+            loc: data.loc.clone(),
+            dro_type: data.dro_type.clone(),
+        },
+        OpInner::AnnotToStringT { orig_t, .. } => ElabOpenMemoTag::ToString {
+            orig_t: orig_t.clone(),
+        },
+        OpInner::AnnotObjRestT { keys, .. } => ElabOpenMemoTag::ObjRest { keys: keys.clone() },
+        // `ConcretizeForImportsExports` applies an opaque closure: unkeyable.
+        // `ConcretizeForInspection` writes to its collector: memoizing
+        // would skip collection on re-demands. Both keep old behavior.
+        OpInner::AnnotConcretizeForImportsExports(..)
+        | OpInner::AnnotConcretizeForInspection { .. } => return None,
+        OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(..) => {
+            ElabOpenMemoTag::ConcretizeForCJS
+        }
+        OpInner::AnnotGetEnumT(..) => ElabOpenMemoTag::GetEnum,
+        OpInner::AnnotGetStaticsT(..) => ElabOpenMemoTag::GetStatics,
+        OpInner::AnnotObjTestProtoT(..) => ElabOpenMemoTag::ObjTestProto,
+        OpInner::AnnotMixinT(..) => ElabOpenMemoTag::Mixin,
+        OpInner::AnnotNotT(..) => ElabOpenMemoTag::Not,
+        OpInner::AnnotObjKeyMirror(..) => ElabOpenMemoTag::ObjKeyMirror,
+        OpInner::AnnotGetKeysT(..) => ElabOpenMemoTag::GetKeys,
+        OpInner::AnnotGetKeysDictKeyT(..) => ElabOpenMemoTag::GetKeysDictKey,
+        OpInner::AnnotGetValuesT(..) => ElabOpenMemoTag::GetValues,
+    };
+    Some(ElabOpenMemoKey { tag, id })
+}
+
 impl<'cx> Context<'cx> {
     pub fn take_cache_snapshot(&self) -> CacheSnapshot {
         // snapshot_subst_cache = !(cx.ccx.subst_cache);
@@ -2309,6 +2493,7 @@ impl<'cx> Context<'cx> {
         self.0.ccx.eval_repos_cache.borrow_mut().push_level();
         self.0.ccx.fix_cache.borrow_mut().push_level();
         self.0.ccx.const_fold_cache.borrow_mut().push_level();
+        self.0.ccx.elab_open_memo.borrow_mut().push_level();
         let mut cc = self.0.ccx.constraint_cache.borrow_mut();
         let constraint_cache_level_count = cc.level_count();
         cc.push_level();
@@ -2340,6 +2525,7 @@ impl<'cx> Context<'cx> {
         self.0.ccx.eval_repos_cache.borrow_mut().pop_level();
         self.0.ccx.fix_cache.borrow_mut().pop_level();
         self.0.ccx.const_fold_cache.borrow_mut().pop_level();
+        self.0.ccx.elab_open_memo.borrow_mut().pop_level();
         *self.0.ccx.spread_cache.borrow_mut() = snapshot_spread_cache;
         self.set_evaluated(snapshot_evaluated);
     }
@@ -2971,6 +3157,14 @@ impl<'cx> Context<'cx> {
 
     pub fn find_avar_opt(&self, id: i32) -> Option<AConstraint<'cx>> {
         self.0.ccx.annot_graph.borrow().get(&id).duped()
+    }
+
+    pub fn elab_open_memo_get(&self, key: &ElabOpenMemoKey) -> Option<Type> {
+        self.0.ccx.elab_open_memo.borrow().get(key).duped()
+    }
+
+    pub fn elab_open_memo_insert(&self, key: ElabOpenMemoKey, t: Type) {
+        self.0.ccx.elab_open_memo.borrow_mut().insert(key, t);
     }
 
     pub fn remove_avar(&self, id: i32) {
