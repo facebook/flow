@@ -56,19 +56,19 @@ Cannot cast `promise` to `Promise` because in type argument `R` [1]: `HTMLDivEle
 `string` [3]. [incompatible-type]
 
    test.js:32:1
-     32| promise as Promise<string>; // ERROR
-         ^^^^^^^
+   32| promise as Promise<string>; // ERROR
+       ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2288:27
-   2288| declare class Promise<out R = unknown> {
-                                   ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:27
+   29| declare class Promise<out R = unknown> {
+                                 ^ [1]
    test.js:6:24
-      6| const promise: Promise<HTMLDivElement> = Promise.resolve(element);
-                                ^^^^^^^^^^^^^^ [2]
+    6| const promise: Promise<HTMLDivElement> = Promise.resolve(element);
+                              ^^^^^^^^^^^^^^ [2]
    test.js:32:20
-     32| promise as Promise<string>; // ERROR
-                            ^^^^^^ [3]
+   32| promise as Promise<string>; // ERROR
+                          ^^^^^^ [3]
 
 
 

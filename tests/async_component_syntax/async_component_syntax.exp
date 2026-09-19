@@ -33,16 +33,16 @@ Error --------------------------------------------------------------------------
 Cannot return `result` because `Promise<string>` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:47:10
-     47|   return result;
-                  ^^^^^^
+   47|   return result;
+                ^^^^^^
 
 References:
-   <BUILTINS>/core.js:2288:15
-   2288| declare class Promise<out R = unknown> {
-                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:15
+   29| declare class Promise<out R = unknown> {
+                     ^^^^^^^ [1]
    test.js:45:28
-     45| async hook useAsyncHook(): string {
-                                    ^^^^^^ [2]
+   45| async hook useAsyncHook(): string {
+                                  ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:64:10
@@ -51,16 +51,16 @@ Cannot return `await Promise.resolve(...)` because `Promise<"hello">` [1] is inc
 [incompatible-type]
 
    test.js:64:10
-     64|   return await Promise.resolve("hello");
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   64|   return await Promise.resolve("hello");
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2288:15
-   2288| declare class Promise<out R = unknown> {
-                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:15
+   29| declare class Promise<out R = unknown> {
+                     ^^^^^^^ [1]
    test.js:63:43
-     63| export async hook useExportedAsyncHook(): string {
-                                                   ^^^^^^ [2]
+   63| export async hook useExportedAsyncHook(): string {
+                                                 ^^^^^^ [2]
 
 
 

@@ -476,22 +476,22 @@ Cannot cast `C` to component because in property `ref` > type argument `T` [1] >
 incompatible with `string` [4]. [incompatible-type]
 
    everything_implicit_instantiation.js:11:1
-     11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
-         ^
+    11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
+        ^
 
 References:
    <BUILTINS>/react.js:106:21
-    106|   type RefSetter<in T> =
-                             ^ [1]
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [2]
+   106|   type RefSetter<in T> =
+                            ^ [1]
+   <BUILTINS>/lib.es2015.collection.js:150:19
+   150| declare class Set<T> extends $ReadOnlySet<T> {
+                          ^ [2]
    everything_implicit_instantiation.js:11:41
-     11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
-                                                 ^^^^^^ [3]
+    11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
+                                                ^^^^^^ [3]
    everything_implicit_instantiation.js:6:46
-      6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
-                                                      ^^^^^^ [4]
+     6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
+                                                     ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:12:1
@@ -874,22 +874,22 @@ Cannot cast `C` to component because in property `ref` > type argument `T` [1] >
 incompatible with `string` [4]. [incompatible-type]
 
    props_implicit_instantiation.js:12:1
-     12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
-         ^
+    12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+        ^
 
 References:
    <BUILTINS>/react.js:106:21
-    106|   type RefSetter<in T> =
-                             ^ [1]
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [2]
+   106|   type RefSetter<in T> =
+                            ^ [1]
+   <BUILTINS>/lib.es2015.collection.js:150:19
+   150| declare class Set<T> extends $ReadOnlySet<T> {
+                          ^ [2]
    props_implicit_instantiation.js:12:41
-     12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
-                                                 ^^^^^^ [3]
+    12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+                                                ^^^^^^ [3]
    props_implicit_instantiation.js:7:46
-      7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
-                                                      ^^^^^^ [4]
+     7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
+                                                     ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1

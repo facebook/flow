@@ -9,22 +9,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    arrays.js:8:14
-      8| noop<string>(new_arr);
-                      ^^^^^^^
+     8| noop<string>(new_arr);
+                     ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1069:47
-   1069|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
-                                                       ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:933:47
+   933|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
+                                                      ^^^^^^^^^^^^^^ [1]
    arrays.js:3:37
-      3| declare const noop : <T>(arr: Array<Array<T>>) => void;
-                                             ^^^^^^^^ [2]
-   <BUILTINS>/core.js:1069:41
-   1069|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
-                                                 ^^^^^^^^^^^^^^^^^^^^^ [3]
+     3| declare const noop : <T>(arr: Array<Array<T>>) => void;
+                                            ^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:933:41
+   933|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
+                                                ^^^^^^^^^^^^^^^^^^^^^ [3]
    arrays.js:3:31
-      3| declare const noop : <T>(arr: Array<Array<T>>) => void;
-                                       ^^^^^^^^^^^^^^^ [4]
+     3| declare const noop : <T>(arr: Array<Array<T>>) => void;
+                                      ^^^^^^^^^^^^^^^ [4]
 
 
 

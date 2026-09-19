@@ -35,8 +35,8 @@ fn hash(lib: BuiltinLib) -> String {
 
 fn contents(lib: BuiltinLib) -> &'static [(&'static str, &'static str)] {
     match lib {
-        BuiltinLib::Flowlib => flowlib_contents::CONTENTS,
-        BuiltinLib::FlowlibWithLibDomDts => flowlib_with_lib_dom_d_ts_contents::CONTENTS,
+        BuiltinLib::Flowlib => flowlib_contents::CONTENTS.as_slice(),
+        BuiltinLib::FlowlibWithLibDomDts => flowlib_with_lib_dom_d_ts_contents::CONTENTS.as_slice(),
         BuiltinLib::Prelude => prelude_contents::CONTENTS,
         BuiltinLib::Tslib => tslib_contents::CONTENTS,
     }
@@ -117,7 +117,7 @@ pub fn extract(libdir: &LibDir) {
 
 pub fn extract_if_missing(libdir: &LibDir) {
     let sentinel_name = match libdir {
-        LibDir::Flowlib(_) => "core.js",
+        LibDir::Flowlib(_) => "lib.es5.js",
         LibDir::FlowlibWithLibDomDts(_) => "lib.dom.d.ts",
         LibDir::Prelude(_) => "prelude.js",
         LibDir::Tslib(_) => "lib.d.ts",

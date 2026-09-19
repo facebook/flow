@@ -38,16 +38,16 @@ Error --------------------------------------------------------------------------
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    forof.js:24:17
-     24|   for (var x of str) {
-                         ^^^
+    24|   for (var x of str) {
+                        ^^^
 
 References:
    forof.js:23:26
-     23| function testString(str: string): void {
-                                  ^^^^^^ [1]
-   <BUILTINS>/core.js:2001:11
-   2001| interface $Iterable<out Yield,out Return,in Next> {
-                   ^^^^^^^^^ [2]
+    23| function testString(str: string): void {
+                                 ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:167:11
+   167| interface $Iterable<out Yield,out Return,in Next> {
+                  ^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:32:5
@@ -55,16 +55,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `elem` to number because `[string, number]` [1] is incompatible with `number` [2]. [incompatible-type]
 
    forof.js:32:5
-     32|     elem as number; // Error - tuple ~> number
-             ^^^^
+   32|     elem as number; // Error - tuple ~> number
+           ^^^^
 
 References:
-   <BUILTINS>/core.js:2073:28
-   2073|     @@iterator(): Iterator<[K, V]>;
-                                    ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:51:28
+   51|     @@iterator(): Iterator<[K, V]>;
+                                  ^^^^^^ [1]
    forof.js:32:13
-     32|     elem as number; // Error - tuple ~> number
-                     ^^^^^^ [2]
+   32|     elem as number; // Error - tuple ~> number
+                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:38:5

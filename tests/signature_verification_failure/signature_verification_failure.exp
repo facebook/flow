@@ -188,16 +188,16 @@ In property `@@iterator`: `number` [1] is incompatible with
 `(this: $Iterable<empty, any, any>) => $IteratorProtocol<empty, any, any>` [2]. [incompatible-type]
 
    misc.js:7:22
-      7| export const d = [...c];
-                              ^
+     7| export const d = [...c];
+                             ^
 
 References:
    misc.js:5:32
-      5| export const c = {['a' + 'b']: 42};
-                                        ^^ [1]
-   <BUILTINS>/core.js:2002:5
-   2002|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     5| export const c = {['a' + 'b']: 42};
+                                       ^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:168:5
+   168|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:9:19

@@ -12,23 +12,25 @@ use flow_common_xx as xx;
 use crate::flowlib_contents;
 use crate::tslib_contents;
 
-pub static CONTENTS: &[(&str, &str)] = &[
-    ("core.js", flowlib_contents::CORE_JS),
-    ("react.js", flowlib_contents::REACT_JS),
-    (
-        "lib.dom.asynciterable.d.ts",
-        tslib_contents::LIB_DOM_ASYNCITERABLE_D_TS,
-    ),
-    ("lib.dom.d.ts", tslib_contents::LIB_DOM_D_TS),
-    (
-        "lib.dom.iterable.d.ts",
-        tslib_contents::LIB_DOM_ITERABLE_D_TS,
-    ),
-];
+pub static CONTENTS: LazyLock<Vec<(&str, &str)>> = LazyLock::new(|| {
+    let mut contents = flowlib_contents::COMMON_CONTENTS.to_vec();
+    contents.extend([
+        (
+            "lib.dom.asynciterable.d.ts",
+            tslib_contents::LIB_DOM_ASYNCITERABLE_D_TS,
+        ),
+        ("lib.dom.d.ts", tslib_contents::LIB_DOM_D_TS),
+        (
+            "lib.dom.iterable.d.ts",
+            tslib_contents::LIB_DOM_ITERABLE_D_TS,
+        ),
+    ]);
+    contents
+});
 
 pub static HASH: LazyLock<String> = LazyLock::new(|| {
     let mut state = xx::State::new(0);
-    for (file, contents) in CONTENTS {
+    for (file, contents) in CONTENTS.iter() {
         state.update(file.as_bytes());
         state.update(contents.as_bytes());
     }

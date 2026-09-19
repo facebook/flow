@@ -2712,22 +2712,22 @@ Cannot call `Set` with array literal bound to `iterable` because: [incompatible-
       `"A" | "B"` [5]
 
    local.js:658:20
-    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
-                            ^^^^^ [1]
+   658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+                           ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2245:29
-   2245|     constructor(iterable?: ?Iterable<T>): void;
-                                     ^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1875:33
-   1875| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                         ^^^^^ [3]
+   <BUILTINS>/lib.es2015.collection.js:152:29
+   152|     constructor(iterable?: ?Iterable<T>): void;
+                                    ^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:41:33
+    41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                        ^^^^^ [3]
    local.js:658:21
-    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
-                             ^^^ [4]
+   658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+                            ^^^ [4]
    local.js:653:77
-    653|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
-                                                                                     ^^^^^^^^^ [5]
+   653|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
+                                                                                    ^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:671:7

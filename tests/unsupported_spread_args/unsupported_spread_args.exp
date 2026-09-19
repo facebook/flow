@@ -7,8 +7,8 @@ Cannot call method `getPrototypeOf` because no more than 1 argument is expected 
                ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:178:5
-   178|     static getPrototypeOf(o: $NotNullOrVoid): any;
+   <BUILTINS>/lib.es5.js:165:5
+   165|     static getPrototypeOf(o: $NotNullOrVoid): any;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

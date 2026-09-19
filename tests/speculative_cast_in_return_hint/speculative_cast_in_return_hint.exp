@@ -5,25 +5,25 @@ Cannot cast `fetchLike()` to `Promise` because in type argument `R` [1]: `Respon
 `RequiredHeaders` [5]. [incompatible-type]
 
    test.js:20:11
-     20|   return (fetchLike() as Promise<ExpectedResponse>).then( // error
-                   ^^^^^^^^^^^
+   20|   return (fetchLike() as Promise<ExpectedResponse>).then( // error
+                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2288:27
-   2288| declare class Promise<out R = unknown> {
-                                   ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:27
+   29| declare class Promise<out R = unknown> {
+                                 ^ [1]
    lib.d.ts:20:39
-     20| declare function fetchLike(): Promise<Response>;
-                                               ^^^^^^^^ [2]
+   20| declare function fetchLike(): Promise<Response>;
+                                             ^^^^^^^^ [2]
    test.js:20:34
-     20|   return (fetchLike() as Promise<ExpectedResponse>).then( // error
-                                          ^^^^^^^^^^^^^^^^ [3]
+   20|   return (fetchLike() as Promise<ExpectedResponse>).then( // error
+                                        ^^^^^^^^^^^^^^^^ [3]
    lib.d.ts:14:21
-     14|   readonly headers: Headers;
-                             ^^^^^^^ [4]
+   14|   readonly headers: Headers;
+                           ^^^^^^^ [4]
    test.js:13:12
-     13|   headers: RequiredHeaders;
-                    ^^^^^^^^^^^^^^^ [5]
+   13|   headers: RequiredHeaders;
+                  ^^^^^^^^^^^^^^^ [5]
 
 
 

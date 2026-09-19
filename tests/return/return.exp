@@ -36,16 +36,16 @@ Cannot expect `Promise` as the return type of async function because in type arg
 incompatible with `void` [3]. [incompatible-type]
 
    implicit.js:7:22
-      7| async function g2(): Promise<number> {}
-                              ^^^^^^^^^^^^^^^ [3]
+    7| async function g2(): Promise<number> {}
+                            ^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/core.js:2288:27
-   2288| declare class Promise<out R = unknown> {
-                                   ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:27
+   29| declare class Promise<out R = unknown> {
+                                 ^ [1]
    implicit.js:7:30
-      7| async function g2(): Promise<number> {}
-                                      ^^^^^^ [2]
+    7| async function g2(): Promise<number> {}
+                                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ implicit_void.js:185:19

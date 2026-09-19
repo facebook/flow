@@ -4,19 +4,19 @@ Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > th
 `Yield` [1]: `string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    class_iterator.js:39:31
-     39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
-                                       ^^^^^^^^^^^^^^^^^
+   39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
+                                     ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1875:33
-   1875| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                         ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:41:33
+   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                       ^^^^^ [1]
    class_iterator.js:35:34
-     35|   *[Symbol.iterator](): Iterator<string> {
-                                          ^^^^^^ [2]
+   35|   *[Symbol.iterator](): Iterator<string> {
+                                        ^^^^^^ [2]
    class_iterator.js:39:21
-     39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
-                             ^^^^^^ [3]
+   39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
+                           ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:11:1
@@ -25,16 +25,16 @@ Cannot cast `map[Symbol.toStringTag]` to string literal `Set` because string lit
 string literal `Set` [2]. [incompatible-type]
 
    collection_to_string_tag.js:11:1
-     11| map[Symbol.toStringTag] as 'Set'; // ERROR
-         ^^^^^^^^^^^^^^^^^^^^^^^
+   11| map[Symbol.toStringTag] as 'Set'; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2069:36
-   2069|     readonly [Symbol.toStringTag]: 'Map';
-                                            ^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:47:36
+   47|     readonly [Symbol.toStringTag]: 'Map';
+                                          ^^^^^ [1]
    collection_to_string_tag.js:11:28
-     11| map[Symbol.toStringTag] as 'Set'; // ERROR
-                                    ^^^^^ [2]
+   11| map[Symbol.toStringTag] as 'Set'; // ERROR
+                                  ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:12:1
@@ -43,16 +43,16 @@ Cannot cast `roSet[Symbol.toStringTag]` to string literal `Map` because string l
 string literal `Map` [2]. [incompatible-type]
 
    collection_to_string_tag.js:12:1
-     12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2240:36
-   2240|     readonly [Symbol.toStringTag]: 'Set';
-                                            ^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:147:36
+   147|     readonly [Symbol.toStringTag]: 'Set';
+                                           ^^^^^ [1]
    collection_to_string_tag.js:12:30
-     12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
-                                      ^^^^^ [2]
+    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+                                     ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:22:1
@@ -61,16 +61,16 @@ Cannot cast `set` to `TaggedMap` because in property `[toStringTag]`: string lit
 string literal `Set` [2]. [incompatible-type]
 
    collection_to_string_tag.js:22:1
-     22| set as TaggedMap; // ERROR
-         ^^^
+    22| set as TaggedMap; // ERROR
+        ^^^
 
 References:
    collection_to_string_tag.js:19:54
-     19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
-                                                              ^^^^^ [1]
-   <BUILTINS>/core.js:2240:36
-   2240|     readonly [Symbol.toStringTag]: 'Set';
-                                            ^^^^^ [2]
+    19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
+                                                             ^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:147:36
+   147|     readonly [Symbol.toStringTag]: 'Set';
+                                           ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:1
@@ -96,13 +96,13 @@ Error --------------------------------------------------------------------------
 Cannot call `Symbol` because no more than 1 argument is expected by function type [1]. [extra-arg]
 
    symbol.js:8:17
-     8|   Symbol('foo', 'bar'); // Error: unused argument
-                        ^^^^^
+    8|   Symbol('foo', 'bar'); // Error: unused argument
+                       ^^^^^
 
 References:
-   <BUILTINS>/core.js:265:10
-   265|   static (value?: unknown): symbol;
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:28:10
+   28|   static (value?: unknown): symbol;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:5
@@ -149,8 +149,8 @@ Cannot assign `Symbol.toPrimitive` to `y` because unique symbol [1] is incompati
                                          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:341:32
-   341|   static readonly toPrimitive: unique symbol;
+   <BUILTINS>/lib.es2015.symbol.js:104:32
+   104|   static readonly toPrimitive: unique symbol;
                                        ^^^^^^^^^^^^^ [1]
    symbol.js:46:12
     46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
@@ -235,19 +235,19 @@ Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return va
 `string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    type_well_known_symbol.js:18:1
-     18| bad as Iterable<number>; // ERROR
-         ^^^
+   18| bad as Iterable<number>; // ERROR
+       ^^^
 
 References:
-   <BUILTINS>/core.js:1875:33
-   1875| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                         ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:41:33
+   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                       ^^^^^ [1]
    type_well_known_symbol.js:16:44
-     16| type Bad = { [Symbol.iterator](): Iterator<string> };
-                                                    ^^^^^^ [2]
+   16| type Bad = { [Symbol.iterator](): Iterator<string> };
+                                                  ^^^^^^ [2]
    type_well_known_symbol.js:18:17
-     18| bad as Iterable<number>; // ERROR
-                         ^^^^^^ [3]
+   18| bad as Iterable<number>; // ERROR
+                       ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:31:1
@@ -278,13 +278,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
 
    type_well_known_symbol.js:37:29
-    37| type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
-                                    ^^^
+   37| type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
+                                   ^^^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:38:21
@@ -300,13 +300,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
 
    type_well_known_symbol.js:38:29
-    38| type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
-                                    ^^^
+   38| type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
+                                   ^^^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:40:24
@@ -322,13 +322,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
 
    type_well_known_symbol.js:40:32
-    40| interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
-                                       ^^^
+   40| interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                      ^^^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:41:28
@@ -344,13 +344,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
 
    type_well_known_symbol.js:41:36
-    41| declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
-                                           ^^^
+   41| declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                          ^^^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 

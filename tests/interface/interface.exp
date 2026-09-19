@@ -343,8 +343,8 @@ References:
    indexer.js:129:19
     129|   values as Array<number>; // ERROR
                            ^^^^^^ [2]
-   <BUILTINS>/core.js:1204:59
-   1204|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
+   <BUILTINS>/lib.es5.js:1068:59
+   1068|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
                                                                    ^^^^^^^^ [3]
    indexer.js:129:13
     129|   values as Array<number>; // ERROR
@@ -1099,16 +1099,16 @@ Error --------------------------------------------------------------------------
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    string.js:5:17
-      5| for (const c of s) {} // ERROR
-                         ^
+     5| for (const c of s) {} // ERROR
+                        ^
 
 References:
    string.js:1:18
-      1| declare const s: string;
-                          ^^^^^^ [1]
-   <BUILTINS>/core.js:2001:11
-   2001| interface $Iterable<out Yield,out Return,in Next> {
-                   ^^^^^^^^^ [2]
+     1| declare const s: string;
+                         ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:167:11
+   167| interface $Iterable<out Yield,out Return,in Next> {
+                  ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:24:1

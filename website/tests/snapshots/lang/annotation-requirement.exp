@@ -121,16 +121,16 @@ Cannot call `Set` because `T` [1] is underconstrained by new `Set` [2]. Either a
 expression to your expected type. [underconstrained-implicit-instantiation]
 
    -:2:17
-      2| const set = new Set(); // Error
-                         ^^^
+     2| const set = new Set(); // Error
+                        ^^^
 
 References:
-   <BUILTINS>/core.js:2243:19
-   2243| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [1]
+   <BUILTINS>/lib.es2015.collection.js:150:19
+   150| declare class Set<T> extends $ReadOnlySet<T> {
+                          ^ [1]
    -:2:13
-      2| const set = new Set(); // Error
-                     ^^^^^^^^^ [2]
+     2| const set = new Set(); // Error
+                    ^^^^^^^^^ [2]
 
 
 Found 1 error

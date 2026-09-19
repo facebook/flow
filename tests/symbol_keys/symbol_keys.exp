@@ -17,16 +17,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `Symbol()` to `viaTypeof` because `symbol` [1] is incompatible with unique symbol [2]. [incompatible-type]
 
    call.js:42:36
-    42| const viaTypeof: typeof declared = Symbol(); // ERROR
-                                           ^^^^^^^^
+   42| const viaTypeof: typeof declared = Symbol(); // ERROR
+                                          ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [1]
    call.js:42:18
-    42| const viaTypeof: typeof declared = Symbol(); // ERROR
-                         ^^^^^^^^^^^^^^^ [2]
+   42| const viaTypeof: typeof declared = Symbol(); // ERROR
+                        ^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- call.js:47:37
@@ -89,16 +89,16 @@ Cannot assign object literal to `inObject` because in property `a`: `symbol` [1]
 [incompatible-type]
 
    call.js:62:51
-    62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR
-                                                          ^^^^^^^^
+   62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR
+                                                         ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [1]
    call.js:62:30
-    62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR
-                                     ^^^^^^^^^^^^^ [2]
+   62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR
+                                    ^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- call_consumer.js:10:1
@@ -1062,13 +1062,13 @@ Error --------------------------------------------------------------------------
 Property `m` is missing in `Symbol` [1]. [prop-missing]
 
    position.js:85:8
-    85| const {m}: unique symbol = null as any; // ERROR
-               ^
+   85| const {m}: unique symbol = null as any; // ERROR
+              ^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ position.js:85:12
@@ -1087,13 +1087,13 @@ Error --------------------------------------------------------------------------
 Property `0` is missing in `Symbol` [1]. [prop-missing]
 
    position.js:86:8
-    86| const [n]: unique symbol = null as any; // ERROR
-               ^
+   86| const [n]: unique symbol = null as any; // ERROR
+              ^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ position.js:86:12

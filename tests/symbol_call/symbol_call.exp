@@ -173,13 +173,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:37:19
-    37| const fromLet = {[rebindable]: 1}; // ERROR: `symbol` is not a key
-                          ^^^^^^^^^^ [1]
+   37| const fromLet = {[rebindable]: 1}; // ERROR: `symbol` is not a key
+                         ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:40:19
@@ -189,13 +189,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:40:19
-    40| const fromVar = {[alsoRebindable]: 1}; // ERROR: `symbol` is not a key
-                          ^^^^^^^^^^^^^^ [1]
+   40| const fromVar = {[alsoRebindable]: 1}; // ERROR: `symbol` is not a key
+                         ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:45:25
@@ -221,13 +221,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:51:22
-    51| const fromObject = {[inObject.k]: 1}; // ERROR: `symbol` is not a key
-                             ^^^^^^^^^^ [1]
+   51| const fromObject = {[inObject.k]: 1}; // ERROR: `symbol` is not a key
+                            ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:54:21
@@ -237,13 +237,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:54:21
-    54| const fromArray = {[inArray[0]]: 1}; // ERROR: `symbol` is not a key
-                            ^^^^^^^^^^ [1]
+   54| const fromArray = {[inArray[0]]: 1}; // ERROR: `symbol` is not a key
+                           ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:56:23
@@ -253,13 +253,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:56:23
-    56| const fromNothing = {[Symbol()]: 1}; // ERROR: `symbol` is not a key
-                              ^^^^^^^^ [1]
+   56| const fromNothing = {[Symbol()]: 1}; // ERROR: `symbol` is not a key
+                             ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:61:21
@@ -269,13 +269,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:61:21
-    61| const fromComma = {[throughComma]: 1}; // ERROR: `symbol` is not a key
-                            ^^^^^^^^^^^^ [1]
+   61| const fromComma = {[throughComma]: 1}; // ERROR: `symbol` is not a key
+                           ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:69:24
@@ -285,13 +285,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:69:24
-    69| const fromFunction = {[fromCall]: 1}; // ERROR: `symbol` is not a key
-                               ^^^^^^^^ [1]
+   69| const fromFunction = {[fromCall]: 1}; // ERROR: `symbol` is not a key
+                              ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mint.js:107:19
@@ -333,13 +333,13 @@ values, but this one is a symbol [2]. Can you add an appropriate type annotation
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    notcalls.js:11:24
-    11| const fromOptional = {[optional]: 1}; // ERROR: `symbol` is not a key
-                               ^^^^^^^^ [1]
+   11| const fromOptional = {[optional]: 1}; // ERROR: `symbol` is not a key
+                              ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:16:26
@@ -347,13 +347,13 @@ Error --------------------------------------------------------------------------
 An index signature declaring the expected key / value type is missing in class `Symbol` [1]. [incompatible-use]
 
    notcalls.js:16:26
-    16| const bracketed = Symbol['for']('a key'); // ERROR: no index signature on `Symbol`
-                                 ^^^^^
+   16| const bracketed = Symbol['for']('a key'); // ERROR: no index signature on `Symbol`
+                                ^^^^^
 
 References:
-   <BUILTINS>/core.js:260:15
-   260| declare class Symbol {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:23:15
+   23| declare class Symbol {
+                     ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:21:22
@@ -363,13 +363,13 @@ but this one is a null or undefined [2]. Can you add an appropriate type annotat
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    notcalls.js:21:22
-    21| const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
-                             ^^^^^ [1]
+   21| const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
+                            ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:301:31
-   301|   static keyFor(sym: symbol): ?string;
-                                      ^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:64:31
+   64|   static keyFor(sym: symbol): ?string;
+                                     ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:26:25

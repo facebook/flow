@@ -27,16 +27,16 @@ Error --------------------------------------------------------------------------
 Cannot return `result` because `Promise<string>` [1] is incompatible with `string` [2]. [incompatible-type]
 
    test.js:10:10
-     10|   return result;
-                  ^^^^^^
+   10|   return result;
+                ^^^^^^
 
 References:
-   <BUILTINS>/core.js:2288:15
-   2288| declare class Promise<out R = unknown> {
-                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:15
+   29| declare class Promise<out R = unknown> {
+                     ^^^^^^^ [1]
    test.js:8:28
-      8| async hook useAsyncHook(): string { // ERROR: async hook syntax not enabled
-                                    ^^^^^^ [2]
+    8| async hook useAsyncHook(): string { // ERROR: async hook syntax not enabled
+                                  ^^^^^^ [2]
 
 
 

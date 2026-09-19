@@ -1492,13 +1492,13 @@ Error --------------------------------------------------------------------------
 `$Generator<empty, empty, empty>` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    invalid.js:19:34
-     19| function *generator(x: unknown): x is number { // error
-                                          ^^^^^^^^^^^ [2]
+   19| function *generator(x: unknown): x is number { // error
+                                        ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2015:48
-   2015| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:32:48
+   32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
@@ -1507,13 +1507,13 @@ Error --------------------------------------------------------------------------
 `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    invalid.js:19:34
-     19| function *generator(x: unknown): x is number { // error
-                                          ^^^^^^^^^^^ [1]
+    19| function *generator(x: unknown): x is number { // error
+                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2001:11
-   2001| interface $Iterable<out Yield,out Return,in Next> {
-                   ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:167:11
+   167| interface $Iterable<out Yield,out Return,in Next> {
+                  ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:20:10
@@ -1522,16 +1522,16 @@ Cannot return `(typeof x) == "number"` because `$Generator<empty, boolean, empty
 `boolean` [2]. [incompatible-type]
 
    invalid.js:20:10
-     20|   return typeof x == "number";
-                  ^^^^^^^^^^^^^^^^^^^^
+   20|   return typeof x == "number";
+                ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2015:48
-   2015| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:32:48
+   32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:34
-     19| function *generator(x: unknown): x is number { // error
-                                          ^^^^^^^^^^^ [2]
+   19| function *generator(x: unknown): x is number { // error
+                                        ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:25:3
@@ -1565,16 +1565,16 @@ Cannot return `(typeof x) == "number"` because `Promise<boolean>` [1] is incompa
 [incompatible-type]
 
    invalid.js:29:10
-     29|   return typeof x == "number"
-                  ^^^^^^^^^^^^^^^^^^^^
+   29|   return typeof x == "number"
+                ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2288:15
-   2288| declare class Promise<out R = unknown> {
-                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:15
+   29| declare class Promise<out R = unknown> {
+                     ^^^^^^^ [1]
    invalid.js:28:35
-     28| async function async(x: unknown): x is number { // error
-                                           ^^^^^^^^^^^ [2]
+   28| async function async(x: unknown): x is number { // error
+                                         ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:33:12

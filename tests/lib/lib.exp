@@ -7,8 +7,8 @@ Cannot assign `NaN` to `x` because `number` [1] is incompatible with `string` [2
                       ^^^
 
 References:
-   <BUILTINS>/core.js:24:18
-   24| declare var NaN: number;
+   <BUILTINS>/lib.es5.js:23:18
+   23| declare var NaN: number;
                         ^^^^^^ [1]
    libtest.js:1:7
     1| var x:string = NaN
@@ -24,8 +24,8 @@ Cannot assign `Number.MAX_VALUE` to `y` because `number` [1] is incompatible wit
                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:422:23
-   422|     static MAX_VALUE: number;
+   <BUILTINS>/lib.es5.js:286:23
+   286|     static MAX_VALUE: number;
                               ^^^^^^ [1]
    libtest.js:2:7
      2| var y:string = Number.MAX_VALUE;
@@ -42,8 +42,8 @@ Cannot assign `(new TypeError()).name` to `z` because `string` [1] is incompatib
                         ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1774:11
-   1774|     name: string;
+   <BUILTINS>/lib.es5.js:1620:11
+   1620|     name: string;
                    ^^^^^^ [1]
    libtest.js:3:7
       3| var z:number = new TypeError().name;
@@ -59,8 +59,8 @@ Cannot assign `parseInt(...)` to `w` because `number` [1] is incompatible with `
                       ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:35:61
-   35| declare function parseInt(string: unknown, radix?: number): number;
+   <BUILTINS>/lib.es5.js:33:61
+   33| declare function parseInt(string: unknown, radix?: number): number;
                                                                    ^^^^^^ [1]
    libtest.js:4:7
     4| var w:string = parseInt("...");

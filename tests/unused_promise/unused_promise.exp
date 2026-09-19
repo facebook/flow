@@ -102,13 +102,13 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
 [constant-condition]
 
    test.js:42:5
-     42|     foo().catch(() => {}) && foo(); // error
-             ^^^^^^^^^^^^^^^^^^^^^
+   42|     foo().catch(() => {}) && foo(); // error
+           ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2322:8
-   2322|     ): Promise<R | U>;
-                ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:63:8
+   63|     ): Promise<R | U>;
+              ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:5

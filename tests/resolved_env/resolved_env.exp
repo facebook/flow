@@ -33,13 +33,13 @@ You can wrap it in `new Number(...))` to turn it into an object and attempt to u
 [incompatible-type]
 
    async.js:4:27
-      4|     var x = await (yield* 42); // error: number is not iterable
-                                   ^^ [1]
+    4|     var x = await (yield* 42); // error: number is not iterable
+                                 ^^ [1]
 
 References:
-   <BUILTINS>/core.js:2043:7
-   2043|     : $Iterable<Yield, Return, Next>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/misc.js:60:7
+   60|     : $Iterable<Yield, Return, Next>;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- bindings.js:4:1

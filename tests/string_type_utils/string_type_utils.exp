@@ -307,13 +307,13 @@ Error --------------------------------------------------------------------------
 Cannot use `StringPrefix` [1] without 1-2 type arguments. [missing-type-arg]
 
    prefix.js:77:15
-     77| type NoArgs = StringPrefix; // ERROR
-                       ^^^^^^^^^^^^
+    77| type NoArgs = StringPrefix; // ERROR
+                      ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3332:18
-   3332| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:122:18
+   122| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:78:21
@@ -321,13 +321,13 @@ Error --------------------------------------------------------------------------
 Cannot use `StringPrefix` [1] with fewer than 1 type argument. [missing-type-arg]
 
    prefix.js:78:21
-     78| type ZeroTypeArgs = StringPrefix<>; // ERROR
-                             ^^^^^^^^^^^^^^
+    78| type ZeroTypeArgs = StringPrefix<>; // ERROR
+                            ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3332:18
-   3332| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:122:18
+   122| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:79:24
@@ -335,13 +335,13 @@ Error --------------------------------------------------------------------------
 Cannot use `StringPrefix` [1] with more than 2 type arguments. [extra-type-arg]
 
    prefix.js:79:24
-     79| type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>; // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    79| type TooManyTypeArgs = StringPrefix<'foo', 'bar', 'baz'>; // ERROR
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3332:18
-   3332| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:122:18
+   122| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:84:1
@@ -432,13 +432,13 @@ Cannot instantiate `StringPrefix` because in type argument `R`: `1` [1] is incom
 [incompatible-type]
 
    prefix.js:111:45
-    111| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
-                                                     ^ [1]
+   111| type RemainderTypeErr = StringPrefix<'foo', 1>; // ERROR
+                                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:3332:55
-   3332| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
-                                                               ^^^^^^ [2]
+   <BUILTINS>/misc.js:122:55
+   122| type StringPrefix<out P extends string, out R extends string = string> = `${P}${R}`;
+                                                              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:116:3
@@ -598,13 +598,13 @@ Error --------------------------------------------------------------------------
 Cannot use `StringSuffix` [1] without 1-2 type arguments. [missing-type-arg]
 
    suffix.js:62:15
-     62| type NoArgs = StringSuffix; // ERROR
-                       ^^^^^^^^^^^^
+    62| type NoArgs = StringSuffix; // ERROR
+                      ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3341:18
-   3341| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:131:18
+   131| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- suffix.js:63:21
@@ -612,13 +612,13 @@ Error --------------------------------------------------------------------------
 Cannot use `StringSuffix` [1] with fewer than 1 type argument. [missing-type-arg]
 
    suffix.js:63:21
-     63| type ZeroTypeArgs = StringSuffix<>; // ERROR
-                             ^^^^^^^^^^^^^^
+    63| type ZeroTypeArgs = StringSuffix<>; // ERROR
+                            ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3341:18
-   3341| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:131:18
+   131| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- suffix.js:64:24
@@ -626,13 +626,13 @@ Error --------------------------------------------------------------------------
 Cannot use `StringSuffix` [1] with more than 2 type arguments. [extra-type-arg]
 
    suffix.js:64:24
-     64| type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>; // ERROR
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    64| type TooManyTypeArgs = StringSuffix<'foo', 'bar', 'baz'>; // ERROR
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:3341:18
-   3341| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/misc.js:131:18
+   131| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:69:1
@@ -724,13 +724,13 @@ Cannot instantiate `StringSuffix` because in type argument `R`: `1` [1] is incom
 [incompatible-type]
 
    suffix.js:96:45
-     96| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
-                                                     ^ [1]
+    96| type RemainderTypeErr = StringSuffix<'foo', 1>; // ERROR
+                                                    ^ [1]
 
 References:
-   <BUILTINS>/core.js:3341:55
-   3341| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
-                                                               ^^^^^^ [2]
+   <BUILTINS>/misc.js:131:55
+   131| type StringSuffix<out S extends string, out R extends string = string> = `${R}${S}`;
+                                                              ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- suffix.js:101:3

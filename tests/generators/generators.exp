@@ -35,16 +35,16 @@ Cannot return empty string because in type argument `Return` [1]: `string` [2] i
 [incompatible-type]
 
    class.js:24:12
-     24|     return ""; // error: string ~> number
-                    ^^ [2]
+   24|     return ""; // error: string ~> number
+                  ^^ [2]
 
 References:
-   <BUILTINS>/core.js:2015:30
-   2015| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:32:30
+   32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                    ^^^^^^ [1]
    class.js:23:39
-     23|   *stmt_return_err(): Generator<void, number, void> {
-                                               ^^^^^^ [3]
+   23|   *stmt_return_err(): Generator<void, number, void> {
+                                             ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:28:22
@@ -123,25 +123,25 @@ Cannot yield `xs` because: [incompatible-type]
       `string` [5]
 
    class.js:72:12
-     72|     yield *xs;
-                    ^^
+    72|     yield *xs;
+                   ^^
 
 References:
    class.js:71:31
-     71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                       ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:2001:11
-   2001| interface $Iterable<out Yield,out Return,in Next> {
-                   ^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1875:58
-   1875| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                                                  ^^^^ [3]
-   <BUILTINS>/core.js:1885:58
-   1885| declare class Iterator<out Yield,out Return=void,in Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
-                                                                  ^^^^ [4]
+    71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
+                                      ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:167:11
+   167| interface $Iterable<out Yield,out Return,in Next> {
+                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:41:58
+    41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
+                                                                 ^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:51:58
+    51| declare class Iterator<out Yield,out Return=void,in Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+                                                                 ^^^^ [4]
    class.js:71:71
-     71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                                                               ^^^^^^ [5]
+    71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
+                                                                              ^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:40
@@ -375,16 +375,16 @@ Cannot return empty string because in type argument `Return` [1]: `string` [2] i
 [incompatible-type]
 
    generators.js:23:10
-     23|   return ""; // error: string ~> number
-                  ^^ [2]
+   23|   return ""; // error: string ~> number
+                ^^ [2]
 
 References:
-   <BUILTINS>/core.js:2015:30
-   2015| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                      ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:32:30
+   32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
+                                    ^^^^^^ [1]
    generators.js:22:46
-     22| function *stmt_return_err(): Generator<void, number, void> {
-                                                      ^^^^^^ [3]
+   22| function *stmt_return_err(): Generator<void, number, void> {
+                                                    ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:27:20
@@ -681,16 +681,16 @@ Cannot cast `refuse_return_result.value` to string because `void` [1] is incompa
 [incompatible-type]
 
    return.js:20:3
-     20|   refuse_return_result.value as string; // error: number | void ~> string
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+   20|   refuse_return_result.value as string; // error: number | void ~> string
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1862:22
-   1862|     readonly value?: Return,
-                              ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:28:22
+   28|     readonly value?: Return,
+                            ^^^^^^ [1]
    return.js:20:33
-     20|   refuse_return_result.value as string; // error: number | void ~> string
-                                         ^^^^^^ [2]
+   20|   refuse_return_result.value as string; // error: number | void ~> string
+                                       ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:3

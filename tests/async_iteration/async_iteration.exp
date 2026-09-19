@@ -109,16 +109,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `result.value` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
    return.js:20:5
-     20|     result.value as string; // error: number | void ~> string
-             ^^^^^^^^^^^^
+   20|     result.value as string; // error: number | void ~> string
+           ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1862:22
-   1862|     readonly value?: Return,
-                              ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:28:22
+   28|     readonly value?: Return,
+                            ^^^^^^ [1]
    return.js:20:21
-     20|     result.value as string; // error: number | void ~> string
-                             ^^^^^^ [2]
+   20|     result.value as string; // error: number | void ~> string
+                           ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- return.js:20:5

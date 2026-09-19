@@ -109,8 +109,8 @@ Cannot cast `<StarFoo />` to renders `Foo` because `$ReadOnlyArray` [1] does not
          ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:595:15
+   595| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [1]
    import.js:14:16
     14| <StarFoo /> as renders Foo; // ERROR
@@ -141,8 +141,8 @@ Cannot cast `<StarFoo />` to renders? `Foo` because `$ReadOnlyArray` [1] does no
          ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:731:15
-   731| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:595:15
+   595| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [1]
    import.js:15:16
     15| <StarFoo /> as renders? Foo; // ERROR

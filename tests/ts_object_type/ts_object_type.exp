@@ -141,16 +141,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `Symbol()` to `p7` because `symbol` [1] is incompatible with `interface {}` [2]. [incompatible-type]
 
    object.ts:30:20
-    30| const p7: object = Symbol(); // ERROR -- symbol is not an object
-                           ^^^^^^^^
+   30| const p7: object = Symbol(); // ERROR -- symbol is not an object
+                          ^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:265:29
-   265|   static (value?: unknown): symbol;
-                                    ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:28:29
+   28|   static (value?: unknown): symbol;
+                                   ^^^^^^ [1]
    object.ts:30:11
-    30| const p7: object = Symbol(); // ERROR -- symbol is not an object
-                  ^^^^^^ [2]
+   30| const p7: object = Symbol(); // ERROR -- symbol is not an object
+                 ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- object.ts:35:3

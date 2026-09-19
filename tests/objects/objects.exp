@@ -189,8 +189,8 @@ Cannot cast `Object(...)` to `Number` because `{[key: any]: any}` [1] is incompa
        ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:97:24
-   97|     static (o: ?void): { [key: any]: any, ... };
+   <BUILTINS>/lib.es5.js:84:24
+   84|     static (o: ?void): { [key: any]: any, ... };
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    conversion.js:10:22
    10| Object(undefined) as Number; // error
@@ -206,8 +206,8 @@ Cannot call `z.charAt` because property `charAt` is missing in `Number` [1]. [pr
          ^^^^^^
 
 References:
-   <BUILTINS>/core.js:99:25
-   99|     static (o: number): Number;
+   <BUILTINS>/lib.es5.js:86:25
+   86|     static (o: number): Number;
                                ^^^^^^ [1]
 
 
@@ -403,8 +403,8 @@ Cannot cast `y['hasOwnProperty']` to string because `(prop: unknown) => boolean`
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:241:5
-   241|     hasOwnProperty(prop: unknown): boolean;
+   <BUILTINS>/lib.es5.js:228:5
+   228|     hasOwnProperty(prop: unknown): boolean;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    objects.js:18:24
     18| y['hasOwnProperty'] as string; // error, prototype method is not a string
