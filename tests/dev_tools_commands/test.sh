@@ -10,6 +10,7 @@ write_flowconfig() {
   cat > "$root/.flowconfig" <<'EOF'
 [options]
 all=true
+builtin_lib=core-only
 include_warnings=true
 EOF
 }
@@ -57,6 +58,7 @@ mkdir -p update_suppressions_upgrade
 cat > update_suppressions_upgrade/.flowconfig <<'EOF'
 [options]
 all=true
+builtin_lib=core-only
 include_warnings=true
 lazy_mode=fs
 EOF
@@ -82,6 +84,7 @@ cat > update_sites/foo/.flowconfig <<'EOF'
 
 [options]
 all=true
+builtin_lib=core-only
 include_warnings=true
 
 [lints]
@@ -93,6 +96,7 @@ cat > update_sites/bar/.flowconfig <<'EOF'
 
 [options]
 all=true
+builtin_lib=core-only
 include_warnings=true
 
 [lints]

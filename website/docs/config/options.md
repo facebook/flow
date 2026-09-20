@@ -89,19 +89,19 @@ The default value for `ban_spread_key_props` is `false`.
 
 ### builtin_lib {#toc-builtin-lib}
 
-Type: `flowlib | flowlib-with-lib-dom-d-ts | prelude | experimental.tslib`
+Type: `default | core-only | prelude | experimental.tslib`
 
 Selects the builtin library definitions that Flow loads:
 
-- `flowlib` loads Flow's standard JavaScript and React definitions.
-- `flowlib-with-lib-dom-d-ts` loads Flow's core and React definitions together
+- `default` loads Flow's core and React definitions together
   with TypeScript's DOM, DOM iterable, and DOM async iterable definitions.
+- `core-only` loads Flow's core and React definitions without DOM definitions.
 - `prelude` loads only the minimal definitions that Flow needs to run.
 - `experimental.tslib` loads the TypeScript standard library definitions.
 
 You can override this setting for a command with `--builtin-lib`.
 
-The default value is `flowlib`.
+The default value is `default`.
 
 ### component_syntax {#toc-component-syntax}
 

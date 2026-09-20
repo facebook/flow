@@ -1448,6 +1448,8 @@ pub struct BaseFlags {
 
 fn builtin_lib_flag() -> arg_spec::FlagType<Option<String>> {
     arg_spec::enum_flag(vec![
+        ("default", "default".to_owned()),
+        ("core-only", "core-only".to_owned()),
         ("flowlib", "flowlib".to_owned()),
         (
             "flowlib-with-lib-dom-d-ts",
@@ -1460,8 +1462,8 @@ fn builtin_lib_flag() -> arg_spec::FlagType<Option<String>> {
 
 fn config_builtin_lib_of_arg(value: &str) -> Option<ConfigBuiltinLib> {
     match value {
-        "flowlib" => Some(ConfigBuiltinLib::Flowlib),
-        "flowlib-with-lib-dom-d-ts" => Some(ConfigBuiltinLib::FlowlibWithLibDomDts),
+        "core-only" | "flowlib" => Some(ConfigBuiltinLib::Flowlib),
+        "default" | "flowlib-with-lib-dom-d-ts" => Some(ConfigBuiltinLib::FlowlibWithLibDomDts),
         "prelude" => Some(ConfigBuiltinLib::Prelude),
         "experimental.tslib" => Some(ConfigBuiltinLib::Tslib),
         _ => None,
@@ -1470,8 +1472,8 @@ fn config_builtin_lib_of_arg(value: &str) -> Option<ConfigBuiltinLib> {
 
 pub fn builtin_lib_arg(builtin_lib: ConfigBuiltinLib) -> &'static str {
     match builtin_lib {
-        ConfigBuiltinLib::Flowlib => "flowlib",
-        ConfigBuiltinLib::FlowlibWithLibDomDts => "flowlib-with-lib-dom-d-ts",
+        ConfigBuiltinLib::Flowlib => "core-only",
+        ConfigBuiltinLib::FlowlibWithLibDomDts => "default",
         ConfigBuiltinLib::Prelude => "prelude",
         ConfigBuiltinLib::Tslib => "experimental.tslib",
     }
@@ -3505,7 +3507,36 @@ pub fn subcommand_spec<T: Clone + Send + Sync + 'static>(
 
 #[cfg(test)]
 mod tests {
+    use flow_config::opts::BuiltinLib as ConfigBuiltinLib;
+
+    use super::builtin_lib_arg;
+    use super::config_builtin_lib_of_arg;
     use super::should_show_progress;
+
+    #[test]
+    fn builtin_lib_names_are_canonicalized() {
+        assert_eq!(
+            config_builtin_lib_of_arg("default"),
+            Some(ConfigBuiltinLib::FlowlibWithLibDomDts)
+        );
+        assert_eq!(
+            config_builtin_lib_of_arg("flowlib-with-lib-dom-d-ts"),
+            Some(ConfigBuiltinLib::FlowlibWithLibDomDts)
+        );
+        assert_eq!(
+            config_builtin_lib_of_arg("core-only"),
+            Some(ConfigBuiltinLib::Flowlib)
+        );
+        assert_eq!(
+            config_builtin_lib_of_arg("flowlib"),
+            Some(ConfigBuiltinLib::Flowlib)
+        );
+        assert_eq!(
+            builtin_lib_arg(ConfigBuiltinLib::FlowlibWithLibDomDts),
+            "default"
+        );
+        assert_eq!(builtin_lib_arg(ConfigBuiltinLib::Flowlib), "core-only");
+    }
 
     #[test]
     fn human_invocations_show_progress_by_default() {

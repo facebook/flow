@@ -374,7 +374,7 @@ pub mod opts {
             multi_platform_extension_group_mapping: Vec::new(),
             multi_platform_ambient_supports_platform_project_overrides: Vec::new(),
             munge_underscores: false,
-            builtin_lib: BuiltinLib::Flowlib,
+            builtin_lib: BuiltinLib::FlowlibWithLibDomDts,
             no_implicit_override: false,
             no_unchecked_indexed_access: false,
             node_modules_errors: false,
@@ -2629,6 +2629,8 @@ pub mod opts {
             ("builtin_lib", |values, config| {
                 enum_parser(
                     &[
+                        ("default", BuiltinLib::FlowlibWithLibDomDts),
+                        ("core-only", BuiltinLib::Flowlib),
                         ("flowlib", BuiltinLib::Flowlib),
                         (
                             "flowlib-with-lib-dom-d-ts",
@@ -3627,6 +3629,40 @@ pub fn get_with_ignored_version(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn builtin_lib_defaults_to_flowlib_with_lib_dom_d_ts() {
+        assert_eq!(
+            empty_config().options.builtin_lib,
+            opts::BuiltinLib::FlowlibWithLibDomDts
+        );
+    }
+
+    #[test]
+    fn builtin_lib_accepts_canonical_names_and_compatibility_aliases() {
+        for (value, expected) in [
+            ("default", opts::BuiltinLib::FlowlibWithLibDomDts),
+            (
+                "flowlib-with-lib-dom-d-ts",
+                opts::BuiltinLib::FlowlibWithLibDomDts,
+            ),
+            ("core-only", opts::BuiltinLib::Flowlib),
+            ("flowlib", opts::BuiltinLib::Flowlib),
+        ] {
+            let mut config = empty_config();
+            let result = parse(
+                &mut config,
+                vec![
+                    (1, "[options]".to_owned()),
+                    (2, format!("builtin_lib={value}")),
+                ],
+                true,
+            );
+
+            assert!(result.is_ok(), "failed to parse builtin_lib={value}");
+            assert_eq!(config.options.builtin_lib, expected);
+        }
+    }
 
     #[test]
     fn globs_have_the_expected_semantics() {
