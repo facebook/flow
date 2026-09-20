@@ -651,10 +651,22 @@ pub(super) fn any_propagated_use<'cx>(
         | TypeInner::EvalT { .. }
         | TypeInner::OptionalT { .. }
         | TypeInner::MaybeT(..)
-        | TypeInner::TypeAppT(..)
         | TypeInner::UnionT(..)
         | TypeInner::IntersectionT(..)
         | TypeInner::ThisTypeAppT(..) => Ok(false),
+        // A typeapp with no unresolved tvars flowing to `any` succeeds
+        // unconditionally: instantiation can only add bounds through unresolved
+        // tvars, of which there are none, so skip it instead of evaluating
+        // (e.g. solving conditional types). With unresolved tvars, fall
+        // through so instantiation can constrain them.
+        TypeInner::TypeAppT(..)
+            if !flow_typing_flow_common::flow_js_utils::tvar_visitors::has_unresolved_tvars(
+                cx, l,
+            ) =>
+        {
+            Ok(true)
+        }
+        TypeInner::TypeAppT(..) => Ok(false),
         // Should never occur as the lower bound of any
         TypeInner::NamespaceT(_) => Ok(false),
         TypeInner::TemplateLiteralT { .. }
