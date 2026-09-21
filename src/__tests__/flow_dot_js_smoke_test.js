@@ -204,6 +204,9 @@ function Foo(x: string) {}
       'Invalid autocomplete result. Got: ' + JSON.stringify(got, undefined, 2)
     );
   }
+
+  // The generated runtime must grow beyond Emscripten's 16 MiB default.
+  flow.registerFile('large.js', ' '.repeat(16 * 1024 * 1024));
 }
 
 main().catch(error => {
