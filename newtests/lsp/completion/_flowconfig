@@ -1,2 +1,3 @@
 [options]
 autoimports=false
+builtin_lib=core-only

@@ -1,2 +1,3 @@
 [options]
 experimental.deprecated_utilities.excludes=<PROJECT_ROOT>/excluded/
+builtin_lib=core-only

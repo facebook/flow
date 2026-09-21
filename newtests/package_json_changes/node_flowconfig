@@ -7,3 +7,4 @@
 [options]
 all=true
 module.system=node
+builtin_lib=core-only

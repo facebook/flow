@@ -7,3 +7,4 @@
 [options]
 all=true
 module.system=haste
+builtin_lib=core-only
