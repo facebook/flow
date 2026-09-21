@@ -1,6 +1,7 @@
 [options]
 all=true
 #placeholder
+builtin_lib=core-only
 
 [version]
 >0.60.0

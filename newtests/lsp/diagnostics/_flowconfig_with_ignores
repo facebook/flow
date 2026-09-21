@@ -2,3 +2,4 @@
 **/ignoreme.js
 
 [options]
+builtin_lib=core-only

@@ -1,2 +1,3 @@
 [options]
 experimental.records=true
+builtin_lib=core-only

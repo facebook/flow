@@ -1,3 +1,4 @@
 [options]
 all=true
 saved_state_restart_on_reinit=true
+builtin_lib=core-only

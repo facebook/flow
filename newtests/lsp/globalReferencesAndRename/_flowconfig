@@ -1,2 +1,3 @@
 [options]
 react.runtime=automatic
+builtin_lib=core-only

@@ -1,1 +1,2 @@
 [options]
+builtin_lib=core-only
