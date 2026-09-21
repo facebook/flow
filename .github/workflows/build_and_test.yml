@@ -357,7 +357,7 @@ jobs:
     - name: Install tool deps from yarn
       run: (cd packages/flow-dev-tools && yarn install | cat)
     - name: Run Rust port newtests
-      run: ./tool test --check check --bin bin/rust-port-macos-arm64/flow
+      run: ./tool test -p 4 --check check --bin bin/rust-port-macos-arm64/flow
   tool_test_win:
     runs-on: windows-2022
     needs:
