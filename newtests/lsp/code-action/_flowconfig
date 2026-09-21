@@ -1,6 +1,7 @@
 [options]
 enums=true
 component_syntax=true
+builtin_lib=core-only
 
 [lints]
 unused-promise=error

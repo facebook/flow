@@ -6,6 +6,7 @@
 
 [options]
 all=true
+builtin_lib=core-only
 
 [lints]
 unclear-type=error

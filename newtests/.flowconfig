@@ -15,3 +15,4 @@
 [options]
 emoji=true
 component_syntax=true
+builtin_lib=core-only
