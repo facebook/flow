@@ -14,8 +14,17 @@ const {execSync, spawn} = require('child_process');
 const {randomBytes} = require('crypto');
 const {createWriteStream, realpathSync, lstatSync} = require('fs');
 // $FlowFixMe[prop-missing]
-const {access, appendFile, readdir, readFile, unlink, writeFile, cp, symlink} =
-  require('fs').promises;
+const {
+  access,
+  appendFile,
+  readdir,
+  readFile,
+  stat,
+  unlink,
+  writeFile,
+  cp,
+  symlink,
+} = require('fs').promises;
 const {platform, tmpdir} = require('os');
 const {basename, dirname, extname, join, sep: dir_sep} = require('path');
 const {format} = require('util');
@@ -29,9 +38,16 @@ import type {LSPMessage, RpcConnection} from './lsp';
 const {exec, execManual, isRunning, mkdirp, sleep} = require('../utils/async');
 const {getTestsDir} = require('../constants');
 const {default: ShellMocker} = require('./ShellMocker');
+const {
+  describeServerCrash,
+  isCrash,
+  isServerLogName,
+  logWindow,
+} = require('./serverCrash');
 
 import type {SuiteResult} from './runTestSuite';
 import type {AllInvocations} from './ShellMocker';
+import type {ServerExit, ServerLog} from './serverCrash';
 
 type CancellationToken = {
   +isCancellationRequested: boolean,
@@ -64,7 +80,8 @@ class TestBuilder {
   sourceDir: string;
   suiteName: string;
   tmpDir: string;
-  testErrors: Array<string> = [];
+  serverCrash: ServerExit | null = null;
+  serverLogMarks: Map<string, number> = new Map();
   allowFlowServerToDie: boolean = false;
   logStream: stream$Writable | null;
   shellMocker: ShellMocker;
@@ -388,15 +405,14 @@ class TestBuilder {
     });
 
     serverProcess.on('exit', (code, signal) => {
-      if (this.server != null && !this.allowFlowServerToDie) {
-        this.testErrors.push(
-          format(
-            'flow server mysteriously died. Code: %d, Signal: %s, stderr:\n%s',
-            code,
-            signal,
-            stderr.join(''),
-          ),
-        );
+      // `stopFlowServer` clears `this.server` before it kills, so a null one here means the
+      // harness is the one that asked.
+      const context = {
+        harnessStoppedIt: this.server == null,
+        stepAllowsDeath: this.allowFlowServerToDie,
+      };
+      if (isCrash(context)) {
+        this.serverCrash = {code, signal, stderr: stderr.join('')};
       }
       this.stopFlowServer();
     });
@@ -945,14 +961,63 @@ class TestBuilder {
     await this.flowCmd(['stop']);
   }
 
-  assertNoErrors(): void {
-    if (this.testErrors.length > 0) {
+  async serverLogNames(): Promise<Array<string>> {
+    return (await readdir(this.tmpDir)).filter(isServerLogName);
+  }
+
+  /**
+   * A log can be gone by the time it is opened — Flow renames `.log` to `.log.old` when a server
+   * restarts — and this whole path exists only to describe a failure. Losing one log beats turning
+   * a crash report into an unrelated `ENOENT`, so a file that will not open is skipped. A `tmpDir`
+   * that will not list is a different matter and still throws: that is the harness being broken.
+   */
+  async readLogIfPresent(name: string): Promise<Buffer | null> {
+    try {
+      return await readFile(join(this.tmpDir, name));
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Remembers how long each Flow log is, so that a crash can be reported with what the server
+   * wrote during the step that killed it rather than with an arbitrary slice of the whole file.
+   */
+  async markServerLogs(): Promise<void> {
+    const marks = new Map<string, number>();
+    for (const name of await this.serverLogNames()) {
+      try {
+        marks.set(name, (await stat(join(this.tmpDir, name))).size);
+      } catch {
+        continue;
+      }
+    }
+    this.serverLogMarks = marks;
+  }
+
+  async readServerLogsSinceMark(): Promise<Array<ServerLog>> {
+    const logs: Array<ServerLog> = [];
+    for (const name of await this.serverLogNames()) {
+      const bytes = await this.readLogIfPresent(name);
+      if (bytes == null) {
+        continue;
+      }
+      const contents = logWindow(bytes, this.serverLogMarks.get(name) ?? 0);
+      if (contents.trim() !== '') {
+        logs.push({name, contents});
+      }
+    }
+    return logs;
+  }
+
+  async assertServerDidNotCrash(): Promise<void> {
+    const crash = this.serverCrash;
+    if (crash != null) {
       throw new Error(
-        format(
-          '%d test error%s: %s',
-          this.testErrors.length,
-          this.testErrors.length == 1 ? '' : 's',
-          this.testErrors.join('\n\n'),
+        describeServerCrash(
+          crash,
+          await this.readServerLogsSinceMark(),
+          this.tmpDir,
         ),
       );
     }

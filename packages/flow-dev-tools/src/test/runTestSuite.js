@@ -163,6 +163,7 @@ async function runTestSuite(
         testBuilder.clearLSPMessages();
         testBuilder.clearLSPStderr();
         await testBuilder.clearMockInvocations();
+        await testBuilder.markServerLogs();
 
         if (step.needsFlowServer()) {
           // No-op if one is already running
@@ -214,8 +215,13 @@ async function runTestSuite(
           await testBuilder.getMockInvocationsSinceStartOfStep(),
         );
 
+        // Ahead of the assertions, not after them. Once the server is gone, what the step observed
+        // describes the crash rather than the behaviour under test — an empty stdout, a truncated
+        // response, a connection error — so an assertion failure here would name the symptom and
+        // bury the event.
+        await testBuilder.assertServerDidNotCrash();
+
         let result = step.checkAssertions(envRead);
-        testBuilder.assertNoErrors();
         testBuilder.setAllowFlowServerToDie(false);
         if (result.passed) {
           stepsPassed++;
