@@ -769,6 +769,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedRunner<C> {
                 &reader,
                 &Arc::new(_options.clone()),
                 files_to_merge.clone().into_iter().collect(),
+                flow_services_inference::type_service::ParseProgress::Report,
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
@@ -915,6 +916,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 &reader,
                 &Arc::new(_options.clone()),
                 files_to_merge.clone().into_iter().collect(),
+                flow_services_inference::type_service::ParseProgress::Report,
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
@@ -1004,6 +1006,7 @@ impl<C: SimpleTypedRunnerConfig> TypedRunnerConfig for SimpleTypedTwoPassRunner<
                 &reader,
                 &Arc::new(_options.clone()),
                 files_to_merge2.clone().into_iter().collect(),
+                flow_services_inference::type_service::ParseProgress::Report,
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
         }
@@ -1119,6 +1122,7 @@ impl<C: TypedRunnerWithPrepassConfig> TypedRunnerConfig for TypedRunnerWithPrepa
                 &reader,
                 &Arc::new(_options.clone()),
                 files_to_merge.clone().into_iter().collect(),
+                flow_services_inference::type_service::ParseProgress::Report,
             )
             .expect("ensure_parsed_or_trigger_recheck failed");
         }

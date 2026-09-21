@@ -103,6 +103,17 @@ pub enum RecheckError {
     Canceled(Vec<FileKey>),
 }
 
+/// Whether an `ensure_parsed` announces its progress on the server status line.
+///
+/// Only work the status machine already counts as a typecheck may: it accepts a parsing-progress
+/// event solely while the server is typechecking, and a command executor sits in `Free`, where the
+/// same event is an illegal transition that panics a `debug_assertions` build.
+#[derive(Clone, Copy, Debug)]
+pub enum ParseProgress {
+    Report,
+    Silent,
+}
+
 /// A completed recheck whose heap and environment changes have not yet been published.
 #[must_use = "a prepared recheck must be committed by the recheck thread"]
 pub struct PreparedRecheck {
@@ -1251,6 +1262,7 @@ fn ensure_parsed(
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     files: FlowOrdSet<FileKey>,
+    progress: ParseProgress,
 ) -> Result<(), UnexpectedFileChanges> {
     with_memory_timer(options, "EnsureParsed", || {
         let parse_unexpected_skips = parsing_service::ensure_parsed(
@@ -1258,14 +1270,17 @@ fn ensure_parsed(
             transaction,
             options,
             files,
-            |total, start, _length| {
-                let finished = start;
-                monitor_rpc::status_update(server_status::Event::ParsingProgress(
-                    server_status::Progress {
-                        total: Some(total),
-                        finished,
-                    },
-                ));
+            move |total, start, _length| match progress {
+                ParseProgress::Report => {
+                    let finished = start;
+                    monitor_rpc::status_update(server_status::Event::ParsingProgress(
+                        server_status::Progress {
+                            total: Some(total),
+                            finished,
+                        },
+                    ));
+                }
+                ParseProgress::Silent => {}
             },
         );
         if parse_unexpected_skips.is_empty() {
@@ -1283,8 +1298,9 @@ pub fn ensure_parsed_or_trigger_recheck(
     transaction: &Arc<Transaction>,
     options: &Arc<Options>,
     files: FlowOrdSet<FileKey>,
+    progress: ParseProgress,
 ) -> Result<(), RecheckError> {
-    match ensure_parsed(pool, transaction, options, files) {
+    match ensure_parsed(pool, transaction, options, files, progress) {
         Ok(()) => Ok(()),
         Err(UnexpectedFileChanges(changed_files)) => {
             Err(handle_unexpected_file_changes(orchestrator, changed_files))
@@ -1694,11 +1710,16 @@ pub(crate) mod recheck {
 
         flow_hh_logger::info!("Re-resolving parsed and directly dependent files");
         let dirty_direct_dependents_set: FlowOrdSet<FileKey> = dirty_direct_dependents.dupe();
-        ensure_parsed(pool, transaction, options, dirty_direct_dependents_set).map_err(
-            |UnexpectedFileChanges(changed_files)| {
-                handle_unexpected_file_changes(orchestrator, changed_files)
-            },
-        )?;
+        ensure_parsed(
+            pool,
+            transaction,
+            options,
+            dirty_direct_dependents_set,
+            ParseProgress::Report,
+        )
+        .map_err(|UnexpectedFileChanges(changed_files)| {
+            handle_unexpected_file_changes(orchestrator, changed_files)
+        })?;
         let parsed_set_for_resolve = parsed_set.dupe().union(dirty_direct_dependents.dupe());
         resolve_requires_for_recheck(pool, transaction, options, &parsed_set_for_resolve)?;
         check_recheck_canceled()?;
@@ -1880,6 +1901,7 @@ pub(crate) mod recheck {
                 transaction,
                 options,
                 to_merge.dupe().all(),
+                ParseProgress::Report,
             )?;
             check_recheck_canceled()?;
             if dependent_file_count > 0 {
@@ -3945,6 +3967,7 @@ pub fn check_files_for_init(
             transaction,
             options,
             to_merge.dupe().all(),
+            ParseProgress::Report,
         )?;
         let merge_result = merge(
             pool,
