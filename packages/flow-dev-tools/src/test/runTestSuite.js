@@ -13,6 +13,10 @@ const {format} = require('util');
 const {writeFile} = require('fs').promises;
 
 const {noErrors} = require('../flowResult');
+const {
+  describeJsonParseFailure,
+  JsonParseError,
+} = require('./assertions/normalize');
 const {TestStep, TestStepFirstStage} = require('./TestStep');
 const {newEnv} = require('./stepEnv');
 const {withTimeout} = require('../utils/async');
@@ -224,9 +228,16 @@ async function runTestSuite(
       await testBuilder.cleanup();
     } catch (e) {
       printStatus('ERROR');
+      // The stack locates the parse; only the error itself knows what was being parsed.
+      const subject =
+        e instanceof JsonParseError ? '\n' + describeJsonParseFailure(e) : '';
       return {
         type: 'exceptional',
-        message: format('Exception while running test steps:\n%s', e.stack),
+        message: format(
+          'Exception while running test steps:\n%s%s',
+          e.stack,
+          subject,
+        ),
       };
     }
     testsRun++;
