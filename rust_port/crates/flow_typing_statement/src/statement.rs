@@ -4436,12 +4436,11 @@ fn statement_<'a>(
     })
 }
 
-pub fn statement_list<'a>(
+fn statement_list_from_iter<'a, 'b>(
     cx: &Context<'a>,
-    stmts: &[statement::Statement<ALoc, ALoc>],
+    stmts: impl Iterator<Item = &'b statement::Statement<ALoc, ALoc>>,
 ) -> Result<Vec<statement::Statement<ALoc, (ALoc, Type)>>, JobError> {
     stmts
-        .iter()
         .map(|stmt| {
             let (stmt, _abnormal) =
                 flow_typing_utils::abnormal::catch_stmt_control_flow_exception(|| {
@@ -4450,6 +4449,13 @@ pub fn statement_list<'a>(
             Ok(stmt)
         })
         .collect()
+}
+
+pub fn statement_list<'a>(
+    cx: &Context<'a>,
+    stmts: &[statement::Statement<ALoc, ALoc>],
+) -> Result<Vec<statement::Statement<ALoc, (ALoc, Type)>>, JobError> {
+    statement_list_from_iter(cx, stmts.iter())
 }
 
 pub fn for_of_elemt<'a>(
@@ -5074,11 +5080,43 @@ pub fn declare_namespace<'a>(
     if let Some(x) = node_cache.get_declared_namespace(&loc) {
         return Ok(x);
     }
+    let is_supported_global = matches!(id, statement::declare_namespace::Id::Global(_))
+        && cx.declare_global_support()
+        && cx.is_ts_global_augmentation()
+        && type_env::in_toplevel_scope(cx);
     let prev_scope_kind = type_env::set_scope_kind(
         cx,
         flow_env_builder::name_def_types::ScopeKind::DeclareModule,
     );
-    let body_statements = statement_list(cx, &body_block.body)?;
+    let body_statements = if is_supported_global {
+        statement_list_from_iter(
+            cx,
+            body_block.body.iter().filter(|stmt| {
+                match flow_parser::ast_utils::acceptable_statement_in_declaration_context(
+                    flow_parser::ast_utils::DeclarationContext::DeclareGlobal,
+                    stmt,
+                ) {
+                    Ok(()) => true,
+                    Err(error) => {
+                        flow_js::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(Box::new((
+                                stmt.loc().dupe(),
+                                UnsupportedSyntax::ContextDependentUnsupportedStatement(
+                                    ContextDependentUnsupportedStatement::UnsupportedStatementInDeclareGlobal(
+                                        FlowSmolStr::new(error),
+                                    ),
+                                ),
+                            ))),
+                        );
+                        false
+                    }
+                }
+            }),
+        )?
+    } else {
+        statement_list(cx, &body_block.body)?
+    };
     let body_comments = &body_block.comments;
     type_env::set_scope_kind(cx, prev_scope_kind);
     let body = (
@@ -5113,13 +5151,13 @@ pub fn declare_namespace<'a>(
                         UnsupportedSyntax::DeclareGlobal,
                     ))),
                 );
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUndocumentedFeature {
+                        loc: name_loc.dupe(),
+                    },
+                );
             }
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EUndocumentedFeature {
-                    loc: name_loc.dupe(),
-                },
-            );
             (t, statement::declare_namespace::Id::Global(ident.clone()))
         }
         statement::declare_namespace::Id::Local(ident) => {

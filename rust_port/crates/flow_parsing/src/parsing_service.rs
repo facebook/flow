@@ -36,6 +36,7 @@ use flow_parser::dts_file_kind::dts_file_kind;
 use flow_parser::dts_file_kind::has_top_level_declare_global;
 use flow_parser::dts_file_kind::is_external_module;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::has_dts_ext;
 use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
 use flow_parser_utils::file_sig::FileSig;
@@ -425,22 +426,34 @@ pub fn does_content_match_file_hash(
     content_hash_matches_file_hash(transaction, file, content_hash)
 }
 
-pub fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
-    match std::fs::read_to_string(file.to_absolute()).ok() {
-        None => true,
-        Some(content) => !does_content_match_file_hash(transaction, file, &content),
+fn read_content_and_check_if_changed(
+    transaction: &Transaction,
+    file: &FileKey,
+) -> (bool, Option<String>) {
+    match std::fs::read_to_string(file.to_absolute()) {
+        Ok(content) => (
+            !does_content_match_file_hash(transaction, file, &content),
+            Some(content),
+        ),
+        Err(_) => (true, None),
     }
 }
 
-/// The declaration files among `files` whose bytes on disk no longer match the parse the
-/// heap holds for them. Any one of them can move the global scope — it may have become a
-/// global libdef, stopped being one, or changed the declarations it contributes — and
-/// which of those it did is only knowable by parsing it. What to do about that is the
-/// caller's: reparse them to rebuild the global scope, or refuse to reuse the one the heap
-/// was built with.
+pub fn did_content_change(transaction: &Transaction, file: &FileKey) -> bool {
+    read_content_and_check_if_changed(transaction, file).0
+}
+
+fn file_has_ts_global_augmentation(options: &Options, file: &FileKey, content: &str) -> bool {
+    let (ast, parse_errors) = parse_source_file(options, Ok(content), file, false);
+    parse_errors.is_empty()
+        && has_ts_global_augmentation(options.declare_global_support, false, file, &ast)
+}
+
+/// The declaration files among `files` whose bytes on disk no longer match the parse heap.
 ///
-/// Configured libs are excluded: a change to one of those is reported separately, as a
-/// modified lib file.
+/// Existing TypeScript global augmentation contributors are also included. A changed TypeScript
+/// module that was not previously a contributor is parsed directly to determine whether it became
+/// one.
 pub fn changed_declaration_files<'a>(
     options: &Options,
     transaction: &Transaction,
@@ -449,9 +462,19 @@ pub fn changed_declaration_files<'a>(
     files
         .into_iter()
         .filter(|file| {
-            !files::is_configured_lib_file(&options.file_options, file.as_str())
-                && flow_parser::file_key::has_dts_ext(file.as_str())
-                && did_content_change(transaction, file)
+            if files::is_configured_lib_file(&options.file_options, file.as_str()) {
+                return false;
+            }
+
+            let (content_changed, content) = read_content_and_check_if_changed(transaction, file);
+            content_changed
+                && (has_dts_ext(file.as_str())
+                    || transaction.has_ts_global_augmentation(file)
+                    || (options.declare_global_support
+                        && files::has_ts_ext(file)
+                        && content.is_some_and(|content| {
+                            file_has_ts_global_augmentation(options, file, &content)
+                        })))
         })
         .duped()
         .collect()

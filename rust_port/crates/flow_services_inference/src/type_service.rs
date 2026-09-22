@@ -2574,12 +2574,12 @@ fn filter_saved_state_updates(
     acc
 }
 
-/// This function tries to find out d.ts changes that should invalidate the libdef.
+/// This function tries to find out declaration changes that should invalidate the global scope.
 /// Two additional tricky cases compared to baseline libdef change:
 ///
-/// 1. previous d.ts global libdef files become modules due to addition of import/export.
+/// 1. previous global contributors stop contributing.
 ///    Handled in this function by comparing content
-/// 2. previous d.ts module files become libdefs due to removal of import/export.
+/// 2. previous non-global declaration files become global contributors.
 ///    Handled in this function by parsing with an ad-hoc transaction to figure out that it happened.
 fn global_scope_changes(
     pool: &ThreadPool,
@@ -2588,27 +2588,33 @@ fn global_scope_changes(
     saved_discovered: &BTreeSet<FileKey>,
     updates: &FlowOrdSet<FileKey>,
 ) -> BTreeSet<FileKey> {
+    let scratch = ActiveTransaction::new(committed_heap.dupe());
+    let transaction = scratch.handle();
     let mut moved: BTreeSet<FileKey> = updates
         .iter()
-        .filter(|file| saved_discovered.contains(*file))
+        .filter(|file| {
+            saved_discovered.contains(*file) || transaction.has_ts_global_augmentation(file)
+        })
         .duped()
         .collect();
     let unclassified: Vec<FileKey> = updates
         .iter()
         .filter(|file| {
             !moved.contains(*file)
-                && has_dts_ext(file.as_str())
                 && !files::is_configured_lib_file(&options.file_options, file.as_str())
+                && (has_dts_ext(file.as_str())
+                    || (options.declare_global_support && files::has_ts_ext(file)))
         })
         .duped()
         .collect();
     if !unclassified.is_empty() {
-        let scratch = ActiveTransaction::new(committed_heap.dupe());
         let next: parsing_service::Next = {
             let mut files = Some(unclassified);
             Box::new(move || files.take())
         };
-        moved.extend(parse(pool, &scratch.handle(), options, next).discovered_global_libdefs());
+        let parsed = parse(pool, &transaction, options, next);
+        moved.extend(parsed.discovered_global_libdefs());
+        moved.extend(parsed.ts_global_augmentation_files);
     }
     moved
 }
@@ -2771,6 +2777,11 @@ fn init_with_initial_state(
     flow_hh_logger::info!("Loading libraries");
     monitor_rpc::status_update(server_status::Event::LoadLibrariesStart);
     let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
+    let global_augmentation_files: FlowOrdSet<FileKey> = parsed
+        .iter()
+        .filter(|file| transaction.has_ts_global_augmentation(file))
+        .duped()
+        .collect();
 
     let additional_lib_files: Vec<FileKey> = ordered_libs
         .iter()
@@ -2807,7 +2818,11 @@ fn init_with_initial_state(
         options,
         transaction,
         all_unordered_libs_set.dupe(),
-        init::assemble_ordered_lib_inputs(&ordered_libs, &discovered_global_libdefs),
+        init::assemble_ordered_lib_inputs(
+            &ordered_libs,
+            &discovered_global_libdefs,
+            &global_augmentation_files,
+        ),
         local_errors,
         BTreeMap::new(),
         ErrorSuppressions::empty(),
@@ -3162,7 +3177,7 @@ pub fn init_from_scratch(
             package_json: (package_json_files_list, package_json_errors),
             all_unordered_libs: discovered_libs,
             dts_file_kinds: _,
-            ts_global_augmentation_files: _,
+            ts_global_augmentation_files,
         } = parse_results;
         handle.join().unwrap();
 
@@ -3217,7 +3232,11 @@ pub fn init_from_scratch(
             options,
             transaction,
             all_unordered_libs_set.dupe(),
-            init::assemble_ordered_lib_inputs(&ordered_libs, &discovered_global_libdefs),
+            init::assemble_ordered_lib_inputs(
+                &ordered_libs,
+                &discovered_global_libdefs,
+                &ts_global_augmentation_files,
+            ),
             local_errors,
             warnings,
             ErrorSuppressions::empty(),

@@ -348,7 +348,9 @@ pub fn mk_check_file(
 
         let cx = {
             let docblock = parse.docblock_unsafe(file_key);
-            let metadata = docblock_overrides(&docblock, file_key, base_metadata.clone());
+            let mut metadata = docblock_overrides(&docblock, file_key, base_metadata.clone());
+            metadata.overridable.is_ts_global_augmentation =
+                transaction.has_ts_global_augmentation(file_key);
             let resolved_requires_for_resolve = resolved_requires.dupe();
             let resolve_require: Rc<
                 dyn Fn(&Context<'static>, &FlowImportSpecifier) -> ResolvedRequire<'static>,
@@ -888,7 +890,9 @@ pub fn mk_check_file(
                   docblock: Arc<Docblock>,
                   aloc_table: LazyALocTable| {
                 let ccx = Rc::new(make_ccx());
-                let metadata = docblock_overrides(&docblock, &file_key, base_metadata.clone());
+                let mut metadata = docblock_overrides(&docblock, &file_key, base_metadata.clone());
+                metadata.overridable.is_ts_global_augmentation =
+                    transaction.has_ts_global_augmentation(&file_key);
                 let resolved_requires: Rc<
                     RefCell<HashMap<FlowImportSpecifier, ResolvedRequire<'static>>>,
                 > = Rc::new(RefCell::new(HashMap::new()));

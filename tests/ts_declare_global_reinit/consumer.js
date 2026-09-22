@@ -1,0 +1,1 @@
+AugmentedGlobal as string; // ERROR

@@ -132,6 +132,7 @@ pub struct OverridableMetadata {
     pub available_platforms: Option<PlatformSet>,
     pub checked: bool,
     pub has_explicit_supports_platform: bool,
+    pub is_ts_global_augmentation: bool,
     pub jsx: JsxMode,
     pub munge_underscores: bool,
     pub react_runtime: ReactRuntime,
@@ -145,6 +146,7 @@ impl Default for OverridableMetadata {
             available_platforms: None,
             checked: true,
             has_explicit_supports_platform: false,
+            is_ts_global_augmentation: false,
             jsx: JsxMode::JsxReact,
             munge_underscores: false,
             react_runtime: ReactRuntime::Classic,
@@ -606,6 +608,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             strict_local: false,
             available_platforms: None,
             has_explicit_supports_platform: false,
+            is_ts_global_augmentation: false,
             react_runtime: options.react_runtime,
         },
         frozen: Rc::new(FrozenMetadata {
@@ -1436,6 +1439,11 @@ impl<'cx> Context<'cx> {
 
     pub fn declare_global_support(&self) -> bool {
         self.0.metadata.frozen.declare_global_support
+    }
+
+    /// Whether the current source module contributes a supported `declare global` block.
+    pub fn is_ts_global_augmentation(&self) -> bool {
+        self.0.metadata.overridable.is_ts_global_augmentation
     }
 
     pub fn assert_operator_enabled(&self) -> bool {

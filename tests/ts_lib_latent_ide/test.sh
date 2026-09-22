@@ -30,3 +30,15 @@ cp external.d.ts.ignored live.d.ts
 assert_ok "$FLOW" force-recheck live.d.ts
 assert_errors "$FLOW" status .
 show_queries
+
+printf "\n\n======Queries after a TypeScript module augments globals======\n"
+cp augmentation.ts.ignored augmentation.ts
+assert_ok "$FLOW" force-recheck augmentation.ts
+assert_errors "$FLOW" status .
+show_queries
+
+printf "\n\n======Queries after the global augmentation is removed======\n"
+rm augmentation.ts
+assert_ok "$FLOW" force-recheck augmentation.ts
+assert_errors "$FLOW" status .
+show_queries

@@ -1,0 +1,27 @@
+Error -------------------------------------------------------------------------------------------------- augment.ts:10:9
+
+`declare global` statement is not supported yet. [unsupported-syntax]
+
+   10| declare global { // ERROR
+               ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- augment.ts:10:9
+
+You are using an undocumented feature. It might be removed in the future, and the behavior might change at any time
+without warning. [undocumented-feature]
+
+   10| declare global { // ERROR
+               ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
+
+Cannot resolve name `disabledGlobal`. [cannot-resolve-name]
+
+   1| disabledGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^
+
+
+
+Found 3 errors

@@ -137,3 +137,105 @@ autoimport.js:2:22
 Flags: --pretty --imports
 {"result":[{"name":"IdeGlobal","type":"Import from ./live.d.ts"}]}
 
+
+
+======Queries after a TypeScript module augments globals======
+Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
+
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+
+   2| globalThis.IdeG;
+                 ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- autoimport.js:2:18
+
+Cannot resolve name `IdeG`. [cannot-resolve-name]
+
+   2| const imported = IdeG
+                       ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------- use.js:3:1
+
+Cannot cast `ideValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   use.js:3:1
+   3| ideValue as number;
+      ^^^^^^^^
+
+References:
+   augmentation.ts:4:28
+   4|   declare const IdeGlobal: string;
+                                 ^^^^^^ [1]
+   use.js:3:13
+   3| ideValue as number;
+                  ^^^^^^ [2]
+
+
+
+Found 3 errors
+Type at global use:
+string
+use.js:1:18,1:26
+Definition of global use:
+augmentation.ts:4:17,4:25
+Autocomplete at global prefix:
+autocomplete.js:2:16
+Flags: --pretty
+{"result":[{"name":"IdeGlobal","type":"string"}]}
+
+Autoimport at declaration prefix:
+autoimport.js:2:22
+Flags: --pretty --imports
+{
+  "result":[
+    {"name":"IdeGlobal","type":"(global)"},
+    {"name":"IdeGlobal","type":"Import from ./live.d.ts"}
+  ]
+}
+
+
+
+======Queries after the global augmentation is removed======
+Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
+
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+
+   2| globalThis.IdeG;
+                 ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- autoimport.js:2:18
+
+Cannot resolve name `IdeG`. [cannot-resolve-name]
+
+   2| const imported = IdeG
+                       ^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ use.js:1:18
+
+Cannot resolve name `IdeGlobal`. [cannot-resolve-name]
+
+   1| const ideValue = IdeGlobal;
+                       ^^^^^^^^^
+
+
+
+Found 3 errors
+Type at global use:
+any (implicit)
+use.js:1:18,1:26
+Definition of global use:
+use.js:1:18,1:26
+Autocomplete at global prefix:
+autocomplete.js:2:16
+Flags: --pretty
+{"result":[]}
+
+Autoimport at declaration prefix:
+autoimport.js:2:22
+Flags: --pretty --imports
+{"result":[{"name":"IdeGlobal","type":"Import from ./live.d.ts"}]}
+

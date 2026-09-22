@@ -1,0 +1,5 @@
+export {};
+
+declare global {
+  declare const IdeGlobal: string;
+}

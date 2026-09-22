@@ -184,6 +184,10 @@ fn check_for_lib_changes(
     filtered_updates: &FlowOrdSet<FileKey>,
     updates: &BTreeSet<String>,
 ) -> Result<(), Error> {
+    if skip_incompatible {
+        return Ok(());
+    }
+
     let flow_typed_path = files::get_flowtyped_path(root)
         .to_string_lossy()
         .to_string();
@@ -199,7 +203,7 @@ fn check_for_lib_changes(
         .collect();
     let changed_declaration_files =
         parsing_service::changed_declaration_files(options, transaction, filtered_updates.iter());
-    if !skip_incompatible && (!libs.is_empty() || !changed_declaration_files.is_empty()) {
+    if !libs.is_empty() || !changed_declaration_files.is_empty() {
         let messages = libs
             .iter()
             .rev()

@@ -23,6 +23,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_common::options::Options;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::Transaction;
 use flow_imports_exports::exports;
@@ -63,6 +64,7 @@ impl OrderedLibInput {
 pub(crate) fn assemble_ordered_lib_inputs(
     configured_libs: &[String],
     discovered_globals: &BTreeSet<FileKey>,
+    global_augmentations: &FlowOrdSet<FileKey>,
 ) -> Vec<OrderedLibInput> {
     // `FileKey` stores a root-relative, `/`-separated path suffix, so its `Ord` is already the
     // canonical cross-platform order the global scope needs; a `BTreeSet` iterates in it.
@@ -76,6 +78,11 @@ pub(crate) fn assemble_ordered_lib_inputs(
             );
             OrderedLibInput::discovered(file.dupe())
         }))
+        .chain(
+            global_augmentations
+                .iter()
+                .map(|file| OrderedLibInput::discovered(file.dupe())),
+        )
         .collect()
 }
 
@@ -100,15 +107,21 @@ fn load_lib_files(
         flow_common::type_strictness::TypeStrictnessKind,
         Arc<ast::Program<Loc, Loc>>,
     )> = Vec::new();
+    let mut global_augmentation_asts = Vec::new();
     for OrderedLibInput { file } in files {
         match reader.get_ast(file) {
             Some(ast) => {
-                ordered_asts.push((
+                let ast = (
                     flow_common::type_strictness::TypeStrictnessKind::from_is_typescript(
                         flow_common::files::has_ts_ext(file),
                     ),
                     ast,
-                ));
+                );
+                if reader.has_ts_global_augmentation(file) {
+                    global_augmentation_asts.push(ast);
+                } else {
+                    ordered_asts.push(ast);
+                }
             }
             None => {
                 flow_hh_logger::info!("Failed to find {:?} in parsing heap.", file);
@@ -120,8 +133,12 @@ fn load_lib_files(
 
     let (builtin_exports, master_cx, cx_opt) = if ok {
         let sig_opts = TypeSigOptions::builtin_options(options);
-        let (builtin_errors, master_cx) =
-            merge::merge_lib_files(&sig_opts, all_unordered_libs, &ordered_asts, &[]);
+        let (builtin_errors, master_cx) = merge::merge_lib_files(
+            &sig_opts,
+            all_unordered_libs,
+            &ordered_asts,
+            &global_augmentation_asts,
+        );
         match master_cx {
             MasterContext::EmptyMasterContext => {
                 (Exports::empty(), MasterContext::EmptyMasterContext, None)
@@ -157,6 +174,7 @@ fn load_lib_files(
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts
                         .iter()
+                        .chain(global_augmentation_asts.iter())
                         .map(|(_, ast)| {
                             let loc = &ast.loc;
                             let source = loc

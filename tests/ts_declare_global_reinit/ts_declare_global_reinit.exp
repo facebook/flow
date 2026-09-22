@@ -1,0 +1,123 @@
+======ordinary module has no global contribution======
+Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
+
+Cannot resolve name `AugmentedGlobal`. [cannot-resolve-name]
+
+   1| AugmentedGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+
+======adding the first block rebuilds globals======
+No errors!
+
+
+======editing a contributor rebuilds globals======
+Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
+
+Cannot cast `AugmentedGlobal` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   consumer.js:1:1
+   1| AugmentedGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^^
+
+References:
+   augmentation.ts:4:26
+   4|   const AugmentedGlobal: number;
+                               ^^^^^^ [1]
+   consumer.js:1:20
+   1| AugmentedGlobal as string; // ERROR
+                         ^^^^^^ [2]
+
+
+
+Found 1 error
+
+
+======removing the block rebuilds globals======
+Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
+
+Cannot resolve name `AugmentedGlobal`. [cannot-resolve-name]
+
+   1| AugmentedGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+
+======removing the module indicator rebuilds globals======
+Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
+
+Cannot resolve name `AugmentedGlobal`. [cannot-resolve-name]
+
+   1| AugmentedGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+
+
+======restoring the module indicator rebuilds globals======
+No errors!
+
+
+======a contributor parse failure rebuilds globals======
+
+
+======recovering the contributor rebuilds globals======
+No errors!
+
+
+======renaming a contributor rebuilds globals======
+No errors!
+
+
+======deleting a contributor rebuilds globals======
+Error -------------------------------------------------------------------------------------------------- consumer.js:1:1
+
+Cannot resolve name `AugmentedGlobal`. [cannot-resolve-name]
+
+   1| AugmentedGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^^
+
+
+
+Found 1 error
+No errors!
+
+
+======unrelated TypeScript edit stays incremental======
+no full reinit
+
+
+======saved state restores global contributors======
+No errors!
+
+
+======ordinary dependency edit stays incremental======
+Error ------------------------------------------------------------------------------------------------ dependent.ts:10:1
+
+Cannot cast `dependencyValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   dependent.ts:10:1
+   10| dependencyValue as string; // ERROR
+       ^^^^^^^^^^^^^^^
+
+References:
+   dependency.ts:1:31
+    1| export const dependencyValue: number = 1;
+                                     ^^^^^^ [1]
+   dependent.ts:10:20
+   10| dependencyValue as string; // ERROR
+                          ^^^^^^ [2]
+
+
+
+Found 1 error
+no full reinit

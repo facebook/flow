@@ -1,0 +1,41 @@
+Error -------------------------------------------------------------------------------------------------- consumer.js:4:1
+
+Cannot cast `globalBox.value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   consumer.js:4:1
+    4| globalBox.value as number; // ERROR
+       ^^^^^^^^^^^^^^^
+
+References:
+   augment.ts:12:12
+   12|     value: string;
+                  ^^^^^^ [1]
+   consumer.js:4:20
+    4| globalBox.value as number; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- consumer.js:13:1
+
+Cannot call `globalOverload` because: [incompatible-type]
+ - Either `true` [1] is incompatible with `string` [2].
+ - Or `true` [1] is incompatible with `number` [3].
+
+   consumer.js:13:1
+   13| globalOverload(true); // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   consumer.js:13:16
+   13| globalOverload(true); // ERROR
+                      ^^^^ [1]
+   augment.ts:31:34
+   31|   function globalOverload(value: string): string;
+                                        ^^^^^^ [2]
+   augment_second.ts:19:34
+   19|   function globalOverload(value: number): number;
+                                        ^^^^^^ [3]
+
+
+
+Found 2 errors

@@ -1,0 +1,121 @@
+Error ------------------------------------------------------------------------------------------------- ambient.ts:10:16
+
+`declare module` statement is only supported at the toplevel of a library file. [unsupported-syntax]
+
+   10| declare module "ambient" { // ERROR
+                      ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- augment.ts:14:21
+
+Cannot resolve name `PrivateType`. [cannot-resolve-name]
+
+   14|   type FromImport = PrivateType; // ERROR
+                           ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- augment.ts:15:20
+
+Cannot resolve name `PrivateAlias`. [cannot-resolve-name]
+
+   15|   type FromAlias = PrivateAlias; // ERROR
+                          ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- augment.ts:16:27
+
+Cannot resolve name `privateValue`. [cannot-resolve-name]
+
+   16|   type FromValue = typeof privateValue; // ERROR
+                                 ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- augment.ts:19:3
+
+Cannot use export declaration statements within `declare global`. The statement will be ignored. [unsupported-syntax]
+
+   19|   export type ExportedFromGlobal = string; // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- augment.ts:21:3
+
+Cannot use string-named module declaration statements within `declare global`. The statement will be ignored.
+[unsupported-syntax]
+
+         v---------------------------------
+   21|   declare module "nested" { // ERROR
+   22|     declare export const nestedValue: string;
+   23|   }
+         ^
+
+
+Error -------------------------------------------------------------------------------------------------- augment.ts:25:3
+
+Cannot use variable declaration statements within `declare global`. The statement will be ignored. [unsupported-syntax]
+
+   25|   const initialized: string = "value"; // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- augment.ts:28:3
+
+Cannot use nested declare global statements within `declare global`. The statement will be ignored. [unsupported-syntax]
+
+         v------------------------
+   28|   declare global { // ERROR
+   29|     const nestedGlobal: string;
+   30|   }
+         ^
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:2:1
+
+Cannot resolve name `InlineImport`. [cannot-resolve-name]
+
+   2| InlineImport as string; // ERROR
+      ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:3:1
+
+Cannot resolve name `nestedGlobal`. [cannot-resolve-name]
+
+   3| nestedGlobal as string; // ERROR
+      ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:4:1
+
+Cannot resolve name `scriptGlobal`. [cannot-resolve-name]
+
+   4| scriptGlobal as string; // ERROR
+      ^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:5:1
+
+Cannot resolve name `javascriptGlobal`. [cannot-resolve-name]
+
+   5| javascriptGlobal as string; // ERROR
+      ^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- consumer.js:6:1
+
+Cannot resolve name `ambientGlobal`. [cannot-resolve-name]
+
+   6| ambientGlobal as string; // ERROR
+      ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ javascript.js:4:9
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   4|   const javascriptGlobal: string; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 14 errors
