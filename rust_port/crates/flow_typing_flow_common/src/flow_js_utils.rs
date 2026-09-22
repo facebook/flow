@@ -2889,7 +2889,7 @@ pub fn is_builtin_class_id<'cx>(
 }
 
 pub fn is_builtin_iterable_class_id<'cx>(class_id: flow_aloc::ALocId, cx: &Context<'cx>) -> bool {
-    is_builtin_class_id("$Iterable", class_id, cx)
+    is_builtin_class_id("Iterable", class_id, cx)
 }
 
 pub fn builtin_react_element_nominal_id<'cx>(

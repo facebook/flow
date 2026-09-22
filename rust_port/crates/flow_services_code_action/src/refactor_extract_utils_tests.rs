@@ -557,8 +557,8 @@ mod collect_function_method_inserting_points_tests {
             flow_typing_builtins::LazyVal<'_, Context<'_>>,
         > = FlowOrdMap::new();
         for name in &[
-            "$AsyncIterable",
-            "$Iterable",
+            "AsyncIterable",
+            "Iterable",
             "$JSXIntrinsics",
             "React$CreateElement",
             "ExactReactElement_DEPRECATED",
@@ -814,8 +814,8 @@ mod find_closest_enclosing_class_tests {
             flow_typing_builtins::LazyVal<'_, Context<'_>>,
         > = FlowOrdMap::new();
         for name in &[
-            "$AsyncIterable",
-            "$Iterable",
+            "AsyncIterable",
+            "Iterable",
             "$JSXIntrinsics",
             "React$CreateElement",
             "ExactReactElement_DEPRECATED",
@@ -1435,8 +1435,8 @@ mod type_synthesizer_tests {
             flow_typing_builtins::LazyVal<'_, Context<'_>>,
         > = FlowOrdMap::new();
         for name in &[
-            "$AsyncIterable",
-            "$Iterable",
+            "AsyncIterable",
+            "Iterable",
             "$JSXIntrinsics",
             "React$CreateElement",
             "ExactReactElement_DEPRECATED",

@@ -921,8 +921,8 @@ Cannot assign `x.valueOf` to `xValueOf` because `(this: Date) => number` [1] is 
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1594:5
-   1594|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1595:5
+   1595|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -973,8 +973,8 @@ with `number` [2]. [incompatible-type]
                                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1582:5
-   1582|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1583:5
+   1583|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -991,8 +991,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the `this` par
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1432:15
-   1432| declare class Date {
+   <BUILTINS>/lib.es5.js:1433:15
+   1433| declare class Date {
                        ^^^^ [1]
 
 
@@ -1006,8 +1006,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return val
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1582:93
-   1582|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/lib.es5.js:1583:93
+   1583|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                      ^^^^^^ [1]
    object_prototype.js:151:30
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error

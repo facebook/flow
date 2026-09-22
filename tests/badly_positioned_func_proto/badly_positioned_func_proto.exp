@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:1:14
 
-`number` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, any, any>` [2]. You can wrap it in
+`number` [1], a primitive, cannot be used as a subtype of `Iterable<empty, any, any>` [2]. You can wrap it in
 `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    test.js:1:14
@@ -8,14 +8,14 @@ Error --------------------------------------------------------------------------
                      ^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:1:16
 
-`number` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, any, any>` [2]. You can wrap it in
+`number` [1], a primitive, cannot be used as a subtype of `Iterable<empty, any, any>` [2]. You can wrap it in
 `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    test.js:1:16
@@ -23,9 +23,9 @@ Error --------------------------------------------------------------------------
                        ^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:45
@@ -38,15 +38,15 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
 
 References:
    <BUILTINS>/lib.es5.js:249:19
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:45
 
 Cannot call `function () { ... }.apply` because in type argument `A`: `number` [1], a primitive, cannot be used as a
-subtype of `interface {readonly length: number; readonly [indexer: number]: unknown}` [2]. You can wrap it in
-`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+subtype of `ArrayLike<unknown>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    test.js:7:45
      7| (function (this: any) { return this.bar; }).apply(...arr); // error
@@ -57,8 +57,8 @@ References:
      1| const arr = [1,2,3];  // badly-positioned error
                        ^ [1]
    <BUILTINS>/lib.es5.js:249:36
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                           ^^^^^^^^^^^^^^^^^^^ [2]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:45
@@ -71,15 +71,15 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
 
 References:
    <BUILTINS>/lib.es5.js:249:19
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:45
 
 Cannot call `function () { ... }.apply` because in type argument `A`: `number` [1], a primitive, cannot be used as a
-subtype of `interface {readonly length: number; readonly [indexer: number]: unknown}` [2]. You can wrap it in
-`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+subtype of `ArrayLike<unknown>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    test.js:8:45
      8| (function (this: any) { return this.bar; }).apply({} as any, ...arr); // error
@@ -90,8 +90,8 @@ References:
      1| const arr = [1,2,3];  // badly-positioned error
                      ^ [1]
    <BUILTINS>/lib.es5.js:249:36
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                           ^^^^^^^^^^^^^^^^^^^ [2]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
@@ -104,15 +104,15 @@ Cannot call `function () { ... }.apply` because no more than 2 arguments are exp
 
 References:
    <BUILTINS>/lib.es5.js:249:19
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
 
 Cannot call `function () { ... }.apply` because in type argument `A`: `number` [1], a primitive, cannot be used as a
-subtype of `interface {readonly length: number; readonly [indexer: number]: unknown}` [2]. You can wrap it in
-`new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
+subtype of `ArrayLike<unknown>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    test.js:9:45
      9| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error
@@ -123,8 +123,8 @@ References:
      1| const arr = [1,2,3];  // badly-positioned error
                        ^ [1]
    <BUILTINS>/lib.es5.js:249:36
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                           ^^^^^^^^^^^^^^^^^^^ [2]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
 

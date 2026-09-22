@@ -26,8 +26,8 @@ incompatible with `SharedArrayBuffer` [3]. [incompatible-type]
          ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:2368:26
-   2368| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
+   <BUILTINS>/lib.es5.js:2364:26
+   2364| type ArrayBufferView<out TArrayBuffer extends ArrayBufferLike = ArrayBufferLike> =
                                   ^^^^^^^^^^^^ [1]
    test.js:103:46
     103| declare const arrayOnlyView: ArrayBufferView<ArrayBuffer>;

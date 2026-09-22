@@ -149,7 +149,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:63:5
 
-`"hello"` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, any, any>` [2]. You can wrap it in
+`"hello"` [1], a primitive, cannot be used as a subtype of `Iterable<empty, any, any>` [2]. You can wrap it in
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    test.js:63:5
@@ -157,9 +157,9 @@ Error --------------------------------------------------------------------------
            ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/prelude.js:53:11
-   53| interface $Iterable<out Yield,out Return,in Next> {
-                 ^^^^^^^^^ [2]
+   <BUILTINS>/prelude.js:56:11
+   56| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:70:30

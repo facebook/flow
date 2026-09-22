@@ -2967,7 +2967,7 @@ pub mod type_assertions {
                             env,
                             &reason,
                             None,
-                            "$Iterable",
+                            "Iterable",
                             targs_to_infer.to_vec(),
                         )
                     };

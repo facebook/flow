@@ -2707,7 +2707,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- local.js:658:20
 
 Cannot call `Set` with array literal bound to `iterable` because: [incompatible-type]
- - array literal [1] is incompatible with `$Iterable` [2]
+ - array literal [1] is incompatible with `Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3]: `"C"` [4] is incompatible with
       `"A" | "B"` [5]
 
@@ -2719,9 +2719,9 @@ References:
    <BUILTINS>/lib.es2015.collection.js:152:29
    152|     constructor(iterable?: ?Iterable<T>): void;
                                     ^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-    41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                        ^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+    41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                               ^^^^^ [3]
    local.js:658:21
    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
                             ^^^ [4]

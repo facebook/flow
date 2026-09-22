@@ -13853,11 +13853,11 @@ References:
 Error -------------------------------------------------------------------------------------------- tagged_union.js:137:9
 
 Cannot compare
-`<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ....` [1] to
+`<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, .....` [1] to
 `0` [2], because
-`<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ....` [3] is not a
+`<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, .....` [3] is not a
 subtype of `0` [2] and `0` [2] is not a subtype of
-`<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ....` [3]. In
+`<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, .....` [3]. In
 **rare** cases, these types may have overlapping values but lack a subtyping relationship. If that happens, you can cast
 one side to the union of both types to pass the flow check.  [invalid-compare]
 
@@ -13873,8 +13873,8 @@ References:
    137|     if (t.call === 0) {} // Error
                            ^ [2]
    <BUILTINS>/lib.es5.js:251:17
-   251|     proto call: <T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   251|     proto call: <T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:138:11

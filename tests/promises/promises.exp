@@ -145,8 +145,8 @@ References:
    <BUILTINS>/lib.es2015.promise.js:101:5
             v--------------------------------------------------------------------
    101|     static allSettled<T extends Iterable<unknown>>(promises: T): Promise<
-   102|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
-   103|       T extends Iterable<infer V> ? Array<$SettledPromiseResult<Awaited<V>>> : any
+   102|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
+   103|       T extends Iterable<infer V> ? Array<PromiseSettledResult<Awaited<V>>> : any
    104|     >;
             ^ [1]
 
@@ -192,9 +192,9 @@ Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [
                                      ^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:102:81
-   102|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
-                                                                                        ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:102:80
+   102|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
+                                                                                       ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:1
@@ -242,7 +242,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ any.js:5:29
 
 Cannot call `Promise.any` with `0` bound to `promises` because `0` [1], a primitive, cannot be used as a subtype of
-`$Iterable<any, void, void>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it
+`Iterable<any, void, void>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it
 as a subtype of an interface. [incompatible-type]
 
    any.js:5:29

@@ -577,8 +577,8 @@ pub fn toplevels<'a, C: crate::func_params_intf::Config>(
             };
             let return_targ = flow_typing_tvar::mk(cx, reason.dupe());
             let (iterable, generator) = match kind {
-                Kind::Generator { .. } => ("$Iterable", "Generator"),
-                Kind::AsyncGenerator { .. } => ("$AsyncIterable", "AsyncGenerator"),
+                Kind::Generator { .. } => ("Iterable", "Generator"),
+                Kind::AsyncGenerator { .. } => ("AsyncIterable", "AsyncGenerator"),
                 _ => unreachable!("Bad kind"),
             };
             {

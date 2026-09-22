@@ -1913,12 +1913,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R",
+  "detail":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R",
   "insertTextFormat":1,
   "kind":3,
   "label":"apply",
   "labelDetails":{
-    "detail":": <T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: ..."
+    "detail":": <T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A..."
   },
   "sortText":"00000000000000000001",
   "textEdit":{
@@ -1999,12 +1999,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R",
+  "detail":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R",
   "insertTextFormat":1,
   "kind":3,
   "label":"call",
   "labelDetails":{
-    "detail":": <T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: ..."
+    "detail":": <T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A..."
   },
   "sortText":"00000000000000000001",
   "textEdit":{
@@ -2627,12 +2627,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: typeof DefaultedStringEnum) => Iterator<DefaultedStringEnum>",
+  "detail":"(this: typeof DefaultedStringEnum) => IteratorObject<DefaultedStringEnum>",
   "insertTextFormat":1,
   "kind":3,
   "label":"members",
   "labelDetails":{
-    "detail":": (this: typeof DefaultedStringEnum) => Iterator<DefaultedStringEnum>"
+    "detail":": (this: typeof DefaultedStringEnum) => IteratorObject<DefaultedStringEnum>"
   },
   "sortText":"00000000000000000001",
   "textEdit":{
@@ -2814,12 +2814,12 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: typeof InitializedStringEnum) => Iterator<InitializedStringEnum>",
+  "detail":"(this: typeof InitializedStringEnum) => IteratorObject<InitializedStringEnum>",
   "insertTextFormat":1,
   "kind":3,
   "label":"members",
   "labelDetails":{
-    "detail":": (this: typeof InitializedStringEnum) => Iterator<InitializedStringEnum>"
+    "detail":": (this: typeof InitializedStringEnum) => IteratorObject<InitializedStringEnum>"
   },
   "sortText":"00000000000000000001",
   "textEdit":{
@@ -2997,11 +2997,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: typeof NumberEnum) => Iterator<NumberEnum>",
+  "detail":"(this: typeof NumberEnum) => IteratorObject<NumberEnum>",
   "insertTextFormat":1,
   "kind":3,
   "label":"members",
-  "labelDetails":{"detail":": (this: typeof NumberEnum) => Iterator<NumberEnum>"},
+  "labelDetails":{"detail":": (this: typeof NumberEnum) => IteratorObject<NumberEnum>"},
   "sortText":"00000000000000000001",
   "textEdit":{
     "insert":{"end":{"character":11,"line":14},"start":{"character":11,"line":14}},
@@ -3180,11 +3180,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: typeof BooleanEnum) => Iterator<BooleanEnum>",
+  "detail":"(this: typeof BooleanEnum) => IteratorObject<BooleanEnum>",
   "insertTextFormat":1,
   "kind":3,
   "label":"members",
-  "labelDetails":{"detail":": (this: typeof BooleanEnum) => Iterator<BooleanEnum>"},
+  "labelDetails":{"detail":": (this: typeof BooleanEnum) => IteratorObject<BooleanEnum>"},
   "sortText":"00000000000000000001",
   "textEdit":{
     "insert":{"end":{"character":12,"line":16},"start":{"character":12,"line":16}},
@@ -3361,11 +3361,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: typeof SymbolEnum) => Iterator<SymbolEnum>",
+  "detail":"(this: typeof SymbolEnum) => IteratorObject<SymbolEnum>",
   "insertTextFormat":1,
   "kind":3,
   "label":"members",
-  "labelDetails":{"detail":": (this: typeof SymbolEnum) => Iterator<SymbolEnum>"},
+  "labelDetails":{"detail":": (this: typeof SymbolEnum) => IteratorObject<SymbolEnum>"},
   "sortText":"00000000000000000001",
   "textEdit":{
     "insert":{"end":{"character":11,"line":18},"start":{"character":11,"line":18}},

@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Cannot call `f.apply` because in type argument `A`: property `length` is missing in `$Iterable` [1] but exists in
-`$ArrayLike` [2]. [incompatible-type]
+Cannot call `f.apply` because in type argument `A`: property `length` is missing in `Iterable` [1] but exists in
+`ArrayLike` [2]. [incompatible-type]
 
    apply.js:11:15
     11| f.apply(null, it); // Error
@@ -12,32 +12,13 @@ References:
      3| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/lib.es5.js:249:36
-   249|     proto apply: (<T, R, A extends $ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
-                                           ^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- apply.js:11:15
-
-Cannot call `f.apply` because in type argument `A` > property `@@iterator` > the return value:
-`$IteratorProtocol<number, void, void>` [1] is incompatible with `Iterator<unknown, void, void>` [2].
-[incompatible-type]
-
-   apply.js:11:15
-     11| f.apply(null, it); // Error
-                       ^^
-
-References:
-   <BUILTINS>/lib.es2015.iterable.js:168:19
-    168|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
-                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1097:17
-   1097|   @@iterator(): Iterator<T>;
-                         ^^^^^^^^^^^ [2]
+   249|     proto apply: (<T, R, A extends ArrayLike<unknown> = []>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R);
+                                           ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- iterables.js:2:5
 
-`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
+`Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:2:5
      2| [...it]; // Error
@@ -54,7 +35,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- iterables.js:3:6
 
-`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
+`Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:3:6
      3| f(...it); // Error
@@ -71,7 +52,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:4:17
 
-`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
+`Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:4:17
      4| f.bind(null, ...it); // Error
@@ -88,7 +69,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:12:5
 
-`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
+`Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:12:5
     12| [...oit]; // Error
@@ -105,7 +86,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ iterables.js:13:6
 
-`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
+`Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:13:6
     13| f(...oit); // Error
@@ -122,7 +103,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- iterables.js:14:17
 
-`$Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
+`Iterable<number, void, void>` [1] is incompatible with `$ReadOnlyArray<empty>` [2]. [incompatible-type]
 
    iterables.js:14:17
     14| f.bind(null, ...oit); // Error
@@ -206,4 +187,4 @@ References:
 
 
 
-Found 12 errors
+Found 11 errors

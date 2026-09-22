@@ -1,9 +1,9 @@
 /* @flow */
-declare const iterator: Iterator<number>;
+declare const iterator: IteratorObject<number>;
 declare function mapper(x: number): ReadonlyArray<string>
 
 // Basic usage
-iterator.flatMap(mapper) as Iterator<string>; // OK
+iterator.flatMap(mapper) as IteratorObject<string>; // OK
 
 // Return type is discarded: https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.flatmap
 // "ii. If value is done, return undefined."

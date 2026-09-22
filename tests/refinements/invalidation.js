@@ -295,8 +295,8 @@ declare const x: { b?: { ... }, ... };
 declare const f: unknown => boolean;
 declare const p: boolean;
 
-declare const y: { ... } & Iterator<unknown>;
-declare const ff: unknown => { ... } & Iterator<unknown>;
+declare const y: { ... } & IteratorObject<unknown>;
+declare const ff: unknown => { ... } & IteratorObject<unknown>;
 
 () => {
   declare function f(x: unknown): boolean;

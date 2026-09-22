@@ -1,8 +1,8 @@
 /* @flow */
-declare const iterator: Iterator<number>;
+declare const iterator: IteratorObject<number>;
 
 // Basic usage
-iterator.take(2) as Iterator<number>; // OK
+iterator.take(2) as IteratorObject<number>; // OK
 
 // Return type is discarded: https://tc39.es/proposal-iterator-helpers/#sec-iteratorprototype.take
 // "ii. If value is done, return undefined."

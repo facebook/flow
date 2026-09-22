@@ -799,7 +799,7 @@ str.js:3:9
 Flags: --pretty
 {
   "result":[
-    {"name":"[Symbol.iterator]","type":"(this: String) => Iterator<string>"},
+    {"name":"[Symbol.iterator]","type":"(this: String) => StringIterator"},
     {"name":"anchor","type":"(this: String, name: string) => string"},
     {"name":"at","type":"(this: String, index: number) => string | void"},
     {"name":"charAt","type":"(this: String, pos: number) => string"},
@@ -830,11 +830,11 @@ Flags: --pretty
     },
     {
       "name":"match",
-      "type":"(this: String, regexp: string | RegExp) => RegExp$matchResult | null"
+      "type":"(this: String, regexp: string | RegExp) => RegExpMatchArray | null"
     },
     {
       "name":"matchAll",
-      "type":"(this: String, regexp: string | RegExp) => Iterator<RegExp$matchResult>"
+      "type":"(this: String, regexp: string | RegExp) => RegExpStringIterator<RegExpMatchArray>"
     },
     {"name":"normalize","type":"(this: String, format?: string) => string"},
     {

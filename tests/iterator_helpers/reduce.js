@@ -1,5 +1,5 @@
 /* @flow */
-declare const iterator: Iterator<number>;
+declare const iterator: IteratorObject<number>;
 declare const numberReducer: (number,  number) => number;
 declare const stringReducer: (string,  number) => string;
 declare const flexibleReducer: (string | number,  number) => string;

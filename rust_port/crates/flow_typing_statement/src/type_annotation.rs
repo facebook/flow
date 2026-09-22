@@ -4299,7 +4299,7 @@ fn convert_render_type_inner<'a>(
                         cx_arg,
                         &r,
                         None,
-                        "$Iterable",
+                        "Iterable",
                         vec![error_r.dupe(), error_r.dupe(), error_r],
                     );
                     FlowJs::speculative_subtyping_succeeds(cx_arg, t_arg, &iterable_t)

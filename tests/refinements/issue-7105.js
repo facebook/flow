@@ -2,7 +2,7 @@ type Box = {readonly type: "GOOD", readonly value: string} | {readonly type: "BA
 type Result = {readonly type: "PENDING"} | {readonly type: "DONE", value: number};
 function coerce(t: string): number {
   let box: Box = { type: "GOOD", value: t };
-  function* broken(): Iterator<Result> {
+  function* broken(): IteratorObject<Result> {
     if (box.type === "GOOD") {
       yield { type: "PENDING" }; // TODO(T225770374)
       if (box.type !== "GOOD") {

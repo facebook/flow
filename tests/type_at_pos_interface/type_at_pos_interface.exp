@@ -51,7 +51,7 @@ interface.js:31:11
 Flags:
 function gen(): Generator<number, void, number>
 
-'Generator' defined at (lib) prelude.js:56:10
+'Generator' defined at (lib) prelude.js:61:10
 
 interface.js:31:11,31:13
 

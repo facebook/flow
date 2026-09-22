@@ -2229,9 +2229,9 @@ is incompatible with `void` [3]. [incompatible-type]
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 References:
-   <BUILTINS>/lib.es2015.generator.js:32:30
-    32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                     ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:23:35
+    23| interface Generator<out Yield,out Return,in Next> extends IteratorObject<Yield,Return,Next> {
+                                          ^^^^^^ [1]
    exhaustive-check-implicit-return.js:201:36
    201| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
                                            ^^^^^^ [2]
@@ -3096,7 +3096,7 @@ References:
    108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    109|   getName(this: TEnum, input: TEnumValue): string,
    110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): Iterator<TEnumValue>,
+   111|   members(this: TEnum): IteratorObject<TEnumValue>,
    112|   __proto__: null,
    113| }
         ^ [1]
@@ -3117,7 +3117,7 @@ References:
    108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    109|   getName(this: TEnum, input: TEnumValue): string,
    110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): Iterator<TEnumValue>,
+   111|   members(this: TEnum): IteratorObject<TEnumValue>,
    112|   __proto__: null,
    113| }
         ^ [1]
@@ -3152,7 +3152,7 @@ References:
    108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    109|   getName(this: TEnum, input: TEnumValue): string,
    110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): Iterator<TEnumValue>,
+   111|   members(this: TEnum): IteratorObject<TEnumValue>,
    112|   __proto__: null,
    113| }
         ^ [1]
@@ -3173,7 +3173,7 @@ References:
    108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
    109|   getName(this: TEnum, input: TEnumValue): string,
    110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): Iterator<TEnumValue>,
+   111|   members(this: TEnum): IteratorObject<TEnumValue>,
    112|   __proto__: null,
    113| }
         ^ [1]

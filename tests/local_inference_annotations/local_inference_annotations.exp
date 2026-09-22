@@ -56,16 +56,16 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:8
 
-Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [incompatible-type]
+Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
 
    call.js:12:8
     12| }, ...((x) => 3));
                ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:9
@@ -617,16 +617,16 @@ Missing an annotation on `y`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------------------------------- for_of.js:7:18
 
-Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [incompatible-type]
+Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
 
    for_of.js:7:18
      7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error
                          ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- for_of.js:7:19

@@ -107,8 +107,8 @@ fn dummy_context() -> Context<'static> {
     let mut builtin_types: FlowOrdMap<FlowSmolStr, flow_typing_builtins::LazyVal<'_, Context<'_>>> =
         FlowOrdMap::new();
     for name in &[
-        "$AsyncIterable",
-        "$Iterable",
+        "AsyncIterable",
+        "Iterable",
         "$JSXIntrinsics",
         "React$CreateElement",
         "ExactReactElement_DEPRECATED",

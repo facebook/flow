@@ -1095,7 +1095,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:5:17
 
-`string` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, unknown, empty>` [2]. You can wrap it in
+`string` [1], a primitive, cannot be used as a subtype of `Iterable<empty, unknown, empty>` [2]. You can wrap it in
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    string.js:5:17
@@ -1106,9 +1106,9 @@ References:
    string.js:1:18
      1| declare const s: string;
                          ^^^^^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:24:1

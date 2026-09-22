@@ -49,7 +49,7 @@ if.js:3:7
 Flags: --pretty
 {
   "result":[
-    {"name":"[Symbol.iterator]","type":"(this: String) => Iterator<string>"},
+    {"name":"[Symbol.iterator]","type":"(this: String) => StringIterator"},
     {"name":"anchor","type":"(this: String, name: string) => string"},
     {"name":"at","type":"(this: String, index: number) => string | void"},
     {"name":"charAt","type":"(this: String, pos: number) => string"},
@@ -80,11 +80,11 @@ Flags: --pretty
     },
     {
       "name":"match",
-      "type":"(this: String, regexp: string | RegExp) => RegExp$matchResult | null"
+      "type":"(this: String, regexp: string | RegExp) => RegExpMatchArray | null"
     },
     {
       "name":"matchAll",
-      "type":"(this: String, regexp: string | RegExp) => Iterator<RegExp$matchResult>"
+      "type":"(this: String, regexp: string | RegExp) => RegExpStringIterator<RegExpMatchArray>"
     },
     {"name":"normalize","type":"(this: String, format?: string) => string"},
     {
@@ -2460,7 +2460,10 @@ indirect_array.js:5:3
 Flags: --pretty
 {
   "result":[
-    {"name":"?.[Symbol.iterator]","type":"void | ((this: this) => Iterator<T>)"},
+    {
+      "name":"?.[Symbol.iterator]",
+      "type":"void | ((this: this) => ArrayIterator<T>)"
+    },
     {"name":"?.at","type":"void | ((this: this, index: number) => T | void)"},
     {
       "name":"?.concat",
@@ -2470,7 +2473,10 @@ Flags: --pretty
       "name":"?.copyWithin",
       "type":"void | ((this: this, target: number, start: number, end?: number) => Array<T>)"
     },
-    {"name":"?.entries","type":"void | ((this: this) => Iterator<[number, T]>)"},
+    {
+      "name":"?.entries",
+      "type":"void | ((this: this) => ArrayIterator<[number, T]>)"
+    },
     {
       "name":"?.every",
       "type":"void | (<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean)"
@@ -2520,7 +2526,7 @@ Flags: --pretty
       "type":"void | ((this: this, searchElement: T, fromIndex?: number) => number)"
     },
     {"name":"?.join","type":"void | ((this: this, separator?: string) => string)"},
-    {"name":"?.keys","type":"void | ((this: this) => Iterator<number>)"},
+    {"name":"?.keys","type":"void | ((this: this) => ArrayIterator<number>)"},
     {
       "name":"?.lastIndexOf",
       "type":"void | ((this: this, searchElement: T, fromIndex?: number) => number)"
@@ -2572,7 +2578,7 @@ Flags: --pretty
       "name":"?.unshift",
       "type":"void | ((this: this, ...items: Array<T>) => number)"
     },
-    {"name":"?.values","type":"void | ((this: this) => Iterator<T>)"},
+    {"name":"?.values","type":"void | ((this: this) => ArrayIterator<T>)"},
     {
       "name":"?.with",
       "type":"void | ((this: this, index: number, value: T) => Array<T>)"
@@ -2584,7 +2590,7 @@ indirect_array.js:11:3
 Flags: --pretty
 {
   "result":[
-    {"name":"[Symbol.iterator]","type":"(this: this) => Iterator<T>"},
+    {"name":"[Symbol.iterator]","type":"(this: this) => ArrayIterator<T>"},
     {"name":"at","type":"(this: this, index: number) => T | void"},
     {
       "name":"concat",
@@ -2594,7 +2600,7 @@ Flags: --pretty
       "name":"copyWithin",
       "type":"(this: this, target: number, start: number, end?: number) => Array<T>"
     },
-    {"name":"entries","type":"(this: this) => Iterator<[number, T]>"},
+    {"name":"entries","type":"(this: this) => ArrayIterator<[number, T]>"},
     {
       "name":"every",
       "type":"<This>(this: this, callbackfn: (this: This, value: T, index: number, array: Array<T>) => unknown, thisArg: This) => boolean"
@@ -2641,7 +2647,7 @@ Flags: --pretty
       "type":"(this: this, searchElement: T, fromIndex?: number) => number"
     },
     {"name":"join","type":"(this: this, separator?: string) => string"},
-    {"name":"keys","type":"(this: this) => Iterator<number>"},
+    {"name":"keys","type":"(this: this) => ArrayIterator<number>"},
     {
       "name":"lastIndexOf",
       "type":"(this: this, searchElement: T, fromIndex?: number) => number"
@@ -2690,7 +2696,7 @@ Flags: --pretty
       "type":"<S>(this: this, start: number, deleteCount?: number, ...items: Array<S>) => Array<T | S>"
     },
     {"name":"unshift","type":"(this: this, ...items: Array<T>) => number"},
-    {"name":"values","type":"(this: this) => Iterator<T>"},
+    {"name":"values","type":"(this: this) => ArrayIterator<T>"},
     {"name":"with","type":"(this: this, index: number, value: T) => Array<T>"}
   ]
 }
@@ -3058,11 +3064,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: Map<number, string>) => Iterator<[number, string]>",
+  "detail":"(this: Map<number, string>) => MapIterator<[number, string]>",
   "insertTextFormat":1,
   "kind":3,
   "label":"[Symbol.iterator]",
-  "labelDetails":{"detail":": (this: Map<number, string>) => Iterator<[number, string]>"},
+  "labelDetails":{"detail":": (this: Map<number, string>) => MapIterator<[number, string]>"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"[Symbol.iterator]",
@@ -3118,11 +3124,11 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "title":""
   },
-  "detail":"(this: Map<number, string>) => Iterator<[number, string]>",
+  "detail":"(this: Map<number, string>) => MapIterator<[number, string]>",
   "insertTextFormat":1,
   "kind":3,
   "label":"[Symbol.iterator]",
-  "labelDetails":{"detail":": (this: Map<number, string>) => Iterator<[number, string]>"},
+  "labelDetails":{"detail":": (this: Map<number, string>) => MapIterator<[number, string]>"},
   "sortText":"00000000000000000000",
   "textEdit":{
     "newText":"[Symbol.iterator]",

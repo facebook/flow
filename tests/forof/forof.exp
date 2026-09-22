@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- forof.js:24:17
 
-`string` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, unknown, empty>` [2]. You can wrap it in
+`string` [1], a primitive, cannot be used as a subtype of `Iterable<empty, unknown, empty>` [2]. You can wrap it in
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    forof.js:24:17
@@ -45,9 +45,9 @@ References:
    forof.js:23:26
     23| function testString(str: string): void {
                                  ^^^^^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- forof.js:32:5
@@ -59,9 +59,9 @@ Cannot cast `elem` to number because `[string, number]` [1] is incompatible with
            ^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:51:28
-   51|     @@iterator(): Iterator<[K, V]>;
-                                  ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.collection.js:51:31
+   51|     @@iterator(): MapIterator<[K, V]>;
+                                     ^^^^^^ [1]
    forof.js:32:13
    32|     elem as number; // Error - tuple ~> number
                    ^^^^^^ [2]

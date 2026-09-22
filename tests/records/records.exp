@@ -273,8 +273,8 @@ Operation `Pick` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:2345:60
-   2345| type Pick<O extends interface {}, Keys extends keyof O> = {[key in Keys]: O[key]};
+   <BUILTINS>/lib.es5.js:2346:60
+   2346| type Pick<O extends interface {}, Keys extends keyof O> = {[key in Keys]: O[key]};
                                                                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -288,8 +288,8 @@ Operation `Omit` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/lib.es5.js:2350:43
-   2350| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
+   <BUILTINS>/lib.es5.js:2351:43
+   2351| type Omit<O extends interface {}, Keys> = $Omit<O, Keys>;
                                                    ^^^^^^^^^^^^^^ [1]
 
 

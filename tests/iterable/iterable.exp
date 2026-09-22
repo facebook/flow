@@ -8,9 +8,9 @@ Cannot cast array literal to `Iterable` because in property `@@iterator` > the r
        ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [1]
    array.js:7:2
     7| ['hi'] as Iterable<number>; // Error string ~> number
         ^^^^ [2]
@@ -29,9 +29,9 @@ Cannot cast array literal to `Iterable` because in property `@@iterator` > the r
        ^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [1]
    array.js:8:8
     8| ['hi', 1] as Iterable<string>; // Error number ~> string
               ^ [2]
@@ -43,7 +43,7 @@ References:
 Error --------------------------------------------------------------------------------------------- caching_bug.js:21:79
 
 Cannot return `x` because: [incompatible-type]
- - array type [1] is incompatible with `$Iterable` [2]
+ - array type [1] is incompatible with `Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3]: `number` [4] is incompatible with
       `string` [5]
 
@@ -58,9 +58,9 @@ References:
    caching_bug.js:21:53
    21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                            ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [3]
    caching_bug.js:21:43
    21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                  ^^^^^^ [4]
@@ -100,14 +100,14 @@ References:
    32|     done: false,
    33|     readonly value: Yield,
    34|     ...
-   35| };
-       ^ [2]
+   35|   };
+         ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10
 
 Cannot return `map` because: [incompatible-type]
- - `Map` [1] is incompatible with `$Iterable` [2]
+ - `Map` [1] is incompatible with `Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3]: `[number, string]` [4] is incompatible
       with `string` [5]
 
@@ -122,12 +122,12 @@ References:
    map.js:13:46
    13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                     ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [3]
-   <BUILTINS>/lib.es2015.collection.js:51:28
-   51|     @@iterator(): Iterator<[K, V]>;
-                                  ^^^^^^ [4]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [3]
+   <BUILTINS>/lib.es2015.collection.js:51:31
+   51|     @@iterator(): MapIterator<[K, V]>;
+                                     ^^^^^^ [4]
    map.js:13:55
    13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                              ^^^^^^ [5]
@@ -136,7 +136,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10
 
 Cannot return `set` because: [incompatible-type]
- - `Set` [1] is incompatible with `$Iterable` [2]
+ - `Set` [1] is incompatible with `Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3]: `string` [4] is incompatible with
       `number` [5]
 
@@ -151,9 +151,9 @@ References:
    set.js:13:38
    13| function setTest4(set: Set<string>): Iterable<number> {
                                             ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [3]
    set.js:13:28
    13| function setTest4(set: Set<string>): Iterable<number> {
                                   ^^^^^^ [4]
@@ -168,19 +168,19 @@ Cannot cast `new String(...)` to `Iterable` because in property `@@iterator` > t
 `Yield` [1]: `string` [2] is incompatible with `number` [3]. [incompatible-type]
 
    string.js:3:1
-      3| new String("hi") as Iterable<number>; // Error - string is a Iterable<string>
-         ^^^^^^^^^^^^^^^^
+     3| new String("hi") as Iterable<number>; // Error - string is a Iterable<string>
+        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-     41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                         ^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1157:28
-   1157|     @@iterator(): Iterator<string>;
-                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+    41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                               ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:179:38
+   179| type StringIterator = IteratorObject<string>;
+                                             ^^^^^^ [2]
    string.js:3:30
-      3| new String("hi") as Iterable<number>; // Error - string is a Iterable<string>
-                                      ^^^^^^ [3]
+     3| new String("hi") as Iterable<number>; // Error - string is a Iterable<string>
+                                     ^^^^^^ [3]
 
 
 

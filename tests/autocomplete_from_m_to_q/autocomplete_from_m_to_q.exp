@@ -66,13 +66,13 @@ Flags: --pretty
     {"name":"bar","type":"string"},
     {
       "name":"apply",
-      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R"
+      "type":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
     {
       "name":"call",
-      "type":"<T, R, A extends $ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R"
+      "type":"<T, R, A extends ArrayLike<unknown> = Readonly<[]>>(this: (this: T, ...args: A) => R, thisArg: T, ...args: A) => R"
     },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
@@ -369,7 +369,7 @@ Flags: --pretty
     {"name":"Int8Array","type":"Int8ArrayConstructor"},
     {"name":"isFinite","type":"(number: unknown) => boolean"},
     {"name":"isNaN","type":"(number: unknown) => boolean"},
-    {"name":"Iterator","type":"typeof Iterator"},
+    {"name":"Iterator","type":"IteratorConstructor"},
     {
       "name":"JSON",
       "type":"{readonly parse: (text: string, reviver?: (key: any, value: any) => any) => any, readonly stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<unknown>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: unknown, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)}"

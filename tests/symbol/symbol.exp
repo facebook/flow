@@ -8,12 +8,12 @@ Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > th
                                      ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [1]
-   class_iterator.js:35:34
-   35|   *[Symbol.iterator](): Iterator<string> {
-                                        ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [1]
+   class_iterator.js:35:40
+   35|   *[Symbol.iterator](): IteratorObject<string> {
+                                              ^^^^^^ [2]
    class_iterator.js:39:21
    39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
                            ^^^^^^ [3]
@@ -239,9 +239,9 @@ Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return va
        ^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:41:33
-   41| interface $IteratorProtocol<out Yield,out Return=void,in Next=void> {
-                                       ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [1]
    type_well_known_symbol.js:16:44
    16| type Bad = { [Symbol.iterator](): Iterator<string> };
                                                   ^^^^^^ [2]
@@ -253,7 +253,7 @@ References:
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:31:1
 
 Cannot cast `new DStaticIterable()` to `Iterable` because property `@@iterator` is missing in `DStaticIterable` [1] but
-exists in `$Iterable` [2]. [incompatible-type]
+exists in `Iterable` [2]. [incompatible-type]
 
    type_well_known_symbol.js:31:1
    31| new DStaticIterable() as Iterable<number>; // ERROR: no instance @@iterator

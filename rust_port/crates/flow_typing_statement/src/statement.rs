@@ -13146,7 +13146,7 @@ pub fn jsx_mk_props<'a>(
     // Desugar the configured prop (e.g. sx={...}) into a stylex.props() call.
     // Returns the spread type to add to acc and the typed attribute node.
     // Instead of calling stylex.props(...sx_value) with SpreadArg (which produces
-    // confusing errors about "$Iterable" and "spread" when sx is not an array),
+    // confusing errors about "Iterable" and "spread" when sx is not an array),
     // we first check that the sx value is an array, extracting the element type,
     // then call stylex.props(elem) with a regular Arg.
     let desugar_shorthand_prop = |prop_name: &FlowSmolStr,
@@ -13184,7 +13184,7 @@ pub fn jsx_mk_props<'a>(
         )?;
         // Check that the prop value is an array and extract element type.
         // This produces errors like "Cannot create `div` element because ..."
-        // instead of confusing messages about spread and $Iterable.
+        // instead of confusing messages about spread and Iterable.
         let shorthand_arr_reason = mk_reason(
             VirtualReasonDesc::RProperty(Some(Name::new(prop_name.dupe()))),
             attr_loc.dupe(),

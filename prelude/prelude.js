@@ -31,11 +31,11 @@ declare class Array<T> extends $ReadOnlyArray<T> {
   constructor(arrayLength?: number): void;
 }
 
-type $ArrayLike<T> = {
+interface ArrayLike<out T> {
   readonly [indexer: number]: T,
   readonly length: number,
-  ...
-};
+}
+type $ArrayLike<T> = ArrayLike<T>;
 
 interface TaggedTemplateLiteralArray extends $ReadOnlyArray<string> {
   readonly raw: $ReadOnlyArray<string>;
@@ -47,41 +47,44 @@ declare class Promise<out R> {}
 
 // Iterable/Iterator/Generator
 
-interface $Iterator<out Yield,out Return,in Next> {
-  @@iterator(): $Iterator<Yield,Return,Next>;
+interface Iterator<out Yield,out Return=void,in Next=void> {
+  @@iterator(): Iterator<Yield,Return,Next>;
 }
-interface $Iterable<out Yield,out Return,in Next> {
-  @@iterator(): $Iterator<Yield,Return,Next>;
-}
-interface Generator<out Yield,out Return,in Next> {
-  @@iterator(): $Iterator<Yield,Return,Next>;
-}
+type $IteratorProtocol<out Yield,out Return=void,in Next=void> = Iterator<Yield,Return,Next>;
+type $Iterator<out Yield,out Return,in Next> = Iterator<Yield,Return,Next>;
 
-type Iterator<out T> = $Iterator<T,void,void>;
-type Iterable<out T> = $Iterable<T,void,void>;
+interface Iterable<out Yield,out Return=void,in Next=void> {
+  @@iterator(): Iterator<Yield,Return,Next>;
+}
+type $Iterable<out Yield,out Return,in Next> = Iterable<Yield,Return,Next>;
+
+interface Generator<out Yield,out Return,in Next> {
+  @@iterator(): Iterator<Yield,Return,Next>;
+}
 
 declare function $iterate<T>(p: Iterable<T>): T;
 
 // Async Iterable/Iterator/Generator
 
-interface $AsyncIterator<out Yield,out Return,in Next> {
-  @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
+interface AsyncIterator<out Yield,out Return=void,in Next=void> {
+  @@asyncIterator(): AsyncIterator<Yield,Return,Next>;
 }
-interface $AsyncIterable<out Yield,out Return,in Next> {
-  @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
+type $AsyncIterator<out Yield,out Return,in Next> = AsyncIterator<Yield,Return,Next>;
+
+interface AsyncIterable<out Yield,out Return=void,in Next=void> {
+  @@asyncIterator(): AsyncIterator<Yield,Return,Next>;
 }
+type $AsyncIterable<out Yield,out Return,in Next> = AsyncIterable<Yield,Return,Next>;
+
 interface AsyncGenerator<out Yield,out Return,in Next> {
-  @@asyncIterator(): $AsyncIterator<Yield,Return,Next>;
+  @@asyncIterator(): AsyncIterator<Yield,Return,Next>;
 }
 
 /* Type used internally for inferring the type of the yield delegate */
 type $IterableOrAsyncIterableInternal<Input, out Yield, out Return, in Next> =
-  Input extends $AsyncIterable<any, any, any>
-    ? $AsyncIterable<Yield, Return, Next>
-    : $Iterable<Yield, Return, Next>;
-
-type AsyncIterator<out T> = $AsyncIterator<T,void,void>;
-type AsyncIterable<out T> = $AsyncIterable<T,void,void>;
+  Input extends AsyncIterable<any, any, any>
+    ? AsyncIterable<Yield, Return, Next>
+    : Iterable<Yield, Return, Next>;
 
 declare opaque type $Flow$ModuleRef<out T>;
 declare opaque type $Flow$EsmModuleMarkerWrapperInModuleRef<out T>: T;

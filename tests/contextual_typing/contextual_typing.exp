@@ -332,16 +332,16 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:8
 
-Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. [incompatible-type]
+Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
 
    encountered_placeholder_failure.js:27:8
     27| id([...(item) => 1]); // error
                ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:9
@@ -763,9 +763,9 @@ Cannot cast `s2.values()` to `Iterator` because in type argument `Yield` [1]: `n
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:51:28
-   51| declare class Iterator<out Yield,out Return=void,in Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
-                                  ^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:41:24
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                              ^^^^^ [1]
    lits.js:50:17
    50|   const s2: Set<number> = new Set([]);
                        ^^^^^^ [2]

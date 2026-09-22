@@ -1489,21 +1489,21 @@ Cannot declare a type guard on a(n) generator function. [function-predicate]
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
 
-`$Generator<empty, empty, empty>` [1] is incompatible with `boolean` [2]. [incompatible-type]
+`Generator<empty, empty, empty>` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    invalid.js:19:34
    19| function *generator(x: unknown): x is number { // error
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es2015.generator.js:32:48
-   32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:23:11
+   23| interface Generator<out Yield,out Return,in Next> extends IteratorObject<Yield,Return,Next> {
+                 ^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
 
-`boolean` [1], a primitive, cannot be used as a subtype of `$Iterable<empty, empty, empty>` [2]. You can wrap it in
+`boolean` [1], a primitive, cannot be used as a subtype of `Iterable<empty, empty, empty>` [2]. You can wrap it in
 `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    invalid.js:19:34
@@ -1511,14 +1511,14 @@ Error --------------------------------------------------------------------------
                                          ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:167:11
-   167| interface $Iterable<out Yield,out Return,in Next> {
-                  ^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:161:11
+   161| interface Iterable<out Yield,out Return=void,in Next=void> {
+                  ^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:20:10
 
-Cannot return `(typeof x) == "number"` because `$Generator<empty, boolean, empty>` [1] is incompatible with
+Cannot return `(typeof x) == "number"` because `Generator<empty, boolean, empty>` [1] is incompatible with
 `boolean` [2]. [incompatible-type]
 
    invalid.js:20:10
@@ -1526,9 +1526,9 @@ Cannot return `(typeof x) == "number"` because `$Generator<empty, boolean, empty
                 ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.generator.js:32:48
-   32| type Generator<out Yield,out Return,in Next> = $Generator<Yield,Return,Next>;
-                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.generator.js:23:11
+   23| interface Generator<out Yield,out Return,in Next> extends IteratorObject<Yield,Return,Next> {
+                 ^^^^^^^^^ [1]
    invalid.js:19:34
    19| function *generator(x: unknown): x is number { // error
                                         ^^^^^^^^^^^ [2]

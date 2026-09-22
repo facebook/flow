@@ -3913,7 +3913,7 @@ fn __flow_impl<'cx>(
                             let iterable_reason = reason.dupe().replace_desc_new(
                                 VirtualReasonDesc::RCustom("Iterable expected for spread".into()),
                             );
-                            get_builtin_typeapp(cx, env, &iterable_reason, None, "$Iterable", targs)
+                            get_builtin_typeapp(cx, env, &iterable_reason, None, "Iterable", targs)
                         }
                         ResolveTo::Array => {
                             let arr_reason = reason.dupe().replace_desc_new(

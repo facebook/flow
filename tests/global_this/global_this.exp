@@ -72,7 +72,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `Array` to `Node` because: [incompatible-type]
  - Either class `Array` [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or class `Array` [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in class `Array` [1] but exists in `$Iterable` [4].
+ - Or property `@@iterator` is missing in class `Array` [1] but exists in `Iterable` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
