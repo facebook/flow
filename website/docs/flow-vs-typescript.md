@@ -1675,9 +1675,7 @@ The following TypeScript features have type-checking support implemented in Flow
 - `satisfies` expression - validates an expression against a type without widening the inferred type.
 - Inline `import()` type expression - `type A = import('./m').A`.
 - `import X = require('foo')` and `export = X` - CommonJS-style import and export bindings.
-
-Planned:
-- Support for symbol-keyed property accesses at the type level. The `unique symbol` syntax parses today, but the type system doesn't yet model symbol keys as distinct nominal keys.
+- `unique symbol` and support for symbol-keyed property accesses.
 
 ## Syntax convergence with TypeScript {#toc-convergence}
 
