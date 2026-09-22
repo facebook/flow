@@ -22,6 +22,36 @@ const MASTER_VERSION = 'master';
 const FLOW_RELEASE_VERSION =
   /^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/;
 
+const SPLIT_FLOWLIB_FILES: ReadonlyArray<string> = [
+  'lib.decorators.js',
+  'lib.decorators.legacy.js',
+  'lib.es2015.collection.js',
+  'lib.es2015.generator.js',
+  'lib.es2015.iterable.js',
+  'lib.es2015.promise.js',
+  'lib.es2015.proxy.js',
+  'lib.es2015.reflect.js',
+  'lib.es2015.symbol.js',
+  'lib.es2017.sharedmemory.js',
+  'lib.es2018.asyncgenerator.js',
+  'lib.es2018.asynciterable.js',
+  'lib.es2019.array.js',
+  'lib.es2020.bigint.js',
+  'lib.es2020.intl.js',
+  'lib.es2020.promise.js',
+  'lib.es2020.symbol.wellknown.js',
+  'lib.es2021.promise.js',
+  'lib.es2021.weakref.js',
+  'lib.es2022.error.js',
+  'lib.es2024.promise.js',
+  'lib.es5.js',
+  'lib.esnext.collection.js',
+  'lib.esnext.float16.js',
+  'misc.js',
+  'react.js',
+  'dom_extra_to_be_removed.js',
+];
+
 const TRY_LIB_CONTENTS = `
 declare type $JSXIntrinsics = {
   [string]: {
@@ -153,10 +183,9 @@ export function load(
   let libs: Array<string>;
   if (masterBasePath != null) {
     flowPath = withBaseUrl(`${masterBasePath}/flow.js`);
-    libs = [
-      `${masterBasePath}/flowlib/core.js`,
-      `${masterBasePath}/flowlib/react.js`,
-    ].map(withBaseUrl);
+    libs = SPLIT_FLOWLIB_FILES.map(filename =>
+      withBaseUrl(`${masterBasePath}/flowlib/${filename}`),
+    );
   } else {
     let releaseVersion;
     try {
@@ -169,16 +198,20 @@ export function load(
     const minorVersion = parseInt(releaseVersion.split('.')[1], 10);
     flowPath = `${versionedBaseUrl}/flow.js`;
     libs =
-      minorVersion >= 266
-        ? [
-            `${versionedBaseUrl}/flowlib/core.js`,
-            `${versionedBaseUrl}/flowlib/react.js`,
-          ]
-        : [
-            `${versionedBaseUrl}/flowlib/core.js`,
-            `${versionedBaseUrl}/flowlib/react.js`,
-            `${versionedBaseUrl}/flowlib/intl.js`,
-          ];
+      minorVersion >= 333
+        ? SPLIT_FLOWLIB_FILES.map(
+            filename => `${versionedBaseUrl}/flowlib/${filename}`,
+          )
+        : minorVersion >= 266
+          ? [
+              `${versionedBaseUrl}/flowlib/core.js`,
+              `${versionedBaseUrl}/flowlib/react.js`,
+            ]
+          : [
+              `${versionedBaseUrl}/flowlib/core.js`,
+              `${versionedBaseUrl}/flowlib/react.js`,
+              `${versionedBaseUrl}/flowlib/intl.js`,
+            ];
   }
   const flowLoader = new Promise<FlowJs>((resolve, reject) => {
     requirejs([flowPath], flowModule => {
