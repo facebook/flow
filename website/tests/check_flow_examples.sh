@@ -73,7 +73,9 @@ fi
 
 # --- Set up temp environment ---
 WORK_DIR=$(mktemp -d /tmp/flow_doc_test.XXXXXX)
-trap '$FLOW stop "$WORK_DIR" 2>/dev/null; rm -rf "$WORK_DIR"' EXIT
+FLOW_TEMP_DIR=$(mktemp -d /tmp/flow_doc_flow_tmp.XXXXXX)
+trap '$FLOW stop "$WORK_DIR" 2>/dev/null; rm -rf "$WORK_DIR" "$FLOW_TEMP_DIR"' EXIT
+export FLOW_TEMP_DIR
 
 # Create .flowconfig from the snippet config, but remove the catch-all ignore
 # so example files are checked.

@@ -3105,6 +3105,14 @@ fn connect_and_make_request_inner(
 
     // connect handles timeouts itself
     let tmp_dir_normalized = normalize_temp_dir(&connect_flags.temp_dir);
+    flow_parser::file_key::set_project_root(&root.to_string_lossy());
+    let flowlib_dir = flow_flowlib::libdir(
+        flowlib_builtin_lib(flowconfig.options.builtin_lib),
+        &tmp_dir_normalized,
+    );
+    flow_parser::file_key::set_flowlib_root(
+        &flow_flowlib::path_of_libdir(&flowlib_dir).to_string_lossy(),
+    );
     let tmp_dir_str = tmp_dir_normalized.to_string_lossy();
     let env = make_env(
         &flowconfig,
@@ -3181,25 +3189,6 @@ pub fn connect_and_make_request(
     root: &std::path::Path,
     request: &server_prot::request::Command,
 ) -> server_prot::response::Response {
-    // Set File_key root paths for this client process. Server responses
-    // contain File_key.t values with relative suffixes; to_string needs
-    // the roots to reconstruct absolute paths.
-    flow_parser::file_key::set_project_root(&root.to_string_lossy());
-    let temp_dir = normalize_temp_dir(&connect_flags.temp_dir);
-    match flow_flowlib::libdir(flow_flowlib::BuiltinLib::Flowlib, &temp_dir) {
-        flow_flowlib::LibDir::Prelude(ref path) => {
-            flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
-        }
-        flow_flowlib::LibDir::Flowlib(ref path) => {
-            flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
-        }
-        flow_flowlib::LibDir::FlowlibWithLibDomDts(ref path) => {
-            flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
-        }
-        flow_flowlib::LibDir::Tslib(ref path) => {
-            flow_parser::file_key::set_flowlib_root(&path.to_string_lossy());
-        }
-    }
     match connect_flags.timeout {
         None => connect_and_make_request_inner(
             flowconfig_name,
