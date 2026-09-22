@@ -1443,6 +1443,22 @@ fn intersect<'cx>(
         t2: &Type,
     ) -> Result<Option<Type>, JobError> {
         let t1 = t1_conc.unwrap();
+        // A predicate over a union runs once per member, so avoid concretizing the
+        // entire guard union below when its enum index can prove membership.
+        let resolved_t2 = cx.find_resolved(t2);
+        let quick_t2 = resolved_t2.as_ref().unwrap_or(t2);
+        if let TypeInner::UnionT(_, rep) = quick_t2.deref() {
+            if matches!(
+                union_rep::quick_mem_enum(
+                    |l, u| type_util::quick_subtype(None::<&fn(&Type)>, l, u),
+                    t1,
+                    rep,
+                ),
+                QuickMemResult::Yes
+            ) {
+                return Ok(Some(t1.dupe()));
+            }
+        }
         if types_differ(cx, env, 0, t1_conc, t2) {
             let r = reason1.dupe().update_desc(|d| d.invalidate_rtype_alias());
             Ok(Some(Type::new(TypeInner::DefT(
