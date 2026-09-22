@@ -1770,6 +1770,14 @@ fn imported_module_with_resolver(
     phantom_acc: Option<&mut PhantomAcc>,
     import_specifier: &FlowImportSpecifier,
 ) -> Result<Dependency, Option<FlowImportSpecifier>> {
+    // `react` is always provided by Flow's builtin libdefs, even if a project installs it.
+    if matches!(
+        import_specifier,
+        FlowImportSpecifier::Userland(userland) if userland.as_str() == "react"
+    ) {
+        return Err(None);
+    }
+
     match options.module_system {
         ModuleSystem::Node => node::Node::imported_module(
             options,
