@@ -22,6 +22,7 @@ use flow_services_coverage::FileCoverage;
 use flow_services_references::find_refs_types::SingleRef;
 use flow_type_sig::packed_type_sig;
 use flow_type_sig::signature_error::TolerableError;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing_context::Context;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
@@ -35,6 +36,8 @@ pub struct ParseArtifacts {
     pub ast: Arc<ast::Program<Loc, Loc>>,
     pub requires: Vec<FlowImportSpecifier>,
     pub file_sig: Arc<FileSig>,
+    pub type_sig: Option<Arc<packed_type_sig::Module<Loc>>>,
+    pub type_sig_options: Arc<TypeSigOptions>,
     pub tolerable_errors: Vec<TolerableError<Loc>>,
     pub parse_errors: Vec<(Loc, ParseError)>,
 }

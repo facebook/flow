@@ -28,6 +28,7 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::package_json::PackageJson;
 use flow_type_sig::packed_type_sig::Module as TypeSigModule;
 use flow_type_sig::signature_error::TolerableError;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 
 use crate::haste_module::HasteModule;
 use crate::parse::FileEntry;
@@ -633,6 +634,7 @@ impl Transaction {
         docblock: Option<Arc<Docblock>>,
         aloc_table: Option<Arc<PackedALocTable>>,
         type_sig: Option<Arc<TypeSigModule<Loc>>>,
+        type_sig_options: Option<Arc<TypeSigOptions>>,
         file_sig: Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)>,
         exports: Arc<Exports>,
         requires: Arc<[FlowImportSpecifier]>,
@@ -677,6 +679,7 @@ impl Transaction {
                 docblock,
                 aloc_table,
                 type_sig,
+                type_sig_options,
                 file_sig,
                 exports,
                 requires,
@@ -1072,6 +1075,7 @@ mod tests {
                     None,
                     None,
                     None,
+                    None,
                     Arc::new(Exports::empty()),
                     Arc::from(Vec::new()),
                     Arc::new(Imports::empty()),
@@ -1124,6 +1128,7 @@ mod tests {
                     1,
                     None,
                     false,
+                    None,
                     None,
                     None,
                     None,

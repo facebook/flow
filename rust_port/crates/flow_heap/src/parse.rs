@@ -23,6 +23,7 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::package_json::PackageJson;
 use flow_type_sig::packed_type_sig::Module;
 use flow_type_sig::signature_error::TolerableError;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 
 use crate::resolved_requires::Dependency;
 use crate::resolved_requires::DependencyTarget;
@@ -159,6 +160,7 @@ pub struct TypedParse {
     pub(crate) docblock: Option<CompressedBytes>,
     pub(crate) aloc_table: Option<CompressedBytes>,
     pub(crate) type_sig: Option<CompressedBytes>,
+    pub(crate) type_sig_options: Option<Arc<TypeSigOptions>>,
     pub(crate) file_sig: Option<CompressedBytes>,
     pub(crate) exports: CompressedBytes,
     pub(crate) requires: Arc<[FlowImportSpecifier]>,
@@ -179,6 +181,7 @@ impl TypedParse {
         docblock: Option<Arc<Docblock>>,
         aloc_table: Option<Arc<PackedALocTable>>,
         type_sig: Option<Arc<Module<Loc>>>,
+        type_sig_options: Option<Arc<TypeSigOptions>>,
         file_sig: Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)>,
         exports: Arc<Exports>,
         requires: Arc<[FlowImportSpecifier]>,
@@ -196,6 +199,7 @@ impl TypedParse {
             aloc_table: aloc_table
                 .map(|a| Arc::from(flow_heap_serialization::serialize_aloc_table(&a))),
             type_sig: type_sig.map(|t| Arc::from(flow_heap_serialization::serialize_type_sig(&t))),
+            type_sig_options,
             file_sig: file_sig.map(|(f, e)| {
                 Arc::from(flow_heap_serialization::serialize_file_sig_with_errors(
                     &f, &e,
@@ -259,6 +263,15 @@ impl TypedParse {
             Some(bytes) => flow_heap_serialization::deserialize_type_sig(file, bytes),
             None => panic!("Type signature not found for file: {}", file.as_str()),
         }
+    }
+
+    pub fn type_sig_options_unsafe(&self, file: &FileKey) -> Arc<TypeSigOptions> {
+        self.type_sig_options.dupe().unwrap_or_else(|| {
+            panic!(
+                "Type signature options not found for file: {}",
+                file.as_str()
+            )
+        })
     }
 
     pub fn requires(&self) -> Arc<[FlowImportSpecifier]> {

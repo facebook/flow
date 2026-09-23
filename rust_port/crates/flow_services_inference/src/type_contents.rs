@@ -33,6 +33,8 @@ use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypeContentsError;
 use flow_services_inference_types::TypecheckArtifacts;
+use flow_type_sig::packed_type_sig::Module as PackedTypeSigModule;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
@@ -68,19 +70,16 @@ fn do_parse_wrapper(
         filename,
         contents,
     );
-    let parse_result = parsing_service::do_parse(
-        options,
-        &docblock,
-        &[],
-        Ok(contents),
-        filename,
-        files::is_lib_file(&all_unordered_libs, filename),
-    );
+    let is_lib_file = files::is_lib_file(&all_unordered_libs, filename);
+    let parse_result =
+        parsing_service::do_parse(options, &docblock, &[], Ok(contents), filename, is_lib_file);
     match parse_result {
         ParseResult::ParseOk {
             ast,
             requires,
             file_sig,
+            type_sig,
+            type_sig_options,
             tolerable_errors,
             ..
         } => ParseContentsReturn::Parsed(ParseArtifacts {
@@ -89,6 +88,8 @@ fn do_parse_wrapper(
             ast: Arc::new(ast),
             requires,
             file_sig,
+            type_sig: Some(Arc::new(type_sig)),
+            type_sig_options: Arc::new(type_sig_options),
             tolerable_errors,
             parse_errors: vec![],
         }),
@@ -98,15 +99,26 @@ fn do_parse_wrapper(
             file_sig,
             tolerable_errors,
             parse_errors,
-        } => ParseContentsReturn::Parsed(ParseArtifacts {
-            docblock: Arc::new(docblock),
-            docblock_errors,
-            ast: Arc::new(ast),
-            requires,
-            file_sig,
-            tolerable_errors,
-            parse_errors: parse_errors.into_vec(),
-        }),
+        } => {
+            let type_sig_options = TypeSigOptions::of_options(
+                options,
+                docblock.prevent_munge(),
+                Vec::new(),
+                filename,
+                is_lib_file,
+            );
+            ParseContentsReturn::Parsed(ParseArtifacts {
+                docblock: Arc::new(docblock),
+                docblock_errors,
+                ast: Arc::new(ast),
+                requires,
+                file_sig,
+                type_sig: None,
+                type_sig_options: Arc::new(type_sig_options),
+                tolerable_errors,
+                parse_errors: parse_errors.into_vec(),
+            })
+        }
         ParseResult::ParseExn(exn) => {
             panic!("{}", exn)
         }
@@ -407,6 +419,8 @@ pub fn check_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
+    type_sig: Option<Arc<PackedTypeSigModule<Loc>>>,
+    type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
     Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
@@ -427,6 +441,8 @@ pub fn check_contents(
             ast,
             docblock,
             file_sig,
+            type_sig,
+            type_sig_options,
         )?))
     })
 }
@@ -444,6 +460,7 @@ pub fn compute_env_of_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
+    type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
     Result<Context<'static>, CheckedDependenciesCanceled>,
     flow_utils_concurrency::job_error::JobError,
@@ -469,6 +486,7 @@ pub fn compute_env_of_contents(
                 ast,
                 docblock,
                 file_sig,
+                type_sig_options,
             )?))
         })
     })
@@ -493,6 +511,8 @@ pub fn type_parse_artifacts(
                 ast,
                 requires,
                 file_sig,
+                type_sig,
+                type_sig_options,
                 tolerable_errors,
                 parse_errors,
             } = parse_artifacts;
@@ -512,6 +532,8 @@ pub fn type_parse_artifacts(
                             ast.dupe(),
                             &requires,
                             file_sig.dupe(),
+                            type_sig.dupe(),
+                            type_sig_options.dupe(),
                         )
                     })
                 })
@@ -532,6 +554,8 @@ pub fn type_parse_artifacts(
                     ast,
                     requires,
                     file_sig,
+                    type_sig,
+                    type_sig_options,
                     tolerable_errors,
                     parse_errors,
                 }),

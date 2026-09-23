@@ -13,6 +13,7 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::has_dts_ext;
 use flow_parser::loc::Loc;
 
+#[derive(Debug)]
 pub struct TypeSigOptions {
     pub munge: bool,
     pub facebook_key_mirror: bool,

@@ -1561,6 +1561,7 @@ impl Transaction {
                 type_sig: typed
                     .type_sig
                     .map(|bytes| Arc::from(bytes.into_boxed_slice())),
+                type_sig_options: None,
                 file_sig: typed
                     .file_sig
                     .map(|bytes| Arc::from(bytes.into_boxed_slice())),

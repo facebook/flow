@@ -67,6 +67,7 @@ pub enum ParseResult {
         file_sig: Arc<FileSig>,
         locs: flow_type_sig::compact_table::Table<Loc>,
         type_sig: flow_type_sig::packed_type_sig::Module<Loc>,
+        type_sig_options: TypeSigOptions,
         tolerable_errors: Vec<TolerableError<Loc>>,
         exports: Exports,
         imports: Imports,
@@ -257,6 +258,7 @@ pub fn parse_type_sig<'arena, 'ast>(
     Vec<flow_type_sig::type_sig::Errno<flow_type_sig::compact_table::Index<Loc>>>,
     flow_type_sig::compact_table::Table<Loc>,
     flow_type_sig::packed_type_sig::Module<Loc>,
+    TypeSigOptions,
 ) {
     let sig_opts = TypeSigOptions::of_options(
         options,
@@ -273,14 +275,15 @@ pub fn parse_type_sig<'arena, 'ast>(
         docblock.supports_platform.as_deref(),
     );
 
-    type_sig_utils::parse_and_pack_module(
+    let (errors, locs, type_sig) = type_sig_utils::parse_and_pack_module(
         &sig_opts,
         arena,
         strict,
         platform_availability_set,
         Some(file.dupe()),
         ast,
-    )
+    );
+    (errors, locs, type_sig, sig_opts)
 }
 
 // parse contents of a file
@@ -338,7 +341,7 @@ pub fn do_parse(
                     );
                     let arena = bumpalo::Bump::new();
                     let locs_to_dirtify_vec = locs_to_dirtify.to_vec();
-                    let (sig_errors, locs, type_sig) = parse_type_sig(
+                    let (sig_errors, locs, type_sig, type_sig_options) = parse_type_sig(
                         options,
                         docblock,
                         locs_to_dirtify_vec,
@@ -375,6 +378,7 @@ pub fn do_parse(
                         file_sig,
                         locs,
                         type_sig,
+                        type_sig_options,
                         tolerable_errors,
                         exports: exports_result,
                         imports: imports_result,
@@ -600,6 +604,7 @@ fn reducer(
             file_sig,
             locs,
             type_sig,
+            type_sig_options,
             tolerable_errors,
             exports,
             imports,
@@ -632,6 +637,7 @@ fn reducer(
                 Some(Arc::new(docblock)),
                 Some(Arc::new(packed_aloc_table)),
                 Some(Arc::new(type_sig)),
+                Some(Arc::new(type_sig_options)),
                 Some((file_sig, Arc::from(tolerable_errors))),
                 Arc::new(exports),
                 Arc::from(requires_vec),

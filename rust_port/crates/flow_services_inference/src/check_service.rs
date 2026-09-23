@@ -41,6 +41,8 @@ use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 use flow_type_sig::compact_table::Index;
+use flow_type_sig::packed_type_sig::Module as PackedTypeSigModule;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_type_sig::type_sig_pack as Pack;
 use flow_typing::merge::copy_into;
 use flow_typing::merge::mk_builtins;
@@ -76,10 +78,13 @@ pub struct CheckFileAndCompEnv {
         dyn FnMut(
                 &Context<'static>,
                 &FileKey,
+                &TypeSigOptions,
                 Arc<FileSig>,
                 &Metadata,
                 &[flow_parser::ast::Comment<Loc>],
+                &ast::Program<Loc, Loc>,
                 &ast::Program<ALoc, ALoc>,
+                Option<Arc<PackedTypeSigModule<Loc>>>,
             ) -> Result<
                 ast::Program<ALoc, (ALoc, Type)>,
                 flow_utils_concurrency::job_error::JobError,
@@ -88,6 +93,8 @@ pub struct CheckFileAndCompEnv {
     pub compute_env: Box<
         dyn FnMut(
                 &Context<'static>,
+                &TypeSigOptions,
+                &ast::Program<Loc, Loc>,
                 &ast::Program<ALoc, ALoc>,
             ) -> Result<(), flow_utils_concurrency::job_error::JobError>
             + 'static,
@@ -949,10 +956,13 @@ pub fn mk_check_file(
         Box::new(
             move |cx: &Context<'static>,
                   file_key: &FileKey,
+                  _type_sig_options: &TypeSigOptions,
                   file_sig: Arc<FileSig>,
                   metadata: &Metadata,
                   comments: &[flow_parser::ast::Comment<Loc>],
-                  aloc_ast: &ast::Program<ALoc, ALoc>| {
+                  _ast: &ast::Program<Loc, Loc>,
+                  aloc_ast: &ast::Program<ALoc, ALoc>,
+                  _current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>| {
                 // Set merge_dst_cx to self to establish the chain for copy_into:
                 // nested copy_into calls read this to find the ultimate error
                 // destination (the file being checked).
@@ -972,7 +982,10 @@ pub fn mk_check_file(
     };
 
     let compute_env = Box::new(
-        move |cx: &Context<'static>, aloc_ast: &ast::Program<ALoc, ALoc>| {
+        move |cx: &Context<'static>,
+              _type_sig_options: &TypeSigOptions,
+              _ast: &ast::Program<Loc, Loc>,
+              aloc_ast: &ast::Program<ALoc, ALoc>| {
             cx.set_merge_dst_cx(cx);
             type_inference::initialize_env(cx, None, aloc_ast)
         },

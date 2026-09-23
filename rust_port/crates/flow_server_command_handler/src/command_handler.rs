@@ -987,6 +987,8 @@ fn type_parse_artifacts_for_ac_with_cache(
                 ref ast,
                 ref requires,
                 ref file_sig,
+                type_sig: _,
+                ref type_sig_options,
                 tolerable_errors: _,
                 parse_errors: _,
             } = parse_artifacts;
@@ -1002,6 +1004,7 @@ fn type_parse_artifacts_for_ac_with_cache(
                 ast.dupe(),
                 requires,
                 file_sig.dupe(),
+                type_sig_options.dupe(),
             ) {
                 Ok(Ok(v)) => v,
                 Ok(Err(_)) | Err(_) => {

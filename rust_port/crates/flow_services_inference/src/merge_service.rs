@@ -52,6 +52,7 @@ use flow_type_sig::type_sig_hash;
 use flow_type_sig::type_sig_hash::CheckedDep;
 use flow_type_sig::type_sig_hash::Dependency;
 use flow_type_sig::type_sig_hash::ReadHash;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_type_sig::type_sig_pack::ModuleKind;
 use flow_typing::merge::get_lint_severities;
 use flow_typing::type_inference::scan_for_suppressions;
@@ -846,6 +847,7 @@ fn mk_check_file(
         };
         let ast = parse.ast_unsafe(&file);
         let type_sig = parse.type_sig_unsafe(&file);
+        let type_sig_options = parse.type_sig_options_unsafe(&file);
         let (file_sig, tolerable_errors) = parse.tolerable_file_sig_unsafe(&file);
         let docblock = parse.docblock_unsafe(&file);
         let aloc_table: flow_aloc::LazyALocTable = {
@@ -891,7 +893,17 @@ fn mk_check_file(
         let loc_of_aloc = |aloc: &ALoc| transaction.loc_of_aloc(aloc);
         let (typed_ast_result, obj_to_obj_map) =
             obj_to_obj_hook::with_obj_to_obj_hook(enabled, &loc_of_aloc, || {
-                check_file(&cx, &file, file_sig.dupe(), &metadata, comments, aloc_ast)
+                check_file(
+                    &cx,
+                    &file,
+                    &type_sig_options,
+                    file_sig.dupe(),
+                    &metadata,
+                    comments,
+                    ast_ref.as_ref(),
+                    aloc_ast,
+                    Some(type_sig.dupe()),
+                )
             });
         let typed_ast = match typed_ast_result {
             Ok(typed_ast) => typed_ast,
@@ -989,6 +1001,8 @@ pub fn check_contents_context(
     ast: Arc<ast::Program<Loc, Loc>>,
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
+    type_sig: Option<Arc<flow_type_sig::packed_type_sig::Module<Loc>>>,
+    type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
     (Context<'static>, ast::Program<ALoc, (ALoc, Type)>),
     flow_utils_concurrency::job_error::JobError,
@@ -1050,7 +1064,17 @@ pub fn check_contents_context(
     } = ast_ref.as_ref();
     let aloc_ast = flow_aloc::loc_to_aloc_ast(ast_ref.as_ref());
     let metadata = cx.metadata().clone();
-    let typed_ast = check_file(&cx, &file, file_sig, &metadata, comments, aloc_ast)?;
+    let typed_ast = check_file(
+        &cx,
+        &file,
+        &type_sig_options,
+        file_sig,
+        &metadata,
+        comments,
+        ast_ref.as_ref(),
+        aloc_ast,
+        type_sig,
+    )?;
     Ok((cx, typed_ast))
 }
 
@@ -1064,6 +1088,7 @@ pub fn compute_env_of_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
+    type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<Context<'static>, flow_utils_concurrency::job_error::JobError> {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
@@ -1121,7 +1146,7 @@ pub fn compute_env_of_contents(
         aloc_table,
     );
     let aloc_ast = flow_aloc::loc_to_aloc_ast(ast.as_ref());
-    compute_env(&cx, aloc_ast)?;
+    compute_env(&cx, &type_sig_options, ast.as_ref(), aloc_ast)?;
     Ok(cx)
 }
 
