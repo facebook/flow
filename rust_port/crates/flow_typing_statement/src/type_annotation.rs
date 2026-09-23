@@ -874,6 +874,7 @@ fn convert_unique_symbol<'a>(
     cx: &Context<'a>,
     t: &ast::types::Type<ALoc, ALoc>,
     loc: &ALoc,
+    symbol_loc: &ALoc,
     comments: &Option<ast::Syntax<ALoc, ()>>,
     name_hint: Option<FlowSmolStr>,
 ) -> ast::types::Type<ALoc, (ALoc, Type)> {
@@ -896,6 +897,7 @@ fn convert_unique_symbol<'a>(
         let rt = unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe(), name_hint);
         ast::types::Type::new(TypeInner::UniqueSymbol {
             loc: (loc.dupe(), rt),
+            symbol_loc: symbol_loc.dupe(),
             comments: comments.clone(),
         })
     }
@@ -917,11 +919,17 @@ fn convert_single_binding_value<'a>(
 ) -> Result<ast::types::Type<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     use std::ops::Deref;
 
-    if let ast::types::TypeInner::UniqueSymbol { loc, comments } = value.deref() {
+    if let ast::types::TypeInner::UniqueSymbol {
+        loc,
+        symbol_loc,
+        comments,
+    } = value.deref()
+    {
         Ok(convert_unique_symbol(
             cx,
             value,
             loc,
+            symbol_loc,
             comments,
             name_hint.map(Dupe::dupe),
         ))
@@ -1205,9 +1213,11 @@ fn convert_inner<'a>(
             ))),
             t,
         ),
-        TypeInner::UniqueSymbol { loc, comments } => {
-            convert_unique_symbol(cx, t, loc, comments, None)
-        }
+        TypeInner::UniqueSymbol {
+            loc,
+            symbol_loc,
+            comments,
+        } => convert_unique_symbol(cx, t, loc, symbol_loc, comments, None),
         TypeInner::Nullable { loc, inner } => {
             let t_ast = convert_inner(cx, env, &inner.argument)?;
             let inner_t = t_ast.loc().1.dupe();

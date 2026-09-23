@@ -6845,8 +6845,13 @@ pub fn type_<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             loc: mapper.on_type_annot(loc)?,
             comments: syntax_opt(mapper, comments.as_ref())?,
         },
-        TypeInner::UniqueSymbol { loc, comments } => TypeInner::UniqueSymbol {
+        TypeInner::UniqueSymbol {
+            loc,
+            symbol_loc,
+            comments,
+        } => TypeInner::UniqueSymbol {
             loc: mapper.on_type_annot(loc)?,
+            symbol_loc: mapper.on_loc_annot(symbol_loc)?,
             comments: syntax_opt(mapper, comments.as_ref())?,
         },
         TypeInner::Nullable { loc, inner } => TypeInner::Nullable {

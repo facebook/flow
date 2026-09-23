@@ -81,29 +81,38 @@ describe('MappedType', () => {
     });
 
     test('preserves +readonly', () => {
-      const property = parseMappedTypeProperty(
-        'type Add<T> = {+readonly [K in keyof T]: T[K]};',
-      );
+      const code = 'type Add<T> = {+readonly [K in keyof T]: T[K]};';
+      const property = parseMappedTypeProperty(code);
 
       expect(property).toMatchObject({
         nameType: null,
         variance: {kind: 'readonly'},
         varianceOp: '+',
       });
-      expect(property.variance?.range[0]).toBe(property.range[0]);
+      const readonlyStart = code.indexOf('readonly');
+      expect(property.range[0]).toBe(code.indexOf('+'));
+      expect(property.variance?.range).toEqual([
+        readonlyStart,
+        readonlyStart + 'readonly'.length,
+      ]);
     });
 
     test('preserves -readonly', () => {
-      const property = parseMappedTypeProperty(
-        'type Remove<T> = {-readonly [K in keyof T]: T[K]};',
-      );
+      const code =
+        'type Remove<T> = {- /* comment */ readonly [K in keyof T]: T[K]};';
+      const property = parseMappedTypeProperty(code);
 
       expect(property).toMatchObject({
         nameType: null,
         variance: {kind: 'readonly'},
         varianceOp: '-',
       });
-      expect(property.variance?.range[0]).toBe(property.range[0]);
+      const readonlyStart = code.indexOf('readonly');
+      expect(property.range[0]).toBe(code.indexOf('-'));
+      expect(property.variance?.range).toEqual([
+        readonlyStart,
+        readonlyStart + 'readonly'.length,
+      ]);
     });
 
     test('preserves key remapping', () => {

@@ -12514,7 +12514,11 @@ pub fn type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         TypeInner::Undefined { loc: _, comments } => {
             visitor.syntax_opt(comments.as_ref())?;
         }
-        TypeInner::UniqueSymbol { loc: _, comments } => {
+        TypeInner::UniqueSymbol {
+            loc: _,
+            symbol_loc: _,
+            comments,
+        } => {
             visitor.syntax_opt(comments.as_ref())?;
         }
         TypeInner::Nullable { loc: _, inner } => {
@@ -12697,10 +12701,15 @@ pub fn map_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
                 comments: comments_,
             })
         }
-        TypeInner::UniqueSymbol { loc, comments } => {
+        TypeInner::UniqueSymbol {
+            loc,
+            symbol_loc,
+            comments,
+        } => {
             let comments_ = visitor.map_syntax_opt(comments.as_ref());
             ast::types::Type::new(TypeInner::UniqueSymbol {
                 loc: loc.dupe(),
+                symbol_loc: symbol_loc.dupe(),
                 comments: comments_,
             })
         }

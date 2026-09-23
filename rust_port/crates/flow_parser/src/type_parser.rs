@@ -756,9 +756,11 @@ fn primary(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rollback> {
                 let leading = peek::comments(env);
                 eat::token(env)?;
                 let trailing = eat::trailing_comments(env);
+                let symbol_loc = peek::loc(env).dupe();
                 eat::token(env)?;
                 Ok(TypeInner::UniqueSymbol {
                     loc: LOC_NONE,
+                    symbol_loc,
                     comments: mk_comments_opt(Some(leading.into()), Some(trailing.into())),
                 })
             })?;
@@ -3545,23 +3547,16 @@ fn object_type(
                         }
                     };
                     if variance_allows && object_key_after_current_in_normal_mode(env, is_class) {
-                        let (variance_op, variance_op_loc) = match &variance {
-                            Some(v) if v.kind == VarianceKind::Plus => (
-                                Some(types::object::MappedTypeVarianceOp::Add),
-                                Some(v.loc.dupe()),
-                            ),
-                            Some(v) if v.kind == VarianceKind::Minus => (
-                                Some(types::object::MappedTypeVarianceOp::Remove),
-                                Some(v.loc.dupe()),
-                            ),
-                            _ => (None, None),
+                        let variance_op = match &variance {
+                            Some(v) if v.kind == VarianceKind::Plus => {
+                                Some(types::object::MappedTypeVarianceOp::Add)
+                            }
+                            Some(v) if v.kind == VarianceKind::Minus => {
+                                Some(types::object::MappedTypeVarianceOp::Remove)
+                            }
+                            _ => None,
                         };
                         variance = maybe_variance(env, true, false)?;
-                        if let (Some(variance_op_loc), Some(variance)) =
-                            (variance_op_loc, variance.as_mut())
-                        {
-                            variance.loc = Loc::between(&variance_op_loc, &variance.loc);
-                        }
                         return property(
                             env,
                             start_loc,
@@ -4443,8 +4438,13 @@ fn add_comments(
             loc: loc.dupe(),
             comments: ast_utils::merge_comments(comments.dupe(), outer),
         }),
-        TypeInner::UniqueSymbol { loc, comments } => types::Type::new(TypeInner::UniqueSymbol {
+        TypeInner::UniqueSymbol {
+            loc,
+            symbol_loc,
+            comments,
+        } => types::Type::new(TypeInner::UniqueSymbol {
             loc: loc.dupe(),
+            symbol_loc: symbol_loc.dupe(),
             comments: ast_utils::merge_comments(comments.dupe(), outer),
         }),
         TypeInner::Nullable { loc, inner } => {

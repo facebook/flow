@@ -262,12 +262,12 @@
                 },
                 "source": null,
                 "start": {
-                  "column": 12,
+                  "column": 13,
                   "line": 1
                 }
               },
               "range": [
-                12,
+                13,
                 21
               ],
               "type": "Variance"
@@ -546,12 +546,12 @@
                 },
                 "source": null,
                 "start": {
-                  "column": 12,
+                  "column": 13,
                   "line": 2
                 }
               },
               "range": [
-                58,
+                59,
                 67
               ],
               "type": "Variance"
@@ -830,12 +830,12 @@
                 },
                 "source": null,
                 "start": {
-                  "column": 12,
+                  "column": 13,
                   "line": 3
                 }
               },
               "range": [
-                104,
+                105,
                 113
               ],
               "type": "Variance"
@@ -1135,13 +1135,359 @@
       },
       "type": "TypeAlias",
       "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 7,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 5
+          }
+        },
+        "name": "T5",
+        "optional": false,
+        "range": [
+          190,
+          192
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 61,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        185,
+        246
+      ],
+      "right": {
+        "callProperties": [],
+        "exact": false,
+        "indexers": [],
+        "inexact": false,
+        "internalSlots": [],
+        "loc": {
+          "end": {
+            "column": 60,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 13,
+            "line": 5
+          }
+        },
+        "properties": [
+          {
+            "keyTparam": {
+              "bound": null,
+              "const": false,
+              "default": null,
+              "loc": {
+                "end": {
+                  "column": 41,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 40,
+                  "line": 5
+                }
+              },
+              "name": "K",
+              "range": [
+                225,
+                226
+              ],
+              "type": "TypeParameter",
+              "variance": null
+            },
+            "loc": {
+              "end": {
+                "column": 59,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 14,
+                "line": 5
+              }
+            },
+            "nameType": null,
+            "optional": null,
+            "propType": {
+              "indexType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 58,
+                      "line": 5
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 57,
+                      "line": 5
+                    }
+                  },
+                  "name": "K",
+                  "optional": false,
+                  "range": [
+                    242,
+                    243
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 58,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 57,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  242,
+                  243
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 59,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 55,
+                  "line": 5
+                }
+              },
+              "objectType": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 56,
+                      "line": 5
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 55,
+                      "line": 5
+                    }
+                  },
+                  "name": "O",
+                  "optional": false,
+                  "range": [
+                    240,
+                    241
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 56,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 55,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  240,
+                  241
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "range": [
+                240,
+                244
+              ],
+              "type": "IndexedAccessType"
+            },
+            "range": [
+              199,
+              244
+            ],
+            "sourceType": {
+              "argument": {
+                "id": {
+                  "loc": {
+                    "end": {
+                      "column": 52,
+                      "line": 5
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 51,
+                      "line": 5
+                    }
+                  },
+                  "name": "O",
+                  "optional": false,
+                  "range": [
+                    236,
+                    237
+                  ],
+                  "type": "Identifier",
+                  "typeAnnotation": null
+                },
+                "loc": {
+                  "end": {
+                    "column": 52,
+                    "line": 5
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 51,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  236,
+                  237
+                ],
+                "type": "GenericTypeAnnotation",
+                "typeParameters": null
+              },
+              "loc": {
+                "end": {
+                  "column": 52,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 45,
+                  "line": 5
+                }
+              },
+              "range": [
+                230,
+                237
+              ],
+              "type": "KeyofTypeAnnotation"
+            },
+            "type": "ObjectTypeMappedTypeProperty",
+            "variance": {
+              "kind": "readonly",
+              "loc": {
+                "end": {
+                  "column": 38,
+                  "line": 5
+                },
+                "source": null,
+                "start": {
+                  "column": 30,
+                  "line": 5
+                }
+              },
+              "range": [
+                215,
+                223
+              ],
+              "type": "Variance"
+            },
+            "varianceOp": "-"
+          }
+        ],
+        "range": [
+          198,
+          245
+        ],
+        "type": "ObjectTypeAnnotation"
+      },
+      "type": "TypeAlias",
+      "typeParameters": {
+        "loc": {
+          "end": {
+            "column": 10,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 7,
+            "line": 5
+          }
+        },
+        "params": [
+          {
+            "bound": null,
+            "const": false,
+            "default": null,
+            "loc": {
+              "end": {
+                "column": 9,
+                "line": 5
+              },
+              "source": null,
+              "start": {
+                "column": 8,
+                "line": 5
+              }
+            },
+            "name": "O",
+            "range": [
+              193,
+              194
+            ],
+            "type": "TypeParameter",
+            "variance": null
+          }
+        ],
+        "range": [
+          192,
+          195
+        ],
+        "type": "TypeParameterDeclaration"
+      }
     }
   ],
-  "comments": [],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 29,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 16,
+          "line": 5
+        }
+      },
+      "range": [
+        201,
+        214
+      ],
+      "type": "Block",
+      "value": " comment "
+    }
+  ],
   "loc": {
     "end": {
-      "column": 44,
-      "line": 4
+      "column": 61,
+      "line": 5
     },
     "source": null,
     "start": {
@@ -1151,7 +1497,7 @@
   },
   "range": [
     0,
-    184
+    246
   ],
   "type": "Program"
 }

@@ -183,6 +183,7 @@ impl NormalizeTypeLocAndCommentMapper {
             },
             TypeInner::UniqueSymbol { comments, .. } => TypeInner::UniqueSymbol {
                 loc: LOC_NONE,
+                symbol_loc: LOC_NONE,
                 comments: comments.clone(),
             },
         }

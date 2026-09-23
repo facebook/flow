@@ -1489,6 +1489,7 @@ pub mod types {
         },
         UniqueSymbol {
             loc: T,
+            symbol_loc: M,
             comments: Option<Syntax<M, ()>>,
         },
     }

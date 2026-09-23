@@ -489,10 +489,10 @@ impl<'a> Serializer<'a> {
                 self.write_str("readonly");
                 self.serialize_type(&inner.argument);
             }
-            TypeInner::UniqueSymbol { loc, .. } => {
+            TypeInner::UniqueSymbol { loc, symbol_loc, .. } => {
                 self.write_node_header(NodeKind::TypeOperator, loc);
                 self.write_str("unique");
-                self.write_node_header(NodeKind::SymbolTypeAnnotation, loc);
+                self.write_node_header(NodeKind::SymbolTypeAnnotation, symbol_loc);
             }
             TypeInner::StringLiteral { loc, literal } => {
                 self.write_node_header(NodeKind::StringLiteralTypeAnnotation, loc);

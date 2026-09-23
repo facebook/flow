@@ -1,115 +1,446 @@
 {
-  "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":23}},
-  "range":[0,94],
-  "body":[
+  "body": [
     {
-      "type":"DeclareVariable",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":31}},
-      "range":[0,31],
-      "declarations":[
+      "declarations": [
         {
-          "type":"VariableDeclarator",
-          "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":30}},
-          "range":[14,30],
-          "id":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":30}},
-            "range":[14,30],
-            "name":"a",
-            "typeAnnotation":{
-              "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":30}},
-              "range":[15,30],
-              "typeAnnotation":{
-                "type":"TypeOperator",
-                "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":30}},
-                "range":[17,30],
-                "operator":"unique",
-                "typeAnnotation":{
-                  "type":"SymbolTypeAnnotation",
-                  "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":30}},
-                  "range":[17,30]
+          "id": {
+            "loc": {
+              "end": {
+                "column": 30,
+                "line": 1
+              },
+              "source": null,
+              "start": {
+                "column": 14,
+                "line": 1
+              }
+            },
+            "name": "a",
+            "optional": false,
+            "range": [
+              14,
+              30
+            ],
+            "type": "Identifier",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 30,
+                  "line": 1
+                },
+                "source": null,
+                "start": {
+                  "column": 15,
+                  "line": 1
+                }
+              },
+              "range": [
+                15,
+                30
+              ],
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 30,
+                    "line": 1
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 17,
+                    "line": 1
+                  }
+                },
+                "operator": "unique",
+                "range": [
+                  17,
+                  30
+                ],
+                "type": "TypeOperator",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 30,
+                      "line": 1
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 24,
+                      "line": 1
+                    }
+                  },
+                  "range": [
+                    24,
+                    30
+                  ],
+                  "type": "SymbolTypeAnnotation"
+                }
+              }
+            }
+          },
+          "init": null,
+          "loc": {
+            "end": {
+              "column": 30,
+              "line": 1
+            },
+            "source": null,
+            "start": {
+              "column": 14,
+              "line": 1
+            }
+          },
+          "range": [
+            14,
+            30
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 31,
+          "line": 1
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        31
+      ],
+      "type": "DeclareVariable"
+    },
+    {
+      "declaration": {
+        "declarations": [
+          {
+            "id": {
+              "loc": {
+                "end": {
+                  "column": 37,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 2
+                }
+              },
+              "name": "b",
+              "optional": false,
+              "range": [
+                53,
+                69
+              ],
+              "type": "Identifier",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 37,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 22,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  54,
+                  69
+                ],
+                "type": "TypeAnnotation",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 37,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 24,
+                      "line": 2
+                    }
+                  },
+                  "operator": "unique",
+                  "range": [
+                    56,
+                    69
+                  ],
+                  "type": "TypeOperator",
+                  "typeAnnotation": {
+                    "loc": {
+                      "end": {
+                        "column": 37,
+                        "line": 2
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 31,
+                        "line": 2
+                      }
+                    },
+                    "range": [
+                      63,
+                      69
+                    ],
+                    "type": "SymbolTypeAnnotation"
+                  }
                 }
               }
             },
-            "optional":false
-          },
-          "init":null
-        }
-      ],
-      "kind":"const"
-    },
-    {
-      "type":"DeclareExportDeclaration",
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":38}},
-      "range":[32,70],
-      "default":false,
-      "declaration":{
-        "type":"DeclareVariable",
-        "loc":{"source":null,"start":{"line":2,"column":15},"end":{"line":2,"column":38}},
-        "range":[47,70],
-        "declarations":[
-          {
-            "type":"VariableDeclarator",
-            "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":37}},
-            "range":[53,69],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":2,"column":21},"end":{"line":2,"column":37}},
-              "range":[53,69],
-              "name":"b",
-              "typeAnnotation":{
-                "type":"TypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":22},"end":{"line":2,"column":37}},
-                "range":[54,69],
-                "typeAnnotation":{
-                  "type":"TypeOperator",
-                  "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":2,"column":37}},
-                  "range":[56,69],
-                  "operator":"unique",
-                  "typeAnnotation":{
-                    "type":"SymbolTypeAnnotation",
-                    "loc":{"source":null,"start":{"line":2,"column":24},"end":{"line":2,"column":37}},
-                    "range":[56,69]
-                  }
-                }
+            "init": null,
+            "loc": {
+              "end": {
+                "column": 37,
+                "line": 2
               },
-              "optional":false
+              "source": null,
+              "start": {
+                "column": 21,
+                "line": 2
+              }
             },
-            "init":null
+            "range": [
+              53,
+              69
+            ],
+            "type": "VariableDeclarator"
           }
         ],
-        "kind":"const"
+        "kind": "const",
+        "loc": {
+          "end": {
+            "column": 38,
+            "line": 2
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 2
+          }
+        },
+        "range": [
+          47,
+          70
+        ],
+        "type": "DeclareVariable"
       },
-      "specifiers":[],
-      "source":null
+      "default": false,
+      "loc": {
+        "end": {
+          "column": 38,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 2
+        }
+      },
+      "range": [
+        32,
+        70
+      ],
+      "source": null,
+      "specifiers": [],
+      "type": "DeclareExportDeclaration"
     },
     {
-      "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":23}},
-      "range":[71,94],
-      "id":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":6}},
-        "range":[76,77],
-        "name":"T",
-        "typeAnnotation":null,
-        "optional":false
+      "id": {
+        "loc": {
+          "end": {
+            "column": 6,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 3
+          }
+        },
+        "name": "T",
+        "optional": false,
+        "range": [
+          76,
+          77
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
       },
-      "typeParameters":null,
-      "right":{
-        "type":"TypeOperator",
-        "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":22}},
-        "range":[80,93],
-        "operator":"unique",
-        "typeAnnotation":{
-          "type":"SymbolTypeAnnotation",
-          "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":22}},
-          "range":[80,93]
+      "loc": {
+        "end": {
+          "column": 23,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 3
         }
-      }
+      },
+      "range": [
+        71,
+        94
+      ],
+      "right": {
+        "loc": {
+          "end": {
+            "column": 22,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 9,
+            "line": 3
+          }
+        },
+        "operator": "unique",
+        "range": [
+          80,
+          93
+        ],
+        "type": "TypeOperator",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 22,
+              "line": 3
+            },
+            "source": null,
+            "start": {
+              "column": 16,
+              "line": 3
+            }
+          },
+          "range": [
+            87,
+            93
+          ],
+          "type": "SymbolTypeAnnotation"
+        }
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
+    },
+    {
+      "id": {
+        "loc": {
+          "end": {
+            "column": 17,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 5,
+            "line": 4
+          }
+        },
+        "name": "TWithComment",
+        "optional": false,
+        "range": [
+          100,
+          112
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "loc": {
+        "end": {
+          "column": 48,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 4
+        }
+      },
+      "range": [
+        95,
+        143
+      ],
+      "right": {
+        "loc": {
+          "end": {
+            "column": 47,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 20,
+            "line": 4
+          }
+        },
+        "operator": "unique",
+        "range": [
+          115,
+          142
+        ],
+        "type": "TypeOperator",
+        "typeAnnotation": {
+          "loc": {
+            "end": {
+              "column": 47,
+              "line": 4
+            },
+            "source": null,
+            "start": {
+              "column": 41,
+              "line": 4
+            }
+          },
+          "range": [
+            136,
+            142
+          ],
+          "type": "SymbolTypeAnnotation"
+        }
+      },
+      "type": "TypeAlias",
+      "typeParameters": null
     }
   ],
-  "comments":[]
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 40,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 27,
+          "line": 4
+        }
+      },
+      "range": [
+        122,
+        135
+      ],
+      "type": "Block",
+      "value": " comment "
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 48,
+      "line": 4
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    143
+  ],
+  "type": "Program"
 }
