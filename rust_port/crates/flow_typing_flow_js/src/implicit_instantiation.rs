@@ -17,6 +17,7 @@ use flow_common::enclosing_context::EnclosingContext;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
+use flow_common::reason::mk_id;
 use flow_common::subst_name;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -60,6 +61,7 @@ use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumKind;
 use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::HintEvalResult;
+use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
@@ -214,13 +216,11 @@ trait Observer {
 
 fn get_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     let no_lowers = |_cx: &Context, r: &Reason| unsoundness::merged_any(r.dupe());
-    match t.deref() {
-        TypeInner::OpenT(tvar) => {
-            let r = tvar.reason();
-            let id = tvar.id() as i32;
-            flow_js_utils::merge_tvar(cx, false, no_lowers, r, id)
+    match type_util::constraint_node_id(t) {
+        Some(node) => {
+            flow_js_utils::merge_tvar(cx, false, no_lowers, type_util::reason_of_t(t), node.id())
         }
-        _ => t.dupe(),
+        None => t.dupe(),
     }
 }
 
@@ -418,7 +418,7 @@ fn t_of_use_t<'cx>(
     }
 
     match u.deref() {
-        UseTInner::UseT(_, t) if let TypeInner::OpenT(_) = t.deref() => {
+        UseTInner::UseT(_, t) if type_util::constraint_node_id(t).is_some() => {
             merge_upper_bounds(cx, env, seen, t)
         }
         UseTInner::UseT(_, t) => Ok(UseTResult::UpperT(t.dupe())),
@@ -1127,6 +1127,25 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
     }
 }
 
+enum PinningSource<'cx> {
+    Constraints {
+        id: i32,
+        constraints: constraint::Constraints<'cx, Context<'cx>>,
+    },
+    Concrete(Type),
+}
+
+fn pinning_source<'cx>(cx: &Context<'cx>, t: &Type) -> PinningSource<'cx> {
+    match type_util::constraint_node_id(t) {
+        Some(node) => {
+            let id = node.id();
+            let (_, constraints) = cx.find_constraints(id);
+            PinningSource::Constraints { id, constraints }
+        }
+        None => PinningSource::Concrete(t.dupe()),
+    }
+}
+
 // merge_upper_bounds is complex — it looks at upper bounds and tries to find a consistent type.
 // For now we provide a simplified version that handles the common cases.
 fn merge_upper_bounds<'cx>(
@@ -1144,13 +1163,11 @@ fn merge_upper_bounds<'cx>(
     };
     let equal = |t1: &Type, t2: &Type| concrete_type_eq::eq_with_env(cx, env, t1, t2);
 
-    match tvar.deref() {
-        TypeInner::OpenT(open_t) => {
-            let id = open_t.id() as i32;
+    match pinning_source(cx, tvar) {
+        PinningSource::Constraints { id, constraints } => {
             if seen.contains(&id) {
                 return Ok(UseTResult::UpperEmpty);
             }
-            let constraints = cx.find_graph(id);
             match constraints {
                 constraint::Constraints::FullyResolved(s) => {
                     Ok(filter_placeholder(cx.force_fully_resolved_tvar(&s)))
@@ -1210,7 +1227,7 @@ fn merge_upper_bounds<'cx>(
                 }
             }
         }
-        _ => Ok(UseTResult::UpperT(tvar.dupe())),
+        PinningSource::Concrete(t) => Ok(UseTResult::UpperT(t)),
     }
 }
 
@@ -1223,79 +1240,65 @@ fn merge_lower_bounds<'cx>(
     // discounting lower bounds that are just waiting to be added as soon as the
     // ReposUseT fires. Here, we make sure we record the result of the ReposUseT
     // before we make a decision based on lower bounds.
-    let t_resolved = match t.deref() {
-        TypeInner::OpenT(open_t) => {
-            let id = open_t.id() as i32;
-            let constraints = cx.find_graph(id);
-            match constraints {
-                constraint::Constraints::Unresolved(bounds) => {
-                    let upper = bounds.borrow().upper.clone();
-                    for key in upper.keys() {
-                        if let UseTInner::ReposUseT(box ReposUseTData { type_: ref l, .. }) =
-                            *key.use_t
-                        {
-                            FlowJs::flow_t_with_env(cx, env, l, t)?;
-                        }
-                    }
-                    t.dupe()
-                }
-                _ => t.dupe(),
+    if let PinningSource::Constraints {
+        constraints: constraint::Constraints::Unresolved(bounds),
+        ..
+    } = pinning_source(cx, t)
+    {
+        let upper = bounds.borrow().upper.clone();
+        for key in upper.keys() {
+            if let UseTInner::ReposUseT(box ReposUseTData { type_: ref l, .. }) = *key.use_t {
+                FlowJs::flow_t_with_env(cx, env, l, t)?;
             }
         }
-        _ => t.dupe(),
-    };
+    }
 
-    Ok(match t_resolved.deref() {
-        TypeInner::OpenT(open_t) => {
-            let r = open_t.reason();
-            let id = open_t.id() as i32;
-            let constraints = cx.find_graph(id);
-            match constraints {
-                constraint::Constraints::FullyResolved(s) => {
-                    let t = cx.force_fully_resolved_tvar(&s);
-                    if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
-                        None
-                    } else {
-                        Some(t)
-                    }
-                }
-                constraint::Constraints::Resolved(t) => {
-                    if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
-                        None
-                    } else {
-                        Some(t)
-                    }
-                }
-                constraint::Constraints::Unresolved(bounds) => {
-                    let lower_types: Vec<Type> = bounds.borrow().lower.keys().duped().collect();
-                    if lower_types.is_empty() {
-                        None
-                    } else {
-                        let mut seen = BTreeSet::new();
-                        seen.insert(id);
-                        let mut collected = Vec::new();
-                        flow_js_utils::collect_lowers(
-                            false,
-                            cx,
-                            &mut seen,
-                            &mut collected,
-                            lower_types,
-                        );
-                        let flattened = union_flatten_list(collected);
-                        let filtered: Vec<Type> = flattened
-                            .into_iter()
-                            .filter(|t| !flow_js_utils::tvar_visitors::has_placeholders(cx, t))
-                            .collect();
-                        type_util::union_of_ts_opt(
-                            r.dupe(),
-                            filtered,
-                            Some(union_rep::UnionKind::ImplicitInstantiationKind),
-                        )
-                    }
+    Ok(match pinning_source(cx, t) {
+        PinningSource::Constraints { id, constraints } => match constraints {
+            constraint::Constraints::FullyResolved(s) => {
+                let t = cx.force_fully_resolved_tvar(&s);
+                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
+                    None
+                } else {
+                    Some(t)
                 }
             }
-        }
-        _ => Some(t_resolved),
+            constraint::Constraints::Resolved(t) => {
+                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
+                    None
+                } else {
+                    Some(t)
+                }
+            }
+            constraint::Constraints::Unresolved(bounds) => {
+                let lower_types: Vec<Type> = bounds.borrow().lower.keys().duped().collect();
+                if lower_types.is_empty() {
+                    None
+                } else {
+                    let mut seen = BTreeSet::new();
+                    seen.insert(id);
+                    let mut collected = Vec::new();
+                    flow_js_utils::collect_lowers(
+                        false,
+                        cx,
+                        &mut seen,
+                        &mut collected,
+                        lower_types,
+                    );
+                    let flattened = union_flatten_list(collected);
+                    let filtered: Vec<Type> = flattened
+                        .into_iter()
+                        .filter(|t| !flow_js_utils::tvar_visitors::has_placeholders(cx, t))
+                        .collect();
+                    type_util::union_of_ts_opt(
+                        type_util::reason_of_t(t).dupe(),
+                        filtered,
+                        Some(union_rep::UnionKind::ImplicitInstantiationKind),
+                    )
+                }
+            }
+        },
+        PinningSource::Concrete(t) => Some(t),
     })
 }
 
@@ -1367,6 +1370,29 @@ fn use_upper_bounds<'cx, Obs: Observer>(
     }
 }
 
+fn mk_inference_targ<'cx>(
+    cx: &Context<'cx>,
+    typeparam: &TypeParam,
+    reason_op: &Reason,
+    reason_tapp: &Reason,
+) -> Type {
+    let reason = instantiation_utils::implicit_type_argument::mk_targ_reason(
+        typeparam,
+        reason_op,
+        reason_tapp,
+    );
+    let inference_id = mk_id() as i32;
+    cx.add_inference_node(inference_id);
+    Type::new(TypeInner::ImplicitInstantiationTvar(Box::new(
+        ImplicitInstantiationTvarData {
+            reason,
+            name: typeparam.name.dupe(),
+            bound: typeparam.bound.dupe(),
+            id: inference_id,
+        },
+    )))
+}
+
 fn check_instantiation<'cx, Obs: Observer>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -1395,12 +1421,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                 let mut inferred_targ_and_bound_list: Vec<(SubstName, Type, Type, bool)> =
                     Vec::new();
                 for tparam in tparams.iter() {
-                    let targ = instantiation_utils::implicit_type_argument::mk_targ(
-                        cx,
-                        tparam,
-                        reason_op,
-                        reason_tapp,
-                    );
+                    let targ = mk_inference_targ(cx, tparam, reason_op, reason_tapp);
                     targs.push(Targ::ExplicitArg(targ.dupe()));
                     inferred_targ_and_bound_list.push((
                         tparam.name.dupe(),
@@ -1439,12 +1460,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                             break;
                         }
                         (Some(tparam), None) => {
-                            let targ = instantiation_utils::implicit_type_argument::mk_targ(
-                                cx,
-                                tparam,
-                                reason_op,
-                                reason_tapp,
-                            );
+                            let targ = mk_inference_targ(cx, tparam, reason_op, reason_tapp);
                             if tparam.default.is_none() {
                                 flow_js_utils::add_output_with_env(
                                     cx,
@@ -1481,12 +1497,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                                         VirtualReasonDesc::RImplicitInstantiation,
                                         r.loc().dupe(),
                                     );
-                                    let targ = instantiation_utils::implicit_type_argument::mk_targ(
-                                        cx,
-                                        tparam,
-                                        &reason,
-                                        reason_tapp,
-                                    );
+                                    let targ = mk_inference_targ(cx, tparam, &reason, reason_tapp);
                                     FlowJs::flow_with_env(
                                         cx,
                                         env,

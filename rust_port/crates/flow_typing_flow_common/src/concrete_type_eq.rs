@@ -18,6 +18,7 @@ use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::constraint::Constraints;
 use flow_typing_type::type_::nominal;
+use flow_typing_type::type_util;
 use flow_typing_type::type_util::mod_reason_of_t;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_type::type_util::reasonless_cmp_inner_fast;
@@ -198,84 +199,77 @@ pub fn eq_with_env<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t1: &Type, t2: &Type
         return true;
     }
 
-    match (t1.deref(), t2.deref()) {
-        (TypeInner::OpenT(tvar1), TypeInner::OpenT(tvar2))
-            if {
-                let id1 = tvar1.id() as i32;
-                let id2 = tvar2.id() as i32;
-                let root_id1 = cx.find_root_id(id1);
-                let root_id2 = cx.find_root_id(id2);
-                root_id1 == root_id2
-            } =>
+    match (
+        type_util::constraint_node_id(t1),
+        type_util::constraint_node_id(t2),
+    ) {
+        (Some(node1), Some(node2))
+            if cx.find_constraints(node1.id()).0 == cx.find_constraints(node2.id()).0 =>
         {
             true
         }
-        (TypeInner::OpenT(tvar), _) => {
-            let id1 = tvar.id() as i32;
-            match cx.find_graph(id1) {
-                Constraints::Resolved(resolved_t1) => eq_with_env(cx, env, &resolved_t1, t2),
-                Constraints::FullyResolved(s1) => {
-                    eq_with_env(cx, env, &cx.force_fully_resolved_tvar(&s1), t2)
+        (Some(node1), _) => match cx.find_constraints(node1.id()).1 {
+            Constraints::Resolved(resolved_t1) => eq_with_env(cx, env, &resolved_t1, t2),
+            Constraints::FullyResolved(s1) => {
+                eq_with_env(cx, env, &cx.force_fully_resolved_tvar(&s1), t2)
+            }
+            Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
+        },
+        (_, Some(node2)) => match cx.find_constraints(node2.id()).1 {
+            Constraints::Resolved(resolved_t2) => eq_with_env(cx, env, t1, &resolved_t2),
+            Constraints::FullyResolved(s2) => {
+                eq_with_env(cx, env, t1, &cx.force_fully_resolved_tvar(&s2))
+            }
+            Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
+        },
+        (None, None) => match (t1.deref(), t2.deref()) {
+            (TypeInner::AnnotT(_, inner_t1, _), _) => eq_with_env(cx, env, inner_t1, t2),
+            (_, TypeInner::AnnotT(_, inner_t2, _)) => eq_with_env(cx, env, t1, inner_t2),
+            (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
+                let members1: Vec<_> = rep1.members_iter().collect();
+                let members2: Vec<_> = rep2.members_iter().collect();
+                if members1.len() != members2.len() {
+                    return false;
                 }
-                Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
+                members1
+                    .iter()
+                    .zip(members2.iter())
+                    .all(|(m1, m2)| eq_with_env(cx, env, m1, m2))
             }
-        }
-        (_, TypeInner::OpenT(tvar)) => {
-            let id2 = tvar.id() as i32;
-            match cx.find_graph(id2) {
-                Constraints::Resolved(resolved_t2) => eq_with_env(cx, env, t1, &resolved_t2),
-                Constraints::FullyResolved(s2) => {
-                    eq_with_env(cx, env, t1, &cx.force_fully_resolved_tvar(&s2))
+            (TypeInner::EvalT { id, .. }, _) => {
+                let evaluated = cx.evaluated();
+                match evaluated.get(id) {
+                    Some(t) => eq_with_env(cx, env, t, t2),
+                    None => eq_swap_reason(t1, t2),
                 }
-                Constraints::Unresolved(_) => eq_swap_reason(t1, t2),
             }
-        }
-        (TypeInner::AnnotT(_, inner_t1, _), _) => eq_with_env(cx, env, inner_t1, t2),
-        (_, TypeInner::AnnotT(_, inner_t2, _)) => eq_with_env(cx, env, t1, inner_t2),
-        (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
-            let members1: Vec<_> = rep1.members_iter().collect();
-            let members2: Vec<_> = rep2.members_iter().collect();
-            if members1.len() != members2.len() {
-                return false;
+            (_, TypeInner::EvalT { id, .. }) => {
+                let evaluated = cx.evaluated();
+                match evaluated.get(id) {
+                    Some(t) => eq_with_env(cx, env, t1, t),
+                    None => eq_swap_reason(t1, t2),
+                }
             }
-            members1
-                .iter()
-                .zip(members2.iter())
-                .all(|(m1, m2)| eq_with_env(cx, env, m1, m2))
-        }
-        (TypeInner::EvalT { id, .. }, _) => {
-            let evaluated = cx.evaluated();
-            match evaluated.get(id) {
-                Some(t) => eq_with_env(cx, env, t, t2),
-                None => eq_swap_reason(t1, t2),
+            (
+                TypeInner::TypeAppT(box TypeAppTData {
+                    type_: inner_t1,
+                    targs: targs1,
+                    from_value: fv1,
+                    ..
+                }),
+                TypeInner::TypeAppT(box TypeAppTData {
+                    type_: inner_t2,
+                    targs: targs2,
+                    from_value: fv2,
+                    ..
+                }),
+            ) => {
+                eq_with_env(cx, env, inner_t1, inner_t2)
+                    && fv1 == fv2
+                    && eq_targs(cx, env, targs1, targs2)
             }
-        }
-        (_, TypeInner::EvalT { id, .. }) => {
-            let evaluated = cx.evaluated();
-            match evaluated.get(id) {
-                Some(t) => eq_with_env(cx, env, t1, t),
-                None => eq_swap_reason(t1, t2),
-            }
-        }
-        (
-            TypeInner::TypeAppT(box TypeAppTData {
-                type_: inner_t1,
-                targs: targs1,
-                from_value: fv1,
-                ..
-            }),
-            TypeInner::TypeAppT(box TypeAppTData {
-                type_: inner_t2,
-                targs: targs2,
-                from_value: fv2,
-                ..
-            }),
-        ) => {
-            eq_with_env(cx, env, inner_t1, inner_t2)
-                && fv1 == fv2
-                && eq_targs(cx, env, targs1, targs2)
-        }
-        _ => eq_swap_reason(t1, t2),
+            _ => eq_swap_reason(t1, t2),
+        },
     }
 }
 

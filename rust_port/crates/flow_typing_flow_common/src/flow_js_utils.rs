@@ -85,6 +85,7 @@ use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
+use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
 use vec1::Vec1;
@@ -130,14 +131,16 @@ pub enum PolymorphicClassKind {
 pub fn polymorphic_class_kind<'cx>(cx: &Context<'cx>, t: &Type) -> PolymorphicClassKind {
     fn resolve<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
         match t.deref() {
-            TypeInner::OpenT(open_t) => match cx.find_graph(open_t.id() as i32) {
-                Constraints::Resolved(t) => resolve(cx, &t),
-                Constraints::FullyResolved(s) => {
-                    let forced = cx.force_fully_resolved_tvar(&s);
-                    resolve(cx, &forced)
+            _ if let Some(node) = type_util::constraint_node_id(t) => {
+                match cx.find_constraints(node.id()).1 {
+                    Constraints::Resolved(t) => resolve(cx, &t),
+                    Constraints::FullyResolved(s) => {
+                        let forced = cx.force_fully_resolved_tvar(&s);
+                        resolve(cx, &forced)
+                    }
+                    Constraints::Unresolved(_) => t.dupe(),
                 }
-                Constraints::Unresolved(_) => t.dupe(),
-            },
+            }
             TypeInner::AnnotT(_, inner_t, _) => resolve(cx, inner_t),
             _ => t.dupe(),
         }
@@ -171,18 +174,18 @@ pub fn polymorphic_class_kind<'cx>(cx: &Context<'cx>, t: &Type) -> PolymorphicCl
 //
 // Def types that describe the solution of a type variable.
 pub fn possible_types<'cx>(cx: &Context<'cx>, id: i32) -> Vec<Type> {
-    types_of(cx, &cx.find_graph(id))
+    types_of(cx, &cx.find_constraints(id).1)
 }
 
 pub fn possible_types_of_type<'cx>(cx: &Context<'cx>, t: &Type) -> Vec<Type> {
-    match t.deref() {
-        TypeInner::OpenT(open_t) => possible_types(cx, open_t.id() as i32),
-        _ => Vec::new(),
+    match type_util::constraint_node_id(t) {
+        Some(node) => possible_types(cx, node.id()),
+        None => Vec::new(),
     }
 }
 
 pub fn possible_uses<'cx>(cx: &Context<'cx>, id: i32) -> Vec<UseT<Context<'cx>>> {
-    uses_of(cx, &cx.find_graph(id))
+    uses_of(cx, &cx.find_constraints(id).1)
 }
 
 // Does [t] carry an [abstract] bit? Any-abstract over both connectives: a
@@ -612,9 +615,9 @@ pub fn collect_lowers<'cx>(
 ) {
     let mut work_list = VecDeque::from(ts);
     while let Some(t) = work_list.pop_front() {
-        match t.deref() {
-            TypeInner::OpenT(open_t) => {
-                let id = open_t.id() as i32;
+        match type_util::constraint_node_id(&t) {
+            Some(node) => {
+                let id = node.id();
                 if seen.contains(&id) {
                     // already unwrapped, continue
                     continue;
@@ -626,7 +629,9 @@ pub fn collect_lowers<'cx>(
                     }
                 }
             }
-            TypeInner::DefT(_, def_t) if filter_empty => {
+            None if let TypeInner::DefT(_, def_t) = t.deref()
+                && filter_empty =>
+            {
                 if matches!(def_t.deref(), DefTInner::EmptyT) {
                     continue;
                 } else {
@@ -799,6 +804,7 @@ pub mod invalid_cyclic_type_validation {
                 | TypeInner::TemplateLiteralT { .. }
                 | TypeInner::StringMappingT { .. }
                 | TypeInner::OpenT(_)
+                | TypeInner::ImplicitInstantiationTvar(_)
                 | TypeInner::IntersectionT(_, _)
                 | TypeInner::UnionT(_, _)
                 | TypeInner::MaybeT(_, _)
@@ -902,11 +908,11 @@ pub mod invalid_cyclic_type_validation {
 }
 
 pub fn unwrap_fully_resolved_open_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
-    let unwrapped = match t.deref() {
-        TypeInner::OpenT(open_t) => {
-            let r = open_t.reason();
-            let id = open_t.id() as i32;
-            match cx.find_graph(id) {
+    let unwrapped = match type_util::constraint_node_id(t) {
+        Some(node) => {
+            let r = type_util::reason_of_t(t);
+            let id = node.id();
+            match cx.find_constraints(id).1 {
                 Constraints::FullyResolved(s) => cx.force_fully_resolved_tvar(&s),
                 Constraints::Resolved(resolved_t) => {
                     panic!(
@@ -919,7 +925,7 @@ pub fn unwrap_fully_resolved_open_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
                 }
             }
         }
-        _ => t.dupe(),
+        None => t.dupe(),
     };
     invalid_cyclic_type_validation::validate_local_type(cx, &unwrapped);
     unwrapped
@@ -949,8 +955,11 @@ where
 
 // some types need to be resolved before proceeding further
 pub fn needs_resolution(t: &Type) -> bool {
+    if type_util::constraint_node_id(t).is_some() {
+        return true;
+    }
+
     match t.deref() {
-        TypeInner::OpenT(_) => true,
         TypeInner::UnionT(_, _) => true,
         TypeInner::OptionalT { .. } => true,
         TypeInner::MaybeT(_, _) => true,
@@ -1107,6 +1116,7 @@ pub mod tvar_visitors {
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::constraint::Constraints;
+    use flow_typing_type::type_util;
     use flow_typing_visitors::type_visitor::TypeVisitor;
     use flow_typing_visitors::type_visitor::type_default;
 
@@ -1118,6 +1128,34 @@ pub mod tvar_visitors {
     type Seen = BTreeSet<i32>;
 
     struct HasPlaceholdersVisitor;
+
+    impl HasPlaceholdersVisitor {
+        fn constraint_node<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            acc: Result<Seen, TvarVisitorResult>,
+            id: i32,
+        ) -> Result<Seen, TvarVisitorResult> {
+            let mut seen = acc?;
+            let (root_id, constraints) = cx.find_constraints(id);
+            if seen.contains(&root_id) {
+                return Ok(seen);
+            }
+
+            seen.insert(root_id);
+            match constraints {
+                Constraints::FullyResolved(_) => Ok(seen),
+                Constraints::Resolved(t) => self.type_(cx, pole, Ok(seen), &t),
+                Constraints::Unresolved(bounds) => {
+                    let lower: Vec<_> = bounds.borrow().lower.keys().cloned().collect();
+                    lower
+                        .iter()
+                        .try_fold(seen, |seen, t| self.type_(cx, pole, Ok(seen), t))
+                }
+            }
+        }
+    }
 
     impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasPlaceholdersVisitor {
         fn type_<'cx>(
@@ -1132,6 +1170,9 @@ pub mod tvar_visitors {
                 TypeInner::AnyT(_, AnySource::Placeholder) => {
                     Err(TvarVisitorResult::EncounteredPlaceholderType)
                 }
+                _ if let Some(node) = type_util::constraint_node_id(t) => {
+                    self.constraint_node(cx, pole, Ok(seen), node.id())
+                }
                 _ => type_default(self, cx, pole, Ok(seen), t),
             }
         }
@@ -1144,25 +1185,7 @@ pub mod tvar_visitors {
             _r: &flow_common::reason::Reason,
             id: u32,
         ) -> Result<Seen, TvarVisitorResult> {
-            let mut seen = acc?;
-            let (root_id, constraints) = cx.find_constraints(id as i32);
-            if seen.contains(&root_id) {
-                Ok(seen)
-            } else {
-                seen.insert(root_id);
-                match constraints {
-                    Constraints::FullyResolved(_) => Ok(seen),
-                    Constraints::Resolved(t) => self.type_(cx, pole, Ok(seen), &t),
-                    Constraints::Unresolved(bounds) => {
-                        let mut result = Ok(seen);
-                        let lower: Vec<_> = bounds.borrow().lower.keys().cloned().collect();
-                        for t in lower.iter() {
-                            result = Ok(self.type_(cx, pole, result, t)?);
-                        }
-                        result
-                    }
-                }
-            }
+            self.constraint_node(cx, pole, acc, id as i32)
         }
     }
 
@@ -1176,17 +1199,16 @@ pub mod tvar_visitors {
 
     struct HasUnresolvedTvarsVisitor;
 
-    impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasUnresolvedTvarsVisitor {
-        fn tvar<'cx>(
+    impl HasUnresolvedTvarsVisitor {
+        fn constraint_node<'cx>(
             &mut self,
             cx: &Context<'cx>,
             pole: Polarity,
             acc: Result<Seen, TvarVisitorResult>,
-            _r: &flow_common::reason::Reason,
-            id: u32,
+            id: i32,
         ) -> Result<Seen, TvarVisitorResult> {
             let mut seen = acc?;
-            let (root_id, constraints) = cx.find_constraints(id as i32);
+            let (root_id, constraints) = cx.find_constraints(id);
             if seen.contains(&root_id) {
                 Ok(seen)
             } else {
@@ -1200,7 +1222,56 @@ pub mod tvar_visitors {
         }
     }
 
+    impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasUnresolvedTvarsVisitor {
+        fn type_<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            acc: Result<Seen, TvarVisitorResult>,
+            t: &Type,
+        ) -> Result<Seen, TvarVisitorResult> {
+            match type_util::constraint_node_id(t) {
+                Some(node) => self.constraint_node(cx, pole, acc, node.id()),
+                None => type_default(self, cx, pole, acc, t),
+            }
+        }
+
+        fn tvar<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            acc: Result<Seen, TvarVisitorResult>,
+            _r: &flow_common::reason::Reason,
+            id: u32,
+        ) -> Result<Seen, TvarVisitorResult> {
+            self.constraint_node(cx, pole, acc, id as i32)
+        }
+    }
+
     struct HasUnresolvedTvarsOrPlaceholdersVisitor;
+
+    impl HasUnresolvedTvarsOrPlaceholdersVisitor {
+        fn constraint_node<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            acc: Result<Seen, TvarVisitorResult>,
+            id: i32,
+        ) -> Result<Seen, TvarVisitorResult> {
+            let mut seen = acc?;
+            let (root_id, constraints) = cx.find_constraints(id);
+            if seen.contains(&root_id) {
+                Ok(seen)
+            } else {
+                seen.insert(root_id);
+                match constraints {
+                    Constraints::FullyResolved(_) => Ok(seen),
+                    Constraints::Resolved(t) => self.type_(cx, pole, Ok(seen), &t),
+                    Constraints::Unresolved(_) => Err(TvarVisitorResult::EncounteredUnresolvedTvar),
+                }
+            }
+        }
+    }
 
     impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasUnresolvedTvarsOrPlaceholdersVisitor {
         fn type_<'cx>(
@@ -1215,6 +1286,9 @@ pub mod tvar_visitors {
                 TypeInner::AnyT(_, AnySource::Placeholder) => {
                     Err(TvarVisitorResult::EncounteredPlaceholderType)
                 }
+                _ if let Some(node) = type_util::constraint_node_id(t) => {
+                    self.constraint_node(cx, pole, Ok(seen), node.id())
+                }
                 _ => type_default(self, cx, pole, Ok(seen), t),
             }
         }
@@ -1227,18 +1301,7 @@ pub mod tvar_visitors {
             _r: &flow_common::reason::Reason,
             id: u32,
         ) -> Result<Seen, TvarVisitorResult> {
-            let mut seen = acc?;
-            let (root_id, constraints) = cx.find_constraints(id as i32);
-            if seen.contains(&root_id) {
-                Ok(seen)
-            } else {
-                seen.insert(root_id);
-                match constraints {
-                    Constraints::FullyResolved(_) => Ok(seen),
-                    Constraints::Resolved(t) => self.type_(cx, pole, Ok(seen), &t),
-                    Constraints::Unresolved(_) => Err(TvarVisitorResult::EncounteredUnresolvedTvar),
-                }
-            }
+            self.constraint_node(cx, pole, acc, id as i32)
         }
     }
 
@@ -3691,7 +3754,7 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
     use crate::type_subst::subst;
 
     let distributed_t = match distributed_t.deref() {
-        TypeInner::OpenT(_) => distributed_t.dupe(),
+        _ if type_util::constraint_node_id(&distributed_t).is_some() => distributed_t.dupe(),
         _ if !free_var_finder(cx, None, &distributed_t).is_empty() => distributed_t.dupe(),
         // | _ ->
         _ => {
@@ -7695,7 +7758,7 @@ pub mod get_prop_t_kit {
                     F::cg_lookup(cx, env, *trace, l, true, o.proto_t.dupe(), data)
                 }
                 PropRef::Computed(elem_t) => match elem_t.deref() {
-                    TypeInner::OpenT(_) => {
+                    TypeInner::OpenT(_) | TypeInner::ImplicitInstantiationTvar(_) => {
                         let loc = type_util::loc_of_t(elem_t).dupe();
                         add_output_with_env(
                                     cx,
@@ -8955,8 +9018,8 @@ pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
                 }
                 _ => false,
             },
-            TypeInner::OpenT(tvar) => {
-                let (root_id, constraints) = cx.find_constraints(tvar.id() as i32);
+            _ if let Some(node) = type_util::constraint_node_id(t) => {
+                let (root_id, constraints) = cx.find_constraints(node.id());
                 if seen_open_id.contains(&root_id) {
                     false
                 } else {

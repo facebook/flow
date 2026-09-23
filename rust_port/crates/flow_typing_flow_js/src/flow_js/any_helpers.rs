@@ -377,6 +377,9 @@ pub(super) fn any_propagated<'cx>(
             u: inner_u,
         } => any_propagated(cx, env, trace, any, inner_u),
         UseTInner::UseT(use_op, t) => match t.deref() {
+            _ if let Some(node) = type_util::constraint_node_id(t) => {
+                Ok(any_prop_tvar(cx, node.id()))
+            }
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 DefTInner::ArrT(arr_t) => {
                     // read-only arrays are covariant
@@ -457,7 +460,6 @@ pub(super) fn any_propagated<'cx>(
                 rec_flow_t(cx, env, trace, use_op.dupe(), (&expand_any(cx, any, t), t))?;
                 Ok(true)
             }
-            TypeInner::OpenT(tvar) => Ok(any_prop_tvar(cx, tvar.id() as i32)),
             // AnnotTs are 0->1, so there's no need to propagate any inside them
             TypeInner::AnnotT(..) => Ok(true),
             // used to filter maybe
@@ -558,6 +560,8 @@ pub(super) fn any_propagated_use<'cx>(
     };
 
     match l.deref() {
+        TypeInner::OpenT(tvar) => Ok(any_prop_tvar(cx, tvar.id() as i32)),
+        TypeInner::ImplicitInstantiationTvar(data) => Ok(any_prop_tvar(cx, data.id)),
         TypeInner::DefT(_, def_t) => match def_t.deref() {
             DefTInner::FunT(_, funtype) => {
                 // function types are contravariant in the arguments
@@ -645,7 +649,6 @@ pub(super) fn any_propagated_use<'cx>(
         | TypeInner::NullProtoT(_) => Ok(true),
         // AnnotTs are 0->1, so there's no need to propagate any inside them
         TypeInner::AnnotT(..) => Ok(true),
-        TypeInner::OpenT(tvar) => Ok(any_prop_tvar(cx, tvar.id() as i32)),
         // Handled already in __flow
         TypeInner::ThisInstanceT(..)
         | TypeInner::EvalT { .. }

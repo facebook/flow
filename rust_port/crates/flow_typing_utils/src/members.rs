@@ -759,8 +759,8 @@ fn find_props<'cx>(cx: &Context<'cx>, id: properties::Id) -> BTreeMap<FlowSmolSt
     result
 }
 
-fn resolve_tvar<'cx>(cx: &Context<'cx>, id: u32) -> Type {
-    let ts = flow_js_utils::possible_types(cx, id as i32);
+fn resolve_tvar<'cx>(cx: &Context<'cx>, id: i32) -> Type {
+    let ts = flow_js_utils::possible_types(cx, id);
     // The list of types returned by possible_types is often empty, and the
     // most common reason is that we don't have enough type coverage to
     // resolve id. Thus, we take the unit of merging to be `any`. (Something
@@ -781,7 +781,11 @@ fn resolve_tvar<'cx>(cx: &Context<'cx>, id: u32) -> Type {
 pub fn resolve_type<'cx>(cx: &Context<'cx>, t: Type) -> Type {
     match t.deref() {
         TypeInner::OpenT(tvar) => {
-            let resolved = resolve_tvar(cx, tvar.id());
+            let resolved = resolve_tvar(cx, tvar.id() as i32);
+            resolve_type(cx, resolved)
+        }
+        TypeInner::ImplicitInstantiationTvar(data) => {
+            let resolved = resolve_tvar(cx, data.id);
             resolve_type(cx, resolved)
         }
         TypeInner::AnnotT(_, inner, _) => resolve_type(cx, inner.dupe()),
@@ -791,7 +795,9 @@ pub fn resolve_type<'cx>(cx: &Context<'cx>, t: Type) -> Type {
 
 pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type> {
     match this_t.deref() {
-        TypeInner::OpenT(_) | TypeInner::AnnotT(_, _, _) => {
+        TypeInner::OpenT(_)
+        | TypeInner::ImplicitInstantiationTvar(_)
+        | TypeInner::AnnotT(_, _, _) => {
             let resolved = resolve_type(cx, this_t);
             extract_type(cx, resolved)
         }

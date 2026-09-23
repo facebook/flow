@@ -9,9 +9,73 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_type::type_util::ConstraintNodeId;
+pub(super) use flow_typing_type::type_util::constraint_node_id;
 
 use super::helpers::*;
 use super::*;
+
+pub(super) fn constraint_node_constraints<'cx>(
+    cx: &Context<'cx>,
+    node: ConstraintNodeId,
+) -> (i32, constraint::Constraints<'cx, Context<'cx>>) {
+    cx.find_constraints(node.id())
+}
+
+fn constraint_node_root<'cx>(
+    cx: &Context<'cx>,
+    node: ConstraintNodeId,
+) -> (
+    ConstraintNodeId,
+    Root<constraint::Constraints<'cx, Context<'cx>>>,
+) {
+    let (root_id, root) = match node {
+        ConstraintNodeId::OpenT(id) => cx.find_root(id),
+        ConstraintNodeId::Inference(id) => cx.find_inference_root(id),
+    };
+    let root_node = if cx.is_inference_node(root_id) {
+        ConstraintNodeId::Inference(root_id)
+    } else {
+        ConstraintNodeId::OpenT(root_id)
+    };
+    (root_node, root)
+}
+
+fn set_constraint_node_constraints<'cx>(
+    cx: &Context<'cx>,
+    node: ConstraintNodeId,
+    constraints: constraint::Constraints<'cx, Context<'cx>>,
+) {
+    match node {
+        ConstraintNodeId::OpenT(id) => cx.set_root_constraints(id, constraints),
+        ConstraintNodeId::Inference(id) => cx.set_inference_root_constraints(id, constraints),
+    }
+}
+
+fn set_constraint_node_rank(cx: &Context<'_>, node: ConstraintNodeId, rank: i32) {
+    match node {
+        ConstraintNodeId::OpenT(id) => cx.set_root_rank(id, rank),
+        ConstraintNodeId::Inference(id) => cx.set_inference_root_rank(id, rank),
+    }
+}
+
+fn set_constraint_node_goto(cx: &Context<'_>, node: ConstraintNodeId, parent: ConstraintNodeId) {
+    match node {
+        ConstraintNodeId::OpenT(id) => match parent {
+            ConstraintNodeId::OpenT(parent_id) => {
+                cx.add_tvar(id, Node::create_goto(parent_id));
+            }
+            ConstraintNodeId::Inference(parent_id) => {
+                // Preserve the chosen root while keeping production nodes out of the side store.
+                let (parent_id, parent_root) = cx.find_inference_root(parent_id);
+                cx.set_root_constraints(id, parent_root.constraints);
+                cx.set_root_rank(id, parent_root.rank);
+                cx.set_inference_goto(parent_id, id);
+            }
+        },
+        ConstraintNodeId::Inference(id) => cx.set_inference_goto(id, parent.id()),
+    }
+}
 
 // Bounds Manipulation
 //
@@ -90,6 +154,133 @@ pub(super) fn flows_across<'cx>(
                 flow_use_op(env, use_op.dupe(), use_type_key.use_t.dupe()),
             );
             join_flow(cx, env, &[*trace_l, trace, *trace_u], (l, &u))?;
+        }
+    }
+    Ok(())
+}
+
+pub(super) fn flow_unresolved_to_unresolved<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    node1: ConstraintNodeId,
+    node2: ConstraintNodeId,
+) -> Result<(), FlowJsException> {
+    let ((id1, constraints1), (id2, constraints2)) =
+        cx.find_constraints_pair(node1.id(), node2.id());
+    match (constraints1, constraints2) {
+        (
+            constraint::Constraints::Unresolved(bounds1),
+            constraint::Constraints::Unresolved(bounds2),
+        ) => {
+            if not_linked((id1, &bounds1), (id2, &bounds2)) {
+                let (lower, upper) = {
+                    let bounds1 = bounds1.borrow();
+                    let bounds2 = bounds2.borrow();
+                    (bounds1.lower.clone(), bounds2.upper.clone())
+                };
+                add_upper_edges(
+                    cx,
+                    env,
+                    trace,
+                    use_op.dupe(),
+                    false,
+                    (id1, &bounds1),
+                    (id2, &bounds2),
+                );
+                add_lower_edges(
+                    cx,
+                    env,
+                    trace,
+                    use_op.dupe(),
+                    false,
+                    (id1, &bounds1),
+                    (id2, &bounds2),
+                );
+                flows_across(cx, env, trace, use_op, &lower, &upper)?;
+            }
+        }
+        (constraint::Constraints::Unresolved(bounds1), constraint::Constraints::Resolved(t2)) => {
+            let t2_use = flow_use_op(
+                env,
+                unknown_use(),
+                UseT::new(UseTInner::UseT(use_op, t2.dupe())),
+            );
+            edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &t2_use)?;
+        }
+        (
+            constraint::Constraints::Unresolved(bounds1),
+            constraint::Constraints::FullyResolved(s2),
+        ) => {
+            let t2_use = flow_use_op(
+                env,
+                unknown_use(),
+                UseT::new(UseTInner::UseT(use_op, cx.force_fully_resolved_tvar(&s2))),
+            );
+            edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &t2_use)?;
+        }
+        (constraint::Constraints::Resolved(t1), constraint::Constraints::Unresolved(bounds2)) => {
+            edges_and_flows_from_t(cx, env, trace, use_op, false, &t1, (id2, &bounds2))?;
+        }
+        (
+            constraint::Constraints::FullyResolved(s1),
+            constraint::Constraints::Unresolved(bounds2),
+        ) => {
+            edges_and_flows_from_t(
+                cx,
+                env,
+                trace,
+                use_op,
+                false,
+                &cx.force_fully_resolved_tvar(&s1),
+                (id2, &bounds2),
+            )?;
+        }
+        (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
+            let t2_use = flow_use_op(
+                env,
+                unknown_use(),
+                UseT::new(UseTInner::UseT(use_op, t2.dupe())),
+            );
+            rec_flow(cx, env, trace, (&t1, &t2_use))?;
+        }
+        (constraint::Constraints::Resolved(t1), constraint::Constraints::FullyResolved(s2)) => {
+            let t2_use = flow_use_op(
+                env,
+                unknown_use(),
+                UseT::new(UseTInner::UseT(use_op, cx.force_fully_resolved_tvar(&s2))),
+            );
+            rec_flow(cx, env, trace, (&t1, &t2_use))?;
+        }
+        (constraint::Constraints::FullyResolved(s1), constraint::Constraints::Resolved(t2)) => {
+            let t2_use = flow_use_op(
+                env,
+                unknown_use(),
+                UseT::new(UseTInner::UseT(use_op, t2.dupe())),
+            );
+            rec_flow(
+                cx,
+                env,
+                trace,
+                (&cx.force_fully_resolved_tvar(&s1), &t2_use),
+            )?;
+        }
+        (
+            constraint::Constraints::FullyResolved(s1),
+            constraint::Constraints::FullyResolved(s2),
+        ) => {
+            let t2_use = flow_use_op(
+                env,
+                unknown_use(),
+                UseT::new(UseTInner::UseT(use_op, cx.force_fully_resolved_tvar(&s2))),
+            );
+            rec_flow(
+                cx,
+                env,
+                trace,
+                (&cx.force_fully_resolved_tvar(&s1), &t2_use),
+            )?;
         }
     }
     Ok(())
@@ -516,15 +707,17 @@ pub(super) fn goto<'cx>(
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
-    (id1, root1): (
-        i32,
-        flow_utils_union_find::Root<constraint::Constraints<'cx, Context<'cx>>>,
+    (node1, root1): (
+        ConstraintNodeId,
+        Root<constraint::Constraints<'cx, Context<'cx>>>,
     ),
-    (id2, root2): (
-        i32,
-        flow_utils_union_find::Root<constraint::Constraints<'cx, Context<'cx>>>,
+    (node2, root2): (
+        ConstraintNodeId,
+        Root<constraint::Constraints<'cx, Context<'cx>>>,
     ),
 ) -> Result<(), FlowJsException> {
+    let id1 = node1.id();
+    let id2 = node2.id();
     //   match (root1.constraints, root2.constraints) with
     match (root1.constraints, root2.constraints) {
         //   | (Unresolved bounds1, Unresolved bounds2) ->
@@ -593,7 +786,7 @@ pub(super) fn goto<'cx>(
                     (id1, &bounds1),
                 );
             }
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             Ok(())
         }
         (constraint::Constraints::Unresolved(bounds1), constraint::Constraints::Resolved(t2)) => {
@@ -608,7 +801,7 @@ pub(super) fn goto<'cx>(
                 &t2,
                 (id1, &bounds1),
             )?;
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             Ok(())
         }
         (
@@ -627,15 +820,15 @@ pub(super) fn goto<'cx>(
                 &t2,
                 (id1, &bounds1),
             )?;
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             Ok(())
         }
         (constraint::Constraints::Resolved(t1), constraint::Constraints::Unresolved(bounds2)) => {
             let t1_use = UseT::new(UseTInner::UseT(unify_flip(use_op.dupe()), t1.dupe()));
             edges_and_flows_to_t(cx, env, trace, true, (id2, &bounds2), &t1_use)?;
             edges_and_flows_from_t(cx, env, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
-            cx.set_root_constraints(id2, constraint::Constraints::Resolved(t1));
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_constraints(cx, node2, constraint::Constraints::Resolved(t1));
+            set_constraint_node_goto(cx, node1, node2);
             Ok(())
         }
         (
@@ -646,13 +839,13 @@ pub(super) fn goto<'cx>(
             let t1_use = UseT::new(UseTInner::UseT(unify_flip(use_op.dupe()), t1.dupe()));
             edges_and_flows_to_t(cx, env, trace, true, (id2, &bounds2), &t1_use)?;
             edges_and_flows_from_t(cx, env, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
-            cx.set_root_constraints(id2, constraint::Constraints::FullyResolved(s1));
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_constraints(cx, node2, constraint::Constraints::FullyResolved(s1));
+            set_constraint_node_goto(cx, node1, node2);
             Ok(())
         }
         (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
             // replace node first, in case rec_unify recurses back to these tvars
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             rec_unify(
                 cx,
                 env,
@@ -667,7 +860,7 @@ pub(super) fn goto<'cx>(
         (constraint::Constraints::Resolved(t1), constraint::Constraints::FullyResolved(s2)) => {
             let t2 = cx.force_fully_resolved_tvar(&s2);
             // replace node first, in case rec_unify recurses back to these tvars
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             rec_unify(
                 cx,
                 env,
@@ -686,7 +879,7 @@ pub(super) fn goto<'cx>(
             let t1 = cx.force_fully_resolved_tvar(&s1);
             let t2 = cx.force_fully_resolved_tvar(&s2);
             // replace node first, in case rec_unify recurses back to these tvars
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             rec_unify(
                 cx,
                 env,
@@ -701,9 +894,9 @@ pub(super) fn goto<'cx>(
         (constraint::Constraints::FullyResolved(s1), constraint::Constraints::Resolved(t2)) => {
             let t1 = cx.force_fully_resolved_tvar(&s1);
             // prefer fully resolved roots to resolved roots
-            cx.set_root_constraints(id2, constraint::Constraints::FullyResolved(s1));
+            set_constraint_node_constraints(cx, node2, constraint::Constraints::FullyResolved(s1));
             // replace node first, in case rec_unify recurses back to these tvars
-            cx.add_tvar(id1, Node::create_goto(id2));
+            set_constraint_node_goto(cx, node1, node2);
             rec_unify(
                 cx,
                 env,
@@ -718,52 +911,57 @@ pub(super) fn goto<'cx>(
     }
 }
 
-/// Unify two type variables. This involves finding their roots, and making one
-/// point to the other. Ranks are used to keep chains short.
-pub(super) fn merge_ids<'cx>(
+/// Unify two constraint nodes. This involves finding their roots, and making one
+/// point to the other. Ranks are used to keep chains short. A side root always
+/// points to a production root when the stores differ.
+pub(super) fn merge_constraint_nodes<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
-    id1: i32,
-    id2: i32,
+    node1: ConstraintNodeId,
+    node2: ConstraintNodeId,
 ) -> Result<(), FlowJsException> {
-    let (id1, root1) = cx.find_root(id1);
-    let (id2, root2) = cx.find_root(id2);
-    if id1 == id2 {
+    let (node1, root1) = constraint_node_root(cx, node1);
+    let (node2, root2) = constraint_node_root(cx, node2);
+    if node1 == node2 {
         return Ok(());
     }
-    if root1.rank < root2.rank {
-        goto(cx, env, trace, use_op, (id1, root1), (id2, root2))
-    } else if root2.rank < root1.rank {
-        goto(
+
+    match (root1.rank, root2.rank) {
+        (rank1, rank2) if rank1 < rank2 => {
+            goto(cx, env, trace, use_op, (node1, root1), (node2, root2))
+        }
+        (rank1, rank2) if rank2 < rank1 => goto(
             cx,
             env,
             trace,
             unify_flip(use_op),
-            (id2, root2),
-            (id1, root1),
-        )
-    } else {
-        cx.set_root_rank(id2, root1.rank + 1);
-        goto(cx, env, trace, use_op, (id1, root1), (id2, root2))
+            (node2, root2),
+            (node1, root1),
+        ),
+        _ => {
+            set_constraint_node_rank(cx, node2, root1.rank + 1);
+            goto(cx, env, trace, use_op, (node1, root1), (node2, root2))
+        }
     }
 }
 
-/// Resolve a type variable to a type. This involves finding its root,
+/// Resolve a constraint node to a type. This involves finding its root,
 /// and resolving to that type.
-pub(super) fn resolve_id<'cx>(
+pub(super) fn resolve_constraint_node<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
-    id: i32,
+    node: ConstraintNodeId,
     t: &Type,
 ) -> Result<(), FlowJsException> {
-    let (id, root) = cx.find_root(id);
+    let (node, root) = constraint_node_root(cx, node);
+    let id = node.id();
     match root.constraints {
         constraint::Constraints::Unresolved(bounds) => {
-            cx.set_root_constraints(id, constraint::Constraints::Resolved(t.dupe()));
+            set_constraint_node_constraints(cx, node, constraint::Constraints::Resolved(t.dupe()));
             let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe()));
             edges_and_flows_to_t(cx, env, trace, true, (id, &bounds), &use_t)?;
             edges_and_flows_from_t(cx, env, trace, use_op, true, t, (id, &bounds))
@@ -792,4 +990,16 @@ pub(super) fn resolve_id<'cx>(
             )
         }
     }
+}
+
+/// Resolve a production type variable to a type.
+pub(super) fn resolve_id<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    id: i32,
+    t: &Type,
+) -> Result<(), FlowJsException> {
+    resolve_constraint_node(cx, env, trace, use_op, ConstraintNodeId::OpenT(id), t)
 }

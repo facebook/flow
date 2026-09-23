@@ -565,6 +565,7 @@ impl<'cx, F: Fn(&ALoc) -> SingletonAction> TypeMapper<'cx, ()>
                 }
             }
             TypeInner::OpenT(_)
+            | TypeInner::ImplicitInstantiationTvar(_)
             | TypeInner::DefT(..)
             | TypeInner::ThisInstanceT(..)
             | TypeInner::ThisTypeAppT(..)

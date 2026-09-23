@@ -106,6 +106,8 @@ use flow_typing_type::type_::object::ResolveTool;
 use flow_typing_type::type_::object::Tool;
 use flow_utils_concurrency::check_budget::CheckBudget;
 use flow_utils_concurrency::job_error::JobError;
+use flow_utils_union_find::Node;
+use flow_utils_union_find::Root;
 use flow_utils_union_find::TvarNotFound;
 use regex::Regex;
 use vec1::Vec1;
@@ -409,6 +411,9 @@ pub struct ComponentT<'cx> {
         )>,
     >,
     maybe_unused_promises: RefCell<FlowVector<(ALoc, Type, bool)>>,
+
+    inference_nodes:
+        RefCell<IntHashMap<i32, Node<type_::constraint::Constraints<'cx, Context<'cx>>>>>,
 
     constraint_cache: RefCell<type_::FlowSet<Context<'cx>>>,
     subst_cache: RefCell<type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>>,
@@ -806,6 +811,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         conditions: RefCell::new(FlowVector::new()),
         strict_comparisons: RefCell::new(FlowVector::new()),
         maybe_unused_promises: RefCell::new(FlowVector::new()),
+        inference_nodes: RefCell::new(IntHashMap::default()),
         constraint_cache: RefCell::new(type_::FlowSet::default()),
         subst_cache: RefCell::new(Default::default()),
         eval_id_cache: RefCell::new(Default::default()),
@@ -2049,6 +2055,85 @@ impl<'cx> Context<'cx> {
             .insert_fresh(id, bounds);
     }
 
+    pub fn add_inference_node(&self, id: i32) {
+        assert!(
+            self.graph().borrow().get(&id).is_none(),
+            "inference node id collides with a production node"
+        );
+        let previous = self.0.ccx.inference_nodes.borrow_mut().insert(
+            id,
+            Node::create_root(type_::constraint::Constraints::default()),
+        );
+        assert!(previous.is_none(), "inference node id registered twice");
+    }
+
+    pub fn is_inference_node(&self, id: i32) -> bool {
+        self.0.ccx.inference_nodes.borrow().contains_key(&id)
+    }
+
+    pub fn find_inference_root(
+        &self,
+        id: i32,
+    ) -> (i32, Root<type_::constraint::Constraints<'cx, Context<'cx>>>) {
+        assert!(self.is_inference_node(id), "inference node not found");
+        let mut current = id;
+        let mut path = Vec::new();
+        let mut seen = BTreeSet::new();
+        let (root_id, root) = loop {
+            assert!(seen.insert(current), "cyclic inference node aliases");
+            let node = self.0.ccx.inference_nodes.borrow().get(&current).cloned();
+            match node {
+                Some(Node::Root(root)) => break (current, root),
+                Some(Node::Goto { parent }) => {
+                    path.push(current);
+                    current = parent;
+                }
+                None => break self.find_root(current),
+            }
+        };
+        let mut inference_nodes = self.0.ccx.inference_nodes.borrow_mut();
+        for id in path {
+            inference_nodes.insert(id, Node::create_goto(root_id));
+        }
+        (root_id, root)
+    }
+
+    pub fn set_inference_root_constraints(
+        &self,
+        id: i32,
+        constraints: type_::constraint::Constraints<'cx, Context<'cx>>,
+    ) {
+        let mut inference_nodes = self.0.ccx.inference_nodes.borrow_mut();
+        let node = inference_nodes
+            .get_mut(&id)
+            .expect("inference root not found");
+        let Node::Root(root) = node else {
+            panic!("inference node is not a root");
+        };
+        root.constraints = constraints;
+    }
+
+    pub fn set_inference_root_rank(&self, id: i32, rank: i32) {
+        let mut inference_nodes = self.0.ccx.inference_nodes.borrow_mut();
+        let node = inference_nodes
+            .get_mut(&id)
+            .expect("inference root not found");
+        let Node::Root(root) = node else {
+            panic!("inference node is not a root");
+        };
+        root.rank = rank;
+    }
+
+    pub fn set_inference_goto(&self, id: i32, parent: i32) {
+        let previous = self
+            .0
+            .ccx
+            .inference_nodes
+            .borrow_mut()
+            .insert(id, Node::create_goto(parent));
+        assert!(previous.is_some(), "inference node not found");
+    }
+
     pub fn set_synthesis_produced_uncacheable_result(&self) {
         match *self.0.typing_mode.borrow() {
             TypingMode::SynthesisMode { .. } => {
@@ -2904,6 +2989,11 @@ impl<'cx> Context<'cx> {
         &self,
         id: i32,
     ) -> (i32, type_::constraint::Constraints<'cx, Context<'cx>>) {
+        if self.is_inference_node(id) {
+            let (root_id, root) = self.find_inference_root(id);
+            return (root_id, root.constraints);
+        }
+
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
         let file = self.file();
@@ -2911,6 +3001,19 @@ impl<'cx> Context<'cx> {
             panic!("find_constraints: TvarNotFound({}) in file {:?}", e.0, file,)
         });
         (id, c.clone())
+    }
+
+    pub fn set_constraints(
+        &self,
+        id: i32,
+        constraints: type_::constraint::Constraints<'cx, Context<'cx>>,
+    ) {
+        let (root_id, _) = self.find_constraints(id);
+        if self.is_inference_node(root_id) {
+            self.set_inference_root_constraints(root_id, constraints);
+        } else {
+            self.set_root_constraints(root_id, constraints);
+        }
     }
 
     pub fn find_constraints_pair(
@@ -2921,6 +3024,10 @@ impl<'cx> Context<'cx> {
         (i32, type_::constraint::Constraints<'cx, Context<'cx>>),
         (i32, type_::constraint::Constraints<'cx, Context<'cx>>),
     ) {
+        if self.is_inference_node(id1) || self.is_inference_node(id2) {
+            return (self.find_constraints(id1), self.find_constraints(id2));
+        }
+
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
         let file = self.file();
@@ -3044,32 +3151,33 @@ impl<'cx> Context<'cx> {
     pub fn find_resolved(&self, t_in: &Type) -> Option<Type> {
         fn find_resolved_inner<'a>(
             cx: &Context<'a>,
-            seen: &mut BTreeSet<u32>,
+            seen: &mut BTreeSet<i32>,
             t_in: &Type,
         ) -> Option<Type> {
-            match &**t_in {
-                TypeInner::OpenT(tvar) => {
-                    let id = tvar.id();
-                    if seen.contains(&id) {
-                        Some(t_in.dupe())
-                    } else {
-                        use flow_typing_type::type_::constraint::Constraints;
-                        match cx.find_graph(id as i32) {
-                            Constraints::Resolved(t) => {
-                                seen.insert(id);
-                                find_resolved_inner(cx, seen, &t)
-                            }
-                            Constraints::FullyResolved(s) => {
-                                seen.insert(id);
-                                let forced = cx.force_fully_resolved_tvar(&s);
-                                find_resolved_inner(cx, seen, &forced)
-                            }
-                            Constraints::Unresolved(_) => None,
+            if let Some(node) = flow_typing_type::type_util::constraint_node_id(t_in) {
+                let id = node.id();
+                if seen.contains(&id) {
+                    Some(t_in.dupe())
+                } else {
+                    use flow_typing_type::type_::constraint::Constraints;
+                    match cx.find_constraints(id).1 {
+                        Constraints::Resolved(t) => {
+                            seen.insert(id);
+                            find_resolved_inner(cx, seen, &t)
                         }
+                        Constraints::FullyResolved(s) => {
+                            seen.insert(id);
+                            let forced = cx.force_fully_resolved_tvar(&s);
+                            find_resolved_inner(cx, seen, &forced)
+                        }
+                        Constraints::Unresolved(_) => None,
                     }
                 }
-                TypeInner::AnnotT(_, t, _) => find_resolved_inner(cx, seen, t),
-                _ => Some(t_in.dupe()),
+            } else {
+                match &**t_in {
+                    TypeInner::AnnotT(_, t, _) => find_resolved_inner(cx, seen, t),
+                    _ => Some(t_in.dupe()),
+                }
             }
         }
 

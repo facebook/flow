@@ -117,15 +117,14 @@ pub(super) fn __unify<'cx>(
                 let upper_desc = TypeOrTypeDescT::Type(t2.dupe());
                 let lower_loc = {
                     match t1.deref() {
-                        TypeInner::OpenT(tvar) => {
-                            let r = tvar.reason();
-                            let id = tvar.id() as i32;
+                        _ if let Some(node) = constraint_node_id(t1) => {
+                            let r = reason_of_t(t1);
                             match flow_js_utils::merge_tvar_opt(
                                 cx,
                                 false,
                                 union_rep::UnionKind::ResolvedKind,
                                 r,
-                                id,
+                                node.id(),
                             ) {
                                 Some(t) => loc_of_t(&t).dupe(),
                                 None => r.loc().dupe(),
@@ -169,14 +168,23 @@ fn __unify_inner<'cx>(
     trace: DepthTrace,
 ) -> Result<(), FlowJsException> {
     match (t1.deref(), t2.deref()) {
-        (TypeInner::OpenT(tvar1), TypeInner::OpenT(tvar2)) => {
-            merge_ids(cx, env, trace, use_op, tvar1.id() as i32, tvar2.id() as i32)?;
+        (_, _)
+            if let Some(node1) = constraint_node_id(t1)
+                && let Some(node2) = constraint_node_id(t2) =>
+        {
+            merge_constraint_nodes(cx, env, trace, use_op, node1, node2)?;
         }
-        (TypeInner::OpenT(tvar), _) if ok_unify(unify_any, t2) => {
-            resolve_id(cx, env, trace, use_op, tvar.id() as i32, t2)?;
+        (_, _)
+            if let Some(node) = constraint_node_id(t1)
+                && ok_unify(unify_any, t2) =>
+        {
+            resolve_constraint_node(cx, env, trace, use_op, node, t2)?;
         }
-        (_, TypeInner::OpenT(tvar)) if ok_unify(unify_any, t1) => {
-            resolve_id(cx, env, trace, unify_flip(use_op), tvar.id() as i32, t1)?;
+        (_, _)
+            if let Some(node) = constraint_node_id(t2)
+                && ok_unify(unify_any, t1) =>
+        {
+            resolve_constraint_node(cx, env, trace, unify_flip(use_op), node, t1)?;
         }
         (TypeInner::DefT(r1, def1), TypeInner::DefT(r2, def2)) => {
             match (def1.deref(), def2.deref()) {

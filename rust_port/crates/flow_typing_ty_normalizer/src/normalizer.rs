@@ -191,6 +191,7 @@ pub mod lookahead {
     use flow_typing_type::type_::Type;
     use flow_typing_type::type_::TypeInner;
     use flow_typing_type::type_::constraint::Constraints;
+    use flow_typing_type::type_util;
 
     #[derive(Debug, Clone)]
     pub enum Lookahead {
@@ -209,8 +210,8 @@ pub mod lookahead {
             t: &Type,
         ) -> Result<(), RecursiveError> {
             match t.deref() {
-                TypeInner::OpenT(tvar) => {
-                    let (root_id, constraints) = cx.find_constraints(tvar.id() as i32);
+                _ if let Some(node) = type_util::constraint_node_id(t) => {
+                    let (root_id, constraints) = cx.find_constraints(node.id());
                     if seen.contains(&root_id) {
                         return Err(RecursiveError);
                     }
@@ -1315,7 +1316,9 @@ mod type_converter {
         t: &Type,
     ) -> Result<ALocTy, Error> {
         match t.deref() {
-            TypeInner::OpenT(_) => type_ctor::<I>(env, state, id, type_with_alias_reason::<I>, t),
+            TypeInner::OpenT(_) | TypeInner::ImplicitInstantiationTvar(_) => {
+                type_ctor::<I>(env, state, id, type_with_alias_reason::<I>, t)
+            }
             TypeInner::EvalT { .. } if should_eval_skip_aliases(env) => {
                 type_ctor::<I>(env, state, id, type_with_alias_reason::<I>, t)
             }
@@ -1361,6 +1364,32 @@ mod type_converter {
         }
     }
 
+    fn constraint_node<'cx, I: NormalizerInput>(
+        env: &mut Env<'_, 'cx>,
+        state: &mut State,
+        id: Option<IdKey>,
+        node_id: i32,
+    ) -> Result<ALocTy, Error> {
+        let (root_id, _) = env.genv.cx.find_constraints(node_id);
+        if id == Some(IdKey::TVarKey(root_id)) {
+            return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
+                UpperBoundKind::NoUpper,
+            ))));
+        }
+        if is_rec_id(state, IdKey::TVarKey(root_id)) {
+            return Ok(Arc::new(ty::Ty::Any(ty::AnyKind::Recursive)));
+        }
+        if env.seen_tvar_ids.contains(&root_id) {
+            add_rec_id(state, IdKey::TVarKey(root_id));
+            return Ok(Arc::new(ty::Ty::Any(ty::AnyKind::Recursive)));
+        }
+        let old_seen_tvar_ids = env.seen_tvar_ids.dupe();
+        env.seen_tvar_ids.insert(root_id);
+        let result = type_variable(env, state, &mut type_converter::type__::<I>, root_id);
+        env.seen_tvar_ids = old_seen_tvar_ids;
+        result
+    }
+
     fn type_ctor<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
@@ -1369,26 +1398,9 @@ mod type_converter {
         t: &Type,
     ) -> Result<ALocTy, Error> {
         match t.deref() {
-            TypeInner::OpenT(tvar) => {
-                let id_ = tvar.id() as i32;
-                let root_id = env.genv.cx.find_root_id(id_);
-                if id == Some(IdKey::TVarKey(root_id)) {
-                    return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
-                        UpperBoundKind::NoUpper,
-                    ))));
-                }
-                if is_rec_id(state, IdKey::TVarKey(root_id)) {
-                    return Ok(Arc::new(ty::Ty::Any(ty::AnyKind::Recursive)));
-                }
-                if env.seen_tvar_ids.contains(&root_id) {
-                    add_rec_id(state, IdKey::TVarKey(root_id));
-                    return Ok(Arc::new(ty::Ty::Any(ty::AnyKind::Recursive)));
-                }
-                let old_seen_tvar_ids = env.seen_tvar_ids.dupe();
-                env.seen_tvar_ids.insert(root_id);
-                let result = type_variable(env, state, &mut type_converter::type__::<I>, root_id);
-                env.seen_tvar_ids = old_seen_tvar_ids;
-                result
+            TypeInner::OpenT(tvar) => constraint_node::<I>(env, state, id, tvar.id() as i32),
+            TypeInner::ImplicitInstantiationTvar(data) => {
+                constraint_node::<I>(env, state, id, data.id)
             }
             TypeInner::GenericT(box GenericTData {
                 reason,
@@ -5007,9 +5019,9 @@ mod expand_members {
         t: &Type,
     ) -> Result<ALocTy, Error> {
         match t.deref() {
-            TypeInner::OpenT(tvar) => {
-                let id_ = tvar.id() as i32;
-                let root_id = env.genv.cx.find_root_id(id_);
+            _ if let Some(node) = type_util::constraint_node_id(t) => {
+                let id_ = node.id();
+                let (root_id, _) = env.genv.cx.find_constraints(id_);
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,
@@ -5490,9 +5502,8 @@ mod expand_literal_union {
     ) -> Result<ALocTy, Error> {
         descend(env, t)?;
         match t.deref() {
-            TypeInner::OpenT(tvar) => {
-                let id_ = tvar.id() as i32;
-                let root_id = env.genv.cx.find_root_id(id_);
+            _ if let Some(node) = type_util::constraint_node_id(t) => {
+                let (root_id, _) = env.genv.cx.find_constraints(node.id());
                 if id == Some(IdKey::TVarKey(root_id)) {
                     return Ok(Arc::new(ty::Ty::Bot(BotKind::NoLowerWithUpper(
                         UpperBoundKind::NoUpper,

@@ -401,6 +401,10 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
             let extra = tvar(tvars, tv.id() as i32);
             p(cx, t, true, &extra)
         }
+        TypeInner::ImplicitInstantiationTvar(data) => {
+            let extra = tvar(tvars, data.id);
+            p(cx, t, true, &extra)
+        }
         TypeInner::DefT(_, def) => match def.deref() {
             DefTInner::NumGeneralT(lit) => {
                 let extra = match lit {

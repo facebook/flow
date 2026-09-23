@@ -60,8 +60,10 @@ pub mod flow_constraint {
         match (l.deref(), u.deref()) {
             // Don't cache constraints involving type variables, since the
             // corresponding typing rules are already sufficiently robust.
-            (TypeInner::OpenT(_), _) => false,
-            (_, UseTInner::UseT(_, inner_t)) if matches!(inner_t.deref(), TypeInner::OpenT(_)) => {
+            (_, _) if flow_typing_type::type_util::constraint_node_id(l).is_some() => false,
+            (_, UseTInner::UseT(_, inner_t))
+                if flow_typing_type::type_util::constraint_node_id(inner_t).is_some() =>
+            {
                 false
             }
             (_, UseTInner::ReposUseT(..)) => false,

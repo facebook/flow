@@ -2197,16 +2197,17 @@ fn flow_obj_to_obj<'cx>(
         [] => {}
         [(name, l_prop_t, u_prop_t)] => {
             let lower_loc = match l_prop_t.deref() {
-                TypeInner::OpenT(tvar) => {
+                _ if let Some(node) = type_util::constraint_node_id(l_prop_t) => {
+                    let reason = type_util::reason_of_t(l_prop_t);
                     match flow_js_utils::merge_tvar_opt(
                         cx,
                         false,
                         union_rep::UnionKind::ResolvedKind,
-                        tvar.reason(),
-                        tvar.id() as i32,
+                        reason,
+                        node.id(),
                     ) {
                         Some(t) => type_util::loc_of_t(&t).dupe(),
-                        None => tvar.reason().loc().dupe(),
+                        None => reason.loc().dupe(),
                     }
                 }
                 _ => type_util::loc_of_t(l_prop_t).dupe(),
@@ -4232,12 +4233,14 @@ pub fn rec_sub_t<'cx>(
             //  before kicking off regular speculation
             let union_contains_instantiable_tvars = if env.in_implicit_instantiation() {
                 rep.members_iter().any(|t| {
-                    if let TypeInner::OpenT(tvar) = t.deref() {
+                    if let Some(node) = type_util::constraint_node_id(t) {
                         use constraint::Constraints;
-                        match cx.find_graph(tvar.id() as i32) {
+                        match cx.find_constraints(node.id()).1 {
                             Constraints::Resolved(_) | Constraints::FullyResolved(_) => false,
                             Constraints::Unresolved(_) => {
-                                flow_common::reason::is_instantiable_reason(tvar.reason())
+                                flow_common::reason::is_instantiable_reason(
+                                    type_util::reason_of_t(t),
+                                )
                             }
                         }
                     } else {

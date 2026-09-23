@@ -246,7 +246,7 @@ fn strict_computed_lookup_failed<'cx>(
     action: &LookupAction,
 ) -> Result<(), FlowJsException> {
     match elem_t.deref() {
-        TypeInner::OpenT(_) => {
+        _ if constraint_node_id(elem_t).is_some() => {
             let loc = loc_of_t(elem_t);
             flow_js_utils::add_output_with_env(
                 cx,
@@ -559,171 +559,27 @@ fn __flow_impl<'cx>(
         // ******************
         // * process X ~> Y *
         // ******************
-        (TypeInner::OpenT(tvar1), UseTInner::UseT(use_op, t_upper))
-            if let TypeInner::OpenT(tvar2) = t_upper.deref() =>
+        (_, UseTInner::UseT(use_op, t_upper))
+            if let Some(node1) = constraint_node_id(l)
+                && let Some(node2) = constraint_node_id(t_upper) =>
         {
-            cx.add_array_or_object_literal_declaration_upper_bound(
-                tvar1.id() as i32,
-                Type::new(TypeInner::OpenT(tvar2.dupe())),
-            );
-            let ((id1, constraints1), (id2, constraints2)) =
-                cx.find_constraints_pair(tvar1.id() as i32, tvar2.id() as i32);
-            match (constraints1, constraints2) {
-                (
-                    constraint::Constraints::Unresolved(bounds1),
-                    constraint::Constraints::Unresolved(bounds2),
-                ) => {
-                    if not_linked((id1, &bounds1), (id2, &bounds2)) {
-                        let (lower, upper) = {
-                            let bounds1 = bounds1.borrow();
-                            let bounds2 = bounds2.borrow();
-                            (bounds1.lower.clone(), bounds2.upper.clone())
-                        };
-                        add_upper_edges(
-                            cx,
-                            env,
-                            trace,
-                            use_op.dupe(),
-                            false,
-                            (id1, &bounds1),
-                            (id2, &bounds2),
-                        );
-                        add_lower_edges(
-                            cx,
-                            env,
-                            trace,
-                            use_op.dupe(),
-                            false,
-                            (id1, &bounds1),
-                            (id2, &bounds2),
-                        );
-                        flows_across(cx, env, trace, use_op.dupe(), &lower, &upper)?;
-                    }
-                }
-                (
-                    constraint::Constraints::Unresolved(bounds1),
-                    constraint::Constraints::Resolved(t2),
-                ) => {
-                    let t2_use = flow_use_op(
-                        env,
-                        unknown_use(),
-                        UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe())),
-                    );
-                    edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &t2_use)?;
-                }
-                (
-                    constraint::Constraints::Unresolved(bounds1),
-                    constraint::Constraints::FullyResolved(s2),
-                ) => {
-                    let t2_use = flow_use_op(
-                        env,
-                        unknown_use(),
-                        UseT::new(UseTInner::UseT(
-                            use_op.dupe(),
-                            cx.force_fully_resolved_tvar(&s2),
-                        )),
-                    );
-                    edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &t2_use)?;
-                }
-                (
-                    constraint::Constraints::Resolved(t1),
-                    constraint::Constraints::Unresolved(bounds2),
-                ) => {
-                    edges_and_flows_from_t(
-                        cx,
-                        env,
-                        trace,
-                        use_op.dupe(),
-                        false,
-                        &t1,
-                        (id2, &bounds2),
-                    )?;
-                }
-                (
-                    constraint::Constraints::FullyResolved(s1),
-                    constraint::Constraints::Unresolved(bounds2),
-                ) => {
-                    edges_and_flows_from_t(
-                        cx,
-                        env,
-                        trace,
-                        use_op.dupe(),
-                        false,
-                        &cx.force_fully_resolved_tvar(&s1),
-                        (id2, &bounds2),
-                    )?;
-                }
-                (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
-                    let t2_use = flow_use_op(
-                        env,
-                        unknown_use(),
-                        UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe())),
-                    );
-                    rec_flow(cx, env, trace, (&t1, &t2_use))?;
-                }
-                (
-                    constraint::Constraints::Resolved(t1),
-                    constraint::Constraints::FullyResolved(s2),
-                ) => {
-                    let t2_use = flow_use_op(
-                        env,
-                        unknown_use(),
-                        UseT::new(UseTInner::UseT(
-                            use_op.dupe(),
-                            cx.force_fully_resolved_tvar(&s2),
-                        )),
-                    );
-                    rec_flow(cx, env, trace, (&t1, &t2_use))?;
-                }
-                (
-                    constraint::Constraints::FullyResolved(s1),
-                    constraint::Constraints::Resolved(t2),
-                ) => {
-                    let t2_use = flow_use_op(
-                        env,
-                        unknown_use(),
-                        UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe())),
-                    );
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (&cx.force_fully_resolved_tvar(&s1), &t2_use),
-                    )?;
-                }
-                (
-                    constraint::Constraints::FullyResolved(s1),
-                    constraint::Constraints::FullyResolved(s2),
-                ) => {
-                    let t2_use = flow_use_op(
-                        env,
-                        unknown_use(),
-                        UseT::new(UseTInner::UseT(
-                            use_op.dupe(),
-                            cx.force_fully_resolved_tvar(&s2),
-                        )),
-                    );
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (&cx.force_fully_resolved_tvar(&s1), &t2_use),
-                    )?;
-                }
+            if node1.is_open_t() {
+                cx.add_array_or_object_literal_declaration_upper_bound(node1.id(), t_upper.dupe());
             }
+            flow_unresolved_to_unresolved(cx, env, trace, use_op.dupe(), node1, node2)?;
         }
         // ******************
         // * process Y ~> U *
         // ******************
-        (TypeInner::OpenT(tvar), _) => {
-            let r = tvar.reason();
+        (_, _) if let Some(node) = constraint_node_id(l) => {
+            let r = reason_of_t(l);
             if !match u.deref() {
                 // We have some simple tvar id based concretization. Bad cyclic types can only
                 // come from indirections through OpenT, most of them are already defended with
                 // Flow_js_utils.InvalidCyclicTypeValidation and turned to any, but there are gaps
                 // (especially EvalT from type sig), so we defend it again here.
                 UseTInner::ConcretizeT(box ConcretizeTData { seen, .. }) => {
-                    let tvar_id = tvar.id() as i32;
+                    let tvar_id = node.id();
                     // ISet.mem tvar !seen
                     if seen.contains(&tvar_id) {
                         true
@@ -736,9 +592,9 @@ fn __flow_impl<'cx>(
                 _ => false,
             } {
                 match u.deref() {
-                    UseTInner::UseT(_, t2) => {
+                    UseTInner::UseT(_, t2) if node.is_open_t() => {
                         cx.add_array_or_object_literal_declaration_upper_bound(
-                            tvar.id() as i32,
+                            node.id(),
                             t2.dupe(),
                         );
                     }
@@ -756,7 +612,7 @@ fn __flow_impl<'cx>(
                     ),
                     _ => u.dupe(),
                 };
-                let (id1, constraints1) = cx.find_constraints(tvar.id() as i32);
+                let (id1, constraints1) = constraint_node_constraints(cx, node);
                 match constraints1 {
                     constraint::Constraints::Unresolved(bounds1) => {
                         edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &u)?;
@@ -781,8 +637,8 @@ fn __flow_impl<'cx>(
         // ******************
         // * process L ~> X *
         // ******************
-        (_, UseTInner::UseT(use_op, t_open)) if let TypeInner::OpenT(tvar) = t_open.deref() => {
-            let (id2, constraints2) = cx.find_constraints(tvar.id() as i32);
+        (_, UseTInner::UseT(use_op, t_open)) if let Some(node) = constraint_node_id(t_open) => {
+            let (id2, constraints2) = constraint_node_constraints(cx, node);
             match constraints2 {
                 constraint::Constraints::Unresolved(bounds2) => {
                     edges_and_flows_from_t(

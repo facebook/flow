@@ -86,6 +86,7 @@ use flow_typing_type::type_::poly;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::void;
+use flow_typing_type::type_util;
 
 /// NOTE: While union flattening could be performed at any time, it is most effective when we know
 /// that all tvars have been resolved.
@@ -105,18 +106,18 @@ pub fn union_flatten<'cx>(cx: &Context<'cx>, ts: impl IntoIterator<Item = Type>)
     #[inline]
     fn flatten_into<'cx>(
         cx: &Context<'cx>,
-        seen: &mut std::collections::HashSet<u32>,
+        seen: &mut std::collections::HashSet<i32>,
         t: Type,
         out: &mut Vec<Type>,
     ) {
         match &*t {
-            TypeInner::OpenT(tvar) => {
-                let id = tvar.id();
+            _ if let Some(node) = type_util::constraint_node_id(&t) => {
+                let id = node.id();
                 if seen.contains(&id) {
                     return;
                 }
                 seen.insert(id);
-                match cx.find_graph(id as i32) {
+                match cx.find_constraints(id).1 {
                     constraint::Constraints::Resolved(inner) => flatten_into(cx, seen, inner, out),
                     constraint::Constraints::FullyResolved(s) => {
                         let forced = cx.force_fully_resolved_tvar(&s);
@@ -354,6 +355,7 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     t: Type,
 ) -> Type {
     match &*t {
+        TypeInner::ImplicitInstantiationTvar(_) => t,
         TypeInner::OpenT(tvar) => {
             let id_prime = mapper.tvar(cx, map_cx, tvar.reason(), tvar.id());
             if id_prime == tvar.id() {

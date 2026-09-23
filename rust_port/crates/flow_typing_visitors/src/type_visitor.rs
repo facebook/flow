@@ -37,6 +37,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
+use flow_typing_type::type_util;
 
 fn pole_todo() -> Polarity {
     Polarity::Neutral
@@ -270,6 +271,7 @@ pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
 ) -> Acc {
     match &**t {
         TypeInner::OpenT(tvar) => visitor.tvar(cx, pole, acc, tvar.reason(), tvar.id()),
+        TypeInner::ImplicitInstantiationTvar(_) => acc,
         TypeInner::DefT(_, def_t) => visitor.def_type(cx, pole, acc, def_t),
         TypeInner::FunProtoT(_)
         | TypeInner::FunProtoBindT(_)
@@ -282,9 +284,10 @@ pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         } => {
             let acc = visitor.type_(cx, Polarity::Positive, acc, type_);
             let acc = visitor.defer_use_type(cx, acc, defer_use_t);
-            let eval_pole = match &**type_ {
-                TypeInner::OpenT(_) => Polarity::Neutral,
-                _ => Polarity::Positive,
+            let eval_pole = if type_util::constraint_node_id(type_).is_some() {
+                Polarity::Neutral
+            } else {
+                Polarity::Positive
             };
             visitor.eval_id(cx, eval_pole, acc, id.dupe())
         }

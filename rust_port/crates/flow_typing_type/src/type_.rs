@@ -195,6 +195,16 @@ pub struct GenericTData {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Metadata for the future implicit-instantiation constraint system.
+/// Type visitors and mappers intentionally treat this node as atomic and do not traverse `bound`.
+pub struct ImplicitInstantiationTvarData {
+    pub reason: Reason,
+    pub name: SubstName,
+    pub bound: Type,
+    pub id: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ThisInstanceTData {
     pub reason: Reason,
     pub instance: InstanceT,
@@ -240,6 +250,7 @@ pub enum TypeInner {
     },
     /// bound type variable
     GenericT(Box<GenericTData>),
+    ImplicitInstantiationTvar(Box<ImplicitInstantiationTvarData>),
     /// this-abstracted instance. If `is_this` is true, then this literally comes from
     /// `this` as an annotation or expression, and should be fixed to an internal
     /// view of the class, which is a generic whose upper bound is the class.
@@ -8013,6 +8024,7 @@ pub mod union_rep {
         for t in ts {
             match &**t {
                 TypeInner::OpenT(_)
+                | TypeInner::ImplicitInstantiationTvar(_)
                 | TypeInner::EvalT { .. }
                 | TypeInner::TypeAppT(..)
                 | TypeInner::KeysT(_, _)
@@ -11240,6 +11252,7 @@ pub fn string_of_ctor(t: &Type) -> &'static str {
         TypeInner::FunProtoT(_) => "FunProtoT",
         TypeInner::FunProtoBindT(_) => "FunProtoBindT",
         TypeInner::GenericT(..) => "GenericT",
+        TypeInner::ImplicitInstantiationTvar(..) => "ImplicitInstantiationTvar",
         TypeInner::KeysT(_, _) => "KeysT",
         TypeInner::TemplateLiteralT { .. } => "TemplateLiteralT",
         TypeInner::StringMappingT { .. } => "StringMappingT",
@@ -11669,6 +11682,18 @@ pub fn ro_of_arrtype(arrtype: &ArrType) -> flow_typing_generics::array_spread::R
 
 pub fn annot(in_implicit_instantiation: bool, use_desc: bool, t: &Type) -> Type {
     match &**t {
+        TypeInner::ImplicitInstantiationTvar(data) => {
+            let reason = &data.reason;
+            if !(flow_common::reason::is_instantiable_reason(reason) && in_implicit_instantiation) {
+                Type(Rc::new(TypeInner::AnnotT(
+                    reason.dupe(),
+                    t.dupe(),
+                    use_desc,
+                )))
+            } else {
+                t.dupe()
+            }
+        }
         TypeInner::OpenT(tvar) => {
             if !(flow_common::reason::is_instantiable_reason(&tvar.0) && in_implicit_instantiation)
             {

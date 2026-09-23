@@ -194,6 +194,7 @@ impl CoverageVisitor {
     pub fn type_<'a>(&mut self, cx: &Context<'a>, t: &FlowType) -> Kind {
         match t.deref() {
             TypeInner::OpenT(tvar) => self.tvar(cx, tvar.id()),
+            TypeInner::ImplicitInstantiationTvar(data) => self.tvar(cx, data.id as u32),
             TypeInner::EvalT { type_, id, .. } => self.eval_t(cx, type_, id),
             // Non-concrete (fallthrough) constructors
             TypeInner::AnnotT(_, t, _)

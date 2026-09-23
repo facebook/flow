@@ -2035,7 +2035,9 @@ pub fn tag_of_t<'cx>(cx: &Context<'cx>, t: &Type) -> Option<TypeTagSet> {
         TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
             tag_of_inst(&instance.inst)
         }
-        TypeInner::OpenT(_) | TypeInner::AnnotT(_, _, _) => cx
+        TypeInner::OpenT(_)
+        | TypeInner::ImplicitInstantiationTvar(_)
+        | TypeInner::AnnotT(_, _, _) => cx
             .find_resolved(t)
             .and_then(|resolved| tag_of_t(cx, &resolved)),
         TypeInner::NominalT {

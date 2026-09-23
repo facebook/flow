@@ -24,7 +24,7 @@ use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
-use flow_typing_type::type_::open_tvar;
+use flow_typing_type::type_util;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 
 // (***********************)
@@ -33,6 +33,23 @@ use flow_typing_visitors::type_visitor::TypeVisitor;
 
 pub mod implicit_type_argument {
     use super::*;
+
+    pub fn mk_targ_reason(
+        typeparam: &TypeParam,
+        reason_op: &Reason,
+        reason_tapp: &Reason,
+    ) -> Reason {
+        let loc_op = reason_op.loc().dupe();
+        let desc = VirtualReasonDesc::RTypeParam(Box::new((
+            typeparam.name.dupe(),
+            (Arc::new(reason_op.desc(true).clone()), loc_op.dupe()),
+            (
+                Arc::new(reason_tapp.desc(true).clone()),
+                reason_tapp.def_loc().dupe(),
+            ),
+        )));
+        mk_reason(desc, typeparam.reason.def_loc().dupe()).reposition(loc_op)
+    }
 
     /// Make a type argument for a given type parameter, given a reason. Note that
     /// not all type arguments are tvars; the following function is used only when
@@ -46,17 +63,7 @@ pub mod implicit_type_argument {
         reason_tapp: &Reason,
     ) -> Type {
         // Create a reason that is positioned at reason_op, but has a def_loc at typeparam.reason.
-        let loc_op = reason_op.loc().dupe();
-        let desc = VirtualReasonDesc::RTypeParam(Box::new((
-            typeparam.name.dupe(),
-            (Arc::new(reason_op.desc(true).clone()), loc_op.dupe()),
-            (
-                Arc::new(reason_tapp.desc(true).clone()),
-                reason_tapp.def_loc().dupe(),
-            ),
-        )));
-        let reason = mk_reason(desc, typeparam.reason.def_loc().dupe());
-        let reason = reason.reposition(loc_op);
+        let reason = mk_targ_reason(typeparam, reason_op, reason_tapp);
         flow_typing_tvar::mk(cx, reason)
     }
 
@@ -64,8 +71,8 @@ pub mod implicit_type_argument {
     /// above. Sometimes, these type arguments are involved in type expansion
     /// loops, so we abstract them to detect such loops.
     pub fn abstract_targ(tvar: &Type) -> Option<Type> {
-        let tvar_inner = open_tvar(tvar);
-        let reason = tvar_inner.reason();
+        type_util::constraint_node_id(tvar)?;
+        let reason = type_util::reason_of_t(tvar);
         let desc = reason.desc(true).clone();
         match &desc {
             VirtualReasonDesc::RTypeParam(box (_, _, _)) => {
@@ -136,13 +143,15 @@ pub mod type_app_expansion {
                     }
                     _ => flow_typing_visitors::type_visitor::type_default(self, cx, pole, acc, t),
                 },
-                TypeInner::OpenT(_) => match implicit_type_argument::abstract_targ(t) {
-                    None => acc,
-                    Some(abstract_t) => {
-                        acc.insert(Root::Type(abstract_t));
-                        acc
+                _ if type_util::constraint_node_id(t).is_some() => {
+                    match implicit_type_argument::abstract_targ(t) {
+                        None => acc,
+                        Some(abstract_t) => {
+                            acc.insert(Root::Type(abstract_t));
+                            acc
+                        }
                     }
-                },
+                }
                 _ => flow_typing_visitors::type_visitor::type_default(self, cx, pole, acc, t),
             }
         }

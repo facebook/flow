@@ -85,6 +85,7 @@ struct FreeVarVisitor;
 impl TypeVisitor<FvAcc> for FreeVarVisitor {
     fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, mut acc: FvAcc, t: &Type) -> FvAcc {
         match t.deref() {
+            TypeInner::ImplicitInstantiationTvar(_) => acc,
             TypeInner::GenericT(box GenericTData { name, .. }) if !acc.bound.contains(name) => {
                 acc.free.insert(name.dupe());
                 flow_typing_visitors::type_visitor::type_default(self, cx, pole, acc, t)
@@ -594,6 +595,12 @@ impl<'cx> TypeMapper<'cx, MapCx<'cx>> for Substituter<'cx> {
                             cx.mk_placeholder(reason_of_t(param_t).dupe())
                         } else {
                             match (&mut self.obj_reachable_targs, &**param_t) {
+                                (obj_reachable_targs, TypeInner::ImplicitInstantiationTvar(_)) => {
+                                    if let Some(targs) = obj_reachable_targs {
+                                        targs.push((param_t.dupe(), Polarity::Neutral));
+                                    }
+                                    param_t.dupe()
+                                }
                                 (_, TypeInner::GenericT(..)) => mod_reason_of_t(
                                     &|param_reason| {
                                         param_reason

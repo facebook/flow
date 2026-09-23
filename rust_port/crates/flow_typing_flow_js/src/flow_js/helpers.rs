@@ -42,6 +42,8 @@ use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::WriteElemData;
 use flow_typing_type::type_::WritePropData;
 
+use super::constraint_helpers::constraint_node_constraints;
+use super::constraint_helpers::constraint_node_id;
 use super::constraint_helpers::resolve_id;
 use super::dispatch::__flow;
 use super::unification_helpers::__unify;
@@ -215,7 +217,7 @@ pub(super) fn perform_lookup_action<'cx>(
             tout,
         }) => {
             let react_dro = match obj_t.deref() {
-                TypeInner::OpenT(_) => panic!("Expected concrete type"),
+                _ if constraint_node_id(obj_t).is_some() => panic!("Expected concrete type"),
                 TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst) = def_t.deref() => {
                     inst.inst.inst_react_dro.clone()
                 }
@@ -365,7 +367,7 @@ pub(super) fn lookup_prop_type_direct<'cx>(
 pub(super) fn empty_success(u: &UseT<Context>) -> bool {
     match u.deref() {
         // Work has to happen when Empty flows to these types
-        UseTInner::UseT(_, t) if matches!(t.deref(), TypeInner::OpenT(_)) => false,
+        UseTInner::UseT(_, t) if type_util::constraint_node_id(t).is_some() => false,
         UseTInner::EvalTypeDestructorT(..) => false,
         UseTInner::UseT(_, t)
             if matches!(
@@ -393,14 +395,17 @@ pub(super) fn empty_success(u: &UseT<Context>) -> bool {
 }
 
 fn is_concrete(t: &Type) -> bool {
+    if type_util::constraint_node_id(t).is_some() {
+        return false;
+    }
+
     match t.deref() {
         TypeInner::EvalT { .. }
         | TypeInner::AnnotT(..)
         | TypeInner::MaybeT(..)
         | TypeInner::OptionalT { .. }
         | TypeInner::TypeAppT(..)
-        | TypeInner::ThisTypeAppT(..)
-        | TypeInner::OpenT(_) => false,
+        | TypeInner::ThisTypeAppT(..) => false,
         _ => true,
     }
 }
@@ -1738,13 +1743,13 @@ pub(super) fn reposition<'cx>(
         t: &Type,
     ) -> Result<Type, FlowJsException> {
         match t.deref() {
-            TypeInner::OpenT(tvar) => {
-                let r = tvar.reason();
-                let id = tvar.id() as i32;
-                let t_open = t;
+            _ if let Some(node) = constraint_node_id(t) => {
+                let r = reason_of_t(t);
+                let id = node.id();
+                let t_node = t;
                 let reason = mod_reason(r.dupe());
                 let use_desc = desc.is_some();
-                let constraints = cx.find_graph(id);
+                let (_, constraints) = constraint_node_constraints(cx, node);
                 match constraints {
                     Constraints::Resolved(resolved_t) => match seen.get(&id) {
                         Some(t) => Ok(t.dupe()),
@@ -1801,7 +1806,7 @@ pub(super) fn reposition<'cx>(
                                 lazy_t_val
                             };
                             match t.deref() {
-                                TypeInner::OpenT(repositioned_tvar) => {
+                                TypeInner::OpenT(repositioned_tvar) if node.is_open_t() => {
                                     cx.report_array_or_object_literal_declaration_reposition(
                                         repositioned_tvar.id() as i32,
                                         id,
@@ -1814,7 +1819,7 @@ pub(super) fn reposition<'cx>(
                     },
                     Constraints::Unresolved(_) => {
                         if is_instantiable_reason(r) && env.in_implicit_instantiation() {
-                            Ok(t_open.dupe())
+                            Ok(t_node.dupe())
                         } else {
                             let reason_for_repos = reason.dupe();
                             flow_typing_tvar::mk_where(cx, reason, |cx, tvar| {
@@ -1823,7 +1828,7 @@ pub(super) fn reposition<'cx>(
                                     env,
                                     trace,
                                     (
-                                        t_open,
+                                        t_node,
                                         &UseT::new(UseTInner::ReposLowerT {
                                             reason: reason_for_repos,
                                             use_desc,
@@ -2558,7 +2563,7 @@ where
     F: FnOnce(&Type) -> T,
 {
     use flow_typing_type::type_::constraint::Constraints;
-    match cx.find_graph(id) {
+    match cx.find_constraints(id).1 {
         Constraints::Resolved(t) => f(&t),
         Constraints::FullyResolved(s) => f(&cx.force_fully_resolved_tvar(&s)),
         Constraints::Unresolved(_) => default,
@@ -2571,13 +2576,19 @@ where
 // annotation rather than getting a bound on both sides.
 pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     match t.deref() {
+        _ if let Some(node) = type_util::constraint_node_id(t) => find_resolved_opt(
+            cx,
+            t.dupe(),
+            |resolved_t| drop_resolved(cx, resolved_t),
+            node.id(),
+        ),
         TypeInner::GenericT(box GenericTData {
             reason,
             name,
             id: g_id,
             bound,
             no_infer,
-        }) if let TypeInner::OpenT(tvar) = bound.deref() => find_resolved_opt(
+        }) if let Some(node) = constraint_node_id(bound) => find_resolved_opt(
             cx,
             t.dupe(),
             |resolved_t| {
@@ -2589,12 +2600,8 @@ pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
                     no_infer: *no_infer,
                 })))
             },
-            tvar.id() as i32,
+            node.id(),
         ),
-        TypeInner::OpenT(tvar) => {
-            let id = tvar.id() as i32;
-            find_resolved_opt(cx, t.dupe(), |resolved_t| drop_resolved(cx, resolved_t), id)
-        }
         _ => t.dupe(),
     }
 }
@@ -2702,8 +2709,8 @@ pub(super) fn singleton_concrete_type_for_type_cast<'cx>(
                 let repositioned = reposition_reason(cx, env, None, r, *use_desc, inner).unwrap();
                 resolve(cx, env, &repositioned)
             }
-            TypeInner::OpenT(tvar) => {
-                let (_root_id, constraints) = cx.find_constraints(tvar.id() as i32);
+            _ if let Some(node) = type_util::constraint_node_id(t) => {
+                let (_root_id, constraints) = cx.find_constraints(node.id());
                 match constraints {
                     Constraints::Resolved(t1) => resolve(cx, env, &t1),
                     Constraints::FullyResolved(s1) => {

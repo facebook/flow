@@ -417,15 +417,15 @@ fn get_t<'cx>(cx: &Context<'cx>, t: Type) -> Type {
                     depth -= 1;
                     t = inner_t.dupe();
                 }
-                TypeInner::OpenT(tvar) if depth >= 0 => {
-                    let r = tvar.reason();
-                    let id = tvar.id() as i32;
+                _ if depth >= 0
+                    && let Some(node) = type_util::constraint_node_id(&t) =>
+                {
                     let merged = flow_js_utils::merge_tvar(
                         cx,
                         false,
                         |_cx, r| Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::EmptyT))),
-                        r,
-                        id,
+                        type_util::reason_of_t(&t),
+                        node.id(),
                     );
                     depth -= 1;
                     t = merged;

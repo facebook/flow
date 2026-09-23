@@ -47,6 +47,7 @@ use crate::type_::GetPrivatePropTData;
 use crate::type_::GetPropTData;
 use crate::type_::GetTypeFromNamespaceTData;
 use crate::type_::HasOwnPropTData;
+use crate::type_::ImplicitInstantiationTvarData;
 use crate::type_::MapTypeTData;
 use crate::type_::MethodTData;
 use crate::type_::MixedFlavor;
@@ -96,6 +97,7 @@ pub fn reason_of_t(t: &Type) -> &Reason {
         TypeInner::DefT(reason, _) => reason,
         TypeInner::EvalT { defer_use_t, .. } => reason_of_defer_use_t(defer_use_t),
         TypeInner::GenericT(box GenericTData { reason, .. }) => reason,
+        TypeInner::ImplicitInstantiationTvar(data) => &data.reason,
         TypeInner::FunProtoT(reason) => reason,
         TypeInner::FunProtoBindT(reason) => reason,
         TypeInner::KeysT(reason, _) => reason,
@@ -113,6 +115,32 @@ pub fn reason_of_t(t: &Type) -> &Reason {
         TypeInner::IntersectionT(reason, _) => reason,
         TypeInner::MaybeT(reason, _) => reason,
         TypeInner::OptionalT { reason, .. } => reason,
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum ConstraintNodeId {
+    OpenT(i32),
+    Inference(i32),
+}
+
+impl ConstraintNodeId {
+    pub fn id(self) -> i32 {
+        match self {
+            Self::OpenT(id) | Self::Inference(id) => id,
+        }
+    }
+
+    pub fn is_open_t(self) -> bool {
+        matches!(self, Self::OpenT(_))
+    }
+}
+
+pub fn constraint_node_id(t: &Type) -> Option<ConstraintNodeId> {
+    match t.deref() {
+        TypeInner::OpenT(tvar) => Some(ConstraintNodeId::OpenT(tvar.id() as i32)),
+        TypeInner::ImplicitInstantiationTvar(data) => Some(ConstraintNodeId::Inference(data.id)),
+        _ => None,
     }
 }
 
@@ -234,6 +262,19 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
             no_infer: *no_infer,
             id: id.clone(),
         }))),
+        TypeInner::ImplicitInstantiationTvar(box ImplicitInstantiationTvarData {
+            reason,
+            name,
+            bound,
+            id,
+        }) => Type::new(TypeInner::ImplicitInstantiationTvar(Box::new(
+            ImplicitInstantiationTvarData {
+                reason: f(reason.dupe()),
+                name: name.dupe(),
+                bound: bound.dupe(),
+                id: *id,
+            },
+        ))),
         TypeInner::FunProtoT(reason) => Type::new(TypeInner::FunProtoT(f(reason.dupe()))),
         TypeInner::FunProtoBindT(reason) => Type::new(TypeInner::FunProtoBindT(f(reason.dupe()))),
         TypeInner::KeysT(reason, inner_t) => {
@@ -1656,6 +1697,7 @@ pub fn is_falsy(t: &Type) -> bool {
 pub fn is_concrete(t: &Type) -> bool {
     match t.deref() {
         TypeInner::OpenT(_)
+        | TypeInner::ImplicitInstantiationTvar(_)
         | TypeInner::EvalT { .. }
         | TypeInner::TypeAppT(box TypeAppTData { .. })
         | TypeInner::KeysT(_, _)
@@ -1737,7 +1779,9 @@ where
     use crate::type_::Literal;
 
     match (l.deref(), u.deref()) {
-        (TypeInner::OpenT(_), _) | (_, TypeInner::OpenT(_)) | (TypeInner::UnionT(_, _), _) => false,
+        (TypeInner::OpenT(_) | TypeInner::ImplicitInstantiationTvar(_), _)
+        | (_, TypeInner::OpenT(_) | TypeInner::ImplicitInstantiationTvar(_))
+        | (TypeInner::UnionT(_, _), _) => false,
 
         (TypeInner::DefT(_, l_def), TypeInner::DefT(_, u_def))
             if matches!(&**l_def, D::NumGeneralT(_) | D::SingletonNumT { .. })

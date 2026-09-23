@@ -486,6 +486,7 @@ enum TruthynessResult {
 fn try_eval_concrete_type_truthyness<'cx>(cx: &Context<'cx>, t: &Type) -> TruthynessResult {
     match t.deref() {
         TypeInner::OpenT(_)
+        | TypeInner::ImplicitInstantiationTvar(_)
         | TypeInner::EvalT { .. }
         | TypeInner::TypeAppT(..)
         | TypeInner::GenericT(..)

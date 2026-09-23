@@ -217,7 +217,7 @@ fn evaluate_type_destructor_<'cx>(
     let t = super::helpers::drop_resolved(cx, t);
     match t.deref() {
         // | OpenT _
-        TypeInner::OpenT(_) => {
+        _ if type_util::constraint_node_id(&t).is_some() => {
             let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
                 EvalTypeDestructorTData {
                     destructor_use_op: use_op,
@@ -236,7 +236,7 @@ fn evaluate_type_destructor_<'cx>(
             name,
             id,
             no_infer,
-        }) if matches!(bound.deref(), TypeInner::OpenT(_)) => {
+        }) if type_util::constraint_node_id(bound).is_some() => {
             let x = UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
                 EvalTypeDestructorTData {
                     destructor_use_op: use_op,
@@ -1380,9 +1380,8 @@ pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
         crate::tvar_resolver::resolve(cx, crate::tvar_resolver::default_no_lowers, true, &result);
         let t = singleton_concrete_type_for_inspection(cx, env, reason, &result)?;
         Ok(match t.deref() {
-            TypeInner::OpenT(inner_tvar) => {
-                let id = inner_tvar.id() as i32;
-                let (_, constraints) = cx.find_constraints(id);
+            _ if let Some(node) = type_util::constraint_node_id(&t) => {
+                let (_, constraints) = cx.find_constraints(node.id());
                 match constraints {
                     constraint::Constraints::FullyResolved(s) => cx.force_fully_resolved_tvar(&s),
                     _ => t,

@@ -197,6 +197,7 @@ use flow_typing_type::type_util::tuple_ts_of_elements;
 use flow_typing_type::type_util::use_op_of_use_t;
 use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::Node;
+use flow_utils_union_find::Root;
 use vec1::Vec1;
 
 use crate::implicit_instantiation;

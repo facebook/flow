@@ -113,7 +113,7 @@ fn check_polarity_impl<'cx>(
             }
         },
         // No need to walk into tvars
-        TypeInner::OpenT(..) => {}
+        TypeInner::OpenT(..) | TypeInner::ImplicitInstantiationTvar(..) => {}
         // The annot will resolve to some type, but it doesn't matter because that
         // type will certainly not contain a GenericT.
         TypeInner::AnnotT(..) => {}

@@ -335,7 +335,7 @@ fn ref_json(id: u32) -> Json {
 
 fn type_to_json_uncached<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, t: &Type) -> Json {
     match t.deref() {
-        TypeInner::OpenT(_) => {
+        TypeInner::OpenT(_) | TypeInner::ImplicitInstantiationTvar(_) => {
             let reason = type_util::reason_of_t(t);
             let resolved = FlowJs::singleton_concrete_type_for_inspection(cx, reason, t)
                 .unwrap_or_else(|_| t.dupe());
