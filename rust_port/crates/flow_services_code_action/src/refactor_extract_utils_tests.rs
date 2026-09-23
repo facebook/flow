@@ -9,6 +9,7 @@
 
 use flow_analysis::scope_builder;
 use flow_analysis::ssa_builder;
+use flow_common::options::Options;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
@@ -18,6 +19,7 @@ use flow_parser::parse_program_file;
 use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::pretty_printer;
 use flow_parser_utils_output::source::Source;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 
 use crate::ast_extraction_utils::ast_extractor;
 use crate::refactor_extract_utils::variable_analysis;
@@ -31,6 +33,16 @@ fn pretty_print(layout: &flow_parser_utils_output::layout::LayoutNode) -> String
 
 fn dummy_filename() -> FileKey {
     FileKey::new(FileKeyInner::SourceFile("".to_string()))
+}
+
+fn type_sig_options() -> TypeSigOptions {
+    TypeSigOptions::of_options(
+        &Options::default(),
+        false,
+        Vec::new(),
+        &dummy_filename(),
+        false,
+    )
 }
 
 fn parse(contents: &str) -> ast::Program<Loc, Loc> {
@@ -638,7 +650,10 @@ mod collect_function_method_inserting_points_tests {
             Arc::new(FileSig::empty()),
             cx.metadata(),
             comments,
+            ast,
             aloc_ast,
+            &type_sig_options(),
+            None,
         )
         .expect("infer_ast should not be canceled in test")
     }
@@ -892,7 +907,10 @@ mod find_closest_enclosing_class_tests {
             Arc::new(FileSig::empty()),
             cx.metadata(),
             comments,
+            ast,
             aloc_ast,
+            &type_sig_options(),
+            None,
         )
         .expect("infer_ast should not be canceled in test")
     }
@@ -1513,7 +1531,10 @@ mod type_synthesizer_tests {
             Arc::new(FileSig::empty()),
             cx.metadata(),
             comments,
+            ast,
             aloc_ast,
+            &type_sig_options(),
+            None,
         )
         .expect("infer_ast should not be canceled in test")
     }

@@ -233,6 +233,210 @@ impl<'cx> File<'cx> {
     }
 }
 
+/// Keeps the temporary signature file alive while its merged root types are inspected.
+/// Any lazy forcing states reachable from the roots retain their own copy of the file.
+pub struct TargetedMergeResult<'cx, L: Ord> {
+    _file: File<'cx>,
+    roots: BTreeMap<L, Type>,
+}
+
+impl<'cx, L: Ord> TargetedMergeResult<'cx, L> {
+    pub fn roots(&self) -> &BTreeMap<L, Type> {
+        &self.roots
+    }
+}
+
+/// Merges the requested roots of a local-only targeted signature into semantic types.
+pub fn merge_targeted_module<'cx>(
+    cx: &Context<'cx>,
+    locs: Table<Loc>,
+    targeted: packed_type_sig::TargetedModule<Loc>,
+) -> TargetedMergeResult<'cx, Loc> {
+    let aloc = Rc::new(move |index: &Index<Loc>| ALoc::of_loc(locs.get(*index).dupe()));
+    merge_targeted_module_impl(cx, aloc, &targeted.module, targeted.roots)
+}
+
+/// Merges roots already present in the ordinary packed signature.
+pub fn merge_packed_target_roots<'cx>(
+    cx: &Context<'cx>,
+    source: Option<FileKey>,
+    module: &packed_type_sig::Module<Loc>,
+    roots: BTreeMap<ALoc, packed_type_sig::TargetedRoot<Loc>>,
+) -> TargetedMergeResult<'cx, ALoc> {
+    let aloc = Rc::new(move |index: &Index<Loc>| {
+        flow_aloc::aloc_representation_do_not_use::make_keyed(
+            source.dupe(),
+            index.as_usize() as u32,
+        )
+    });
+    merge_targeted_module_impl(cx, aloc, module, roots)
+}
+
+fn mk_targeted_sig_tvar<'cx>(
+    cx: &Context<'cx>,
+    file_cell: &std::cell::OnceCell<Weak<FileInner<'cx>>>,
+    reason: Reason,
+    resolve: impl FnOnce(&Context<'cx>, &File<'cx>) -> Type + 'cx,
+) -> Type {
+    let file = File::from_weak(
+        file_cell
+            .get()
+            .expect("targeted file should be initialized"),
+    );
+    let resolved: LazyType<'cx> =
+        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+            resolve(cx, &file)
+        })));
+    annotation_inference::mk_sig_tvar(cx, reason, resolved)
+}
+
+fn merge_targeted_module_impl<'cx, L: Ord>(
+    cx: &Context<'cx>,
+    aloc: Rc<dyn Fn(&Index<Loc>) -> ALoc + 'cx>,
+    module: &packed_type_sig::Module<Loc>,
+    roots: BTreeMap<L, packed_type_sig::TargetedRoot<Loc>>,
+) -> TargetedMergeResult<'cx, L> {
+    use std::cell::OnceCell;
+
+    use flow_common::reason::VirtualReasonDesc::RExports;
+    use packed_type_sig::TargetedRoot;
+
+    let file_cell: Rc<OnceCell<Weak<FileInner<'cx>>>> = Rc::new(OnceCell::new());
+
+    let dependencies = module.module_refs.map(|mref| {
+        let specifier = FlowImportSpecifier::Userland(mref.dupe());
+        let resolved = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+            cx.find_require(&specifier)
+        })
+            as Box<dyn FnOnce(&Context<'cx>) -> ResolvedRequire<'cx> + 'cx>));
+        (mref.dupe(), resolved)
+    });
+
+    let local_defs = module.local_defs.map(|def| {
+        let aloc = aloc.dupe();
+        let file_cell = file_cell.dupe();
+        let def = def.clone();
+        Rc::new(flow_lazy::Lazy::new(Box::new(move |_cx: &Context<'cx>| {
+            let def = Rc::new(def.map(
+                &mut (),
+                |_, loc: &Index<Loc>| (*aloc)(loc),
+                |_, t: &Pack::Packed<Index<Loc>>| t.map(&|i| (*aloc)(i)),
+            ));
+            let loc = def.id_loc();
+            let name = def.name().dupe();
+            let binding_kind = def_binding_kind(&def);
+            let reason = def_reason(&def);
+            let make_type = |const_decl: bool| {
+                let file_cell = file_cell.dupe();
+                let reason_for_tvar = reason.dupe();
+                let reason = reason.dupe();
+                let def = def.dupe();
+                Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                    mk_targeted_sig_tvar(cx, &file_cell, reason_for_tvar, move |cx, file| {
+                        merge_def(cx, file, reason, &def, const_decl)
+                    })
+                })
+                    as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>))
+            };
+            (loc, name, binding_kind, make_type(false), make_type(true))
+        })
+            as Box<dyn FnOnce(&Context<'cx>) -> LocalDefEntry<'cx> + 'cx>))
+    });
+
+    let remote_refs = module.remote_refs.map(|remote_ref| {
+        let aloc = aloc.dupe();
+        let file_cell = file_cell.dupe();
+        let remote_ref = remote_ref.clone();
+        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+            let remote_ref = remote_ref.map(&|i| (*aloc)(i));
+            let loc = remote_ref.loc().dupe();
+            let name = remote_ref.name().dupe();
+            let reason = remote_ref_reason(&remote_ref);
+            let reason_for_type = reason.dupe();
+            let remote_ref_for_type = remote_ref.clone();
+            let t = mk_targeted_sig_tvar(cx, &file_cell, reason.dupe(), move |cx, file| {
+                merge_remote_ref(cx, file, reason_for_type, &remote_ref_for_type)
+            });
+            let reason_for_extends = reason.dupe();
+            let t_for_extends = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+                mk_targeted_sig_tvar(cx, &file_cell, reason, move |cx, file| {
+                    merge_remote_ref_for_extends(cx, file, reason_for_extends, &remote_ref)
+                })
+            })
+                as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>));
+            (loc, name, t, t_for_extends)
+        })
+            as Box<dyn FnOnce(&Context<'cx>) -> RemoteRefEntry<'cx> + 'cx>))
+    });
+
+    let pattern_defs = module.pattern_defs.map(|def| {
+        let aloc = aloc.dupe();
+        let file_cell = file_cell.dupe();
+        let def = def.clone();
+        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+            let def = def.map(&|i| (*aloc)(i));
+            let file = File::from_weak(
+                file_cell
+                    .get()
+                    .expect("targeted file should be initialized"),
+            );
+            merge(FlowOrdMap::new(), cx, &file, &def)
+        })
+            as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>))
+    });
+
+    let patterns = module.patterns.map(|pattern| {
+        let aloc = aloc.dupe();
+        let file_cell = file_cell.dupe();
+        let pattern = pattern.clone();
+        Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
+            let pattern = pattern.map(&|i| (*aloc)(i));
+            let file = File::from_weak(
+                file_cell
+                    .get()
+                    .expect("targeted file should be initialized"),
+            );
+            merge_pattern(cx, &file, &pattern)
+        })
+            as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>))
+    });
+
+    let exports: Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type> + 'cx> =
+        Rc::new(|_cx, _dst_cx| Err(type_::any_t::annot(reason::locationless_reason(RExports))));
+    let file = File::new(
+        dependencies,
+        exports,
+        local_defs,
+        remote_refs,
+        pattern_defs,
+        patterns,
+    );
+    file_cell
+        .set(file.downgrade())
+        .unwrap_or_else(|_| panic!("targeted file should only be initialized once"));
+
+    let roots = roots
+        .into_iter()
+        .map(|(loc, root)| {
+            let type_ = match root {
+                TargetedRoot::LocalDef(index) => {
+                    let entry = file.local_defs.borrow().get(index).dupe();
+                    let (_, _, _, general, _) = entry.get_forced(cx);
+                    general.get_forced(cx).dupe()
+                }
+                TargetedRoot::RemoteRef(index) => {
+                    let entry = file.remote_refs.borrow().get(index).dupe();
+                    let (_, _, type_, _) = entry.get_forced(cx);
+                    type_.dupe()
+                }
+            };
+            (loc, type_)
+        })
+        .collect();
+
+    TargetedMergeResult { _file: file, roots }
+}
+
 pub type TparamsMap = FlowOrdMap<FlowSmolStr, Type>;
 
 pub fn def_reason<T>(def: &Def<ALoc, T>) -> Reason {

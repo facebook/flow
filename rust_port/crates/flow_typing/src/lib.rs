@@ -9,6 +9,7 @@
 #![feature(never_type)]
 
 pub mod cycles;
+mod declared_types;
 pub mod env_resolution;
 pub mod marked;
 pub mod merge;

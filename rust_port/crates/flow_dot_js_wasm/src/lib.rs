@@ -93,6 +93,7 @@ struct PreparedFile {
     cx: Context<'static>,
     metadata: flow_typing_context::Metadata,
     lint_severities: LintSettings<Severity>,
+    type_sig_options: TypeSigOptions,
 }
 
 struct CheckedFile {
@@ -309,6 +310,13 @@ fn prepare_file(
     let options = config_options(config);
     let file_key = FileKey::new(FileKeyInner::SourceFile(filename.to_string()));
     let parsed = parse_file(file_key.dupe(), content, &options);
+    let type_sig_options = TypeSigOptions::of_options(
+        &options,
+        parsed.docblock.prevent_munge(),
+        Vec::new(),
+        &file_key,
+        false,
+    );
     if !parsed.parse_errors.is_empty() {
         return Ok(PreparedFile {
             parsed,
@@ -328,6 +336,7 @@ fn prepare_file(
             ),
             metadata: flow_typing_context::mk_context_metadata(&options, Arc::default()),
             lint_severities: LintSettings::<Severity>::empty_severities(),
+            type_sig_options,
         });
     }
 
@@ -369,6 +378,7 @@ fn prepare_file(
         cx,
         metadata,
         lint_severities,
+        type_sig_options,
     })
 }
 
@@ -391,7 +401,10 @@ fn check_file(
         prepared.parsed.file_sig.dupe(),
         &prepared.metadata,
         all_comments,
+        prepared.parsed.ast.as_ref(),
         aloc_ast,
+        &prepared.type_sig_options,
+        None,
     )
     .map_err(|_| "type inference failed".to_string())?;
     Ok(CheckedFile {
@@ -829,8 +842,14 @@ fn autocomplete(params: &Value) -> Result<Value, String> {
             return Err("parse error".to_string());
         }
         let aloc_ast = flow_aloc::loc_to_aloc_ast(prepared.parsed.ast.as_ref());
-        type_inference::initialize_env(&prepared.cx, None, aloc_ast)
-            .map_err(|_| "autocomplete type inference failed".to_string())?;
+        type_inference::initialize_env(
+            &prepared.cx,
+            &prepared.type_sig_options,
+            None,
+            prepared.parsed.ast.as_ref(),
+            aloc_ast,
+        )
+        .map_err(|_| "autocomplete type inference failed".to_string())?;
         let module_system_info = LspModuleSystemInfo {
             file_options: Arc::<FileOptions>::default(),
             haste_module_system: false,

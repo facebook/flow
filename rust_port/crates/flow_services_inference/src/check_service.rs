@@ -956,13 +956,13 @@ pub fn mk_check_file(
         Box::new(
             move |cx: &Context<'static>,
                   file_key: &FileKey,
-                  _type_sig_options: &TypeSigOptions,
+                  type_sig_options: &TypeSigOptions,
                   file_sig: Arc<FileSig>,
                   metadata: &Metadata,
                   comments: &[flow_parser::ast::Comment<Loc>],
-                  _ast: &ast::Program<Loc, Loc>,
+                  ast: &ast::Program<Loc, Loc>,
                   aloc_ast: &ast::Program<ALoc, ALoc>,
-                  _current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>| {
+                  current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>| {
                 // Set merge_dst_cx to self to establish the chain for copy_into:
                 // nested copy_into calls read this to find the ultimate error
                 // destination (the file being checked).
@@ -975,7 +975,10 @@ pub fn mk_check_file(
                     file_sig,
                     metadata,
                     comments,
+                    ast,
                     aloc_ast,
+                    type_sig_options,
+                    current_type_sig,
                 )
             },
         )
@@ -983,11 +986,11 @@ pub fn mk_check_file(
 
     let compute_env = Box::new(
         move |cx: &Context<'static>,
-              _type_sig_options: &TypeSigOptions,
-              _ast: &ast::Program<Loc, Loc>,
+              type_sig_options: &TypeSigOptions,
+              ast: &ast::Program<Loc, Loc>,
               aloc_ast: &ast::Program<ALoc, ALoc>| {
             cx.set_merge_dst_cx(cx);
-            type_inference::initialize_env(cx, None, aloc_ast)
+            type_inference::initialize_env(cx, type_sig_options, None, ast, aloc_ast)
         },
     );
 

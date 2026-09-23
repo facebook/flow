@@ -249,12 +249,20 @@ fn mark_local_binding<'arena, 'ast>(
             id_loc,
             name: _,
             def,
-            tparams: _,
+            tparams,
             strictness_kind: _,
         } => {
             mark_loc(marker, id_loc);
             let parsed = def.get_forced(opts, scopes, tbls);
             mark_parsed(opts, scopes, tbls, marker, parsed);
+            // Pack consumes the tparams, so they must be marked: a lone param
+            // root (targeted packing) otherwise panics in `index_exn`.
+            let mut cx = (tbls, marker, scopes);
+            tparams.iter(
+                &mut cx,
+                &|(_tbls, marker, _scopes), loc| mark_loc(marker, loc),
+                &|(tbls, marker, scopes), t| mark_parsed(opts, scopes, tbls, marker, t),
+            );
         }
         parse::LocalBinding::ConstRefBinding {
             id_loc,

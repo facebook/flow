@@ -15,6 +15,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
+use flow_common::options::Options;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -31,6 +32,7 @@ use flow_parser::polymorphic_ast_mapper::LocMapper;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::pretty_printer;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
 use flow_typing_context::FrozenMetadata;
@@ -131,6 +133,19 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
         flow_utils_concurrency::check_budget::CheckBudget::new(None),
     );
     let aloc_ast = flow_aloc::loc_to_aloc_ast(&ast);
+    let type_sig_options = TypeSigOptions::of_options(
+        &Options {
+            hook_compatibility: true,
+            ts_syntax: true,
+            ts_utility_syntax: true,
+            tslib_syntax: true,
+            ..Default::default()
+        },
+        false,
+        Vec::new(),
+        &file_key,
+        false,
+    );
     let typed_ast = type_inference::infer_ast(
         &LintSettings::<Severity>::empty_severities(),
         &cx,
@@ -138,7 +153,10 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
         Arc::new(FileSig::empty()),
         &md,
         &[],
+        &ast,
         aloc_ast,
+        &type_sig_options,
+        None,
     )
     .expect("infer_ast should not be canceled in test");
     let aloc_stmts = flow_aloc::loc_to_aloc_statement_list(&ast.statements);

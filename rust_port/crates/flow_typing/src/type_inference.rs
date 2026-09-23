@@ -40,6 +40,8 @@ use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::polymorphic_ast_mapper;
 use flow_parser_utils::file_sig::FileSig;
+use flow_type_sig::packed_type_sig::Module as PackedTypeSigModule;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing_context::Context;
 use flow_typing_context::Metadata;
 use flow_typing_debug::verbose;
@@ -58,6 +60,8 @@ use flow_typing_loc_env::loc_env::LocEnv;
 use flow_typing_statement::statement as statement_mod;
 use flow_typing_type::type_::Type;
 use flow_typing_utils::typed_ast_utils::ErrorMapper;
+
+use crate::declared_types;
 
 // Scan the list of comments to place suppressions on the appropriate locations.
 // Because each comment can only contain a single code, in order to support
@@ -705,11 +709,21 @@ impl<'a, 'cx: 'a> dependency_sigs::Flow for FlowJsUtilsFlow<'a, 'cx> {
     }
 }
 
-pub fn initialize_env<'cx>(
+enum DeclaredTypesMode<'a> {
+    Skip,
+    Compute {
+        ast: &'a ast::Program<Loc, Loc>,
+        type_sig_options: &'a TypeSigOptions,
+        current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>,
+    },
+}
+
+fn initialize_env_with_mode<'cx>(
     cx: &Context<'cx>,
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
-) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    declared_types_mode: DeclaredTypesMode<'_>,
+) -> Result<Option<declared_types::ResolvedAnalysis>, flow_utils_concurrency::job_error::JobError> {
     let lib = cx.is_global_lib_context();
     let toplevel_scope_kind = if lib {
         ScopeKind::Global
@@ -718,7 +732,7 @@ pub fn initialize_env<'cx>(
     };
     let exclude_syms = exclude_syms.unwrap_or_default();
     let result: Result<
-        Result<(), env_api::EnvInvariant<ALoc>>,
+        Result<Option<declared_types::ResolvedAnalysis>, env_api::EnvInvariant<ALoc>>,
         flow_utils_concurrency::job_error::JobError,
     > = (|| {
         let dep_cx = DepSigsContext(cx);
@@ -729,6 +743,23 @@ pub fn initialize_env<'cx>(
                 exclude_syms.into_iter().collect(),
                 aloc_ast,
             );
+        let resolved_declared_types = match declared_types_mode {
+            DeclaredTypesMode::Skip => None,
+            DeclaredTypesMode::Compute {
+                ast,
+                type_sig_options,
+                current_type_sig,
+            } => declared_types::pack(
+                type_sig_options,
+                cx,
+                ast,
+                aloc_ast,
+                &info.scopes,
+                &info.providers,
+                current_type_sig,
+            )
+            .map(|analysis| declared_types::resolve(cx, analysis)),
+        };
         let info = info.to_env_info();
         let autocomplete_hooks = AutocompleteHooks {
             id_hook: Box::new(|name: &str, loc: &ALoc| {
@@ -815,20 +846,46 @@ pub fn initialize_env<'cx>(
             env.scope_kind = scope_kind;
             env.class_stack = class_stack;
         }
-        Ok(Ok(()))
+        Ok(Ok(resolved_declared_types))
     })();
     let result = result?;
-    if let Err(env_api::EnvInvariant { loc, failure }) = result {
-        let loc = loc.unwrap_or_else(|| aloc_ast.loc.dupe());
-        flow_js_utils::add_output_non_speculating(
-            cx,
-            ErrorMessage::EInternal(Box::new((loc, InternalError::EnvInvariant(failure)))),
-        );
+    match result {
+        Ok(resolved_declared_types) => Ok(resolved_declared_types),
+        Err(env_api::EnvInvariant { loc, failure }) => {
+            let loc = loc.unwrap_or_else(|| aloc_ast.loc.dupe());
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EInternal(Box::new((loc, InternalError::EnvInvariant(failure)))),
+            );
+            Ok(None)
+        }
     }
+}
+
+pub fn initialize_env<'cx>(
+    cx: &Context<'cx>,
+    type_sig_options: &TypeSigOptions,
+    exclude_syms: Option<BTreeSet<FlowSmolStr>>,
+    ast: &ast::Program<Loc, Loc>,
+    aloc_ast: &ast::Program<ALoc, ALoc>,
+) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    let _resolved_declared_types = initialize_env_with_mode(
+        cx,
+        exclude_syms,
+        aloc_ast,
+        DeclaredTypesMode::Compute {
+            ast,
+            type_sig_options,
+            current_type_sig: None,
+        },
+    )?;
     Ok(())
 }
 
 /// Lint suppressions are handled iff lint_severities is Some.
+/// `type_sig_options` must be the options used to parse `ast`.
+/// `current_type_sig` must come from the same parse as `ast`. Pass `None` when
+/// no matching packed signature exists; the required roots are then repacked from `ast`.
 pub fn infer_ast<'a>(
     lint_severities: &LintSettings<Severity>,
     cx: &Context<'a>,
@@ -836,7 +893,10 @@ pub fn infer_ast<'a>(
     file_sig: Arc<FileSig>,
     metadata: &Metadata,
     loc_comments: &[Comment<Loc>],
+    ast: &ast::Program<Loc, Loc>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
+    type_sig_options: &TypeSigOptions,
+    current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>,
 ) -> Result<ast::Program<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     assert!(cx.is_checked());
     // Check if the file is in declarations mode and we're not in IDE mode.
@@ -856,7 +916,16 @@ pub fn infer_ast<'a>(
             ref comments,
             ref all_comments,
         } = *aloc_ast;
-        initialize_env(cx, None, aloc_ast)?;
+        let _resolved_declared_types = initialize_env_with_mode(
+            cx,
+            None,
+            aloc_ast,
+            DeclaredTypesMode::Compute {
+                ast,
+                type_sig_options,
+                current_type_sig,
+            },
+        )?;
         let typed_statements = statement_mod::statement_list(cx, statements)?;
         let tast = ast::Program {
             loc: prog_aloc.dupe(),
@@ -1105,7 +1174,12 @@ fn infer_lib_file<'a>(
         ref all_comments,
     } = *aloc_ast;
     let exclude_syms = cx.builtins().builtin_ordinary_name_set();
-    initialize_env(cx, Some(exclude_syms), &filtered_aloc_ast)?;
+    let _resolved_declared_types = initialize_env_with_mode(
+        cx,
+        Some(exclude_syms),
+        &filtered_aloc_ast,
+        DeclaredTypesMode::Skip,
+    )?;
     let (severity_cover, suppressions, suppression_errors) =
         scan_for_suppressions(true, lint_severities, vec![(file_key.dupe(), loc_comments)]);
     let typed_statements = statement_mod::statement_list(cx, statements)?;
@@ -1134,7 +1208,10 @@ pub fn infer_file<'a>(
     file_sig: Arc<FileSig>,
     metadata: &Metadata,
     all_comments: &[Comment<Loc>],
+    ast: &ast::Program<Loc, Loc>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
+    type_sig_options: &TypeSigOptions,
+    current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>,
 ) -> Result<ast::Program<ALoc, (ALoc, Type)>, flow_utils_concurrency::job_error::JobError> {
     if cx.is_global_libdef(file_key) {
         infer_lib_file(
@@ -1154,7 +1231,10 @@ pub fn infer_file<'a>(
             file_sig,
             metadata,
             all_comments,
+            ast,
             aloc_ast,
+            type_sig_options,
+            current_type_sig,
         )
     }
 }

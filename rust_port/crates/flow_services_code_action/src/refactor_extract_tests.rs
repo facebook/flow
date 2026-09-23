@@ -12,6 +12,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
+use flow_common::options::Options;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -27,6 +28,7 @@ use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::FileSigOptions;
 use flow_parser_utils_output::js_layout_generator;
 use flow_parser_utils_output::pretty_printer;
+use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing::type_inference;
 use flow_typing_builtins::builtins::Builtins;
 use flow_typing_context::Context;
@@ -47,6 +49,16 @@ fn pretty_print(layout: &flow_parser_utils_output::layout::LayoutNode) -> String
 
 fn dummy_filename() -> FileKey {
     FileKey::new(FileKeyInner::SourceFile("".to_string()))
+}
+
+fn type_sig_options() -> TypeSigOptions {
+    TypeSigOptions::of_options(
+        &Options::default(),
+        false,
+        Vec::new(),
+        &dummy_filename(),
+        false,
+    )
 }
 
 fn parse(contents: &str) -> ast::Program<Loc, Loc> {
@@ -197,7 +209,10 @@ fn typed_ast_of_ast(
         Arc::new(FileSig::empty()),
         cx.metadata(),
         comments,
+        ast,
         aloc_ast,
+        &type_sig_options(),
+        None,
     )
     .expect("infer_ast should not be canceled in test")
 }

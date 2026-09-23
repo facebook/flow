@@ -21,6 +21,7 @@ mod tests {
     use flow_common::hint::Hint;
     use flow_common::hint::HintDecompositionInner::*;
     use flow_common::hint::HintKind::ExpectedTypeHint;
+    use flow_common::options::Options;
     use flow_common::polarity::Polarity;
     use flow_common::reason::Name;
     use flow_common::reason::Reason;
@@ -145,6 +146,23 @@ mod tests {
 
     fn dummy_filename() -> FileKey {
         FileKey::new(FileKeyInner::SourceFile("".to_string()))
+    }
+
+    fn type_sig_options() -> TypeSigOptions {
+        TypeSigOptions::of_options(
+            &Options {
+                component_syntax: true,
+                enums: true,
+                hook_compatibility: true,
+                ts_syntax: true,
+                ts_utility_syntax: true,
+                ..Default::default()
+            },
+            false,
+            Vec::new(),
+            &dummy_filename(),
+            false,
+        )
     }
 
     #[allow(dead_code)]
@@ -332,7 +350,10 @@ mod tests {
                 Arc::new(FileSig::empty()),
                 &metadata,
                 &ast.all_comments,
+                &ast,
                 aloc_ast,
+                &type_sig_options(),
+                None,
             )
             .expect("infer_ast should not be canceled in test")
         }
