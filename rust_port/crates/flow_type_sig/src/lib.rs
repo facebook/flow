@@ -6,6 +6,7 @@
  */
 
 #![feature(box_patterns)]
+#![feature(never_type)]
 
 pub mod compact_table;
 pub mod expected_annotation_sort;

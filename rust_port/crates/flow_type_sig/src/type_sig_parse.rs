@@ -37,6 +37,8 @@ use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::statement::StatementInner;
 use flow_parser::ast::types::TypeInner;
 use flow_parser::ast_utils;
+use flow_parser::ast_visitor;
+use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
 use flow_parser_utils::enum_validate;
@@ -595,7 +597,7 @@ pub(super) enum FrozenKind {
     FrozenDirect,
 }
 
-fn loc_of_binding<'arena>(binding: &BindingNode<'arena, '_>) -> LocNode<'arena> {
+fn binding_locs<'arena>(binding: &BindingNode<'arena, '_>) -> Vec<LocNode<'arena>> {
     match binding {
         BindingNode::LocalBinding(node) => {
             let binding = node.0.data();
@@ -612,10 +614,9 @@ fn loc_of_binding<'arena>(binding: &BindingNode<'arena, '_>) -> LocNode<'arena> 
                 | LocalBinding::ComponentBinding { id_loc, .. }
                 | LocalBinding::EnumBinding { id_loc, .. }
                 | LocalBinding::NamespaceBinding { id_loc, .. }
-                | LocalBinding::TypeBinding { id_loc, .. } => id_loc.dupe(),
+                | LocalBinding::TypeBinding { id_loc, .. } => vec![id_loc.dupe()],
                 LocalBinding::DeclareFunBinding { defs, .. } => {
-                    let (id_loc, _, _) = defs.first().unwrap();
-                    id_loc.dupe()
+                    defs.iter().map(|(id_loc, _, _)| id_loc.dupe()).collect()
                 }
             }
         }
@@ -627,10 +628,17 @@ fn loc_of_binding<'arena>(binding: &BindingNode<'arena, '_>) -> LocNode<'arena> 
                 | RemoteBinding::ImportTypeofBinding { id_loc, .. }
                 | RemoteBinding::ImportNsBinding { id_loc, .. }
                 | RemoteBinding::ImportTypeofNsBinding { id_loc, .. }
-                | RemoteBinding::ImportTypeNsBinding { id_loc, .. } => id_loc.dupe(),
+                | RemoteBinding::ImportTypeNsBinding { id_loc, .. } => vec![id_loc.dupe()],
             }
         }
     }
+}
+
+fn loc_of_binding<'arena>(binding: &BindingNode<'arena, '_>) -> LocNode<'arena> {
+    binding_locs(binding)
+        .into_iter()
+        .next()
+        .expect("bindings should have at least one location")
 }
 
 pub(super) struct Tables<'arena, 'ast> {
@@ -969,7 +977,7 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) struct ScopeId(usize);
+pub(crate) struct ScopeId(usize);
 
 pub(super) mod scope {
     use std::ops::DerefMut;
@@ -1042,6 +1050,37 @@ pub(super) mod scope {
 
         pub(crate) fn get_mut(&mut self, id: ScopeId) -> &mut Scope<'arena, 'ast> {
             &mut self.scopes[id.0]
+        }
+
+        pub(crate) fn value_bindings_at_locs(
+            &self,
+            target_locs: &BTreeSet<Loc>,
+        ) -> BTreeMap<Loc, BindingNode<'arena, 'ast>> {
+            let mut result = BTreeMap::new();
+            for scope in &self.scopes {
+                let values = match scope {
+                    Scope::Global { values, .. }
+                    | Scope::DeclareGlobal { values, .. }
+                    | Scope::DeclareModule { values, .. }
+                    | Scope::DeclareNamespace { values, .. }
+                    | Scope::Module { values, .. }
+                    // Lexical bindings (parameters, function-local
+                    // definitions) resolve like module bindings. Consumers
+                    // decide which roots their analysis can address: names
+                    // that escape module scope are filtered downstream.
+                    | Scope::Lexical { values, .. } => values,
+                    Scope::ConditionalTypeExtends(_) => continue,
+                };
+                for binding in values.values() {
+                    for loc in super::binding_locs(binding) {
+                        let loc = loc.0.data();
+                        if target_locs.contains(&loc) {
+                            result.insert(loc.dupe(), binding.dupe());
+                        }
+                    }
+                }
+            }
+            result
         }
     }
 
@@ -14672,4 +14711,184 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
         | S::Return { .. }
         | S::Throw { .. } => {}
     }
+}
+
+// Lexical annotation roots for targeted signatures
+//
+// Function bodies are irrelevant to signatures, so bindings inside them (and
+// parameters of functions whose signatures were never forced) never enter
+// scopes. A targeted root naming such a binding therefore resolves to
+// nothing. When the binding carries its own annotation, bind it here from
+// the annotation alone, so scope+provider-targeted analyses can address
+// parameters and function-local definitions.
+struct LexicalAnnotRoot<'ast> {
+    loc: Loc,
+    name: FlowSmolStr,
+    annot: &'ast ast::types::AnnotationOrHint<Loc, Loc>,
+    kind: LexicalAnnotKind,
+}
+
+enum LexicalAnnotKind {
+    Param,
+    Var(ast::VariableKind),
+}
+
+struct LexicalAnnotCollector<'a, 'ast> {
+    targets: &'a BTreeSet<Loc>,
+    roots: Vec<LexicalAnnotRoot<'ast>>,
+}
+
+impl<'a, 'ast> LexicalAnnotCollector<'a, 'ast> {
+    fn record_identifier(
+        &mut self,
+        kind: LexicalAnnotKind,
+        id: &'ast ast::pattern::Identifier<Loc, Loc>,
+    ) {
+        if !matches!(id.annot, ast::types::AnnotationOrHint::Available(_)) {
+            return;
+        }
+        let loc = id.name.loc.dupe();
+        if !self.targets.contains(&loc) {
+            return;
+        }
+        self.roots.push(LexicalAnnotRoot {
+            loc,
+            name: id.name.name.dupe(),
+            annot: &id.annot,
+            kind,
+        });
+    }
+
+    fn record_pattern(
+        &mut self,
+        kind: LexicalAnnotKind,
+        pattern: &'ast ast::pattern::Pattern<Loc, Loc>,
+    ) {
+        if let ast::pattern::Pattern::Identifier { inner, .. } = pattern {
+            self.record_identifier(kind, inner);
+        }
+    }
+}
+
+impl<'a, 'ast> AstVisitor<'ast, Loc> for LexicalAnnotCollector<'a, 'ast> {
+    fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
+        loc
+    }
+
+    fn normalize_type(type_: &'ast Loc) -> &'ast Loc {
+        type_
+    }
+
+    fn function_param(&mut self, param: &'ast ast::function::Param<Loc, Loc>) -> Result<(), !> {
+        if let ast::function::Param::RegularParam { argument, .. } = param {
+            self.record_pattern(LexicalAnnotKind::Param, argument);
+        }
+        ast_visitor::function_param_default(self, param)
+    }
+
+    fn variable_declaration(
+        &mut self,
+        loc: &'ast Loc,
+        decl: &'ast ast::statement::VariableDeclaration<Loc, Loc>,
+    ) -> Result<(), !> {
+        for declarator in decl.declarations.iter() {
+            if let ast::pattern::Pattern::Identifier { inner, .. } = &declarator.id {
+                self.record_identifier(LexicalAnnotKind::Var(decl.kind), inner);
+            }
+        }
+        ast_visitor::variable_declaration_default(self, loc, decl)
+    }
+
+    fn catch_clause(
+        &mut self,
+        clause: &'ast ast::statement::try_::CatchClause<Loc, Loc>,
+    ) -> Result<(), !> {
+        if let Some(param) = clause.param.as_ref() {
+            self.record_pattern(LexicalAnnotKind::Var(ast::VariableKind::Var), param);
+        }
+        ast_visitor::catch_clause_default(self, clause)
+    }
+}
+
+pub(crate) fn bind_lexical_annotation_roots<'arena: 'ast, 'ast>(
+    _opts: &TypeSigOptions,
+    module_scope: ScopeId,
+    scopes: &mut scope::Scopes<'arena, 'ast>,
+    tbls: &mut Tables<'arena, 'ast>,
+    program: &'ast ast::Program<Loc, Loc>,
+    missing: &BTreeSet<Loc>,
+) -> BTreeMap<Loc, BindingNode<'arena, 'ast>> {
+    let mut collector = LexicalAnnotCollector {
+        targets: missing,
+        roots: vec![],
+    };
+    let Ok(()) = collector.program(program);
+    let mut bound = BTreeMap::new();
+    for root in collector.roots {
+        let LexicalAnnotRoot {
+            loc,
+            name,
+            annot,
+            kind,
+        } = root;
+        let id_loc_node = tbls.push_loc(loc.dupe());
+        let id_loc_node_for_def = id_loc_node.dupe();
+        let name_for_def = name.dupe();
+        let def = tbls.lazy(Box::new(move |opts, scopes, tbls| {
+            tbls.splice(id_loc_node_for_def.dupe(), |tbls| {
+                annot_or_hint(
+                    ExpectedAnnotationSort::VariableDefinition {
+                        name: name_for_def.clone(),
+                    },
+                    Some(&id_loc_node_for_def),
+                    opts,
+                    module_scope,
+                    scopes,
+                    tbls,
+                    &mut tparam_stack::TParamStack::new(),
+                    annot,
+                )
+            })
+        }));
+        // A fresh scope per root: a lexical name may shadow, or be shadowed
+        // by, an unrelated same-named binding elsewhere in the file.
+        let lex = scope::push_lex(scopes, module_scope);
+        let slot: Rc<RefCell<Option<LocalDefNode>>> = Rc::new(RefCell::new(None));
+        match kind {
+            LexicalAnnotKind::Param => {
+                let slot = Rc::clone(&slot);
+                scope::bind_param(
+                    lex,
+                    scopes,
+                    tbls,
+                    id_loc_node,
+                    name.dupe(),
+                    def,
+                    TParams::Mono,
+                    move |_, _, node| {
+                        *slot.borrow_mut() = Some(node.dupe());
+                    },
+                );
+            }
+            LexicalAnnotKind::Var(kind) => {
+                let slot = Rc::clone(&slot);
+                scope::bind_var(
+                    lex,
+                    scopes,
+                    tbls,
+                    kind,
+                    id_loc_node,
+                    name.dupe(),
+                    def,
+                    move |_, _, node| {
+                        *slot.borrow_mut() = Some(node.dupe());
+                    },
+                );
+            }
+        }
+        if let Some(node) = slot.borrow().as_ref() {
+            bound.insert(loc, BindingNode::LocalBinding(node.dupe()));
+        }
+    }
+    bound
 }

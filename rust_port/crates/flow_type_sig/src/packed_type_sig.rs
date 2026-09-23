@@ -18,6 +18,20 @@ use crate::type_sig_pack::PackedDef;
 use crate::type_sig_pack::Pattern;
 use crate::type_sig_pack::RemoteRef;
 
+/// A requested binding's location in the compact targeted signature tables.
+#[derive(Debug, Clone, Copy, Hash, serde::Serialize, serde::Deserialize)]
+pub enum TargetedRoot<Loc> {
+    LocalDef(Index<Loc>),
+    RemoteRef(Index<Loc>),
+}
+
+/// A local-only signature and the requested bindings retained within it.
+#[derive(Debug, Hash, serde::Serialize, serde::Deserialize)]
+pub struct TargetedModule<Loc: Ord> {
+    pub module: Module<Loc>,
+    pub roots: BTreeMap<Loc, TargetedRoot<Loc>>,
+}
+
 #[derive(Debug, Hash, serde::Serialize, serde::Deserialize)]
 pub struct Module<Loc> {
     pub module_kind: ModuleKind<Index<Loc>>,

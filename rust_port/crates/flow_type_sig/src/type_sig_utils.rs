@@ -7,6 +7,7 @@
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::collections::BTreeSet;
 use std::rc::Rc;
 
 use dupe::Dupe;
@@ -24,6 +25,8 @@ use crate::compact_table::Table;
 use crate::packed_type_sig::Builtins;
 use crate::packed_type_sig::Module;
 use crate::packed_type_sig::ModuleDef;
+use crate::packed_type_sig::TargetedModule;
+use crate::packed_type_sig::TargetedRoot;
 use crate::signature_error::BindingValidation;
 use crate::type_sig::Errno;
 use crate::type_sig_mark as mark;
@@ -208,6 +211,7 @@ fn parse_module<'arena: 'ast, 'ast>(
     source: Option<FileKey>,
     ast: &'ast Program<Loc, Loc>,
 ) -> (
+    parse::ScopeId,
     parse::scope::Scopes<'arena, 'ast>,
     parse::Tables<'arena, 'ast>,
     parse::LocNode<'arena>,
@@ -223,7 +227,7 @@ fn parse_module<'arena: 'ast, 'ast>(
         parse::statement(opts, scope, &mut scopes, &mut tbls, stmt);
     }
     let exports = parse::scope::exports_exn(&mut scopes, scope);
-    (scopes, tbls, file_loc, exports)
+    (scope, scopes, tbls, file_loc, exports)
 }
 
 fn parse_libdef_file_as_empty_module<'arena: 'ast, 'ast>(
@@ -233,6 +237,7 @@ fn parse_libdef_file_as_empty_module<'arena: 'ast, 'ast>(
     platform_availability_set: Option<PlatformSet>,
     source: Option<FileKey>,
 ) -> (
+    parse::ScopeId,
     parse::scope::Scopes<'arena, 'ast>,
     parse::Tables<'arena, 'ast>,
     parse::LocNode<'arena>,
@@ -243,7 +248,7 @@ fn parse_libdef_file_as_empty_module<'arena: 'ast, 'ast>(
     let mut tbls = parse::Tables::new(arenas, strictness_kind);
     let file_loc = tbls.push_loc(Loc { source, ..LOC_NONE });
     let exports = parse::scope::exports_exn(&mut scopes, scope);
-    (scopes, tbls, file_loc, exports)
+    (scope, scopes, tbls, file_loc, exports)
 }
 
 fn merge_locs(loc0: &Loc, loc1: &Loc) -> Option<Loc> {
@@ -256,11 +261,33 @@ fn merge_locs(loc0: &Loc, loc1: &Loc) -> Option<Loc> {
     }
 }
 
+/// Lenient loc merging for targeted packing only.
+///
+/// Targeted packing binds annotated lexical roots (parameters,
+/// function-local definitions) that live mid-span of lazily-parsed
+/// signatures. When those signatures splice in later, their tails sit
+/// ahead of the roots in chain order while sorting after them, so
+/// source order is unachievable here no matter where the roots are
+/// placed. Out-of-order entries survive
+/// unmerged; every other push still lands in order, so
+/// adjacent-duplicate merging is unaffected where it applies.
+///
+/// The main pack path uses [`merge_locs`], which panics on out-of-order
+/// locations to preserve the ordering invariant.
+fn merge_locs_allow_unordered(loc0: &Loc, loc1: &Loc) -> Option<Loc> {
+    match packed_locs::compare_locs(loc0, loc1) {
+        std::cmp::Ordering::Less => None,
+        std::cmp::Ordering::Equal => Some(loc0.dupe()),
+        std::cmp::Ordering::Greater => None,
+    }
+}
+
 fn pack<'arena, 'ast>(
     opts: &TypeSigOptions,
     locs_to_dirtify: &[Loc],
     source: Option<FileKey>,
-    (mut scopes, mut tbls, file_loc, exports): (
+    (_scope, mut scopes, mut tbls, file_loc, exports): (
+        parse::ScopeId,
         parse::scope::Scopes<'arena, 'ast>,
         parse::Tables<'arena, 'ast>,
         parse::LocNode<'arena>,
@@ -378,4 +405,146 @@ pub fn parse_and_pack_module<'arena: 'ast, 'ast>(
         )
     };
     pack(opts, &opts.locs_to_dirtify, source, parsed)
+}
+
+/// Packs only the bindings at `target_locs` and their signature dependencies.
+pub fn parse_and_pack_targets<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
+    arenas: &'arena bumpalo::Bump,
+    strict: bool,
+    platform_availability_set: Option<PlatformSet>,
+    source: Option<FileKey>,
+    ast: &'ast Program<Loc, Loc>,
+    target_locs: &BTreeSet<Loc>,
+) -> (Vec<Errno<Index<Loc>>>, Table<Loc>, TargetedModule<Loc>) {
+    if target_locs.is_empty() {
+        return (
+            vec![],
+            Table::empty(),
+            TargetedModule {
+                module: Module {
+                    module_kind: pack::ModuleKind::CJSModule {
+                        type_exports: vec![],
+                        exports: None,
+                        info: pack::CJSModuleInfo {
+                            type_export_keys: vec![],
+                            type_stars: vec![],
+                            strict,
+                            platform_availability_set,
+                        },
+                    },
+                    module_refs: Table::empty(),
+                    local_defs: Table::empty(),
+                    dirty_local_defs: vec![],
+                    remote_refs: Table::empty(),
+                    pattern_defs: Table::empty(),
+                    dirty_pattern_defs: vec![],
+                    patterns: Table::empty(),
+                },
+                roots: BTreeMap::new(),
+            },
+        );
+    }
+
+    let (scope, mut scopes, mut tbls, _file_loc, exports) =
+        parse_module(opts, arenas, strict, platform_availability_set, source, ast);
+    let mut roots = scopes.value_bindings_at_locs(target_locs);
+    // Parameters and function-local bindings never enter scopes, so roots
+    // naming them resolve to nothing. Bind the annotated ones from their
+    // annotations so targeted analyses can address them.
+    if roots.len() < target_locs.len() {
+        let missing: BTreeSet<Loc> = target_locs
+            .iter()
+            .filter(|loc| !roots.contains_key(*loc))
+            .map(|loc| loc.dupe())
+            .collect();
+        roots.extend(parse::bind_lexical_annotation_roots(
+            opts,
+            scope,
+            &mut scopes,
+            &mut tbls,
+            ast,
+            &missing,
+        ));
+    }
+
+    let mut marker = mark::Marker::new(&opts.locs_to_dirtify);
+    for binding in roots.values() {
+        mark::mark_binding(opts, &mut scopes, &mut tbls, &mut marker, binding);
+    }
+    mark::mark_errors(&mut marker, &tbls.additional_errors);
+
+    let parse::Tables {
+        locs,
+        module_refs,
+        local_defs,
+        remote_refs,
+        pattern_defs,
+        patterns,
+        additional_errors,
+        strictness_kind: _,
+    } = tbls;
+
+    let locs = locs.compact_with_merge(merge_locs_allow_unordered);
+    let module_refs = module_refs.compact_without_merge();
+    let local_defs = local_defs.compact_without_merge();
+    let remote_refs = remote_refs.compact_without_merge();
+    let pattern_defs = pattern_defs.compact_without_merge();
+    let patterns = patterns.compact_without_merge();
+
+    let packed_roots = roots
+        .into_iter()
+        .filter_map(|(loc, binding)| {
+            let root = match binding {
+                parse::BindingNode::LocalBinding(node) => {
+                    TargetedRoot::LocalDef(node.0.index_opt()?)
+                }
+                parse::BindingNode::RemoteBinding(node) => {
+                    TargetedRoot::RemoteRef(node.0.index_opt()?)
+                }
+            };
+            Some((loc, root))
+        })
+        .collect();
+
+    let mut cx = create_pack_cx(additional_errors);
+    let (locs, _) = locs.copy(|loc| loc.dupe());
+    let (module_refs, _) = module_refs.copy(|u| u.dupe());
+    let (local_defs, dirty_local_defs) =
+        local_defs.copy(|binding| pack::pack_local_binding(&mut cx, binding));
+    let (remote_refs, _) = remote_refs.copy(pack::pack_remote_binding);
+    let (pattern_defs, dirty_pattern_defs) =
+        pattern_defs.copy(|parsed| pack::pack_parsed(&mut cx, parsed));
+    let (patterns, _) = patterns.copy(pack::pack_pattern);
+
+    let exports = exports.borrow();
+    let module_kind = pack::ModuleKind::CJSModule {
+        type_exports: vec![],
+        exports: None,
+        info: pack::CJSModuleInfo {
+            type_export_keys: vec![],
+            type_stars: vec![],
+            strict: exports.strict,
+            platform_availability_set: exports.platform_availability_set,
+        },
+    };
+    let module = Module {
+        module_kind,
+        module_refs,
+        local_defs,
+        dirty_local_defs,
+        remote_refs,
+        pattern_defs,
+        dirty_pattern_defs,
+        patterns,
+    };
+
+    (
+        cx.take_errs(),
+        locs,
+        TargetedModule {
+            module,
+            roots: packed_roots,
+        },
+    )
 }

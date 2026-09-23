@@ -7,6 +7,7 @@
 
 #![feature(never_type)]
 
+pub mod assertion_call_target;
 pub mod env_api;
 pub mod eq_test;
 #[cfg(test)]

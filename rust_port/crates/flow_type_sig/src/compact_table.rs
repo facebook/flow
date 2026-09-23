@@ -391,13 +391,17 @@ impl<'a, T> Builder<'a, T> {
 }
 
 impl<'a, Marker> Node<'a, Marker> {
-    pub fn index_exn<T>(&self) -> Index<T> {
+    pub fn index_opt<T>(&self) -> Option<Index<T>> {
         let index = self.inner.index.get();
-        assert!(index >= 0, "Node has not been compacted or is not marked");
-        Index {
+        (index >= 0).then_some(Index {
             index: index as usize,
             _phantom: std::marker::PhantomData,
-        }
+        })
+    }
+
+    pub fn index_exn<T>(&self) -> Index<T> {
+        self.index_opt()
+            .expect("Node has not been compacted or is not marked")
     }
 }
 
