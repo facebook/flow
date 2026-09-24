@@ -684,7 +684,6 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, AbruptCompletion> for Proper
                 left,
                 right,
                 body,
-                each: _,
                 comments: _,
             } = stmt;
             this.expression(right)?;

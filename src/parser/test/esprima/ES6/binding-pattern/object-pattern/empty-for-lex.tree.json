@@ -108,8 +108,7 @@
                     }
                 },
                 "type": "EmptyStatement"
-            },
-            "each": false
+            }
         }
     ],
     "sourceType": "script",

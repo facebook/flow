@@ -321,7 +321,6 @@ fn forin_statement_declaration() {
             false,
             &S::for_in(
                 None,
-                None,
                 S::for_in_declarator(
                     None,
                     None,
@@ -412,7 +411,6 @@ fn forin_statement_pattern_identifier() {
             false,
             &S::for_in(
                 None,
-                None,
                 S::for_in_pattern(patterns::identifier(None, None, a)),
                 E::identifier(None, None, b),
                 S::block(None, vec![]),
@@ -464,7 +462,6 @@ fn forin_empty_body() {
         &opts(),
         false,
         &S::for_in(
-            None,
             None,
             S::for_in_pattern(patterns::identifier(None, None, "a")),
             E::identifier(None, None, "b"),

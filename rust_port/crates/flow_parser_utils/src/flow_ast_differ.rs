@@ -3951,13 +3951,8 @@ fn for_in_statement(
         &for_in1.right,
         &for_in2.right,
     ));
-    let each = if for_in1.each != for_in2.each {
-        None
-    } else {
-        Some(vec![])
-    };
     let comments = syntax_opt(loc, &for_in1.comments, &for_in2.comments);
-    join_diff_list(vec![left, right, body, each, comments])
+    join_diff_list(vec![left, right, body, comments])
 }
 
 fn for_in_statement_lhs(

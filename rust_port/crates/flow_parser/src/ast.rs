@@ -2305,7 +2305,6 @@ pub mod statement {
         pub left: for_in::Left<M, T>,
         pub right: super::expression::Expression<M, T>,
         pub body: Statement<M, T>,
-        pub each: bool,
         pub comments: Option<Syntax<M, ()>>,
     }
 

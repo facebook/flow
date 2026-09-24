@@ -566,7 +566,6 @@ fn statement(
                         expression(offset_table, config, false, &for_in.right),
                     ),
                     ("body", statement(offset_table, config, &for_in.body)),
-                    ("each", bool_value(for_in.each)),
                 ],
             )
         }

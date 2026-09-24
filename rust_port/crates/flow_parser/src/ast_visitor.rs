@@ -10136,7 +10136,6 @@ pub fn for_in_statement_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         left,
         right,
         body,
-        each: _,
         comments,
     } = stmt;
     visitor.for_in_statement_lhs(left)?;
@@ -10155,7 +10154,6 @@ pub fn map_for_in_statement_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         left,
         right,
         body,
-        each,
         comments,
     } = stmt;
     let left_ = visitor.map_for_in_statement_lhs(left);
@@ -10166,7 +10164,6 @@ pub fn map_for_in_statement_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         left: left_,
         right: right_,
         body: body_,
-        each: *each,
         comments: comments_,
     }
 }

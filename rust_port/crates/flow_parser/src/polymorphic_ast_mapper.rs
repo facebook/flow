@@ -4191,7 +4191,6 @@ pub fn for_in_statement<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         left,
         right,
         body,
-        each,
         comments,
     } = stmt;
     let left_ = for_in_statement_lhs(mapper, left)?;
@@ -4202,7 +4201,6 @@ pub fn for_in_statement<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         left: left_,
         right: right_,
         body: body_,
-        each: *each,
         comments: comments_,
     })
 }

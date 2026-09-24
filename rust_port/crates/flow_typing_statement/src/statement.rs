@@ -3080,7 +3080,6 @@ fn statement_<'a>(
                     left: left_ast,
                     right: right_ast,
                     body: body_ast,
-                    each: inner.each,
                     comments: inner.comments.dupe(),
                 })
                 .into(),

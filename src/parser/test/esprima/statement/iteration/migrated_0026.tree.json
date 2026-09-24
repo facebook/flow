@@ -92,7 +92,6 @@
                     }
                 }
             },
-            "each": false,
             "range": [
                 0,
                 16

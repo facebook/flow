@@ -323,8 +323,7 @@
         "loc":{"source":null,"start":{"line":7,"column":126},"end":{"line":7,"column":128}},
         "range":[485,487],
         "body":[]
-      },
-      "each":false
+      }
     }
   ],
   "comments":[

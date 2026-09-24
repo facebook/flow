@@ -84,8 +84,7 @@
                 },
                 "type": "BlockStatement",
                 "body": []
-            },
-            "each": false
+            }
         }
     ],
     "sourceType": "script",

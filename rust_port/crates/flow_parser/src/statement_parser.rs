@@ -591,7 +591,6 @@ fn for_loop(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, Rollb
                     left,
                     right,
                     body,
-                    each: false,
                     comments,
                 };
                 Ok(StatementInner::ForIn {

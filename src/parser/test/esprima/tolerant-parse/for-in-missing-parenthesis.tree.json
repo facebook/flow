@@ -56,7 +56,6 @@
                 },
                 "type": "EmptyStatement"
             },
-            "each": false,
             "range": [
                 0,
                 15

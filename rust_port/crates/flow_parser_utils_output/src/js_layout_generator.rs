@@ -1376,11 +1376,6 @@ pub fn statement(
                 inner.comments.as_ref(),
                 fuse(vec![
                     LayoutNode::atom("for".to_string()),
-                    if inner.each {
-                        fuse(vec![space(), LayoutNode::atom("each".to_string())])
-                    } else {
-                        LayoutNode::empty()
-                    },
                     pretty_space(),
                     wrap_in_parens(
                         false,

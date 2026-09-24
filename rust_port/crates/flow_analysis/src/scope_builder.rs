@@ -248,7 +248,6 @@ pub fn for_in_statement<Loc: Dupe, E, V: WithBindings<Loc, E>>(
         left,
         right: _,
         body: _,
-        each: _,
         comments: _,
     } = stmt;
     let mut lexical_hoist = LexicalHoister::new(enable_enums);

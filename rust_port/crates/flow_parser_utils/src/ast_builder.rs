@@ -1144,20 +1144,17 @@ pub mod statements {
     }
 
     pub fn for_in(
-        each: Option<bool>,
         comments: Option<ast::Syntax<Loc, ()>>,
         left: statement::for_in::Left<Loc, Loc>,
         right: expression::Expression<Loc, Loc>,
         body: statement::Statement<Loc, Loc>,
     ) -> statement::Statement<Loc, Loc> {
-        let each = each.unwrap_or(false);
         statement::Statement::new(StatementInner::ForIn {
             loc: Loc::none(),
             inner: Arc::new(statement::ForIn {
                 left,
                 right,
                 body,
-                each,
                 comments,
             }),
         })

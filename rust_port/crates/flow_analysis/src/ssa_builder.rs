@@ -701,7 +701,6 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
                 left,
                 right,
                 body,
-                each: _,
                 comments: _,
             } = stmt;
             this.expression(right)?;
