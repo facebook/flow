@@ -1,3 +1,20 @@
+### 0.333.0
+
+Likely to cause new Flow errors:
+* Imports of `react` module will always resolve to Flow's builtin react type definitions. If you use a custom react typing module, you might see errors.
+
+Notable bug fixes:
+* Preserve Flow WASM linker settings, including memory growth.
+* Correct parser ranges for `unique symbol` types and signed mapped-property variance.
+
+Parser:
+* Rename the `ImportType` ESTree field from `argument` to `source`.
+* Preserve computed object type property keys in parser output.
+
+Library Definitions:
+* Flow will now include DOM typing from TypeScript's `lib.dom.d.ts` by default. If your project is not supposed to run in the browser, you can switch back to the old behavior with `builtin_lib=core-only` in flowconfig's `[options]` section.
+* Flow's `Iterable` and `ArrayLike` type now align with those from TypeScript. You might see errors when your existing code assumes the old typing.
+
 ### 0.332.0
 
 Breaking Changes:
