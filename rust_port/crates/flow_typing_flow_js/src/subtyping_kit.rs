@@ -44,6 +44,7 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InternalError;
+use flow_typing_errors::error_message::TypeGuardParameterData;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -421,20 +422,21 @@ fn func_type_guard_compat<'cx>(
         Arc::new(use_op),
     );
     if idx1 != idx2 {
-        let lower = flow_common::reason::mk_reason(
-            VirtualReasonDesc::RTypeGuardParam(x1.display_smol_str()),
-            loc1.dupe(),
-        );
-        let upper = flow_common::reason::mk_reason(
-            VirtualReasonDesc::RTypeGuardParam(x2.display_smol_str()),
-            loc2.dupe(),
-        );
         flow_js_utils::add_output_with_env(
             cx,
             env,
             ErrorMessage::ETypeGuardIndexMismatch {
                 use_op: use_op.dupe(),
-                reasons: (lower, upper),
+                parameters: (
+                    TypeGuardParameterData {
+                        loc: loc1.dupe(),
+                        name: x1.display_smol_str(),
+                    },
+                    TypeGuardParameterData {
+                        loc: loc2.dupe(),
+                        name: x2.display_smol_str(),
+                    },
+                ),
             },
         )?;
     }

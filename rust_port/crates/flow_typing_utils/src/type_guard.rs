@@ -13,7 +13,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Reason;
-use flow_common::reason::ReasonDesc;
 use flow_common::reason::VirtualReasonDesc::*;
 use flow_common::reason::mk_reason;
 use flow_env_builder::env_api;
@@ -29,6 +28,8 @@ use flow_typing_errors::error_message::ETypeGuardFunctionInvalidWritesData;
 use flow_typing_errors::error_message::ETypeGuardFunctionParamHavocedData;
 use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::TypeGuardBindingKind;
+use flow_typing_errors::error_message::TypeGuardParameterData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -85,8 +86,12 @@ fn check_type_guard_consistency<'cx>(
                 cx,
                 ErrorMessage::ETypeGuardFunctionParamHavoced(Box::new(
                     ETypeGuardFunctionParamHavocedData {
-                        param_reason,
-                        type_guard_reason: tg_reason.to_error_reference(),
+                        type_guard: TypeGuardParameterData {
+                            loc: name_loc.dupe(),
+                            name: name.dupe(),
+                        },
+                        param_loc: param_loc.dupe(),
+                        is_this: name.as_str() == "this",
                         call_locs: havoced_loc_set.iter().cloned().collect(),
                     },
                 )),
@@ -217,30 +222,42 @@ pub fn check_type_guard<'cx>(
         type_guard,
     } = type_guard_val.deref();
 
-    let err_with_desc = |desc: ReasonDesc, type_guard_reason: &Reason, binding_loc: ALoc| {
-        let binding_reason = mk_reason(desc, binding_loc);
+    let err_with_binding = |binding_kind: TypeGuardBindingKind,
+                            type_guard_loc: &ALoc,
+                            name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
+                            binding_loc: ALoc| {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::ETypeGuardInvalidParameter(Box::new(ETypeGuardInvalidParameterData {
-                type_guard_reason: type_guard_reason.dupe(),
-                binding_reason,
+                type_guard: TypeGuardParameterData {
+                    loc: type_guard_loc.dupe(),
+                    name: name.dupe(),
+                },
+                binding_loc,
+                binding_kind,
             })),
         )
     };
 
     let error_on_non_root_binding =
-        |name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
-         expr_reason: &Reason,
+        |type_guard_loc: &ALoc,
+         name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
          binding: &(ALoc, Rc<pattern_helper::Binding<ALoc, ALoc>>)| {
             let (loc, binding_kind) = binding;
             match binding_kind.deref() {
                 pattern_helper::Binding::Root => (),
-                pattern_helper::Binding::Rest => {
-                    err_with_desc(RRestParameter(Some(name.dupe())), expr_reason, loc.dupe())
-                }
-                pattern_helper::Binding::Select { .. } => {
-                    err_with_desc(RPatternParameter(name.dupe()), expr_reason, loc.dupe())
-                }
+                pattern_helper::Binding::Rest => err_with_binding(
+                    TypeGuardBindingKind::RestParameter,
+                    type_guard_loc,
+                    name,
+                    loc.dupe(),
+                ),
+                pattern_helper::Binding::Select { .. } => err_with_binding(
+                    TypeGuardBindingKind::PatternParameter,
+                    type_guard_loc,
+                    name,
+                    loc.dupe(),
+                ),
             }
         };
 
@@ -278,12 +295,15 @@ pub fn check_type_guard<'cx>(
                 } else if is_this_guard {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ETypeGuardThisParam(mk_reason(RThis, name_loc.dupe())),
+                        ErrorMessage::ETypeGuardThisParam(name_loc.dupe()),
                     );
                 } else {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ETypeGuardParamUnbound(tg_reason),
+                        ErrorMessage::ETypeGuardParamUnbound(TypeGuardParameterData {
+                            loc: name_loc.dupe(),
+                            name: name.dupe(),
+                        }),
                     );
                 }
             }
@@ -295,7 +315,7 @@ pub fn check_type_guard<'cx>(
                 )?;
             }
             Some(binding) => {
-                error_on_non_root_binding(name, &tg_reason, binding);
+                error_on_non_root_binding(name_loc, name, binding);
             }
         }
     }

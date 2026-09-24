@@ -6112,9 +6112,9 @@ where
                 binding_reason,
             } => friendly::Message(vec![
                 text("A "),
-                ref_(type_guard_reason),
+                ref_of_ty_or_desc(&type_guard_reason.loc, &type_guard_reason.desc),
                 text(" cannot reference "),
-                ref_(binding_reason),
+                ref_of_ty_or_desc(&binding_reason.loc, &binding_reason.desc),
                 text("."),
             ]),
             MessageCannotResolveBuiltinName(name) => {
@@ -6497,7 +6497,7 @@ where
                     text("Cannot use "),
                     friendly::desc_of_reason_desc(type_guard_desc),
                     text(", because "),
-                    ref_(param_reason),
+                    ref_of_ty_or_desc(&param_reason.loc, &param_reason.desc),
                     text(" is reassigned "),
                 ];
                 features.extend(loc_str);
@@ -7914,12 +7914,12 @@ where
             }
             MessageInvalidTypeGuardParamUnbound(reason) => friendly::Message(vec![
                 text("Cannot find "),
-                ref_(reason),
+                ref_of_ty_or_desc(&reason.loc, &reason.desc),
                 text(" in the parameters of this function (type)."),
             ]),
             MessageInvalidTypeGuardThisParam(reason) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_(reason),
+                ref_of_ty_or_desc(&reason.loc, &reason.desc),
                 text(" as a type guard variable in this context. "),
                 code("this"),
                 text(" type guards are only supported in non-static class or interface methods."),
@@ -8953,9 +8953,9 @@ where
                 ])
             }
             MessageTypeGuardIndexMismatch { lower, upper } => friendly::Message(vec![
-                ref_(lower),
+                ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 text(" does not appear in the same position as "),
-                ref_(upper),
+                ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
             MessageTypeGuardImpliesMismatch { lower, upper } => friendly::Message(vec![
                 text("one-sided "),

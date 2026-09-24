@@ -38,6 +38,8 @@ use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::EVarianceKeywordData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
+use flow_typing_errors::error_message::TypeGuardBindingKind;
+use flow_typing_errors::error_message::TypeGuardParameterData;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::InternalType;
 use flow_typing_errors::intermediate_error_types::InvalidObjKey;
@@ -5791,10 +5793,7 @@ fn convert_return_annotation_inner<'a>(
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)
             } else {
                 let name_loc = x.loc.dupe();
-                let msg = ErrorMessage::ETypeGuardThisParam(reason::mk_reason(
-                    reason::VirtualReasonDesc::RThis,
-                    name_loc,
-                ));
+                let msg = ErrorMessage::ETypeGuardThisParam(name_loc);
                 let (bool_t, guard_prime, predicate) =
                     error_type_guard(cx, env, gloc, x, t, kind, comments, msg)?;
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)
@@ -5827,14 +5826,12 @@ fn convert_return_annotation_inner<'a>(
             if let Some(rloc) = is_rest_param_conflict {
                 let msg = ErrorMessage::ETypeGuardInvalidParameter(Box::new(
                     ETypeGuardInvalidParameterData {
-                        type_guard_reason: reason::mk_reason(
-                            reason::VirtualReasonDesc::RTypeGuardParam(name.dupe()),
-                            name_loc,
-                        ),
-                        binding_reason: reason::mk_reason(
-                            reason::VirtualReasonDesc::RRestParameter(Some(name.dupe())),
-                            rloc,
-                        ),
+                        type_guard: TypeGuardParameterData {
+                            loc: name_loc,
+                            name: name.dupe(),
+                        },
+                        binding_loc: rloc,
+                        binding_kind: TypeGuardBindingKind::RestParameter,
                     },
                 ));
                 let (bool_t, guard_prime, predicate) =
@@ -5857,10 +5854,10 @@ fn convert_return_annotation_inner<'a>(
                 }
                 _ => true,
             }) {
-                let msg = ErrorMessage::ETypeGuardParamUnbound(reason::mk_reason(
-                    reason::VirtualReasonDesc::RTypeGuardParam(name.dupe()),
-                    name_loc,
-                ));
+                let msg = ErrorMessage::ETypeGuardParamUnbound(TypeGuardParameterData {
+                    loc: name_loc,
+                    name: name.dupe(),
+                });
                 let (bool_t, guard_prime, predicate) =
                     error_type_guard(cx, env, gloc, x, t, kind, comments, msg)?;
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)

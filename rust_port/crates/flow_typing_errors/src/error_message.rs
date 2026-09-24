@@ -1812,9 +1812,43 @@ pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct TypeGuardParameterData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum TypeGuardBindingKind {
+    RestParameter,
+    PatternParameter,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ETypeGuardInvalidParameterData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub type_guard_reason: VirtualReason<L>,
-    pub binding_reason: VirtualReason<L>,
+    pub type_guard: TypeGuardParameterData<L>,
+    pub binding_loc: L,
+    pub binding_kind: TypeGuardBindingKind,
 }
 
 #[derive(
@@ -1846,8 +1880,9 @@ pub struct ETypeGuardFunctionInvalidWritesData<L: Dupe + PartialOrd + Ord + Part
     serde::Deserialize
 )]
 pub struct ETypeGuardFunctionParamHavocedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub type_guard_reason: ErrorReference<L>,
-    pub param_reason: VirtualReason<L>,
+    pub type_guard: TypeGuardParameterData<L>,
+    pub param_loc: L,
+    pub is_this: bool,
     pub call_locs: Vec<L>,
 }
 
@@ -3348,7 +3383,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETypeGuardIndexMismatch {
         use_op: VirtualUseOp<L>,
-        reasons: (VirtualReason<L>, VirtualReason<L>),
+        parameters: (TypeGuardParameterData<L>, TypeGuardParameterData<L>),
     },
 
     ETypeGuardImpliesMismatch {
@@ -3356,9 +3391,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         reasons: (VirtualReason<L>, VirtualReason<L>),
     },
 
-    ETypeGuardParamUnbound(VirtualReason<L>),
+    ETypeGuardParamUnbound(TypeGuardParameterData<L>),
 
-    ETypeGuardThisParam(VirtualReason<L>),
+    ETypeGuardThisParam(L),
 
     ETypeGuardFunctionInvalidWrites(Box<ETypeGuardFunctionInvalidWritesData<L>>),
 
@@ -5023,19 +5058,33 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             },
 
             ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
-                type_guard_reason,
-                binding_reason,
+                type_guard,
+                binding_loc,
+                binding_kind,
             }) => ETypeGuardInvalidParameter(Box::new(ETypeGuardInvalidParameterData {
-                type_guard_reason: map_reason(type_guard_reason),
-                binding_reason: map_reason(binding_reason),
+                type_guard: TypeGuardParameterData {
+                    loc: f(type_guard.loc),
+                    name: type_guard.name,
+                },
+                binding_loc: f(binding_loc),
+                binding_kind,
             })),
 
             ETypeGuardIndexMismatch {
                 use_op,
-                reasons: (r1, r2),
+                parameters: (p1, p2),
             } => ETypeGuardIndexMismatch {
                 use_op: map_use_op(use_op),
-                reasons: (map_reason(r1), map_reason(r2)),
+                parameters: (
+                    TypeGuardParameterData {
+                        loc: f(p1.loc),
+                        name: p1.name,
+                    },
+                    TypeGuardParameterData {
+                        loc: f(p2.loc),
+                        name: p2.name,
+                    },
+                ),
             },
 
             ETypeGuardImpliesMismatch {
@@ -5046,9 +5095,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reasons: (map_reason(r1), map_reason(r2)),
             },
 
-            ETypeGuardParamUnbound(reason) => ETypeGuardParamUnbound(map_reason(reason)),
+            ETypeGuardParamUnbound(parameter) => ETypeGuardParamUnbound(TypeGuardParameterData {
+                loc: f(parameter.loc),
+                name: parameter.name,
+            }),
 
-            ETypeGuardThisParam(reason) => ETypeGuardThisParam(map_reason(reason)),
+            ETypeGuardThisParam(loc) => ETypeGuardThisParam(f(loc)),
 
             ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
                 loc,
@@ -5061,12 +5113,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ETypeGuardFunctionParamHavoced(box ETypeGuardFunctionParamHavocedData {
-                type_guard_reason,
-                param_reason,
+                type_guard,
+                param_loc,
+                is_this,
                 call_locs,
             }) => ETypeGuardFunctionParamHavoced(Box::new(ETypeGuardFunctionParamHavocedData {
-                type_guard_reason: map_error_ref(type_guard_reason),
-                param_reason: map_reason(param_reason),
+                type_guard: TypeGuardParameterData {
+                    loc: f(type_guard.loc),
+                    name: type_guard.name,
+                },
+                param_loc: f(param_loc),
+                is_this,
                 call_locs: call_locs.into_iter().map(&f).collect(),
             })),
 
@@ -7617,13 +7674,14 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple: reason,
                 ..
-            })
-            | Self::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
-                type_guard_reason: reason,
+            }) => Some(reason.loc.dupe()),
+
+            Self::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
+                type_guard: TypeGuardParameterData { loc, .. },
                 ..
             })
-            | Self::ETypeGuardParamUnbound(reason)
-            | Self::ETypeGuardThisParam(reason) => Some(reason.loc.dupe()),
+            | Self::ETypeGuardParamUnbound(TypeGuardParameterData { loc, .. })
+            | Self::ETypeGuardThisParam(loc) => Some(loc.dupe()),
 
             Self::EBigIntRShift3(box EArithmeticOperandData { loc, .. }) => Some(loc.dupe()),
 
@@ -7653,9 +7711,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             }) => Some(return_reason.loc.dupe()),
 
             Self::ETypeGuardFunctionParamHavoced(box ETypeGuardFunctionParamHavocedData {
-                type_guard_reason,
+                type_guard,
                 ..
-            }) => Some(type_guard_reason.loc.dupe()),
+            }) => Some(type_guard.loc.dupe()),
 
             Self::EDefinitionCycle(dependencies) => Some(dependencies.first().0.loc.dupe()),
 
@@ -10227,21 +10285,48 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
-                type_guard_reason,
-                binding_reason,
-            }) => Normal(Message::MessageCannotReferenceTypeGuardParameter {
-                type_guard_reason,
-                binding_reason,
-            }),
+                type_guard,
+                binding_loc,
+                binding_kind,
+            }) => {
+                let TypeGuardParameterData { loc, name } = type_guard;
+                let binding_desc = match binding_kind {
+                    TypeGuardBindingKind::RestParameter => {
+                        VirtualReasonDesc::RRestParameter(Some(name.dupe()))
+                    }
+                    TypeGuardBindingKind::PatternParameter => {
+                        VirtualReasonDesc::RPatternParameter(name.dupe())
+                    }
+                };
+                Normal(Message::MessageCannotReferenceTypeGuardParameter {
+                    type_guard_reason: MessageTypeReferenceData {
+                        loc,
+                        desc: Err(VirtualReasonDesc::RTypeGuardParam(name)),
+                    },
+                    binding_reason: MessageTypeReferenceData {
+                        loc: binding_loc,
+                        desc: Err(binding_desc),
+                    },
+                })
+            }
 
             ErrorMessage::ETypeGuardIndexMismatch {
                 use_op,
-                reasons: (lower, upper),
+                parameters: (lower, upper),
             } => {
                 let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageTypeGuardIndexMismatch { lower, upper },
+                    message: Message::MessageTypeGuardIndexMismatch {
+                        lower: MessageTypeReferenceData {
+                            loc: lower.loc,
+                            desc: Err(VirtualReasonDesc::RTypeGuardParam(lower.name)),
+                        },
+                        upper: MessageTypeReferenceData {
+                            loc: upper.loc,
+                            desc: Err(VirtualReasonDesc::RTypeGuardParam(upper.name)),
+                        },
+                    },
                     use_op,
                     explanation: None,
                 }))
@@ -10260,13 +10345,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ErrorMessage::ETypeGuardParamUnbound(reason) => {
-                Normal(Message::MessageInvalidTypeGuardParamUnbound(reason))
-            }
+            ErrorMessage::ETypeGuardParamUnbound(TypeGuardParameterData { loc, name }) => Normal(
+                Message::MessageInvalidTypeGuardParamUnbound(MessageTypeReferenceData {
+                    loc,
+                    desc: Err(VirtualReasonDesc::RTypeGuardParam(name)),
+                }),
+            ),
 
-            ErrorMessage::ETypeGuardThisParam(reason) => {
-                Normal(Message::MessageInvalidTypeGuardThisParam(reason))
-            }
+            ErrorMessage::ETypeGuardThisParam(loc) => Normal(
+                Message::MessageInvalidTypeGuardThisParam(MessageTypeReferenceData {
+                    loc,
+                    desc: Err(VirtualReasonDesc::RThis),
+                }),
+            ),
 
             ErrorMessage::ETypeGuardFunctionInvalidWrites(
                 box ETypeGuardFunctionInvalidWritesData {
@@ -10321,17 +10412,32 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ETypeGuardFunctionParamHavoced(
                 box ETypeGuardFunctionParamHavocedData {
-                    type_guard_reason,
-                    param_reason,
+                    type_guard,
+                    param_loc,
+                    is_this,
                     call_locs,
                 },
-            ) => Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced(
-                Box::new(MessageCannotUseTypeGuardWithFunctionParamHavocedData {
-                    type_guard_desc: type_guard_reason.desc,
-                    param_reason,
-                    call_locs,
-                }),
-            )),
+            ) => {
+                let TypeGuardParameterData { name, .. } = type_guard;
+                let (type_guard_desc, param_desc) = if is_this {
+                    (VirtualReasonDesc::RThis, VirtualReasonDesc::RThis)
+                } else {
+                    (
+                        VirtualReasonDesc::RTypeGuardParam(name.dupe()),
+                        VirtualReasonDesc::RParameter(Some(name)),
+                    )
+                };
+                Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced(
+                    Box::new(MessageCannotUseTypeGuardWithFunctionParamHavocedData {
+                        type_guard_desc,
+                        param_reason: MessageTypeReferenceData {
+                            loc: param_loc,
+                            desc: Err(param_desc),
+                        },
+                        call_locs,
+                    }),
+                ))
+            }
 
             ErrorMessage::ETypeGuardIncompatibleWithFunctionKind(
                 box ETypeGuardIncompatibleWithFunctionKindData { kind, .. },

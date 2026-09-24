@@ -2828,15 +2828,19 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
-            type_guard_reason,
-            binding_reason: _,
+            type_guard,
+            ..
         }) => {
             format!(
-                "ETypeGuardInvalidParameter ({})",
-                dump_reason(cx, type_guard_reason)
+                "ETypeGuardInvalidParameter ({} {})",
+                string_of_aloc(None, &type_guard.loc),
+                type_guard.name
             )
         }
-        ErrorMessage::ETypeGuardIndexMismatch { use_op, reasons: _ } => {
+        ErrorMessage::ETypeGuardIndexMismatch {
+            use_op,
+            parameters: _,
+        } => {
             format!("ETypeGuardIndexMismatch ({})", string_of_use_op(use_op))
         }
         ErrorMessage::ETypeGuardImpliesMismatch { use_op, reasons: _ } => {

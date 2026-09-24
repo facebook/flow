@@ -1373,7 +1373,7 @@ pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeGuardWithFunctionParamHavocedData<L: Dupe> {
     pub type_guard_desc: VirtualReasonDesc<L>,
-    pub param_reason: VirtualReason<L>,
+    pub param_reason: MessageTypeReferenceData<L>,
     pub call_locs: Vec<L>,
 }
 
@@ -1888,8 +1888,8 @@ pub enum Message<L: Dupe> {
     MessageCannotRedeclareVar(VirtualReason<L>),
 
     MessageCannotReferenceTypeGuardParameter {
-        type_guard_reason: VirtualReason<L>,
-        binding_reason: VirtualReason<L>,
+        type_guard_reason: MessageTypeReferenceData<L>,
+        binding_reason: MessageTypeReferenceData<L>,
     },
 
     MessageCannotResolveBuiltinName(FlowSmolStr),
@@ -2241,8 +2241,8 @@ pub enum Message<L: Dupe> {
         type_: Box<MessageTypeReferenceData<L>>,
     },
 
-    MessageInvalidTypeGuardParamUnbound(VirtualReason<L>),
-    MessageInvalidTypeGuardThisParam(VirtualReason<L>),
+    MessageInvalidTypeGuardParamUnbound(MessageTypeReferenceData<L>),
+    MessageInvalidTypeGuardThisParam(MessageTypeReferenceData<L>),
     MessageInvalidUseOfFlowEnforceOptimized(Box<MessageTypeReferenceData<L>>),
 
     MessageLowerIsNotArray(VirtualReason<L>),
@@ -2377,8 +2377,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageTypeGuardIndexMismatch {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
     MessageTypeGuardImpliesMismatch {
