@@ -1700,11 +1700,21 @@ pub fn type_or_type_desc_for_error(t: &Type) -> TypeOrTypeDescT<ALoc> {
 pub fn type_reference_for_error(t: &Type) -> ErrorTypeReferenceData<ALoc> {
     use flow_typing_type::type_util;
 
+    let reason = type_util::reason_of_t(t);
     ErrorTypeReferenceData {
-        reference: ErrorReference::new(
-            type_util::ref_loc_of_t(t).dupe(),
-            type_util::reason_of_t(t).desc(false).clone(),
-        ),
+        loc: reason.loc().dupe(),
+        reference_loc: type_util::ref_loc_of_t(t).dupe(),
+        type_desc: type_or_type_desc_for_error(t),
+    }
+}
+
+/// Keeps a type for post-inference normalization at a caller-selected primary location.
+pub fn type_reference_at_loc_for_error(t: &Type, loc: ALoc) -> ErrorTypeReferenceData<ALoc> {
+    use flow_typing_type::type_util;
+
+    ErrorTypeReferenceData {
+        loc,
+        reference_loc: type_util::ref_loc_of_t(t).dupe(),
         type_desc: type_or_type_desc_for_error(t),
     }
 }

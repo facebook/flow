@@ -3182,7 +3182,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "EUnsupportedImplements ({} {:?})",
-                string_of_aloc(None, &type_.reference.loc),
+                string_of_aloc(None, &type_.loc),
                 type_desc,
             )
         }
@@ -3653,10 +3653,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 )
             }
             EnumErrorKind::EnumNotIterable(box EnumNotIterableData { enum_, .. }) => {
+                let enum_desc = match &enum_.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
                 format!(
-                    "EEnumError (EnumNotIterable ({} {:?}))",
-                    string_of_aloc(None, &enum_.reference.loc),
-                    enum_.reference.desc
+                    "EEnumError (EnumNotIterable ({} {}))",
+                    string_of_aloc(None, &enum_.loc),
+                    enum_desc
                 )
             }
             EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData { enum_, .. }) => {

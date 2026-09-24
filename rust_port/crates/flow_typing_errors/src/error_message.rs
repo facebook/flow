@@ -3051,10 +3051,21 @@ pub struct EReactIntrinsicOverlapData<L: Dupe + PartialOrd + Ord + PartialEq + E
     pub mixed: bool,
 }
 
-/// A type-backed error reference whose normalized description does not affect error identity.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+/// A type-backed error reference with explicit primary and reference locations.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ErrorTypeReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reference: ErrorReference<L>,
+    pub loc: L,
+    pub reference_loc: L,
     pub type_desc: TypeOrTypeDesc<L>,
 }
 
@@ -3098,29 +3109,77 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ErrorTypeReferenceWith
     }
 }
 
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for ErrorTypeReferenceData<L> {
+/// A type-backed error reference with a distinct primary location.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ErrorTypeReferenceWithLocData<L: Dupe> {
+    pub loc: L,
+    pub definition_loc: L,
+    pub reference_loc: L,
+    pub type_desc: TypeOrTypeDesc<L>,
+}
+
+impl<L: Dupe> ErrorTypeReferenceWithLocData<L> {
+    pub fn new(reason: VirtualReason<L>, reference_loc: L, type_desc: TypeOrTypeDesc<L>) -> Self {
+        Self {
+            loc: reason.loc().dupe(),
+            definition_loc: reason.def_loc().dupe(),
+            reference_loc,
+            type_desc,
+        }
+    }
+
+    pub fn reason_ref_loc(&self) -> L {
+        self.reference_loc.dupe()
+    }
+}
+
+impl<L: Dupe + PartialEq> PartialEq for ErrorTypeReferenceWithLocData<L> {
     fn eq(&self, other: &Self) -> bool {
-        self.reference == other.reference
+        self.type_desc == other.type_desc
+            && self.loc == other.loc
+            && self.definition_loc == other.definition_loc
+            && self.reference_loc == other.reference_loc
     }
 }
 
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for ErrorTypeReferenceData<L> {}
+impl<L: Dupe + Eq> Eq for ErrorTypeReferenceWithLocData<L> {}
 
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for ErrorTypeReferenceData<L> {
+impl<L: Dupe + Hash> Hash for ErrorTypeReferenceWithLocData<L> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.reference.hash(state);
+        self.type_desc.hash(state);
+        self.loc.hash(state);
+        self.definition_loc.hash(state);
+        self.reference_loc.hash(state);
     }
 }
 
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for ErrorTypeReferenceData<L> {
+impl<L: Dupe + PartialOrd> PartialOrd for ErrorTypeReferenceWithLocData<L> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        self.type_desc
+            .partial_cmp(&other.type_desc)
+            .and_then(|ordering| match ordering {
+                std::cmp::Ordering::Equal => {
+                    self.loc
+                        .partial_cmp(&other.loc)
+                        .and_then(|ordering| match ordering {
+                            std::cmp::Ordering::Equal => {
+                                self.definition_loc.partial_cmp(&other.definition_loc)
+                            }
+                            _ => Some(ordering),
+                        })
+                }
+                _ => Some(ordering),
+            })
     }
 }
 
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ErrorTypeReferenceData<L> {
+impl<L: Dupe + Ord> Ord for ErrorTypeReferenceWithLocData<L> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.reference.cmp(&other.reference)
+        self.type_desc
+            .cmp(&other.type_desc)
+            .then_with(|| self.loc.cmp(&other.loc))
+            .then_with(|| self.definition_loc.cmp(&other.definition_loc))
+            .then_with(|| self.reference_loc.cmp(&other.reference_loc))
     }
 }
 
@@ -4348,7 +4407,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
         };
         let map_error_type_ref = |r: ErrorTypeReferenceData<L>| -> ErrorTypeReferenceData<M> {
             ErrorTypeReferenceData {
-                reference: map_error_ref(r.reference),
+                loc: f(r.loc),
+                reference_loc: f(r.reference_loc),
                 type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), r.type_desc),
             }
         };
@@ -6601,7 +6661,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             };
         let map_error_type_ref = |r: ErrorTypeReferenceData<L>| -> ErrorTypeReferenceData<L> {
             ErrorTypeReferenceData {
-                reference: r.reference,
+                loc: r.loc,
+                reference_loc: r.reference_loc,
                 type_desc: f(r.type_desc),
             }
         };
@@ -7646,7 +7707,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EExportValueAsType(box (loc, _))
             | Self::EImportValueAsType(box (loc, _)) => Some(loc.dupe()),
 
-            Self::EUnsupportedImplements(type_) => Some(type_.reference.loc.dupe()),
+            Self::EUnsupportedImplements(type_) => Some(type_.loc.dupe()),
 
             Self::EMissingLocalAnnotation { reason, .. } => Some(reason.loc.dupe()),
 
@@ -7721,15 +7782,13 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 | EnumErrorKind::EnumInvalidMemberAccess(box EnumInvalidMemberAccessData {
                     reason,
                     ..
-                })
-                | EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
-                    enum_:
-                        ErrorTypeReferenceData {
-                            reference: reason, ..
-                        },
-                    ..
                 }),
             ) => Some(reason.loc.dupe()),
+
+            Self::EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
+                enum_: ErrorTypeReferenceData { loc, .. },
+                ..
+            })) => Some(loc.dupe()),
 
             Self::EEnumError(EnumErrorKind::EnumNotIterableForIn(
                 box EnumNotIterableForInData {
@@ -9356,7 +9415,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 enum_name,
             })) => Normal(Message::MessageCannotIterateEnum {
                 enum_: MessageTypeReferenceData {
-                    loc: enum_.reference.loc,
+                    loc: enum_.loc,
                     desc: expect_type_desc(enum_.type_desc),
                 },
                 enum_name,
@@ -9765,7 +9824,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => {
                 let to_message_type_ref =
                     |type_ref: ErrorTypeReferenceData<L>| MessageTypeReferenceData {
-                        loc: type_ref.reference.loc,
+                        loc: type_ref.loc,
                         desc: expect_type_desc(type_ref.type_desc),
                     };
                 Normal(Message::MessageInvalidRendersTypeArgument(Box::new(
@@ -10861,7 +10920,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EUnsupportedImplements(type_) => Normal(
                 Message::MessageCannotImplementNonInterface(Box::new(MessageTypeReferenceData {
-                    loc: type_.reference.loc,
+                    loc: type_.loc,
                     desc: expect_type_desc(type_.type_desc),
                 })),
             ),
