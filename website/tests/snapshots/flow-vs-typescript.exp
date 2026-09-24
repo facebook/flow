@@ -163,7 +163,7 @@ Found 2 errors
 Error -------------------------------------------------------------------------- -:9:8
 
 Cannot call `logAll` with `msgs` bound to `items` because `"foo"` [1], a primitive, cannot be used as a subtype of
-`$Iterable<string, void, void>` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use
+`Iterable<string, void, void>` [2]. You can wrap it in `new String(...))` to turn it into an object and attempt to use
 it as a subtype of an interface. [incompatible-type]
 
    -:9:8
