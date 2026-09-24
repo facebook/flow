@@ -134,7 +134,9 @@ pub(super) fn any_prop_to_function(
     }
     contravariant_flow(use_op, &funtype.this_t.0)?;
     if let Some(tg) = &funtype.type_guard {
-        covariant_flow(use_op, &tg.type_guard)?;
+        if let Some(type_guard) = &tg.type_guard {
+            covariant_flow(use_op, type_guard)?;
+        }
     }
     covariant_flow(use_op, &funtype.return_t)
 }

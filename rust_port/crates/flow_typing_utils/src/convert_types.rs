@@ -263,8 +263,8 @@ fn funtype_to_json<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, funtype: &FunType)
             json!({
                 "inferred": tg.inferred,
                 "param_name": name.to_string(),
-                "type_guard": type_to_json(cx, depth - 1, &tg.type_guard),
-                "one_sided": tg.one_sided,
+                "type_guard": tg.type_guard.as_ref().map(|t| type_to_json(cx, depth - 1, t)),
+                "one_sided": tg.one_sided(),
             })
         }
     };

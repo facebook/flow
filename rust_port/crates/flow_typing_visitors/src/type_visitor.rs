@@ -847,9 +847,12 @@ pub fn fun_type_guard_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
         reason: _,
         param_name: _,
         type_guard,
-        one_sided: _,
+        kind: _,
     } = &**tg;
-    visitor.type_(cx, pole, acc, type_guard)
+    match type_guard {
+        Some(type_guard) => visitor.type_(cx, pole, acc, type_guard),
+        None => acc,
+    }
 }
 
 pub fn obj_flags_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(

@@ -42,6 +42,7 @@ use flow_typing_type::type_::PredicateInner;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeGuard;
 use flow_typing_type::type_::TypeGuardInner;
+use flow_typing_type::type_::TypeGuardKind;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
@@ -217,7 +218,7 @@ pub fn check_type_guard<'cx>(
     let TypeGuardInner {
         reason,
         inferred,
-        one_sided,
+        kind,
         param_name,
         type_guard,
     } = type_guard_val.deref();
@@ -283,15 +284,19 @@ pub fn check_type_guard<'cx>(
                         Some(this_param) => &this_param.loc,
                         None => name_loc,
                     };
-                    check_type_guard_consistency(
-                        cx,
-                        reason,
-                        *one_sided,
-                        binding_loc,
-                        param_name,
-                        &tg_reason,
-                        type_guard,
-                    )?;
+                    if let Some(type_guard) = type_guard
+                        && !matches!(kind, TypeGuardKind::Asserts)
+                    {
+                        check_type_guard_consistency(
+                            cx,
+                            reason,
+                            type_guard_val.one_sided(),
+                            binding_loc,
+                            param_name,
+                            &tg_reason,
+                            type_guard,
+                        )?;
+                    }
                 } else if is_this_guard {
                     flow_js::add_output_non_speculating(
                         cx,
@@ -310,9 +315,19 @@ pub fn check_type_guard<'cx>(
             Some((p_loc, binding_kind))
                 if matches!(binding_kind.deref(), pattern_helper::Binding::Root) =>
             {
-                check_type_guard_consistency(
-                    cx, reason, *one_sided, p_loc, param_name, &tg_reason, type_guard,
-                )?;
+                if let Some(type_guard) = type_guard
+                    && !matches!(kind, TypeGuardKind::Asserts)
+                {
+                    check_type_guard_consistency(
+                        cx,
+                        reason,
+                        type_guard_val.one_sided(),
+                        p_loc,
+                        param_name,
+                        &tg_reason,
+                        type_guard,
+                    )?;
+                }
             }
             Some(binding) => {
                 error_on_non_root_binding(name_loc, name, binding);
@@ -386,8 +401,8 @@ where
             inferred: true,
             reason: param_reason.dupe(),
             param_name: (param_loc.dupe(), pname.dupe()),
-            type_guard: tg,
-            one_sided: true,
+            type_guard: Some(tg),
+            kind: TypeGuardKind::Implies,
         })
     };
     let returns_bool = || -> Result<bool, CheckExprError> {

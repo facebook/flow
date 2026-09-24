@@ -1807,8 +1807,11 @@ mod type_converter {
         let fun_rest_param = fun_rest_param_t::<I>(env, state, &f.rest_param)?;
         let fun_return = match &f.type_guard {
             Some(tg) => {
-                let t = type__::<I>(env, state, None, &tg.type_guard)?;
-                ty::ReturnT::TypeGuard(tg.one_sided, tg.param_name.1.dupe(), t)
+                let t = match &tg.type_guard {
+                    Some(type_guard) => Some(type__::<I>(env, state, None, type_guard)?),
+                    None => None,
+                };
+                ty::ReturnT::TypeGuard(tg.kind, tg.param_name.1.dupe(), t)
             }
             None => {
                 let t = type__::<I>(env, state, None, &f.return_t)?;

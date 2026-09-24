@@ -326,9 +326,12 @@ fn dump_fun_t<L: Debug + Clone + Dupe>(depth: i32, f: &FunT<L>) -> String {
 fn dump_return_t<L: Debug + Clone + Dupe>(depth: i32, ret: &ReturnT<L>) -> String {
     match ret {
         ReturnT::ReturnType(t) => dump_t(depth, t),
-        ReturnT::TypeGuard(impl_, x, t) => {
-            let impl_str = if *impl_ { "implies " } else { "" };
-            format!("{}{} is {}", impl_str, x, dump_t(depth, t))
+        ReturnT::TypeGuard(kind, x, t) => {
+            let prefix = crate::ty::type_guard_kind_prefix(*kind);
+            match t {
+                Some(t) => format!("{}{} is {}", prefix, x, dump_t(depth, t)),
+                None => format!("{}{}", prefix, x),
+            }
         }
     }
 }
@@ -1018,12 +1021,21 @@ fn json_of_return_t<L: Debug + Clone + Dupe>(
             "type_".to_string(),
             json_of_t(converter, t, strip_root),
         )])),
-        ReturnT::TypeGuard(impl_, x, t) => Json::Object(serde_json::Map::from_iter(vec![(
+        ReturnT::TypeGuard(kind, x, t) => Json::Object(serde_json::Map::from_iter(vec![(
             "type_guard".to_string(),
             Json::Object(serde_json::Map::from_iter(vec![
-                ("implies".to_string(), Json::Bool(*impl_)),
+                (
+                    "kind".to_string(),
+                    Json::String(format!("{:?}", kind).to_lowercase()),
+                ),
                 ("type_parameter".to_string(), Json::String(x.to_string())),
-                ("type_".to_string(), json_of_t(converter, t, strip_root)),
+                (
+                    "type_".to_string(),
+                    match t {
+                        Some(t) => json_of_t(converter, t, strip_root),
+                        None => Json::Null,
+                    },
+                ),
             ])),
         )])),
     }

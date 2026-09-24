@@ -5668,6 +5668,17 @@ fn check_guard_type<'a>(
     }
 }
 
+fn has_guard_payload(guard: &ast::types::TypeGuard<ALoc, ALoc>) -> bool {
+    guard.guard.1.is_some() || guard.kind == ast::types::TypeGuardKind::Asserts
+}
+
+fn type_guard_return_t(kind: ast::types::TypeGuardKind, loc: &ALoc) -> Type {
+    match kind {
+        ast::types::TypeGuardKind::Asserts => type_::void::at(loc.dupe()),
+        _ => type_::bool_module_t::at(loc.dupe()),
+    }
+}
+
 fn convert_type_guard_inner<'a>(
     cx: &Context<'a>,
     env: &mut ConvertEnv,
@@ -5675,7 +5686,7 @@ fn convert_type_guard_inner<'a>(
     gloc: ALoc,
     kind: ast::types::TypeGuardKind,
     id_name: &ast::Identifier<ALoc, ALoc>,
-    t: &ast::types::Type<ALoc, ALoc>,
+    t: Option<&ast::types::Type<ALoc, ALoc>>,
     comments: Option<&ast::Syntax<ALoc, std::sync::Arc<[ast::Comment<ALoc>]>>>,
 ) -> Result<
     (
@@ -5687,10 +5698,15 @@ fn convert_type_guard_inner<'a>(
 > {
     let name_loc = id_name.loc.dupe();
     let name = &id_name.name;
-    let t_prime = convert_inner(cx, env, t)?;
-    let (_, type_guard_t) = t_prime.loc();
-    let type_guard_t = type_guard_t.dupe();
-    let bool_t = type_::bool_module_t::at(gloc.dupe());
+    let t_prime = match t {
+        Some(t) => Some(convert_inner(cx, env, t)?),
+        None => None,
+    };
+    let type_guard_t = t_prime.as_ref().map(|t_prime| {
+        let (_, type_guard_t) = t_prime.loc();
+        type_guard_t.dupe()
+    });
+    let return_t = type_guard_return_t(kind, &gloc);
     let id_name_typed: ast::Identifier<ALoc, ALoc> = ast::Identifier::new(ast::IdentifierInner {
         loc: id_name.loc.dupe(),
         name: id_name.name.dupe(),
@@ -5699,20 +5715,21 @@ fn convert_type_guard_inner<'a>(
     let guard_prime = ast::types::TypeGuard {
         loc: gloc.dupe(),
         kind,
-        guard: (id_name_typed, Some(t_prime)),
+        guard: (id_name_typed, t_prime),
         comments: comments.cloned(),
     };
-    let one_sided = kind == ast::types::TypeGuardKind::Implies;
     let reason = reason::mk_reason(reason::VirtualReasonDesc::RTypeGuard, gloc);
-    check_guard_type(cx, fparams, name, &type_guard_t);
+    if let Some(type_guard_t) = &type_guard_t {
+        check_guard_type(cx, fparams, name, type_guard_t);
+    }
     let type_guard = Some(type_::TypeGuard::new(type_::TypeGuardInner {
         reason,
-        one_sided,
+        kind,
         inferred: false,
         param_name: (name_loc, name.dupe()),
         type_guard: type_guard_t,
     }));
-    Ok((bool_t, guard_prime, type_guard))
+    Ok((return_t, guard_prime, type_guard))
 }
 
 fn error_type_guard<'a>(
@@ -5720,7 +5737,7 @@ fn error_type_guard<'a>(
     env: &mut ConvertEnv,
     loc: ALoc,
     x: &ast::Identifier<ALoc, ALoc>,
-    t: &ast::types::Type<ALoc, ALoc>,
+    t: Option<&ast::types::Type<ALoc, ALoc>>,
     kind: ast::types::TypeGuardKind,
     comments: Option<&ast::Syntax<ALoc, std::sync::Arc<[ast::Comment<ALoc>]>>>,
     msg: ErrorMessage<ALoc>,
@@ -5733,7 +5750,10 @@ fn error_type_guard<'a>(
     flow_utils_concurrency::job_error::JobError,
 > {
     flow_js_utils::add_output_non_speculating(cx, msg);
-    let t_ast = convert_inner(cx, env, t)?;
+    let t_ast = match t {
+        Some(t) => Some(convert_inner(cx, env, t)?),
+        None => None,
+    };
     let x_typed = ast::Identifier::new(ast::IdentifierInner {
         loc: x.loc.dupe(),
         name: x.name.dupe(),
@@ -5742,11 +5762,11 @@ fn error_type_guard<'a>(
     let guard_prime = ast::types::TypeGuard {
         loc: loc.dupe(),
         kind,
-        guard: (x_typed, Some(t_ast)),
+        guard: (x_typed, t_ast),
         comments: comments.cloned(),
     };
-    let bool_t = type_::bool_module_t::at(loc);
-    Ok((bool_t, guard_prime, None))
+    let return_t = type_guard_return_t(kind, &loc);
+    Ok((return_t, guard_prime, None))
 }
 
 fn convert_return_annotation_inner<'a>(
@@ -5780,10 +5800,10 @@ fn convert_return_annotation_inner<'a>(
             )
         }
         ReturnAnnotation::TypeGuard(guard)
-            if guard.guard.0.name.as_str() == "this" && guard.guard.1.is_some() =>
+            if guard.guard.0.name.as_str() == "this" && has_guard_payload(guard) =>
         {
             let x = &guard.guard.0;
-            let t = guard.guard.1.as_ref().unwrap();
+            let t = guard.guard.1.as_ref();
             let gloc = guard.loc.dupe();
             let kind = guard.kind;
             let comments = guard.comments.as_ref();
@@ -5799,9 +5819,9 @@ fn convert_return_annotation_inner<'a>(
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)
             }
         }
-        ReturnAnnotation::TypeGuard(guard) if guard.guard.1.is_some() => {
+        ReturnAnnotation::TypeGuard(guard) if has_guard_payload(guard) => {
             let x = &guard.guard.0;
-            let t = guard.guard.1.as_ref().unwrap();
+            let t = guard.guard.1.as_ref();
             let gloc = guard.loc.dupe();
             let kind = guard.kind;
             let comments = guard.comments.as_ref();
@@ -9672,7 +9692,7 @@ pub fn convert_type_guard<'a>(
     gloc: ALoc,
     kind: ast::types::TypeGuardKind,
     id_name: &ast::Identifier<ALoc, ALoc>,
-    t: &ast::types::Type<ALoc, ALoc>,
+    t: Option<&ast::types::Type<ALoc, ALoc>>,
     comments: Option<&ast::Syntax<ALoc, std::sync::Arc<[ast::Comment<ALoc>]>>>,
 ) -> Result<
     (

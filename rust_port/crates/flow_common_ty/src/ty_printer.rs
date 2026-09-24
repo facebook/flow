@@ -13,6 +13,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::ast::types::TypeGuardKind;
 use flow_parser_utils_output::layout;
 use flow_parser_utils_output::layout::LayoutNode;
 use flow_parser_utils_output::pretty_printer;
@@ -664,14 +665,18 @@ fn return_t<L: Dupe>(
 ) -> LayoutNode {
     match ret {
         ReturnT::ReturnType(t) => type_(opts, depth, t.as_ref(), size),
-        ReturnT::TypeGuard(implies, x, t) => {
+        ReturnT::TypeGuard(kind, x, t) => {
             let mut elements = Vec::new();
-            if *implies {
-                elements.push(LayoutNode::atom("implies".to_string()));
+            match kind {
+                TypeGuardKind::Default => (),
+                TypeGuardKind::Implies => elements.push(LayoutNode::atom("implies".to_string())),
+                TypeGuardKind::Asserts => elements.push(LayoutNode::atom("asserts".to_string())),
             }
             elements.push(LayoutNode::atom(x.to_string()));
-            elements.push(LayoutNode::atom("is".to_string()));
-            elements.push(type_(opts, depth, t.as_ref(), size));
+            if let Some(t) = t {
+                elements.push(LayoutNode::atom("is".to_string()));
+                elements.push(type_(opts, depth, t.as_ref(), size));
+            }
             layout::fuse_with_space(elements)
         }
     }

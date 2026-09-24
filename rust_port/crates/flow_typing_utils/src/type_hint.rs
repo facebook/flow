@@ -876,10 +876,10 @@ fn type_of_hint_decomposition<'cx>(
         let type_guard = type_guard.as_ref().map(|tg| match tg {
             PredicateKind::TypeGuardKind(param_loc, param_name) => TypeGuard::new(TypeGuardInner {
                 reason: reason.dupe(),
-                one_sided: false,
+                kind: flow_typing_type::type_::TypeGuardKind::Default,
                 inferred: false,
                 param_name: (param_loc.dupe(), param_name.dupe()),
-                type_guard: unsoundness::unresolved_any(reason.dupe()),
+                type_guard: Some(unsoundness::unresolved_any(reason.dupe())),
             }),
         });
         let func = FunType {

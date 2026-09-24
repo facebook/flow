@@ -30,6 +30,7 @@ use flow_common::polarity::Polarity;
 use flow_common::type_strictness::TypeStrictnessKind;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
+pub use flow_parser::ast::types::TypeGuardKind;
 use vec1::Vec1;
 
 use crate::signature_error;
@@ -63,8 +64,8 @@ pub enum Arg<T> {
 pub struct TypeGuard<Loc, T> {
     pub loc: Loc,
     pub param_name: (Loc, FlowSmolStr),
-    pub type_guard: T,
-    pub one_sided: bool,
+    pub type_guard: Option<T>,
+    pub kind: TypeGuardKind,
 }
 
 impl<Loc, T> TypeGuard<Loc, T> {
@@ -77,8 +78,8 @@ impl<Loc, T> TypeGuard<Loc, T> {
         TypeGuard {
             loc: f_loc(cx, &self.loc),
             param_name: (f_loc(cx, &self.param_name.0), self.param_name.1.dupe()),
-            type_guard: f_t(cx, &self.type_guard),
-            one_sided: self.one_sided,
+            type_guard: self.type_guard.as_ref().map(|t| f_t(cx, t)),
+            kind: self.kind,
         }
     }
 }
@@ -279,7 +280,9 @@ impl<Loc, T> FunSig<Loc, T> {
         if let Some(tg) = &self.type_guard {
             f_loc(cx, &tg.loc);
             f_loc(cx, &tg.param_name.0);
-            f_t(cx, &tg.type_guard);
+            if let Some(t) = &tg.type_guard {
+                f_t(cx, t);
+            }
         }
         self.effect_.iter(cx, f_loc);
     }

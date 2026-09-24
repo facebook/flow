@@ -423,6 +423,20 @@ fn with_concretized_type<'cx>(
     )
 }
 
+/// Evaluates deferred heads (type applications, computed wrappers) of an
+/// annotation type without applying any further operation, so that callers
+/// which inspect a merged type directly observe the same shape that property
+/// lookup would navigate into. Already-concrete types pass through unchanged.
+pub fn concretize_type<'cx>(cx: &Context<'cx>, reason: Reason, type_: Type) -> Type {
+    with_concretized_type(
+        cx,
+        &FlowJsEnv::entry(),
+        reason,
+        Rc::new(|type_| type_),
+        type_,
+    )
+}
+
 // (***********)
 // (* GetProp *)
 // (***********)

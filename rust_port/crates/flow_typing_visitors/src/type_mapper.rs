@@ -1664,13 +1664,21 @@ pub fn func_type_guard_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
     map_cx: &A,
     type_guard: &TypeGuard,
 ) -> TypeGuard {
-    let tg_prime = mapper.type_(cx, map_cx, type_guard.type_guard.dupe());
-    if type_guard.type_guard.ptr_eq(&tg_prime) {
+    let tg_prime = type_guard
+        .type_guard
+        .as_ref()
+        .map(|type_guard| mapper.type_(cx, map_cx, type_guard.dupe()));
+    let unchanged = match (&type_guard.type_guard, &tg_prime) {
+        (None, None) => true,
+        (Some(before), Some(after)) => before.ptr_eq(after),
+        _ => false,
+    };
+    if unchanged {
         type_guard.dupe()
     } else {
         TypeGuard::new(TypeGuardInner {
             reason: type_guard.reason.dupe(),
-            one_sided: type_guard.one_sided,
+            kind: type_guard.kind,
             inferred: type_guard.inferred,
             param_name: type_guard.param_name.clone(),
             type_guard: tg_prime,

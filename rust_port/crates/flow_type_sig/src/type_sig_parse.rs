@@ -979,7 +979,7 @@ impl<'arena, 'ast> Exports<'arena, 'ast> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct ScopeId(usize);
 
-pub(super) mod scope {
+pub(crate) mod scope {
     use std::ops::DerefMut;
 
     use super::*;
@@ -2571,8 +2571,11 @@ pub(super) mod scope {
                         type_guard.param_name.0.dupe(),
                         type_guard.param_name.1.dupe(),
                     ),
-                    type_guard: rename_tparams_in_parsed(&body_rename_map, &type_guard.type_guard),
-                    one_sided: type_guard.one_sided,
+                    type_guard: type_guard
+                        .type_guard
+                        .as_ref()
+                        .map(|t| rename_tparams_in_parsed(&body_rename_map, t)),
+                    kind: type_guard.kind,
                 }),
                 effect_: sig.effect_.clone(),
                 strictness_kind: sig.strictness_kind,
@@ -7285,23 +7288,31 @@ fn type_guard_opt<'arena, 'ast>(
 ) -> Option<(
     LocNode<'arena>,
     (LocNode<'arena>, FlowSmolStr),
-    Parsed<'arena, 'ast>,
-    bool,
+    Option<Parsed<'arena, 'ast>>,
+    ast::types::TypeGuardKind,
 )> {
-    let gloc = &guard.loc;
     let (x, t_opt) = &guard.guard;
-    match t_opt {
-        Some(t) => {
-            let gloc = tbls.push_loc(gloc.clone());
-            let loc = tbls.push_loc(x.loc.dupe());
-            let name = x.name.dupe();
-            let t = annot(opts, scope, scopes, tbls, xs, t);
-            let one_sided = guard.kind == ast::types::TypeGuardKind::Implies;
-            Some((gloc, (loc, name), t, one_sided))
-        }
-        // TODO(pvekris) support assert type guards in type_sig_parse
-        None => None,
+    if t_opt.is_none() && guard.kind != ast::types::TypeGuardKind::Asserts {
+        return None;
     }
+    let gloc = tbls.push_loc(guard.loc.clone());
+    let loc = tbls.push_loc(x.loc.dupe());
+    let name = x.name.dupe();
+    let t = t_opt
+        .as_ref()
+        .map(|t| annot(opts, scope, scopes, tbls, xs, t));
+    Some((gloc, (loc, name), t, guard.kind))
+}
+
+fn type_guard_return_annot<'arena, 'ast>(
+    kind: ast::types::TypeGuardKind,
+    loc: LocNode<'arena>,
+) -> Parsed<'arena, 'ast> {
+    let annot = match kind {
+        ast::types::TypeGuardKind::Asserts => ParsedAnnot::Void(Box::new(loc)),
+        _ => ParsedAnnot::Boolean(Box::new(loc)),
+    };
+    Parsed::Annot(Box::new(annot))
 }
 
 fn return_annot<'arena, 'ast>(
@@ -7324,17 +7335,14 @@ fn return_annot<'arena, 'ast>(
         ast::types::function::ReturnAnnotation::TypeGuard(tg) => {
             let loc = tbls.push_loc(tg.loc.dupe());
             let guard = type_guard_opt(opts, scope, scopes, tbls, xs, tg).map(
-                |(guard_loc, param_name, type_guard, one_sided)| TypeGuard {
+                |(guard_loc, param_name, type_guard, kind)| TypeGuard {
                     loc: guard_loc,
                     param_name,
                     type_guard,
-                    one_sided,
+                    kind,
                 },
             );
-            (
-                Parsed::Annot(Box::new(ParsedAnnot::Boolean(Box::new(loc)))),
-                guard,
-            )
+            (type_guard_return_annot(tg.kind, loc), guard)
         }
         ast::types::function::ReturnAnnotation::Missing(loc) => {
             let loc = tbls.push_loc(loc.dupe());
@@ -11157,17 +11165,17 @@ fn function_def_helper<'arena: 'ast, 'ast>(
                 let guard_opt =
                     type_guard_opt(opts, rest_scope, scopes, tbls, xs, &guard_annot.guard);
                 (
-                    Parsed::Annot(Box::new(ParsedAnnot::Boolean(Box::new(loc_node)))),
+                    type_guard_return_annot(guard_annot.guard.kind, loc_node),
                     guard_opt,
                 )
             }
         }
     };
-    let type_guard = type_guard_opt.map(|(loc, param_name, type_guard, one_sided)| TypeGuard {
+    let type_guard = type_guard_opt.map(|(loc, param_name, type_guard, kind)| TypeGuard {
         loc,
         param_name,
         type_guard,
-        one_sided,
+        kind,
     });
     let effect_ = convert_effect(opts, effect_, Some(fn_loc), id.as_ref().map(|id| &id.name));
     FunSig {
@@ -14713,6 +14721,7 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
     }
 }
 
+// ---------------------------------------------------------------------------
 // Lexical annotation roots for targeted signatures
 //
 // Function bodies are irrelevant to signatures, so bindings inside them (and

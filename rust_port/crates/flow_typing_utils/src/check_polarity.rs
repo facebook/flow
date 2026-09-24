@@ -419,7 +419,9 @@ fn check_polarity_impl<'cx>(
                 }
                 check_polarity_impl(cx, env, trace, seen, tparams, polarity, return_t)?;
                 if let Some(tg) = type_guard {
-                    check_polarity_impl(cx, env, trace, seen, tparams, polarity, &tg.type_guard)?;
+                    if let Some(type_guard) = &tg.type_guard {
+                        check_polarity_impl(cx, env, trace, seen, tparams, polarity, type_guard)?;
+                    }
                 }
             }
             DefTInner::ArrT(arr) => {

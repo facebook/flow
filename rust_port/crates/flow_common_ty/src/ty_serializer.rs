@@ -627,17 +627,13 @@ impl Serializer {
                     annotation: t,
                 })
             }
-            ReturnT::TypeGuard(impl_, x, t) => {
-                let kind = if *impl_ {
-                    ast::types::TypeGuardKind::Implies
-                } else {
-                    ast::types::TypeGuardKind::Default
-                };
-                let t = self.type_(t);
+            ReturnT::TypeGuard(kind, x, t) => {
+                let kind = *kind;
+                let t = t.as_ref().map(|t| self.type_(t));
                 ast::types::function::ReturnAnnotation::TypeGuard(ast::types::TypeGuard {
                     loc: LOC_NONE,
                     kind,
-                    guard: (id_from_string(x), Some(t)),
+                    guard: (id_from_string(x), t),
                     comments: None,
                 })
             }

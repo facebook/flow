@@ -12,6 +12,7 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_common::reason::Name;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::ast::types::TypeGuardKind;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
 
@@ -268,7 +269,8 @@ pub struct FunT<L> {
 )]
 pub enum ReturnT<L> {
     ReturnType(Arc<Ty<L>>),
-    TypeGuard(bool /* implies */, FlowSmolStr, Arc<Ty<L>>),
+    /// The payload is `None` only for a bare `asserts x`.
+    TypeGuard(TypeGuardKind, FlowSmolStr, Option<Arc<Ty<L>>>),
 }
 
 #[derive(
@@ -1466,8 +1468,10 @@ where
             ReturnT::ReturnType(t) => {
                 self.on_t(env, t);
             }
-            ReturnT::TypeGuard(_implies, _name, t) => {
-                self.on_t(env, t);
+            ReturnT::TypeGuard(_kind, _name, t) => {
+                if let Some(t) = t {
+                    self.on_t(env, t);
+                }
             }
         }
     }
@@ -2093,8 +2097,13 @@ where
     ) -> Result<(), StructuralMismatch> {
         match (r1, r2) {
             (ReturnT::ReturnType(t1), ReturnT::ReturnType(t2)) => self.on_t(env, t1, t2),
-            (ReturnT::TypeGuard(i1, _, t1), ReturnT::TypeGuard(i2, _, t2)) if i1 == i2 => {
+            (ReturnT::TypeGuard(k1, _, Some(t1)), ReturnT::TypeGuard(k2, _, Some(t2)))
+                if k1 == k2 =>
+            {
                 self.on_t(env, t1, t2)
+            }
+            (ReturnT::TypeGuard(k1, _, None), ReturnT::TypeGuard(k2, _, None)) if k1 == k2 => {
+                Ok(())
             }
             _ => self.fail_return_t(env, r1, r2),
         }
@@ -3020,7 +3029,11 @@ where
 
     fn on_return_t(&mut self, env: &Env, r: &ReturnT<L>) -> Self::Acc {
         match r {
-            ReturnT::ReturnType(t) | ReturnT::TypeGuard(_, _, t) => self.on_t(env, t),
+            ReturnT::ReturnType(t) => self.on_t(env, t),
+            ReturnT::TypeGuard(_, _, t) => match t {
+                Some(t) => self.on_t(env, t),
+                None => Self::Acc::zero(),
+            },
         }
     }
 
@@ -3640,9 +3653,9 @@ where
                 let t_new = self.on_t(env, t);
                 ReturnT::ReturnType(t_new)
             }
-            ReturnT::TypeGuard(implies, name, t) => {
-                let t_new = self.on_t(env, t);
-                ReturnT::TypeGuard(implies, name, t_new)
+            ReturnT::TypeGuard(kind, name, t) => {
+                let t_new = t.map(|t| self.on_t(env, t));
+                ReturnT::TypeGuard(kind, name, t_new)
             }
         }
     }
@@ -4318,6 +4331,15 @@ pub fn tag_of_builtin_or_symbol<L>(_bos: &BuiltinOrSymbol<L>) -> i32 {
     }
 }
 
+/// The keyword a type guard is printed with, including its trailing space.
+pub fn type_guard_kind_prefix(kind: TypeGuardKind) -> &'static str {
+    match kind {
+        TypeGuardKind::Default => "",
+        TypeGuardKind::Implies => "implies ",
+        TypeGuardKind::Asserts => "asserts ",
+    }
+}
+
 pub fn tag_of_return_t<L>(_rt: &ReturnT<L>) -> i32 {
     match _rt {
         ReturnT::ReturnType(_) => 0,
@@ -4476,10 +4498,12 @@ impl<L: Dupe> ReturnT<L> {
             ReturnT::ReturnType(arc_ty) => {
                 ReturnT::ReturnType(Arc::new(arc_ty.as_ref().map_locs(f)))
             }
-            ReturnT::TypeGuard(implies, name, arc_ty) => ReturnT::TypeGuard(
-                *implies,
+            ReturnT::TypeGuard(kind, name, arc_ty) => ReturnT::TypeGuard(
+                *kind,
                 name.clone(),
-                Arc::new(arc_ty.as_ref().map_locs(f)),
+                arc_ty
+                    .as_ref()
+                    .map(|arc_ty| Arc::new(arc_ty.as_ref().map_locs(f))),
             ),
         }
     }

@@ -57,6 +57,7 @@ use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+pub use flow_parser::ast::types::TypeGuardKind;
 use vec1::Vec1;
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash)]
@@ -4656,8 +4657,18 @@ pub struct TypeGuardInner {
     pub inferred: bool,
     pub reason: Reason,
     pub param_name: (ALoc, FlowSmolStr),
-    pub type_guard: Type,
-    pub one_sided: bool,
+    pub type_guard: Option<Type>,
+    pub kind: TypeGuardKind,
+}
+
+impl TypeGuardInner {
+    pub fn one_sided(&self) -> bool {
+        !matches!(self.kind, TypeGuardKind::Default)
+    }
+
+    pub fn is_asserts(&self) -> bool {
+        matches!(self.kind, TypeGuardKind::Asserts)
+    }
 }
 
 #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]

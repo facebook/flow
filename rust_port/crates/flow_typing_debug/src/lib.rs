@@ -441,13 +441,20 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                 let return_str = kid(tvars, &fun.return_t);
                 let guard_str = match &fun.type_guard {
                     Some(tg) => {
-                        let implies = if tg.one_sided { "implies " } else { "" };
-                        format!(
-                            " {}{}is {}",
-                            implies,
-                            tg.param_name.1.as_str(),
-                            kid(tvars, &tg.type_guard)
-                        )
+                        let prefix = match tg.kind {
+                            flow_typing_type::type_::TypeGuardKind::Default => "",
+                            flow_typing_type::type_::TypeGuardKind::Implies => "implies ",
+                            flow_typing_type::type_::TypeGuardKind::Asserts => "asserts ",
+                        };
+                        match &tg.type_guard {
+                            Some(type_guard) => format!(
+                                " {}{}is {}",
+                                prefix,
+                                tg.param_name.1.as_str(),
+                                kid(tvars, type_guard)
+                            ),
+                            None => format!(" {}{}", prefix, tg.param_name.1.as_str()),
+                        }
                     }
                     None => String::new(),
                 };

@@ -393,14 +393,14 @@ fn func_type_guard_compat<'cx>(
         &[(Option<Name>, Type)],
         bool,
         (&ALoc, &Name),
-        &Type,
+        Option<&Type>,
     ),
     grd2: (
         &Reason,
         &[(Option<Name>, Type)],
         bool,
         (&ALoc, &Name),
-        &Type,
+        Option<&Type>,
     ),
 ) -> Result<(), FlowJsException> {
     let (reason1, params1, impl1, (loc1, x1), t1) = grd1;
@@ -440,10 +440,11 @@ fn func_type_guard_compat<'cx>(
             },
         )?;
     }
-    if impl2 {
-        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)
-    } else {
-        FlowJs::rec_unify_with_env(
+    match (t1, t2) {
+        (Some(t1), Some(t2)) if impl2 => {
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, t1, t2)
+        }
+        (Some(t1), Some(t2)) => FlowJs::rec_unify_with_env(
             cx,
             env,
             trace,
@@ -452,7 +453,25 @@ fn func_type_guard_compat<'cx>(
             None,
             t1,
             t2,
-        )
+        ),
+        (None, None) => Ok(()),
+        _ => {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::ETypeGuardFuncIncompatibility {
+                    use_op,
+                    lower: flow_js_utils::type_reference_with_reason_or_desc_for_error(
+                        t1,
+                        reason1.dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_or_desc_for_error(
+                        t2,
+                        reason2.dupe(),
+                    ),
+                },
+            )?;
+            Ok(())
+        }
     }
 }
 
@@ -624,20 +643,27 @@ fn funt_to_funt_check<'cx>(
             )?;
         }
     }
-    let ret_use_op = VirtualUseOp::Frame(
-        Arc::new(VirtualFrameUseOp::FunReturn {
-            lower: type_util::reason_of_t(&ft1.return_t).clone(),
-            upper: type_util::reason_of_t(&ft2.return_t).clone(),
-        }),
-        Arc::new(use_op.dupe()),
-    );
-    FlowJs::rec_flow_with_env(
-        cx,
-        env,
-        trace,
-        &ft1.return_t,
-        &UseT::new(UseTInner::UseT(ret_use_op, ft2.return_t.dupe())),
-    )?;
+    let is_asserts = |guard: &Option<flow_typing_type::type_::TypeGuard>| {
+        guard.as_deref().is_some_and(|guard| guard.is_asserts())
+    };
+    let assertion_kind_mismatch =
+        is_asserts(&ft1.type_guard) != is_asserts(&ft2.type_guard) && ft2.type_guard.is_some();
+    if !assertion_kind_mismatch {
+        let ret_use_op = VirtualUseOp::Frame(
+            Arc::new(VirtualFrameUseOp::FunReturn {
+                lower: type_util::reason_of_t(&ft1.return_t).clone(),
+                upper: type_util::reason_of_t(&ft2.return_t).clone(),
+            }),
+            Arc::new(use_op.dupe()),
+        );
+        FlowJs::rec_flow_with_env(
+            cx,
+            env,
+            trace,
+            &ft1.return_t,
+            &UseT::new(UseTInner::UseT(ret_use_op, ft2.return_t.dupe())),
+        )?;
+    }
     match (&ft1.type_guard, &ft2.type_guard) {
         (None, Some(_)) => {
             // Non-predicate functions are incompatible with predicate ones
@@ -659,6 +685,23 @@ fn funt_to_funt_check<'cx>(
             )?;
         }
         (Some(tg1), Some(tg2)) => {
+            if tg1.is_asserts() != tg2.is_asserts() {
+                flow_js_utils::add_output(
+                    cx,
+                    ErrorMessage::ETypeGuardFuncIncompatibility {
+                        use_op: use_op.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                            lower,
+                            lreason.dupe(),
+                        ),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                            upper,
+                            ureason.dupe(),
+                        ),
+                    },
+                )?;
+                return Ok(());
+            }
             let params1: Vec<(Option<Name>, Type)> = ft1
                 .params
                 .iter()
@@ -679,16 +722,16 @@ fn funt_to_funt_check<'cx>(
                 (
                     &tg1.reason,
                     &params1,
-                    tg1.one_sided,
+                    tg1.one_sided(),
                     (&tg1.param_name.0, &name1),
-                    &tg1.type_guard,
+                    tg1.type_guard.as_ref(),
                 ),
                 (
                     &tg2.reason,
                     &params2,
-                    tg2.one_sided,
+                    tg2.one_sided(),
                     (&tg2.param_name.0, &name2),
-                    &tg2.type_guard,
+                    tg2.type_guard.as_ref(),
                 ),
             )?;
         }

@@ -20189,26 +20189,26 @@ pub fn mk_func_sig<'a>(
             let guard_kind = guard_annot.guard.kind;
             let (ref id_name, ref guard_type_opt) = guard_annot.guard.guard;
             let guard_comments = guard_annot.guard.comments.as_ref();
-            match (guard_kind, guard_type_opt) {
-                (kind, Some(t))
-                    if kind == ast::types::TypeGuardKind::Default
-                        || kind == ast::types::TypeGuardKind::Implies =>
-                {
+            // A bare `asserts x` needs no guard type; every other kind does.
+            let representable =
+                guard_type_opt.is_some() || guard_kind == ast::types::TypeGuardKind::Asserts;
+            match (guard_kind, representable) {
+                (kind, true) => {
                     let fparams_value = crate::func_params::value::<
                         crate::func_params::FuncStmtConfig,
                     >(&fparams.params);
-                    let (bool_t, guard_ast, predicate_opt) = type_annotation::convert_type_guard(
+                    let (return_t, guard_ast, predicate_opt) = type_annotation::convert_type_guard(
                         cx,
                         tparams_map.dupe(),
                         &fparams_value,
                         gloc,
                         kind,
                         id_name,
-                        t,
+                        guard_type_opt.as_ref(),
                         guard_comments,
                     )?;
                     (
-                        AnnotatedOrInferred::Annotated(bool_t),
+                        AnnotatedOrInferred::Annotated(return_t),
                         ast::function::ReturnAnnot::TypeGuard(ast::types::TypeGuardAnnotation {
                             loc: guard_annot.loc.dupe(),
                             guard: guard_ast,

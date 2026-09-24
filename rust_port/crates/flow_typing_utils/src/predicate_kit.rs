@@ -1082,29 +1082,37 @@ fn call_latent_pred<'cx>(
                     // `params`) raise errors, but also propagate the unrefined types (as if the
                     // refinement never took place).
                     DefTInner::FunT(_, fun_type)
-                        if let Some(TypeGuardInner {
-                            one_sided,
-                            param_name: (_, param_name),
-                            type_guard,
-                            ..
-                        }) = fun_type.type_guard.as_deref() =>
+                        if let Some(type_guard_value) = fun_type.type_guard.as_deref()
+                            && let TypeGuardInner {
+                                param_name: (_, param_name),
+                                type_guard,
+                                ..
+                            } = type_guard_value =>
                     {
+                        let one_sided = type_guard_value.one_sided();
                         // TODO: for the moment we only support simple keys (empty projection)
                         // that exactly correspond to the function's parameters
                         if is_target(param_name.as_str(), &fun_type.params) {
                             let filter_result = if sense {
-                                let repositioned = FlowJs::reposition_reason(
-                                    cx,
-                                    env,
-                                    Some(trace),
-                                    reason,
-                                    None,
-                                    type_guard,
-                                )?;
-                                let type_ = intersect(cx, env, tin.dupe(), repositioned)?;
-                                let changed = !Type::ptr_eq(&type_, tin);
-                                FilterResult { type_, changed }
-                            } else if !one_sided {
+                                match type_guard {
+                                    None => type_filter::truthy(cx, tin.dupe()),
+                                    Some(type_guard) => {
+                                        let repositioned = FlowJs::reposition_reason(
+                                            cx,
+                                            env,
+                                            Some(trace),
+                                            reason,
+                                            None,
+                                            type_guard,
+                                        )?;
+                                        let type_ = intersect(cx, env, tin.dupe(), repositioned)?;
+                                        let changed = !Type::ptr_eq(&type_, tin);
+                                        FilterResult { type_, changed }
+                                    }
+                                }
+                            } else if let Some(type_guard) = type_guard
+                                && !one_sided
+                            {
                                 let repositioned = FlowJs::reposition_reason(
                                     cx,
                                     env,

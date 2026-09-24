@@ -4978,7 +4978,7 @@ fn merge_fun<'cx>(
                 loc,
                 param_name,
                 type_guard: t,
-                one_sided,
+                kind,
             }) => {
                 let name = &param_name.1;
                 let skip_for_rest = match &rest_param {
@@ -4997,10 +4997,12 @@ fn merge_fun<'cx>(
                     let tg_reason = reason::mk_reason(RTypeGuard, loc.dupe());
                     Some(type_::TypeGuard::new(type_::TypeGuardInner {
                         reason: tg_reason,
-                        one_sided: *one_sided,
+                        kind: *kind,
                         inferred: false,
                         param_name: param_name.dupe(),
-                        type_guard: merge_impl(env, cx, file, t, false, false),
+                        type_guard: t
+                            .as_ref()
+                            .map(|t| merge_impl(env, cx, file, t, false, false)),
                     }))
                 }
             }
