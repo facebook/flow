@@ -23,6 +23,7 @@ use flow_type_sig::ts_enum_sig;
 use flow_type_sig::type_sig::TsEnumMemberValue;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::TSEnumInvalidMemberData;
 use flow_typing_errors::error_message::TSEnumInvalidSyntaxData;
@@ -159,6 +160,10 @@ pub fn mk_ts_enum_namespace<'cx>(
         has_unknown_members,
         comments: _,
     } = body;
+    let enum_reference = || EnumReferenceData {
+        loc: name_loc.dupe(),
+        name: enum_name.dupe(),
+    };
     // Flow Enums allow syntax that a TypeScript enum does not: unknown members
     // (`...`) and an explicit representation type (`enum E of string`). These reach
     // this path because [enable_enums] is forced on for .ts/.d.ts files, so report
@@ -169,7 +174,7 @@ pub fn mk_ts_enum_namespace<'cx>(
             ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidSyntax(Box::new(
                 TSEnumInvalidSyntaxData {
                     loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
+                    enum_: enum_reference(),
                     kind: TsEnumInvalidSyntaxKind::TSEnumUnknownMembers,
                 },
             ))),
@@ -181,7 +186,7 @@ pub fn mk_ts_enum_namespace<'cx>(
             ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidSyntax(Box::new(
                 TSEnumInvalidSyntaxData {
                     loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
+                    enum_: enum_reference(),
                     kind: TsEnumInvalidSyntaxKind::TSEnumExplicitType,
                 },
             ))),
@@ -201,7 +206,7 @@ pub fn mk_ts_enum_namespace<'cx>(
                     ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(Box::new(
                         TSEnumInvalidMemberData {
                             loc: init_loc.dupe(),
-                            enum_reason: enum_reason.dupe(),
+                            enum_: enum_reference(),
                             member_name: member_name.to_string(),
                             kind: TsEnumInvalidMemberKind::TSEnumMemberInvalidLiteral,
                         },
@@ -214,7 +219,7 @@ pub fn mk_ts_enum_namespace<'cx>(
                     ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(Box::new(
                         TSEnumInvalidMemberData {
                             loc: member_loc.dupe(),
-                            enum_reason: enum_reason.dupe(),
+                            enum_: enum_reference(),
                             member_name: member_name.to_string(),
                             kind: TsEnumInvalidMemberKind::TSEnumMemberMissingInitializer,
                         },
@@ -227,7 +232,7 @@ pub fn mk_ts_enum_namespace<'cx>(
                     ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(Box::new(
                         TSEnumInvalidMemberData {
                             loc: member_loc.dupe(),
-                            enum_reason: enum_reason.dupe(),
+                            enum_: enum_reference(),
                             member_name: member_name.to_string(),
                             kind: TsEnumInvalidMemberKind::TSEnumMemberNumericName,
                         },

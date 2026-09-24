@@ -1771,13 +1771,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     }
 
     fn valid_declaration_check(&self, name: &FlowSmolStr, loc: &ALoc) {
-        use flow_common::reason::VirtualReason;
-        use flow_common::reason::VirtualReasonDesc;
         use invalidation_api::InitializationValid;
         use invalidation_api::declaration_validity;
-
-        let declaration =
-            VirtualReason::new(VirtualReasonDesc::RIdentifier(name.dupe()), loc.dupe());
 
         let error =
             |null_write: Option<ALoc>,
@@ -1791,7 +1786,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 Fl::add_output(
                     self.cx,
                     ErrorMessage::EInvalidDeclaration(Box::new(EInvalidDeclarationData {
-                        declaration: declaration.dupe(),
+                        declaration_loc: loc.dupe(),
+                        name: name.dupe(),
                         null_write,
                         possible_generic_escape_locs: possible_generic_escape_locs
                             .iter()
@@ -4236,17 +4232,14 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 if let Some(binding_list) = bindings.get(name) {
                     if let Some((_, first_binding)) = binding_list.first() {
                         let binding_loc = first_binding.loc.dupe();
-                        let binding_reason = flow_common::reason::mk_reason(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(name.dupe()),
-                            binding_loc,
-                        );
                         Fl::add_output(
                             self.resolver.cx,
                             ErrorMessage::EMatchError(
                                 MatchErrorKind::MatchInvalidPatternReference(Box::new(
                                     MatchInvalidPatternReferenceData {
                                         loc,
-                                        binding_reason,
+                                        binding_loc,
+                                        name: name.dupe(),
                                     },
                                 )),
                             ),

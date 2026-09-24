@@ -280,6 +280,23 @@ pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 #[derive(
     Debug,
     Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EnumReferenceData<L: Dupe> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     Hash,
@@ -291,7 +308,7 @@ pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub prev_use_loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -306,7 +323,8 @@ pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq +
     serde::Deserialize
 )]
 pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: ErrorReference<L>,
+    pub operation_loc: L,
+    pub operation_name: FlowSmolStr,
     pub enum_: ErrorTypeReferenceWithReasonData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
@@ -323,7 +341,8 @@ pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq 
     serde::Deserialize
 )]
 pub struct EnumInvalidObjectFunctionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
+    pub operation_loc: L,
+    pub function_name: FlowSmolStr,
     pub enum_: ErrorTypeReferenceWithReasonData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
@@ -492,7 +511,7 @@ pub struct EnumInvalidAbstractUseData<L: Dupe + PartialOrd + Ord + PartialEq + E
 )]
 pub struct EnumInvalidMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
 }
 
@@ -509,7 +528,7 @@ pub struct EnumInvalidMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 )]
 pub struct EnumNonIdentifierMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
 }
 
@@ -527,7 +546,7 @@ pub struct EnumNonIdentifierMemberNameData<L: Dupe + PartialOrd + Ord + PartialE
 pub struct EnumDuplicateMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub prev_use_loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
 }
 
@@ -544,7 +563,7 @@ pub struct EnumDuplicateMemberNameData<L: Dupe + PartialOrd + Ord + PartialEq + 
 )]
 pub struct EnumInconsistentMemberValuesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -560,7 +579,7 @@ pub struct EnumInconsistentMemberValuesData<L: Dupe + PartialOrd + Ord + Partial
 )]
 pub struct EnumInvalidMemberInitializerData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
     pub member_name: String,
 }
@@ -578,7 +597,7 @@ pub struct EnumInvalidMemberInitializerData<L: Dupe + PartialOrd + Ord + Partial
 )]
 pub struct EnumBooleanMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
 }
 
@@ -595,7 +614,7 @@ pub struct EnumBooleanMemberNotInitializedData<L: Dupe + PartialOrd + Ord + Part
 )]
 pub struct EnumNumberMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
 }
 
@@ -612,7 +631,7 @@ pub struct EnumNumberMemberNotInitializedData<L: Dupe + PartialOrd + Ord + Parti
 )]
 pub struct EnumBigIntMemberNotInitializedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
 }
 
@@ -631,7 +650,7 @@ pub struct EnumStringMemberInconsistentlyInitializedData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -647,7 +666,7 @@ pub struct EnumStringMemberInconsistentlyInitializedData<
 )]
 pub struct TSEnumInvalidMemberData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub member_name: String,
     pub kind: crate::intermediate_error_types::TsEnumInvalidMemberKind,
 }
@@ -665,7 +684,7 @@ pub struct TSEnumInvalidMemberData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
 )]
 pub struct TSEnumInvalidSyntaxData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: EnumReferenceData<L>,
     pub kind: crate::intermediate_error_types::TsEnumInvalidSyntaxKind,
 }
 
@@ -853,7 +872,8 @@ pub struct MatchDuplicateObjectPropertyData<L: Dupe + PartialOrd + Ord + Partial
 )]
 pub struct MatchInvalidPatternReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub binding_reason: VirtualReason<L>,
+    pub binding_loc: L,
+    pub name: FlowSmolStr,
 }
 
 #[derive(
@@ -2553,8 +2573,8 @@ pub struct EImplicitInstantiationUnderconstrainedErrorData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
     pub reason_call: VirtualReason<L>,
-    pub reason_tparam: VirtualReason<L>,
-    pub bound: FlowSmolStr,
+    pub type_param_loc: L,
+    pub type_param_name: FlowSmolStr,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -2657,7 +2677,8 @@ pub struct EComponentThisReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + 
     serde::Deserialize
 )]
 pub struct EInvalidDeclarationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub declaration: VirtualReason<L>,
+    pub declaration_loc: L,
+    pub name: FlowSmolStr,
     pub null_write: Option<NullWrite<L>>,
     pub possible_generic_escape_locs: Vec<L>,
 }
@@ -4319,6 +4340,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             |d: VirtualReasonDesc<L>| -> VirtualReasonDesc<M> { d.map_locs(&|l: &L| f(l.dupe())) };
         let map_error_ref =
             |r: ErrorReference<L>| -> ErrorReference<M> { r.map_locs(&|l: &L| f(l.dupe())) };
+        let map_enum_ref = |r: EnumReferenceData<L>| -> EnumReferenceData<M> {
+            EnumReferenceData {
+                loc: f(r.loc),
+                name: r.name,
+            }
+        };
         let map_error_type_ref = |r: ErrorTypeReferenceData<L>| -> ErrorTypeReferenceData<M> {
             ErrorTypeReferenceData {
                 reference: map_error_ref(r.reference),
@@ -5226,27 +5253,31 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
                         loc,
                         prev_use_loc,
-                        enum_reason,
+                        enum_,
                     }) => EnumMemberDuplicateValue(Box::new(EnumMemberDuplicateValueData {
                         loc: f(loc),
                         prev_use_loc: f(prev_use_loc),
-                        enum_reason: map_reason(enum_reason),
+                        enum_: map_enum_ref(enum_),
                     })),
                     EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
-                        reason,
+                        operation_loc,
+                        operation_name,
                         enum_,
                         enum_name,
                     }) => EnumInvalidObjectUtilType(Box::new(EnumInvalidObjectUtilTypeData {
-                        reason: map_error_ref(reason),
+                        operation_loc: f(operation_loc),
+                        operation_name,
                         enum_: map_error_type_ref_with_reason(enum_),
                         enum_name,
                     })),
                     EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
-                        reason,
+                        operation_loc,
+                        function_name,
                         enum_,
                         enum_name,
                     }) => EnumInvalidObjectFunction(Box::new(EnumInvalidObjectFunctionData {
-                        reason: map_reason(reason),
+                        operation_loc: f(operation_loc),
+                        function_name,
                         enum_: map_error_type_ref_with_reason(enum_),
                         enum_name,
                     })),
@@ -5351,116 +5382,114 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     })),
                     EnumInvalidMemberName(box EnumInvalidMemberNameData {
                         loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                     }) => EnumInvalidMemberName(Box::new(EnumInvalidMemberNameData {
                         loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
+                        enum_: map_enum_ref(enum_),
                         member_name,
                     })),
                     EnumNonIdentifierMemberName(box EnumNonIdentifierMemberNameData {
                         loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                     }) => EnumNonIdentifierMemberName(Box::new(EnumNonIdentifierMemberNameData {
                         loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
+                        enum_: map_enum_ref(enum_),
                         member_name,
                     })),
                     EnumDuplicateMemberName(box EnumDuplicateMemberNameData {
                         loc,
                         prev_use_loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                     }) => EnumDuplicateMemberName(Box::new(EnumDuplicateMemberNameData {
                         loc: f(loc),
                         prev_use_loc: f(prev_use_loc),
-                        enum_reason: map_reason(enum_reason),
+                        enum_: map_enum_ref(enum_),
                         member_name,
                     })),
                     EnumInconsistentMemberValues(box EnumInconsistentMemberValuesData {
                         loc,
-                        enum_reason,
+                        enum_,
                     }) => {
                         EnumInconsistentMemberValues(Box::new(EnumInconsistentMemberValuesData {
                             loc: f(loc),
-                            enum_reason: map_reason(enum_reason),
+                            enum_: map_enum_ref(enum_),
                         }))
                     }
                     EnumInvalidMemberInitializer(box EnumInvalidMemberInitializerData {
                         loc,
-                        enum_reason,
+                        enum_,
                         explicit_type,
                         member_name,
                     }) => {
                         EnumInvalidMemberInitializer(Box::new(EnumInvalidMemberInitializerData {
                             loc: f(loc),
-                            enum_reason: map_reason(enum_reason),
+                            enum_: map_enum_ref(enum_),
                             explicit_type,
                             member_name,
                         }))
                     }
                     EnumBooleanMemberNotInitialized(box EnumBooleanMemberNotInitializedData {
                         loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                     }) => EnumBooleanMemberNotInitialized(Box::new(
                         EnumBooleanMemberNotInitializedData {
                             loc: f(loc),
-                            enum_reason: map_reason(enum_reason),
+                            enum_: map_enum_ref(enum_),
                             member_name,
                         },
                     )),
                     EnumNumberMemberNotInitialized(box EnumNumberMemberNotInitializedData {
                         loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                     }) => EnumNumberMemberNotInitialized(Box::new(
                         EnumNumberMemberNotInitializedData {
                             loc: f(loc),
-                            enum_reason: map_reason(enum_reason),
+                            enum_: map_enum_ref(enum_),
                             member_name,
                         },
                     )),
                     EnumBigIntMemberNotInitialized(box EnumBigIntMemberNotInitializedData {
                         loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                     }) => EnumBigIntMemberNotInitialized(Box::new(
                         EnumBigIntMemberNotInitializedData {
                             loc: f(loc),
-                            enum_reason: map_reason(enum_reason),
+                            enum_: map_enum_ref(enum_),
                             member_name,
                         },
                     )),
                     EnumStringMemberInconsistentlyInitialized(
-                        box EnumStringMemberInconsistentlyInitializedData { loc, enum_reason },
+                        box EnumStringMemberInconsistentlyInitializedData { loc, enum_ },
                     ) => EnumStringMemberInconsistentlyInitialized(Box::new(
                         EnumStringMemberInconsistentlyInitializedData {
                             loc: f(loc),
-                            enum_reason: map_reason(enum_reason),
+                            enum_: map_enum_ref(enum_),
                         },
                     )),
                     TSEnumInvalidMember(box TSEnumInvalidMemberData {
                         loc,
-                        enum_reason,
+                        enum_,
                         member_name,
                         kind,
                     }) => TSEnumInvalidMember(Box::new(TSEnumInvalidMemberData {
                         loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
+                        enum_: map_enum_ref(enum_),
                         member_name,
                         kind,
                     })),
-                    TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData {
-                        loc,
-                        enum_reason,
-                        kind,
-                    }) => TSEnumInvalidSyntax(Box::new(TSEnumInvalidSyntaxData {
-                        loc: f(loc),
-                        enum_reason: map_reason(enum_reason),
-                        kind,
-                    })),
+                    TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData { loc, enum_, kind }) => {
+                        TSEnumInvalidSyntax(Box::new(TSEnumInvalidSyntaxData {
+                            loc: f(loc),
+                            enum_: map_enum_ref(enum_),
+                            kind,
+                        }))
+                    }
                 })
             }
             EIndeterminateModuleType(loc) => EIndeterminateModuleType(f(loc)),
@@ -5774,15 +5803,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EImplicitInstantiationUnderconstrainedError(
                 box EImplicitInstantiationUnderconstrainedErrorData {
                     reason_call,
-                    reason_tparam,
-                    bound,
+                    type_param_loc,
+                    type_param_name,
                     use_op,
                 },
             ) => EImplicitInstantiationUnderconstrainedError(Box::new(
                 EImplicitInstantiationUnderconstrainedErrorData {
                     reason_call: map_reason(reason_call),
-                    reason_tparam: map_reason(reason_tparam),
-                    bound,
+                    type_param_loc: f(type_param_loc),
+                    type_param_name,
                     use_op: map_use_op(use_op),
                 },
             )),
@@ -5884,11 +5913,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ENestedHook(loc) => ENestedHook(f(loc)),
 
             EInvalidDeclaration(box EInvalidDeclarationData {
-                declaration,
+                declaration_loc,
+                name,
                 null_write,
                 possible_generic_escape_locs,
             }) => EInvalidDeclaration(Box::new(EInvalidDeclarationData {
-                declaration: map_reason(declaration),
+                declaration_loc: f(declaration_loc),
+                name,
                 null_write: null_write.map(|nw| NullWrite {
                     null_loc: f(nw.null_loc),
                     initialized: nw.initialized,
@@ -6334,11 +6365,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     MatchInvalidAsPattern { loc } => MatchInvalidAsPattern { loc: f(loc) },
                     MatchInvalidPatternReference(box MatchInvalidPatternReferenceData {
                         loc,
-                        binding_reason,
+                        binding_loc,
+                        name,
                     }) => {
                         MatchInvalidPatternReference(Box::new(MatchInvalidPatternReferenceData {
                             loc: f(loc),
-                            binding_reason: map_reason(binding_reason),
+                            binding_loc: f(binding_loc),
+                            name,
                         }))
                     }
                     MatchInvalidObjectShorthand(box MatchInvalidObjectShorthandData {
@@ -6954,13 +6987,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(
                 box EnumInvalidObjectUtilTypeData {
-                    reason,
+                    operation_loc,
+                    operation_name,
                     enum_,
                     enum_name,
                 },
             )) => EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
                 EnumInvalidObjectUtilTypeData {
-                    reason,
+                    operation_loc,
+                    operation_name,
                     enum_: map_error_type_ref_with_reason(enum_),
                     enum_name,
                 },
@@ -6968,13 +7003,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EEnumError(EnumErrorKind::EnumInvalidObjectFunction(
                 box EnumInvalidObjectFunctionData {
-                    reason,
+                    operation_loc,
+                    function_name,
                     enum_,
                     enum_name,
                 },
             )) => EEnumError(EnumErrorKind::EnumInvalidObjectFunction(Box::new(
                 EnumInvalidObjectFunctionData {
-                    reason,
+                    operation_loc,
+                    function_name,
                     enum_: map_error_type_ref_with_reason(enum_),
                     enum_name,
                 },
@@ -7685,10 +7722,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     reason,
                     ..
                 })
-                | EnumErrorKind::EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
-                    reason,
-                    ..
-                })
                 | EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
                     enum_:
                         ErrorTypeReferenceData {
@@ -7698,24 +7731,31 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 }),
             ) => Some(reason.loc.dupe()),
 
-            Self::EEnumError(
-                EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
-                    reason,
-                    ..
-                })
-                | EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData {
+            Self::EEnumError(EnumErrorKind::EnumNotIterableForIn(
+                box EnumNotIterableForInData {
                     enum_: ErrorTypeReferenceWithReasonData { reason, .. },
                     ..
-                }),
-            )
-            | Self::EInvalidDeclaration(box EInvalidDeclarationData {
-                declaration: reason,
-                ..
-            })
+                },
+            ))
             | Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple: reason,
                 ..
             }) => Some(reason.loc.dupe()),
+
+            Self::EEnumError(
+                EnumErrorKind::EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
+                    operation_loc: loc,
+                    ..
+                })
+                | EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
+                    operation_loc: loc,
+                    ..
+                }),
+            )
+            | Self::EInvalidDeclaration(box EInvalidDeclarationData {
+                declaration_loc: loc,
+                ..
+            }) => Some(loc.dupe()),
 
             Self::ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
                 type_guard: TypeGuardParameterData { loc, .. },
@@ -8601,6 +8641,15 @@ fn definition_reference_desc<L: Dupe>(kind: DefinitionReferenceKind) -> VirtualR
     }
 }
 
+fn message_enum_reference<L: Dupe>(enum_: EnumReferenceData<L>) -> MessageTypeReferenceData<L> {
+    MessageTypeReferenceData {
+        loc: enum_.loc,
+        desc: Err(VirtualReasonDesc::REnum {
+            name: Some(enum_.name),
+        }),
+    }
+}
+
 impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
     /// Transform an ErrorMessage into a FriendlyMessageRecipe.
     ///
@@ -9295,12 +9344,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue(
                 box EnumMemberDuplicateValueData {
                     prev_use_loc,
-                    enum_reason,
+                    enum_,
                     ..
                 },
             )) => Normal(Message::MessageDuplicateEnumMember {
                 prev_use_loc,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
                 enum_,
@@ -9420,28 +9469,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName(
                 box EnumInvalidMemberNameData {
-                    enum_reason,
-                    member_name,
-                    ..
+                    enum_, member_name, ..
                 },
             )) => Normal(Message::MessageInvalidEnumMemberName {
                 member_name,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName(
                 box EnumNonIdentifierMemberNameData {
-                    enum_reason,
-                    member_name,
-                    ..
+                    enum_, member_name, ..
                 },
             )) => Normal(Message::MessageEnumNonIdentifierMemberName {
                 member_name,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName(
                 box EnumDuplicateMemberNameData {
                     prev_use_loc,
-                    enum_reason,
+                    enum_,
                     member_name,
                     ..
                 },
@@ -9449,15 +9494,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MessageEnumDuplicateMemberNameData {
                     member_name,
                     prev_use_loc,
-                    enum_reason,
+                    enum_: message_enum_reference(enum_),
                 },
             ))),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues(
-                box EnumInconsistentMemberValuesData { enum_reason, .. },
-            )) => Normal(Message::MessageEnumInconsistentMemberValues { enum_reason }),
+                box EnumInconsistentMemberValuesData { enum_, .. },
+            )) => Normal(Message::MessageEnumInconsistentMemberValues {
+                enum_: message_enum_reference(enum_),
+            }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer(
                 box EnumInvalidMemberInitializerData {
-                    enum_reason,
+                    enum_,
                     explicit_type,
                     member_name,
                     ..
@@ -9466,59 +9513,56 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MessageEnumInvalidMemberInitializerData {
                     member_name,
                     explicit_type,
-                    enum_reason,
+                    enum_: message_enum_reference(enum_),
                 },
             ))),
             ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized(
                 box EnumBooleanMemberNotInitializedData {
-                    enum_reason,
-                    member_name,
-                    ..
+                    enum_, member_name, ..
                 },
             )) => Normal(Message::MessageEnumBooleanMemberNotInitialized {
                 member_name,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized(
                 box EnumNumberMemberNotInitializedData {
-                    enum_reason,
-                    member_name,
-                    ..
+                    enum_, member_name, ..
                 },
             )) => Normal(Message::MessageEnumNumberMemberNotInitialized {
                 member_name,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized(
                 box EnumBigIntMemberNotInitializedData {
-                    enum_reason,
-                    member_name,
-                    ..
+                    enum_, member_name, ..
                 },
             )) => Normal(Message::MessageEnumBigIntMemberNotInitialized {
                 member_name,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
-                box EnumStringMemberInconsistentlyInitializedData { enum_reason, .. },
-            )) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized { enum_reason }),
+                box EnumStringMemberInconsistentlyInitializedData { enum_, .. },
+            )) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized {
+                enum_: message_enum_reference(enum_),
+            }),
             ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(
                 box TSEnumInvalidMemberData {
-                    enum_reason,
+                    enum_,
                     member_name,
                     kind,
                     ..
                 },
             )) => Normal(Message::MessageTSEnumInvalidMember {
                 member_name,
-                enum_reason,
+                enum_: message_enum_reference(enum_),
                 kind,
             }),
             ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidSyntax(
-                box TSEnumInvalidSyntaxData {
-                    enum_reason, kind, ..
-                },
-            )) => Normal(Message::MessageTSEnumInvalidSyntax { enum_reason, kind }),
+                box TSEnumInvalidSyntaxData { enum_, kind, .. },
+            )) => Normal(Message::MessageTSEnumInvalidSyntax {
+                enum_: message_enum_reference(enum_),
+                kind,
+            }),
 
             ErrorMessage::EDuplicateClassMember(box EDuplicateClassMemberData {
                 name,
@@ -9532,24 +9576,29 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }),
 
             ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
-                declaration,
+                declaration_loc,
+                name,
                 null_write: None,
                 possible_generic_escape_locs,
-            }) if possible_generic_escape_locs.is_empty() => Normal(
-                Message::MessageVariableNeverInitAssignedAnnotated(declaration),
-            ),
+            }) if possible_generic_escape_locs.is_empty() => {
+                Normal(Message::MessageVariableNeverInitAssignedAnnotated(
+                    message_identifier_reference(declaration_loc, name),
+                ))
+            }
             ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
-                declaration,
+                declaration_loc,
+                name,
                 null_write: None,
                 possible_generic_escape_locs,
             }) => Normal(
                 Message::MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
-                    reason: declaration,
+                    reason: message_identifier_reference(declaration_loc, name),
                     possible_generic_escape_locs,
                 },
             ),
             ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
-                declaration,
+                declaration_loc,
+                name,
                 null_write: Some(null_write),
                 possible_generic_escape_locs,
             }) if possible_generic_escape_locs.is_empty() => {
@@ -9560,18 +9609,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 };
                 Normal(Message::MessageVariableOnlyAssignedByNull(Box::new(
                     MessageVariableOnlyAssignedByNullData {
-                        reason: declaration,
+                        reason: message_identifier_reference(declaration_loc, name),
                         null_loc,
                     },
                 )))
             }
             ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
-                declaration,
+                declaration_loc,
+                name,
                 null_write: Some(null_write),
                 possible_generic_escape_locs,
             }) => Normal(Message::MessageShouldAnnotateVariableUsedInGenericContext(
                 Box::new(MessageShouldAnnotateVariableUsedInGenericContextData {
-                    reason: declaration,
+                    reason: message_identifier_reference(declaration_loc, name),
                     null_loc: null_write.null_loc,
                     initialized: null_write.initialized,
                     possible_generic_escape_locs,
@@ -9821,8 +9871,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )) => Normal(Message::MessageMatchDuplicateObjectProperty { name, pattern_kind }),
             ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidPatternReference(
-                box MatchInvalidPatternReferenceData { binding_reason, .. },
-            )) => Normal(Message::MessageMatchInvalidPatternReference { binding_reason }),
+                box MatchInvalidPatternReferenceData {
+                    binding_loc, name, ..
+                },
+            )) => Normal(Message::MessageMatchInvalidPatternReference {
+                binding_reason: message_identifier_reference(binding_loc, name),
+            }),
             ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand(
                 box MatchInvalidObjectShorthandData {
                     name, pattern_kind, ..
@@ -11030,13 +11084,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(
                 box EnumInvalidObjectUtilTypeData {
-                    reason,
+                    operation_name,
                     enum_,
                     enum_name,
+                    ..
                 },
             )) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum(
                 Box::new(MessageCannotInstantiateObjectUtilTypeWithEnumData {
-                    description: reason.desc,
+                    description: Err(VirtualReasonDesc::RType(operation_name)),
                     enum_: MessageTypeReferenceData {
                         loc: enum_.reference_loc,
                         desc: expect_type_desc(enum_.type_desc),
@@ -11047,12 +11102,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(
                 box EnumInvalidObjectFunctionData {
-                    reason,
+                    operation_loc,
+                    function_name,
                     enum_,
                     enum_name,
                 },
             )) => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
-                reason,
+                reason: MessageTypeReferenceData {
+                    loc: operation_loc,
+                    desc: Err(VirtualReasonDesc::RIdentifier(function_name)),
+                },
                 enum_: MessageTypeReferenceData {
                     loc: enum_.reference_loc,
                     desc: expect_type_desc(enum_.type_desc),
@@ -11097,7 +11156,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EImplicitInstantiationUnderconstrainedError(
                 box EImplicitInstantiationUnderconstrainedErrorData {
                     reason_call,
-                    reason_tparam,
+                    type_param_loc,
+                    type_param_name,
                     use_op,
                     ..
                 },
@@ -11107,7 +11167,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op,
                     message: Message::MessageUnderconstrainedImplicitInstantiaton {
                         reason_call,
-                        reason_tparam,
+                        reason_tparam: MessageTypeReferenceData {
+                            loc: type_param_loc,
+                            desc: Err(VirtualReasonDesc::RType(type_param_name)),
+                        },
                     },
                     loc,
                     explanation: None,

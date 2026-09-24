@@ -2264,9 +2264,9 @@ pub mod instantiation_solver {
                             env,
                             ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
                                 EImplicitInstantiationUnderconstrainedErrorData {
-                                    bound: tparam.name.string_of_subst_name().dupe(),
                                     reason_call: instantiation_reason.dupe(),
-                                    reason_tparam: tparam_binder_reason.dupe(),
+                                    type_param_loc: tparam_binder_reason.def_loc().dupe(),
+                                    type_param_name: tparam.name.string_of_subst_name().dupe(),
                                     use_op: use_op.dupe(),
                                 },
                             )),
@@ -2312,9 +2312,9 @@ pub mod instantiation_solver {
                     env,
                     ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
                         EImplicitInstantiationUnderconstrainedErrorData {
-                            bound: tparam.name.string_of_subst_name().dupe(),
                             reason_call: instantiation_reason.dupe(),
-                            reason_tparam: tparam_binder_reason.dupe(),
+                            type_param_loc: tparam_binder_reason.def_loc().dupe(),
+                            type_param_name: tparam.name.string_of_subst_name().dupe(),
                             use_op: use_op.dupe(),
                         },
                     )),

@@ -73,6 +73,7 @@ use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::EnumMemberDuplicateValueData;
 use flow_typing_errors::error_message::EnumNonIdentifierMemberNameData;
 use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
@@ -21204,7 +21205,7 @@ fn enum_declaration<'a>(
             );
         }
         if cx.enable_enums() {
-            let concrete_info = mk_enum(cx, reason.dupe(), name_loc.dupe(), name.as_str(), body);
+            let concrete_info = mk_enum(cx, reason.dupe(), name_loc.dupe(), name, body);
             let enum_info = Rc::new(type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(
                 type_::EnumConcreteInfo::new(concrete_info),
             )));
@@ -21235,11 +21236,15 @@ pub fn mk_enum<'a>(
     cx: &Context<'a>,
     enum_reason: Reason,
     name_loc: ALoc,
-    enum_name: &str,
+    enum_name: &FlowSmolStr,
     body: &statement::enum_declaration::Body<ALoc>,
 ) -> type_::EnumConcreteInfoInner {
     use flow_parser_utils::enum_validate;
     let result = enum_validate::classify_enum_body(body, &body.loc);
+    let enum_reference = || EnumReferenceData {
+        loc: name_loc.dupe(),
+        name: enum_name.dupe(),
+    };
     // Report validation errors
     for err in &result.errors {
         let error = match err {
@@ -21250,14 +21255,14 @@ pub fn mk_enum<'a>(
             } => EnumErrorKind::EnumDuplicateMemberName(Box::new(EnumDuplicateMemberNameData {
                 loc: loc.dupe(),
                 prev_use_loc: prev_use_loc.dupe(),
-                enum_reason: enum_reason.dupe(),
+                enum_: enum_reference(),
                 member_name: member_name.clone(),
             })),
             enum_validate::ValidationError::InconsistentMemberValues { loc } => {
                 EnumErrorKind::EnumInconsistentMemberValues(Box::new(
                     EnumInconsistentMemberValuesData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                     },
                 ))
             }
@@ -21268,7 +21273,7 @@ pub fn mk_enum<'a>(
             } => EnumErrorKind::EnumInvalidMemberInitializer(Box::new(
                 EnumInvalidMemberInitializerData {
                     loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
+                    enum_: enum_reference(),
                     explicit_type: *explicit_type,
                     member_name: member_name.clone(),
                 },
@@ -21277,7 +21282,7 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumBooleanMemberNotInitialized(Box::new(
                     EnumBooleanMemberNotInitializedData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                         member_name: member_name.clone(),
                     },
                 ))
@@ -21286,7 +21291,7 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumNumberMemberNotInitialized(Box::new(
                     EnumNumberMemberNotInitializedData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                         member_name: member_name.clone(),
                     },
                 ))
@@ -21295,7 +21300,7 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumBigIntMemberNotInitialized(Box::new(
                     EnumBigIntMemberNotInitializedData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                         member_name: member_name.clone(),
                     },
                 ))
@@ -21304,7 +21309,7 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumStringMemberInconsistentlyInitialized(Box::new(
                     EnumStringMemberInconsistentlyInitializedData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                     },
                 ))
             }
@@ -21312,7 +21317,7 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumInvalidMemberInitializer(Box::new(
                     EnumInvalidMemberInitializerData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                         explicit_type: Some(
                             flow_parser::ast::statement::enum_declaration::ExplicitType::Symbol,
                         ),
@@ -21324,13 +21329,13 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumMemberDuplicateValue(Box::new(EnumMemberDuplicateValueData {
                     loc: loc.dupe(),
                     prev_use_loc: prev_use_loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
+                    enum_: enum_reference(),
                 }))
             }
             enum_validate::ValidationError::InvalidMemberName { loc, member_name } => {
                 EnumErrorKind::EnumInvalidMemberName(Box::new(EnumInvalidMemberNameData {
                     loc: loc.dupe(),
-                    enum_reason: enum_reason.dupe(),
+                    enum_: enum_reference(),
                     member_name: member_name.clone(),
                 }))
             }
@@ -21338,7 +21343,7 @@ pub fn mk_enum<'a>(
                 EnumErrorKind::EnumNonIdentifierMemberName(Box::new(
                     EnumNonIdentifierMemberNameData {
                         loc: loc.dupe(),
-                        enum_reason: enum_reason.dupe(),
+                        enum_: enum_reference(),
                         member_name: member_name.clone(),
                     },
                 ))
@@ -21414,7 +21419,7 @@ pub fn mk_enum<'a>(
     };
     let has_unknown_members = result.has_unknown_members.is_some();
     type_::EnumConcreteInfoInner {
-        enum_name: FlowSmolStr::from(enum_name),
+        enum_name: enum_name.dupe(),
         enum_id,
         members,
         representation_t,

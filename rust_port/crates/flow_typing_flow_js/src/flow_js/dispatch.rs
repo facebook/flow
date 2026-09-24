@@ -8952,7 +8952,8 @@ fn __flow_impl<'cx>(
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
                     EnumInvalidObjectUtilTypeData {
-                        reason: op_reason.to_error_reference(),
+                        operation_loc: op_reason.loc().dupe(),
+                        operation_name: "Values".into(),
                         enum_: flow_js_utils::type_reference_with_reason_for_error(
                             l,
                             enum_reason.dupe(),
@@ -8972,7 +8973,8 @@ fn __flow_impl<'cx>(
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(Box::new(
                     EnumInvalidObjectFunctionData {
-                        reason: reason.dupe(),
+                        operation_loc: reason.loc().dupe(),
+                        function_name: "Object.values".into(),
                         enum_: flow_js_utils::type_reference_with_reason_for_error(
                             l,
                             enum_reason.dupe(),

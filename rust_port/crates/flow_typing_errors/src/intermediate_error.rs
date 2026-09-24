@@ -4092,10 +4092,6 @@ where
         friendly::ref_map(&loc_of_aloc, r)
     };
 
-    let desc = |r: &VirtualReason<L>| -> friendly::MessageFeature<Loc> {
-        friendly::desc_of_reason_desc(&r.desc.map_locs(&loc_of_aloc))
-    };
-
     let msg_export = |prefix: &str,
                       export_name: &str|
      -> (friendly::MessageFeature<Loc>, friendly::MessageFeature<Loc>) {
@@ -4130,6 +4126,18 @@ where
                 friendly::ref_map(&loc_of_aloc, &reason)
             }
         }
+    };
+
+    let desc_of_ty_or_desc = |ty_or_desc: &Result<ALocTy, VirtualReasonDesc<L>>| match ty_or_desc {
+        Ok(ty) => {
+            let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
+            let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
+                &ty,
+                &flow_common_ty::ty_printer::PrinterOptions::default(),
+            );
+            code(&ty_str)
+        }
+        Err(desc) => friendly::desc_of_reason_desc(&desc.map_locs(&loc_of_aloc)),
     };
 
     let explanation_to_friendly_msgs = |explanation: &Explanation<L>| -> friendly::Message<Loc> {
@@ -5600,7 +5608,7 @@ where
                 };
                 let mut features = vec![
                     text("Cannot call function "),
-                    ref_(reason),
+                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
                     text(" with argument "),
                     ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" because it is not an object."),
@@ -5888,7 +5896,7 @@ where
                 };
                 let mut features = vec![
                     text("Cannot instantiate "),
-                    friendly::desc_of_reason_desc(description),
+                    desc_of_ty_or_desc(description),
                     text(" because "),
                     ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" is not an object."),
@@ -6947,7 +6955,7 @@ where
             }
             MessageDuplicateEnumMember {
                 prev_use_loc,
-                enum_reason,
+                enum_,
             } => friendly::Message(vec![
                 text(
                     "Invalid enum member initializer. Initializers need to be unique, but this one ",
@@ -6955,7 +6963,7 @@ where
                 text("has already been used for a "),
                 friendly::hardcoded_string_desc_ref("previous member", loc_of_aloc(prev_use_loc)),
                 text(" of "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text("."),
             ]),
             MessageDuplicateModuleProvider(box MessageDuplicateModuleProviderData {
@@ -7011,17 +7019,17 @@ where
             ]),
             MessageEnumNonIdentifierMemberName {
                 member_name,
-                enum_reason,
+                enum_,
             } => friendly::Message(vec![
                 text("Enum member names must be identifiers, not string literals. "),
                 code(member_name),
                 text(" is not a valid member name in "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text("."),
             ]),
             MessageInvalidEnumMemberName {
                 member_name,
-                enum_reason,
+                enum_,
             } => {
                 let suggestion = {
                     let mut chars: Vec<char> = member_name.chars().collect();
@@ -7038,25 +7046,25 @@ where
                     text(", consider using "),
                     code(&suggestion),
                     text(", in "),
-                    ref_(enum_reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text("."),
                 ])
             }
             MessageEnumDuplicateMemberName(box MessageEnumDuplicateMemberNameData {
                 member_name,
                 prev_use_loc,
-                enum_reason,
+                enum_,
             }) => friendly::Message(vec![
                 text("Enum member names need to be unique, but the name "),
                 code(member_name),
                 text(" has already been used for a "),
                 friendly::hardcoded_string_desc_ref("previous member", loc_of_aloc(prev_use_loc)),
                 text(" of "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text("."),
             ]),
-            MessageEnumInconsistentMemberValues { enum_reason } => friendly::Message(vec![
-                ref_(enum_reason),
+            MessageEnumInconsistentMemberValues { enum_ } => friendly::Message(vec![
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(
                     " has been specified with inconsistent member initializers. All members need to consistently either use no initializer, or have a literal (boolean, number, bigint, or string) initializer.",
                 ),
@@ -7064,7 +7072,7 @@ where
             MessageEnumInvalidMemberInitializer(box MessageEnumInvalidMemberInitializerData {
                 member_name,
                 explicit_type,
-                enum_reason,
+                enum_,
             }) => {
                 use flow_parser::ast::statement::enum_declaration::ExplicitType;
                 match explicit_type {
@@ -7072,7 +7080,7 @@ where
                         text("Symbol enum members cannot be initialized. Use "),
                         code(&format!("{member_name},")),
                         text(" in "),
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text("."),
                     ]),
                     Some(t) => {
@@ -7083,7 +7091,7 @@ where
                             text(" needs to be a "),
                             code(type_str),
                             text(" literal in "),
-                            ref_(enum_reason),
+                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                             text("."),
                         ])
                     }
@@ -7093,19 +7101,19 @@ where
                         text(
                             " needs to be a literal (either a boolean, number, bigint, or string) in ",
                         ),
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text("."),
                     ]),
                 }
             }
             MessageEnumBooleanMemberNotInitialized {
                 member_name,
-                enum_reason,
+                enum_,
             } => friendly::Message(vec![
                 text("The enum member "),
                 code(member_name),
                 text(" of boolean "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(
                     " has been left uninitialized. Boolean enum members need to be initialized, e.g. ",
                 ),
@@ -7114,12 +7122,12 @@ where
             ]),
             MessageEnumNumberMemberNotInitialized {
                 member_name,
-                enum_reason,
+                enum_,
             } => friendly::Message(vec![
                 text("The enum member "),
                 code(member_name),
                 text(" of number "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(
                     " has been left uninitialized. Number enum members need to be initialized, e.g. ",
                 ),
@@ -7128,22 +7136,22 @@ where
             ]),
             MessageEnumBigIntMemberNotInitialized {
                 member_name,
-                enum_reason,
+                enum_,
             } => friendly::Message(vec![
                 text("The enum member "),
                 code(member_name),
                 text(" of bigint "),
-                ref_(enum_reason),
+                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(
                     " has been left uninitialized. BigInt enum members need to be initialized, e.g. ",
                 ),
                 code(&format!("{member_name} = 1n,")),
                 text("."),
             ]),
-            MessageEnumStringMemberInconsistentlyInitialized { enum_reason } => {
+            MessageEnumStringMemberInconsistentlyInitialized { enum_ } => {
                 friendly::Message(vec![
                     text("String "),
-                    ref_(enum_reason),
+                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(
                         " has been specified with inconsistent member initializers. Either all members need a string literal initializer, or none.",
                     ),
@@ -7151,7 +7159,7 @@ where
             }
             MessageTSEnumInvalidMember {
                 member_name,
-                enum_reason,
+                enum_,
                 kind,
             } => match kind {
                 super::intermediate_error_types::TsEnumInvalidMemberKind::TSEnumMemberInvalidLiteral => {
@@ -7159,7 +7167,7 @@ where
                         text("The enum member initializer for "),
                         code(member_name),
                         text(" in "),
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text(
                             " must be a number or string literal, the only member types TypeScript enums allow.",
                         ),
@@ -7170,7 +7178,7 @@ where
                         text("The enum member "),
                         code(member_name),
                         text(" in "),
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text(
                             " must have an initializer because the preceding member is not a numeric constant, so it cannot be auto-numbered.",
                         ),
@@ -7181,15 +7189,15 @@ where
                         text("The enum member "),
                         code(member_name),
                         text(" in "),
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text(" cannot have a numeric name, which TypeScript does not allow."),
                     ])
                 }
             },
-            MessageTSEnumInvalidSyntax { enum_reason, kind } => match kind {
+            MessageTSEnumInvalidSyntax { enum_, kind } => match kind {
                 super::intermediate_error_types::TsEnumInvalidSyntaxKind::TSEnumUnknownMembers => {
                     friendly::Message(vec![
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text(
                             " cannot have unknown members (`...`), which is a Flow Enums feature that TypeScript enums do not support.",
                         ),
@@ -7197,7 +7205,7 @@ where
                 }
                 super::intermediate_error_types::TsEnumInvalidSyntaxKind::TSEnumExplicitType => {
                     friendly::Message(vec![
-                        ref_(enum_reason),
+                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                         text(
                             " cannot have an explicit representation type (`of ...`), which is a Flow Enums feature that TypeScript enums do not support.",
                         ),
@@ -8401,7 +8409,7 @@ where
             } => {
                 let mut features = vec![
                     text("Variable "),
-                    ref_(reason),
+                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
                     text(
                         " should be annotated, because it is only initialized in a generic context",
                     ),
@@ -8436,7 +8444,7 @@ where
                 };
                 let mut features = vec![
                     text("Variable "),
-                    ref_(reason),
+                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
                     text(" should be annotated, because it is only ever assigned to by "),
                     null_ref,
                     text(" and in generic context"),
@@ -8827,7 +8835,7 @@ where
                 reason_call,
                 reason_tparam,
             } => friendly::Message(vec![
-                ref_(reason_tparam),
+                ref_of_ty_or_desc(&reason_tparam.loc, &reason_tparam.desc),
                 text(" is underconstrained by "),
                 ref_(reason_call),
                 text(
@@ -9163,7 +9171,7 @@ where
             ]),
             MessageVariableNeverInitAssignedAnnotated(reason) => friendly::Message(vec![
                 text("Variable "),
-                ref_(reason),
+                ref_of_ty_or_desc(&reason.loc, &reason.desc),
                 text(" is never initialized, annotated, or assigned to."),
             ]),
             MessageVariableOnlyAssignedByNull(box MessageVariableOnlyAssignedByNullData {
@@ -9179,11 +9187,11 @@ where
                 };
                 friendly::Message(vec![
                     text("Variable "),
-                    ref_(reason),
+                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
                     text(" is only ever assigned to by "),
                     null_ref,
                     text(". This is likely unintended; if it is intended, annotate "),
-                    desc(reason),
+                    desc_of_ty_or_desc(&reason.desc),
                     text(" with "),
                     code(": null"),
                     text(" to disambiguate."),
@@ -9830,7 +9838,7 @@ where
             ]),
             MessageMatchInvalidPatternReference { binding_reason } => friendly::Message(vec![
                 text("Can't use variable "),
-                ref_(binding_reason),
+                ref_of_ty_or_desc(&binding_reason.loc, &binding_reason.desc),
                 text(" within the same match pattern it is defined."),
             ]),
             MessageMatchInvalidObjectShorthand { name, pattern_kind } => {

@@ -1322,7 +1322,7 @@ pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotInstantiateObjectUtilTypeWithEnumData<L: Dupe> {
-    pub description: VirtualReasonDesc<L>,
+    pub description: Result<ALocTy, VirtualReasonDesc<L>>,
     pub enum_: MessageTypeReferenceData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
@@ -1402,14 +1402,14 @@ pub struct MessageDuplicateModuleProviderData<L: Dupe> {
 pub struct MessageEnumDuplicateMemberNameData<L: Dupe> {
     pub member_name: String,
     pub prev_use_loc: L,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageEnumInvalidMemberInitializerData<L: Dupe> {
     pub member_name: String,
     pub explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
-    pub enum_reason: VirtualReason<L>,
+    pub enum_: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1633,7 +1633,7 @@ pub struct MessageRedeclareComponentPropData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageShouldAnnotateVariableUsedInGenericContextData<L: Dupe> {
-    pub reason: VirtualReason<L>,
+    pub reason: MessageTypeReferenceData<L>,
     pub null_loc: L,
     pub initialized: bool,
     pub possible_generic_escape_locs: Vec<L>,
@@ -1676,7 +1676,7 @@ pub struct MessageTupleNonIntegerIndexData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageVariableOnlyAssignedByNullData<L: Dupe> {
-    pub reason: VirtualReason<L>,
+    pub reason: MessageTypeReferenceData<L>,
     pub null_loc: Option<L>,
 }
 
@@ -1784,7 +1784,7 @@ pub enum Message<L: Dupe> {
     MessageCannotCallNonHookSyntaxHook(L),
 
     MessageCannotCallObjectFunctionOnEnum {
-        reason: VirtualReason<L>,
+        reason: MessageTypeReferenceData<L>,
         enum_: MessageTypeReferenceData<L>,
         enum_name: Option<FlowSmolStr>,
     },
@@ -2018,7 +2018,7 @@ pub enum Message<L: Dupe> {
     },
 
     MessageDuplicateEnumMember {
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
         prev_use_loc: L,
     },
 
@@ -2031,49 +2031,49 @@ pub enum Message<L: Dupe> {
     MessageEnumDuplicateMemberName(Box<MessageEnumDuplicateMemberNameData<L>>),
 
     MessageEnumInconsistentMemberValues {
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageEnumInvalidMemberInitializer(Box<MessageEnumInvalidMemberInitializerData<L>>),
 
     MessageEnumBooleanMemberNotInitialized {
         member_name: String,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageEnumNumberMemberNotInitialized {
         member_name: String,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageEnumBigIntMemberNotInitialized {
         member_name: String,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageEnumStringMemberInconsistentlyInitialized {
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageTSEnumInvalidMember {
         member_name: String,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
         kind: TsEnumInvalidMemberKind,
     },
 
     MessageTSEnumInvalidSyntax {
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
         kind: TsEnumInvalidSyntaxKind,
     },
 
     MessageEnumNonIdentifierMemberName {
         member_name: String,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageInvalidEnumMemberName {
         member_name: String,
-        enum_reason: VirtualReason<L>,
+        enum_: MessageTypeReferenceData<L>,
     },
 
     MessageExponentialSpread(Box<MessageExponentialSpreadData<L>>),
@@ -2321,7 +2321,7 @@ pub enum Message<L: Dupe> {
     MessageRedeclareComponentProp(Box<MessageRedeclareComponentPropData<L>>),
 
     MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
-        reason: VirtualReason<L>,
+        reason: MessageTypeReferenceData<L>,
         possible_generic_escape_locs: Vec<L>,
     },
 
@@ -2396,7 +2396,7 @@ pub enum Message<L: Dupe> {
 
     MessageUnderconstrainedImplicitInstantiaton {
         reason_call: VirtualReason<L>,
-        reason_tparam: VirtualReason<L>,
+        reason_tparam: MessageTypeReferenceData<L>,
     },
 
     MessageUndocumentedFeature,
@@ -2437,7 +2437,7 @@ pub enum Message<L: Dupe> {
     MessageUnusedSuppression,
 
     MessageValueUsedAsType(VirtualReasonDesc<L>),
-    MessageVariableNeverInitAssignedAnnotated(VirtualReason<L>),
+    MessageVariableNeverInitAssignedAnnotated(MessageTypeReferenceData<L>),
 
     MessageVariableOnlyAssignedByNull(Box<MessageVariableOnlyAssignedByNullData<L>>),
 
@@ -2480,7 +2480,7 @@ pub enum Message<L: Dupe> {
     MessageMatchInvalidAsPattern,
 
     MessageMatchInvalidPatternReference {
-        binding_reason: VirtualReason<L>,
+        binding_reason: MessageTypeReferenceData<L>,
     },
 
     MessageMatchInvalidObjectShorthand {

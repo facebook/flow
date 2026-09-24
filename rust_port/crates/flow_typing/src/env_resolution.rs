@@ -2698,7 +2698,7 @@ fn resolve_enum<'cx>(
             enum_,
         )
     } else if cx.enable_enums() {
-        let enum_info = statement::mk_enum(cx, enum_reason.dupe(), id_loc, name.as_str(), enum_);
+        let enum_info = statement::mk_enum(cx, enum_reason.dupe(), id_loc, name, enum_);
         type_::mk_enum_object_type(
             enum_reason,
             type_::EnumInfo::new(type_::EnumInfoInner::ConcreteEnum(

@@ -16,6 +16,7 @@ use flow_common::flow_symbol::dump_symbol;
 use flow_common::polarity::Polarity;
 use flow_common::reason;
 use flow_common::reason::Reason;
+use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::string_of_aloc;
 use flow_lint_settings::lint_settings::LintParseError;
 use flow_lint_settings::lints::PropertyAssignmentKind;
@@ -150,6 +151,7 @@ use flow_typing_errors::error_message::EnumNotAllCheckedData;
 use flow_typing_errors::error_message::EnumNotIterableData;
 use flow_typing_errors::error_message::EnumNotIterableForInData;
 use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
 use flow_typing_errors::error_message::ErrorMessage;
@@ -307,6 +309,16 @@ pub fn dump_reason(cx: &Context, reason: &Reason) -> String {
     } else {
         reason::dump_reason(None, reason)
     }
+}
+
+fn dump_enum_reference(enum_: &EnumReferenceData<ALoc>) -> String {
+    format!(
+        "{} {:?}",
+        string_of_aloc(None, &enum_.loc),
+        VirtualReasonDesc::<ALoc>::REnum {
+            name: Some(enum_.name.clone()),
+        }
+    )
 }
 
 fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> String {
@@ -3607,34 +3619,36 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
                 loc,
                 prev_use_loc,
-                enum_reason,
+                enum_,
             }) => {
                 format!(
                     "EEnumError (EnumMemberDuplicateValue ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
                     string_of_aloc(None, prev_use_loc),
-                    dump_reason(cx, enum_reason)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumInvalidObjectUtilType(box EnumInvalidObjectUtilTypeData {
-                reason,
+                operation_loc,
+                operation_name,
                 enum_,
                 ..
             }) => {
                 format!(
-                    "EEnumError (EnumInvalidObjectUtilType ({}) ({}))",
-                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
+                    "EEnumError (EnumInvalidObjectUtilType ({} RType({operation_name:?})) ({}))",
+                    string_of_aloc(None, operation_loc),
                     dump_reason(cx, &enum_.reason)
                 )
             }
             EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
-                reason,
+                operation_loc,
+                function_name,
                 enum_,
                 ..
             }) => {
                 format!(
-                    "EEnumError (EnumInvalidObjectFunction ({}) ({}))",
-                    dump_reason(cx, reason),
+                    "EEnumError (EnumInvalidObjectFunction ({} RIdentifier({function_name:?})) ({}))",
+                    string_of_aloc(None, operation_loc),
                     dump_reason(cx, &enum_.reason)
                 )
             }
@@ -3762,138 +3776,138 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }
             EnumErrorKind::EnumInvalidMemberName(box EnumInvalidMemberNameData {
                 loc,
-                enum_reason,
+                enum_,
                 member_name,
             }) => {
                 format!(
                     "EEnumError (EnumInvalidMemberName ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumNonIdentifierMemberName(box EnumNonIdentifierMemberNameData {
                 loc,
-                enum_reason,
+                enum_,
                 member_name,
             }) => {
                 format!(
                     "EEnumError (EnumNonIdentifierMemberName ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumDuplicateMemberName(box EnumDuplicateMemberNameData {
                 loc,
                 prev_use_loc,
-                enum_reason,
+                enum_,
                 member_name,
             }) => {
                 format!(
                     "EEnumError (EnumDuplicateMemberName ({}) ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
                     string_of_aloc(None, prev_use_loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumInconsistentMemberValues(box EnumInconsistentMemberValuesData {
                 loc,
-                enum_reason,
+                enum_,
             }) => {
                 format!(
                     "EEnumError (EnumInconsistentMemberValues ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumInvalidMemberInitializer(box EnumInvalidMemberInitializerData {
                 loc,
-                enum_reason,
+                enum_,
                 member_name,
                 ..
             }) => {
                 format!(
                     "EEnumError (EnumInvalidMemberInitializer ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumBooleanMemberNotInitialized(
                 box EnumBooleanMemberNotInitializedData {
                     loc,
-                    enum_reason,
+                    enum_,
                     member_name,
                 },
             ) => {
                 format!(
                     "EEnumError (EnumBooleanMemberNotInitialized ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumNumberMemberNotInitialized(
                 box EnumNumberMemberNotInitializedData {
                     loc,
-                    enum_reason,
+                    enum_,
                     member_name,
                 },
             ) => {
                 format!(
                     "EEnumError (EnumNumberMemberNotInitialized ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumBigIntMemberNotInitialized(
                 box EnumBigIntMemberNotInitializedData {
                     loc,
-                    enum_reason,
+                    enum_,
                     member_name,
                 },
             ) => {
                 format!(
                     "EEnumError (EnumBigIntMemberNotInitialized ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
-                box EnumStringMemberInconsistentlyInitializedData { loc, enum_reason },
+                box EnumStringMemberInconsistentlyInitializedData { loc, enum_ },
             ) => {
                 format!(
                     "EEnumError (EnumStringMemberInconsistentlyInitialized ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::TSEnumInvalidMember(box TSEnumInvalidMemberData {
                 loc,
-                enum_reason,
+                enum_,
                 member_name,
                 kind: _,
             }) => {
                 format!(
                     "EEnumError (TSEnumInvalidMember ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason),
+                    dump_enum_reference(enum_),
                     member_name
                 )
             }
             EnumErrorKind::TSEnumInvalidSyntax(box TSEnumInvalidSyntaxData {
                 loc,
-                enum_reason,
+                enum_,
                 kind: _,
             }) => {
                 format!(
                     "EEnumError (TSEnumInvalidSyntax ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, enum_reason)
+                    dump_enum_reference(enum_)
                 )
             }
         },
@@ -3958,10 +3972,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::ENestedHook(loc) => {
             format!("ENestedHook ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData { declaration, .. }) => {
+        ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
+            declaration_loc,
+            name,
+            ..
+        }) => {
             format!(
-                "EInvalidDeclaration(Box::new(EInvalidDeclarationData {}))",
-                dump_reason(cx, declaration)
+                "EInvalidDeclaration(Box::new(EInvalidDeclarationData {} {}))",
+                string_of_aloc(None, declaration_loc),
+                name
             )
         }
         ErrorMessage::EImplicitInstantiationUnderconstrainedError(
@@ -4330,13 +4349,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             MatchErrorKind::MatchInvalidPatternReference(
                 box MatchInvalidPatternReferenceData {
                     loc,
-                    binding_reason,
+                    binding_loc,
+                    name,
                 },
             ) => {
                 format!(
-                    "EMatchInvalidPatternReference ({}) ({})",
+                    "EMatchInvalidPatternReference ({}) ({} {})",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, binding_reason)
+                    string_of_aloc(None, binding_loc),
+                    name
                 )
             }
             MatchErrorKind::MatchInvalidObjectShorthand(box MatchInvalidObjectShorthandData {
