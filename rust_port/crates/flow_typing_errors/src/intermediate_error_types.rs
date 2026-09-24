@@ -1991,7 +1991,7 @@ pub enum Message<L: Dupe> {
     MessageComponentNonUpperCase,
     MessageDeclareComponentInvalidParam(DeclareComponentInvalidParamKind),
 
-    MessageDefinitionCycle(Vec1<(VirtualReason<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
+    MessageDefinitionCycle(Vec1<(MessageTypeReferenceData<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
     MessageDefinitionInvalidRecursive(Box<MessageDefinitionInvalidRecursiveData<L>>),
 

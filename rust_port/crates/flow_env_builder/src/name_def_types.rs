@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
+use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocMap;
 use flow_common::enclosing_context::EnclosingContext;
@@ -657,6 +658,39 @@ pub mod print {
     }
 }
 
-pub type EnvEntriesMap = EnvMap<ALoc, (Def, ScopeKind, ClassStack, VirtualReason<ALoc>)>;
+/// Semantic description of a definition used when reporting dependency cycles.
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum DefinitionReferenceKind {
+    Name(FlowSmolStr),
+    Function { async_: bool, generator: bool },
+    Component(FlowSmolStr),
+    Enum(FlowSmolStr),
+    Interface,
+    This,
+    Destructuring,
+    Match,
+    Other,
+}
+
+pub type NameDefEntry = (
+    Def,
+    ScopeKind,
+    ClassStack,
+    VirtualReason<ALoc>,
+    DefinitionReferenceKind,
+);
+
+pub type EnvEntriesMap = EnvMap<ALoc, NameDefEntry>;
 
 pub type HintMap = ALocMap<AstHints>;

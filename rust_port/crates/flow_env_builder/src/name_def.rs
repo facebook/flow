@@ -1550,6 +1550,64 @@ fn fail(loc: ALoc, str: &str) -> EnvInvariant<ALoc> {
     )
 }
 
+fn definition_reference_kind(def: &Def) -> DefinitionReferenceKind {
+    match def {
+        Def::Function(data) => DefinitionReferenceKind::Function {
+            async_: data.function_.async_,
+            generator: data.function_.generator,
+        },
+        Def::DeclaredFunction(_) => DefinitionReferenceKind::Function {
+            async_: false,
+            generator: false,
+        },
+        Def::Component(data) => DefinitionReferenceKind::Component(data.component.id.name.dupe()),
+        Def::DeclaredComponent(_, component) => {
+            DefinitionReferenceKind::Component(component.id.name.dupe())
+        }
+        Def::Enum { name, .. } => DefinitionReferenceKind::Enum(name.dupe()),
+        Def::Interface(..) => DefinitionReferenceKind::Interface,
+        Def::MissingThisAnnot => DefinitionReferenceKind::This,
+        Def::Class(data) => data
+            .class_
+            .id
+            .as_ref()
+            .map(|id| DefinitionReferenceKind::Name(id.name.dupe()))
+            .unwrap_or(DefinitionReferenceKind::Other),
+        Def::Record(data) => DefinitionReferenceKind::Name(data.record.id.name.dupe()),
+        Def::DeclaredClass(data) => DefinitionReferenceKind::Name(data.decl.id.name.dupe()),
+        Def::TypeAlias(_, alias) => DefinitionReferenceKind::Name(alias.id.name.dupe()),
+        Def::OpaqueType(_, opaque) => DefinitionReferenceKind::Name(opaque.id.name.dupe()),
+        Def::TypeParam(data) => DefinitionReferenceKind::Name(data.tparam.1.name.name.dupe()),
+        Def::DeclaredNamespace(_, namespace) => match &namespace.id {
+            ast::statement::declare_namespace::Id::Local(id) => {
+                DefinitionReferenceKind::Name(id.name.dupe())
+            }
+            ast::statement::declare_namespace::Id::Global(_) => DefinitionReferenceKind::Other,
+        },
+        Def::Import(data) => match &data.import {
+            Import::Named { local, .. } | Import::Namespace(local) | Import::Default(local) => {
+                DefinitionReferenceKind::Name(local.dupe())
+            }
+        },
+        Def::ExpressionDef(data) => match data.expr.deref() {
+            ast::expression::ExpressionInner::ArrowFunction { inner, .. }
+            | ast::expression::ExpressionInner::Function { inner, .. } => {
+                DefinitionReferenceKind::Function {
+                    async_: inner.async_,
+                    generator: inner.generator,
+                }
+            }
+            _ => DefinitionReferenceKind::Other,
+        },
+        Def::Binding(_)
+        | Def::MatchCasePattern(_)
+        | Def::MemberAssign(_)
+        | Def::OpAssign(_)
+        | Def::Update { .. }
+        | Def::GeneratorNext(_) => DefinitionReferenceKind::Other,
+    }
+}
+
 struct DefFinder<'a> {
     autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
     react_jsx: bool,
@@ -1629,9 +1687,26 @@ impl<'a> DefFinder<'a> {
         reason: VirtualReason<ALoc>,
         src: Def,
     ) {
+        let definition_kind = definition_reference_kind(&src);
+        self.force_add_binding_with_kind(kind_and_loc, reason, definition_kind, src);
+    }
+
+    fn force_add_binding_with_kind(
+        &mut self,
+        kind_and_loc: EnvKey<ALoc>,
+        reason: VirtualReason<ALoc>,
+        definition_kind: DefinitionReferenceKind,
+        src: Def,
+    ) {
         self.env_map.insert(
             kind_and_loc,
-            (src, self.scope_kind, self.class_stack.dupe(), reason),
+            (
+                src,
+                self.scope_kind,
+                self.class_stack.dupe(),
+                reason,
+                definition_kind,
+            ),
         );
     }
 
@@ -1641,14 +1716,52 @@ impl<'a> DefFinder<'a> {
         }
     }
 
+    fn add_binding_with_kind(
+        &mut self,
+        kind_and_loc: EnvKey<ALoc>,
+        reason: VirtualReason<ALoc>,
+        definition_kind: DefinitionReferenceKind,
+        src: Def,
+    ) {
+        if crate::env_api::has_assigning_write(kind_and_loc.dupe(), &self.env_info.env_entries) {
+            self.force_add_binding_with_kind(kind_and_loc, reason, definition_kind, src);
+        }
+    }
+
     fn add_ordinary_binding(&mut self, loc: ALoc, reason: VirtualReason<ALoc>, src: Def) {
         self.add_binding(EnvKey::new(DefLocType::OrdinaryNameLoc, loc), reason, src);
     }
 
+    fn add_ordinary_binding_with_kind(
+        &mut self,
+        loc: ALoc,
+        reason: VirtualReason<ALoc>,
+        definition_kind: DefinitionReferenceKind,
+        src: Def,
+    ) {
+        self.add_binding_with_kind(
+            EnvKey::new(DefLocType::OrdinaryNameLoc, loc),
+            reason,
+            definition_kind,
+            src,
+        );
+    }
+
+    fn add_named_ordinary_binding(
+        &mut self,
+        loc: ALoc,
+        name: FlowSmolStr,
+        reason: VirtualReason<ALoc>,
+        src: Def,
+    ) {
+        self.add_ordinary_binding_with_kind(loc, reason, DefinitionReferenceKind::Name(name), src);
+    }
+
     fn add_destructure_binding(&mut self, loc: ALoc, binding: Binding) {
-        self.add_binding(
+        self.add_binding_with_kind(
             EnvKey::new(DefLocType::PatternLoc, loc.dupe()),
             mk_reason(VirtualReasonDesc::RDestructuring, loc),
+            DefinitionReferenceKind::Destructuring,
             Def::Binding(Box::new(binding)),
         );
     }
@@ -1694,8 +1807,9 @@ impl<'a> DefFinder<'a> {
                         flow_parser::ast_utils::hook_name(&name),
                         binding,
                     );
-                    self.add_ordinary_binding(
+                    self.add_named_ordinary_binding(
                         loc.dupe(),
+                        name.dupe(),
                         mk_reason(VirtualReasonDesc::RIdentifier(name), loc),
                         Def::Binding(Box::new(binding)),
                     );
@@ -1849,8 +1963,9 @@ impl<'a> DefFinder<'a> {
         );
 
         for (id_loc, name, binding) in ops.identifiers {
-            self.add_ordinary_binding(
+            self.add_named_ordinary_binding(
                 id_loc.dupe(),
+                name.dupe(),
                 mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc),
                 Def::Binding(Box::new(binding)),
             );
@@ -1865,9 +1980,10 @@ impl<'a> DefFinder<'a> {
         }
 
         if !found && annot.is_none() {
-            self.add_binding(
+            self.add_binding_with_kind(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
                 mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
+                DefinitionReferenceKind::Destructuring,
                 Def::Binding(Box::new(Binding::Root(source))),
             );
         }
@@ -2101,8 +2217,9 @@ impl<'a> DefFinder<'a> {
         );
 
         for (id_loc, name, binding) in ops.identifiers {
-            self.add_ordinary_binding(
+            self.add_named_ordinary_binding(
                 id_loc.dupe(),
+                name.dupe(),
                 mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc),
                 Def::Binding(Box::new(binding)),
             );
@@ -2117,9 +2234,10 @@ impl<'a> DefFinder<'a> {
         }
 
         if !found && annot.is_none() {
-            self.add_binding(
+            self.add_binding_with_kind(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
                 mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
+                DefinitionReferenceKind::Destructuring,
                 Def::Binding(Box::new(Binding::Root(source))),
             );
         }
@@ -2208,8 +2326,9 @@ impl<'a> DefFinder<'a> {
         );
 
         for (id_loc, name, binding) in ops.identifiers {
-            self.add_ordinary_binding(
+            self.add_named_ordinary_binding(
                 id_loc.dupe(),
+                name.dupe(),
                 mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc),
                 Def::Binding(Box::new(binding)),
             );
@@ -2224,9 +2343,10 @@ impl<'a> DefFinder<'a> {
         }
 
         if !found && annot.is_none() {
-            self.add_binding(
+            self.add_binding_with_kind(
                 EnvKey::new(DefLocType::FunctionParamLoc, loc.dupe()),
                 mk_reason(VirtualReasonDesc::RDestructuring, loc.dupe()),
+                DefinitionReferenceKind::Destructuring,
                 Def::Binding(Box::new(Binding::Root(source))),
             );
         }
@@ -2293,8 +2413,9 @@ impl<'a> DefFinder<'a> {
                     tparams_map: this.tparams.clone(),
                 })));
                 let binding = this.mk_hooklike_if_necessary(hooklike, binding);
-                this.add_ordinary_binding(
+                this.add_named_ordinary_binding(
                     name_loc,
+                    name.dupe(),
                     mk_reason(
                         VirtualReasonDesc::RIdentifier(name.dupe()),
                         name_ident.loc.dupe(),
@@ -3137,8 +3258,9 @@ impl<'a> DefFinder<'a> {
             (Some(op), Pattern::Identifier { inner, .. }) => {
                 let id_loc = inner.name.loc.dupe();
                 let name = &inner.name.name;
-                self.add_ordinary_binding(
+                self.add_named_ordinary_binding(
                     id_loc.dupe(),
+                    name.dupe(),
                     mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc.dupe()),
                     Def::OpAssign(Box::new(OpAssignData {
                         exp_loc: loc.dupe(),
@@ -4359,9 +4481,10 @@ impl<'a> DefFinder<'a> {
         } = x;
 
         self.visit_expression(EnclosingContext::NoContext, &vec![], arg)?;
-        self.add_ordinary_binding(
+        self.add_ordinary_binding_with_kind(
             match_keyword_loc.dupe(),
             mk_reason(RMatch, match_keyword_loc.dupe()),
+            DefinitionReferenceKind::Match,
             Def::Binding(Box::new(Binding::Root(mk_value(
                 None,
                 None,
@@ -4497,8 +4620,9 @@ impl<'a> DefFinder<'a> {
                         flow_parser::ast_utils::hook_name(&name),
                         binding,
                     );
-                    self.add_ordinary_binding(
+                    self.add_named_ordinary_binding(
                         loc.dupe(),
+                        name.dupe(),
                         mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), loc),
                         Def::Binding(Box::new(binding)),
                     );
@@ -5556,7 +5680,12 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                         let reason =
                             mk_reason(VirtualReasonDesc::RIdentifier(name.into()), id_loc.dupe());
 
-                        self.add_ordinary_binding(id_loc, reason, Def::Binding(Box::new(binding)));
+                        self.add_named_ordinary_binding(
+                            id_loc,
+                            name.into(),
+                            reason,
+                            Def::Binding(Box::new(binding)),
+                        );
                     }
                     (ast::types::AnnotationOrHint::Missing(_), Some(init_expr)) => {
                         let binding = self.mk_hooklike_if_necessary(
@@ -5567,7 +5696,12 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                         let reason =
                             mk_reason(VirtualReasonDesc::RIdentifier(name.into()), id_loc.dupe());
 
-                        self.add_ordinary_binding(id_loc, reason, Def::Binding(Box::new(binding)));
+                        self.add_named_ordinary_binding(
+                            id_loc,
+                            name.into(),
+                            reason,
+                            Def::Binding(Box::new(binding)),
+                        );
                     }
                     (ast::types::AnnotationOrHint::Missing(_), None) => {
                         // Error case: no annotation and no init. Type checker will report the error.
@@ -5575,8 +5709,9 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
                         let reason =
                             mk_reason(VirtualReasonDesc::RIdentifier(name.into()), id_loc.dupe());
 
-                        self.add_ordinary_binding(
+                        self.add_named_ordinary_binding(
                             id_loc,
+                            name.into(),
                             reason,
                             Def::Binding(Box::new(Binding::Root(
                                 Root::DeclareVariableMissingAnnotationAndInit,
@@ -5640,9 +5775,10 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
         let loc = &this_param.loc;
         let annot = &this_param.annot;
 
-        self.add_ordinary_binding(
+        self.add_ordinary_binding_with_kind(
             loc.dupe(),
             mk_reason(VirtualReasonDesc::RThis, loc.dupe()),
+            DefinitionReferenceKind::This,
             Def::Binding(Box::new(Binding::Root(Root::Annotation(Box::new(
                 AnnotationData {
                     tparams_map: self.tparams.clone(),
@@ -5884,9 +6020,13 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
 
             let binding = self.mk_hooklike_if_necessary(is_hooklike, binding);
 
-            self.add_ordinary_binding(
+            self.add_ordinary_binding_with_kind(
                 id_loc,
                 func_reason(false, false, loc.dupe()),
+                DefinitionReferenceKind::Function {
+                    async_: false,
+                    generator: false,
+                },
                 Def::Binding(Box::new(binding)),
             );
         }
@@ -5941,8 +6081,9 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             let id_loc = id.loc.dupe();
             let name = &id.name;
 
-            self.add_ordinary_binding(
+            self.add_named_ordinary_binding(
                 id_loc.dupe(),
+                name.dupe(),
                 mk_reason(VirtualReasonDesc::RIdentifier(name.dupe()), id_loc.dupe()),
                 Def::Update {
                     exp_loc: loc.dupe(),
@@ -6950,9 +7091,10 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             comments: _,
         } = x;
         self.visit_expression(EnclosingContext::NoContext, &Vec::new(), arg)?;
-        self.add_ordinary_binding(
+        self.add_ordinary_binding_with_kind(
             match_keyword_loc.dupe(),
             mk_reason(RMatch, match_keyword_loc.dupe()),
+            DefinitionReferenceKind::Match,
             Def::Binding(Box::new(Binding::Root(mk_value(
                 None,
                 None,

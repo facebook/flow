@@ -29,7 +29,6 @@ use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api;
-use flow_env_builder::env_api::EnvMap;
 use flow_env_builder::name_def_types;
 use flow_env_builder::name_def_types::AnnotationData;
 use flow_env_builder::name_def_types::Binding;
@@ -3079,7 +3078,7 @@ fn resolve<'cx>(
 }
 
 fn entries_of_def(
-    graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+    graph: &name_def_types::EnvEntriesMap,
     kind: env_api::DefLocType,
     loc: ALoc,
 ) -> env_api::EnvSet<ALoc> {
@@ -3136,7 +3135,7 @@ fn entries_of_def(
             Binding::Select { .. } => {}
         }
     }
-    if let Some((def, _, _, _)) = graph.get(&env_api::EnvKey::new(kind, loc)) {
+    if let Some((def, _, _, _, _)) = graph.get(&env_api::EnvKey::new(kind, loc)) {
         match def {
             Def::Binding(b) => {
                 add_from_bindings(&mut acc, b);
@@ -3175,7 +3174,7 @@ fn entries_of_def(
 }
 
 fn entries_of_component(
-    graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+    graph: &name_def_types::EnvEntriesMap,
     component: &name_def_ordering::OrderingResult,
 ) -> env_api::EnvSet<ALoc> {
     fn element_key(elt: &name_def_ordering::Element) -> (env_api::DefLocType, ALoc) {
@@ -3218,12 +3217,12 @@ fn entries_of_component(
 
 fn init_type_param<'cx>(
     cx: &Context<'cx>,
-    graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+    graph: &name_def_types::EnvEntriesMap,
     def_loc: ALoc,
 ) -> Result<(SubstName, type_::TypeParam, Type), JobError> {
     fn get_type_param<'cx>(
         cx: &Context<'cx>,
-        graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+        graph: &name_def_types::EnvEntriesMap,
         l: ALoc,
     ) -> Result<(SubstName, type_::TypeParam, Type), JobError> {
         let cached = {
@@ -3238,7 +3237,7 @@ fn init_type_param<'cx>(
 
     fn mk_tparams_map_from_graph<'cx>(
         cx: &Context<'cx>,
-        graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+        graph: &name_def_types::EnvEntriesMap,
         tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     ) -> Result<FlowOrdMap<SubstName, Type>, JobError> {
         let mut subst_map = FlowOrdMap::new();
@@ -3266,6 +3265,7 @@ fn init_type_param<'cx>(
             _,
             _,
             _,
+            _,
         )) => {
             let tparams_map = mk_tparams_map_from_graph(cx, graph, tparams_locs)?;
             let (_, tparam_inner) = tparam;
@@ -3276,7 +3276,7 @@ fn init_type_param<'cx>(
             cache.set_tparam(info);
             result
         }
-        Some((Def::Class(box ClassDefData { class_loc, .. }), _, _, reason)) => {
+        Some((Def::Class(box ClassDefData { class_loc, .. }), _, _, reason, _)) => {
             let self_ = type_env::read_class_self_type(cx, class_loc.dupe());
             let (this_param, this_t) =
                 flow_typing_statement::class_sig::mk_this(self_, cx, reason.dupe());
@@ -3286,7 +3286,7 @@ fn init_type_param<'cx>(
                 this_t,
             )
         }
-        Some((Def::Record(box RecordDefData { record_loc, .. }), _, _, reason)) => {
+        Some((Def::Record(box RecordDefData { record_loc, .. }), _, _, reason, _)) => {
             let self_ = type_env::read_class_self_type(cx, record_loc.dupe());
             let (this_param, this_t) =
                 flow_typing_statement::class_sig::mk_this(self_, cx, reason.dupe());
@@ -3296,7 +3296,7 @@ fn init_type_param<'cx>(
                 this_t,
             )
         }
-        Some((Def::Interface(_, _), _, _, reason)) => {
+        Some((Def::Interface(_, _), _, _, reason, _)) => {
             // Interfaces have polymorphic [this]. The bound used here doesn't
             // need to match the interface's later [this_t] identity — [tparams_map]
             // lookups during convert just need a usable type so [extends this]
@@ -3332,86 +3332,85 @@ fn init_type_param<'cx>(
 
 fn resolve_component_type_params<'cx>(
     cx: &Context<'cx>,
-    graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+    graph: &name_def_types::EnvEntriesMap,
     component: &name_def_ordering::OrderingResult,
 ) -> Result<(), JobError> {
-    let resolve_illegal =
-        |loc: ALoc, def: &(Def, ScopeKind, name_def_types::ClassStack, Reason)| {
-            let (def, _, _, _) = def;
-            match def {
-                Def::TypeParam(box TypeParamData {
-                    tparam: (_, tparam),
-                    ..
-                }) => {
-                    let name_loc = tparam.name.loc.dupe();
-                    let str_name = tparam.name.name.dupe();
-                    let name = SubstName::name(str_name.dupe());
-                    let tp_reason = reason::mk_annot_reason(
-                        reason::VirtualReasonDesc::RType(str_name),
-                        name_loc.dupe(),
-                    );
-                    let tp = type_::TypeParam::new(type_::TypeParamInner {
-                        reason: tp_reason.dupe(),
-                        name: name.dupe(),
-                        bound: Type::new(TypeInner::DefT(
-                            tp_reason.dupe(),
-                            DefT::new(DefTInner::MixedT(type_::MixedFlavor::MixedEverything)),
-                        )),
-                        polarity: flow_common::polarity::Polarity::Neutral,
-                        default: None,
-                        is_this: false,
-                        is_const: false,
-                    });
-                    cx.environment_mut().tparams.insert(
-                        env_api::EnvKey::ordinary(loc.dupe()),
-                        (name, tp, any_t::at(AnySource::AnyError(None), loc)),
-                    );
-                }
-                Def::Class(_) => {
-                    let name = SubstName::name(FlowSmolStr::new("this"));
-                    let tp_reason =
-                        reason::mk_annot_reason(reason::VirtualReasonDesc::RThis, loc.dupe());
-                    let tp = type_::TypeParam::new(type_::TypeParamInner {
-                        reason: tp_reason.dupe(),
-                        name: name.dupe(),
-                        bound: Type::new(TypeInner::DefT(
-                            tp_reason.dupe(),
-                            DefT::new(DefTInner::MixedT(type_::MixedFlavor::MixedEverything)),
-                        )),
-                        polarity: flow_common::polarity::Polarity::Neutral,
-                        default: None,
-                        is_this: true,
-                        is_const: false,
-                    });
-                    cx.environment_mut().tparams.insert(
-                        env_api::EnvKey::ordinary(loc.dupe()),
-                        (name, tp, any_t::at(AnySource::AnyError(None), loc)),
-                    );
-                }
-                Def::Record(_) => {
-                    let name = SubstName::name(FlowSmolStr::new("this"));
-                    let tp_reason =
-                        reason::mk_annot_reason(reason::VirtualReasonDesc::RThis, loc.dupe());
-                    let tp = type_::TypeParam::new(type_::TypeParamInner {
-                        reason: tp_reason.dupe(),
-                        name: name.dupe(),
-                        bound: Type::new(TypeInner::DefT(
-                            tp_reason.dupe(),
-                            DefT::new(DefTInner::MixedT(type_::MixedFlavor::MixedEverything)),
-                        )),
-                        polarity: flow_common::polarity::Polarity::Neutral,
-                        default: None,
-                        is_this: true,
-                        is_const: false,
-                    });
-                    cx.environment_mut().tparams.insert(
-                        env_api::EnvKey::ordinary(loc.dupe()),
-                        (name, tp, any_t::at(AnySource::AnyError(None), loc)),
-                    );
-                }
-                _ => {}
+    let resolve_illegal = |loc: ALoc, def: &name_def_types::NameDefEntry| {
+        let (def, _, _, _, _) = def;
+        match def {
+            Def::TypeParam(box TypeParamData {
+                tparam: (_, tparam),
+                ..
+            }) => {
+                let name_loc = tparam.name.loc.dupe();
+                let str_name = tparam.name.name.dupe();
+                let name = SubstName::name(str_name.dupe());
+                let tp_reason = reason::mk_annot_reason(
+                    reason::VirtualReasonDesc::RType(str_name),
+                    name_loc.dupe(),
+                );
+                let tp = type_::TypeParam::new(type_::TypeParamInner {
+                    reason: tp_reason.dupe(),
+                    name: name.dupe(),
+                    bound: Type::new(TypeInner::DefT(
+                        tp_reason.dupe(),
+                        DefT::new(DefTInner::MixedT(type_::MixedFlavor::MixedEverything)),
+                    )),
+                    polarity: flow_common::polarity::Polarity::Neutral,
+                    default: None,
+                    is_this: false,
+                    is_const: false,
+                });
+                cx.environment_mut().tparams.insert(
+                    env_api::EnvKey::ordinary(loc.dupe()),
+                    (name, tp, any_t::at(AnySource::AnyError(None), loc)),
+                );
             }
-        };
+            Def::Class(_) => {
+                let name = SubstName::name(FlowSmolStr::new("this"));
+                let tp_reason =
+                    reason::mk_annot_reason(reason::VirtualReasonDesc::RThis, loc.dupe());
+                let tp = type_::TypeParam::new(type_::TypeParamInner {
+                    reason: tp_reason.dupe(),
+                    name: name.dupe(),
+                    bound: Type::new(TypeInner::DefT(
+                        tp_reason.dupe(),
+                        DefT::new(DefTInner::MixedT(type_::MixedFlavor::MixedEverything)),
+                    )),
+                    polarity: flow_common::polarity::Polarity::Neutral,
+                    default: None,
+                    is_this: true,
+                    is_const: false,
+                });
+                cx.environment_mut().tparams.insert(
+                    env_api::EnvKey::ordinary(loc.dupe()),
+                    (name, tp, any_t::at(AnySource::AnyError(None), loc)),
+                );
+            }
+            Def::Record(_) => {
+                let name = SubstName::name(FlowSmolStr::new("this"));
+                let tp_reason =
+                    reason::mk_annot_reason(reason::VirtualReasonDesc::RThis, loc.dupe());
+                let tp = type_::TypeParam::new(type_::TypeParamInner {
+                    reason: tp_reason.dupe(),
+                    name: name.dupe(),
+                    bound: Type::new(TypeInner::DefT(
+                        tp_reason.dupe(),
+                        DefT::new(DefTInner::MixedT(type_::MixedFlavor::MixedEverything)),
+                    )),
+                    polarity: flow_common::polarity::Polarity::Neutral,
+                    default: None,
+                    is_this: true,
+                    is_const: false,
+                });
+                cx.environment_mut().tparams.insert(
+                    env_api::EnvKey::ordinary(loc.dupe()),
+                    (name, tp, any_t::at(AnySource::AnyError(None), loc)),
+                );
+            }
+            _ => {}
+        }
+    };
 
     let cyclic_type_param_locs = cx.environment().var_info.cyclic_type_param_locs.dupe();
     let seed_cyclic_type_param = |elt: &name_def_ordering::Element| {
@@ -3447,7 +3446,7 @@ fn resolve_component_type_params<'cx>(
             }
             name_def_ordering::Element::Normal(key)
             | name_def_ordering::Element::Resolvable(key) => {
-                if let Some((def, _, _, _)) = graph.get(key)
+                if let Some((def, _, _, _, _)) = graph.get(key)
                     && let Def::TypeParam(_) | Def::Class(_) | Def::Record(_) = def
                 {
                     init_type_param(cx, graph, key.loc.dupe())?;
@@ -3483,7 +3482,7 @@ fn resolve_component_type_params<'cx>(
 
 pub fn resolve_component<'cx>(
     cx: &Context<'cx>,
-    graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
+    graph: &name_def_types::EnvEntriesMap,
     component: &name_def_ordering::OrderingResult,
 ) -> Result<(), JobError> {
     cx.constraint_cache_mut().clear();
@@ -3511,7 +3510,7 @@ pub fn resolve_component<'cx>(
             }
             name_def_ordering::Element::Normal(key)
             | name_def_ordering::Element::Resolvable(key) => {
-                if let Some((def, scope_kind, class_stack, reason)) = graph.get(key) {
+                if let Some((def, scope_kind, class_stack, reason, _)) = graph.get(key) {
                     flow_typing_utils::abnormal::try_with_abnormal_exn(
                         || {
                             resolve(

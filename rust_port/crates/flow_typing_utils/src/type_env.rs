@@ -599,7 +599,7 @@ pub fn local_classlike_binding_kind_at_loc<'cx>(
                 };
                 match def_opt {
                     None => None,
-                    Some((def, _scope, _stack, _reason)) => {
+                    Some((def, _scope, _stack, _reason, _definition_kind)) => {
                         let poly_or_mono = |has_tparams: bool| {
                             if has_tparams {
                                 LocalClasslikeBindingKind::Poly
@@ -645,12 +645,14 @@ pub fn import_info_at_loc<'cx>(cx: &Context<'cx>, use_loc: ALoc) -> Option<Impor
                     .name_defs
                     .get(&EnvKey::new(DefLocType::OrdinaryNameLoc, def_loc.dupe()))
                 {
-                    Some((NameDef::Import(data), _scope, _stack, _reason)) => Some((
-                        data.import_kind.clone(),
-                        data.import.clone(),
-                        data.source.dupe(),
-                        data.source_loc.dupe(),
-                    )),
+                    Some((NameDef::Import(data), _scope, _stack, _reason, _definition_kind)) => {
+                        Some((
+                            data.import_kind.clone(),
+                            data.import.clone(),
+                            data.source.dupe(),
+                            data.source_loc.dupe(),
+                        ))
+                    }
                     _ => None,
                 }
             }

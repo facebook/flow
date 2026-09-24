@@ -45,6 +45,7 @@ use flow_env_builder::name_def_types::ContextualData;
 use flow_env_builder::name_def_types::DeclaredClassDefData;
 use flow_env_builder::name_def_types::DeclaredFunctionDefData;
 use flow_env_builder::name_def_types::Def;
+use flow_env_builder::name_def_types::DefinitionReferenceKind;
 use flow_env_builder::name_def_types::EmptyArrayData;
 use flow_env_builder::name_def_types::ExpressionDef;
 use flow_env_builder::name_def_types::FunctionDefData;
@@ -68,6 +69,7 @@ use flow_parser::ast::function::Function;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::ast_visitor::TypeParamsContext;
 use flow_parser::loc_sig::LocSig;
+use flow_typing_errors::error_message::DefinitionReferenceData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use vec1::Vec1;
@@ -78,7 +80,7 @@ use crate::dependency_sigs::Flow;
 #[derive(Debug, Clone)]
 pub struct Blame<K> {
     pub payload: K,
-    pub reason: VirtualReason<ALoc>,
+    pub definition: DefinitionReferenceData<ALoc>,
     pub annot_locs: Vec<AnnotLoc<ALoc>>,
     pub recursion: Vec<ALoc>,
 }
@@ -94,13 +96,13 @@ type DeclareNamespaceReadPaths<'a> =
     &'a FlowOrdMap<ALoc, FlowVector<env_api::DeclareNamespaceReadPathElement<ALoc>>>;
 
 fn string_of_element<A: Clone, B: Clone>(
-    graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>)>,
+    graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
     element: &Element,
 ) -> String {
     let print_elt = |key: &EnvKey<ALoc>| -> String {
         match graph.get(key) {
             None => "MISSING DEFINITION".to_string(),
-            Some((def, _, _, _)) => string_of_source(def),
+            Some((def, _, _, _, _)) => string_of_source(def),
         }
     };
 
@@ -143,7 +145,7 @@ pub enum OrderingResult {
 }
 
 pub fn string_of_component<A: Clone, B: Clone>(
-    graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>)>,
+    graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
     result: &OrderingResult,
 ) -> String {
     match result {
@@ -4000,7 +4002,7 @@ pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     cx: &Cx,
     autocomplete_hooks: &AutocompleteHooks<ALoc>,
     env: &EnvInfo<ALoc>,
-    map: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>)>,
+    map: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
 ) -> std::result::Result<EnvMap<ALoc, EnvMap<ALoc, Vec1<ALoc>>>, Box<ErrorMessage<ALoc>>> {
     use flow_env_builder::name_def_types::ObjectSynthKind;
 
@@ -4012,7 +4014,7 @@ pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     // we use this forwarding map to say it actually depends on the functions/classes that define
     // `this`/`super`. *)
     let mut this_super_dep_loc_map: EnvMap<ALoc, EnvKey<ALoc>> = EnvMap::empty();
-    for (kind_and_loc, (def, _, _, _)) in map.iter() {
+    for (kind_and_loc, (def, _, _, _, _)) in map.iter() {
         match def {
             Def::Class(box ClassDefData {
                 this_super_write_locs: locs,
@@ -4044,7 +4046,7 @@ pub fn build_graph<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     }
 
     let mut result: EnvMap<ALoc, EnvMap<ALoc, Vec1<ALoc>>> = EnvMap::empty();
-    for (key, (def, _, _, _)) in map.iter() {
+    for (key, (def, _, _, _, _)) in map.iter() {
         dependencies::<Cx, F>(
             cx,
             autocomplete_hooks,
@@ -4062,7 +4064,7 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
     cx: &Cx,
     autocomplete_hooks: &AutocompleteHooks<ALoc>,
     env: &EnvInfo<ALoc>,
-    map: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>)>,
+    map: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
 ) -> std::result::Result<Vec<OrderingResult>, Box<ErrorMessage<ALoc>>> {
     fn env_map_find<'a, V: Clone>(
         k: &EnvKey<ALoc>,
@@ -4156,7 +4158,7 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
 
         let element_of_loc =
             |key: &EnvKey<ALoc>| -> std::result::Result<Element, Box<ErrorMessage<ALoc>>> {
-                let (def, _, _, reason) = env_map_find(key, map)?;
+                let (def, _, _, reason, definition_kind) = env_map_find(key, map)?;
                 let self_deps = env_map_find(key, &order_graph)?;
                 if self_deps.contains(key) {
                     if recursively_resolvable(def) {
@@ -4168,7 +4170,10 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
                             self_recursion.iter().map(|l| l.dupe()).collect();
                         Ok(Element::Illegal(Blame {
                             payload: key.dupe(),
-                            reason: reason.clone(),
+                            definition: DefinitionReferenceData {
+                                loc: reason.loc().dupe(),
+                                kind: definition_kind.dupe(),
+                            },
                             recursion,
                             annot_locs: annotation_locs(
                                 scopes,
@@ -4192,7 +4197,7 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
                 .collect();
 
             let all_resolvable = component_list.iter().all(|m| {
-                if let Ok((def, _, _, _)) = env_map_find(m, map) {
+                if let Ok((def, _, _, _, _)) = env_map_find(m, map) {
                     recursively_resolvable(def)
                 } else {
                     false
@@ -4262,7 +4267,7 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
 
                 let mut cycle_elts: BTreeSet<EnvKey<ALoc>> = BTreeSet::new();
                 for payload in &component_list {
-                    if let Some((def, _, _, _)) = map.get(payload) {
+                    if let Some((def, _, _, _, _)) = map.get(payload) {
                         if !recursively_resolvable(def) {
                             if let Some(cycle) = shortest_cycle(payload, &order_graph) {
                                 for elt in cycle {
@@ -4275,7 +4280,7 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
 
                 let mut elements: Vec<(Blame<Element>, bool)> = Vec::new();
                 for key in &component_list {
-                    let (def, _, _, reason) = env_map_find(key, map)?;
+                    let (def, _, _, reason, definition_kind) = env_map_find(key, map)?;
                     let depends = env_map_find(key, &graph)?;
                     let edges: Vec<ALoc> = {
                         let mut acc: Vec<ALoc> = Vec::new();
@@ -4297,7 +4302,10 @@ pub fn build_ordering<A: Clone, B: Clone, Cx: Context, F: Flow<Cx = Cx>>(
                     let display = cycle_elts.contains(key);
                     let blame = Blame {
                         payload: element_of_loc(key)?,
-                        reason: reason.clone(),
+                        definition: DefinitionReferenceData {
+                            loc: reason.loc().dupe(),
+                            kind: definition_kind.dupe(),
+                        },
                         recursion: edges,
                         annot_locs: annotation_locs(
                             scopes,

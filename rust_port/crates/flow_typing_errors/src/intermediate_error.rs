@@ -6666,7 +6666,7 @@ where
                             .collect();
                         let mut result = vec![
                             text(" - "),
-                            ref_(reason),
+                            ref_of_ty_or_desc(&reason.loc, &reason.desc),
                             text(" depends on "),
                             friendly::hardcoded_string_desc_ref(
                                 "other definition",

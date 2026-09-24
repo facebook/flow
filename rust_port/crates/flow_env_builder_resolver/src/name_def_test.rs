@@ -95,7 +95,7 @@ fn print_values(values: &EnvEntriesMap) -> String {
     let kvlist: Vec<_> = values.iter().collect();
     let strlist: Vec<String> = kvlist
         .iter()
-        .map(|(key, (init, _, _, _))| {
+        .map(|(key, (init, _, _, _, _))| {
             format!(
                 "{} => {}",
                 key.loc.debug_to_string(false),

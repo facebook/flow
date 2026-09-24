@@ -18,6 +18,7 @@ use flow_common::error_ref::ErrorReference;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
+use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::refinement_invalidation;
@@ -32,6 +33,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api::AnnotLoc;
 use flow_env_builder::env_api::DefLocType;
 use flow_env_builder::env_api::EnvInvariantFailure;
+use flow_env_builder::name_def_types::DefinitionReferenceKind;
 use flow_lint_settings::lint_settings::LintParseError;
 use flow_lint_settings::lints::LintKind;
 use flow_lint_settings::lints::PropertyAssignmentKind;
@@ -2672,9 +2674,27 @@ pub struct EInvalidDeclarationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     serde::Deserialize
 )]
 pub struct ERecursiveDefinitionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: ErrorReference<L>,
+    pub definition: DefinitionReferenceData<L>,
     pub recursion: Vec<L>,
     pub annot_locs: Vec<AnnotLoc<L>>,
+}
+
+/// A definition location and its semantic kind for recursive-definition errors.
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct DefinitionReferenceData<L: Dupe> {
+    pub loc: L,
+    pub kind: DefinitionReferenceKind,
 }
 
 #[derive(
@@ -3607,7 +3627,9 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETrivialRecursiveDefinition(ErrorReference<L>),
 
-    EDefinitionCycle(Vec1<(VirtualReason<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
+    ETrivialRecursiveTypeParameter(Box<(L, FlowSmolStr)>),
+
+    EDefinitionCycle(Vec1<(DefinitionReferenceData<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
     ERecursiveDefinition(Box<ERecursiveDefinitionData<L>>),
 
@@ -5896,13 +5918,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ETrivialRecursiveDefinition(reason) => {
                 ETrivialRecursiveDefinition(map_error_ref(reason))
             }
+            ETrivialRecursiveTypeParameter(box (loc, name)) => {
+                ETrivialRecursiveTypeParameter(Box::new((f(loc), name)))
+            }
 
             EDefinitionCycle(elts) => EDefinitionCycle(
                 Vec1::try_from_vec(
                     elts.into_iter()
-                        .map(|(reason, recur, annot)| {
+                        .map(|(definition, recur, annot)| {
                             (
-                                map_reason(reason),
+                                DefinitionReferenceData {
+                                    loc: f(definition.loc),
+                                    kind: definition.kind,
+                                },
                                 recur.into_iter().map(&f).collect(),
                                 annot
                                     .into_iter()
@@ -5922,11 +5950,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ),
 
             ERecursiveDefinition(box ERecursiveDefinitionData {
-                reason,
+                definition,
                 recursion,
                 annot_locs,
             }) => ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
-                reason: map_error_ref(reason),
+                definition: DefinitionReferenceData {
+                    loc: f(definition.loc),
+                    kind: definition.kind,
+                },
                 recursion: recursion.into_iter().map(&f).collect(),
                 annot_locs: annot_locs
                     .into_iter()
@@ -7408,6 +7439,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 })
             }
 
+            ERecursiveDefinition(box ERecursiveDefinitionData {
+                definition,
+                recursion,
+                annot_locs,
+            }) => ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
+                definition,
+                recursion,
+                annot_locs,
+            })),
+
             e => e,
         }
     }
@@ -7687,8 +7728,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EBigIntNumCoerce(box EArithmeticOperandData { loc, .. }) => Some(loc.dupe()),
 
-            Self::ERecursiveDefinition(box ERecursiveDefinitionData { reason, .. }) => {
-                Some(reason.loc.dupe())
+            Self::ERecursiveDefinition(box ERecursiveDefinitionData { definition, .. }) => {
+                Some(definition.loc.dupe())
             }
 
             Self::EInvalidBinaryArith(box EInvalidBinaryArithData { loc, .. })
@@ -7843,6 +7884,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             ) => Some(loc.dupe()),
 
             Self::ETrivialRecursiveDefinition(reason) => Some(reason.loc.dupe()),
+
+            Self::ETrivialRecursiveTypeParameter(data) => Some(data.0.dupe()),
 
             Self::ECallTypeArity(box ECallTypeArityData { call_loc, .. }) => Some(call_loc.dupe()),
             Self::EMissingTypeArgs(box EMissingTypeArgsData { loc, .. }) => Some(loc.dupe()),
@@ -8533,6 +8576,28 @@ fn message_identifier_reference<L: Dupe>(loc: L, name: FlowSmolStr) -> MessageTy
     MessageTypeReferenceData {
         loc,
         desc: Err(VirtualReasonDesc::RIdentifier(name)),
+    }
+}
+
+fn definition_reference_desc<L: Dupe>(kind: DefinitionReferenceKind) -> VirtualReasonDesc<L> {
+    match kind {
+        DefinitionReferenceKind::Name(name) => VirtualReasonDesc::RIdentifier(name),
+        DefinitionReferenceKind::Function { async_, generator } => {
+            let function_kind = match (async_, generator) {
+                (true, true) => ReasonDescFunction::RAsyncGenerator,
+                (true, false) => ReasonDescFunction::RAsync,
+                (false, true) => ReasonDescFunction::RGenerator,
+                (false, false) => ReasonDescFunction::RNormal,
+            };
+            VirtualReasonDesc::RFunction(function_kind)
+        }
+        DefinitionReferenceKind::Component(name) => VirtualReasonDesc::RComponent(name),
+        DefinitionReferenceKind::Enum(name) => VirtualReasonDesc::REnum { name: Some(name) },
+        DefinitionReferenceKind::Interface => VirtualReasonDesc::RInterfaceType,
+        DefinitionReferenceKind::This => VirtualReasonDesc::RThis,
+        DefinitionReferenceKind::Destructuring => VirtualReasonDesc::RDestructuring,
+        DefinitionReferenceKind::Match => VirtualReasonDesc::RMatch,
+        DefinitionReferenceKind::Other => VirtualReasonDesc::RCustom("definition".into()),
     }
 }
 
@@ -9530,20 +9595,37 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::ETrivialRecursiveDefinition(reason) => Normal(
                 Message::MessageInvalidTrivialRecursiveDefinition(reason.desc),
             ),
+            ErrorMessage::ETrivialRecursiveTypeParameter(box (_, name)) => Normal(
+                Message::MessageInvalidTrivialRecursiveDefinition(VirtualReasonDesc::RType(name)),
+            ),
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData {
-                reason,
+                definition,
                 recursion,
                 annot_locs,
                 ..
-            }) => Normal(Message::MessageDefinitionInvalidRecursive(Box::new(
-                MessageDefinitionInvalidRecursiveData {
-                    description: reason.desc,
-                    recursion,
-                    annot_locs,
-                },
-            ))),
+            }) => {
+                let definition_desc = definition_reference_desc(definition.kind);
+                Normal(Message::MessageDefinitionInvalidRecursive(Box::new(
+                    MessageDefinitionInvalidRecursiveData {
+                        description: definition_desc,
+                        recursion,
+                        annot_locs,
+                    },
+                )))
+            }
             ErrorMessage::EDefinitionCycle(dependencies) => {
-                Normal(Message::MessageDefinitionCycle(dependencies))
+                Normal(Message::MessageDefinitionCycle(dependencies.mapped(
+                    |(definition, dependencies, annot_locs)| {
+                        (
+                            MessageTypeReferenceData {
+                                loc: definition.loc,
+                                desc: Err(definition_reference_desc(definition.kind)),
+                            },
+                            dependencies,
+                            annot_locs,
+                        )
+                    },
+                )))
             }
             ErrorMessage::EReferenceInAnnotation(box (_, name, loc)) => {
                 Normal(Message::MessageInvalidSelfReferencingTypeAnnotation(
@@ -11392,6 +11474,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ))
             | Self::EUninitializedInstanceProperty(_, _)
             | Self::ETrivialRecursiveDefinition(_)
+            | Self::ETrivialRecursiveTypeParameter(_)
             | Self::EAnyValueUsedAsType { .. }
             | Self::EValueUsedAsType { .. }
             | Self::EUnusedPromise { .. }
@@ -12013,6 +12096,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidGraphQL { .. } => Some(InvalidGraphQL),
             ErrorMessage::EAnnotationInference { .. } => Some(InvalidExportedAnnotation),
             ErrorMessage::ETrivialRecursiveDefinition(_) => Some(RecursiveDefinition),
+            ErrorMessage::ETrivialRecursiveTypeParameter(_) => Some(RecursiveDefinition),
             ErrorMessage::EDefinitionCycle { .. } => Some(DefinitionCycle),
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData { .. }) => {
                 Some(RecursiveDefinition)

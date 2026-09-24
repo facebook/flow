@@ -31,9 +31,7 @@ use flow_analysis::bindings::Kind as BindingsKind;
 use flow_analysis::hoister::LexicalHoister;
 use flow_analysis::scope_builder;
 use flow_analysis::scope_builder::WithBindings;
-use flow_common::error_ref::ErrorReference;
 use flow_common::options::JsxMode;
-use flow_common::reason::VirtualReasonDesc;
 use flow_common::refinement_invalidation::RefinementInvalidation;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -1717,10 +1715,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> WithBindings<ALoc, AbruptCompletion>
             }
             Fl::add_output(
                 self.cx,
-                ErrorMessage::ETrivialRecursiveDefinition(ErrorReference::new(
+                ErrorMessage::ETrivialRecursiveTypeParameter(Box::new((
                     reference_loc,
-                    VirtualReasonDesc::RType(tparams.params[target].name.name.dupe()),
-                )),
+                    tparams.params[target].name.name.dupe(),
+                ))),
             );
         }
         visit(self)

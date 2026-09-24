@@ -11,6 +11,7 @@ use flow_common::reason::VirtualReason;
 use flow_env_builder::env_api::EnvKey;
 use flow_env_builder::env_api::EnvMap;
 use flow_env_builder::name_def_types::Def;
+use flow_env_builder::name_def_types::DefinitionReferenceKind;
 use flow_env_builder_resolver::name_def_ordering::Blame;
 use flow_env_builder_resolver::name_def_ordering::Element;
 use flow_env_builder_resolver::name_def_ordering::OrderingResult;
@@ -24,7 +25,7 @@ fn handle_element(cx: &Context, elt: &Element) -> bool {
     match elt {
         Element::Normal(_) | Element::Resolvable(_) => false,
         Element::Illegal(Blame {
-            reason,
+            definition,
             recursion,
             payload: _,
             annot_locs,
@@ -32,7 +33,7 @@ fn handle_element(cx: &Context, elt: &Element) -> bool {
             flow_js_utils::add_output_non_speculating(
                 cx,
                 ErrorMessage::ERecursiveDefinition(Box::new(ERecursiveDefinitionData {
-                    reason: reason.to_error_reference(),
+                    definition: definition.dupe(),
                     recursion: recursion.clone(),
                     annot_locs: annot_locs.clone(),
                 })),
@@ -51,7 +52,7 @@ fn key_of_element(elt: &Element) -> &EnvKey<ALoc> {
 
 pub fn handle_component<A: Clone, B: Clone>(
     cx: &Context,
-    graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>)>,
+    graph: &EnvMap<ALoc, (Def, A, B, VirtualReason<ALoc>, DefinitionReferenceKind)>,
     scc: &OrderingResult,
 ) {
     match scc {
@@ -70,7 +71,7 @@ pub fn handle_component<A: Clone, B: Clone>(
                     |(
                         Blame {
                             payload: elt,
-                            reason,
+                            definition,
                             recursion: blame,
                             annot_locs,
                         },
@@ -78,10 +79,10 @@ pub fn handle_component<A: Clone, B: Clone>(
                     )| {
                         let illegal_elt = handle_element(cx, elt);
                         if *display {
-                            let (def, _, _, _) = graph.get(key_of_element(elt)).unwrap();
+                            let (def, _, _, _, _) = graph.get(key_of_element(elt)).unwrap();
                             Some((
                                 (def, illegal_elt),
-                                (reason.dupe(), blame.clone(), annot_locs.clone()),
+                                (definition.dupe(), blame.clone(), annot_locs.clone()),
                             ))
                         } else {
                             None
@@ -103,7 +104,7 @@ pub fn handle_component<A: Clone, B: Clone>(
             match fold_result {
                 Ok(true) => {}
                 Ok(false) | Err(()) => {
-                    let cycle_entries: Vec<_> = blame.into_iter().map(|(_, snd)| snd).collect();
+                    let cycle_entries: Vec<_> = blame.into_iter().map(|(_, entry)| entry).collect();
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::EDefinitionCycle(Vec1::try_from_vec(cycle_entries).unwrap()),

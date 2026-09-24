@@ -713,7 +713,7 @@ fn downstream_effects<'ev, 'b, 'cx>(
                 })
                 .collect();
             let mut acc = Vec::new();
-            for (def, _, _, _) in defs {
+            for (def, _, _, _, _) in defs {
                 match def {
                     Def::ExpressionDef(box name_def_types::ExpressionDef { expr, .. })
                     | Def::MemberAssign(box MemberAssignData { rhs: (_, expr), .. })
