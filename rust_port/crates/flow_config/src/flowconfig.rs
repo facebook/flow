@@ -163,6 +163,7 @@ pub mod opts {
         pub facebook_fbs: Option<String>,
         pub facebook_fbt: Option<String>,
         pub facebook_module_interop: bool,
+        pub fast_symlink_resolution: bool,
         pub file_watcher: Option<FileWatcher>,
         pub file_watcher_edenfs_throttle_time_ms: u32,
         pub file_watcher_edenfs_timeout: u32,
@@ -321,6 +322,7 @@ pub mod opts {
             facebook_fbs: None,
             facebook_fbt: None,
             facebook_module_interop: false,
+            fast_symlink_resolution: false,
             file_watcher: None,
             file_watcher_edenfs_throttle_time_ms: 50,
             file_watcher_edenfs_timeout: 60,
@@ -2210,6 +2212,16 @@ pub mod opts {
             }),
             ("experimental.facebook_module_interop", |values, config| {
                 facebook_module_interop_parser(values, config)
+            }),
+            ("experimental.fast_symlink_resolution", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.fast_symlink_resolution = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
             }),
             (
                 "experimental.importable_global_libdefs",

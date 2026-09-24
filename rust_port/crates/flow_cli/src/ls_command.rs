@@ -225,7 +225,7 @@ fn get_ls_files(
         None => {
             let mut all_files = Vec::new();
             let options_for_filter = Arc::clone(&options);
-            files::make_next_files(root, None, all, true, options, true, |chunk| {
+            files::make_next_files(root, None, all, true, options, true, None, |chunk| {
                 for p in chunk {
                     let path = p.to_string_lossy();
                     if !files::is_in_flowlib(&options_for_filter, &path) {
@@ -247,14 +247,23 @@ fn get_ls_files(
             let subdir = Path::new(dir).to_path_buf();
             let mut all_files = Vec::new();
             let options_for_filter = Arc::clone(&options);
-            files::make_next_files(root, Some(&subdir), all, true, options, true, |chunk| {
-                for p in chunk {
-                    let path = p.to_string_lossy();
-                    if !files::is_in_flowlib(&options_for_filter, &path) {
-                        all_files.push(path.into_owned());
+            files::make_next_files(
+                root,
+                Some(&subdir),
+                all,
+                true,
+                options,
+                true,
+                None,
+                |chunk| {
+                    for p in chunk {
+                        let path = p.to_string_lossy();
+                        if !files::is_in_flowlib(&options_for_filter, &path) {
+                            all_files.push(path.into_owned());
+                        }
                     }
-                }
-            });
+                },
+            );
             let mut returned = false;
             Box::new(move || {
                 if returned {

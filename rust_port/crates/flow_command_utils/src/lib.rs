@@ -2162,6 +2162,7 @@ pub fn make_options(
                 facebook_fbs,
                 facebook_fbt,
                 facebook_module_interop,
+                fast_symlink_resolution,
                 file_watcher: _file_watcher,
                 file_watcher_edenfs_throttle_time_ms: _file_watcher_edenfs_throttle_time_ms,
                 file_watcher_edenfs_timeout: _file_watcher_edenfs_timeout,
@@ -2282,6 +2283,14 @@ pub fn make_options(
     let estimate_recheck_time = estimate_recheck_time_override
         .or(estimate_recheck_time)
         .unwrap_or(true);
+    let fast_symlink_resolution = match std::env::var("FLOW_FAST_SYMLINK_RESOLUTION")
+        .ok()
+        .as_deref()
+    {
+        Some("1" | "true") => true,
+        Some("0" | "false") => false,
+        _ => fast_symlink_resolution,
+    };
     let saved_state_restart_on_reinit = match std::env::var("FLOW_SAVED_STATE_RESTART_ON_REINIT")
         .ok()
         .as_deref()
@@ -2562,6 +2571,7 @@ pub fn make_options(
         facebook_fbs: facebook_fbs.map(FlowSmolStr::new),
         facebook_fbt: facebook_fbt.map(FlowSmolStr::new),
         facebook_module_interop,
+        fast_symlink_resolution,
         file_options,
         flowconfig_hash: FlowSmolStr::new(flowconfig_hash),
         flowconfig_name: FlowSmolStr::new(flowconfig_name),

@@ -2385,6 +2385,7 @@ pub fn make_next_files(
     root: &Path,
     file_options: Arc<FileOptions>,
     include_libdef: bool,
+    symlink_map: Option<&files::SymlinkMap>,
     mut send_chunked: impl FnMut(Vec<FileKey>),
 ) {
     let file_opts_for_convert = file_options.dupe();
@@ -2395,6 +2396,7 @@ pub fn make_next_files(
         false,
         file_options,
         include_libdef,
+        symlink_map,
         |chunk: Vec<PathBuf>| {
             let files: Vec<FileKey> = chunk
                 .into_iter()
@@ -3140,14 +3142,28 @@ pub fn init_from_scratch(
         let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
         let file_opts = options.file_options.dupe();
         let root_buf = root.to_path_buf();
+        // Windows canonical paths need separate handling.
+        let symlink_transaction =
+            (options.fast_symlink_resolution && cfg!(unix)).then(|| transaction.dupe());
 
         let (sender, receiver) = channel::unbounded::<Vec<FileKey>>();
         let receiver = Arc::new(receiver);
 
         let handle = std::thread::spawn(move || {
-            make_next_files(&root_buf, file_opts, true, |files| {
-                sender.send(files).unwrap();
-            });
+            make_next_files(
+                &root_buf,
+                file_opts,
+                true,
+                symlink_transaction
+                    .as_ref()
+                    .map(|transaction| transaction.symlink_paths()),
+                |files| {
+                    sender.send(files).unwrap();
+                },
+            );
+            if let Some(transaction) = symlink_transaction {
+                transaction.symlink_paths().mark_complete();
+            }
             drop(sender);
         });
         flow_hh_logger::info!("Parsing");

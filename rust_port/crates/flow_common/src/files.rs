@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -12,6 +13,8 @@ use std::collections::HashSet;
 use std::ffi::OsStr;
 use std::hash::Hash;
 use std::hash::Hasher;
+use std::path::Component;
+use std::path::MAIN_SEPARATOR;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -83,6 +86,25 @@ pub fn cached_canonicalize(path: &Path) -> std::io::Result<PathBuf> {
     CANONICALIZE_CACHE
         .get_or_init(CanonicalizeCache::new)
         .get_or_insert(path)
+}
+
+fn resolved_path<'a>(original: &'a str, resolved: &Path) -> Cow<'a, str> {
+    let Some(resolved) = resolved.to_str() else {
+        return Cow::Borrowed(original);
+    };
+    if resolved == original {
+        Cow::Borrowed(original)
+    } else {
+        Cow::Owned(resolved.to_string())
+    }
+}
+
+/// Canonicalizes a path, returning the original string when no UTF-8 result is available.
+pub fn canonicalize_path(path: &str) -> Cow<'_, str> {
+    match cached_canonicalize(Path::new(path)) {
+        Ok(resolved) => resolved_path(path, &resolved),
+        Err(_) => Cow::Borrowed(path),
+    }
 }
 
 // utilities for supported filenames
@@ -162,6 +184,72 @@ impl Default for FileOptions {
 #[allow(non_upper_case_globals)]
 pub static node_modules_containers: LazyLock<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>> =
     LazyLock::new(|| RwLock::new(BTreeMap::new()));
+
+#[derive(Debug)]
+pub struct SymlinkMap {
+    building_paths: Mutex<Option<HashMap<PathBuf, PathBuf>>>,
+    complete_paths: OnceLock<HashMap<PathBuf, PathBuf>>,
+}
+
+impl Default for SymlinkMap {
+    fn default() -> Self {
+        Self {
+            building_paths: Mutex::new(Some(HashMap::new())),
+            complete_paths: OnceLock::new(),
+        }
+    }
+}
+
+impl SymlinkMap {
+    fn insert(&self, path: PathBuf, real_path: PathBuf) {
+        self.building_paths
+            .lock()
+            .expect("symlink map lock should not be poisoned")
+            .as_mut()
+            .expect("paths cannot be inserted after the map is complete")
+            .insert(path, real_path);
+    }
+
+    pub fn mark_complete(&self) {
+        let paths = self
+            .building_paths
+            .lock()
+            .expect("symlink map lock should not be poisoned")
+            .take()
+            .expect("symlink map should only be completed once");
+        self.complete_paths
+            .set(paths)
+            .expect("symlink map should only be completed once");
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.complete_paths.get().is_some()
+    }
+
+    /// Returns `None` when resolving the path requires filesystem semantics.
+    pub fn try_resolve<'a>(&self, path: &'a str, crawl_covers_path: bool) -> Option<Cow<'a, str>> {
+        let paths = self.complete_paths.get()?;
+        let path_buf = Path::new(path);
+        if path_buf
+            .components()
+            .any(|component| component == Component::ParentDir)
+        {
+            return None;
+        }
+
+        let normalized = if path.split(MAIN_SEPARATOR).any(|component| component == ".") {
+            Cow::Owned(path_buf.components().collect::<PathBuf>())
+        } else {
+            Cow::Borrowed(path_buf)
+        };
+        let resolved = match paths.get(normalized.as_ref()) {
+            Some(resolved) => resolved.as_path(),
+            None if crawl_covers_path => normalized.as_ref(),
+            None => return None,
+        };
+        Some(resolved_path(path, resolved))
+    }
+}
 
 pub const GLOBAL_FILE_NAME: &str = "(global)";
 pub const FLOW_EXT: &str = ".flow";
@@ -846,6 +934,47 @@ fn should_canonicalize_discovered_entry(
         }
 }
 
+fn wanted_filter(options: &FileOptions, path: &Path, all: bool, include_libdef: bool) -> bool {
+    let path_str = path.to_string_lossy();
+    all || wanted(options, include_libdef, &path_str)
+}
+
+fn realpath_filter(options: &FileOptions, path: &Path, all: bool, include_libdef: bool) -> bool {
+    let path_str = path.to_string_lossy();
+    (is_valid_path(options, &path_str)
+        || (include_libdef && is_configured_lib_file(options, &path_str)))
+        && wanted_filter(options, path, all, include_libdef)
+}
+
+fn path_is_in_crawl_scope(
+    options: &FileOptions,
+    root: &Path,
+    path: &Path,
+    include_libdef: bool,
+) -> bool {
+    (options.implicitly_include_root && path.starts_with(root)) || {
+        let path_str = path.to_string_lossy();
+        is_included(options, &path_str)
+            || (include_libdef && is_configured_lib_file(options, &path_str))
+    }
+}
+
+fn no_subdir_path_filter(
+    options: &FileOptions,
+    root: &Path,
+    path: &Path,
+    all: bool,
+    include_libdef: bool,
+) -> bool {
+    path_is_in_crawl_scope(options, root, path, include_libdef)
+        && realpath_filter(options, path, all, include_libdef)
+}
+
+/// Whether the initial full crawl covers a path, making an absent alias mapping conclusive.
+pub fn initial_crawl_covers_path(options: &FileOptions, root: &Path, path: &Path) -> bool {
+    path_is_in_crawl_scope(options, root, path, true) && wanted_filter(options, path, false, true)
+}
+
 /// Creates a "next" function for finding the files in a given FlowConfig root.
 /// This means all the files under the root (if the implicit behavior is enabled)
 /// and all the included files, minus the ignored files and the libs.
@@ -860,39 +989,9 @@ pub fn make_next_files(
     sort: bool,
     options: Arc<FileOptions>,
     include_libdef: bool,
+    symlink_map: Option<&SymlinkMap>,
     mut send_chunked: impl FnMut(Vec<PathBuf>),
 ) {
-    fn wanted_filter(options: &FileOptions, path: &Path, all: bool, include_libdef: bool) -> bool {
-        let path_str = path.to_string_lossy();
-        all || wanted(options, include_libdef, &path_str)
-    }
-
-    fn realpath_filter(
-        options: &FileOptions,
-        path: &Path,
-        all: bool,
-        include_libdef: bool,
-    ) -> bool {
-        let path_str = path.to_string_lossy();
-        (is_valid_path(options, &path_str)
-            || (include_libdef && is_configured_lib_file(options, &path_str)))
-            && wanted_filter(options, path, all, include_libdef)
-    }
-
-    fn no_subdir_path_filter(
-        options: &FileOptions,
-        root: &Path,
-        path: &Path,
-        all: bool,
-        include_libdef: bool,
-    ) -> bool {
-        ((options.implicitly_include_root && path.starts_with(root)) || {
-            let path_str = path.to_string_lossy();
-            is_included(options, &path_str)
-                || (include_libdef && is_configured_lib_file(options, &path_str))
-        }) && realpath_filter(options, path, all, include_libdef)
-    }
-
     fn subdir_path_filter(
         options: &FileOptions,
         root: &Path,
@@ -992,6 +1091,13 @@ pub fn make_next_files(
             }
             let path = entry.path();
 
+            if entry.path_is_symlink()
+                && let Some(symlink_map) = symlink_map
+                && let Ok(real_path) = cached_canonicalize(&path)
+            {
+                symlink_map.insert(path.clone(), real_path);
+            }
+
             if !match subdir {
                 Some(subdir) => {
                     subdir_path_filter(&options, root, subdir, &path, all, include_libdef)
@@ -1008,15 +1114,21 @@ pub fn make_next_files(
             ) {
                 // Note: try_exists() check removed because canonicalize() already
                 // verifies the path exists (returns Err for non-existent paths).
-                if let Ok(real_path) = cached_canonicalize(&path)
-                    && (path == real_path
-                        || realpath_filter(&options, &real_path, all, include_libdef))
-                {
-                    chunk.push(real_path);
-                    if chunk.len() == MAX_FILES {
-                        chunk.reverse();
-                        send_chunked(chunk);
-                        chunk = Vec::new();
+                if let Ok(real_path) = cached_canonicalize(&path) {
+                    if path == real_path
+                        || realpath_filter(&options, &real_path, all, include_libdef)
+                    {
+                        if path != real_path
+                            && let Some(symlink_map) = symlink_map
+                        {
+                            symlink_map.insert(path, real_path.clone());
+                        }
+                        chunk.push(real_path);
+                        if chunk.len() == MAX_FILES {
+                            chunk.reverse();
+                            send_chunked(chunk);
+                            chunk = Vec::new();
+                        }
                     }
                 }
             } else {

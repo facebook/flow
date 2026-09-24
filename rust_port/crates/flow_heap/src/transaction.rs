@@ -57,6 +57,7 @@ pub type BeforeCompact<'a> = &'a dyn Fn();
 pub struct Transaction {
     heap: Arc<CommittedHeap>,
     overlay: HeapOverlay,
+    symlink_paths: flow_common::files::SymlinkMap,
     /// The committed-heap read guard, held for the active lifetime of a unit of work so the
     /// base cannot change underneath it, and `None` after its owner is dropped. Detached reads
     /// take a short-lived guard instead.
@@ -94,6 +95,7 @@ impl ActiveTransaction {
         Self(Some(Arc::new(Transaction {
             heap,
             overlay: HeapOverlay::new(),
+            symlink_paths: flow_common::files::SymlinkMap::default(),
             committed: RwLock::new(Some(guard)),
         })))
     }
@@ -113,6 +115,12 @@ impl ActiveTransaction {
             .expect("an active transaction may only be committed once");
         let destination = transaction.committed_heap();
         transaction.commit(&destination);
+    }
+}
+
+impl Transaction {
+    pub fn symlink_paths(&self) -> &flow_common::files::SymlinkMap {
+        &self.symlink_paths
     }
 }
 

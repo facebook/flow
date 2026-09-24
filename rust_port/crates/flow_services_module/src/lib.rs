@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::path::Path;
 use std::sync::Arc;
 use std::sync::LazyLock;
 
@@ -295,16 +297,41 @@ impl PhantomAcc {
 }
 
 struct ModuleResolver<'a> {
+    options: &'a Options,
     transaction: &'a Transaction,
     access: flow_heap::transaction::HeapAccess<'a>,
+    symlink_paths: Option<&'a files::SymlinkMap>,
 }
 
 impl<'a> ModuleResolver<'a> {
-    fn new(transaction: &'a Transaction) -> Self {
+    fn new(options: &'a Options, transaction: &'a Transaction) -> Self {
+        let symlink_paths = transaction.symlink_paths();
         Self {
+            options,
             transaction,
             access: transaction.latest_heap_reader(),
+            symlink_paths: (options.fast_symlink_resolution
+                && cfg!(unix)
+                && symlink_paths.is_complete())
+            .then_some(symlink_paths),
         }
+    }
+
+    fn resolve_symlinks<'b>(&self, path: &'b str) -> Cow<'b, str> {
+        let Some(symlink_paths) = self.symlink_paths else {
+            return files::canonicalize_path(path);
+        };
+        let crawl_covers_path = files::initial_crawl_covers_path(
+            &self.options.file_options,
+            &self.options.root,
+            Path::new(path),
+        );
+        symlink_paths
+            .try_resolve(path, crawl_covers_path)
+            .unwrap_or_else(|| match Path::new(path).try_exists() {
+                Ok(false) => Cow::Borrowed(path),
+                Ok(true) | Err(_) => files::canonicalize_path(path),
+            })
     }
 
     fn get_dependency(&self, modulename: &Modulename) -> Option<Dependency> {
@@ -343,16 +370,6 @@ static ABSOLUTE_PATH_REGEXP: LazyLock<Regex> =
 
 fn is_relative_or_absolute(r: &str) -> bool {
     CURRENT_DIR_NAME.is_match(r) || PARENT_DIR_NAME.is_match(r) || ABSOLUTE_PATH_REGEXP.is_match(r)
-}
-
-fn resolve_symlinks(path: &str) -> String {
-    use std::path::Path;
-
-    let p = Path::new(path);
-    flow_common::files::cached_canonicalize(p)
-        .ok()
-        .and_then(|p| p.to_str().map(|s| s.to_string()))
-        .unwrap_or_else(|| path.to_string())
 }
 
 fn record_phantom_dependency(
@@ -457,7 +474,7 @@ mod node {
         phantom_acc: Option<&mut PhantomAcc>,
         path: &str,
     ) -> Option<Dependency> {
-        let path = super::resolve_symlinks(path);
+        let path = transaction.resolve_symlinks(path);
         let file_key = files::filename_from_string(file_options, &path);
         let mname = Modulename::eponymous_module(file_key);
 
@@ -510,12 +527,8 @@ mod node {
         None
     }
 
-    fn parse_package(
-        _options: &Options,
-        transaction: &ModuleResolver<'_>,
-        package_filename: &str,
-    ) -> Arc<PackageJson> {
-        let package_filename = super::resolve_symlinks(package_filename);
+    fn parse_package(transaction: &ModuleResolver<'_>, package_filename: &str) -> Arc<PackageJson> {
+        let package_filename = transaction.resolve_symlinks(package_filename);
         let file_key = FileKey::json_file_of_absolute(&package_filename);
 
         transaction
@@ -539,7 +552,7 @@ mod node {
             .map(FlowSmolStr::new)
             .collect();
         let package_json_path = Path::new(package_dir).join("package.json");
-        let package = parse_package(options, transaction, package_json_path.to_str().unwrap());
+        let package = parse_package(transaction, package_json_path.to_str().unwrap());
 
         let source_path = package
             .exports()
@@ -571,7 +584,6 @@ mod node {
     }
 
     fn parse_main(
-        options: &Options,
         transaction: &ModuleResolver<'_>,
         file_options: &FileOptions,
         ts_lib_support: bool,
@@ -579,7 +591,7 @@ mod node {
         package_filename: &str,
         file_exts: &[FlowSmolStr],
     ) -> Option<Dependency> {
-        let package = parse_package(options, transaction, package_filename);
+        let package = parse_package(transaction, package_filename);
         package.main().and_then(|main| {
             let dir = Path::new(package_filename).parent()?.to_str()?;
             let path = files::normalize_path(dir, main.as_str());
@@ -670,9 +682,7 @@ mod node {
         let package = std::cell::OnceCell::new();
         let get_package = || -> Arc<PackageJson> {
             package
-                .get_or_init(|| {
-                    parse_package(options, transaction, package_json_path.to_str().unwrap())
-                })
+                .get_or_init(|| parse_package(transaction, package_json_path.to_str().unwrap()))
                 .clone()
         };
 
@@ -704,7 +714,6 @@ mod node {
         .or_else(|| {
             let package_json = Path::new(&full_package_path).join("package.json");
             parse_main(
-                options,
                 transaction,
                 file_options,
                 ts_lib_support,
@@ -1751,7 +1760,7 @@ pub fn imported_module(
     phantom_acc: Option<&mut PhantomAcc>,
     import_specifier: &FlowImportSpecifier,
 ) -> Result<Dependency, Option<FlowImportSpecifier>> {
-    let resolver = ModuleResolver::new(transaction);
+    let resolver = ModuleResolver::new(options, transaction);
     imported_module_with_resolver(
         options,
         &resolver,
@@ -1820,7 +1829,7 @@ pub fn add_parsed_resolved_requires(
     use flow_heap::resolved_requires::ResolvedModule;
     use flow_heap::resolved_requires::ResolvedRequires;
 
-    let resolver = ModuleResolver::new(transaction);
+    let resolver = ModuleResolver::new(options, transaction);
     let requires = resolver.get_requires_unsafe(file);
 
     let phantom_acc_map = std::collections::BTreeMap::new();
