@@ -258,7 +258,7 @@ pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + 
     pub member_name: Option<Name>,
     pub suggestion: Option<FlowSmolStr>,
     pub reason: ErrorReference<L>,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -274,7 +274,7 @@ pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + 
 )]
 pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -325,7 +325,7 @@ pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq +
 pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub operation_loc: L,
     pub operation_name: FlowSmolStr,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
 
@@ -343,7 +343,7 @@ pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq 
 pub struct EnumInvalidObjectFunctionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub operation_loc: L,
     pub function_name: FlowSmolStr,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
 
@@ -375,7 +375,7 @@ pub struct EnumNotIterableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EnumNotIterableForInData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
     pub enum_name: Option<FlowSmolStr>,
 }
 
@@ -393,7 +393,7 @@ pub struct EnumNotIterableForInData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
 pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub case_test_loc: L,
     pub prev_check_loc: L,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
     pub member_name: FlowSmolStr,
 }
 
@@ -410,7 +410,7 @@ pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq +
 )]
 pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -426,7 +426,7 @@ pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + Partial
 )]
 pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: ErrorReference<L>,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
     pub left_to_check: Vec<FlowSmolStr>,
     pub default_case_loc: Option<L>,
 }
@@ -444,7 +444,7 @@ pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: ErrorReference<L>,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -460,7 +460,7 @@ pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 )]
 pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
     pub enum_name: Option<FlowSmolStr>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
@@ -479,7 +479,7 @@ pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EnumMemberUsedAsTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub reason: ErrorReference<L>,
-    pub enum_: ErrorTypeReferenceWithReasonData<L>,
+    pub enum_: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -745,7 +745,7 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct MatchNotExhaustiveData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<L>>)>,
+    pub examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<L>>)>,
     pub missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
 }
 
@@ -972,7 +972,7 @@ pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     RecordBannedTypeUtil {
         reason_op: VirtualReason<L>,
-        record: ErrorTypeReferenceWithReasonData<L>,
+        record: ErrorTypeReferenceWithLocData<L>,
     },
     RecordInvalidName {
         loc: L,
@@ -1165,8 +1165,8 @@ pub struct EExpectedStringLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EExpectedNumberLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -1182,8 +1182,8 @@ pub struct EExpectedNumberLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EExpectedBooleanLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -1199,8 +1199,8 @@ pub struct EExpectedBooleanLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     serde::Deserialize
 )]
 pub struct EExpectedBigIntLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -1294,16 +1294,17 @@ pub struct EConstructSignatureMissingInSubtypingData<L: Dupe + PartialOrd + Ord 
 )]
 pub struct EPropsExtraAgainstExactObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_names: Vec1<Name>,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
+    pub upper_is_record: bool,
     pub use_op: VirtualUseOp<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EIndexerCheckFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_name: Name,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub indexer: ErrorReference<L>,
     pub indexer_desc: TypeOrTypeDesc<L>,
     pub use_op: VirtualUseOp<L>,
@@ -1395,7 +1396,7 @@ pub struct EPropNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EPrivateLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub object: ErrorTypeReferenceWithReasonData<L>,
+    pub object: ErrorTypeReferenceWithLocData<L>,
     pub prop_name: Name,
     pub use_op: VirtualUseOp<L>,
 }
@@ -1536,10 +1537,10 @@ pub struct EPlatformSpecificImplementationModuleLookupFailedData<
     serde::Deserialize
 )]
 pub struct EComparisonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub r1: ErrorTypeReferenceWithReasonData<L>,
-    pub r2: ErrorTypeReferenceWithReasonData<L>,
+    pub r1: ErrorTypeReferenceWithLocData<L>,
+    pub r2: ErrorTypeReferenceWithLocData<L>,
     pub loc_opt: Option<L>,
-    pub strict_comparison_opt: Option<StrictComparisonInfo<L, ErrorTypeReferenceWithReasonData<L>>>,
+    pub strict_comparison_opt: Option<StrictComparisonInfo<L, ErrorTypeReferenceWithLocData<L>>>,
 }
 
 /// Types rejected by a non-strict equality comparison.
@@ -1597,10 +1598,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ENonStrictEqualityComp
 )]
 pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
     pub lower_arity: (i32, i32),
     pub lower_inexact: bool,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub upper_arity: (i32, i32),
     pub upper_inexact: bool,
     pub unify: bool,
@@ -1620,7 +1621,7 @@ pub struct ETupleArityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
 pub struct ETupleOutOfBoundsData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
     pub loc: L,
-    pub tuple: ErrorTypeReferenceWithReasonData<L>,
+    pub tuple: ErrorTypeReferenceWithLocData<L>,
     pub inexact: bool,
     pub length: i32,
     pub index: FlowSmolStr,
@@ -1695,9 +1696,9 @@ pub struct ETupleElementNotWritableData<L: Dupe + PartialOrd + Ord + PartialEq +
 )]
 pub struct ETupleElementPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub index: i32,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
     pub polarity_lower: Polarity,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub polarity_upper: Polarity,
     pub use_op: VirtualUseOp<L>,
 }
@@ -1732,7 +1733,7 @@ pub struct ETupleRequiredAfterOptionalData<L: Dupe + PartialOrd + Ord + PartialE
 )]
 pub struct ETupleInvalidTypeSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_loc: L,
-    pub argument: ErrorTypeReferenceWithReasonData<L>,
+    pub argument: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -2124,8 +2125,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EInvalidObjectKitData<
     serde::Deserialize
 )]
 pub struct EObjectComputedPropertyAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub object: ErrorTypeReferenceWithReasonData<L>,
-    pub property: ErrorTypeReferenceWithReasonData<L>,
+    pub object: ErrorTypeReferenceWithLocData<L>,
+    pub property: ErrorTypeReferenceWithLocData<L>,
     pub kind: InvalidObjKey,
 }
 
@@ -2344,8 +2345,8 @@ pub struct ESketchyNullLintData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EPrimitiveAsInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub kind: PrimitiveKind,
 }
 
@@ -2361,7 +2362,7 @@ pub struct EPrimitiveAsInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
     serde::Deserialize
 )]
 pub struct ENotAReactComponentData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub component: ErrorTypeReferenceWithReasonData<L>,
+    pub component: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -2378,7 +2379,7 @@ pub struct ENotAReactComponentData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
 )]
 pub struct ECannotSpreadInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_reason: VirtualReason<L>,
-    pub interface: ErrorTypeReferenceWithReasonData<L>,
+    pub interface: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -2590,8 +2591,8 @@ pub struct EImplicitInstantiationUnderconstrainedErrorData<
     serde::Deserialize
 )]
 pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
     pub kind: ClassKind,
 }
@@ -2609,8 +2610,8 @@ pub struct EClassToObjectData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EHookIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub lower_is_hook: bool,
     pub hook_is_annot: bool,
 }
@@ -2628,8 +2629,8 @@ pub struct EHookIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EHookUniqueIncompatibleData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub lower: ErrorTypeReferenceWithReasonData<L>,
-    pub upper: ErrorTypeReferenceWithReasonData<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
 }
 
 #[derive(
@@ -3069,47 +3070,7 @@ pub struct ErrorTypeReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub type_desc: TypeOrTypeDesc<L>,
 }
 
-/// A type-backed error reference that preserves its full reason as error identity.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct ErrorTypeReferenceWithReasonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
-    pub reference_loc: L,
-    pub type_desc: TypeOrTypeDesc<L>,
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq
-    for ErrorTypeReferenceWithReasonData<L>
-{
-    fn eq(&self, other: &Self) -> bool {
-        self.reason == other.reason
-    }
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for ErrorTypeReferenceWithReasonData<L> {}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
-    for ErrorTypeReferenceWithReasonData<L>
-{
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.reason.hash(state);
-    }
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd
-    for ErrorTypeReferenceWithReasonData<L>
-{
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ErrorTypeReferenceWithReasonData<L> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.reason.cmp(&other.reason)
-    }
-}
-
-/// A type-backed error reference with a distinct primary location.
+/// A type-backed error reference whose explicit locations determine error identity.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ErrorTypeReferenceWithLocData<L: Dupe> {
     pub loc: L,
@@ -3127,16 +3088,11 @@ impl<L: Dupe> ErrorTypeReferenceWithLocData<L> {
             type_desc,
         }
     }
-
-    pub fn reason_ref_loc(&self) -> L {
-        self.reference_loc.dupe()
-    }
 }
 
 impl<L: Dupe + PartialEq> PartialEq for ErrorTypeReferenceWithLocData<L> {
     fn eq(&self, other: &Self) -> bool {
-        self.type_desc == other.type_desc
-            && self.loc == other.loc
+        self.loc == other.loc
             && self.definition_loc == other.definition_loc
             && self.reference_loc == other.reference_loc
     }
@@ -3146,7 +3102,6 @@ impl<L: Dupe + Eq> Eq for ErrorTypeReferenceWithLocData<L> {}
 
 impl<L: Dupe + Hash> Hash for ErrorTypeReferenceWithLocData<L> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.type_desc.hash(state);
         self.loc.hash(state);
         self.definition_loc.hash(state);
         self.reference_loc.hash(state);
@@ -3155,19 +3110,18 @@ impl<L: Dupe + Hash> Hash for ErrorTypeReferenceWithLocData<L> {
 
 impl<L: Dupe + PartialOrd> PartialOrd for ErrorTypeReferenceWithLocData<L> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.type_desc
-            .partial_cmp(&other.type_desc)
+        self.loc
+            .partial_cmp(&other.loc)
             .and_then(|ordering| match ordering {
-                std::cmp::Ordering::Equal => {
-                    self.loc
-                        .partial_cmp(&other.loc)
-                        .and_then(|ordering| match ordering {
-                            std::cmp::Ordering::Equal => {
-                                self.definition_loc.partial_cmp(&other.definition_loc)
-                            }
-                            _ => Some(ordering),
-                        })
-                }
+                std::cmp::Ordering::Equal => self
+                    .definition_loc
+                    .partial_cmp(&other.definition_loc)
+                    .and_then(|ordering| match ordering {
+                        std::cmp::Ordering::Equal => {
+                            self.reference_loc.partial_cmp(&other.reference_loc)
+                        }
+                        _ => Some(ordering),
+                    }),
                 _ => Some(ordering),
             })
     }
@@ -3175,9 +3129,8 @@ impl<L: Dupe + PartialOrd> PartialOrd for ErrorTypeReferenceWithLocData<L> {
 
 impl<L: Dupe + Ord> Ord for ErrorTypeReferenceWithLocData<L> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.type_desc
-            .cmp(&other.type_desc)
-            .then_with(|| self.loc.cmp(&other.loc))
+        self.loc
+            .cmp(&other.loc)
             .then_with(|| self.definition_loc.cmp(&other.definition_loc))
             .then_with(|| self.reference_loc.cmp(&other.reference_loc))
     }
@@ -3396,8 +3349,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ENonLitArrayToTuple(
         (
-            ErrorTypeReferenceWithReasonData<L>,
-            ErrorTypeReferenceWithReasonData<L>,
+            ErrorTypeReferenceWithLocData<L>,
+            ErrorTypeReferenceWithLocData<L>,
         ),
         VirtualUseOp<L>,
     ),
@@ -3435,8 +3388,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EFunctionIncompatibleWithIndexer(
         (
-            ErrorTypeReferenceWithReasonData<L>,
-            ErrorTypeReferenceWithReasonData<L>,
+            ErrorTypeReferenceWithLocData<L>,
+            ErrorTypeReferenceWithLocData<L>,
         ),
         VirtualUseOp<L>,
     ),
@@ -3475,8 +3428,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETypeGuardFuncIncompatibility {
         use_op: VirtualUseOp<L>,
-        lower: ErrorTypeReferenceWithReasonData<L>,
-        upper: ErrorTypeReferenceWithReasonData<L>,
+        lower: ErrorTypeReferenceWithLocData<L>,
+        upper: ErrorTypeReferenceWithLocData<L>,
     },
 
     ETypeGuardInvalidParameter(Box<ETypeGuardInvalidParameterData<L>>),
@@ -3634,7 +3587,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ESketchyNullLint(Box<ESketchyNullLintData<L>>),
 
-    ESketchyNumberLint(SketchyNumberKind, ErrorTypeReferenceWithReasonData<L>),
+    ESketchyNumberLint(SketchyNumberKind, ErrorTypeReferenceWithLocData<L>),
 
     EInvalidPrototype(Box<EInvalidPrototypeData<L>>),
 
@@ -3780,7 +3733,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EUnionOptimizationOnNonUnion(Box<EUnionOptimizationOnNonUnionData<L>>),
 
     ECannotCallReactComponent {
-        component: ErrorTypeReferenceWithReasonData<L>,
+        component: ErrorTypeReferenceWithLocData<L>,
     },
 
     EMatchError(MatchErrorKind<L>),
@@ -4413,9 +4366,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
         };
         let map_error_type_ref_with_reason =
-            |r: ErrorTypeReferenceWithReasonData<L>| -> ErrorTypeReferenceWithReasonData<M> {
-                ErrorTypeReferenceWithReasonData {
-                    reason: map_reason(r.reason),
+            |r: ErrorTypeReferenceWithLocData<L>| -> ErrorTypeReferenceWithLocData<M> {
+                ErrorTypeReferenceWithLocData {
+                    loc: f(r.loc),
+                    definition_loc: f(r.definition_loc),
                     reference_loc: f(r.reference_loc),
                     type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), r.type_desc),
                 }
@@ -4643,11 +4597,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prop_names,
                 lower,
                 upper,
+                upper_is_record,
                 use_op,
             }) => EPropsExtraAgainstExactObject(Box::new(EPropsExtraAgainstExactObjectData {
                 prop_names,
                 lower: map_error_type_ref_with_reason(lower),
                 upper: map_error_type_ref_with_reason(upper),
+                upper_is_record,
                 use_op: map_use_op(use_op),
             })),
 
@@ -6667,9 +6623,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
         };
         let map_error_type_ref_with_reason =
-            |r: ErrorTypeReferenceWithReasonData<L>| -> ErrorTypeReferenceWithReasonData<L> {
-                ErrorTypeReferenceWithReasonData {
-                    reason: r.reason,
+            |r: ErrorTypeReferenceWithLocData<L>| -> ErrorTypeReferenceWithLocData<L> {
+                ErrorTypeReferenceWithLocData {
+                    loc: r.loc,
+                    definition_loc: r.definition_loc,
                     reference_loc: r.reference_loc,
                     type_desc: f(r.type_desc),
                 }
@@ -6807,11 +6764,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prop_names,
                 lower,
                 upper,
+                upper_is_record,
                 use_op,
             }) => EPropsExtraAgainstExactObject(Box::new(EPropsExtraAgainstExactObjectData {
                 prop_names,
                 lower: map_error_type_ref_with_reason(lower),
                 upper: map_error_type_ref_with_reason(upper),
+                upper_is_record,
                 use_op: map_use_op(&f, use_op),
             })),
 
@@ -7691,7 +7650,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             }
 
             Self::EComparison(box EComparisonData { r1, loc_opt, .. }) => {
-                loc_opt.as_ref().or(Some(&r1.reason.loc)).map(|l| l.dupe())
+                loc_opt.as_ref().or(Some(&r1.loc)).map(|l| l.dupe())
             }
 
             Self::EUnsupportedSetProto(loc)
@@ -7711,7 +7670,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EMissingLocalAnnotation { reason, .. } => Some(reason.loc.dupe()),
 
-            Self::ESketchyNumberLint(_, value) => Some(value.reason.loc.dupe()),
+            Self::ESketchyNumberLint(_, value) => Some(value.loc.dupe()),
 
             Self::EInvalidExtends(box (loc, _)) => Some(loc.dupe()),
 
@@ -7725,7 +7684,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             Self::EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
                 property,
                 ..
-            }) => Some(property.reason.loc().dupe()),
+            }) => Some(property.loc.dupe()),
 
             Self::EUnsupportedExact(box EUnsupportedExactData { value_loc, .. }) => {
                 Some(value_loc.dupe())
@@ -7792,11 +7751,12 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EEnumError(EnumErrorKind::EnumNotIterableForIn(
                 box EnumNotIterableForInData {
-                    enum_: ErrorTypeReferenceWithReasonData { reason, .. },
+                    enum_: ErrorTypeReferenceWithLocData { loc, .. },
                     ..
                 },
-            ))
-            | Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
+            )) => Some(loc.dupe()),
+
+            Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
                 reason_tuple: reason,
                 ..
             }) => Some(reason.loc.dupe()),
@@ -8076,7 +8036,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EEmptyArrayNoProvider { loc }
             | Self::EUnusedPromise { loc, .. } => Some(loc.dupe()),
 
-            Self::ECannotCallReactComponent { component } => Some(component.reason.loc.dupe()),
+            Self::ECannotCallReactComponent { component } => Some(component.loc.dupe()),
 
             Self::EMatchError(e) => match e {
                 MatchErrorKind::MatchNotExhaustive(box MatchNotExhaustiveData { loc, .. })
@@ -8119,9 +8079,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             },
 
             Self::ERecordError(e) => match e {
-                RecordErrorKind::RecordBannedTypeUtil { record, .. } => {
-                    Some(record.reason.loc.dupe())
-                }
+                RecordErrorKind::RecordBannedTypeUtil { record, .. } => Some(record.loc.dupe()),
                 RecordErrorKind::RecordInvalidName { loc, .. }
                 | RecordErrorKind::RecordInvalidNew { loc, .. }
                 | RecordErrorKind::RecordDeclarationInvalidSyntax { loc, .. } => Some(loc.dupe()),
@@ -8827,9 +8785,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
                 EIncompatibleTypesWithUseOpData {
-                    lower_loc: lower.reason.loc().dupe(),
+                    lower_loc: lower.loc.dupe(),
                     lower_def_loc: lower.reference_loc,
-                    upper_loc: upper.reason.loc().dupe(),
+                    upper_loc: upper.loc.dupe(),
                     upper_def_loc: upper.reference_loc,
                     lower_desc: lower.type_desc,
                     upper_desc: upper.type_desc,
@@ -8847,9 +8805,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
                 EIncompatibleTypesWithUseOpData {
-                    lower_loc: lower.reason.loc().dupe(),
+                    lower_loc: lower.loc.dupe(),
                     lower_def_loc: lower.reference_loc,
-                    upper_loc: upper.reason.loc().dupe(),
+                    upper_loc: upper.loc.dupe(),
                     upper_def_loc: upper.reference_loc,
                     lower_desc: lower.type_desc,
                     upper_desc: upper.type_desc,
@@ -8867,9 +8825,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             }) => ErrorMessage::EIncompatibleTypesWithUseOp(Box::new(
                 EIncompatibleTypesWithUseOpData {
-                    lower_loc: lower.reason.loc().dupe(),
+                    lower_loc: lower.loc.dupe(),
                     lower_def_loc: lower.reference_loc,
-                    upper_loc: upper.reason.loc().dupe(),
+                    upper_loc: upper.loc.dupe(),
                     upper_def_loc: upper.reference_loc,
                     lower_desc: lower.type_desc,
                     upper_desc: upper.type_desc,
@@ -8945,11 +8903,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     prop_names,
                     lower,
                     upper,
+                    upper_is_record,
                     use_op,
                 },
             ) => {
-                let loc = lower.reason.loc().dupe();
-                let upper_is_record = flow_common::reason::is_record_reason(&upper.reason);
+                let loc = lower.loc.dupe();
                 PropsExtraAgainstExactObject(Box::new(PropsExtraAgainstExactObjectData {
                     props: Vec1::try_from_vec(
                         prop_names.iter().map(|n| n.display_smol_str()).collect(),
@@ -10176,7 +10134,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ..
             }) => {
                 let to_message_type_ref =
-                    |type_ref: ErrorTypeReferenceWithReasonData<L>| MessageTypeReferenceData {
+                    |type_ref: ErrorTypeReferenceWithLocData<L>| MessageTypeReferenceData {
                         loc: type_ref.reference_loc,
                         desc: expect_type_desc(type_ref.type_desc),
                     };
@@ -10218,7 +10176,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_inexact,
                 unify,
             }) => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleTupleArity(Box::new(
@@ -10268,7 +10226,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ENonLitArrayToTuple((lower, upper), use_op) => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleNonLiteralArrayToTuple {
@@ -10382,7 +10340,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op,
                 },
             ) => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageTuplePolarityMismatch {
@@ -10421,7 +10379,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EFunctionIncompatibleWithIndexer((lower, upper), use_op) => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleWithIndexed {
@@ -10461,7 +10419,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             } => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleNonTypeGuardToTypeGuard {
@@ -10929,7 +10887,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 component,
                 use_op,
             }) => {
-                let loc = component.reason.loc.dupe();
+                let loc = component.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageLowerIsNotReactComponent(Box::new(
@@ -11023,7 +10981,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 kind,
             }) => {
-                let loc = lower.reason.loc().dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotUsePrimitiveAsInterface {
@@ -11242,7 +11200,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 kind,
             }) => {
-                let loc = lower.reason.loc().dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleClassToObject {
@@ -11268,7 +11226,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower_is_hook,
                 hook_is_annot,
             }) => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleReactHooksWithNonReactHook {
@@ -11295,7 +11253,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             }) => {
-                let loc = lower.reason.loc.dupe();
+                let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleReactHooksDueToUniqueness {

@@ -92,6 +92,7 @@ use flow_typing_errors::intermediate_error_types::InvalidRenderTypeKind;
 use flow_typing_errors::intermediate_error_types::VarianceSigilParent;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
+use flow_typing_type::type_util::reason_of_t;
 use lsp_types::CodeAction;
 use lsp_types::CodeActionKind;
 use lsp_types::CodeActionOrCommand;
@@ -1408,10 +1409,24 @@ pub fn ast_transforms_of_error(
             }
         }
         ErrorMessage::EClassToObject(box EClassToObjectData { lower, upper, .. }) => {
-            let error_loc = lower.reason.loc().dupe();
+            let error_loc = lower.loc.dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
-                let obj_loc = upper.reason.def_loc().dupe();
-                let original = flow_common::reason::string_of_desc::<Loc>(&upper.reason.desc);
+                let obj_loc = upper.definition_loc.dupe();
+                let original = match &upper.type_desc {
+                    TypeOrTypeDescT::Type(t) => {
+                        flow_common::reason::string_of_desc(&reason_of_t(t).desc)
+                    }
+                    TypeOrTypeDescT::TypeDesc(Err(desc)) => {
+                        flow_common::reason::string_of_desc::<Loc>(desc)
+                    }
+                    TypeOrTypeDescT::TypeDesc(Ok(ty)) if matches!(ty.as_ref(), Ty::Obj(_)) => {
+                        "object type".to_string()
+                    }
+                    TypeOrTypeDescT::TypeDesc(Ok(ty)) => format!(
+                        "`{}`",
+                        ty_printer::string_of_t_single_line(ty, &PrinterOptions::default())
+                    ),
+                };
                 let title = format!("Rewrite {} as an interface", original);
                 vec![AstTransformOfError {
                     title,

@@ -60,7 +60,7 @@ use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLook
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::ESketchyNullLintData;
 use flow_typing_errors::error_message::ErrorMessage;
-use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
@@ -976,10 +976,10 @@ fn detect_constant_conditions<'cx>(cx: &Context<'cx>) -> Result<(), JobError> {
 }
 
 struct StrictComparisonResult {
-    left: ErrorTypeReferenceWithReasonData<ALoc>,
-    right: ErrorTypeReferenceWithReasonData<ALoc>,
+    left: ErrorTypeReferenceWithLocData<ALoc>,
+    right: ErrorTypeReferenceWithLocData<ALoc>,
     primary_loc: ALoc,
-    info: StrictComparisonInfo<ALoc, ErrorTypeReferenceWithReasonData<ALoc>>,
+    info: StrictComparisonInfo<ALoc, ErrorTypeReferenceWithLocData<ALoc>>,
 }
 
 fn check_strict_comparison<'cx>(

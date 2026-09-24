@@ -155,7 +155,7 @@ use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
 use flow_typing_errors::error_message::ErrorMessage;
-use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
 use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
@@ -311,6 +311,13 @@ pub fn dump_reason(cx: &Context, reason: &Reason) -> String {
     }
 }
 
+fn dump_error_type_reference(
+    cx: &Context,
+    reference: &ErrorTypeReferenceWithLocData<ALoc>,
+) -> String {
+    dump_loc_type_desc(cx, &reference.loc, &reference.type_desc)
+}
+
 fn dump_enum_reference(enum_: &EnumReferenceData<ALoc>) -> String {
     format!(
         "{} {:?}",
@@ -319,6 +326,18 @@ fn dump_enum_reference(enum_: &EnumReferenceData<ALoc>) -> String {
             name: Some(enum_.name.clone()),
         }
     )
+}
+
+fn dump_loc_type_desc(cx: &Context, loc: &ALoc, type_desc: &TypeOrTypeDescT<ALoc>) -> String {
+    match type_desc {
+        TypeOrTypeDescT::Type(t) => {
+            dump_reason(cx, &Reason::new(reason_of_t(t).desc.clone(), loc.clone()))
+        }
+        TypeOrTypeDescT::TypeDesc(Err(desc)) => {
+            format!("{} {desc:?}", string_of_aloc(None, loc))
+        }
+        TypeOrTypeDescT::TypeDesc(Ok(desc)) => format!("{desc:?} at {loc:?}"),
+    }
 }
 
 fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> String {
@@ -2089,7 +2108,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             use_op,
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -2106,7 +2125,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             use_op,
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -2123,7 +2142,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             use_op,
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -2245,7 +2264,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -2263,10 +2282,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             lower,
             upper,
             use_op,
+            ..
         }) => {
             let names: Vec<String> = prop_names.iter().map(|n| n.to_string()).collect();
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -3107,7 +3127,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             kind,
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -3471,7 +3491,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             kind: _,
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -3490,7 +3510,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "ECannotSpreadInterface ({}) ({}) ({})",
                 dump_reason(cx, spread_reason),
-                dump_reason(cx, &interface.reason),
+                dump_error_type_reference(cx, interface),
                 string_of_use_op(use_op)
             )
         }
@@ -3606,14 +3626,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     member_str,
                     suggestion_str,
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumModification(box EnumModificationData { loc, enum_ }) => {
                 format!(
                     "EEnumError (EnumModification ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
@@ -3637,7 +3657,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumInvalidObjectUtilType ({} RType({operation_name:?})) ({}))",
                     string_of_aloc(None, operation_loc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
@@ -3649,7 +3669,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumInvalidObjectFunction ({} RIdentifier({function_name:?})) ({}))",
                     string_of_aloc(None, operation_loc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumNotIterable(box EnumNotIterableData { enum_, .. }) => {
@@ -3666,7 +3686,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData { enum_, .. }) => {
                 format!(
                     "EEnumError (EnumNotIterableForIn ({}))",
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
@@ -3679,7 +3699,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     "EEnumError (EnumMemberAlreadyChecked ({}) ({}) ({}) ({}))",
                     string_of_aloc(None, case_test_loc),
                     string_of_aloc(None, prev_check_loc),
-                    dump_reason(cx, &enum_.reason),
+                    dump_error_type_reference(cx, enum_),
                     member_name
                 )
             }
@@ -3690,7 +3710,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumAllMembersAlreadyChecked ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {
@@ -3706,7 +3726,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumNotAllChecked ({}) ({}) ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, &enum_.reason),
+                    dump_error_type_reference(cx, enum_),
                     left_to_check.join(", "),
                     default_str
                 )
@@ -3718,7 +3738,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumUnknownNotChecked ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumInvalidCheck(box EnumInvalidCheckData {
@@ -3735,7 +3755,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumInvalidCheck ({}) ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, &enum_.reason),
+                    dump_error_type_reference(cx, enum_),
                     member_str,
                     from_match
                 )
@@ -3744,7 +3764,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumMemberUsedAsType ({}) ({}))",
                     format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, &enum_.reason)
+                    dump_error_type_reference(cx, enum_)
                 )
             }
             EnumErrorKind::EnumIncompatible(box EIncompatibleTypesWithUseOpData {
@@ -4003,7 +4023,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             ..
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -4020,7 +4040,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             upper,
         }) => {
             let dump_type =
-                |type_ref: &ErrorTypeReferenceWithReasonData<ALoc>| match &type_ref.type_desc {
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
                     TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                     TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
                 };
@@ -4401,7 +4421,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "ERecordBannedTypeUtil ({}) ({})",
                     dump_reason(cx, reason_op),
-                    dump_reason(cx, &record.reason)
+                    dump_error_type_reference(cx, record)
                 )
             }
             RecordErrorKind::RecordInvalidName { name, loc } => {

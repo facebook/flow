@@ -1798,6 +1798,7 @@ fn flow_obj_to_obj<'cx>(
                             &u_t,
                             ureason.dupe(),
                         ),
+                        upper_is_record: flow_common::reason::is_record_reason(ureason),
                         use_op: use_op.dupe(),
                     },
                 )),

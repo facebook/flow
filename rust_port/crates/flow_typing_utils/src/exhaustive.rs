@@ -28,7 +28,7 @@ use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumInvalidCheckData;
 use flow_typing_errors::error_message::ErrorMessage;
-use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidIdentOrMemberPatternData;
 use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
@@ -2336,8 +2336,7 @@ pub fn analyze<'cx>(
             enum_unknown_members,
             inexhaustible,
         } = &value_left;
-        let mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<ALoc>>)> =
-            Vec::new();
+        let mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<ALoc>>)> = Vec::new();
         let mut asts: Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)> = Vec::new();
         for leaf in leafs.iter() {
             let leaf::Leaf(reason, leaf_ctor) = leaf;
@@ -2446,10 +2445,10 @@ pub fn analyze<'cx>(
         }
         let wildcard_example =
             |reason: Reason,
-             mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<ALoc>>)>,
+             mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<ALoc>>)>,
              mut asts: Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)>|
              -> (
-                Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithReasonData<ALoc>>)>,
+                Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<ALoc>>)>,
                 Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)>,
             ) {
                 let pattern = match_pattern_ir::wildcard_pattern(reason);

@@ -42,7 +42,7 @@ use flow_typing_errors::error_message::ETupleOutOfBoundsData;
 use flow_typing_errors::error_message::ETupleRequiredAfterOptionalData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceData;
-use flow_typing_errors::error_message::ErrorTypeReferenceWithReasonData;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::intermediate_error_types::Explanation;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -1723,27 +1723,27 @@ pub fn type_reference_at_loc_for_error(t: &Type, loc: ALoc) -> ErrorTypeReferenc
 pub fn type_reference_with_reason_for_error(
     t: &Type,
     reason: Reason,
-) -> ErrorTypeReferenceWithReasonData<ALoc> {
+) -> ErrorTypeReferenceWithLocData<ALoc> {
     use flow_typing_type::type_util;
 
-    ErrorTypeReferenceWithReasonData {
+    ErrorTypeReferenceWithLocData::new(
         reason,
-        reference_loc: type_util::ref_loc_of_t(t).dupe(),
-        type_desc: type_or_type_desc_for_error(t),
-    }
+        type_util::ref_loc_of_t(t).dupe(),
+        type_or_type_desc_for_error(t),
+    )
 }
 
 pub fn type_reference_with_reason_or_desc_for_error(
     t: Option<&Type>,
     reason: Reason,
-) -> ErrorTypeReferenceWithReasonData<ALoc> {
+) -> ErrorTypeReferenceWithLocData<ALoc> {
     match t {
         Some(t) => type_reference_with_reason_for_error(t, reason),
-        None => ErrorTypeReferenceWithReasonData {
-            reference_loc: reason.loc().dupe(),
-            type_desc: TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone())),
-            reason,
-        },
+        None => ErrorTypeReferenceWithLocData::new(
+            reason.dupe(),
+            reason.loc().dupe(),
+            TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone())),
+        ),
     }
 }
 
