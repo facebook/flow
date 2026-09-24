@@ -87,6 +87,7 @@ use flow_typing_errors::error_message::ENonStrictEqualityComparisonData;
 use flow_typing_errors::error_message::ENotAReactComponentData;
 use flow_typing_errors::error_message::EObjectComputedPropertyAccessData;
 use flow_typing_errors::error_message::EObjectComputedPropertyPotentialOverwriteData;
+use flow_typing_errors::error_message::EObjectThisSuperReferenceData;
 use flow_typing_errors::error_message::EOverrideData;
 use flow_typing_errors::error_message::EPlatformSpecificImplementationModuleLookupFailedData;
 use flow_typing_errors::error_message::EPolarityMismatchData;
@@ -2754,8 +2755,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EInvalidInfer(loc) => {
             format!("EInvalidInfer ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EInvalidExtends(reason) => {
-            format!("EInvalidExtends ({})", dump_reason(cx, reason))
+        ErrorMessage::EInvalidExtends(box (loc, expression)) => {
+            format!(
+                "EInvalidExtends ({} RCode({expression:?}))",
+                string_of_aloc(None, loc)
+            )
         }
         ErrorMessage::EExportsAnnot(loc) => {
             format!("EExportsAnnot ({})", string_of_aloc(None, loc))
@@ -2924,11 +2928,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc)
             )
         }
-        ErrorMessage::EBadDefaultImportAccess(box (loc, reason)) => {
+        ErrorMessage::EBadDefaultImportAccess(box (loc, import_star_loc)) => {
             format!(
                 "EBadDefaultImportAccess(Box::new(({}, {})))",
                 string_of_aloc(None, loc),
-                dump_reason(cx, reason)
+                string_of_aloc(None, import_star_loc)
             )
         }
         ErrorMessage::EBadDefaultImportDestructuring(loc) => {
@@ -2937,32 +2941,34 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc)
             )
         }
-        ErrorMessage::EInvalidImportStarUse(box (loc, reason)) => {
+        ErrorMessage::EInvalidImportStarUse(box (loc, import_star_loc)) => {
             format!(
                 "EInvalidImportStarUse(Box::new(({}, {})))",
                 string_of_aloc(None, loc),
-                dump_reason(cx, reason)
+                string_of_aloc(None, import_star_loc)
             )
         }
-        ErrorMessage::ENonConstVarExport(box (loc, reason)) => {
-            let reason_str = match reason {
-                Some(r) => dump_reason(cx, r),
+        ErrorMessage::ENonConstVarExport(box (loc, declaration)) => {
+            let declaration = match declaration {
+                Some((declaration_loc, name)) => {
+                    format!("{} {name}", string_of_aloc(None, declaration_loc))
+                }
                 None => "None".to_string(),
             };
             format!(
                 "ENonConstVarExport(Box::new(({}, {})))",
                 string_of_aloc(None, loc),
-                reason_str
+                declaration
             )
         }
         ErrorMessage::EThisInExportedFunction(loc) => {
             format!("EThisInExportedFunction ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EMixedImportAndRequire(box (loc, reason)) => {
+        ErrorMessage::EMixedImportAndRequire(box (loc, import_loc)) => {
             format!(
                 "EMixedImportAndRequire(Box::new(({}, {})))",
                 string_of_aloc(None, loc),
-                dump_reason(cx, reason)
+                string_of_aloc(None, import_loc)
             )
         }
         ErrorMessage::EUnsupportedVarianceAnnotation(box (loc, s)) => {
@@ -3882,24 +3888,32 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         },
         ErrorMessage::EAssignConstLikeBinding(box EAssignConstLikeBindingData {
             loc,
-            definition,
+            definition_loc,
+            name,
             binding_kind,
         }) => {
             format!(
-                "EAssignConstLikeBinding ({}) ({}) ({})",
+                "EAssignConstLikeBinding ({}) (identifier `{}` ({}) ) ({})",
                 string_of_aloc(None, loc),
-                dump_reason(cx, definition),
+                name,
+                string_of_aloc(None, definition_loc),
                 binding_kind.as_str()
             )
         }
         ErrorMessage::EMalformedCode(loc) => {
             format!("EMalformedCode ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EObjectThisSuperReference(box (loc, r, _)) => {
+        ErrorMessage::EObjectThisSuperReference(box EObjectThisSuperReferenceData {
+            loc,
+            method_loc,
+            method_name,
+            kind: _,
+        }) => {
             format!(
-                "EObjectThisSuperReference(Box::new(({}, {}, _)))",
+                "EObjectThisSuperReference(Box::new(({}, {}, {:?}, _)))",
                 string_of_aloc(None, loc),
-                dump_reason(cx, r)
+                string_of_aloc(None, method_loc),
+                method_name
             )
         }
         ErrorMessage::EComponentThisReference(box EComponentThisReferenceData {
@@ -4411,10 +4425,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 dump_reason(cx, lower)
             )
         }
-        ErrorMessage::ETypeParamConstInvalidPosition(reason) => {
+        ErrorMessage::ETypeParamConstInvalidPosition(data) => {
             format!(
-                "ETypeParamConstInvalidPosition ({})",
-                dump_reason(cx, reason)
+                "ETypeParamConstInvalidPosition ({} {})",
+                string_of_aloc(None, &data.0),
+                data.1
             )
         }
         ErrorMessage::EConstantCondition(box EConstantConditionData {

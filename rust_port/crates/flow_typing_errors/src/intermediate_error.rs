@@ -6093,7 +6093,7 @@ where
                 text("Cannot reassign "),
                 text(binding_kind.as_str()),
                 text(" binding "),
-                ref_(definition),
+                ref_of_ty_or_desc(&definition.loc, &definition.desc),
                 text("."),
             ]),
             MessageCannotReassignEnum(x) => {
@@ -6305,7 +6305,7 @@ where
             ]),
             MessageCannotUseAsSuperClass(reason) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_(reason),
+                ref_of_ty_or_desc(&reason.loc, &reason.desc),
                 text(" as a superclass. Only variables and member expressions may be extended"),
             ]),
             MessageCannotUseBeforeDeclaration(x) => friendly::Message(vec![
@@ -6345,7 +6345,7 @@ where
                 text(" may only be used as part of a legal top level export statement"),
             ]),
             MessageCannotUseImportStar(import_star_reason) => friendly::Message(vec![
-                ref_(import_star_reason),
+                ref_of_ty_or_desc(&import_star_reason.loc, &import_star_reason.desc),
                 text(" object can only be used by accessing one of its named exports"),
                 text(" with a member access or destructuring."),
             ]),
@@ -6372,7 +6372,7 @@ where
             ]),
             MessageCannotUseMixedImportAndRequire(import_reason) => friendly::Message(vec![
                 text("Cannot use a mix of non-type toplevel "),
-                ref_(import_reason),
+                ref_of_ty_or_desc(&import_reason.loc, &import_reason.desc),
                 text(" and "),
                 code("require"),
                 text(" statements in the same file."),
@@ -7603,7 +7603,7 @@ where
             ]),
             MessageInvalidImportStarUse(import_star_reason) => friendly::Message(vec![
                 text("The default export of a module cannot be accessed from an "),
-                ref_(import_star_reason),
+                ref_of_ty_or_desc(&import_star_reason.loc, &import_star_reason.desc),
                 text(" object. To use the default export you must import it directly."),
             ]),
             MessageInvalidMappedTypeInInterfaceOrDeclaredClass => friendly::Message(vec![text(
@@ -8058,7 +8058,10 @@ where
             }
             MessageNonConstVarExport(decl_reason) => {
                 let reason_part = match decl_reason {
-                    Some(reason) => vec![text("variable "), ref_(reason)],
+                    Some(reason) => vec![
+                        text("variable "),
+                        ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                    ],
                     None => vec![text("variable")],
                 };
                 let mut features = vec![text("Cannot export ")];
@@ -8546,7 +8549,7 @@ where
                     text("Cannot reference "),
                     code(v),
                     text(" from within "),
-                    ref_(reason),
+                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
                     text(". For safety, Flow restricts access to "),
                     code(v),
                     text(" inside object methods since these methods may be unbound and rebound."),
@@ -10118,7 +10121,7 @@ where
             }
             MessageTypeParamConstInvalidPosition(reason) => friendly::Message(vec![
                 text("Type parameter "),
-                ref_(reason),
+                ref_of_ty_or_desc(&reason.loc, &reason.desc),
                 text(" cannot be declared as 'const'. "),
                 text("'const' modifier can only appear on a function or method type parameter."),
             ]),

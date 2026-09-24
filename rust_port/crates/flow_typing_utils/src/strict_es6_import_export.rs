@@ -12,9 +12,6 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocMap;
 use flow_analysis::scope_api::ScopeInfo;
 use flow_analysis::scope_builder;
-use flow_common::reason::VirtualReason;
-use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::expression::ExpressionInner;
@@ -300,26 +297,15 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         flow_js::add_output_non_speculating(self.cx, err)
     }
 
-    fn import_star_reason(
-        &self,
-        import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
-    ) -> VirtualReason<ALoc> {
-        let (import_star_loc, _) = import_star;
-        mk_reason(
-            VirtualReasonDesc::RCode("import *".into()),
-            import_star_loc.dupe(),
-        )
-    }
-
     fn add_bad_default_import_access_error(
         &self,
         loc: ALoc,
         import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
     ) {
-        let import_star_reason = self.import_star_reason(import_star);
+        let (import_star_loc, _) = import_star;
         self.add_error(ErrorMessage::EBadDefaultImportAccess(Box::new((
             loc,
-            import_star_reason,
+            import_star_loc.dupe(),
         ))))
     }
 
@@ -332,10 +318,10 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         loc: ALoc,
         import_star: &(ALoc, ast::Identifier<ALoc, ALoc>),
     ) {
-        let import_star_reason = self.import_star_reason(import_star);
+        let (import_star_loc, _) = import_star;
         self.add_error(ErrorMessage::EInvalidImportStarUse(Box::new((
             loc,
-            import_star_reason,
+            import_star_loc.dupe(),
         ))))
     }
 
@@ -344,12 +330,7 @@ impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
         loc: ALoc,
         decl_info: Option<(ALoc, flow_data_structure_wrapper::smol_str::FlowSmolStr)>,
     ) {
-        let decl_reason = decl_info
-            .map(|(decl_loc, name)| mk_reason(VirtualReasonDesc::RIdentifier(name), decl_loc));
-        self.add_error(ErrorMessage::ENonConstVarExport(Box::new((
-            loc,
-            decl_reason,
-        ))))
+        self.add_error(ErrorMessage::ENonConstVarExport(Box::new((loc, decl_info))))
     }
 
     fn add_this_in_exported_function_error(&self, loc: ALoc) {
@@ -814,19 +795,13 @@ impl<'cx, 'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ImportExport
 
 fn detect_mixed_import_and_require_error<'cx>(cx: &Context<'cx>, declarations: &Declarations) {
     match (&declarations.first_import, &declarations.first_require) {
-        (Some(first_import_loc), Some(first_require_loc)) => {
-            let import_reason = mk_reason(
-                VirtualReasonDesc::RCode("import".into()),
+        (Some(first_import_loc), Some(first_require_loc)) => flow_js::add_output_non_speculating(
+            cx,
+            ErrorMessage::EMixedImportAndRequire(Box::new((
+                first_require_loc.dupe(),
                 first_import_loc.dupe(),
-            );
-            flow_js::add_output_non_speculating(
-                cx,
-                ErrorMessage::EMixedImportAndRequire(Box::new((
-                    first_require_loc.dupe(),
-                    import_reason,
-                ))),
-            )
-        }
+            ))),
+        ),
         _ => (),
     }
 }

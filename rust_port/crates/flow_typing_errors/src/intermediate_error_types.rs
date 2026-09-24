@@ -1879,7 +1879,7 @@ pub enum Message<L: Dupe> {
     MessageCannotReassignConstant(VirtualReason<L>),
 
     MessageCannotReassignConstantLikeBinding {
-        definition: VirtualReason<L>,
+        definition: MessageTypeReferenceData<L>,
         binding_kind: AssignedConstLikeBindingType,
     },
 
@@ -1922,7 +1922,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotUseAsConstructor(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseAsPrototype(Box<MessageTypeReferenceData<L>>),
-    MessageCannotUseAsSuperClass(VirtualReason<L>),
+    MessageCannotUseAsSuperClass(MessageTypeReferenceData<L>),
     MessageCannotUseBeforeDeclaration(VirtualReason<L>),
 
     MessageCannotUseDefaultImportWithDestrucuturing,
@@ -1931,11 +1931,11 @@ pub enum Message<L: Dupe> {
     MessageCannotUseEnumMemberUsedAsType(Box<MessageCannotUseEnumMemberUsedAsTypeData<L>>),
 
     MessageCannotUseExportInNonLegalToplevelContext(FlowSmolStr),
-    MessageCannotUseImportStar(VirtualReason<L>),
+    MessageCannotUseImportStar(MessageTypeReferenceData<L>),
     MessageCannotUseInOperatorDueToBadLHS(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseInOperatorDueToBadRHS(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseInstanceOfOperatorDueToBadRHS(Box<MessageTypeReferenceData<L>>),
-    MessageCannotUseMixedImportAndRequire(VirtualReason<L>),
+    MessageCannotUseMixedImportAndRequire(MessageTypeReferenceData<L>),
 
     MessageCannotUseNonPolymorphicTypeWithTypeArgs {
         is_new: bool,
@@ -2181,7 +2181,7 @@ pub enum Message<L: Dupe> {
     MessageInvalidGraphQL(GraphqlError),
     MessageInvalidHookNaming,
 
-    MessageInvalidImportStarUse(VirtualReason<L>),
+    MessageInvalidImportStarUse(MessageTypeReferenceData<L>),
     MessageInvalidInferType,
 
     MessageInvalidLintSettings(LintParseError),
@@ -2284,7 +2284,7 @@ pub enum Message<L: Dupe> {
 
     MessageNoNamedExport(Box<MessageNoNamedExportData>),
 
-    MessageNonConstVarExport(Option<VirtualReason<L>>),
+    MessageNonConstVarExport(Option<MessageTypeReferenceData<L>>),
     MessageNonStrictImport,
     MessageNonToplevelExport,
 
@@ -2342,7 +2342,7 @@ pub enum Message<L: Dupe> {
     MessageThisInComponent(L),
     MessageThisInExportedFunction,
 
-    MessageThisSuperInObject(VirtualReason<L>, ThisFinderKind),
+    MessageThisSuperInObject(MessageTypeReferenceData<L>, ThisFinderKind),
 
     MessageTSNeverType,
     MessageTSReadonlyOperatorOnArray,
@@ -2391,7 +2391,7 @@ pub enum Message<L: Dupe> {
         upper: VirtualReason<L>,
     },
 
-    MessageTypeParamConstInvalidPosition(VirtualReason<L>),
+    MessageTypeParamConstInvalidPosition(MessageTypeReferenceData<L>),
     MessageUnclearType,
 
     MessageUnderconstrainedImplicitInstantiaton {

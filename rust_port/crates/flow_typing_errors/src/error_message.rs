@@ -2478,8 +2478,27 @@ pub struct EExponentialSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EAssignConstLikeBindingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub definition: VirtualReason<L>,
+    pub definition_loc: L,
+    pub name: FlowSmolStr,
     pub binding_kind: AssignedConstLikeBindingType,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EObjectThisSuperReferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub method_loc: L,
+    pub method_name: Option<FlowSmolStr>,
+    pub kind: ThisFinderKind,
 }
 
 #[derive(
@@ -3303,7 +3322,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EConstantCondition(Box<EConstantConditionData<L>>),
 
-    EInvalidExtends(VirtualReason<L>),
+    EInvalidExtends(Box<(L, FlowSmolStr)>),
 
     EExportsAnnot(L),
 
@@ -3351,7 +3370,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETypeParamConstIncompatibility(Box<ETypeParamConstIncompatibilityData<L>>),
 
-    ETypeParamConstInvalidPosition(VirtualReason<L>),
+    ETypeParamConstInvalidPosition(Box<(L, FlowSmolStr)>),
 
     EInternal(Box<(L, InternalError)>),
 
@@ -3379,17 +3398,17 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EBadExportContext(Box<(FlowSmolStr, L)>),
 
-    EBadDefaultImportAccess(Box<(L, VirtualReason<L>)>),
+    EBadDefaultImportAccess(Box<(L, L)>),
 
     EBadDefaultImportDestructuring(L),
 
-    EInvalidImportStarUse(Box<(L, VirtualReason<L>)>),
+    EInvalidImportStarUse(Box<(L, L)>),
 
-    ENonConstVarExport(Box<(L, Option<VirtualReason<L>>)>),
+    ENonConstVarExport(Box<(L, Option<(L, FlowSmolStr)>)>),
 
     EThisInExportedFunction(L),
 
-    EMixedImportAndRequire(Box<(L, VirtualReason<L>)>),
+    EMixedImportAndRequire(Box<(L, L)>),
 
     EUnsupportedVarianceAnnotation(Box<(L, FlowSmolStr)>),
 
@@ -3524,7 +3543,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EHookNaming(L),
 
-    EObjectThisSuperReference(Box<(L, VirtualReason<L>, ThisFinderKind)>),
+    EObjectThisSuperReference(Box<EObjectThisSuperReferenceData<L>>),
 
     EComponentThisReference(Box<EComponentThisReferenceData<L>>),
 
@@ -4973,7 +4992,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 constant_condition_kind,
             })),
 
-            EInvalidExtends(r) => EInvalidExtends(map_reason(r)),
+            EInvalidExtends(box (loc, expression)) => {
+                EInvalidExtends(Box::new((f(loc), expression)))
+            }
 
             EExportsAnnot(loc) => EExportsAnnot(f(loc)),
 
@@ -5076,7 +5097,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ETypeParamConstInvalidPosition(reason) => {
-                ETypeParamConstInvalidPosition(map_reason(reason))
+                ETypeParamConstInvalidPosition(Box::new((f(reason.0), reason.1)))
             }
 
             EInternal(box (loc, i)) => EInternal(Box::new((f(loc), i))),
@@ -5367,19 +5388,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EBadExportPosition(loc) => EBadExportPosition(f(loc)),
             EBadExportContext(box (s, loc)) => EBadExportContext(Box::new((s, f(loc)))),
 
-            EBadDefaultImportAccess(box (loc, r)) => {
-                EBadDefaultImportAccess(Box::new((f(loc), map_reason(r))))
+            EBadDefaultImportAccess(box (loc, import_star_loc)) => {
+                EBadDefaultImportAccess(Box::new((f(loc), f(import_star_loc))))
             }
             EBadDefaultImportDestructuring(loc) => EBadDefaultImportDestructuring(f(loc)),
-            EInvalidImportStarUse(box (loc, r)) => {
-                EInvalidImportStarUse(Box::new((f(loc), map_reason(r))))
+            EInvalidImportStarUse(box (loc, import_star_loc)) => {
+                EInvalidImportStarUse(Box::new((f(loc), f(import_star_loc))))
             }
-            ENonConstVarExport(box (loc, r)) => {
-                ENonConstVarExport(Box::new((f(loc), r.map(map_reason))))
-            }
+            ENonConstVarExport(box (loc, declaration)) => ENonConstVarExport(Box::new((
+                f(loc),
+                declaration.map(|(declaration_loc, name)| (f(declaration_loc), name)),
+            ))),
             EThisInExportedFunction(loc) => EThisInExportedFunction(f(loc)),
-            EMixedImportAndRequire(box (loc, r)) => {
-                EMixedImportAndRequire(Box::new((f(loc), map_reason(r))))
+            EMixedImportAndRequire(box (require_loc, import_loc)) => {
+                EMixedImportAndRequire(Box::new((f(require_loc), f(import_loc))))
             }
             EUnsupportedVarianceAnnotation(box (loc, k)) => {
                 EUnsupportedVarianceAnnotation(Box::new((f(loc), k)))
@@ -5658,11 +5680,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EAssignConstLikeBinding(box EAssignConstLikeBindingData {
                 loc,
-                definition,
+                definition_loc,
+                name,
                 binding_kind,
             }) => EAssignConstLikeBinding(Box::new(EAssignConstLikeBindingData {
                 loc: f(loc),
-                definition: map_reason(definition),
+                definition_loc: f(definition_loc),
+                name,
                 binding_kind,
             })),
 
@@ -5750,9 +5774,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EHookNaming(l) => EHookNaming(f(l)),
 
-            EObjectThisSuperReference(box (loc, r, k)) => {
-                EObjectThisSuperReference(Box::new((f(loc), map_reason(r), k)))
-            }
+            EObjectThisSuperReference(box EObjectThisSuperReferenceData {
+                loc,
+                method_loc,
+                method_name,
+                kind,
+            }) => EObjectThisSuperReference(Box::new(EObjectThisSuperReferenceData {
+                loc: f(loc),
+                method_loc: f(method_loc),
+                method_name,
+                kind,
+            })),
 
             EComponentThisReference(box EComponentThisReferenceData {
                 component_loc,
@@ -7485,11 +7517,14 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::ESketchyNumberLint(_, value) => Some(value.reason.loc.dupe()),
 
-            Self::EInvalidExtends(reason)
-            | Self::EReactRefInRender { usage: reason, .. }
-            | Self::EObjectComputedPropertyAssign(box (reason, _, _))
-            | Self::EComponentMissingReturn(reason)
-            | Self::ETypeParamConstInvalidPosition(reason) => Some(reason.loc.dupe()),
+            Self::EInvalidExtends(box (loc, _)) => Some(loc.dupe()),
+
+            Self::EReactRefInRender { usage: reason, .. }
+            | Self::EComponentMissingReturn(reason) => Some(reason.loc.dupe()),
+
+            Self::ETypeParamConstInvalidPosition(reason) => Some(reason.0.dupe()),
+
+            Self::EObjectComputedPropertyAssign(box (property, _, _)) => Some(property.loc.dupe()),
 
             Self::EObjectComputedPropertyAccess(box EObjectComputedPropertyAccessData {
                 property,
@@ -7714,7 +7749,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnexpectedThisType(loc)
             | Self::EAssignConstLikeBinding(box EAssignConstLikeBindingData { loc, .. })
             | Self::EMalformedCode(loc)
-            | Self::EObjectThisSuperReference(box (loc, _, _))
+            | Self::EObjectThisSuperReference(box EObjectThisSuperReferenceData { loc, .. })
             | Self::EComponentThisReference(box EComponentThisReferenceData {
                 this_loc: loc,
                 ..
@@ -8436,6 +8471,13 @@ fn expect_type_desc<L: Dupe>(
     }
 }
 
+fn message_identifier_reference<L: Dupe>(loc: L, name: FlowSmolStr) -> MessageTypeReferenceData<L> {
+    MessageTypeReferenceData {
+        loc,
+        desc: Err(VirtualReasonDesc::RIdentifier(name)),
+    }
+}
+
 impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
     /// Transform an ErrorMessage into a FriendlyMessageRecipe.
     ///
@@ -8491,9 +8533,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EInvalidInfer { .. } => Normal(Message::MessageInvalidInferType),
 
-            ErrorMessage::EInvalidExtends(reason) => {
-                Normal(Message::MessageCannotUseAsSuperClass(reason))
-            }
+            ErrorMessage::EInvalidExtends(box (loc, expression)) => Normal(
+                Message::MessageCannotUseAsSuperClass(MessageTypeReferenceData {
+                    loc,
+                    desc: Err(VirtualReasonDesc::RCode(expression)),
+                }),
+            ),
 
             ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
                 react_loc,
@@ -10267,9 +10312,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ErrorMessage::ETypeParamConstInvalidPosition(reason) => {
-                Normal(Message::MessageTypeParamConstInvalidPosition(reason))
-            }
+            ErrorMessage::ETypeParamConstInvalidPosition(box (loc, name)) => Normal(
+                Message::MessageTypeParamConstInvalidPosition(MessageTypeReferenceData {
+                    loc,
+                    desc: Err(VirtualReasonDesc::RType(name)),
+                }),
+            ),
 
             ErrorMessage::ETypeGuardFunctionParamHavoced(
                 box ETypeGuardFunctionParamHavocedData {
@@ -10383,20 +10431,31 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Message::MessageCannotUseExportInNonLegalToplevelContext(name),
             ),
 
-            ErrorMessage::EBadDefaultImportAccess(box (_, import_star_reason)) => {
-                Normal(Message::MessageInvalidImportStarUse(import_star_reason))
+            ErrorMessage::EBadDefaultImportAccess(box (_, import_star_loc)) => Normal(
+                Message::MessageInvalidImportStarUse(MessageTypeReferenceData {
+                    loc: import_star_loc,
+                    desc: Err(VirtualReasonDesc::RCode("import *".into())),
+                }),
+            ),
+
+            ErrorMessage::EInvalidImportStarUse(box (_, import_star_loc)) => Normal(
+                Message::MessageCannotUseImportStar(MessageTypeReferenceData {
+                    loc: import_star_loc,
+                    desc: Err(VirtualReasonDesc::RCode("import *".into())),
+                }),
+            ),
+
+            ErrorMessage::ENonConstVarExport(box (_, declaration)) => {
+                Normal(Message::MessageNonConstVarExport(
+                    declaration.map(|(loc, name)| message_identifier_reference(loc, name)),
+                ))
             }
 
-            ErrorMessage::EInvalidImportStarUse(box (_, import_star_reason)) => {
-                Normal(Message::MessageCannotUseImportStar(import_star_reason))
-            }
-
-            ErrorMessage::ENonConstVarExport(box (_, decl_reason)) => {
-                Normal(Message::MessageNonConstVarExport(decl_reason))
-            }
-
-            ErrorMessage::EMixedImportAndRequire(box (_, import_reason)) => Normal(
-                Message::MessageCannotUseMixedImportAndRequire(import_reason),
+            ErrorMessage::EMixedImportAndRequire(box (_, import_loc)) => Normal(
+                Message::MessageCannotUseMixedImportAndRequire(MessageTypeReferenceData {
+                    loc: import_loc,
+                    desc: Err(VirtualReasonDesc::RCode("import".into())),
+                }),
             ),
 
             ErrorMessage::EUnsupportedVarianceAnnotation(box (_, kind)) => {
@@ -10814,20 +10873,32 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }),
 
             ErrorMessage::EAssignConstLikeBinding(box EAssignConstLikeBindingData {
-                definition,
+                definition_loc,
+                name,
                 binding_kind,
                 ..
             }) => Normal(Message::MessageCannotReassignConstantLikeBinding {
-                definition,
+                definition: message_identifier_reference(definition_loc, name),
                 binding_kind,
             }),
 
-            ErrorMessage::EObjectThisSuperReference(box (_, reason, k)) => {
-                let converted_kind = match k {
+            ErrorMessage::EObjectThisSuperReference(box EObjectThisSuperReferenceData {
+                method_loc,
+                method_name,
+                kind,
+                ..
+            }) => {
+                let converted_kind = match kind {
                     ThisFinderKind::This => crate::intermediate_error_types::ThisFinderKind::This,
                     ThisFinderKind::Super => crate::intermediate_error_types::ThisFinderKind::Super,
                 };
-                Normal(Message::MessageThisSuperInObject(reason, converted_kind))
+                Normal(Message::MessageThisSuperInObject(
+                    MessageTypeReferenceData {
+                        loc: method_loc,
+                        desc: Err(VirtualReasonDesc::RMethod(method_name)),
+                    },
+                    converted_kind,
+                ))
             }
 
             ErrorMessage::EComponentThisReference(box EComponentThisReferenceData {

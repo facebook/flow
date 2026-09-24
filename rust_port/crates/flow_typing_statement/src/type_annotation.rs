@@ -6417,7 +6417,10 @@ fn mk_type_param_inner<'a>(
         (Some(_), _) => {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::ETypeParamConstInvalidPosition(reason.dupe()),
+                ErrorMessage::ETypeParamConstInvalidPosition(Box::new((
+                    name_loc.dupe(),
+                    name.dupe(),
+                ))),
             );
             false
         }

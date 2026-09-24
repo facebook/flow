@@ -1194,8 +1194,6 @@ fn error_for_assignment_kind(
 ) -> Option<ErrorMessage<ALoc>> {
     use flow_analysis::bindings::Kind as BK;
     use flow_common::reason::Name;
-    use flow_common::reason::VirtualReason;
-    use flow_common::reason::VirtualReasonDesc;
 
     fn is_bundled_in_core_dot_js(name: &str) -> bool {
         matches!(
@@ -1224,10 +1222,10 @@ fn error_for_assignment_kind(
         def_loc: ALoc,
         binding_kind: AssignedConstLikeBindingType,
     ) -> ErrorMessage<ALoc> {
-        let definition = VirtualReason::new(VirtualReasonDesc::RIdentifier(name.dupe()), def_loc);
         ErrorMessage::EAssignConstLikeBinding(Box::new(EAssignConstLikeBindingData {
             loc: assignment_loc,
-            definition,
+            definition_loc: def_loc,
+            name: name.dupe(),
             binding_kind,
         }))
     }

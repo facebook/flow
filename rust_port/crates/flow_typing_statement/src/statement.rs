@@ -29,6 +29,7 @@ use flow_common::reason::Reason;
 use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::reason::VirtualReasonDesc::*;
+use flow_common::reason::code_desc_of_expression;
 use flow_common::reason::func_reason;
 use flow_common::reason::mk_annot_reason;
 use flow_common::reason::mk_expression_reason;
@@ -873,35 +874,29 @@ fn error_on_this_uses_in_object_methods<'a>(
                 let mut finder = ALocThisFinder::new();
                 let Ok(()) = finder.function_(prop_loc, func);
                 for (loc, kind) in &finder.acc {
-                    let reason = match key {
-                        expression::object::Key::Identifier(id) => mk_reason(
-                            VirtualReasonDesc::RMethod(Some(id.name.dupe())),
-                            prop_loc.dupe(),
-                        ),
-                        expression::object::Key::PrivateName(pn) => mk_reason(
-                            VirtualReasonDesc::RMethod(Some(pn.name.dupe())),
-                            prop_loc.dupe(),
-                        ),
-                        expression::object::Key::StringLiteral((_, sl)) => mk_reason(
-                            VirtualReasonDesc::RMethod(Some(sl.raw.dupe())),
-                            prop_loc.dupe(),
-                        ),
-                        _ => mk_reason(VirtualReasonDesc::RMethod(None), prop_loc.dupe()),
+                    let method_name = match key {
+                        expression::object::Key::Identifier(id) => Some(id.name.dupe()),
+                        expression::object::Key::PrivateName(pn) => Some(pn.name.dupe()),
+                        expression::object::Key::StringLiteral((_, sl)) => Some(sl.raw.dupe()),
+                        _ => None,
                     };
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EObjectThisSuperReference(Box::new((
-                            loc.dupe(),
-                            reason,
-                            match kind {
-                                flow_parser_utils::this_finder::Kind::This => {
-                                    flow_typing_errors::error_message::ThisFinderKind::This
-                                }
-                                flow_parser_utils::this_finder::Kind::Super => {
-                                    flow_typing_errors::error_message::ThisFinderKind::Super
-                                }
+                        ErrorMessage::EObjectThisSuperReference(Box::new(
+                            flow_typing_errors::error_message::EObjectThisSuperReferenceData {
+                                loc: loc.dupe(),
+                                method_loc: prop_loc.dupe(),
+                                method_name,
+                                kind: match kind {
+                                    flow_parser_utils::this_finder::Kind::This => {
+                                        flow_typing_errors::error_message::ThisFinderKind::This
+                                    }
+                                    flow_parser_utils::this_finder::Kind::Super => {
+                                        flow_typing_errors::error_message::ThisFinderKind::Super
+                                    }
+                                },
                             },
-                        ))),
+                        )),
                     );
                 }
             }
@@ -15622,7 +15617,10 @@ pub fn mk_class_sig<'a>(
                         _ => {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EInvalidExtends(mk_expression_reason(expr)),
+                                ErrorMessage::EInvalidExtends(Box::new((
+                                    expr.loc().dupe(),
+                                    code_desc_of_expression(false, expr).into(),
+                                ))),
                             );
                             let t = any_t::at(type_::AnySource::AnyError(None), loc.dupe());
                             let expr_c = expr.clone();
