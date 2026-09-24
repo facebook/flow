@@ -1655,6 +1655,7 @@ module.exports = [
     node.proto = this.deserializeBoolean();
     node.variance = this.deserializeNode();
     node.kind = this.deserializeString();
+    if (this.deserializeBoolean()) node['computed'] = true;
     if (this.deserializeBoolean()) node['abstract'] = true;
     if (this.deserializeBoolean()) node['override'] = true;
     {

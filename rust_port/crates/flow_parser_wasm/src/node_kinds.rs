@@ -1357,6 +1357,7 @@ define_nodes! {
         proto: Boolean,
         variance: Node,
         kind: String,
+        computed: TrueBoolean,
         abstract: TrueBoolean,
         override: TrueBoolean,
         tsAccessibility: MaybeString,

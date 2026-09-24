@@ -16,7 +16,48 @@ import {
   expectBabelAlignment,
   expectEspreeAlignment,
 } from '../__test_utils__/alignment-utils';
-import {parse, parseForSnapshot} from '../__test_utils__/parse';
+import {
+  parse,
+  parseForSnapshot,
+  printForSnapshotESTree,
+} from '../__test_utils__/parse';
+
+describe('Computed object type methods', () => {
+  const interfaceCode = 'interface T { [Symbol.iterator](): void }';
+  const objectTypeCode = 'type T = { [Symbol.iterator](): void };';
+
+  test('interface', async () => {
+    expect(parse(interfaceCode)).toMatchObject({
+      body: [
+        {
+          type: 'InterfaceDeclaration',
+          body: {
+            properties: [{type: 'ObjectTypeProperty', computed: true}],
+          },
+        },
+      ],
+    });
+    expect(await printForSnapshotESTree(interfaceCode)).toBe(
+      'interface T {\n  [Symbol.iterator](): void;\n}',
+    );
+  });
+
+  test('object type alias', async () => {
+    expect(parse(objectTypeCode)).toMatchObject({
+      body: [
+        {
+          type: 'TypeAlias',
+          right: {
+            properties: [{type: 'ObjectTypeProperty', computed: true}],
+          },
+        },
+      ],
+    });
+    expect(await printForSnapshotESTree(objectTypeCode)).toBe(
+      'type T = {[Symbol.iterator](): void};',
+    );
+  });
+});
 
 describe('Literal', () => {
   const testCase: AlignmentCase = {

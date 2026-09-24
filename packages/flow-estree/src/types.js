@@ -1605,6 +1605,7 @@ interface ObjectTypePropertyBase extends BaseNode {
   readonly proto: boolean; // only applies to the "declare class" case
   readonly variance: Variance | null;
   readonly kind: 'init' | 'get' | 'set';
+  readonly computed?: true;
   readonly abstract?: true;
   readonly override?: true;
   readonly tsAccessibility?: TSAccessibility;

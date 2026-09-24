@@ -3298,7 +3298,7 @@ impl<'a> Serializer<'a> {
 
     fn serialize_object_type_property(&mut self, p: &ast::types::object::NormalProperty<Loc, Loc>) {
         // 148: ObjectTypeProperty — key value method optional static proto variance kind
-        // abstract override tsAccessibility init
+        // computed abstract override tsAccessibility init
         self.write_node_header(NodeKind::ObjectTypeProperty, &p.loc);
         self.serialize_object_key(&p.key);
         // value: depends on PropertyValue variant
@@ -3328,6 +3328,7 @@ impl<'a> Serializer<'a> {
             None => self.write_null_node(),
         }
         self.write_str(kind);
+        self.write_bool(is_key_computed(&p.key));
         self.write_bool(p.abstract_);
         self.write_bool(p.override_);
         self.write_str_opt(p.ts_accessibility.as_ref().map(|accessibility| {
