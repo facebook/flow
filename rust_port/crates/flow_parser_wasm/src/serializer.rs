@@ -3155,10 +3155,10 @@ impl<'a> Serializer<'a> {
                 self.serialize_identifier_node(&q.id);
             }
             ast::types::generic::Identifier::ImportTypeAnnot(imp) => {
-                // 143: ImportType — argument(Node)
+                // 143: ImportType — source(Node)
                 self.write_node_header(NodeKind::ImportType, &imp.loc);
-                // argument is a string literal
-                let (lit_loc, lit) = &imp.argument;
+                // source is a string literal
+                let (lit_loc, lit) = &imp.source;
                 self.write_string_literal(lit_loc, &lit.value, &lit.raw);
             }
         }
@@ -3596,13 +3596,9 @@ impl<'a> Serializer<'a> {
                 self.serialize_identifier_node(&q.id);
             }
             ast::types::typeof_::Target::Import(imp) => {
-                // 143: ImportType — argument(Node)
+                // 143: ImportType — source(Node)
                 self.write_node_header(NodeKind::ImportType, &imp.loc);
-                self.write_string_literal(
-                    &imp.argument.0,
-                    &imp.argument.1.value,
-                    &imp.argument.1.raw,
-                );
+                self.write_string_literal(&imp.source.0, &imp.source.1.value, &imp.source.1.raw);
             }
         }
     }
@@ -3630,9 +3626,9 @@ impl<'a> Serializer<'a> {
             ast::types::typeof_::Target::Import(import) => {
                 self.write_node_header(NodeKind::ImportType, &import.loc);
                 self.write_string_literal(
-                    &import.argument.0,
-                    &import.argument.1.value,
-                    &import.argument.1.raw,
+                    &import.source.0,
+                    &import.source.1.value,
+                    &import.source.1.raw,
                 );
             }
         }

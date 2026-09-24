@@ -11265,7 +11265,7 @@ pub fn generic_identifier_import_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
     import_type: &'ast ast::types::generic::ImportType<Loc, Type>,
 ) -> Result<(), E> {
-    visitor.string_literal(&import_type.argument.1)?;
+    visitor.string_literal(&import_type.source.1)?;
     visitor.syntax_opt(import_type.comments.as_ref())?;
     Ok(())
 }
@@ -11276,15 +11276,15 @@ pub fn map_generic_identifier_import_type_default<'ast, Loc: Dupe, Type: Dupe, C
 ) -> ast::types::generic::ImportType<Loc, Loc> {
     let ast::types::generic::ImportType {
         loc,
-        argument,
+        source,
         comments,
     } = import_type;
-    let (arg_loc, string_lit) = argument;
+    let (source_loc, string_lit) = source;
     let string_lit_ = visitor.map_string_literal(string_lit);
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::types::generic::ImportType {
         loc: loc.dupe(),
-        argument: (arg_loc.dupe(), string_lit_),
+        source: (source_loc.dupe(), string_lit_),
         comments: comments_,
     }
 }

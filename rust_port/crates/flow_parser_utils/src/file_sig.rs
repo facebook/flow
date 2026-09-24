@@ -597,7 +597,7 @@ impl<'a> flow_parser::ast_visitor::AstVisitor<'_, Loc> for RequiresCalculator<'a
         &mut self,
         import_type: &ast::types::generic::ImportType<Loc, Loc>,
     ) -> Result<(), !> {
-        let (loc, string_lit) = &import_type.argument;
+        let (loc, string_lit) = &import_type.source;
         self.add_require(Require::Import0 {
             source: Source(loc.dupe(), FlowSmolStr::from(string_lit.value.as_str())),
         });

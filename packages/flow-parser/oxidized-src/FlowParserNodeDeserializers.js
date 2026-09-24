@@ -1591,7 +1591,7 @@ module.exports = [
     return {
       type: 'ImportType',
       loc: this.addEmptyLoc(),
-      argument: this.deserializeNode(),
+      source: this.deserializeNode(),
     };
   },
 

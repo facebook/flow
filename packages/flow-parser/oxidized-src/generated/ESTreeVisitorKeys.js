@@ -413,7 +413,7 @@ module.exports = {
     'local',
   ],
   ImportType: [
-    'argument',
+    'source',
   ],
   IndexedAccessType: [
     'objectType',

@@ -1322,7 +1322,7 @@ define_nodes! {
             self.serialize_type_args_opt(&inner.targs),
         },
     ImportType = 143 {
-        argument: Node,
+        source: Node,
     },
     TupleTypeAnnotation = 144 {
         elementTypes: NodeList,

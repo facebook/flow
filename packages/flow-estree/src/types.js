@@ -1399,7 +1399,7 @@ export interface GenericTypeAnnotation extends BaseNode {
 }
 export interface ImportType extends BaseNode {
   readonly type: 'ImportType';
-  readonly argument: StringLiteral;
+  readonly source: StringLiteral;
 
   readonly parent:
     | GenericTypeAnnotation

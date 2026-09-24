@@ -24,7 +24,7 @@
           "type":"ImportType",
           "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":25}},
           "range":[50,66],
-          "argument":{
+          "source":{
             "type":"Literal",
             "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":24}},
             "range":[57,65],
@@ -60,7 +60,7 @@
             "type":"ImportType",
             "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":24}},
             "range":[110,125],
-            "argument":{
+            "source":{
               "type":"Literal",
               "loc":{"source":null,"start":{"line":5,"column":16},"end":{"line":5,"column":23}},
               "range":[117,124],
@@ -105,7 +105,7 @@
             "type":"ImportType",
             "loc":{"source":null,"start":{"line":8,"column":9},"end":{"line":8,"column":24}},
             "range":[177,192],
-            "argument":{
+            "source":{
               "type":"Literal",
               "loc":{"source":null,"start":{"line":8,"column":16},"end":{"line":8,"column":23}},
               "range":[184,191],
@@ -165,7 +165,7 @@
               "type":"ImportType",
               "loc":{"source":null,"start":{"line":11,"column":9},"end":{"line":11,"column":22}},
               "range":[260,273],
-              "argument":{
+              "source":{
                 "type":"Literal",
                 "loc":{"source":null,"start":{"line":11,"column":16},"end":{"line":11,"column":21}},
                 "range":[267,272],
@@ -228,7 +228,7 @@
                   "type":"ImportType",
                   "loc":{"source":null,"start":{"line":14,"column":14},"end":{"line":14,"column":29}},
                   "range":[339,354],
-                  "argument":{
+                  "source":{
                     "type":"Literal",
                     "loc":{"source":null,"start":{"line":14,"column":21},"end":{"line":14,"column":28}},
                     "range":[346,353],
@@ -303,7 +303,7 @@
                     "type":"ImportType",
                     "loc":{"source":null,"start":{"line":17,"column":9},"end":{"line":17,"column":25}},
                     "range":[419,435],
-                    "argument":{
+                    "source":{
                       "type":"Literal",
                       "loc":{"source":null,"start":{"line":17,"column":16},"end":{"line":17,"column":24}},
                       "range":[426,434],

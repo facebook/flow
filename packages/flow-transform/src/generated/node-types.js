@@ -844,7 +844,7 @@ export type ImportSpecifierProps = {
 };
 
 export type ImportTypeProps = {
-  readonly argument: MaybeDetachedNode<ImportTypeType['argument']>,
+  readonly source: MaybeDetachedNode<ImportTypeType['source']>,
 };
 
 export type IndexedAccessTypeProps = {
@@ -2860,7 +2860,7 @@ export function ImportType(props: {
 }): DetachedNode<ImportTypeType> {
   const node = detachedProps<ImportTypeType>(props.parent as $FlowFixMe, {
     type: 'ImportType',
-    argument: asDetachedNodeForCodeGen(props.argument),
+    source: asDetachedNodeForCodeGen(props.source),
   });
   setParentPointersInDirectChildren(node as $FlowFixMe);
   return node;

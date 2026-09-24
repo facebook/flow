@@ -6408,14 +6408,14 @@ pub fn typeof_expression<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         }
         Target::Import(it) => {
             let loc_ = mapper.on_type_annot(&it.loc)?;
-            let argument_ = {
-                let (loc, lit) = &it.argument;
+            let source_ = {
+                let (loc, lit) = &it.source;
                 (mapper.on_loc_annot(loc)?, string_literal(mapper, lit)?)
             };
             let comments_ = syntax_opt(mapper, it.comments.as_ref())?;
             Target::Import(Arc::new(ast::types::generic::ImportType {
                 loc: loc_,
-                argument: argument_,
+                source: source_,
                 comments: comments_,
             }))
         }
@@ -6687,14 +6687,14 @@ fn generic_identifier_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         }
         Identifier::ImportTypeAnnot(import_type) => {
             let loc_ = mapper.on_type_annot(&import_type.loc)?;
-            let argument_ = {
-                let (loc, lit) = &import_type.argument;
+            let source_ = {
+                let (loc, lit) = &import_type.source;
                 (mapper.on_loc_annot(loc)?, string_literal(mapper, lit)?)
             };
             let comments_ = syntax_opt(mapper, import_type.comments.as_ref())?;
             Identifier::ImportTypeAnnot(Arc::new(ast::types::generic::ImportType {
                 loc: loc_,
-                argument: argument_,
+                source: source_,
                 comments: comments_,
             }))
         }

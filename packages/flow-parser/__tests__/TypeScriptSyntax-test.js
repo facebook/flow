@@ -138,7 +138,10 @@ describe('TypeScript-compatible syntax', () => {
       type: 'GenericTypeAnnotation',
       id: {
         type: 'QualifiedTypeIdentifier',
-        qualification: {type: 'ImportType'},
+        qualification: {
+          type: 'ImportType',
+          source: {type: 'Literal', value: './module'},
+        },
       },
     });
     if (

@@ -638,7 +638,7 @@ pub mod types {
         )]
         pub struct ImportType<M: Dupe, T: Dupe> {
             pub loc: T,
-            pub argument: (M, StringLiteral<M>),
+            pub source: (M, StringLiteral<M>),
             pub comments: Option<Syntax<M, ()>>,
         }
     }

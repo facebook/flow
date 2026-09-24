@@ -261,7 +261,7 @@ fn qualified_name(mut id: &ast::types::generic::Identifier<ALoc, ALoc>) -> Strin
                 id = &q.qualification;
             }
             Identifier::ImportTypeAnnot(import) => {
-                let value = &import.argument.1.value;
+                let value = &import.source.1.value;
                 acc.push(format!("import(\"{}\")", value));
                 acc.reverse();
                 return acc.join(".");
@@ -286,7 +286,7 @@ fn typeof_name(mut target: &ast::types::typeof_::Target<ALoc, ALoc>) -> String {
                 target = &q.qualification;
             }
             Target::Import(it) => {
-                let value = &it.argument.1.value;
+                let value = &it.source.1.value;
                 let import_str = format!("import(\"{}\")", value);
                 acc.reverse();
                 if acc.is_empty() {
@@ -1839,7 +1839,7 @@ fn convert_inner<'a>(
             ast::types::generic::Identifier::ImportTypeAnnot(import) => {
                 let import_id = &inner.id;
                 let import_loc = &import.loc;
-                let argument = &import.argument;
+                let source = &import.source;
                 let import_comments = &import.comments;
                 let targs = &inner.targs;
                 let comments = &inner.comments;
@@ -1860,7 +1860,7 @@ fn convert_inner<'a>(
                     _ => ast::types::generic::Identifier::ImportTypeAnnot(
                         (ast::types::generic::ImportType {
                             loc: (import_loc.dupe(), m),
-                            argument: argument.clone(),
+                            source: source.clone(),
                             comments: import_comments.clone(),
                         })
                         .into(),
@@ -3996,7 +3996,7 @@ fn convert_qualification_with_lookup_mode<'a>(
                     Identifier::ImportTypeAnnot(
                         (ast::types::generic::ImportType {
                             loc: (import.loc.dupe(), t),
-                            argument: import.argument.clone(),
+                            source: import.source.clone(),
                             comments: import.comments.dupe(),
                         })
                         .into(),
@@ -4004,13 +4004,13 @@ fn convert_qualification_with_lookup_mode<'a>(
                 )
             } else {
                 // Resolve the module
-                let module_name = &import.argument.1.value;
+                let module_name = &import.source.1.value;
                 let mref = Userland::from_smol_str(module_name.dupe());
                 let source_module = match flow_js_utils::import_export_utils::get_module_type_or_any(
                     cx,
                     false,
                     Some(type_::ImportKind::ImportType),
-                    import.argument.0.dupe(),
+                    import.source.0.dupe(),
                     mref.dupe(),
                 ) {
                     Ok(v) => v,
@@ -4048,7 +4048,7 @@ fn convert_qualification_with_lookup_mode<'a>(
                     Identifier::ImportTypeAnnot(
                         ast::types::generic::ImportType {
                             loc: (import.loc.dupe(), t),
-                            argument: import.argument.clone(),
+                            source: import.source.clone(),
                             comments: import.comments.dupe(),
                         }
                         .into(),
@@ -4168,13 +4168,13 @@ fn convert_typeof<'a>(
                 (t, mapped)
             } else {
                 // Resolve the module
-                let module_name = &import.argument.1.value;
+                let module_name = &import.source.1.value;
                 let mref = Userland::from_smol_str(module_name.dupe());
                 let source_module = match flow_js_utils::import_export_utils::get_module_type_or_any(
                     cx,
                     false,
                     Some(type_::ImportKind::ImportValue),
-                    import.argument.0.dupe(),
+                    import.source.0.dupe(),
                     mref.dupe(),
                 ) {
                     Ok(v) => v,
@@ -4212,7 +4212,7 @@ fn convert_typeof<'a>(
                     Target::Import(
                         ast::types::generic::ImportType {
                             loc: (import.loc.dupe(), t),
-                            argument: import.argument.clone(),
+                            source: import.source.clone(),
                             comments: import.comments.dupe(),
                         }
                         .into(),

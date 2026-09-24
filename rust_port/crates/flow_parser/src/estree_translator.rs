@@ -5816,12 +5816,12 @@ fn import_type_annotation(
         loc,
         import_type.comments.as_ref(),
         vec![(
-            "argument",
+            "source",
             string_literal(
                 offset_table,
                 config,
-                &import_type.argument.0,
-                &import_type.argument.1,
+                &import_type.source.0,
+                &import_type.source.1,
             ),
         )],
     )

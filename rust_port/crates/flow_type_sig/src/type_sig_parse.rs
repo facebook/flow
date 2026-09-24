@@ -7198,7 +7198,7 @@ fn typeof_<'arena, 'ast>(
             }
             ast::types::typeof_::Target::Import(it) => {
                 let import_loc = tbls.push_loc(it.loc.dupe());
-                let value = &it.argument.1.value;
+                let value = &it.source.1.value;
                 let mref = Userland::from_smol_str(value.dupe());
                 let mref = tbls.push_module_ref(mref);
                 let t = Parsed::ImportTypeAnnot {
@@ -8831,7 +8831,7 @@ fn handle_import_type<'arena, 'ast>(
     chain: Vec<(Loc, FlowSmolStr)>,
 ) -> Parsed<'arena, 'ast> {
     let import_loc = tbls.push_loc(import_loc.dupe());
-    let value = &import_type.argument.1.value;
+    let value = &import_type.source.1.value;
     let mref = Userland::from_smol_str(value.dupe());
     let mref = tbls.push_module_ref(mref);
     let base = Parsed::ImportTypeAnnot {
@@ -12324,7 +12324,7 @@ fn member_expr_of_generic_id<'arena, 'ast>(
             }
             ast::types::generic::Identifier::ImportTypeAnnot(import_type) => {
                 let import_loc = tbls.push_loc(import_type.loc.dupe());
-                let value = &import_type.argument.1.value;
+                let value = &import_type.source.1.value;
                 let mref = Userland::from_smol_str(value.dupe());
                 let mref = tbls.push_module_ref(mref);
                 let base = Parsed::ImportTypeAnnot {

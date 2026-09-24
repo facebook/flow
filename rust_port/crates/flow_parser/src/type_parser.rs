@@ -563,7 +563,7 @@ fn typeof_import_expr(env: &mut ParserEnv) -> Result<types::typeof_::Target<Loc,
     expect::token(env, TokenKind::TImport)?;
     expect::token(env, TokenKind::TLparen)?;
 
-    let argument = match peek::token(env).clone() {
+    let source = match peek::token(env).clone() {
         TokenKind::TString(_, value, raw, octal) => {
             if octal {
                 env.strict_error(ParseError::StrictOctalLiteral)?;
@@ -598,7 +598,7 @@ fn typeof_import_expr(env: &mut ParserEnv) -> Result<types::typeof_::Target<Loc,
     let import_loc = Loc::between(&start_loc, &rparen_loc);
     let import_node = types::typeof_::Target::Import(Arc::new(types::generic::ImportType {
         loc: import_loc.dupe(),
-        argument,
+        source,
         comments: mk_comments_opt(Some(leading.into()), None),
     }));
     typeof_qualification(env, import_loc, import_node)
@@ -4218,7 +4218,7 @@ fn import_type_generic(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rol
         eat::token(env)?;
         expect::token(env, TokenKind::TLparen)?;
 
-        let argument = match peek::token(env).clone() {
+        let source = match peek::token(env).clone() {
             TokenKind::TString(loc, value, raw, octal) => {
                 if octal {
                     env.strict_error(ParseError::StrictOctalLiteral)?;
@@ -4254,7 +4254,7 @@ fn import_type_generic(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rol
         let initial =
             types::generic::Identifier::ImportTypeAnnot(Arc::new(types::generic::ImportType {
                 loc: import_loc.dupe(),
-                argument,
+                source,
                 comments: mk_comments_opt(Some(leading.into()), None),
             }));
 

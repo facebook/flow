@@ -788,8 +788,8 @@ const getTransforms = (
     const source: TSESTree.StringLiteral = {
       type: 'Literal',
       loc: DUMMY_LOC,
-      raw: current.argument.raw,
-      value: current.argument.value,
+      raw: current.source.raw,
+      value: current.source.value,
     };
     return {
       type: 'TSImportType',

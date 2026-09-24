@@ -6140,7 +6140,7 @@ fn type_typeof(opts: &Opts, loc: &Loc, t: &ast::types::Typeof<Loc, Loc>) -> Layo
             ast::types::typeof_::Target::Import(imp) => fuse(vec![
                 atom("import"),
                 atom("("),
-                string_literal(opts, &imp.argument.0, &imp.argument.1),
+                string_literal(opts, &imp.source.0, &imp.source.1),
                 atom(")"),
             ]),
         }
@@ -6271,7 +6271,7 @@ fn generic_identifier(opts: &Opts, id: &ast::types::generic::Identifier<Loc, Loc
             fuse(vec![
                 atom("import"),
                 atom("("),
-                string_literal(opts, &imp.argument.0, &imp.argument.1),
+                string_literal(opts, &imp.source.0, &imp.source.1),
                 atom(")"),
             ]),
         ),
