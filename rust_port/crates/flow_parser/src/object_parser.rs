@@ -1850,9 +1850,13 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
             };
 
             // Check for bodyless method: semicolon instead of body.
-            // Also accept implicit semicolons (ASI) in ambient contexts.
+            // Also accept implicit semicolons (ASI) in ambient contexts and
+            // for abstract methods. A `{` after a newline is still a method
+            // body, which is invalid for an abstract method.
             let is_bodyless_method = (peek::token(env) == &TokenKind::TSemicolon
-                || (env.in_ambient_context() && peek::is_implicit_semicolon(env)))
+                || ((env.in_ambient_context() || abstract_)
+                    && (!abstract_ || peek::token(env) != &TokenKind::TLcurly)
+                    && peek::is_implicit_semicolon(env)))
                 && !async_
                 && !generator
                 && (kind != class::MethodKind::Constructor || env.is_d_ts());

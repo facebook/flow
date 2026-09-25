@@ -62,6 +62,53 @@ describe('TypeScript-compatible syntax', () => {
     expect(isAbstractMethodDefinition(base.body.body[0])).toBe(true);
   });
 
+  test('semicolonless abstract method definitions', () => {
+    const classes = parse(`
+      abstract class BeforeClosingBrace {
+        abstract method(): void
+      }
+
+      abstract class BeforeNextMember {
+        abstract first(): void
+        abstract second(): void;
+      }
+
+      abstract class BeforeLineComment {
+        abstract first(): void // comment
+        abstract second(): void;
+      }
+    `).body;
+
+    expect(classes).toHaveLength(3);
+    for (const class_ of classes) {
+      if (class_.type !== 'ClassDeclaration') {
+        throw new Error('expected an abstract class declaration');
+      }
+      expect(class_.body.body.every(isAbstractMethodDefinition)).toBe(true);
+    }
+  });
+
+  test('abstract methods with a body remain invalid', () => {
+    for (const method of [
+      'abstract method(): void {}',
+      'abstract method(): void\n{}',
+    ]) {
+      expect(() => parse(`abstract class Base { ${method} }`)).toThrow(
+        'Abstract methods cannot have an implementation.',
+      );
+    }
+  });
+
+  test('same-line abstract methods require a semicolon', () => {
+    expect(() =>
+      parse(`
+        abstract class Base {
+          abstract first(): void abstract second(): void;
+        }
+      `),
+    ).toThrow('Abstract methods cannot have an implementation.');
+  });
+
   test('override property definitions', () => {
     const [derived] = parse(
       'class Derived extends Base { override value: number; }',

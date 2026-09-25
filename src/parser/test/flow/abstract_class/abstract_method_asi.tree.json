@@ -1,0 +1,636 @@
+{
+  "body": [
+    {
+      "abstract": true,
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 17,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 2
+                }
+              },
+              "name": "method",
+              "optional": false,
+              "range": [
+                47,
+                53
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 25,
+                "line": 2
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 2
+              }
+            },
+            "range": [
+              38,
+              61
+            ],
+            "type": "AbstractMethodDefinition",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 19,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 2
+                }
+              },
+              "params": [],
+              "range": [
+                53,
+                55
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 25,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 21,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  57,
+                  61
+                ],
+                "type": "VoidTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 34,
+            "line": 1
+          }
+        },
+        "range": [
+          34,
+          63
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 33,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 1
+          }
+        },
+        "name": "BeforeClosingBrace",
+        "optional": false,
+        "range": [
+          15,
+          33
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        63
+      ],
+      "superClass": null,
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    },
+    {
+      "abstract": true,
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 16,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 6
+                }
+              },
+              "name": "first",
+              "optional": false,
+              "range": [
+                110,
+                115
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 24,
+                "line": 6
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 6
+              }
+            },
+            "range": [
+              101,
+              123
+            ],
+            "type": "AbstractMethodDefinition",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 6
+                },
+                "source": null,
+                "start": {
+                  "column": 16,
+                  "line": 6
+                }
+              },
+              "params": [],
+              "range": [
+                115,
+                117
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 24,
+                    "line": 6
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 20,
+                    "line": 6
+                  }
+                },
+                "range": [
+                  119,
+                  123
+                ],
+                "type": "VoidTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 17,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 7
+                }
+              },
+              "name": "second",
+              "optional": false,
+              "range": [
+                135,
+                141
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 25,
+                "line": 7
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 7
+              }
+            },
+            "range": [
+              126,
+              149
+            ],
+            "type": "AbstractMethodDefinition",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 19,
+                  "line": 7
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 7
+                }
+              },
+              "params": [],
+              "range": [
+                141,
+                143
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 25,
+                    "line": 7
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 21,
+                    "line": 7
+                  }
+                },
+                "range": [
+                  145,
+                  149
+                ],
+                "type": "VoidTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 8
+          },
+          "source": null,
+          "start": {
+            "column": 32,
+            "line": 5
+          }
+        },
+        "range": [
+          97,
+          152
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 31,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 5
+          }
+        },
+        "name": "BeforeNextMember",
+        "optional": false,
+        "range": [
+          80,
+          96
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 8
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 5
+        }
+      },
+      "range": [
+        65,
+        152
+      ],
+      "superClass": null,
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    },
+    {
+      "abstract": true,
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 16,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 11
+                }
+              },
+              "name": "first",
+              "optional": false,
+              "range": [
+                200,
+                205
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 24,
+                "line": 11
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 11
+              }
+            },
+            "range": [
+              191,
+              213
+            ],
+            "type": "AbstractMethodDefinition",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 11
+                },
+                "source": null,
+                "start": {
+                  "column": 16,
+                  "line": 11
+                }
+              },
+              "params": [],
+              "range": [
+                205,
+                207
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 24,
+                    "line": 11
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 20,
+                    "line": 11
+                  }
+                },
+                "range": [
+                  209,
+                  213
+                ],
+                "type": "VoidTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 17,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 12
+                }
+              },
+              "name": "second",
+              "optional": false,
+              "range": [
+                236,
+                242
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 25,
+                "line": 12
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 12
+              }
+            },
+            "range": [
+              227,
+              250
+            ],
+            "type": "AbstractMethodDefinition",
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 19,
+                  "line": 12
+                },
+                "source": null,
+                "start": {
+                  "column": 17,
+                  "line": 12
+                }
+              },
+              "params": [],
+              "range": [
+                242,
+                244
+              ],
+              "rest": null,
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 25,
+                    "line": 12
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 21,
+                    "line": 12
+                  }
+                },
+                "range": [
+                  246,
+                  250
+                ],
+                "type": "VoidTypeAnnotation"
+              },
+              "this": null,
+              "type": "FunctionTypeAnnotation",
+              "typeParameters": null
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 13
+          },
+          "source": null,
+          "start": {
+            "column": 33,
+            "line": 10
+          }
+        },
+        "range": [
+          187,
+          253
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 32,
+            "line": 10
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 10
+          }
+        },
+        "name": "BeforeLineComment",
+        "optional": false,
+        "range": [
+          169,
+          186
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 13
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 10
+        }
+      },
+      "range": [
+        154,
+        253
+      ],
+      "superClass": null,
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    }
+  ],
+  "comments": [
+    {
+      "loc": {
+        "end": {
+          "column": 35,
+          "line": 11
+        },
+        "source": null,
+        "start": {
+          "column": 25,
+          "line": 11
+        }
+      },
+      "range": [
+        214,
+        224
+      ],
+      "type": "Line",
+      "value": " comment"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 1,
+      "line": 13
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    253
+  ],
+  "type": "Program"
+}

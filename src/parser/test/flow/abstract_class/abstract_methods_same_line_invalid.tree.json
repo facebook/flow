@@ -1,0 +1,417 @@
+{
+  "body": [
+    {
+      "abstract": true,
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 16,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 2
+                }
+              },
+              "name": "first",
+              "optional": false,
+              "range": [
+                30,
+                35
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 1,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 2
+              }
+            },
+            "range": [
+              21,
+              70
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "directive": null,
+                    "expression": {
+                      "arguments": [],
+                      "callee": {
+                        "loc": {
+                          "end": {
+                            "column": 40,
+                            "line": 2
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 34,
+                            "line": 2
+                          }
+                        },
+                        "name": "second",
+                        "optional": false,
+                        "range": [
+                          53,
+                          59
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 42,
+                          "line": 2
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 34,
+                          "line": 2
+                        }
+                      },
+                      "optional": false,
+                      "range": [
+                        53,
+                        61
+                      ],
+                      "type": "CallExpression",
+                      "typeArguments": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 42,
+                        "line": 2
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 34,
+                        "line": 2
+                      }
+                    },
+                    "range": [
+                      53,
+                      61
+                    ],
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "directive": null,
+                    "expression": {
+                      "argument": {
+                        "loc": {
+                          "end": {
+                            "column": 49,
+                            "line": 2
+                          },
+                          "source": null,
+                          "start": {
+                            "column": 48,
+                            "line": 2
+                          }
+                        },
+                        "range": [
+                          67,
+                          68
+                        ],
+                        "raw": "null",
+                        "type": "Literal",
+                        "value": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 48,
+                          "line": 2
+                        },
+                        "source": null,
+                        "start": {
+                          "column": 44,
+                          "line": 2
+                        }
+                      },
+                      "operator": "void",
+                      "prefix": true,
+                      "range": [
+                        63,
+                        67
+                      ],
+                      "type": "UnaryExpression"
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 49,
+                        "line": 2
+                      },
+                      "source": null,
+                      "start": {
+                        "column": 44,
+                        "line": 2
+                      }
+                    },
+                    "range": [
+                      63,
+                      68
+                    ],
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 3
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 25,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  44,
+                  70
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 1,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 16,
+                  "line": 2
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                35,
+                70
+              ],
+              "returnType": {
+                "loc": {
+                  "end": {
+                    "column": 24,
+                    "line": 2
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 18,
+                    "line": 2
+                  }
+                },
+                "range": [
+                  37,
+                  43
+                ],
+                "type": "TypeAnnotation",
+                "typeAnnotation": {
+                  "loc": {
+                    "end": {
+                      "column": 24,
+                      "line": 2
+                    },
+                    "source": null,
+                    "start": {
+                      "column": 20,
+                      "line": 2
+                    }
+                  },
+                  "range": [
+                    39,
+                    43
+                  ],
+                  "type": "VoidTypeAnnotation"
+                }
+              },
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 0,
+            "line": 4
+          },
+          "source": null,
+          "start": {
+            "column": 17,
+            "line": 1
+          }
+        },
+        "range": [
+          17,
+          71
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 16,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 1
+          }
+        },
+        "name": "C",
+        "optional": false,
+        "range": [
+          15,
+          16
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        71
+      ],
+      "superClass": null,
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    }
+  ],
+  "comments": [],
+  "errors": [
+    {
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 25,
+          "line": 2
+        }
+      },
+      "message": "Abstract methods cannot have an implementation."
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 33,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 25,
+          "line": 2
+        }
+      },
+      "message": "Unexpected identifier, expected the token `{`"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 43,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 42,
+          "line": 2
+        }
+      },
+      "message": "Unexpected token `:`, expected the end of an expression statement (`;`)"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 43,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 42,
+          "line": 2
+        }
+      },
+      "message": "Unexpected token `:`, expected the start of a statement"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 49,
+          "line": 2
+        },
+        "source": null,
+        "start": {
+          "column": 48,
+          "line": 2
+        }
+      },
+      "message": "Unexpected token `;`"
+    },
+    {
+      "loc": {
+        "end": {
+          "column": 0,
+          "line": 4
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 4
+        }
+      },
+      "message": "Unexpected end of input, expected the token `}`"
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 0,
+      "line": 4
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    71
+  ],
+  "type": "Program"
+}
