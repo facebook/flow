@@ -1456,6 +1456,22 @@ pub struct MessageTypeReferenceData<L: Dupe> {
     pub desc: Result<ALocTy, VirtualReasonDesc<L>>,
 }
 
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct TupleElementReferenceData<L: Dupe> {
+    pub loc: L,
+    pub name: Option<FlowSmolStr>,
+}
+
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum LowerRequirement {
     Array,
@@ -2198,9 +2214,9 @@ pub enum Message<L: Dupe> {
     MessageInvalidTrivialRecursiveDefinition(VirtualReasonDesc<L>),
 
     MessageInvalidTupleRequiredAfterOptional {
-        reason_tuple: VirtualReason<L>,
-        reason_required: VirtualReason<L>,
-        reason_optional: VirtualReason<L>,
+        tuple_loc: L,
+        required: TupleElementReferenceData<L>,
+        optional: TupleElementReferenceData<L>,
     },
 
     MessageInvalidTupleTypeSpread(Box<MessageTypeReferenceData<L>>),

@@ -44,6 +44,7 @@ use flow_typing_errors::error_message::ErrorTypeReferenceData;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::intermediate_error_types::Explanation;
+use flow_typing_errors::intermediate_error_types::TupleElementReferenceData;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
@@ -9098,6 +9099,7 @@ pub fn validate_tuple_elements<'cx>(
         } else {
             valid = match prev_element {
                 Some(TupleElement {
+                    name: optional_name,
                     optional: true,
                     reason: reason_optional,
                     ..
@@ -9108,9 +9110,15 @@ pub fn validate_tuple_elements<'cx>(
                             env,
                             ErrorMessage::ETupleRequiredAfterOptional(Box::new(
                                 ETupleRequiredAfterOptionalData {
-                                    reason_tuple: reason_tuple.dupe(),
-                                    reason_required: reason_element.dupe(),
-                                    reason_optional: reason_optional.dupe(),
+                                    tuple_loc: reason_tuple.loc().dupe(),
+                                    required: TupleElementReferenceData {
+                                        loc: reason_element.loc().dupe(),
+                                        name: element.name.dupe(),
+                                    },
+                                    optional: TupleElementReferenceData {
+                                        loc: reason_optional.loc().dupe(),
+                                        name: optional_name.dupe(),
+                                    },
                                 },
                             )),
                         )?;

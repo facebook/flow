@@ -142,6 +142,7 @@ use crate::intermediate_error_types::PrimitiveKind;
 use crate::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use crate::intermediate_error_types::StrictComparisonInfo;
 use crate::intermediate_error_types::SubComponentOfInvariantSubtypingError;
+use crate::intermediate_error_types::TupleElementReferenceData;
 use crate::intermediate_error_types::UnsupportedSyntax;
 
 /// Data struct for boxed `ErrorMessage::EIncompatibleSpeculation` variant.
@@ -1725,9 +1726,9 @@ pub struct ETupleElementPolarityMismatchData<L: Dupe + PartialOrd + Ord + Partia
     serde::Deserialize
 )]
 pub struct ETupleRequiredAfterOptionalData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_tuple: VirtualReason<L>,
-    pub reason_required: VirtualReason<L>,
-    pub reason_optional: VirtualReason<L>,
+    pub tuple_loc: L,
+    pub required: TupleElementReferenceData<L>,
+    pub optional: TupleElementReferenceData<L>,
 }
 
 #[derive(
@@ -4823,13 +4824,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
-                reason_tuple,
-                reason_required,
-                reason_optional,
+                tuple_loc,
+                required,
+                optional,
             }) => ETupleRequiredAfterOptional(Box::new(ETupleRequiredAfterOptionalData {
-                reason_tuple: map_reason(reason_tuple),
-                reason_required: map_reason(reason_required),
-                reason_optional: map_reason(reason_optional),
+                tuple_loc: f(tuple_loc),
+                required: TupleElementReferenceData {
+                    loc: f(required.loc),
+                    name: required.name,
+                },
+                optional: TupleElementReferenceData {
+                    loc: f(optional.loc),
+                    name: optional.name,
+                },
             })),
 
             ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {
@@ -6938,6 +6945,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 .unwrap(),
             })),
 
+            ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
+                tuple_loc,
+                required,
+                optional,
+            }) => ETupleRequiredAfterOptional(Box::new(ETupleRequiredAfterOptionalData {
+                tuple_loc,
+                required,
+                optional,
+            })),
+
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 loc,
                 condition,
@@ -7953,9 +7970,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             )) => Some(loc.dupe()),
 
             Self::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
-                reason_tuple: reason,
+                tuple_loc: loc,
                 ..
-            }) => Some(reason.loc.dupe()),
+            }) => Some(loc.dupe()),
 
             Self::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration_loc, ..
@@ -10422,13 +10439,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
-                reason_tuple,
-                reason_required,
-                reason_optional,
+                tuple_loc,
+                required,
+                optional,
             }) => Normal(Message::MessageInvalidTupleRequiredAfterOptional {
-                reason_tuple,
-                reason_required,
-                reason_optional,
+                tuple_loc,
+                required,
+                optional,
             }),
 
             ErrorMessage::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {

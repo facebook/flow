@@ -352,6 +352,14 @@ fn dump_named_type_desc(
     }
 }
 
+fn dump_tuple_element_reference(loc: &ALoc, name: Option<&str>) -> String {
+    let description = name.map_or_else(
+        || "tuple element".to_string(),
+        |name| format!("tuple element (labeled '{name}')"),
+    );
+    format!("{}: {description:?}", string_of_aloc(None, loc))
+}
+
 fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> String {
     if depth == 0 {
         return string_of_ctor(t).to_string();
@@ -2535,15 +2543,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::ETupleRequiredAfterOptional(box ETupleRequiredAfterOptionalData {
-            reason_tuple,
-            reason_required,
-            reason_optional,
+            tuple_loc,
+            required,
+            optional,
         }) => {
+            let tuple = format!("{}: {:?}", string_of_aloc(None, tuple_loc), "tuple type");
             format!(
                 "ETupleRequiredAfterOptional(Box::new(ETupleRequiredAfterOptionalData {{reason_tuple = {}; reason_required = {}; reason_optional = {}}}))",
-                dump_reason(cx, reason_tuple),
-                dump_reason(cx, reason_required),
-                dump_reason(cx, reason_optional)
+                tuple,
+                dump_tuple_element_reference(&required.loc, required.name.as_deref()),
+                dump_tuple_element_reference(&optional.loc, optional.name.as_deref())
             )
         }
         ErrorMessage::ETupleInvalidTypeSpread(box ETupleInvalidTypeSpreadData {

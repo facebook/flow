@@ -138,6 +138,7 @@ use super::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use super::intermediate_error_types::RootMessage;
 use super::intermediate_error_types::StrictComparisonInfo;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
+use super::intermediate_error_types::TupleElementReferenceData;
 use crate::error_message::ConstructSignatureMissingInSubtypingData;
 use crate::error_message::EExpectedBigIntLitData;
 use crate::error_message::EExpectedBooleanLitData;
@@ -7801,18 +7802,30 @@ where
                 text(". "),
             ]),
             MessageInvalidTupleRequiredAfterOptional {
-                reason_tuple,
-                reason_required,
-                reason_optional,
-            } => friendly::Message(vec![
-                text("Invalid "),
-                ref_(reason_tuple),
-                text(", required "),
-                ref_(reason_required),
-                text(" must be after optional "),
-                ref_(reason_optional),
-                text("."),
-            ]),
+                tuple_loc,
+                required,
+                optional,
+            } => {
+                let tuple_element_ref = |element: &TupleElementReferenceData<L>| {
+                    let description = element.name.as_ref().map_or_else(
+                        || "tuple element".to_string(),
+                        |name| format!("tuple element (labeled '{name}')"),
+                    );
+                    friendly::hardcoded_string_desc_ref(
+                        &description,
+                        loc_of_aloc(&element.loc),
+                    )
+                };
+                friendly::Message(vec![
+                    text("Invalid "),
+                    friendly::hardcoded_string_desc_ref("tuple type", loc_of_aloc(tuple_loc)),
+                    text(", required "),
+                    tuple_element_ref(required),
+                    text(" must be after optional "),
+                    tuple_element_ref(optional),
+                    text("."),
+                ])
+            }
             MessageInvalidTupleTypeSpread(reason_arg) => friendly::Message(vec![
                 text("Cannot spread non-tuple ("),
                 ref_of_ty_or_desc(&reason_arg.loc, &reason_arg.desc),
