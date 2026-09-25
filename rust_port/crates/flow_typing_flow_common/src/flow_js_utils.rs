@@ -1719,6 +1719,28 @@ pub fn type_reference_at_loc_for_error(t: &Type, loc: ALoc) -> ErrorTypeReferenc
     }
 }
 
+/// Extracts a user-written name for error messages without retaining its reason.
+pub fn description_name_for_error(reason: &Reason) -> Option<FlowSmolStr> {
+    match reason.desc(false) {
+        VirtualReasonDesc::RIdentifier(name)
+        | VirtualReasonDesc::RType(name)
+        | VirtualReasonDesc::REnumMember {
+            member_name: name, ..
+        } => Some(name.dupe()),
+        _ => None,
+    }
+}
+
+/// Extracts a user-written type name for error messages without retaining its reason.
+pub fn type_name_for_error(reason: &Reason) -> Option<FlowSmolStr> {
+    match reason.desc(false) {
+        VirtualReasonDesc::RType(name)
+        | VirtualReasonDesc::ROpaqueType(name)
+        | VirtualReasonDesc::RTypeAlias(box (name, _, _)) => Some(name.dupe()),
+        _ => None,
+    }
+}
+
 /// Retains a type for error normalization while preserving a selected reason as error identity.
 pub fn type_reference_with_reason_for_error(
     t: &Type,
@@ -3874,11 +3896,13 @@ pub mod value_to_type_reference_transform {
     use flow_typing_type::type_::TypeTKind;
     use flow_typing_type::type_::UseOp;
     use flow_typing_type::type_::any_t;
+    use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
     use flow_typing_type::type_util;
     use flow_typing_type::type_util::reason_of_t;
 
     use super::FlowJsException;
     use super::add_output_with_env;
+    use super::description_name_for_error;
     use super::fix_this_instance;
     use super::lookup_builtin_type_with_env;
     use super::type_reference_with_reason_for_error;
@@ -4080,7 +4104,9 @@ pub mod value_to_type_reference_transform {
                         env,
                         ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(Box::new(
                             EnumMemberUsedAsTypeData {
-                                reason: reason_op.to_error_reference(),
+                                loc: reason_op.loc().dupe(),
+                                description_name: description_name_for_error(reason_op),
+                                type_desc: TypeOrTypeDescT::Type(t.dupe()),
                                 enum_: type_reference_with_reason_for_error(&t, reason.dupe()),
                             },
                         ))),
@@ -7492,11 +7518,6 @@ pub mod get_prop_t_kit {
         } = enum_info.deref();
         let error_invalid_access =
             |suggestion: Option<FlowSmolStr>| -> Result<F::R, FlowJsException> {
-                let member_reason = prop_reason.dupe().replace_desc(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(
-                        member_name.display_smol_str(),
-                    ),
-                );
                 add_output_with_env(
                     cx,
                     env,
@@ -7505,7 +7526,8 @@ pub mod get_prop_t_kit {
                             Box::new(EnumInvalidMemberAccessData {
                                 member_name: Some(member_name.dupe()),
                                 suggestion,
-                                reason: member_reason.to_error_reference(),
+                                member_loc: prop_reason.loc().dupe(),
+                                member_type: None,
                                 enum_: type_reference_with_reason_for_error(
                                     &enum_object_t,
                                     enum_reason.dupe(),

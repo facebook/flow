@@ -1,7 +1,8 @@
 === block 1 ===
 Error -------------------------------------------------------------------------- -:13:8
 
-Cannot access `x` on enum `Status` [1] because computed access is not allowed on enums. [invalid-enum-access]
+Cannot access string literal `Active` on enum `Status` [1] because computed access is not allowed on enums.
+[invalid-enum-access]
 
    -:13:8
    13| Status[x]; // Error: computed access on enums is not allowed

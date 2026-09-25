@@ -8836,7 +8836,8 @@ fn __flow_impl<'cx>(
                     EnumInvalidMemberAccessData {
                         member_name: None,
                         suggestion: None,
-                        reason: reason.to_error_reference(),
+                        member_loc: reason.loc().dupe(),
+                        member_type: Some(flow_js_utils::type_reference_for_error(key_t)),
                         enum_: flow_js_utils::type_reference_with_reason_for_error(
                             l,
                             enum_reason.dupe(),

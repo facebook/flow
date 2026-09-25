@@ -4140,6 +4140,14 @@ where
         Err(desc) => friendly::desc_of_reason_desc(&desc.map_locs(&loc_of_aloc)),
     };
 
+    let desc_of_name_or_ty_or_desc =
+        |name: Option<&FlowSmolStr>, ty_or_desc: &Result<ALocTy, VirtualReasonDesc<L>>| {
+            name.map_or_else(
+                || desc_of_ty_or_desc(ty_or_desc),
+                |name| code(name.as_str()),
+            )
+        };
+
     let explanation_to_friendly_msgs = |explanation: &Explanation<L>| -> friendly::Message<Loc> {
         use super::intermediate_error_types::Explanation::*;
 
@@ -5285,10 +5293,33 @@ where
                 description,
                 enum_,
             }) => {
-                let mut features = vec![
-                    text("Cannot access "),
-                    friendly::desc_of_reason_desc(description),
-                ];
+                let mut features = vec![text("Cannot access ")];
+                match (member_name, description) {
+                    (None, Ok(ty)) => match ty.as_ref() {
+                        Ty::StrLit(value) => {
+                            features.extend(vec![text("string literal "), code(value.as_str())])
+                        }
+                        Ty::NumLit(value) => {
+                            features.extend(vec![text("number literal "), code(value)])
+                        }
+                        Ty::BoolLit(value) => features.extend(vec![
+                            text("boolean literal "),
+                            code(if *value { "true" } else { "false" }),
+                        ]),
+                        Ty::BigIntLit(value) => {
+                            features.extend(vec![text("bigint literal "), code(value)])
+                        }
+                        Ty::Str => features.push(text("string")),
+                        Ty::Num => features.push(text("number")),
+                        Ty::Bool => features.push(text("boolean")),
+                        Ty::BigInt => features.push(text("bigint")),
+                        Ty::Symbol => features.push(text("symbol")),
+                        Ty::Void => features.push(text("undefined")),
+                        Ty::Null => features.push(text("null")),
+                        _ => features.push(desc_of_ty_or_desc(description)),
+                    },
+                    _ => features.push(desc_of_ty_or_desc(description)),
+                }
                 match member_name {
                     Some(name) => {
                         features.extend(vec![
@@ -5671,7 +5702,11 @@ where
                     1 => "no more than 1 argument is expected by".to_string(),
                     n => format!("no more than {} arguments are expected by", n),
                 };
-                friendly::Message(vec![text(&msg), text(" "), ref_(def_reason)])
+                friendly::Message(vec![
+                    text(&msg),
+                    text(" "),
+                    ref_(def_reason),
+                ])
             }
             MessageCannotChangeEnumMember(enum_) => friendly::Message(vec![
                 text("Cannot change member of "),
@@ -5845,18 +5880,32 @@ where
             }
             MessageCannotExhaustivelyCheckAbstractEnums(
                 box MessageCannotExhaustivelyCheckAbstractEnumsData {
+                    description_name,
                     description,
-                    enum_reason,
+                    enum_,
+                    enum_name,
                 },
-            ) => friendly::Message(vec![
-                text("Cannot exhaustively check "),
-                friendly::desc_of_reason_desc(description),
-                text(" because "),
-                ref_(enum_reason),
-                text(" is an abstract enum value, so has no members."),
-            ]),
+            ) => {
+                let enum_reference = enum_name.as_ref().map_or_else(
+                    || ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    |name| {
+                        friendly::hardcoded_string_desc_ref(
+                            &format!("`{name}`"),
+                            loc_of_aloc(&enum_.loc),
+                        )
+                    },
+                );
+                friendly::Message(vec![
+                    text("Cannot exhaustively check "),
+                    desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
+                    text(" because "),
+                    enum_reference,
+                    text(" is an abstract enum value, so has no members."),
+                ])
+            }
             MessageCannotExhaustivelyCheckEnumWithUnknowns(
                 box MessageCannotExhaustivelyCheckEnumWithUnknownsData {
+                    description_name,
                     description,
                     enum_,
                 },
@@ -5864,7 +5913,7 @@ where
                 text("Missing "),
                 code("default"),
                 text(" case in the check of "),
-                friendly::desc_of_reason_desc(description),
+                desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
                 text(". "),
                 ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                 text(" has unknown members (specified using "),
@@ -5966,14 +6015,15 @@ where
                     |x: &UnionEnum| -> friendly::MessageFeature<Loc> { code(&x.to_string()) };
                 let string_of_non_unique_key =
                     |name: &Name,
-                     map: &BTreeMap<UnionEnum, Vec1<VirtualReason<L>>>|
+                     map: &BTreeMap<UnionEnum, Vec1<MessageTypeReferenceData<L>>>|
                      -> Vec<friendly::MessageFeature<Loc>> {
-                        let ref_texts =
-                            |rs: &Vec1<VirtualReason<L>>| -> Vec<friendly::MessageFeature<Loc>> {
-                                let mut result = vec![ref_(&rs[0])];
-                                for r in rs.iter().skip(1) {
+                        let ref_texts = |rs: &Vec1<MessageTypeReferenceData<L>>| -> Vec<
+                            friendly::MessageFeature<Loc>,
+                        > {
+                            let mut result = vec![ref_of_ty_or_desc(&rs[0].loc, &rs[0].desc)];
+                            for r in rs.iter().skip(1) {
                                     result.push(text(", "));
-                                    result.push(ref_(r));
+                                    result.push(ref_of_ty_or_desc(&r.loc, &r.desc));
                                 }
                                 result
                             };
@@ -6336,12 +6386,13 @@ where
             ]),
             MessageCannotUseEnumMemberUsedAsType(
                 box MessageCannotUseEnumMemberUsedAsTypeData {
+                    description_name,
                     description,
                     enum_,
                 },
             ) => friendly::Message(vec![
                 text("Cannot use "),
-                friendly::desc_of_reason_desc(description),
+                desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
                 text(" as a type. "),
                 text("Enum members are not separate types. "),
                 text("Only the enum itself, "),
@@ -7402,6 +7453,7 @@ where
                 ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
             MessageIncompleteExhausiveCheckEnum(box MessageIncompleteExhausiveCheckEnumData {
+                description_name,
                 description,
                 enum_,
                 left_to_check,
@@ -7468,7 +7520,7 @@ where
                 features.extend(left_to_check_features);
                 features.extend(vec![
                     text(" not been considered in check of "),
-                    friendly::desc_of_reason_desc(description),
+                    desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
                     text("."),
                 ]);
                 features.extend(default_features);

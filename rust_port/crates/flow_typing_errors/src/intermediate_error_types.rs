@@ -1212,7 +1212,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotYield(VirtualReasonDesc<L>),
 }
 
-pub type UnionEnumMap<L> = BTreeMap<UnionEnum, Vec1<VirtualReason<L>>>;
+pub type UnionEnumMap<L> = BTreeMap<UnionEnum, Vec1<MessageTypeReferenceData<L>>>;
 
 #[derive(
     Debug,
@@ -1278,7 +1278,7 @@ pub struct MessageAlreadyExhaustivelyCheckOneEnumMemberData<L: Dupe> {
 pub struct MessageCannotAccessEnumMemberData<L: Dupe> {
     pub member_name: Option<Name>,
     pub suggestion: Option<FlowSmolStr>,
-    pub description: VirtualReasonDesc<L>,
+    pub description: Result<ALocTy, VirtualReasonDesc<L>>,
     pub enum_: MessageTypeReferenceData<L>,
 }
 
@@ -1310,13 +1310,16 @@ pub struct MessageCannotExportRenamedDefaultData {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExhaustivelyCheckAbstractEnumsData<L: Dupe> {
-    pub description: VirtualReasonDesc<L>,
-    pub enum_reason: VirtualReason<L>,
+    pub description_name: Option<FlowSmolStr>,
+    pub description: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_name: Option<FlowSmolStr>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
-    pub description: VirtualReasonDesc<L>,
+    pub description_name: Option<FlowSmolStr>,
+    pub description: Result<ALocTy, VirtualReasonDesc<L>>,
     pub enum_: MessageTypeReferenceData<L>,
 }
 
@@ -1358,7 +1361,8 @@ pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseEnumMemberUsedAsTypeData<L: Dupe> {
-    pub description: VirtualReasonDesc<L>,
+    pub description_name: Option<FlowSmolStr>,
+    pub description: Result<ALocTy, VirtualReasonDesc<L>>,
     pub enum_: MessageTypeReferenceData<L>,
 }
 
@@ -1507,7 +1511,8 @@ pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
-    pub description: VirtualReasonDesc<L>,
+    pub description_name: Option<FlowSmolStr>,
+    pub description: Result<ALocTy, VirtualReasonDesc<L>>,
     pub enum_: MessageTypeReferenceData<L>,
     pub left_to_check: Vec<FlowSmolStr>,
     pub default_case_loc: Option<L>,

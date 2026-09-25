@@ -1302,7 +1302,11 @@ fn elab_t_concrete<'cx>(
                         flow_typing_errors::error_message::ErrorMessage::EEnumError(
                             flow_typing_errors::error_message::EnumErrorKind::EnumMemberUsedAsType(
                                 Box::new(EnumMemberUsedAsTypeData {
-                                    reason: reason.to_error_reference(),
+                                    loc: reason.loc().dupe(),
+                                    description_name: flow_js_utils::description_name_for_error(
+                                        reason,
+                                    ),
+                                    type_desc: flow_js_utils::type_or_type_desc_for_error(&t),
                                     enum_: flow_js_utils::type_reference_with_reason_for_error(
                                         &t,
                                         def_reason.dupe(),
@@ -2909,7 +2913,8 @@ fn elab_t_concrete<'cx>(
                         Box::new(EnumInvalidMemberAccessData {
                             member_name: None,
                             suggestion: None,
-                            reason: reason.to_error_reference(),
+                            member_loc: reason.loc().dupe(),
+                            member_type: Some(flow_js_utils::type_reference_for_error(&elem_type)),
                             enum_: flow_js_utils::type_reference_with_reason_for_error(
                                 &t,
                                 enum_reason.dupe(),

@@ -340,6 +340,18 @@ fn dump_loc_type_desc(cx: &Context, loc: &ALoc, type_desc: &TypeOrTypeDescT<ALoc
     }
 }
 
+fn dump_named_type_desc(
+    cx: &Context,
+    loc: &ALoc,
+    name: Option<&str>,
+    type_desc: &TypeOrTypeDescT<ALoc>,
+) -> String {
+    match name {
+        Some(name) => format!("{} RIdentifier({name:?})", string_of_aloc(None, loc)),
+        None => dump_loc_type_desc(cx, loc, type_desc),
+    }
+}
+
 fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> String {
     if depth == 0 {
         return string_of_ctor(t).to_string();
@@ -3610,7 +3622,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumInvalidMemberAccess(box EnumInvalidMemberAccessData {
                 member_name,
                 suggestion,
-                reason,
+                member_loc,
+                member_type,
                 enum_,
             }) => {
                 let member_str = match member_name {
@@ -3621,11 +3634,26 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     Some(s) => s.as_str(),
                     None => "<None>",
                 };
+                let member = member_type.as_ref().map_or_else(
+                    || {
+                        format!(
+                            "{} {:?}",
+                            string_of_aloc(None, member_loc),
+                            VirtualReasonDesc::<ALoc>::RIdentifier(
+                                member_name
+                                    .as_ref()
+                                    .expect("named enum access has a member name")
+                                    .display_smol_str(),
+                            )
+                        )
+                    },
+                    |type_ref| dump_loc_type_desc(cx, &type_ref.reference_loc, &type_ref.type_desc),
+                );
                 format!(
                     "EEnumError (EnumInvalidMemberAccess ({}) ({}) ({}) ({}))",
                     member_str,
                     suggestion_str,
-                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
+                    member,
                     dump_error_type_reference(cx, enum_)
                 )
             }
@@ -3714,7 +3742,9 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 )
             }
             EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {
-                reason,
+                loc,
+                description_name,
+                type_desc,
                 enum_,
                 left_to_check,
                 default_case_loc,
@@ -3725,19 +3755,21 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 };
                 format!(
                     "EEnumError (EnumNotAllChecked ({}) ({}) ({}) ({}))",
-                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
+                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
                     dump_error_type_reference(cx, enum_),
                     left_to_check.join(", "),
                     default_str
                 )
             }
             EnumErrorKind::EnumUnknownNotChecked(box EnumUnknownNotCheckedData {
-                reason,
+                loc,
+                description_name,
+                type_desc,
                 enum_,
             }) => {
                 format!(
                     "EEnumError (EnumUnknownNotChecked ({}) ({}))",
-                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
+                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
                     dump_error_type_reference(cx, enum_)
                 )
             }
@@ -3760,10 +3792,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     from_match
                 )
             }
-            EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData { reason, enum_ }) => {
+            EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
+                loc,
+                description_name,
+                type_desc,
+                enum_,
+            }) => {
                 format!(
                     "EEnumError (EnumMemberUsedAsType ({}) ({}))",
-                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
+                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
                     dump_error_type_reference(cx, enum_)
                 )
             }
@@ -3789,13 +3826,20 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 )
             }
             EnumErrorKind::EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
-                reason,
-                enum_reason,
+                loc,
+                description_name,
+                type_desc,
+                enum_,
+                enum_name,
             }) => {
+                let enum_reference = enum_name.as_ref().map_or_else(
+                    || dump_error_type_reference(cx, enum_),
+                    |name| format!("{} RType({name:?})", string_of_aloc(None, &enum_.loc)),
+                );
                 format!(
                     "EEnumError (EnumInvalidAbstractUse ({}) ({}))",
-                    format_args!("{} {:?}", string_of_aloc(None, &reason.loc), reason.desc),
-                    dump_reason(cx, enum_reason)
+                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
+                    enum_reference
                 )
             }
             EnumErrorKind::EnumInvalidMemberName(box EnumInvalidMemberNameData {

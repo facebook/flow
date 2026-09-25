@@ -932,19 +932,24 @@ fn optimize_spec_try_shortcut<'cx>(
                         ref map,
                     ),
                 ) => {
-                    let non_unique_keys: BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Reason>>> = map
+                    let non_unique_keys: BTreeMap<Name, BTreeMap<UnionEnum, Vec1<_>>> = map
                         .iter()
                         .filter_map(|(name, inner_map)| {
-                            let filtered: BTreeMap<UnionEnum, Vec1<Reason>> = inner_map
+                            let filtered = inner_map
                                 .iter()
                                 .filter(|(_, nel)| nel.len() > 1)
                                 .map(|(k, nel)| {
                                     (
                                         k.clone(),
-                                        nel.mapped_ref(|t| type_util::reason_of_t(t).dupe()),
+                                        nel.mapped_ref(|t| {
+                                            flow_js_utils::type_reference_with_reason_for_error(
+                                                t,
+                                                type_util::reason_of_t(t).dupe(),
+                                            )
+                                        }),
                                     )
                                 })
-                                .collect();
+                                .collect::<BTreeMap<_, _>>();
                             if filtered.is_empty() {
                                 None
                             } else {

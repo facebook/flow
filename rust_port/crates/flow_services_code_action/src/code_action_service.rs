@@ -1354,14 +1354,19 @@ pub fn ast_transforms_of_error(
         }
         ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
             box EnumInvalidMemberAccessData {
-                reason,
+                member_loc: reason_loc,
+                member_name: Some(member_name),
+                member_type: None,
                 suggestion: Some(fixed_prop_name),
                 ..
             },
         )) => {
-            if loc_opt_intersects(loc, reason.loc.dupe()) {
-                let original_prop_name = flow_common::reason::string_of_desc::<Loc>(&reason.desc);
-                let title = format!("Replace {} with `{}`", original_prop_name, fixed_prop_name);
+            if loc_opt_intersects(loc, reason_loc.dupe()) {
+                let original_prop_name = member_name.display_smol_str();
+                let title = format!(
+                    "Replace `{}` with `{}`",
+                    original_prop_name, fixed_prop_name
+                );
                 let fixed_prop_name: FlowSmolStr = fixed_prop_name.as_str().into();
                 vec![AstTransformOfError {
                     title,
@@ -1373,7 +1378,7 @@ pub fn ast_transforms_of_error(
                             loc,
                         )
                     })),
-                    target_loc: reason.loc.dupe(),
+                    target_loc: reason_loc.dupe(),
                     confidence: QuickfixConfidence::BestEffort,
                 }]
             } else {

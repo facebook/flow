@@ -20742,8 +20742,16 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                     env,
                     ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(Box::new(
                         flow_typing_errors::error_message::EnumInvalidAbstractUseData {
-                            reason: check_reason.to_error_reference(),
-                            enum_reason: enum_reason.dupe(),
+                            loc: check_reason.loc().dupe(),
+                            description_name: flow_js_utils::description_name_for_error(
+                                check_reason,
+                            ),
+                            type_desc: flow_js_utils::type_or_type_desc_for_error(concrete),
+                            enum_: flow_js_utils::type_reference_with_reason_for_error(
+                                concrete,
+                                enum_reason.dupe(),
+                            ),
+                            enum_name: flow_js_utils::type_name_for_error(enum_reason),
                         },
                     ))),
                 )?;
@@ -20999,7 +21007,9 @@ fn perform_enum_exhaustive_check<'cx>(
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(Box::new(
                     flow_typing_errors::error_message::EnumNotAllCheckedData {
-                        reason: check_reason.to_error_reference(),
+                        loc: check_reason.loc().dupe(),
+                        description_name: flow_js_utils::description_name_for_error(check_reason),
+                        type_desc: flow_js_utils::type_or_type_desc_for_error(enum_t),
                         enum_: flow_js_utils::type_reference_with_reason_for_error(
                             enum_t,
                             enum_reason.dupe(),
@@ -21017,7 +21027,9 @@ fn perform_enum_exhaustive_check<'cx>(
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(Box::new(
                     flow_typing_errors::error_message::EnumUnknownNotCheckedData {
-                        reason: check_reason.to_error_reference(),
+                        loc: check_reason.loc().dupe(),
+                        description_name: flow_js_utils::description_name_for_error(check_reason),
+                        type_desc: flow_js_utils::type_or_type_desc_for_error(enum_t),
                         enum_: flow_js_utils::type_reference_with_reason_for_error(
                             enum_t,
                             enum_reason.dupe(),
