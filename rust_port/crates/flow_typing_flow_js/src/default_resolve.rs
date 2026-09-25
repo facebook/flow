@@ -270,7 +270,10 @@ pub fn default_resolve_touts<'cx>(
             resolve_tvar(tout_tvar)
         }
         UseTInner::CheckUnusedPromiseT { .. } => Ok(()),
-        UseTInner::ConvertEmptyPropsToMixedT(_, tout) => resolve(tout.dupe()),
+        UseTInner::ConvertEmptyPropsToMixedT(_, collector) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::ExitRendersT {
             renders_reason: _,
             u,

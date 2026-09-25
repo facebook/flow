@@ -2594,7 +2594,7 @@ pub enum UseTInner<CX = ()> {
         reason: Reason,
         async_: bool,
     },
-    ConvertEmptyPropsToMixedT(ALoc, Type),
+    ConvertEmptyPropsToMixedT(ALoc, type_collector::TypeCollector),
     ExitRendersT {
         renders_reason: Reason,
         u: Box<UseT<CX>>,

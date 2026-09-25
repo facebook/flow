@@ -72,6 +72,7 @@ use flow_typing_type::type_::object;
 use flow_typing_type::type_::object::ObjectToolReactConfigData;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::react;
+use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
 use flow_typing_type::type_util::mk_named_prop;
@@ -592,13 +593,20 @@ fn props_to_tout<'cx>(
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config, ..
             }) => {
+                let collector = TypeCollector::create();
                 FlowJs::rec_flow_with_env(
                     cx,
                     env,
                     trace,
                     config,
-                    &UseT::new(UseTInner::ConvertEmptyPropsToMixedT(r.loc().dupe(), tout)),
+                    &UseT::new(UseTInner::ConvertEmptyPropsToMixedT(
+                        r.loc().dupe(),
+                        collector.dupe(),
+                    )),
                 )?;
+                for t in collector.collect_to_vec() {
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &t, &tout)?;
+                }
                 Ok(())
             }
             // ...otherwise, error.

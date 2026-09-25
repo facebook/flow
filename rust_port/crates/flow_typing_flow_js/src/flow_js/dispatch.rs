@@ -757,19 +757,13 @@ fn __flow_impl<'cx>(
             )?;
             rec_flow(cx, env, trace, (&repos_t, u))?;
         }
-        (TypeInner::DefT(reason, def_t), UseTInner::ConvertEmptyPropsToMixedT(_, tout))
+        (TypeInner::DefT(reason, def_t), UseTInner::ConvertEmptyPropsToMixedT(_, collector))
             if matches!(def_t.deref(), DefTInner::EmptyT) =>
         {
-            rec_flow_t(
-                cx,
-                env,
-                trace,
-                unknown_use(),
-                (&mixed_t::make(reason.dupe()), tout),
-            )?;
+            collector.add(mixed_t::make(reason.dupe()));
         }
-        (_, UseTInner::ConvertEmptyPropsToMixedT(_, tout)) => {
-            rec_flow_t(cx, env, trace, unknown_use(), (l, tout))?;
+        (_, UseTInner::ConvertEmptyPropsToMixedT(_, collector)) => {
+            collector.add(l.dupe());
         }
         // ***************
         // * annotations *
