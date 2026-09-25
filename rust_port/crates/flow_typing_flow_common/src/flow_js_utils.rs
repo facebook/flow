@@ -17,7 +17,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
-use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
@@ -8666,32 +8665,29 @@ pub fn unary_negate_bigint_lit(
 }
 
 fn arithmetic_operand_data(t: &Type) -> EArithmeticOperandData<ALoc> {
-    use flow_typing_type::type_util;
-
-    let reason = type_util::reason_of_t(t);
+    let operand = arithmetic_type_reference_for_error(t);
     EArithmeticOperandData {
+        loc: operand.loc.dupe(),
+        operand,
+    }
+}
+
+fn arithmetic_type_reference_for_error(t: &Type) -> ErrorTypeReferenceData<ALoc> {
+    let reason = reason_of_t(t);
+    let type_desc = if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
+        TypeOrTypeDescT::TypeDesc(Err(VirtualReasonDesc::RNullOrVoid))
+    } else {
+        type_or_type_desc_for_error(t)
+    };
+    ErrorTypeReferenceData {
         loc: reason.loc().dupe(),
-        operand: ErrorReference::new(
-            type_util::ref_loc_of_t(t).dupe(),
-            reason.desc(false).clone(),
-        ),
-        operand_desc: arithmetic_type_or_type_desc(t),
+        reference_loc: type_util::ref_loc_of_t(t).dupe(),
+        type_desc,
     }
 }
 
 fn arithmetic_operand_error(t: &Type) -> ErrorMessage<ALoc> {
     ErrorMessage::EArithmeticOperand(Box::new(arithmetic_operand_data(t)))
-}
-
-fn arithmetic_type_or_type_desc(t: &Type) -> TypeOrTypeDescT<ALoc> {
-    use flow_typing_type::type_util;
-
-    let reason = type_util::reason_of_t(t);
-    if matches!(reason.desc(true), VirtualReasonDesc::RNullOrVoid) {
-        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
-    } else {
-        type_or_type_desc_for_error(t)
-    }
 }
 
 pub fn flow_unary_arith<'cx>(
@@ -8810,8 +8806,6 @@ pub fn flow_arith<'cx>(
     use flow_typing_type::type_::empty_t;
     use flow_typing_type::type_::num_module_t;
     use flow_typing_type::type_::str_module_t;
-    use flow_typing_type::type_util;
-    use flow_typing_type::type_util::reason_of_t;
 
     let op = kind.1;
 
@@ -8920,16 +8914,8 @@ pub fn flow_arith<'cx>(
                 env,
                 ErrorMessage::EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                     loc: reason.loc().dupe(),
-                    left: ErrorReference::new(
-                        type_util::ref_loc_of_t(l).dupe(),
-                        reason_of_t(l).desc(false).clone(),
-                    ),
-                    left_desc: arithmetic_type_or_type_desc(l),
-                    right: ErrorReference::new(
-                        type_util::ref_loc_of_t(r).dupe(),
-                        reason_of_t(r).desc(false).clone(),
-                    ),
-                    right_desc: arithmetic_type_or_type_desc(r),
+                    left: arithmetic_type_reference_for_error(l),
+                    right: arithmetic_type_reference_for_error(r),
                     kind,
                 })),
             )?;

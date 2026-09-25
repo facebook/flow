@@ -91,7 +91,6 @@ use crate::intermediate_error_types::MatchInvalidCaseSyntax;
 use crate::intermediate_error_types::MatchObjPatternKind;
 use crate::intermediate_error_types::Message;
 use crate::intermediate_error_types::MessageAlreadyExhaustivelyCheckOneEnumMemberData;
-use crate::intermediate_error_types::MessageArithmeticOperandData;
 use crate::intermediate_error_types::MessageCannotAccessEnumMemberData;
 use crate::intermediate_error_types::MessageCannotAddComputedPropertyDueToPotentialOverwriteData;
 use crate::intermediate_error_types::MessageCannotCallMaybeReactHookData;
@@ -2832,10 +2831,8 @@ pub enum VarianceKeywordKind {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EInvalidBinaryArithData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub left: ErrorReference<L>,
-    pub left_desc: TypeOrTypeDesc<L>,
-    pub right: ErrorReference<L>,
-    pub right_desc: TypeOrTypeDesc<L>,
+    pub left: ErrorTypeReferenceData<L>,
+    pub right: ErrorTypeReferenceData<L>,
     pub kind: flow_typing_type::type_::arith_kind::ArithKind,
 }
 
@@ -2878,8 +2875,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EInvalidBinaryArithDat
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EArithmeticOperandData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub operand: ErrorReference<L>,
-    pub operand_desc: TypeOrTypeDesc<L>,
+    pub operand: ErrorTypeReferenceData<L>,
 }
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EArithmeticOperandData<L> {
@@ -5594,15 +5590,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 rhs_loc: f(rhs_loc),
                 rhs_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), rhs_desc),
             })),
-            EArithmeticOperand(box EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc,
-            }) => EArithmeticOperand(Box::new(EArithmeticOperandData {
-                loc: f(loc),
-                operand: map_error_ref(operand),
-                operand_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), operand_desc),
-            })),
+            EArithmeticOperand(box EArithmeticOperandData { loc, operand }) => {
+                EArithmeticOperand(Box::new(EArithmeticOperandData {
+                    loc: f(loc),
+                    operand: map_error_type_ref(operand),
+                }))
+            }
             EForInRHS(box EForInRHSData {
                 loc,
                 rhs_loc,
@@ -6089,24 +6082,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EInvalidComponentRestParam(loc) => EInvalidComponentRestParam(f(loc)),
-            EBigIntRShift3(box EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc,
-            }) => EBigIntRShift3(Box::new(EArithmeticOperandData {
-                loc: f(loc),
-                operand: map_error_ref(operand),
-                operand_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), operand_desc),
-            })),
-            EBigIntNumCoerce(box EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc,
-            }) => EBigIntNumCoerce(Box::new(EArithmeticOperandData {
-                loc: f(loc),
-                operand: map_error_ref(operand),
-                operand_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), operand_desc),
-            })),
+            EBigIntRShift3(box EArithmeticOperandData { loc, operand }) => {
+                EBigIntRShift3(Box::new(EArithmeticOperandData {
+                    loc: f(loc),
+                    operand: map_error_type_ref(operand),
+                }))
+            }
+            EBigIntNumCoerce(box EArithmeticOperandData { loc, operand }) => {
+                EBigIntNumCoerce(Box::new(EArithmeticOperandData {
+                    loc: f(loc),
+                    operand: map_error_type_ref(operand),
+                }))
+            }
 
             EInvalidCatchParameterAnnotation {
                 loc,
@@ -6190,16 +6177,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidBinaryArith(box EInvalidBinaryArithData {
                 loc,
                 left,
-                left_desc,
                 right,
-                right_desc,
                 kind,
             }) => EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                 loc: f(loc),
-                left: map_error_ref(left),
-                left_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), left_desc),
-                right: map_error_ref(right),
-                right_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), right_desc),
+                left: map_error_type_ref(left),
+                right: map_error_type_ref(right),
                 kind,
             })),
 
@@ -6841,25 +6824,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 kind,
             })),
 
-            EBigIntRShift3(box EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc,
-            }) => EBigIntRShift3(Box::new(EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc: f(operand_desc),
-            })),
+            EBigIntRShift3(box EArithmeticOperandData { loc, operand }) => {
+                EBigIntRShift3(Box::new(EArithmeticOperandData {
+                    loc,
+                    operand: map_error_type_ref(operand),
+                }))
+            }
 
-            EBigIntNumCoerce(box EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc,
-            }) => EBigIntNumCoerce(Box::new(EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc: f(operand_desc),
-            })),
+            EBigIntNumCoerce(box EArithmeticOperandData { loc, operand }) => {
+                EBigIntNumCoerce(Box::new(EArithmeticOperandData {
+                    loc,
+                    operand: map_error_type_ref(operand),
+                }))
+            }
 
             EComparison(box EComparisonData {
                 r1,
@@ -7447,16 +7424,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidBinaryArith(box EInvalidBinaryArithData {
                 loc,
                 left,
-                left_desc,
                 right,
-                right_desc,
                 kind,
             }) => EInvalidBinaryArith(Box::new(EInvalidBinaryArithData {
                 loc,
-                left,
-                left_desc: f(left_desc),
-                right,
-                right_desc: f(right_desc),
+                left: map_error_type_ref(left),
+                right: map_error_type_ref(right),
                 kind,
             })),
 
@@ -7530,15 +7503,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 rhs_desc: f(rhs_desc),
             })),
 
-            EArithmeticOperand(box EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc,
-            }) => EArithmeticOperand(Box::new(EArithmeticOperandData {
-                loc,
-                operand,
-                operand_desc: f(operand_desc),
-            })),
+            EArithmeticOperand(box EArithmeticOperandData { loc, operand }) => {
+                EArithmeticOperand(Box::new(EArithmeticOperandData {
+                    loc,
+                    operand: map_error_type_ref(operand),
+                }))
+            }
 
             EIncompatibleType(box EIncompatibleTypeData {
                 lower_reason,
@@ -9418,16 +9388,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
-            ErrorMessage::EArithmeticOperand(box EArithmeticOperandData {
-                operand,
-                operand_desc,
-                ..
-            }) => Normal(Message::MessageCannotPerformArithOnNonNumbersOrBigInt(
-                Box::new(MessageArithmeticOperandData {
-                    operand,
-                    operand_desc: expect_type_desc(operand_desc),
-                }),
-            )),
+            ErrorMessage::EArithmeticOperand(box EArithmeticOperandData { operand, .. }) => {
+                Normal(Message::MessageCannotPerformArithOnNonNumbersOrBigInt(
+                    Box::new(expect_error_type_reference(operand)),
+                ))
+            }
 
             ErrorMessage::EBinaryInLHS(box EBinaryInLHSData {
                 lhs_loc, lhs_desc, ..
@@ -9965,26 +9930,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ))
             }
 
-            ErrorMessage::EBigIntRShift3(box EArithmeticOperandData {
-                operand,
-                operand_desc,
-                ..
-            }) => Normal(Message::MessageCannotPerformBigIntRShift3(Box::new(
-                MessageArithmeticOperandData {
-                    operand,
-                    operand_desc: expect_type_desc(operand_desc),
-                },
-            ))),
-            ErrorMessage::EBigIntNumCoerce(box EArithmeticOperandData {
-                operand,
-                operand_desc,
-                ..
-            }) => Normal(Message::MessageCannotPerformBigIntUnaryPlus(Box::new(
-                MessageArithmeticOperandData {
-                    operand,
-                    operand_desc: expect_type_desc(operand_desc),
-                },
-            ))),
+            ErrorMessage::EBigIntRShift3(box EArithmeticOperandData { operand, .. }) => {
+                Normal(Message::MessageCannotPerformBigIntRShift3(Box::new(
+                    expect_error_type_reference(operand),
+                )))
+            }
+            ErrorMessage::EBigIntNumCoerce(box EArithmeticOperandData { operand, .. }) => {
+                Normal(Message::MessageCannotPerformBigIntUnaryPlus(Box::new(
+                    expect_error_type_reference(operand),
+                )))
+            }
 
             ErrorMessage::EInvalidCatchParameterAnnotation {
                 ts_utility_syntax, ..
@@ -11597,21 +11552,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData {
                 left,
-                left_desc,
                 right,
-                right_desc,
                 kind,
                 ..
             }) => Normal(Message::MessageCannotPerformBinaryArith {
                 kind,
-                left: Box::new(MessageArithmeticOperandData {
-                    operand: left,
-                    operand_desc: expect_type_desc(left_desc),
-                }),
-                right: Box::new(MessageArithmeticOperandData {
-                    operand: right,
-                    operand_desc: expect_type_desc(right_desc),
-                }),
+                left: Box::new(expect_error_type_reference(left)),
+                right: Box::new(expect_error_type_reference(right)),
             }),
 
             ErrorMessage::EMissingPlatformSupportWithAvailablePlatforms(

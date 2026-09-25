@@ -3098,10 +3098,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 rhs,
             )
         }
-        ErrorMessage::EArithmeticOperand(box EArithmeticOperandData {
-            loc, operand_desc, ..
-        }) => {
-            let operand = match operand_desc {
+        ErrorMessage::EArithmeticOperand(box EArithmeticOperandData { loc, operand }) => {
+            let operand = match &operand.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
@@ -4165,14 +4163,14 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EReactRefInRender { .. } => "EReactRefInRender _".to_string(),
         ErrorMessage::EBigIntRShift3(operand) => {
-            let operand_desc = match &operand.operand_desc {
+            let operand_desc = match &operand.operand.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
             format!("EBigIntRShift3 ({})", operand_desc)
         }
         ErrorMessage::EBigIntNumCoerce(operand) => {
-            let operand_desc = match &operand.operand_desc {
+            let operand_desc = match &operand.operand.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
@@ -4202,16 +4200,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EInvalidBinaryArith(box EInvalidBinaryArithData {
             loc,
-            left_desc,
-            right_desc,
+            left,
+            right,
             kind,
-            ..
         }) => {
-            let left = match left_desc {
+            let left = match &left.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
-            let right = match right_desc {
+            let right = match &right.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };

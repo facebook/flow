@@ -8,12 +8,10 @@
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::hash::Hash;
-use std::hash::Hasher;
 use std::str::FromStr;
 use std::sync::Arc;
 
 use dupe::Dupe;
-use flow_common::error_ref::ErrorReference;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
@@ -1442,42 +1440,20 @@ pub struct MessageIncompatibleGeneralWithPrintedTypesData<L: Dupe> {
     pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
 }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct MessageTypeReferenceData<L: Dupe> {
     pub loc: L,
     pub desc: Result<ALocTy, VirtualReasonDesc<L>>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MessageArithmeticOperandData<L: Dupe> {
-    pub operand: ErrorReference<L>,
-    pub operand_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for MessageArithmeticOperandData<L> {
-    fn eq(&self, other: &Self) -> bool {
-        self.operand == other.operand
-    }
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for MessageArithmeticOperandData<L> {}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for MessageArithmeticOperandData<L> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.operand.hash(state);
-    }
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for MessageArithmeticOperandData<L> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for MessageArithmeticOperandData<L> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.operand.cmp(&other.operand)
-    }
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
@@ -1871,14 +1847,14 @@ pub enum Message<L: Dupe> {
         in_hook: bool,
     },
 
-    MessageCannotPerformArithOnNonNumbersOrBigInt(Box<MessageArithmeticOperandData<L>>),
-    MessageCannotPerformBigIntRShift3(Box<MessageArithmeticOperandData<L>>),
-    MessageCannotPerformBigIntUnaryPlus(Box<MessageArithmeticOperandData<L>>),
+    MessageCannotPerformArithOnNonNumbersOrBigInt(Box<MessageTypeReferenceData<L>>),
+    MessageCannotPerformBigIntRShift3(Box<MessageTypeReferenceData<L>>),
+    MessageCannotPerformBigIntUnaryPlus(Box<MessageTypeReferenceData<L>>),
 
     MessageCannotPerformBinaryArith {
         kind: flow_typing_type::type_::arith_kind::ArithKind,
-        left: Box<MessageArithmeticOperandData<L>>,
-        right: Box<MessageArithmeticOperandData<L>>,
+        left: Box<MessageTypeReferenceData<L>>,
+        right: Box<MessageTypeReferenceData<L>>,
     },
 
     MessageCannotReassignConstant(VirtualReason<L>),

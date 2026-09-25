@@ -6110,19 +6110,19 @@ where
             MessageCannotPerformArithOnNonNumbersOrBigInt(operand) => {
                 friendly::Message(vec![
                     text("Cannot perform arithmetic operation because "),
-                    ref_of_ty_or_desc(&operand.operand.loc, &operand.operand_desc),
+                    ref_of_ty_or_desc(&operand.loc, &operand.desc),
                     text(" is not a number or bigint."),
                 ])
             }
             MessageCannotPerformBigIntRShift3(operand) => friendly::Message(vec![
                 text("Cannot perform unsigned right shift because "),
-                ref_of_ty_or_desc(&operand.operand.loc, &operand.operand_desc),
+                ref_of_ty_or_desc(&operand.loc, &operand.desc),
                 text(" "),
                 text("is a bigint, and all bigints are signed."),
             ]),
             MessageCannotPerformBigIntUnaryPlus(operand) => friendly::Message(vec![
                 text("Cannot perform unary plus because a "),
-                ref_of_ty_or_desc(&operand.operand.loc, &operand.operand_desc),
+                ref_of_ty_or_desc(&operand.loc, &operand.desc),
                 text(" "),
                 text("cannot be coerced to number."),
             ]),
@@ -6136,9 +6136,9 @@ where
                     text("Cannot use operator `"),
                     text(kind_str),
                     text("` with operands "),
-                    ref_of_ty_or_desc(&left.operand.loc, &left.operand_desc),
+                    ref_of_ty_or_desc(&left.loc, &left.desc),
                     text(" and "),
-                    ref_of_ty_or_desc(&right.operand.loc, &right.operand_desc),
+                    ref_of_ty_or_desc(&right.loc, &right.desc),
                 ])
             }
             MessageCannotReassignConstant(x) => {
