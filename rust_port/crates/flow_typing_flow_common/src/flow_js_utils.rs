@@ -45,6 +45,9 @@ use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::intermediate_error_types::Explanation;
 use flow_typing_errors::intermediate_error_types::TupleElementReferenceData;
+use flow_typing_errors::intermediate_error_types::TypeGuardReferenceData;
+use flow_typing_errors::intermediate_error_types::TypeGuardReferenceKind;
+use flow_typing_errors::intermediate_error_types::ValueAsTypeReference;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::CallElemTData;
@@ -1728,6 +1731,38 @@ pub fn description_name_for_error(reason: &Reason) -> Option<FlowSmolStr> {
             member_name: name, ..
         } => Some(name.dupe()),
         _ => None,
+    }
+}
+
+/// Captures the source-level construct used as a type without retaining its reason.
+pub fn value_as_type_reference_for_error(reason: &Reason) -> Option<ValueAsTypeReference> {
+    match reason.desc(false) {
+        VirtualReasonDesc::RIdentifier(name)
+        | VirtualReasonDesc::RType(name)
+        | VirtualReasonDesc::REnumMember {
+            member_name: name, ..
+        } => Some(ValueAsTypeReference::Name(name.dupe())),
+        VirtualReasonDesc::RModule(module) => Some(ValueAsTypeReference::ImportType(module.dupe())),
+        _ => None,
+    }
+}
+
+/// Captures the semantic description and location of a type guard without retaining its reason.
+pub fn type_guard_reference_for_error(reason: &Reason) -> TypeGuardReferenceData<ALoc> {
+    let kind = match reason.desc(false) {
+        VirtualReasonDesc::RParameter(name) => TypeGuardReferenceKind::Parameter(name.dupe()),
+        VirtualReasonDesc::RIdentifier(name) => {
+            TypeGuardReferenceKind::Parameter(Some(name.dupe()))
+        }
+        VirtualReasonDesc::RTypeGuardParam(name) => {
+            TypeGuardReferenceKind::TypeGuardParameter(name.dupe())
+        }
+        VirtualReasonDesc::RThis => TypeGuardReferenceKind::This,
+        _ => TypeGuardReferenceKind::TypeGuard,
+    };
+    TypeGuardReferenceData {
+        loc: reason.loc().dupe(),
+        kind,
     }
 }
 
@@ -3905,7 +3940,9 @@ pub mod value_to_type_reference_transform {
     use super::description_name_for_error;
     use super::fix_this_instance;
     use super::lookup_builtin_type_with_env;
+    use super::type_reference_at_loc_for_error;
     use super::type_reference_with_reason_for_error;
+    use super::value_as_type_reference_for_error;
     use crate::type_subst::Purpose;
     use crate::type_subst::subst;
 
@@ -4127,7 +4164,8 @@ pub mod value_to_type_reference_transform {
                         cx,
                         env,
                         ErrorMessage::EValueUsedAsType {
-                            reason_use: reason_op.to_error_reference(),
+                            reference: value_as_type_reference_for_error(reason_op),
+                            value: type_reference_at_loc_for_error(&t, reason_op.loc().dupe()),
                         },
                     )?;
                     Ok(any_t::error(reason.dupe()))
@@ -4138,7 +4176,8 @@ pub mod value_to_type_reference_transform {
                         cx,
                         env,
                         ErrorMessage::EValueUsedAsType {
-                            reason_use: reason_op.to_error_reference(),
+                            reference: value_as_type_reference_for_error(reason_op),
+                            value: type_reference_at_loc_for_error(&t, reason_op.loc().dupe()),
                         },
                     )?;
                     Ok(any_t::error(reason_of_t(&t).dupe()))
@@ -4157,7 +4196,8 @@ pub mod value_to_type_reference_transform {
                     cx,
                     env,
                     ErrorMessage::EValueUsedAsType {
-                        reason_use: reason_op.to_error_reference(),
+                        reference: value_as_type_reference_for_error(reason_op),
+                        value: type_reference_at_loc_for_error(&t, reason_op.loc().dupe()),
                     },
                 )?;
                 Ok(any_t::error(r.dupe()))
@@ -4170,7 +4210,8 @@ pub mod value_to_type_reference_transform {
                     cx,
                     env,
                     ErrorMessage::EAnyValueUsedAsType {
-                        reason_use: reason_op.to_error_reference(),
+                        reference: value_as_type_reference_for_error(reason_op),
+                        value: type_reference_at_loc_for_error(&t, reason_op.loc().dupe()),
                     },
                 )?;
                 Ok(any_t::error(r.dupe()))
@@ -4181,7 +4222,8 @@ pub mod value_to_type_reference_transform {
                     cx,
                     env,
                     ErrorMessage::EValueUsedAsType {
-                        reason_use: reason_op.to_error_reference(),
+                        reference: value_as_type_reference_for_error(reason_op),
+                        value: type_reference_at_loc_for_error(&t, reason_op.loc().dupe()),
                     },
                 )?;
                 Ok(any_t::error(reason_of_t(&t).dupe()))

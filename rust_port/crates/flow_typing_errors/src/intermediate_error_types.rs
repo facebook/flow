@@ -12,6 +12,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_common::flow_import_specifier::Userland;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::VirtualReason;
@@ -1459,6 +1460,76 @@ pub struct MessageTypeReferenceData<L: Dupe> {
 #[derive(
     Debug,
     Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct NamedReferenceData<L: Dupe> {
+    pub loc: L,
+    pub name: FlowSmolStr,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum TypeGuardReferenceKind {
+    TypeGuard,
+    Parameter(Option<FlowSmolStr>),
+    TypeGuardParameter(FlowSmolStr),
+    This,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct TypeGuardReferenceData<L: Dupe> {
+    pub loc: L,
+    pub kind: TypeGuardReferenceKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum ValueAsTypeReference {
+    Name(FlowSmolStr),
+    ImportType(Userland),
+}
+
+#[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     Hash,
@@ -1739,7 +1810,10 @@ pub enum Message<L: Dupe> {
     MessageAmbiguousNumericKeyWithVariance,
     MessageAmbiguousObjectType,
 
-    MessageAnyValueUsedAsType(VirtualReasonDesc<L>),
+    MessageAnyValueUsedAsType {
+        reference: Option<ValueAsTypeReference>,
+        value: MessageTypeReferenceData<L>,
+    },
     MessageBadLibdefModuleOverride(VirtualReason<L>),
     MessageBadLibdefNameOverride(VirtualReason<L>),
     MessageInterfaceMergePropertyConflict(VirtualReason<L>),
@@ -2229,7 +2303,7 @@ pub enum Message<L: Dupe> {
     MessageInvalidTypeGuardFunctionKind(FlowSmolStr),
 
     MessageInvalidTypeGuardFunctionWritten {
-        type_guard_reason: VirtualReason<L>,
+        type_guard: NamedReferenceData<L>,
         write_locs: Vec<L>,
     },
 
@@ -2379,13 +2453,13 @@ pub enum Message<L: Dupe> {
     },
 
     MessageTypeGuardImpliesMismatch {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: TypeGuardReferenceData<L>,
+        upper: TypeGuardReferenceData<L>,
     },
 
     MessageIncompatiblETypeParamConstIncompatibility {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: NamedReferenceData<L>,
+        upper: NamedReferenceData<L>,
     },
 
     MessageTypeParamConstInvalidPosition(MessageTypeReferenceData<L>),
@@ -2433,7 +2507,10 @@ pub enum Message<L: Dupe> {
     MessageUnusedPromiseInSyncScope,
     MessageUnusedSuppression,
 
-    MessageValueUsedAsType(VirtualReasonDesc<L>),
+    MessageValueUsedAsType {
+        reference: Option<ValueAsTypeReference>,
+        value: MessageTypeReferenceData<L>,
+    },
     MessageVariableNeverInitAssignedAnnotated(MessageTypeReferenceData<L>),
 
     MessageVariableOnlyAssignedByNull(Box<MessageVariableOnlyAssignedByNullData<L>>),

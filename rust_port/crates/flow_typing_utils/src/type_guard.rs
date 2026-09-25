@@ -11,7 +11,6 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc::*;
 use flow_common::reason::mk_reason;
@@ -30,6 +29,7 @@ use flow_typing_errors::error_message::ETypeGuardInvalidParameterData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::TypeGuardBindingKind;
 use flow_typing_errors::error_message::TypeGuardParameterData;
+use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -48,7 +48,6 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::VirtualRootUseOp;
-use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 use flow_typing_visitors::type_visitor::predicate_default;
@@ -173,11 +172,7 @@ fn check_type_guard_consistency<'cx>(
                                     ErrorMessage::ENegativeTypeGuardConsistency(Box::new(
                                         ENegativeTypeGuardConsistencyData {
                                             return_reason: return_reason.to_error_reference(),
-                                            type_: ErrorReference::new(
-                                                type_util::ref_loc_of_t(type_guard).dupe(),
-                                                reason_of_t(type_guard).desc(false).clone(),
-                                            ),
-                                            type_desc: flow_js_utils::type_or_type_desc_for_error(
+                                            type_: flow_js_utils::type_reference_for_error(
                                                 type_guard,
                                             ),
                                         },
@@ -192,7 +187,10 @@ fn check_type_guard_consistency<'cx>(
                             ErrorMessage::ETypeGuardFunctionInvalidWrites(Box::new(
                                 ETypeGuardFunctionInvalidWritesData {
                                     loc: return_reason.loc().dupe(),
-                                    type_guard_reason: tg_reason.dupe(),
+                                    type_guard: NamedReferenceData {
+                                        loc: name_loc.dupe(),
+                                        name: name.dupe(),
+                                    },
                                     write_locs,
                                 },
                             )),

@@ -46,6 +46,7 @@ use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::TypeGuardParameterData;
 use flow_typing_errors::intermediate_error_types;
+use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::instantiation_utils;
@@ -411,7 +412,8 @@ fn func_type_guard_compat<'cx>(
             env,
             ErrorMessage::ETypeGuardImpliesMismatch {
                 use_op: use_op.dupe(),
-                reasons: (reason1.dupe(), reason2.dupe()),
+                lower: flow_js_utils::type_guard_reference_for_error(reason1),
+                upper: flow_js_utils::type_guard_reference_for_error(reason2),
             },
         )?;
     }
@@ -1107,7 +1109,7 @@ fn try_method_bivariant<'cx>(
                         env,
                         trace,
                         &bound2,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1)),
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1.dupe())),
                     )?;
                     if p1.is_const != p2.is_const {
                         flow_js_utils::add_output_with_env(
@@ -1116,8 +1118,14 @@ fn try_method_bivariant<'cx>(
                             ErrorMessage::ETypeParamConstIncompatibility(Box::new(
                                 ETypeParamConstIncompatibilityData {
                                     use_op: use_op.dupe(),
-                                    lower: p1.reason.dupe(),
-                                    upper: p2.reason.dupe(),
+                                    lower: NamedReferenceData {
+                                        loc: p1.reason.loc().dupe(),
+                                        name: p1.name.string_of_subst_name().dupe(),
+                                    },
+                                    upper: NamedReferenceData {
+                                        loc: p2.reason.loc().dupe(),
+                                        name: p2.name.string_of_subst_name().dupe(),
+                                    },
                                 },
                             )),
                         )?;
@@ -4738,7 +4746,7 @@ pub fn rec_sub_t<'cx>(
                         cx, env,
                         trace,
                         &bound2,
-                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1)),
+                        &UseT::new(UseTInner::UseT(use_op.dupe(), bound1.dupe())),
                     )?;
                     if param1.is_const != param2.is_const {
                         flow_js_utils::add_output_with_env(
@@ -4746,8 +4754,14 @@ pub fn rec_sub_t<'cx>(
                             ErrorMessage::ETypeParamConstIncompatibility(Box::new(
                                 ETypeParamConstIncompatibilityData {
                                     use_op: use_op.dupe(),
-                                    lower: param1.reason.dupe(),
-                                    upper: param2.reason.dupe(),
+                                    lower: NamedReferenceData {
+                                        loc: param1.reason.loc().dupe(),
+                                        name: param1.name.string_of_subst_name().dupe(),
+                                    },
+                                    upper: NamedReferenceData {
+                                        loc: param2.reason.loc().dupe(),
+                                        name: param2.name.string_of_subst_name().dupe(),
+                                    },
                                 },
                             )),
                         )?;

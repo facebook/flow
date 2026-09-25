@@ -139,6 +139,9 @@ use super::intermediate_error_types::RootMessage;
 use super::intermediate_error_types::StrictComparisonInfo;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use super::intermediate_error_types::TupleElementReferenceData;
+use super::intermediate_error_types::TypeGuardReferenceData;
+use super::intermediate_error_types::TypeGuardReferenceKind;
+use super::intermediate_error_types::ValueAsTypeReference;
 use crate::error_message::ConstructSignatureMissingInSubtypingData;
 use crate::error_message::EExpectedBigIntLitData;
 use crate::error_message::EExpectedBooleanLitData;
@@ -4149,6 +4152,17 @@ where
             )
         };
 
+    let desc_of_value_as_type_reference =
+        |reference: Option<&ValueAsTypeReference>, value: &MessageTypeReferenceData<L>| {
+            match reference {
+                Some(ValueAsTypeReference::Name(name)) => code(name.as_str()),
+                Some(ValueAsTypeReference::ImportType(module)) => {
+                    code(&format!("import(\"{}\")", module.as_str()))
+                }
+                None => desc_of_ty_or_desc(&value.desc),
+            }
+        };
+
     let explanation_to_friendly_msgs = |explanation: &Explanation<L>| -> friendly::Message<Loc> {
         use super::intermediate_error_types::Explanation::*;
 
@@ -4845,6 +4859,19 @@ where
         friendly::hardcoded_string_desc_ref(s, loc_of_aloc(loc))
     };
 
+    let type_guard_reference = |reference: &TypeGuardReferenceData<L>| {
+        let description = match &reference.kind {
+            TypeGuardReferenceKind::TypeGuard => "type guard".to_string(),
+            TypeGuardReferenceKind::Parameter(Some(name)) => format!("`{name}`"),
+            TypeGuardReferenceKind::Parameter(None) => "parameter".to_string(),
+            TypeGuardReferenceKind::TypeGuardParameter(name) => {
+                format!("type guard parameter `{name}`")
+            }
+            TypeGuardReferenceKind::This => "this".to_string(),
+        };
+        hardcoded_string_desc_ref(&description, &reference.loc)
+    };
+
     fn ordinal(n: i32) -> String {
         match n {
             1 => "first".to_string(),
@@ -5266,14 +5293,14 @@ where
                 code("..."),
                 text(" to the end of the list of properties)."),
             ]),
-            MessageAnyValueUsedAsType(use_) => friendly::Message(vec![
+            MessageAnyValueUsedAsType { reference, value } => friendly::Message(vec![
                 text("Cannot use "),
-                friendly::desc_of_reason_desc(use_),
+                desc_of_value_as_type_reference(reference.as_ref(), value),
                 text(" as a type because it is an "),
                 code("any"),
                 text("-typed value. "),
                 text("Type "),
-                friendly::desc_of_reason_desc(use_),
+                desc_of_value_as_type_reference(reference.as_ref(), value),
                 text(" properly, so it is no longer "),
                 code("any"),
                 text("-typed, to use it as an annotation."),
@@ -7962,7 +7989,7 @@ where
                 text(" function."),
             ]),
             MessageInvalidTypeGuardFunctionWritten {
-                type_guard_reason,
+                type_guard,
                 write_locs,
             } => {
                 let loc_str: Vec<friendly::MessageFeature<Loc>> = match write_locs.as_slice() {
@@ -7978,7 +8005,10 @@ where
                 };
                 let mut features = vec![
                     text("Cannot use "),
-                    ref_(type_guard_reason),
+                    hardcoded_string_desc_ref(
+                        &format!("type guard parameter `{}`", type_guard.name),
+                        &type_guard.loc,
+                    ),
                     text(" because at this return point it is written to "),
                 ];
                 features.extend(loc_str);
@@ -9032,9 +9062,9 @@ where
             ]),
             MessageTypeGuardImpliesMismatch { lower, upper } => friendly::Message(vec![
                 text("one-sided "),
-                ref_(lower),
+                type_guard_reference(lower),
                 text(" is incompatible with default "),
-                ref_(upper),
+                type_guard_reference(upper),
             ]),
             MessageNegativeTypeGuardConsistency {
                 return_desc,
@@ -9224,9 +9254,9 @@ where
             MessageUnusedSuppression => {
                 friendly::Message(vec![text("Unused suppression comment.")])
             }
-            MessageValueUsedAsType(description) => friendly::Message(vec![
+            MessageValueUsedAsType { reference, value } => friendly::Message(vec![
                 text("Cannot use "),
-                friendly::desc_of_reason_desc(description),
+                desc_of_value_as_type_reference(reference.as_ref(), value),
                 text(" as a type. "),
                 text("A name can be used as a type only if it refers to "),
                 text("a type, interface, class, or enum definition. "),
@@ -10186,9 +10216,9 @@ where
             MessageIncompatiblETypeParamConstIncompatibility { lower, upper } => {
                 friendly::Message(vec![
                     text("type parameters "),
-                    ref_(lower),
+                    hardcoded_string_desc_ref(&format!("`{}`", lower.name), &lower.loc),
                     text(" and "),
-                    ref_(upper),
+                    hardcoded_string_desc_ref(&format!("`{}`", upper.name), &upper.loc),
                     text(" do not have matching const-modifier values"),
                 ])
             }

@@ -1322,7 +1322,13 @@ fn elab_t_concrete<'cx>(
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EValueUsedAsType {
-                            reason_use: reason_use.to_error_reference(),
+                            reference: flow_js_utils::value_as_type_reference_for_error(
+                                &reason_use,
+                            ),
+                            value: flow_js_utils::type_reference_at_loc_for_error(
+                                &t,
+                                reason_use.loc().dupe(),
+                            ),
                         },
                     );
                     any_t::error(reason_use)
@@ -1348,7 +1354,11 @@ fn elab_t_concrete<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EAnyValueUsedAsType {
-                    reason_use: reason_use.to_error_reference(),
+                    reference: flow_js_utils::value_as_type_reference_for_error(&reason_use),
+                    value: flow_js_utils::type_reference_at_loc_for_error(
+                        &t,
+                        reason_use.loc().dupe(),
+                    ),
                 },
             );
             any_t::error(reason_use)
@@ -1358,7 +1368,11 @@ fn elab_t_concrete<'cx>(
             flow_js_utils::add_output_non_speculating(
                 cx,
                 flow_typing_errors::error_message::ErrorMessage::EValueUsedAsType {
-                    reason_use: reason_use.to_error_reference(),
+                    reference: flow_js_utils::value_as_type_reference_for_error(&reason_use),
+                    value: flow_js_utils::type_reference_at_loc_for_error(
+                        &t,
+                        reason_use.loc().dupe(),
+                    ),
                 },
             );
             any_t::error(reason_use)

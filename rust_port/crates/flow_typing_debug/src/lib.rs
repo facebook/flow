@@ -178,6 +178,7 @@ use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
 use flow_typing_errors::intermediate_error_types::DocblockError;
 use flow_typing_errors::intermediate_error_types::ExponentialSpreadReasonGroup;
 use flow_typing_errors::intermediate_error_types::ObjKind as IntermediateObjKind;
+use flow_typing_errors::intermediate_error_types::ValueAsTypeReference;
 use flow_typing_type::type_;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
@@ -348,6 +349,25 @@ fn dump_named_type_desc(
 ) -> String {
     match name {
         Some(name) => format!("{} RIdentifier({name:?})", string_of_aloc(None, loc)),
+        None => dump_loc_type_desc(cx, loc, type_desc),
+    }
+}
+
+fn dump_value_as_type_reference(
+    cx: &Context,
+    loc: &ALoc,
+    reference: Option<&ValueAsTypeReference>,
+    type_desc: &TypeOrTypeDescT<ALoc>,
+) -> String {
+    match reference {
+        Some(ValueAsTypeReference::Name(name)) => {
+            dump_named_type_desc(cx, loc, Some(name.as_str()), type_desc)
+        }
+        Some(ValueAsTypeReference::ImportType(module)) => format!(
+            "{} ImportType({:?})",
+            string_of_aloc(None, loc),
+            module.as_str()
+        ),
         None => dump_loc_type_desc(cx, loc, type_desc),
     }
 }
@@ -2087,24 +2107,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 max_arity
             )
         }
-        ErrorMessage::EAnyValueUsedAsType { reason_use } => {
+        ErrorMessage::EAnyValueUsedAsType { reference, value } => {
             format!(
                 "EAnyValueUsedAsType {{ use = {} }}",
-                format_args!(
-                    "{} {:?}",
-                    string_of_aloc(None, &reason_use.loc),
-                    reason_use.desc
-                )
+                dump_value_as_type_reference(cx, &value.loc, reference.as_ref(), &value.type_desc,)
             )
         }
-        ErrorMessage::EValueUsedAsType { reason_use } => {
+        ErrorMessage::EValueUsedAsType { reference, value } => {
             format!(
                 "EValueUsedAsType {{ use = {} }}",
-                format_args!(
-                    "{} {:?}",
-                    string_of_aloc(None, &reason_use.loc),
-                    reason_use.desc
-                )
+                dump_value_as_type_reference(cx, &value.loc, reference.as_ref(), &value.type_desc,)
             )
         }
         ErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
@@ -2900,7 +2912,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         } => {
             format!("ETypeGuardIndexMismatch ({})", string_of_use_op(use_op))
         }
-        ErrorMessage::ETypeGuardImpliesMismatch { use_op, reasons: _ } => {
+        ErrorMessage::ETypeGuardImpliesMismatch { use_op, .. } => {
             format!("ETypeGuardImpliesMismatch ({})", string_of_use_op(use_op))
         }
         ErrorMessage::ETypeGuardParamUnbound(_) => "ETypeGuardParamUnbound".to_string(),
@@ -4530,7 +4542,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }) => {
             format!(
                 "ETypeParamConstIncompatibility ({})",
-                dump_reason(cx, lower)
+                format_args!("{} {:?}", string_of_aloc(None, &lower.loc), lower.name)
             )
         }
         ErrorMessage::ETypeParamConstInvalidPosition(data) => {

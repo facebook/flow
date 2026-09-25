@@ -136,6 +136,7 @@ use crate::intermediate_error_types::MessageTupleIndexOutOfBoundData;
 use crate::intermediate_error_types::MessageTupleNonIntegerIndexData;
 use crate::intermediate_error_types::MessageTypeReferenceData;
 use crate::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
+use crate::intermediate_error_types::NamedReferenceData;
 use crate::intermediate_error_types::ObjKind;
 use crate::intermediate_error_types::OverrideErrorKind;
 use crate::intermediate_error_types::PrimitiveKind;
@@ -143,7 +144,9 @@ use crate::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use crate::intermediate_error_types::StrictComparisonInfo;
 use crate::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use crate::intermediate_error_types::TupleElementReferenceData;
+use crate::intermediate_error_types::TypeGuardReferenceData;
 use crate::intermediate_error_types::UnsupportedSyntax;
+use crate::intermediate_error_types::ValueAsTypeReference;
 
 /// Data struct for boxed `ErrorMessage::EIncompatibleSpeculation` variant.
 #[derive(
@@ -1898,7 +1901,7 @@ pub struct ETypeGuardInvalidParameterData<L: Dupe + PartialOrd + Ord + PartialEq
 )]
 pub struct ETypeGuardFunctionInvalidWritesData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub type_guard_reason: VirtualReason<L>,
+    pub type_guard: NamedReferenceData<L>,
     pub write_locs: Vec<L>,
 }
 
@@ -1939,8 +1942,7 @@ pub struct ETypeGuardIncompatibleWithFunctionKindData<L: Dupe + PartialOrd + Ord
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ENegativeTypeGuardConsistencyData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub return_reason: ErrorReference<L>,
-    pub type_: ErrorReference<L>,
-    pub type_desc: TypeOrTypeDesc<L>,
+    pub type_: ErrorTypeReferenceData<L>,
 }
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq
@@ -1991,8 +1993,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ENegativeTypeGuardCons
 )]
 pub struct ETypeParamConstIncompatibilityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub use_op: VirtualUseOp<L>,
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
+    pub lower: NamedReferenceData<L>,
+    pub upper: NamedReferenceData<L>,
 }
 
 #[derive(
@@ -3298,11 +3300,13 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EMissingTypeArgs(Box<EMissingTypeArgsData<L>>),
 
     EAnyValueUsedAsType {
-        reason_use: ErrorReference<L>,
+        reference: Option<ValueAsTypeReference>,
+        value: ErrorTypeReferenceData<L>,
     },
 
     EValueUsedAsType {
-        reason_use: ErrorReference<L>,
+        reference: Option<ValueAsTypeReference>,
+        value: ErrorTypeReferenceData<L>,
     },
 
     EExpectedStringLit(Box<EExpectedStringLitData<L>>),
@@ -3449,7 +3453,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETypeGuardImpliesMismatch {
         use_op: VirtualUseOp<L>,
-        reasons: (VirtualReason<L>, VirtualReason<L>),
+        lower: TypeGuardReferenceData<L>,
+        upper: TypeGuardReferenceData<L>,
     },
 
     ETypeGuardParamUnbound(TypeGuardParameterData<L>),
@@ -4994,12 +4999,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 max_arity,
             })),
 
-            EAnyValueUsedAsType { reason_use } => EAnyValueUsedAsType {
-                reason_use: map_error_ref(reason_use),
+            EAnyValueUsedAsType { reference, value } => EAnyValueUsedAsType {
+                reference,
+                value: map_error_type_ref(value),
             },
 
-            EValueUsedAsType { reason_use } => EValueUsedAsType {
-                reason_use: map_error_ref(reason_use),
+            EValueUsedAsType { reference, value } => EValueUsedAsType {
+                reference,
+                value: map_error_type_ref(value),
             },
 
             EPolarityMismatch(box EPolarityMismatchData {
@@ -5168,10 +5175,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ETypeGuardImpliesMismatch {
                 use_op,
-                reasons: (r1, r2),
+                lower,
+                upper,
             } => ETypeGuardImpliesMismatch {
                 use_op: map_use_op(use_op),
-                reasons: (map_reason(r1), map_reason(r2)),
+                lower: TypeGuardReferenceData {
+                    loc: f(lower.loc),
+                    kind: lower.kind,
+                },
+                upper: TypeGuardReferenceData {
+                    loc: f(upper.loc),
+                    kind: upper.kind,
+                },
             },
 
             ETypeGuardParamUnbound(parameter) => ETypeGuardParamUnbound(TypeGuardParameterData {
@@ -5183,11 +5198,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
                 loc,
-                type_guard_reason,
+                type_guard,
                 write_locs,
             }) => ETypeGuardFunctionInvalidWrites(Box::new(ETypeGuardFunctionInvalidWritesData {
                 loc: f(loc),
-                type_guard_reason: map_reason(type_guard_reason),
+                type_guard: NamedReferenceData {
+                    loc: f(type_guard.loc),
+                    name: type_guard.name,
+                },
                 write_locs: write_locs.into_iter().map(&f).collect(),
             })),
 
@@ -5215,11 +5233,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
                 return_reason,
                 type_,
-                type_desc,
             }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
                 return_reason: map_error_ref(return_reason),
-                type_: map_error_ref(type_),
-                type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), type_desc),
+                type_: map_error_type_ref(type_),
             })),
 
             ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
@@ -5228,8 +5244,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
             }) => ETypeParamConstIncompatibility(Box::new(ETypeParamConstIncompatibilityData {
                 use_op: map_use_op(use_op),
-                lower: map_reason(lower),
-                upper: map_reason(upper),
+                lower: NamedReferenceData {
+                    loc: f(lower.loc),
+                    name: lower.name,
+                },
+                upper: NamedReferenceData {
+                    loc: f(upper.loc),
+                    name: upper.name,
+                },
             })),
 
             ETypeParamConstInvalidPosition(reason) => {
@@ -6955,6 +6977,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 optional,
             })),
 
+            EAnyValueUsedAsType { reference, value } => EAnyValueUsedAsType {
+                reference,
+                value: map_error_type_ref(value),
+            },
+
+            EValueUsedAsType { reference, value } => EValueUsedAsType {
+                reference,
+                value: map_error_type_ref(value),
+            },
+
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 loc,
                 condition,
@@ -7350,14 +7382,42 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
+            ETypeGuardImpliesMismatch {
+                use_op,
+                lower,
+                upper,
+            } => ETypeGuardImpliesMismatch {
+                use_op: map_use_op(&f, use_op),
+                lower,
+                upper,
+            },
+
+            ETypeGuardFunctionInvalidWrites(box ETypeGuardFunctionInvalidWritesData {
+                loc,
+                type_guard,
+                write_locs,
+            }) => ETypeGuardFunctionInvalidWrites(Box::new(ETypeGuardFunctionInvalidWritesData {
+                loc,
+                type_guard,
+                write_locs,
+            })),
+
+            ETypeParamConstIncompatibility(box ETypeParamConstIncompatibilityData {
+                use_op,
+                lower,
+                upper,
+            }) => ETypeParamConstIncompatibility(Box::new(ETypeParamConstIncompatibilityData {
+                use_op: map_use_op(&f, use_op),
+                lower,
+                upper,
+            })),
+
             ENegativeTypeGuardConsistency(box ENegativeTypeGuardConsistencyData {
                 return_reason,
                 type_,
-                type_desc,
             }) => ENegativeTypeGuardConsistency(Box::new(ENegativeTypeGuardConsistencyData {
                 return_reason,
-                type_,
-                type_desc: f(type_desc),
+                type_: map_error_type_ref(type_),
             })),
 
             EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
@@ -7844,8 +7904,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
         L: Clone,
     {
         match self {
-            Self::EAnyValueUsedAsType { reason_use } | Self::EValueUsedAsType { reason_use } => {
-                Some(reason_use.loc.dupe())
+            Self::EAnyValueUsedAsType { value, .. } | Self::EValueUsedAsType { value, .. } => {
+                Some(value.loc.dupe())
             }
 
             Self::ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData {
@@ -8980,12 +9040,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
             },
 
-            ErrorMessage::EAnyValueUsedAsType { reason_use } => {
-                Normal(Message::MessageAnyValueUsedAsType(reason_use.desc))
+            ErrorMessage::EAnyValueUsedAsType { reference, value } => {
+                Normal(Message::MessageAnyValueUsedAsType {
+                    reference,
+                    value: expect_error_type_reference(value),
+                })
             }
 
-            ErrorMessage::EValueUsedAsType { reason_use } => {
-                Normal(Message::MessageValueUsedAsType(reason_use.desc))
+            ErrorMessage::EValueUsedAsType { reference, value } => {
+                Normal(Message::MessageValueUsedAsType {
+                    reference,
+                    value: expect_error_type_reference(value),
+                })
             }
 
             ErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
@@ -10724,7 +10790,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ETypeGuardImpliesMismatch {
                 use_op,
-                reasons: (lower, upper),
+                lower,
+                upper,
             } => {
                 let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
@@ -10751,12 +10818,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ETypeGuardFunctionInvalidWrites(
                 box ETypeGuardFunctionInvalidWritesData {
-                    type_guard_reason,
+                    type_guard,
                     write_locs,
                     ..
                 },
             ) => Normal(Message::MessageInvalidTypeGuardFunctionWritten {
-                type_guard_reason,
+                type_guard,
                 write_locs,
             }),
 
@@ -10764,14 +10831,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box ENegativeTypeGuardConsistencyData {
                     return_reason,
                     type_,
-                    type_desc,
                 },
             ) => Normal(Message::MessageNegativeTypeGuardConsistency {
                 return_desc: return_reason.desc,
-                type_: Box::new(MessageTypeReferenceData {
-                    loc: type_.loc,
-                    desc: expect_type_desc(type_desc),
-                }),
+                type_: Box::new(expect_error_type_reference(type_)),
             }),
 
             ErrorMessage::ETypeParamConstIncompatibility(
