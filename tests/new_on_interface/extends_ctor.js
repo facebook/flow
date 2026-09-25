@@ -70,3 +70,22 @@ interface Plain {
 }
 declare const plain: Plain;
 declare class NotDerived extends plain {} // ERROR
+
+// Explicit type arguments specialize the generic construct signature rather
+// than its containing interface.
+interface Box<T> {
+  value: T;
+}
+interface BoxCtor {
+  new<T>(value: T): Box<T>;
+}
+declare const BoxC: BoxCtor;
+declare class StringBox extends BoxC<string> {}
+declare const stringBox: StringBox;
+stringBox.value as string; // OK
+stringBox.value as number; // ERROR
+new StringBox('value'); // OK
+new StringBox(1); // ERROR
+
+class MapSubclass<K, V> extends Map<K, V> {}
+class SetSubclass<T> extends Set<T> {}

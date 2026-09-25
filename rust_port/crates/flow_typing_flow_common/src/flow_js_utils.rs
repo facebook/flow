@@ -416,7 +416,11 @@ pub fn construct_base_instance<'cx>(
     use flow_typing_type::type_::Property;
     use flow_typing_type::type_::PropertyInner;
 
-    let construct_ts = collect_construct_ts(concretize, cx, t)?;
+    let construct_ts = collect_construct_ts(concretize, cx, t)?
+        .iter()
+        .map(concretize)
+        .collect::<Result<Vec<_>, _>>()?
+        .concat();
     let Some(base) = construct_return_ts(&construct_ts).into_iter().next() else {
         return Ok(None);
     };

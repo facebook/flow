@@ -198,6 +198,28 @@ fn check_polarity_impl<'cx>(
                                     cx, env, trace, tparams, polarity, tps, targs,
                                 );
                             }
+                            if matches!(d.deref(), DefTInner::InstanceT(_)) {
+                                let concretize = |t: &Type| {
+                                    flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
+                                        cx,
+                                        env,
+                                        reason_of_t(t),
+                                        t,
+                                    )
+                                };
+                                let construct_ts =
+                                    flow_js_utils::collect_construct_ts(&concretize, cx, l)?;
+                                if let Some(construct_t) =
+                                    flow_js_utils::combine_construct_ts(construct_ts)
+                                    && let TypeInner::DefT(_, construct_def) = construct_t.deref()
+                                    && let DefTInner::PolyT(box PolyTData { tparams: tps, .. }) =
+                                        construct_def.deref()
+                                {
+                                    return variance_check(
+                                        cx, env, trace, tparams, polarity, tps, targs,
+                                    );
+                                }
+                            }
                         }
                         // We will encounter this when walking an extends clause which does
                         // not have explicit type arguments. The class has an implicit this type

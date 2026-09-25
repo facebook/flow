@@ -23,3 +23,15 @@ declare class BaseCls {
   m(): string;
 }
 export declare class FromCls extends BaseCls {}
+
+export interface GenericBox<T> {
+  value: T;
+}
+
+interface GenericBoxCtor {
+  new<T>(value: T): GenericBox<T>;
+}
+
+declare const GenericBoxC: GenericBoxCtor;
+
+export declare class ExportedStringBox extends GenericBoxC<string> {}
