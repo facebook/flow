@@ -100,13 +100,13 @@ elementConfigResult as string; // error: number ~> string
 declare function inferFromComponentProps<T>(
   props: React.ComponentProps<typeof PolyComponent<T>>,
 ): T;
-const componentPropsResult = inferFromComponentProps({foo: 42}); // :( underconstrained
+const componentPropsResult = inferFromComponentProps({foo: 42});
 componentPropsResult as number;
-componentPropsResult as string; // should error but doesn't: number ~> string
+componentPropsResult as string; // error: number ~> string
 
 declare function inferFromFunctionComponentProps<T>(
   props: React.ComponentProps<typeof PolyFunction<T>>,
 ): T;
-const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42}); // :( underconstrained
+const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42});
 functionComponentPropsResult as number;
-functionComponentPropsResult as string; // should error but doesn't: number ~> string
+functionComponentPropsResult as string; // error: number ~> string

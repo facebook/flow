@@ -849,6 +849,116 @@ References:
         ^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- nested_instantiation.js:25:3
+
+Cannot cast `result` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   nested_instantiation.js:25:3
+   25|   result as number; // error: string ~> number
+         ^^^^^^
+
+References:
+   nested_instantiation.js:22:20
+   22|   const both = {a: "not number", b: 42};
+                          ^^^^^^^^^^^^ [1]
+   nested_instantiation.js:25:13
+   25|   result as number; // error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- nested_instantiation.js:35:3
+
+Cannot cast `result` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   nested_instantiation.js:35:3
+   35|   result as number; // error: string ~> number
+         ^^^^^^
+
+References:
+   nested_instantiation.js:32:20
+   32|   const both = {a: "not number", b: 42};
+                          ^^^^^^^^^^^^ [1]
+   nested_instantiation.js:35:13
+   35|   result as number; // error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- nested_instantiation.js:72:3
+
+Cannot cast `result` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   nested_instantiation.js:72:3
+   72|   result as number; // error: string ~> number
+         ^^^^^^
+
+References:
+   nested_instantiation.js:69:20
+   69|   const both = {a: "not number", b: 42};
+                          ^^^^^^^^^^^^ [1]
+   nested_instantiation.js:72:13
+   72|   result as number; // error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- nested_instantiation.js:85:3
+
+Cannot cast `result` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   nested_instantiation.js:85:3
+   85|   result as number; // error: string ~> number
+         ^^^^^^
+
+References:
+   nested_instantiation.js:82:20
+   82|   const both = {a: "not number", b: 42};
+                          ^^^^^^^^^^^^ [1]
+   nested_instantiation.js:85:13
+   85|   result as number; // error: string ~> number
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ nested_instantiation.js:96:25
+
+Cannot call `preserveController` with `both` bound to `x` because: [incompatible-type]
+ - Either in property `b`: `number` [1] is incompatible with `string` [2].
+ - Or in property `value`: `string` [3] is incompatible with `number` [4].
+
+   nested_instantiation.js:96:25
+   96|   preserveController(3, both); // error: string ~> number
+                               ^^^^
+
+References:
+   nested_instantiation.js:95:37
+   95|   const both = {a: "not number", b: 42, value: "wrong"};
+                                           ^^ [1]
+   nested_instantiation.js:95:20
+   95|   const both = {a: "not number", b: 42, value: "wrong"};
+                          ^^^^^^^^^^^^ [2]
+   nested_instantiation.js:95:48
+   95|   const both = {a: "not number", b: 42, value: "wrong"};
+                                                      ^^^^^^^ [3]
+   nested_instantiation.js:96:22
+   96|   preserveController(3, both); // error: string ~> number
+                            ^ [4]
+
+
+Error ------------------------------------------------------------------------------------ nested_instantiation.js:112:3
+
+Cannot cast `result` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   nested_instantiation.js:112:3
+   112|   result as number; // error: string ~> number
+          ^^^^^^
+
+References:
+   nested_instantiation.js:110:41
+   110|   const result = definitelyFalse(3, {b: "not number"});
+                                                ^^^^^^^^^^^^ [1]
+   nested_instantiation.js:112:13
+   112|   result as number; // error: string ~> number
+                    ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- non_distributive.js:23:3
 
 Cannot cast `v` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1201,4 +1311,4 @@ References:
 
 
 
-Found 79 errors
+Found 85 errors

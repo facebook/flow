@@ -2116,11 +2116,11 @@ References:
 Error ----------------------------------------------------------------------------------------------- path_test.js:44:13
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
- - Either string [1] is incompatible with string literal `age` [2].
- - Or string [1] is incompatible with string literal `firstName` [2].
- - Or string [1] is incompatible with string literal `lastName` [2].
- - Or string [1] is incompatible with string literal `address` [2].
- - Or an index signature declaring the expected key / value type is missing in `Obj` [3].
+ - Either string literal `invalid` [1] is incompatible with string literal `age` [2].
+ - Or string literal `invalid` [1] is incompatible with string literal `firstName` [2].
+ - Or string literal `invalid` [1] is incompatible with string literal `lastName` [2].
+ - Or string literal `invalid` [1] is incompatible with string literal `address` [2].
+ - Or property `invalid` is missing in `Obj` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2141,11 +2141,13 @@ References:
 Error ----------------------------------------------------------------------------------------------- path_test.js:45:13
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
- - Either string [1] is incompatible with string literal `age` [2].
- - Or string [1] is incompatible with string literal `firstName` [2].
- - Or string [1] is incompatible with string literal `lastName` [2].
- - Or string [1] is incompatible with string literal `address` [2].
- - Or an index signature declaring the expected key / value type is missing in `Obj` [3].
+ - Either string literal `address.invalid` [1] is incompatible with string literal `age` [2].
+ - Or string literal `address.invalid` [1] is incompatible with string literal `firstName` [2].
+ - Or string literal `address.invalid` [1] is incompatible with string literal `lastName` [2].
+ - Or string literal `address.invalid` [1] is incompatible with string literal `address` [2].
+ - Or string literal `invalid` [1] is incompatible with string literal `city` [3].
+ - Or string literal `invalid` [1] is incompatible with string literal `state` [3].
+ - Or property `address.invalid` is missing in `Obj` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2158,9 +2160,12 @@ References:
    path_test.js:8:28
     8| type Path<T> = PathImpl<T, keyof T> | keyof T;
                                   ^^^^^^^ [2]
+   path_test.js:4:34
+    4|     ? K | `${K}.${PathImpl<T[K], keyof T[K]>}`
+                                        ^^^^^^^^^^ [3]
    path_test.js:36:23
    36| declare const object: Obj;
-                             ^^^ [3]
+                             ^^^ [4]
 
 
 

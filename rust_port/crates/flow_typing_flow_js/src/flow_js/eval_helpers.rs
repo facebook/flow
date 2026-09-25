@@ -30,6 +30,7 @@ use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::object::ObjectToolObjectMapData;
 
 // Disambiguate helpers vs mod re-exports
+use super::constraint_helpers::frozen_implicit_instantiation_tvar;
 use super::helpers::mk_typeapp_instance_annot;
 use super::helpers::*;
 use super::*;
@@ -212,9 +213,16 @@ fn evaluate_type_destructor_<'cx>(
     d: &Destructor,
     tvar: &Tvar,
 ) -> Result<(), FlowJsException> {
+    if matches!(d, Destructor::ConditionalType(_)) {
+        let nested_env = env.solving_implicit_instantiation();
+        if frozen_implicit_instantiation_tvar(cx, &nested_env, t).is_some() {
+            return eval_destructor(cx, &nested_env, trace, use_op, reason, t, d, tvar);
+        }
+    }
+
     // As an optimization, unwrap resolved tvars so that they are only evaluated
     // once to an annotation instead of a tvar that gets a bound on both sides.
-    let t = super::helpers::drop_resolved(cx, t);
+    let t = super::helpers::drop_resolved(cx, env, t);
     match t.deref() {
         // | OpenT _
         _ if type_util::constraint_node_id(&t).is_some() => {
@@ -318,7 +326,11 @@ pub(super) fn mk_type_destructor<'cx>(
 ) -> Result<Type, FlowJsException> {
     // let evaluated = Context.evaluated cx in
     let evaluated = cx.evaluated();
+    let conditional_has_implicit_instantiation_tvar = matches!(d, Destructor::ConditionalType(_))
+        && frozen_implicit_instantiation_tvar(cx, &env.solving_implicit_instantiation(), t)
+            .is_some();
     if id.from_type_sig()
+        && !conditional_has_implicit_instantiation_tvar
         && type_subst::free_var_finder(
             cx,
             None,
@@ -399,7 +411,10 @@ pub(super) fn mk_type_destructor<'cx>(
         cx.set_evaluated(evaluated);
         Ok(result)
     } else {
-        let result = match evaluated.get(&id) {
+        let cached = (!conditional_has_implicit_instantiation_tvar)
+            .then(|| evaluated.get(&id))
+            .flatten();
+        let result = match cached {
             Some(cached_t) => cached_t.dupe(),
             None => {
                 let use_op_clone = use_op.dupe();

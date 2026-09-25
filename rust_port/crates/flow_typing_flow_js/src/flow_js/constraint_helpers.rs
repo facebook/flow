@@ -15,11 +15,71 @@ pub(super) use flow_typing_type::type_util::constraint_node_id;
 use super::helpers::*;
 use super::*;
 
+pub(super) fn frozen_implicit_instantiation_tvar(
+    cx: &Context<'_>,
+    env: &FlowJsEnv,
+    t: &Type,
+) -> Option<Type> {
+    let node = constraint_node_id(t)?;
+    frozen_constraint_node(cx, env, node).map(|frozen| frozen.tvar)
+}
+
+struct FrozenConstraintNode {
+    root_id: i32,
+    tvar: Type,
+}
+
+struct ActiveConstraintNode<'cx> {
+    root_id: i32,
+    constraints: constraint::Constraints<'cx, Context<'cx>>,
+}
+
+enum ConstraintNodeState<'cx> {
+    Active(ActiveConstraintNode<'cx>),
+    Frozen(FrozenConstraintNode),
+}
+
+fn frozen_constraint_node(
+    cx: &Context<'_>,
+    env: &FlowJsEnv,
+    node: ConstraintNodeId,
+) -> Option<FrozenConstraintNode> {
+    let root_id = cx.find_constraints(node.id()).0;
+    let tvar = env.frozen_implicit_instantiation_tvar(|id| cx.find_constraints(id).0 == root_id)?;
+    Some(FrozenConstraintNode { root_id, tvar })
+}
+
+pub(super) fn active_constraint_node(
+    cx: &Context<'_>,
+    env: &FlowJsEnv,
+    t: &Type,
+) -> Option<ConstraintNodeId> {
+    let node = constraint_node_id(t)?;
+    frozen_constraint_node(cx, env, node)
+        .is_none()
+        .then_some(node)
+}
+
 pub(super) fn constraint_node_constraints<'cx>(
     cx: &Context<'cx>,
     node: ConstraintNodeId,
 ) -> (i32, constraint::Constraints<'cx, Context<'cx>>) {
     cx.find_constraints(node.id())
+}
+
+fn constraint_node_state<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    node: ConstraintNodeId,
+) -> ConstraintNodeState<'cx> {
+    let (root_id, constraints) = cx.find_constraints(node.id());
+    match frozen_constraint_node(cx, env, node) {
+        Some(frozen) => ConstraintNodeState::Frozen(frozen),
+        None => ConstraintNodeState::Active(ActiveConstraintNode {
+            root_id,
+            constraints,
+        }),
+    }
 }
 
 fn constraint_node_root<'cx>(
@@ -159,16 +219,14 @@ pub(super) fn flows_across<'cx>(
     Ok(())
 }
 
-pub(super) fn flow_unresolved_to_unresolved<'cx>(
+fn flow_active_constraint_nodes<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
-    node1: ConstraintNodeId,
-    node2: ConstraintNodeId,
+    (id1, constraints1): (i32, constraint::Constraints<'cx, Context<'cx>>),
+    (id2, constraints2): (i32, constraint::Constraints<'cx, Context<'cx>>),
 ) -> Result<(), FlowJsException> {
-    let ((id1, constraints1), (id2, constraints2)) =
-        cx.find_constraints_pair(node1.id(), node2.id());
     match (constraints1, constraints2) {
         (
             constraint::Constraints::Unresolved(bounds1),
@@ -284,6 +342,163 @@ pub(super) fn flow_unresolved_to_unresolved<'cx>(
         }
     }
     Ok(())
+}
+
+pub(super) fn flow_active_constraint_node_to_use<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    (id, constraints): (i32, constraint::Constraints<'cx, Context<'cx>>),
+    u: &UseT<Context<'cx>>,
+) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+    match constraints {
+        constraint::Constraints::Unresolved(bounds) => {
+            edges_and_flows_to_t(cx, env, trace, false, (id, &bounds), u)?;
+            Ok(None)
+        }
+        constraint::Constraints::Resolved(t) => Ok(Some((t, u.dupe()))),
+        constraint::Constraints::FullyResolved(s) => {
+            Ok(Some((cx.force_fully_resolved_tvar(&s), u.dupe())))
+        }
+    }
+}
+
+fn flow_type_to_active_constraint_node<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    l: &Type,
+    (id, constraints): (i32, constraint::Constraints<'cx, Context<'cx>>),
+) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+    match constraints {
+        constraint::Constraints::Unresolved(bounds) => {
+            edges_and_flows_from_t(cx, env, trace, use_op, false, l, (id, &bounds))?;
+            Ok(None)
+        }
+        constraint::Constraints::Resolved(t) => {
+            Ok(Some((l.dupe(), UseT::new(UseTInner::UseT(use_op, t)))))
+        }
+        constraint::Constraints::FullyResolved(s) => Ok(Some((
+            l.dupe(),
+            UseT::new(UseTInner::UseT(use_op, cx.force_fully_resolved_tvar(&s))),
+        ))),
+    }
+}
+
+fn flow_type_to_frozen_constraint_node<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    use_op: UseOp,
+    l: &Type,
+    frozen: &FrozenConstraintNode,
+) -> Result<(), FlowJsException> {
+    if matches!(l.deref(), TypeInner::AnyT(..))
+        || matches!(l.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT))
+    {
+        return Ok(());
+    }
+
+    flow_js_utils::add_output_with_env(
+        cx,
+        env,
+        flow_js_utils::incompatible_types_error(l, &frozen.tvar, use_op, None),
+    )
+}
+
+pub(super) fn flow_constraint_nodes<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    node1: ConstraintNodeId,
+    node2: ConstraintNodeId,
+) -> Result<(), FlowJsException> {
+    let state1 = constraint_node_state(cx, env, node1);
+    let state2 = constraint_node_state(cx, env, node2);
+    match (state1, state2) {
+        (
+            ConstraintNodeState::Active(ActiveConstraintNode {
+                root_id: id1,
+                constraints: constraints1,
+            }),
+            ConstraintNodeState::Active(ActiveConstraintNode {
+                root_id: id2,
+                constraints: constraints2,
+            }),
+        ) => flow_active_constraint_nodes(
+            cx,
+            env,
+            trace,
+            use_op,
+            (id1, constraints1),
+            (id2, constraints2),
+        ),
+        (ConstraintNodeState::Frozen(frozen1), ConstraintNodeState::Frozen(frozen2))
+            if frozen1.root_id == frozen2.root_id =>
+        {
+            Ok(())
+        }
+        (ConstraintNodeState::Frozen(frozen1), ConstraintNodeState::Frozen(frozen2)) => {
+            flow_type_to_frozen_constraint_node(cx, env, use_op, &frozen1.tvar, &frozen2)
+        }
+        (
+            ConstraintNodeState::Frozen(frozen),
+            ConstraintNodeState::Active(ActiveConstraintNode {
+                root_id,
+                constraints,
+            }),
+        ) => {
+            if let Some((l, u)) = flow_type_to_active_constraint_node(
+                cx,
+                env,
+                trace,
+                use_op,
+                &frozen.tvar,
+                (root_id, constraints),
+            )? {
+                rec_flow(cx, env, trace, (&l, &u))?;
+            }
+            Ok(())
+        }
+        (
+            ConstraintNodeState::Active(ActiveConstraintNode {
+                root_id,
+                constraints,
+            }),
+            ConstraintNodeState::Frozen(frozen),
+        ) => {
+            let u = UseT::new(UseTInner::UseT(use_op, frozen.tvar));
+            if let Some((l, u)) =
+                flow_active_constraint_node_to_use(cx, env, trace, (root_id, constraints), &u)?
+            {
+                rec_flow(cx, env, trace, (&l, &u))?;
+            }
+            Ok(())
+        }
+    }
+}
+
+pub(super) fn flow_type_to_constraint_node<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    use_op: UseOp,
+    l: &Type,
+    node: ConstraintNodeId,
+) -> Result<Option<(Type, UseT<Context<'cx>>)>, FlowJsException> {
+    match constraint_node_state(cx, env, node) {
+        ConstraintNodeState::Active(ActiveConstraintNode {
+            root_id,
+            constraints,
+        }) => {
+            flow_type_to_active_constraint_node(cx, env, trace, use_op, l, (root_id, constraints))
+        }
+        ConstraintNodeState::Frozen(frozen) => {
+            flow_type_to_frozen_constraint_node(cx, env, use_op, l, &frozen)?;
+            Ok(None)
+        }
+    }
 }
 
 /// bounds.upper += u
@@ -922,6 +1137,29 @@ pub(super) fn merge_constraint_nodes<'cx>(
     node1: ConstraintNodeId,
     node2: ConstraintNodeId,
 ) -> Result<(), FlowJsException> {
+    let frozen1 = frozen_constraint_node(cx, env, node1);
+    let frozen2 = frozen_constraint_node(cx, env, node2);
+    match (frozen1.as_ref(), frozen2.as_ref()) {
+        (Some(frozen1), Some(frozen2)) if frozen1.root_id == frozen2.root_id => return Ok(()),
+        (Some(frozen1), Some(frozen2)) => {
+            return flow_type_to_frozen_constraint_node(cx, env, use_op, &frozen1.tvar, frozen2);
+        }
+        (Some(frozen), None) => {
+            return resolve_constraint_node(
+                cx,
+                env,
+                trace,
+                unify_flip(use_op),
+                node2,
+                &frozen.tvar,
+            );
+        }
+        (None, Some(frozen)) => {
+            return resolve_constraint_node(cx, env, trace, use_op, node1, &frozen.tvar);
+        }
+        (None, None) => {}
+    }
+
     let (node1, root1) = constraint_node_root(cx, node1);
     let (node2, root2) = constraint_node_root(cx, node2);
     if node1 == node2 {
@@ -957,6 +1195,10 @@ pub(super) fn resolve_constraint_node<'cx>(
     node: ConstraintNodeId,
     t: &Type,
 ) -> Result<(), FlowJsException> {
+    if let Some(frozen) = frozen_constraint_node(cx, env, node) {
+        return flow_type_to_frozen_constraint_node(cx, env, use_op, t, &frozen);
+    }
+
     let (node, root) = constraint_node_root(cx, node);
     let id = node.id();
     match root.constraints {

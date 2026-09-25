@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::VecDeque;
 use std::ops::Deref;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -28,6 +29,7 @@ use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::concrete_type_eq;
+use flow_typing_flow_common::flow_cache;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::instantiation_utils;
@@ -63,6 +65,7 @@ use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LazyHintT;
+use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
@@ -81,6 +84,8 @@ use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::TypeDestructorT;
+use flow_typing_type::type_::TypeDestructorTInner;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_::TypeParamInner;
@@ -92,6 +97,8 @@ use flow_typing_type::type_::VirtualFrameUseOp;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::constraint;
 use flow_typing_type::type_::empty_t;
+use flow_typing_type::type_::eval;
+use flow_typing_type::type_::exports;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::nominal;
@@ -107,6 +114,8 @@ use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_::unsoundness;
 use flow_typing_type::type_util;
+use flow_typing_visitors::type_mapper;
+use flow_typing_visitors::type_mapper::TypeMapper;
 use flow_typing_visitors::type_visitor;
 use flow_typing_visitors::type_visitor::TypeVisitor;
 use vec1::Vec1;
@@ -1135,14 +1144,44 @@ enum PinningSource<'cx> {
     Concrete(Type),
 }
 
-fn pinning_source<'cx>(cx: &Context<'cx>, t: &Type) -> PinningSource<'cx> {
+fn pinning_source<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> PinningSource<'cx> {
     match type_util::constraint_node_id(t) {
         Some(node) => {
             let id = node.id();
-            let (_, constraints) = cx.find_constraints(id);
-            PinningSource::Constraints { id, constraints }
+            let (root_id, constraints) = cx.find_constraints(id);
+            if env
+                .frozen_implicit_instantiation_tvar(|frozen_id| {
+                    cx.find_constraints(frozen_id).0 == root_id
+                })
+                .is_some()
+            {
+                PinningSource::Concrete(t.dupe())
+            } else {
+                PinningSource::Constraints { id, constraints }
+            }
         }
         None => PinningSource::Concrete(t.dupe()),
+    }
+}
+
+fn collect_pinning_lowers<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    seen: &mut BTreeSet<i32>,
+    acc: &mut Vec<Type>,
+    ts: Vec<Type>,
+) {
+    let mut work_list = VecDeque::from(ts);
+    while let Some(t) = work_list.pop_front() {
+        match pinning_source(cx, env, &t) {
+            PinningSource::Constraints { id, .. } if seen.insert(id) => {
+                for t in flow_js_utils::possible_types(cx, id).into_iter().rev() {
+                    work_list.push_front(t);
+                }
+            }
+            PinningSource::Constraints { .. } => {}
+            PinningSource::Concrete(t) => acc.push(t),
+        }
     }
 }
 
@@ -1163,7 +1202,7 @@ fn merge_upper_bounds<'cx>(
     };
     let equal = |t1: &Type, t2: &Type| concrete_type_eq::eq_with_env(cx, env, t1, t2);
 
-    match pinning_source(cx, tvar) {
+    match pinning_source(cx, env, tvar) {
         PinningSource::Constraints { id, constraints } => {
             if seen.contains(&id) {
                 return Ok(UseTResult::UpperEmpty);
@@ -1243,7 +1282,7 @@ fn merge_lower_bounds<'cx>(
     if let PinningSource::Constraints {
         constraints: constraint::Constraints::Unresolved(bounds),
         ..
-    } = pinning_source(cx, t)
+    } = pinning_source(cx, env, t)
     {
         let upper = bounds.borrow().upper.clone();
         for key in upper.keys() {
@@ -1253,7 +1292,7 @@ fn merge_lower_bounds<'cx>(
         }
     }
 
-    Ok(match pinning_source(cx, t) {
+    Ok(match pinning_source(cx, env, t) {
         PinningSource::Constraints { id, constraints } => match constraints {
             constraint::Constraints::FullyResolved(s) => {
                 let t = cx.force_fully_resolved_tvar(&s);
@@ -1278,13 +1317,7 @@ fn merge_lower_bounds<'cx>(
                     let mut seen = BTreeSet::new();
                     seen.insert(id);
                     let mut collected = Vec::new();
-                    flow_js_utils::collect_lowers(
-                        false,
-                        cx,
-                        &mut seen,
-                        &mut collected,
-                        lower_types,
-                    );
+                    collect_pinning_lowers(cx, env, &mut seen, &mut collected, lower_types);
                     let flattened = union_flatten_list(collected);
                     let filtered: Vec<Type> = flattened
                         .into_iter()
@@ -1372,6 +1405,7 @@ fn use_upper_bounds<'cx, Obs: Observer>(
 
 fn mk_inference_targ<'cx>(
     cx: &Context<'cx>,
+    env: &FlowJsEnv,
     typeparam: &TypeParam,
     reason_op: &Reason,
     reason_tapp: &Reason,
@@ -1383,14 +1417,16 @@ fn mk_inference_targ<'cx>(
     );
     let inference_id = mk_id() as i32;
     cx.add_inference_node(inference_id);
-    Type::new(TypeInner::ImplicitInstantiationTvar(Box::new(
+    let tvar = Type::new(TypeInner::ImplicitInstantiationTvar(Box::new(
         ImplicitInstantiationTvarData {
             reason,
             name: typeparam.name.dupe(),
             bound: typeparam.bound.dupe(),
             id: inference_id,
         },
-    )))
+    )));
+    env.add_implicit_instantiation_tvar(inference_id, tvar.dupe(), typeparam.default.is_some());
+    tvar
 }
 
 fn check_instantiation<'cx, Obs: Observer>(
@@ -1421,7 +1457,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                 let mut inferred_targ_and_bound_list: Vec<(SubstName, Type, Type, bool)> =
                     Vec::new();
                 for tparam in tparams.iter() {
-                    let targ = mk_inference_targ(cx, tparam, reason_op, reason_tapp);
+                    let targ = mk_inference_targ(cx, env, tparam, reason_op, reason_tapp);
                     targs.push(Targ::ExplicitArg(targ.dupe()));
                     inferred_targ_and_bound_list.push((
                         tparam.name.dupe(),
@@ -1460,7 +1496,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                             break;
                         }
                         (Some(tparam), None) => {
-                            let targ = mk_inference_targ(cx, tparam, reason_op, reason_tapp);
+                            let targ = mk_inference_targ(cx, env, tparam, reason_op, reason_tapp);
                             if tparam.default.is_none() {
                                 flow_js_utils::add_output_with_env(
                                     cx,
@@ -1497,7 +1533,8 @@ fn check_instantiation<'cx, Obs: Observer>(
                                         VirtualReasonDesc::RImplicitInstantiation,
                                         r.loc().dupe(),
                                     );
-                                    let targ = mk_inference_targ(cx, tparam, &reason, reason_tapp);
+                                    let targ =
+                                        mk_inference_targ(cx, env, tparam, &reason, reason_tapp);
                                     FlowJs::flow_with_env(
                                         cx,
                                         env,
@@ -2637,6 +2674,113 @@ pub mod kit {
     use super::instantiation_solver::solve_targs;
     use super::*;
 
+    #[derive(Clone, Copy)]
+    struct FrozenTvarInfo {
+        has_default: bool,
+        has_unconstrained_bound: bool,
+    }
+
+    fn frozen_tvar<'cx>(
+        env: &FlowJsEnv,
+        cx: &Context<'cx>,
+        t: &Type,
+    ) -> Option<(i32, FrozenTvarInfo)> {
+        let node = type_util::constraint_node_id(t)?;
+        let root_id = cx.find_constraints(node.id()).0;
+        let (tvar, has_default) = env.frozen_implicit_instantiation_tvar_with_default(|id| {
+            cx.find_constraints(id).0 == root_id
+        })?;
+        let TypeInner::ImplicitInstantiationTvar(data) = tvar.deref() else {
+            return None;
+        };
+        let has_unconstrained_bound = matches!(
+            data.bound.deref(),
+            TypeInner::DefT(_, def_t)
+                if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedEverything))
+        );
+        Some((
+            data.id,
+            FrozenTvarInfo {
+                has_default,
+                has_unconstrained_bound,
+            },
+        ))
+    }
+
+    fn frozen_tvar_id<'cx>(env: &FlowJsEnv, cx: &Context<'cx>, t: &Type) -> Option<i32> {
+        frozen_tvar(env, cx, t).map(|(id, _)| id)
+    }
+
+    struct ConditionalTypeAnySubstituter<'a> {
+        env: &'a FlowJsEnv,
+        any_t: Type,
+        replaced_frozen_tvar_ids: BTreeSet<i32>,
+    }
+
+    impl<'cx> TypeMapper<'cx, ()> for ConditionalTypeAnySubstituter<'_> {
+        fn tvar(&mut self, _cx: &Context<'cx>, _map_cx: &(), _r: &Reason, id: u32) -> u32 {
+            id
+        }
+
+        fn exports(&mut self, cx: &Context<'cx>, map_cx: &(), id: exports::Id) -> exports::Id {
+            type_subst::exports(self, cx, map_cx, id)
+        }
+
+        fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &(), id: i32) -> i32 {
+            type_subst::call_prop(self, cx, map_cx, id)
+        }
+
+        fn props(&mut self, cx: &Context<'cx>, map_cx: &(), id: properties::Id) -> properties::Id {
+            type_subst::props(self, cx, map_cx, id)
+        }
+
+        fn eval_id(&mut self, _cx: &Context<'cx>, _map_cx: &(), id: eval::Id) -> eval::Id {
+            id
+        }
+
+        fn type_(&mut self, cx: &Context<'cx>, map_cx: &(), t: Type) -> Type {
+            if let Some(id) = frozen_tvar_id(self.env, cx, &t) {
+                self.replaced_frozen_tvar_ids.insert(id);
+                return self.any_t.dupe();
+            }
+            if let TypeInner::EvalT {
+                type_, defer_use_t, ..
+            } = t.deref()
+            {
+                let type_prime = self.type_(cx, map_cx, type_.dupe());
+                let destructor_prime = self.destructor(cx, map_cx, defer_use_t.2.dupe());
+                if !type_.ptr_eq(&type_prime) || !Rc::ptr_eq(&defer_use_t.2, &destructor_prime) {
+                    return flow_cache::eval::id(
+                        cx,
+                        type_prime,
+                        TypeDestructorT::new(TypeDestructorTInner(
+                            defer_use_t.0.dupe(),
+                            defer_use_t.1.dupe(),
+                            destructor_prime,
+                        )),
+                    );
+                }
+                return t;
+            }
+            type_mapper::type_default(self, cx, map_cx, t)
+        }
+    }
+
+    struct FrozenTvarCollector<'a> {
+        env: &'a FlowJsEnv,
+        frozen_tvars: BTreeMap<i32, FrozenTvarInfo>,
+    }
+
+    impl TypeVisitor<()> for FrozenTvarCollector<'_> {
+        fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, _acc: (), t: &Type) {
+            if let Some((id, info)) = frozen_tvar(self.env, cx, t) {
+                self.frozen_tvars.insert(id, info);
+            } else {
+                type_visitor::type_default(self, cx, pole, (), t);
+            }
+        }
+    }
+
     fn instantiate_poly_with_subst_map<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -3016,25 +3160,66 @@ pub mod kit {
             // Placeholder in, placeholder out
             return Ok(cx.mk_placeholder(reason.dupe()));
         }
-        if env.in_implicit_instantiation()
-            && (flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, check_t)
-                || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, extends_t)
-                || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, true_t)
-                || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, false_t))
+        let nested_env = env.solving_implicit_instantiation();
+        let has_unresolved_tvars = flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, check_t)
+            || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, extends_t)
+            || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, true_t)
+            || flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, false_t);
+        let (can_run_nested_solve, infer_through_frozen_tvar) = if env.in_implicit_instantiation()
+            && has_unresolved_tvars
         {
-            // When we are in nested instantiation, we can't meaningfully decide which branch to take,
-            // so we will give up and produce placeholder instead.
+            let mut condition_collector = FrozenTvarCollector {
+                env: &nested_env,
+                frozen_tvars: BTreeMap::new(),
+            };
+            condition_collector.type_(cx, Polarity::Positive, (), check_t);
+            condition_collector.type_(cx, Polarity::Positive, (), extends_t);
+
+            let mut branch_collector = FrozenTvarCollector {
+                env: &nested_env,
+                frozen_tvars: BTreeMap::new(),
+            };
+            branch_collector.type_(cx, Polarity::Positive, (), true_t);
+            branch_collector.type_(cx, Polarity::Positive, (), false_t);
+            let infer_through_frozen_tvar =
+                branch_collector.frozen_tvars.iter().any(|(id, info)| {
+                    info.has_default
+                        && info.has_unconstrained_bound
+                        && !condition_collector.frozen_tvars.contains_key(id)
+                });
+            let condition_has_unconstrained_tvar = condition_collector
+                .frozen_tvars
+                .values()
+                .any(|info| info.has_unconstrained_bound);
+            let branch_has_unconstrained_tvar = branch_collector
+                .frozen_tvars
+                .values()
+                .any(|info| info.has_unconstrained_bound);
+            let can_run_nested_solve = infer_through_frozen_tvar
+                || (!tparams.is_empty()
+                    && (condition_has_unconstrained_tvar || branch_has_unconstrained_tvar))
+                || (condition_collector.frozen_tvars.is_empty() && branch_has_unconstrained_tvar);
+            (can_run_nested_solve, infer_through_frozen_tvar)
+        } else {
+            (false, false)
+        };
+        if has_unresolved_tvars && env.in_implicit_instantiation() && !can_run_nested_solve {
             return Ok(cx.mk_placeholder(reason.dupe()));
         }
 
         let t = {
-            let result = {
-                let env = &env.solving_implicit_instantiation();
-                solve_conditional_type_targs(
-                    cx, env, trace, &use_op, reason, tparams, check_t, extends_t, true_t,
-                )
-            };
-            match result? {
+            let result = solve_conditional_type_targs(
+                cx,
+                &nested_env,
+                trace,
+                &use_op,
+                reason,
+                tparams,
+                check_t,
+                extends_t,
+                true_t,
+            )?;
+            match result {
                 // If the subtyping can succeed even when the GenericTs are still abstract, then it must
                 // succeed under every possible instantiation, so we can take the true branch.
                 Some(subst_map) => {
@@ -3063,7 +3248,17 @@ pub mod kit {
                         let fv2 = type_subst::free_var_finder(cx, Some(bound), extends_t);
                         fv1.union(fv2)
                     };
-                    if free_vars.is_empty() {
+                    let mut frozen_tvar_substituter = ConditionalTypeAnySubstituter {
+                        env: &nested_env,
+                        any_t: any_t::placeholder(reason.dupe()),
+                        replaced_frozen_tvar_ids: BTreeSet::new(),
+                    };
+                    let any_check = frozen_tvar_substituter.type_(cx, &(), check_t.dupe());
+                    let any_extends = frozen_tvar_substituter.type_(cx, &(), extends_t.dupe());
+                    let condition_frozen_tvar_ids =
+                        frozen_tvar_substituter.replaced_frozen_tvar_ids;
+                    let replaced_frozen_tvar = !condition_frozen_tvar_ids.is_empty();
+                    if free_vars.is_empty() && !replaced_frozen_tvar {
                         flow_typing_debug::verbose::print_if_verbose(
                             cx,
                             None,
@@ -3087,7 +3282,7 @@ pub mod kit {
                             false,
                             type_subst::Purpose::ConditionalTypeAnySubst,
                             &any_subst_map,
-                            check_t.dupe(),
+                            any_check,
                         );
                         let any_extends = type_subst::subst(
                             cx,
@@ -3096,7 +3291,7 @@ pub mod kit {
                             false,
                             type_subst::Purpose::ConditionalTypeAnySubst,
                             &any_subst_map,
-                            extends_t.dupe(),
+                            any_extends,
                         );
 
                         match speculation_kit::try_singleton_throw_on_failure(
@@ -3120,57 +3315,62 @@ pub mod kit {
                                 false_t.dupe()
                             }
                             Ok(()) => {
-                                flow_typing_debug::verbose::print_if_verbose(
-                                    cx,
-                                    None,
-                                    None,
-                                    None,
-                                    vec!["Conditional type is kept abstract.".to_string()],
-                                );
-                                // A conditional type with GenericTs in check type and extends type is tricky.
-                                // We cannot conservatively decide which branch we will take. To maintain
-                                // soundness in this general case, we make the type abstract.
-                                let bound = Type::new(TypeInner::UnionT(
-                                    reason.dupe(),
-                                    union_rep::make(
+                                if replaced_frozen_tvar && !infer_through_frozen_tvar {
+                                    cx.mk_placeholder(reason.dupe())
+                                } else {
+                                    flow_typing_debug::verbose::print_if_verbose(
+                                        cx,
                                         None,
-                                        union_rep::UnionKind::UnknownKind,
-                                        true_t.dupe(),
-                                        false_t.dupe(),
-                                        Rc::from([]),
-                                    ),
-                                ));
-                                let nominal_type_args: Rc<[_]> =
-                                    [check_t, extends_t, true_t, false_t]
-                                        .iter()
-                                        .enumerate()
-                                        .map(|(i, t)| {
-                                            (
-                                                SubstName::synthetic(
-                                                    i.to_string().into(),
-                                                    None,
-                                                    vec![],
+                                        None,
+                                        None,
+                                        vec!["Conditional type is kept abstract.".to_string()],
+                                    );
+                                    // A conditional type with GenericTs in check type and extends type is tricky.
+                                    // We cannot conservatively decide which branch we will take. To maintain
+                                    // soundness in this general case, we make the type abstract.
+                                    let bound = Type::new(TypeInner::UnionT(
+                                        reason.dupe(),
+                                        union_rep::make(
+                                            None,
+                                            union_rep::UnionKind::UnknownKind,
+                                            true_t.dupe(),
+                                            false_t.dupe(),
+                                            Rc::from([]),
+                                        ),
+                                    ));
+                                    let lower_t = infer_through_frozen_tvar.then(|| bound.dupe());
+                                    let nominal_type_args: Rc<[_]> =
+                                        [check_t, extends_t, true_t, false_t]
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, t)| {
+                                                (
+                                                    SubstName::synthetic(
+                                                        i.to_string().into(),
+                                                        None,
+                                                        vec![],
+                                                    ),
+                                                    type_util::reason_of_t(t).dupe(),
+                                                    (*t).dupe(),
+                                                    Polarity::Neutral,
+                                                )
+                                            })
+                                            .collect();
+                                    Type::new(TypeInner::NominalT {
+                                        reason: reason.dupe(),
+                                        nominal_type: std::rc::Rc::new(NominalType::new(
+                                            NominalTypeInner {
+                                                nominal_id: nominal::Id::StuckEval(
+                                                    nominal::StuckEvalKind::StuckEvalForConditionalType,
                                                 ),
-                                                type_util::reason_of_t(t).dupe(),
-                                                (*t).dupe(),
-                                                Polarity::Neutral,
-                                            )
-                                        })
-                                        .collect();
-                                Type::new(TypeInner::NominalT {
-                                    reason: reason.dupe(),
-                                    nominal_type: std::rc::Rc::new(NominalType::new(
-                                        NominalTypeInner {
-                                            nominal_id: nominal::Id::StuckEval(
-                                                nominal::StuckEvalKind::StuckEvalForConditionalType,
-                                            ),
-                                            underlying_t: nominal::UnderlyingT::FullyOpaque,
-                                            lower_t: None,
-                                            upper_t: Some(bound),
-                                            nominal_type_args,
-                                        },
-                                    )),
-                                })
+                                                underlying_t: nominal::UnderlyingT::FullyOpaque,
+                                                lower_t,
+                                                upper_t: Some(bound),
+                                                nominal_type_args,
+                                            },
+                                        )),
+                                    })
+                                }
                             }
                             Err(e) => return Err(e),
                         }

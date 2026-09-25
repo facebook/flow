@@ -566,12 +566,12 @@ fn __flow_impl<'cx>(
             if node1.is_open_t() {
                 cx.add_array_or_object_literal_declaration_upper_bound(node1.id(), t_upper.dupe());
             }
-            flow_unresolved_to_unresolved(cx, env, trace, use_op.dupe(), node1, node2)?;
+            flow_constraint_nodes(cx, env, trace, use_op.dupe(), node1, node2)?;
         }
         // ******************
         // * process Y ~> U *
         // ******************
-        (_, _) if let Some(node) = constraint_node_id(l) => {
+        (_, _) if let Some(node) = active_constraint_node(cx, env, l) => {
             let r = reason_of_t(l);
             if !match u.deref() {
                 // We have some simple tvar id based concretization. Bad cyclic types can only
@@ -612,25 +612,10 @@ fn __flow_impl<'cx>(
                     ),
                     _ => u.dupe(),
                 };
-                let (id1, constraints1) = constraint_node_constraints(cx, node);
-                match constraints1 {
-                    constraint::Constraints::Unresolved(bounds1) => {
-                        edges_and_flows_to_t(cx, env, trace, false, (id1, &bounds1), &u)?;
-                    }
-                    constraint::Constraints::Resolved(t1) => {
-                        // rec_flow(cx, env, trace, (&t1, &u))
-                        // Tail call: in OCaml this is the last call in the match arm
-                        return Ok(Some(TailCall::RecFlow(t1, u, DepthTrace::rec_trace(trace))));
-                    }
-                    constraint::Constraints::FullyResolved(s1) => {
-                        // rec_flow(cx, env, trace, (&cx.force_fully_resolved_tvar(&s1), &u))
-                        // Tail call: in OCaml this is the last call in the match arm
-                        return Ok(Some(TailCall::RecFlow(
-                            cx.force_fully_resolved_tvar(&s1),
-                            u,
-                            DepthTrace::rec_trace(trace),
-                        )));
-                    }
+                let state = constraint_node_constraints(cx, node);
+                if let Some((l, u)) = flow_active_constraint_node_to_use(cx, env, trace, state, &u)?
+                {
+                    return Ok(Some(TailCall::RecFlow(l, u, DepthTrace::rec_trace(trace))));
                 }
             }
         }
@@ -638,40 +623,10 @@ fn __flow_impl<'cx>(
         // * process L ~> X *
         // ******************
         (_, UseTInner::UseT(use_op, t_open)) if let Some(node) = constraint_node_id(t_open) => {
-            let (id2, constraints2) = constraint_node_constraints(cx, node);
-            match constraints2 {
-                constraint::Constraints::Unresolved(bounds2) => {
-                    edges_and_flows_from_t(
-                        cx,
-                        env,
-                        trace,
-                        use_op.dupe(),
-                        false,
-                        l,
-                        (id2, &bounds2),
-                    )?;
-                }
-                constraint::Constraints::Resolved(t2) => {
-                    // rec_flow(cx, env, trace, (l, &UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()))))
-                    // Tail call: in OCaml this is the last call in the match arm
-                    return Ok(Some(TailCall::RecFlow(
-                        l.dupe(),
-                        UseT::new(UseTInner::UseT(use_op.dupe(), t2)),
-                        DepthTrace::rec_trace(trace),
-                    )));
-                }
-                constraint::Constraints::FullyResolved(s2) => {
-                    // rec_flow(cx, env, trace, (l, &UseT::new(UseTInner::UseT(use_op.dupe(), ...))))
-                    // Tail call: in OCaml this is the last call in the match arm
-                    return Ok(Some(TailCall::RecFlow(
-                        l.dupe(),
-                        UseT::new(UseTInner::UseT(
-                            use_op.dupe(),
-                            cx.force_fully_resolved_tvar(&s2),
-                        )),
-                        DepthTrace::rec_trace(trace),
-                    )));
-                }
+            if let Some((l, u)) =
+                flow_type_to_constraint_node(cx, env, trace, use_op.dupe(), l, node)?
+            {
+                return Ok(Some(TailCall::RecFlow(l, u, DepthTrace::rec_trace(trace))));
             }
         }
         // ************************
@@ -9319,6 +9274,9 @@ fn __flow_impl<'cx>(
         (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
             let repos = helpers::reposition_reason(cx, env, None, reason, false, bound)?;
             rec_flow(cx, env, trace, (&repos, u))?;
+        }
+        (TypeInner::ImplicitInstantiationTvar(data), _) => {
+            rec_flow(cx, env, trace, (&data.bound, u))?;
         }
         (
             _,

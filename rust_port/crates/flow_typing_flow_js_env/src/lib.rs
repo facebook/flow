@@ -23,6 +23,7 @@
 //! — which is why those take an env of their own.
 
 use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 
@@ -108,6 +109,13 @@ struct TypeAppFrame {
     enclosing: Option<Rc<TypeAppFrame>>,
 }
 
+/// One implicit-instantiation solve, holding the solves it is nested in.
+#[derive(Debug)]
+struct ImplicitInstantiationFrame {
+    inference_tvars: RefCell<BTreeMap<i32, (Type, bool)>>,
+    enclosing: Option<Rc<ImplicitInstantiationFrame>>,
+}
+
 /// The environment for `flow_js` related functions. Callers outside the
 /// `flow_js` system use [`FlowJsEnv::entry`]; any non-default env out there
 /// must be carefully audited (see the module docs for the two ways one can
@@ -125,9 +133,8 @@ pub struct FlowJsEnv {
     /// The innermost type application being expanded, used to cut off expansion
     /// that would otherwise diverge.
     instantiation_stack: Option<Rc<TypeAppFrame>>,
-    /// Whether we are inside the implicit instantiation solver, where
-    /// instantiable tvars must not be resolved the way they normally are.
-    in_implicit_instantiation: bool,
+    /// The innermost implicit-instantiation solve.
+    implicit_instantiation: Option<Rc<ImplicitInstantiationFrame>>,
 }
 
 impl FlowJsEnv {
@@ -194,21 +201,63 @@ impl FlowJsEnv {
                 enclosing: self.speculation.dupe(),
             })),
             instantiation_stack: self.instantiation_stack.dupe(),
-            in_implicit_instantiation: self.in_implicit_instantiation,
+            implicit_instantiation: self.implicit_instantiation.dupe(),
         }
     }
 
     // ---- implicit instantiation ----
 
     pub fn in_implicit_instantiation(&self) -> bool {
-        self.in_implicit_instantiation
+        self.implicit_instantiation.is_some()
     }
 
     pub fn solving_implicit_instantiation(&self) -> Self {
         Self {
-            in_implicit_instantiation: true,
+            implicit_instantiation: Some(Rc::new(ImplicitInstantiationFrame {
+                inference_tvars: RefCell::new(BTreeMap::new()),
+                enclosing: self.implicit_instantiation.dupe(),
+            })),
             ..self.dupe()
         }
+    }
+
+    pub fn add_implicit_instantiation_tvar(&self, id: i32, tvar: Type, has_default: bool) {
+        if let Some(frame) = &self.implicit_instantiation {
+            frame
+                .inference_tvars
+                .borrow_mut()
+                .insert(id, (tvar, has_default));
+        }
+    }
+
+    /// The tvar owned by a lower frame that satisfies `predicate`, if any.
+    pub fn frozen_implicit_instantiation_tvar(
+        &self,
+        predicate: impl FnMut(i32) -> bool,
+    ) -> Option<Type> {
+        self.frozen_implicit_instantiation_tvar_with_default(predicate)
+            .map(|(tvar, _)| tvar)
+    }
+
+    pub fn frozen_implicit_instantiation_tvar_with_default(
+        &self,
+        mut predicate: impl FnMut(i32) -> bool,
+    ) -> Option<(Type, bool)> {
+        std::iter::successors(
+            self.implicit_instantiation
+                .as_deref()
+                .and_then(|frame| frame.enclosing.as_deref()),
+            |frame| frame.enclosing.as_deref(),
+        )
+        .find_map(|frame| {
+            frame
+                .inference_tvars
+                .borrow()
+                .iter()
+                .find_map(|(id, (tvar, has_default))| {
+                    predicate(*id).then(|| (tvar.dupe(), *has_default))
+                })
+        })
     }
 
     // ---- type application expansion ----
@@ -242,7 +291,7 @@ impl FlowJsEnv {
                 entry: Entry(c.dupe(), tss, side),
                 enclosing: self.instantiation_stack.dupe(),
             })),
-            in_implicit_instantiation: self.in_implicit_instantiation,
+            implicit_instantiation: self.implicit_instantiation.dupe(),
         })
     }
 
@@ -252,7 +301,7 @@ impl FlowJsEnv {
         Self {
             speculation: None,
             instantiation_stack: None,
-            in_implicit_instantiation: self.in_implicit_instantiation,
+            implicit_instantiation: self.implicit_instantiation.dupe(),
         }
     }
 }

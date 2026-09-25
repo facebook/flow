@@ -2574,12 +2574,15 @@ where
 // without otherwise concretizing. Used as a local optimization by
 // [evaluate_type_destructor_] so a resolved tvar is evaluated once to an
 // annotation rather than getting a bound on both sides.
-pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
+pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &Type) -> Type {
+    if super::constraint_helpers::frozen_implicit_instantiation_tvar(cx, env, t).is_some() {
+        return t.dupe();
+    }
     match t.deref() {
         _ if let Some(node) = type_util::constraint_node_id(t) => find_resolved_opt(
             cx,
             t.dupe(),
-            |resolved_t| drop_resolved(cx, resolved_t),
+            |resolved_t| drop_resolved(cx, env, resolved_t),
             node.id(),
         ),
         TypeInner::GenericT(box GenericTData {
@@ -2596,7 +2599,7 @@ pub(super) fn drop_resolved<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
                     reason: reason.dupe(),
                     name: name.dupe(),
                     id: g_id.clone(),
-                    bound: drop_resolved(cx, resolved_t),
+                    bound: drop_resolved(cx, env, resolved_t),
                     no_infer: *no_infer,
                 })))
             },
