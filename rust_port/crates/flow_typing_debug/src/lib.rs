@@ -1411,10 +1411,7 @@ fn dump_use_t_<CX>(
             );
             p(cx, use_t, true, &extra)
         }
-        UseTInner::MixinT(_, arg) => {
-            let extra = kid(tvars, arg);
-            p(cx, use_t, true, &extra)
-        }
+        UseTInner::MixinT(..) => p(cx, use_t, true, ""),
         UseTInner::ObjRestT(_, xs, arg, _) => {
             let extra = format!("[{}], {}", xs.join("; "), kid(tvars, arg));
             p(cx, use_t, true, &extra)

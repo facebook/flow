@@ -4144,7 +4144,7 @@ fn __flow_impl<'cx>(
 
         // A class can be viewed as a mixin by extracting its immediate properties,
         // and "erasing" its static and super
-        (TypeInner::DefT(class_reason, def_t), UseTInner::MixinT(r, tvar))
+        (TypeInner::DefT(class_reason, def_t), UseTInner::MixinT(r, collector))
             if let DefTInner::ClassT(inner) = def_t.deref()
                 && let TypeInner::ThisInstanceT(box ThisInstanceTData {
                     instance,
@@ -4172,18 +4172,10 @@ fn __flow_impl<'cx>(
                 class_reason.dupe(),
                 DefT::new(DefTInner::ClassT(new_this_inst)),
             ));
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    &new_l,
-                    &UseT::new(UseTInner::UseT(unknown_use(), tvar.dupe())),
-                ),
-            )?;
+            collector.add(new_l);
         }
 
-        (TypeInner::DefT(_, def_t), UseTInner::MixinT(r, tvar))
+        (TypeInner::DefT(_, def_t), UseTInner::MixinT(r, collector))
             if let DefTInner::PolyT(box PolyTData {
                 tparams_loc,
                 tparams: xs,
@@ -4226,19 +4218,11 @@ fn __flow_impl<'cx>(
                 class_t,
                 *strictness_kind,
             );
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    &poly_t,
-                    &UseT::new(UseTInner::UseT(unknown_use(), tvar.dupe())),
-                ),
-            )?;
+            collector.add(poly_t);
         }
-        (TypeInner::AnyT(_, src), UseTInner::MixinT(r, tvar)) => {
+        (TypeInner::AnyT(_, src), UseTInner::MixinT(r, collector)) => {
             let any = any_t::why(*src, r.dupe());
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
+            collector.add(any);
         }
         // TODO: it is conceivable that other things (e.g. functions) could also be
         // viewed as mixins (e.g. by extracting properties in their prototypes), but

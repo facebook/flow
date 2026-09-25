@@ -221,7 +221,10 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ConstructorT(data) => resolve(data.tout.dupe()),
         UseTInner::SuperT(..) => Ok(()),
         UseTInner::ImplementsT(..) => Ok(()),
-        UseTInner::MixinT(_, t) => resolve(t.dupe()),
+        UseTInner::MixinT(_, collector) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::ToStringT { t_out, .. } => {
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), t_out)
         }

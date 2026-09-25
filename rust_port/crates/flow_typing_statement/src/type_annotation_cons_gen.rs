@@ -33,7 +33,10 @@ use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::ValueToTypeReferenceTData;
 use flow_typing_type::type_::hint_unavailable;
+use flow_typing_type::type_::type_collector::TypeCollector;
+use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
+use flow_typing_type::type_util;
 use flow_typing_type::type_util::reason_of_t;
 use flow_utils_concurrency::job_error::JobError;
 
@@ -66,10 +69,15 @@ pub fn mixin<'a>(cx: &Context<'a>, reason: Reason, i: Type) -> Type {
     let reason_inner = reason.dupe();
     let f = move |cx: &Context<'_>, i: Type| -> Result<Type, JobError> {
         let reason_for_mixin = reason_inner.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner, move |cx, tout| {
-            let use_t = UseT::new(UseTInner::MixinT(reason_for_mixin, tout.dupe()));
-            flow_js::flow_non_speculating(cx, (&i, &use_t))
-        })
+        let collector = TypeCollector::create();
+        let use_t = UseT::new(UseTInner::MixinT(reason_for_mixin, collector.dupe()));
+        flow_js::flow_non_speculating(cx, (&i, &use_t))?;
+        Ok(type_util::union_of_ts_opt(
+            reason_inner.dupe(),
+            collector.collect_to_vec(),
+            Some(UnionKind::ResolvedKind),
+        )
+        .unwrap_or_else(|| tvar_resolver::default_no_lowers(&reason_inner)))
     };
     map_on_resolved_type(cx, reason, i, f)
 }

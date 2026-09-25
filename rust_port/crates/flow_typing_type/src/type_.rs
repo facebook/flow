@@ -2522,7 +2522,7 @@ pub enum UseTInner<CX = ()> {
     ConstructorT(Box<ConstructorTData<CX>>),
     SuperT(Box<SuperTData>),
     ImplementsT(UseOp, Type),
-    MixinT(Reason, Type),
+    MixinT(Reason, type_collector::TypeCollector),
     ToStringT {
         orig_t: Option<Type>,
         reason: Reason,
