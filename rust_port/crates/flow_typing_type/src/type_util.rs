@@ -48,6 +48,7 @@ use crate::type_::GetPropTData;
 use crate::type_::GetTypeFromNamespaceTData;
 use crate::type_::HasOwnPropTData;
 use crate::type_::ImplicitInstantiationTvarData;
+use crate::type_::JSXCreateElementData;
 use crate::type_::MapTypeTData;
 use crate::type_::MethodTData;
 use crate::type_::MixedFlavor;
@@ -1113,18 +1114,21 @@ where
                 op,
                 fn_,
                 args,
+                implicit_instantiation_reference,
                 local,
             }) => FunCall(Box::new(FunCallData {
                 local,
                 op: mod_reason(op),
                 fn_: mod_reason(fn_),
                 args: args.iter().map(|a| mod_reason(a.dupe())).collect(),
+                implicit_instantiation_reference,
             })),
             FunCallMethod(box FunCallMethodData {
                 op,
                 fn_,
                 args,
                 prop,
+                implicit_instantiation_reference,
                 local,
             }) => FunCallMethod(Box::new(FunCallMethodData {
                 local,
@@ -1132,6 +1136,7 @@ where
                 fn_: mod_reason(fn_),
                 prop: mod_reason(prop),
                 args: args.iter().map(|a| mod_reason(a.dupe())).collect(),
+                implicit_instantiation_reference,
             })),
             FunReturnStatement { value } => FunReturnStatement {
                 value: mod_reason(value),
@@ -1158,18 +1163,25 @@ where
                 bound: mod_reason(bound),
                 infer: mod_reason(infer),
             },
-            JSXCreateElement { op, component } => JSXCreateElement {
+            JSXCreateElement(box JSXCreateElementData {
+                op,
+                component,
+                implicit_instantiation_reference,
+            }) => JSXCreateElement(Box::new(JSXCreateElementData {
                 op: mod_reason(op),
                 component: mod_reason(component),
-            },
+                implicit_instantiation_reference,
+            })),
             ReactCreateElementCall(box ReactCreateElementCallData {
                 op,
                 component,
                 children,
+                implicit_instantiation_reference,
             }) => ReactCreateElementCall(Box::new(ReactCreateElementCallData {
                 op: mod_reason(op),
                 component: mod_reason(component),
                 children: f(children),
+                implicit_instantiation_reference,
             })),
             ReactGetIntrinsic { literal } => ReactGetIntrinsic {
                 literal: mod_reason(literal),

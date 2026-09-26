@@ -885,6 +885,27 @@ pub struct ConformToCommonInterfaceData<L: Dupe + PartialEq + Eq + PartialOrd + 
 #[derive(
     Debug,
     Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum ImplicitInstantiationReferenceKind {
+    Call(Option<FlowSmolStr>),
+    Method(Option<FlowSmolStr>),
+    Constructor(Option<FlowSmolStr>),
+    ReactElement(Option<FlowSmolStr>),
+    JSXFunction(FlowSmolStr),
+    SuperCall,
+}
+
+#[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     PartialOrd,
@@ -897,6 +918,7 @@ pub struct FunCallData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub op: VirtualReason<L>,
     pub fn_: VirtualReason<L>,
     pub args: Arc<[VirtualReason<L>]>,
+    pub implicit_instantiation_reference: ImplicitInstantiationReferenceKind,
     pub local: bool,
 }
 
@@ -933,6 +955,7 @@ pub struct FunCallMethodData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     pub fn_: VirtualReason<L>,
     pub prop: VirtualReason<L>,
     pub args: Arc<[VirtualReason<L>]>,
+    pub implicit_instantiation_reference: ImplicitInstantiationReferenceKind,
     pub local: bool,
 }
 
@@ -951,6 +974,24 @@ pub struct ReactCreateElementCallData<L: Dupe + PartialEq + Eq + PartialOrd + Or
     pub op: VirtualReason<L>,
     pub component: VirtualReason<L>,
     pub children: L,
+    pub implicit_instantiation_reference: ImplicitInstantiationReferenceKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct JSXCreateElementData<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    pub op: VirtualReason<L>,
+    pub component: VirtualReason<L>,
+    pub implicit_instantiation_reference: ImplicitInstantiationReferenceKind,
 }
 
 #[derive(
@@ -1216,10 +1257,7 @@ pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         bound: VirtualReason<L>,
         infer: VirtualReason<L>,
     },
-    JSXCreateElement {
-        op: VirtualReason<L>,
-        component: VirtualReason<L>,
-    },
+    JSXCreateElement(Box<JSXCreateElementData<L>>),
     ReactCreateElementCall(Box<ReactCreateElementCallData<L>>),
     ReactGetIntrinsic {
         literal: VirtualReason<L>,
@@ -11197,6 +11235,24 @@ pub fn root_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
     }
 }
 
+pub fn implicit_instantiation_reference_kind<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+    op: &VirtualUseOp<L>,
+) -> Option<&ImplicitInstantiationReferenceKind> {
+    match root_of_use_op(op) {
+        VirtualRootUseOp::FunCall(data) => Some(&data.implicit_instantiation_reference),
+        VirtualRootUseOp::FunCallMethod(data) => Some(&data.implicit_instantiation_reference),
+        VirtualRootUseOp::JSXCreateElement(box JSXCreateElementData {
+            implicit_instantiation_reference,
+            ..
+        }) => Some(implicit_instantiation_reference),
+        VirtualRootUseOp::ReactCreateElementCall(data) => {
+            Some(&data.implicit_instantiation_reference)
+        }
+        VirtualRootUseOp::Speculation(inner) => implicit_instantiation_reference_kind(inner),
+        _ => None,
+    }
+}
+
 /* Printing some types in parseable form relies on particular formats in
 corresponding reason descriptions. The following module formalizes the
 relevant conventions.
@@ -11338,7 +11394,7 @@ pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualRootUseOp::GetProperty { .. } => "GetProperty",
         VirtualRootUseOp::IndexedTypeAccess { .. } => "IndexedTypeAccess",
         VirtualRootUseOp::InferBoundCompatibilityCheck { .. } => "InferBoundCompatibilityCheck",
-        VirtualRootUseOp::JSXCreateElement { .. } => "JSXCreateElement",
+        VirtualRootUseOp::JSXCreateElement(..) => "JSXCreateElement",
         VirtualRootUseOp::ReactCreateElementCall(..) => "ReactCreateElementCall",
         VirtualRootUseOp::ReactGetIntrinsic { .. } => "ReactGetIntrinsic",
         VirtualRootUseOp::RecordCreate(..) => "RecordCreate",

@@ -28,6 +28,7 @@ use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErr
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::intermediate_error_types::ImplicitInstantiationReferenceData;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_common::flow_cache;
 use flow_typing_flow_common::flow_js_utils;
@@ -63,6 +64,7 @@ use flow_typing_type::type_::GetElemTData;
 use flow_typing_type::type_::GetEnumKind;
 use flow_typing_type::type_::GetEnumTData;
 use flow_typing_type::type_::HintEvalResult;
+use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::MixedFlavor;
@@ -100,6 +102,7 @@ use flow_typing_type::type_::empty_t;
 use flow_typing_type::type_::eval;
 use flow_typing_type::type_::exports;
 use flow_typing_type::type_::hint_unavailable;
+use flow_typing_type::type_::implicit_instantiation_reference_kind;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::num_module_t;
@@ -2301,7 +2304,14 @@ pub mod instantiation_solver {
                             env,
                             ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
                                 EImplicitInstantiationUnderconstrainedErrorData {
-                                    reason_call: instantiation_reason.dupe(),
+                                    call: ImplicitInstantiationReferenceData {
+                                        loc: instantiation_reason.loc().dupe(),
+                                        kind: implicit_instantiation_reference_kind(use_op)
+                                            .map(|kind| kind.dupe())
+                                            .unwrap_or(ImplicitInstantiationReferenceKind::Call(
+                                                None,
+                                            )),
+                                    },
                                     type_param_loc: tparam_binder_reason.def_loc().dupe(),
                                     type_param_name: tparam.name.string_of_subst_name().dupe(),
                                     use_op: use_op.dupe(),
@@ -2349,7 +2359,12 @@ pub mod instantiation_solver {
                     env,
                     ErrorMessage::EImplicitInstantiationUnderconstrainedError(Box::new(
                         EImplicitInstantiationUnderconstrainedErrorData {
-                            reason_call: instantiation_reason.dupe(),
+                            call: ImplicitInstantiationReferenceData {
+                                loc: instantiation_reason.loc().dupe(),
+                                kind: implicit_instantiation_reference_kind(use_op)
+                                    .map(|kind| kind.dupe())
+                                    .unwrap_or(ImplicitInstantiationReferenceKind::Call(None)),
+                            },
                             type_param_loc: tparam_binder_reason.def_loc().dupe(),
                             type_param_name: tparam.name.string_of_subst_name().dupe(),
                             use_op: use_op.dupe(),

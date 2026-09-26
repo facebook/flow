@@ -7396,6 +7396,8 @@ fn expression_<'a>(
                             op: reason.dupe(),
                             fn_: reason_of_t(&id_t).dupe(),
                             args: vec![reason_of_t(&arg_t).dupe()].into(),
+                            implicit_instantiation_reference:
+                                ImplicitInstantiationReferenceKind::Constructor(Some(n.dupe())),
                             local: true,
                         }))));
                     let (t, ctor_t) = new_call(
@@ -7458,6 +7460,9 @@ fn expression_<'a>(
                 op: mk_expression_reason(e),
                 fn_: mk_expression_reason(&inner.callee),
                 args: args_reasons.into(),
+                implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Constructor(
+                    Some(code_desc_of_expression(false, &inner.callee).into()),
+                ),
                 local: true,
             }))));
             let (t, ctor_t) = new_call(cx, loc.dupe(), reason, use_op, class_, targts, argts)?;
@@ -7864,6 +7869,9 @@ fn expression_<'a>(
                 op: mk_expression_reason(e),
                 fn_: mk_expression_reason(&inner.tag),
                 args: vec![].into(),
+                implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Call(Some(
+                    code_desc_of_expression(false, &inner.tag).into(),
+                )),
                 local: true,
             }))));
             // tag`a${b}c${d}` -> tag(['a', 'c'], b, d)
@@ -8780,6 +8788,8 @@ pub fn optional_chain<'a>(
                                 fn_: mk_expression_reason(&inner.callee),
                                 prop: reason_prop.dupe(),
                                 args: mk_initial_arguments_reason(&inner.arguments).into(),
+                                implicit_instantiation_reference:
+                                    ImplicitInstantiationReferenceKind::Method(Some(id.name.dupe())),
                                 local: true,
                             }),
                         )));
@@ -8872,6 +8882,8 @@ pub fn optional_chain<'a>(
                                 op: mk_expression_reason(ex),
                                 fn_: mk_expression_reason(&inner.callee),
                                 args: mk_initial_arguments_reason(&inner.arguments).into(),
+                                implicit_instantiation_reference:
+                                    ImplicitInstantiationReferenceKind::SuperCall,
                                 local: true,
                             }))));
                         let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
@@ -10100,6 +10112,8 @@ pub fn optional_chain<'a>(
                             fn_: mk_expression_reason(orig_receiver),
                             prop: reason_prop.dupe(),
                             args: mk_initial_arguments_reason(arguments).into(),
+                            implicit_instantiation_reference:
+                                ImplicitInstantiationReferenceKind::Method(Some(name_str.dupe())),
                             local: true,
                         },
                     ))));
@@ -10343,6 +10357,8 @@ pub fn optional_chain<'a>(
                             fn_: mk_expression_reason(orig_receiver),
                             prop: mk_expression_reason(prop_expr),
                             args: mk_initial_arguments_reason(arguments).into(),
+                            implicit_instantiation_reference:
+                                ImplicitInstantiationReferenceKind::Method(None),
                             local: true,
                         },
                     ))));
@@ -10535,6 +10551,9 @@ pub fn optional_chain<'a>(
                 op: mk_expression_reason(ex),
                 fn_: mk_expression_reason(callee),
                 args: mk_initial_arguments_reason(arguments).into(),
+                implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Call(Some(
+                    code_desc_of_expression(false, callee).into(),
+                )),
                 local: true,
             }))));
             let spec_callee = cx.new_specialized_callee();
@@ -13258,10 +13277,15 @@ pub fn jsx_mk_props<'a>(
             VirtualReasonDesc::RIdentifier(FlowSmolStr::new(name)),
             reason.loc().dupe(),
         );
-        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::JSXCreateElement {
-            op: reason.dupe(),
-            component,
-        }));
+        let use_op = UseOp::Op(Arc::new(type_::RootUseOp::JSXCreateElement(Box::new(
+            JSXCreateElementData {
+                op: reason.dupe(),
+                component,
+                implicit_instantiation_reference: ImplicitInstantiationReferenceKind::ReactElement(
+                    Some(FlowSmolStr::new(name)),
+                ),
+            },
+        ))));
         let elem_reason = mk_reason(VirtualReasonDesc::RArrayElement, attr_loc.dupe());
         let atype_clone = atype.dupe();
         let use_op_clone = use_op.dupe();
@@ -13496,7 +13520,7 @@ fn react_jsx_desugar<'a>(
     let return_hint = type_env::get_hint(cx, loc_element.dupe());
     let reason = mk_reason(
         VirtualReasonDesc::RReactElement {
-            name_opt: Some(Name::new(name)),
+            name_opt: Some(Name::new(name.dupe())),
             from_component_syntax: false,
         },
         loc_element.dupe(),
@@ -13519,6 +13543,9 @@ fn react_jsx_desugar<'a>(
             op: reason_jsx.dupe(),
             component: reason_c.dupe(),
             children: loc_children.dupe(),
+            implicit_instantiation_reference: ImplicitInstantiationReferenceKind::ReactElement(
+                Some(name),
+            ),
         }),
     )));
     let (tout, instantiated_component, use_op) = if cx.react_custom_jsx_typing() {
@@ -13682,10 +13709,15 @@ fn non_react_jsx_desugar<'a>(
             }
         }
     }
-    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::JSXCreateElement {
-        op: reason.dupe(),
-        component: reason_of_t(&component_t).dupe(),
-    }));
+    let use_op = UseOp::Op(Arc::new(type_::RootUseOp::JSXCreateElement(Box::new(
+        JSXCreateElementData {
+            op: reason.dupe(),
+            component: reason_of_t(&component_t).dupe(),
+            implicit_instantiation_reference: ImplicitInstantiationReferenceKind::JSXFunction(
+                FlowSmolStr::from(raw_jsx_expr),
+            ),
+        },
+    ))));
     let t = match jsx_expr.deref() {
         expression::ExpressionInner::Member { inner: member, .. }
             if let expression::member::Property::PropertyIdentifier(id) = &member.property =>
@@ -14147,6 +14179,9 @@ fn static_method_call_object<'a>(
             fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
             prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
             args: mk_initial_arguments_reason(args).into(),
+            implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Method(Some(
+                m.dupe(),
+            )),
             local: true,
         },
     ))));
@@ -14851,6 +14886,9 @@ fn static_method_call_object<'a>(
                     fn_: mk_reason(RMethod(Some(m.dupe())), callee_loc.dupe()),
                     prop: mk_reason(RProperty(Some(Name::new(m.dupe()))), prop_loc.dupe()),
                     args: mk_initial_arguments_reason(args).into(),
+                    implicit_instantiation_reference: ImplicitInstantiationReferenceKind::Method(
+                        Some(m.dupe()),
+                    ),
                     local: true,
                 },
             ))));

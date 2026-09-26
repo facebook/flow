@@ -83,6 +83,7 @@ use crate::intermediate_error_types::ExplanationWithLazyParts;
 use crate::intermediate_error_types::ExponentialSpreadReasonGroup;
 use crate::intermediate_error_types::ExpressionReferenceData;
 use crate::intermediate_error_types::FunctionReferenceData;
+use crate::intermediate_error_types::ImplicitInstantiationReferenceData;
 use crate::intermediate_error_types::IncorrectType;
 use crate::intermediate_error_types::IncorrectTypeErrorType;
 use crate::intermediate_error_types::InternalType;
@@ -2594,7 +2595,7 @@ pub struct EObjectThisSuperReferenceData<L: Dupe + PartialOrd + Ord + PartialEq 
 pub struct EImplicitInstantiationUnderconstrainedErrorData<
     L: Dupe + PartialOrd + Ord + PartialEq + Eq,
 > {
-    pub reason_call: VirtualReason<L>,
+    pub call: ImplicitInstantiationReferenceData<L>,
     pub type_param_loc: L,
     pub type_param_name: FlowSmolStr,
     pub use_op: VirtualUseOp<L>,
@@ -5941,14 +5942,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EImplicitInstantiationUnderconstrainedError(
                 box EImplicitInstantiationUnderconstrainedErrorData {
-                    reason_call,
+                    call,
                     type_param_loc,
                     type_param_name,
                     use_op,
                 },
             ) => EImplicitInstantiationUnderconstrainedError(Box::new(
                 EImplicitInstantiationUnderconstrainedErrorData {
-                    reason_call: map_reason(reason_call),
+                    call: ImplicitInstantiationReferenceData {
+                        loc: f(call.loc),
+                        kind: call.kind,
+                    },
                     type_param_loc: f(type_param_loc),
                     type_param_name,
                     use_op: map_use_op(use_op),
@@ -7719,6 +7723,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     operand: map_error_type_ref(operand),
                 }))
             }
+
+            EImplicitInstantiationUnderconstrainedError(
+                box EImplicitInstantiationUnderconstrainedErrorData {
+                    call,
+                    type_param_loc,
+                    type_param_name,
+                    use_op,
+                },
+            ) => EImplicitInstantiationUnderconstrainedError(Box::new(
+                EImplicitInstantiationUnderconstrainedErrorData {
+                    call,
+                    type_param_loc,
+                    type_param_name,
+                    use_op: map_use_op(&f, use_op),
+                },
+            )),
 
             EIncompatibleType(box EIncompatibleTypeData {
                 lower_reason,
@@ -11622,18 +11642,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EImplicitInstantiationUnderconstrainedError(
                 box EImplicitInstantiationUnderconstrainedErrorData {
-                    reason_call,
+                    call,
                     type_param_loc,
                     type_param_name,
                     use_op,
                     ..
                 },
             ) => {
-                let loc = reason_call.loc.dupe();
+                let loc = call.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     use_op,
                     message: Message::MessageUnderconstrainedImplicitInstantiaton {
-                        reason_call,
+                        call,
                         reason_tparam: MessageTypeReferenceData {
                             loc: type_param_loc,
                             desc: Err(VirtualReasonDesc::RType(type_param_name)),

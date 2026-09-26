@@ -1184,7 +1184,7 @@ pub(super) fn pick_use_op(env: &FlowJsEnv, op1: &UseOp, op2: &UseOp) -> UseOp {
                     | VirtualRootUseOp::EvalMappedType { .. }
                     | VirtualRootUseOp::SetProperty(..)
                     | VirtualRootUseOp::UpdateProperty { .. }
-                    | VirtualRootUseOp::JSXCreateElement { .. }
+                    | VirtualRootUseOp::JSXCreateElement(..)
                     | VirtualRootUseOp::ObjectAddComputedProperty { .. }
                     | VirtualRootUseOp::ObjectSpread { .. }
                     | VirtualRootUseOp::ObjectRest { .. }

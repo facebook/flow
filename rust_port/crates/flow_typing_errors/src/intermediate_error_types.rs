@@ -39,6 +39,7 @@ use flow_parser::loc::Loc;
 use flow_parser::parse_error::ParseError;
 use flow_parser_utils::graphql::GraphqlError;
 use flow_type_sig::signature_error::SignatureError;
+use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::UnionEnum;
 use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
@@ -1498,6 +1499,23 @@ pub struct FunctionReferenceData<L: Dupe> {
 #[derive(
     Debug,
     Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct ImplicitInstantiationReferenceData<L: Dupe> {
+    pub loc: L,
+    pub kind: ImplicitInstantiationReferenceKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
     PartialEq,
     Eq,
     Hash,
@@ -2526,7 +2544,7 @@ pub enum Message<L: Dupe> {
     MessageUnclearType,
 
     MessageUnderconstrainedImplicitInstantiaton {
-        reason_call: VirtualReason<L>,
+        call: ImplicitInstantiationReferenceData<L>,
         reason_tparam: MessageTypeReferenceData<L>,
     },
 

@@ -40,6 +40,8 @@ use flow_typing_type::type_::FunCallMethodData;
 use flow_typing_type::type_::FunImplicitReturnData;
 use flow_typing_type::type_::FunMissingArgData;
 use flow_typing_type::type_::FunParamData;
+use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
+use flow_typing_type::type_::JSXCreateElementData;
 use flow_typing_type::type_::MergedDeclarationConflict;
 use flow_typing_type::type_::OpaqueTypeCustomErrorCompatibilityData;
 use flow_typing_type::type_::PositiveTypeGuardConsistencyData;
@@ -83,6 +85,7 @@ use super::intermediate_error_types::ExpressionReferenceKind;
 use super::intermediate_error_types::Frame as ErrorFrame;
 use super::intermediate_error_types::FunctionReferenceData;
 use super::intermediate_error_types::FunctionReferenceKind;
+use super::intermediate_error_types::ImplicitInstantiationReferenceData;
 use super::intermediate_error_types::IntermediateError;
 use super::intermediate_error_types::LowerRequirement;
 use super::intermediate_error_types::Message;
@@ -1878,7 +1881,11 @@ where
                                 )
                             }
 
-                            VirtualRootUseOp::JSXCreateElement { op, component, .. }
+                            VirtualRootUseOp::JSXCreateElement(box JSXCreateElementData {
+                                op,
+                                component,
+                                ..
+                            })
                             | VirtualRootUseOp::ReactCreateElementCall(
                                 box ReactCreateElementCallData { op, component, .. },
                             ) => {
@@ -2096,7 +2103,7 @@ where
                                             inner_rc.as_ref(),
                                             VirtualRootUseOp::FunCall(..)
                                                 | VirtualRootUseOp::FunCallMethod(..)
-                                                | VirtualRootUseOp::JSXCreateElement { .. }
+                                                | VirtualRootUseOp::JSXCreateElement(..)
                                         )
                                     )
                                 )
@@ -2127,7 +2134,7 @@ where
                                 op_rc.as_ref(),
                                 VirtualRootUseOp::FunCall(..)
                                     | VirtualRootUseOp::FunCallMethod(..)
-                                    | VirtualRootUseOp::JSXCreateElement { .. }
+                                    | VirtualRootUseOp::JSXCreateElement(..)
                                     | VirtualRootUseOp::RecordCreate(..)
                             ) =>
                     {
@@ -2159,7 +2166,11 @@ where
                                 };
                                 root(loc, frames, lower, root_msg, custom_error_message)
                             }
-                            VirtualRootUseOp::JSXCreateElement { op, component, .. } => {
+                            VirtualRootUseOp::JSXCreateElement(box JSXCreateElementData {
+                                op,
+                                component,
+                                ..
+                            }) => {
                                 let root_loc = loc_of_aloc(&op.loc);
                                 let specific_loc = loc_of_aloc(&component.loc);
 
@@ -4906,6 +4917,39 @@ where
         };
         hardcoded_string_desc_ref(description, &reference.loc)
     };
+
+    let render_implicit_instantiation_reference =
+        |reference: &ImplicitInstantiationReferenceData<L>| {
+            let description = match &reference.kind {
+                ImplicitInstantiationReferenceKind::Call(Some(name)) => {
+                    format!("call of `{name}`")
+                }
+                ImplicitInstantiationReferenceKind::Call(None) => "function call".to_string(),
+                ImplicitInstantiationReferenceKind::Method(Some(name)) => {
+                    format!("call of method `{name}`")
+                }
+                ImplicitInstantiationReferenceKind::Method(None) => {
+                    "call of computed property".to_string()
+                }
+                ImplicitInstantiationReferenceKind::Constructor(Some(name)) => {
+                    format!("new `{name}`")
+                }
+                ImplicitInstantiationReferenceKind::Constructor(None) => {
+                    "constructor call".to_string()
+                }
+                ImplicitInstantiationReferenceKind::ReactElement(Some(name)) => {
+                    format!("`{name}` element")
+                }
+                ImplicitInstantiationReferenceKind::ReactElement(None) => {
+                    "React element".to_string()
+                }
+                ImplicitInstantiationReferenceKind::JSXFunction(name) => {
+                    format!("`{name}(...)`")
+                }
+                ImplicitInstantiationReferenceKind::SuperCall => "call of super".to_string(),
+            };
+            hardcoded_string_desc_ref(&description, &reference.loc)
+        };
 
     fn ordinal(n: i32) -> String {
         match n {
@@ -8968,12 +9012,12 @@ where
                 text(" types is not safe!"),
             ]),
             MessageUnderconstrainedImplicitInstantiaton {
-                reason_call,
+                call,
                 reason_tparam,
             } => friendly::Message(vec![
                 ref_of_ty_or_desc(&reason_tparam.loc, &reason_tparam.desc),
                 text(" is underconstrained by "),
-                ref_(reason_call),
+                render_implicit_instantiation_reference(call),
                 text(
                     ". Either add explicit type arguments or cast the expression to your expected type",
                 ),
