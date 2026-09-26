@@ -2516,9 +2516,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!("EComparison ({}, {}, {}, {})", r1, r2, loc_str, strict_str)
         }
         ErrorMessage::ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData {
-            lower_desc,
-            upper_desc,
-            ..
+            lower,
+            upper,
         }) => {
             let dump_type = |type_desc: &TypeOrTypeDescT<ALoc>| match type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
@@ -2526,8 +2525,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "ENonStrictEqualityComparison {{ lower = {}; upper = {} }}",
-                dump_type(lower_desc),
-                dump_type(upper_desc)
+                dump_type(&lower.type_desc),
+                dump_type(&upper.type_desc)
             )
         }
         ErrorMessage::ETupleArityMismatch(box ETupleArityMismatchData {
@@ -2743,18 +2742,12 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::EUnsupportedExact(box EUnsupportedExactData {
-            reason, value_desc, ..
-        }) => {
+        ErrorMessage::EUnsupportedExact(box EUnsupportedExactData { value_desc, .. }) => {
             let value = match value_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
-            format!(
-                "EUnsupportedExact(Box::new(({}, {})))",
-                dump_reason(cx, reason),
-                value,
-            )
+            format!("EUnsupportedExact(Box::new({}))", value)
         }
         ErrorMessage::EUnexpectedThisType(loc) => {
             format!("EUnexpectedThisType ({})", string_of_aloc(None, loc))
@@ -3096,13 +3089,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EUnreachable(loc) => {
             format!("EUnreachable ({})", string_of_aloc(None, loc))
         }
-        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData {
-            loc,
-            value_desc,
-            use_op,
-            ..
-        }) => {
-            let value = match value_desc {
+        ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
+            let value = match &value.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
@@ -3194,12 +3182,12 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EObjectComputedPropertyAssign(box (reason1, reason2, kind)) => {
             let reason2_str = match reason2 {
-                Some(r) => dump_reason(cx, r),
+                Some(r) => format!("{r:?}"),
                 None => "none".to_string(),
             };
             format!(
                 "EObjectComputedPropertyAssign(Box::new(({}, {}, {})))",
-                dump_reason(cx, reason1),
+                dump_error_type_reference(cx, reason1),
                 reason2_str,
                 kind.str_of_kind()
             )
@@ -4075,7 +4063,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!("EComponentCase ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EComponentMissingReturn(r) => {
-            format!("EComponentMissingReturn ({})", dump_reason(cx, r))
+            format!("EComponentMissingReturn ({})", string_of_aloc(None, &r.loc))
         }
         ErrorMessage::EComponentMissingBody(loc) => {
             format!("EComponentMissingBody ({})", string_of_aloc(None, loc))

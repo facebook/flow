@@ -10,13 +10,13 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_typing_context::Context;
+use flow_typing_errors::intermediate_error_types::ComponentReferenceData;
 use flow_typing_loc_env::component_sig_types::component_sig::ComponentParamsTast;
 use flow_typing_loc_env::component_sig_types::component_sig::ComponentSig;
 use flow_typing_loc_env::component_sig_types::declaration_body_config;
@@ -146,7 +146,7 @@ pub mod component_declaration_body {
 
     pub fn eval<'a>(
         cx: &Context<'a>,
-        reason_cmp: Reason,
+        component: ComponentReferenceData<ALoc>,
         renders_t: Type,
         body: declaration_body_config::Body<ALoc>,
     ) -> Result<declaration_body_config::Body<(ALoc, Type)>, JobError> {
@@ -175,7 +175,7 @@ pub mod component_declaration_body {
             if undeclared {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    error_message::ErrorMessage::EComponentMissingReturn(reason_cmp.dupe()),
+                    error_message::ErrorMessage::EComponentMissingReturn(component.dupe()),
                 );
                 None
             } else {
@@ -198,7 +198,7 @@ pub mod component_declaration_body {
             if type_operation_utils::type_assertions::non_exhaustive(cx, &ts)? {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    error_message::ErrorMessage::EComponentMissingReturn(reason_cmp),
+                    error_message::ErrorMessage::EComponentMissingReturn(component),
                 );
             }
         }
@@ -222,10 +222,14 @@ pub fn toplevels<'a>(
         body,
         ret_annot_loc: _,
         renders_t,
+        id_opt,
         ..
     } = x;
-    let reason_cmp = reason_cmp.dupe();
     let renders_t = renders_t.dupe();
+    let component = ComponentReferenceData {
+        loc: reason_cmp.loc().dupe(),
+        name: id_opt.as_ref().map(|(_, name)| name.dupe()),
+    };
     // add param bindings
     let params_ast = component_params::eval::<component_params::DeclarationConfig, _>(
         cx,
@@ -233,7 +237,7 @@ pub fn toplevels<'a>(
         cparams.rest.as_ref(),
         &*cparams.reconstruct,
     )?;
-    let body_ast = component_declaration_body::eval(cx, reason_cmp, renders_t, body.clone())?;
+    let body_ast = component_declaration_body::eval(cx, component, renders_t, body.clone())?;
     Ok((params_ast, body_ast))
 }
 

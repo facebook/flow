@@ -40,6 +40,7 @@ use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InvalidThisArgKind;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
+use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js;
@@ -718,11 +719,14 @@ pub mod operators {
                             env,
                             ErrorMessage::ENonStrictEqualityComparison(Box::new(
                                 ENonStrictEqualityComparisonData {
-                                    reasons: (lower_reason, upper_reason),
-                                    lower_loc: type_util::ref_loc_of_t(lower).dupe(),
-                                    lower_desc: flow_js_utils::type_or_type_desc_for_error(lower),
-                                    upper_loc: type_util::ref_loc_of_t(upper).dupe(),
-                                    upper_desc: flow_js_utils::type_or_type_desc_for_error(upper),
+                                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                                        lower,
+                                        lower_reason,
+                                    ),
+                                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                                        upper,
+                                        upper_reason,
+                                    ),
                                 },
                             )),
                         )?;
@@ -2712,22 +2716,22 @@ pub mod type_assertions {
     pub fn assert_non_component_like_base<'cx>(
         cx: &Context<'cx>,
         def_loc: ALoc,
-        use_reason: &Reason,
+        use_: NamedReferenceData<ALoc>,
         t: &Type,
     ) -> Result<(), JobError> {
-        assert_non_component_like_base_with_env(cx, &FlowJsEnv::entry(), def_loc, use_reason, t)
+        assert_non_component_like_base_with_env(cx, &FlowJsEnv::entry(), def_loc, use_, t)
     }
 
     fn assert_non_component_like_base_with_env<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         def_loc: ALoc,
-        use_reason: &Reason,
+        use_: NamedReferenceData<ALoc>,
         t: &Type,
     ) -> Result<(), JobError> {
         fn check_base<'cx>(
             def_loc: &ALoc,
-            use_reason: &Reason,
+            use_: &NamedReferenceData<ALoc>,
             cx: &Context<'cx>,
             env: &FlowJsEnv,
             t: &Type,
@@ -2741,7 +2745,7 @@ pub mod type_assertions {
                         env,
                         ErrorMessage::EReactIntrinsicOverlap(Box::new(
                             EReactIntrinsicOverlapData {
-                                use_loc: use_reason.dupe(),
+                                use_: use_.dupe(),
                                 def: def_loc.dupe(),
                                 type_: reason_type.loc().dupe(),
                                 mixed: true,
@@ -2763,7 +2767,7 @@ pub mod type_assertions {
                             env,
                             ErrorMessage::EReactIntrinsicOverlap(Box::new(
                                 EReactIntrinsicOverlapData {
-                                    use_loc: use_reason.dupe(),
+                                    use_: use_.dupe(),
                                     def: def_loc.dupe(),
                                     type_: reason_type.loc().dupe(),
                                     mixed: false,
@@ -2788,8 +2792,8 @@ pub mod type_assertions {
                         cx, env, reason, t,
                     )
                 },
-                &|_| use_reason.loc().dupe(),
-                &|cx, env, t| check_base(&def_loc, use_reason, cx, env, t),
+                &|_| use_.loc.dupe(),
+                &|cx, env, t| check_base(&def_loc, &use_, cx, env, t),
                 t,
             ),
         )

@@ -1550,14 +1550,13 @@ pub fn object_make_exact<'cx>(
                            }: &object::Slice|
      -> Result<Type, FlowJsException> {
         match interface {
-            Some(_) => {
+            Some((interface_t, _)) => {
                 flow_js_utils::add_output_with_env(
                     cx,
                     env,
                     ErrorMessage::EUnsupportedExact(Box::new(EUnsupportedExactData {
-                        reason: reason.dupe(),
                         value_loc: r.loc().dupe(),
-                        value_desc: TypeOrTypeDescT::TypeDesc(Err(r.desc(false).clone())),
+                        value_desc: TypeOrTypeDescT::Type(interface_t.dupe()),
                     })),
                 )?;
                 Ok(any_t::error(reason.dupe()))
@@ -2663,7 +2662,6 @@ fn resolve_with_env<'cx, A>(
                 cx,
                 env,
                 ErrorMessage::EUnsupportedExact(Box::new(EUnsupportedExactData {
-                    reason: reason.dupe(),
                     value_loc: type_util::ref_loc_of_t(&t).dupe(),
                     value_desc: flow_js_utils::type_or_type_desc_for_error(&t),
                 })),
@@ -2675,11 +2673,7 @@ fn resolve_with_env<'cx, A>(
                 env,
                 ErrorMessage::EInvalidObjectKit(Box::new(EInvalidObjectKitData {
                     loc: type_util::reason_of_t(&t).loc().dupe(),
-                    value: ErrorReference::new(
-                        type_util::ref_loc_of_t(&t).dupe(),
-                        type_util::reason_of_t(&t).desc(false).clone(),
-                    ),
-                    value_desc: flow_js_utils::type_or_type_desc_for_error(&t),
+                    value: flow_js_utils::type_reference_for_error(&t),
                     use_op: use_op.clone(),
                 })),
             )?;

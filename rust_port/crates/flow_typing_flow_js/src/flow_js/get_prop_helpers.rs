@@ -490,7 +490,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     cx,
                     env,
                     ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                        reason.dupe(),
+                        flow_js_utils::type_reference_with_reason_for_error(elem_t, reason.dupe()),
                         None,
                         kind,
                     ))),
@@ -502,7 +502,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     cx,
                     env,
                     ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                        reason.dupe(),
+                        flow_js_utils::type_reference_with_reason_for_error(elem_t, reason.dupe()),
                         None,
                         flow_typing_errors::intermediate_error_types::InvalidObjKey::Other,
                     ))),

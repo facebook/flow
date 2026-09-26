@@ -45,6 +45,7 @@ use flow_typing_errors::error_message::EHookRuleViolationData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RefInRenderKind;
 use flow_typing_errors::intermediate_error_types;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js::flow_js;
 use flow_typing_type::type_;
@@ -67,7 +68,7 @@ pub fn check_ref_use<'a>(
     cx: &Context<'a>,
     rrid: Option<&type_::nominal::Id>,
     in_hook: bool,
-    var_reason: Reason,
+    usage: ExpressionReferenceData<ALoc>,
     kind: RefInRenderKind,
     t: Type,
 ) -> Vec<ErrorMessage<ALoc>> {
@@ -75,7 +76,7 @@ pub fn check_ref_use<'a>(
         cx: &Context<'a>,
         rrid: Option<&nominal::Id>,
         in_hook: bool,
-        var_reason: &Reason,
+        usage: &ExpressionReferenceData<ALoc>,
         kind: &RefInRenderKind,
         seen: &mut TvarSeenSet<u32>,
         t: &Type,
@@ -92,7 +93,7 @@ pub fn check_ref_use<'a>(
                 if props.len() == 1 {
                     // Catch only cases that look like { current: T }
                     vec![ErrorMessage::EReactRefInRender {
-                        usage: var_reason.dupe(),
+                        usage: usage.dupe(),
                         kind: *kind,
                         in_hook,
                     }]
@@ -104,7 +105,7 @@ pub fn check_ref_use<'a>(
                 if rrid.is_some_and(|rrid| rrid == &nominal_type.nominal_id) =>
             {
                 vec![ErrorMessage::EReactRefInRender {
-                    usage: var_reason.dupe(),
+                    usage: usage.dupe(),
                     kind: *kind,
                     in_hook,
                 }]
@@ -112,15 +113,15 @@ pub fn check_ref_use<'a>(
             TypeInner::NominalT { nominal_type, .. } => {
                 let mut result = match &nominal_type.underlying_t {
                     nominal::UnderlyingT::OpaqueWithLocal { t } => {
-                        recur_id(cx, rrid, in_hook, var_reason, kind, seen, t)
+                        recur_id(cx, rrid, in_hook, usage, kind, seen, t)
                     }
                     nominal::UnderlyingT::CustomError(box nominal::CustomErrorData {
                         t, ..
-                    }) => recur_id(cx, rrid, in_hook, var_reason, kind, seen, t),
+                    }) => recur_id(cx, rrid, in_hook, usage, kind, seen, t),
                     nominal::UnderlyingT::FullyOpaque => vec![],
                 };
                 if let Some(upper_t) = &nominal_type.upper_t {
-                    result.extend(recur_id(cx, rrid, in_hook, var_reason, kind, seen, upper_t));
+                    result.extend(recur_id(cx, rrid, in_hook, usage, kind, seen, upper_t));
                 }
                 result
             }
@@ -130,46 +131,46 @@ pub fn check_ref_use<'a>(
             TypeInner::OpenT(tvar) => seen.with_added(tvar.id(), |seen| {
                 flow_js_utils::possible_types(cx, tvar.id() as i32)
                     .iter()
-                    .flat_map(|t| recur_id(cx, rrid, in_hook, var_reason, kind, seen, t))
+                    .flat_map(|t| recur_id(cx, rrid, in_hook, usage, kind, seen, t))
                     .collect()
             }),
             TypeInner::UnionT(_, rep) => rep
                 .members_iter()
-                .flat_map(|t| recur_id(cx, rrid, in_hook, var_reason, kind, seen, t))
+                .flat_map(|t| recur_id(cx, rrid, in_hook, usage, kind, seen, t))
                 .collect(),
             TypeInner::IntersectionT(_, rep) => rep
                 .members_iter()
-                .flat_map(|t| recur_id(cx, rrid, in_hook, var_reason, kind, seen, t))
+                .flat_map(|t| recur_id(cx, rrid, in_hook, usage, kind, seen, t))
                 .collect(),
             TypeInner::MaybeT(_, inner_t) => {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             TypeInner::OptionalT { type_: inner_t, .. } => {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             TypeInner::AnnotT(_, inner_t, _) => {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             TypeInner::TypeAppT(box TypeAppTData { type_: inner_t, .. }) => {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             TypeInner::GenericT(box GenericTData { bound: inner_t, .. }) => {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             TypeInner::DefT(_, def_t)
                 if let DefTInner::PolyT(box PolyTData { t_out: inner_t, .. }) = def_t.deref() =>
             {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             TypeInner::DefT(_, def_t) if let DefTInner::TypeT(_, inner_t) = def_t.deref() => {
-                recur_id(cx, rrid, in_hook, var_reason, kind, seen, inner_t)
+                recur_id(cx, rrid, in_hook, usage, kind, seen, inner_t)
             }
             _ => vec![],
         }
     }
 
     let mut seen = TvarSeenSet::new();
-    recur_id(cx, rrid, in_hook, &var_reason, &kind, &mut seen, &t)
+    recur_id(cx, rrid, in_hook, &usage, &kind, &mut seen, &t)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1019,12 +1020,9 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
         err_kind: RefInRenderKind,
     ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
         let loc = expr.loc().dupe();
-        let reason = match expr.deref() {
-            ExpressionInner::Identifier { loc, inner } => flow_common::reason::mk_reason(
-                VirtualReasonDesc::RIdentifier(inner.name.dupe()),
-                loc.dupe(),
-            ),
-            _ => flow_common::reason::mk_expression_reason(expr),
+        let usage = ExpressionReferenceData {
+            loc: loc.dupe(),
+            kind: flow_js_utils::expression_reference_kind_for_error(expr),
         };
         if self
             .ev_cx
@@ -1036,7 +1034,7 @@ impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
                     self.ev_cx.cx,
                     self.ev_cx.rrid.as_ref(),
                     self.ev_cx.is_hook,
-                    reason,
+                    usage,
                     err_kind,
                     ty.dupe(),
                 );

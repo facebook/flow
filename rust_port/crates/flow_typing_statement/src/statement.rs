@@ -87,6 +87,7 @@ use flow_typing_errors::intermediate_error_types::ContextDependentUnsupportedSta
 use flow_typing_errors::intermediate_error_types::DeclareComponentInvalidParamKind;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_errors::intermediate_error_types::MatchInvalidCaseSyntax;
+use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_errors::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
 use flow_typing_errors::intermediate_error_types::UnsupportedSyntax;
@@ -5601,7 +5602,7 @@ fn create_computed_prop<'a>(
     unconcretized_key: Type,
     concretized_keys: Vec<Type>,
     reason: Reason,
-    reason_key: Reason,
+    key_expression: ExpressionReferenceData<ALoc>,
     reason_obj: Reason,
     as_const: bool,
     frozen: bool,
@@ -5616,6 +5617,32 @@ fn create_computed_prop<'a>(
             TypeInner::TemplateLiteralT { .. } => true,
             TypeInner::AnyT(_, _) => true,
             _ => false,
+        }
+    };
+    let has_null = concretized_keys.iter().any(|key| {
+        matches!(
+            key.deref(),
+            TypeInner::DefT(_, def) if matches!(def.deref(), DefTInner::NullT)
+        )
+    });
+    let has_void = concretized_keys.iter().any(|key| {
+        matches!(
+            key.deref(),
+            TypeInner::DefT(_, def) if matches!(def.deref(), DefTInner::VoidT)
+        )
+    });
+    let invalid_obj_key_kind = |key: &Type| {
+        if has_null
+            && has_void
+            && matches!(
+                key.deref(),
+                TypeInner::DefT(_, def)
+                    if matches!(def.deref(), DefTInner::NullT | DefTInner::VoidT)
+            )
+        {
+            intermediate_error_types::InvalidObjKey::NullOrVoid
+        } else {
+            intermediate_error_types::InvalidObjKey::Other
         }
     };
     let single_key = |key: Type| -> object_expression_acc::ComputedProp {
@@ -5654,8 +5681,8 @@ fn create_computed_prop<'a>(
                             flow_js::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                                    r,
-                                    Some(reason_key.dupe()),
+                                    flow_js_utils::type_reference_with_reason_for_error(&key, r),
+                                    Some(key_expression.dupe()),
                                     intermediate_error_types::InvalidObjKey::Other,
                                 ))),
                             );
@@ -5682,8 +5709,8 @@ fn create_computed_prop<'a>(
                             flow_js::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                                    r,
-                                    Some(reason_key.dupe()),
+                                    flow_js_utils::type_reference_with_reason_for_error(&key, r),
+                                    Some(key_expression.dupe()),
                                     intermediate_error_types::InvalidObjKey::Other,
                                 ))),
                             );
@@ -5704,7 +5731,7 @@ fn create_computed_prop<'a>(
                                 named_set_opt: None,
                             }
                         }
-                        TypeInner::DefT(singleton_reason, def)
+                        TypeInner::DefT(_, def)
                             if let DefTInner::SingletonNumT { value: num_lit, .. } =
                                 def.deref() =>
                         {
@@ -5714,8 +5741,11 @@ fn create_computed_prop<'a>(
                             flow_js::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                                    reason.dupe(),
-                                    Some(singleton_reason.dupe()),
+                                    flow_js_utils::type_reference_with_reason_for_error(
+                                        &key,
+                                        reason.dupe(),
+                                    ),
+                                    Some(key_expression.dupe()),
                                     kind,
                                 ))),
                             );
@@ -5726,9 +5756,9 @@ fn create_computed_prop<'a>(
                             flow_js::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EObjectComputedPropertyAssign(Box::new((
-                                    r,
-                                    Some(reason_key.dupe()),
-                                    intermediate_error_types::InvalidObjKey::Other,
+                                    flow_js_utils::type_reference_with_reason_for_error(&key, r),
+                                    Some(key_expression.dupe()),
+                                    invalid_obj_key_kind(&key),
                                 ))),
                             );
                             object_expression_acc::ComputedProp::IgnoredInvalidNonLiteralKey
@@ -5836,7 +5866,10 @@ fn object_<'a>(
                 Err(err) => panic!("Should not be under speculation: {:?}", err),
             };
         let key_reason = reason_of_t(&key).dupe();
-        let reason_key = mk_expression_reason(k_expr).map_locs(|loc| loc.0.dupe());
+        let key_expression = ExpressionReferenceData {
+            loc: key_loc.dupe(),
+            kind: flow_js_utils::expression_reference_kind_for_error(k_expr),
+        };
         let reason_obj = key_reason.dupe();
         Ok(create_computed_prop(
             cx,
@@ -5844,7 +5877,7 @@ fn object_<'a>(
             key,
             concretized_keys,
             key_reason,
-            reason_key,
+            key_expression,
             reason_obj,
             as_const,
             frozen,
@@ -12813,14 +12846,13 @@ fn jsx_title<'a>(
                     if let Some((ref_t, def_loc)) =
                         type_env::intrinsic_ref(cx, None, &id_name, id_loc.dupe())?
                     {
-                        let ref_reason = mk_reason(
-                            VirtualReasonDesc::RIdentifier(id_name.dupe()),
-                            id_loc.dupe(),
-                        );
                         type_operation_utils::type_assertions::assert_non_component_like_base(
                             cx,
                             def_loc,
-                            &ref_reason,
+                            NamedReferenceData {
+                                loc: id_loc.dupe(),
+                                name: id_name.dupe(),
+                            },
                             &ref_t,
                         )?;
                     }

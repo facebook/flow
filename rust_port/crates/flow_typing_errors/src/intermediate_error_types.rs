@@ -783,6 +783,8 @@ pub enum IncorrectTypeErrorType {
 )]
 pub enum InvalidObjKey {
     Other,
+    /// The nullish part of a maybe type, kept together after concretization.
+    NullOrVoid,
     NumberNonInt,
     NumberTooLarge,
     NumberTooSmall,
@@ -813,6 +815,7 @@ impl InvalidObjKey {
     pub fn str_of_kind(self) -> &'static str {
         match self {
             Self::Other => "other",
+            Self::NullOrVoid => "null or void",
             Self::NumberNonInt => "number non-int",
             Self::NumberTooLarge => "number too large",
             Self::NumberTooSmall => "number too small",
@@ -1491,6 +1494,23 @@ pub struct NamedReferenceData<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct ComponentReferenceData<L: Dupe> {
+    pub loc: L,
+    pub name: Option<FlowSmolStr>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct FunctionReferenceData<L: Dupe> {
     pub loc: L,
     pub kind: FunctionReferenceKind,
@@ -1762,7 +1782,7 @@ pub struct MessagePropPolarityMismatchData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageReactIntrinsicOverlapData<L: Dupe> {
-    pub use_: VirtualReason<L>,
+    pub use_: NamedReferenceData<L>,
     pub def: L,
     pub type_: L,
     pub mixed: bool,
@@ -1903,7 +1923,7 @@ pub enum Message<L: Dupe> {
     },
 
     MessageCannotAccessReactRefInRender {
-        usage: VirtualReason<L>,
+        usage: ExpressionReferenceData<L>,
         in_hook: bool,
     },
 
@@ -1913,11 +1933,11 @@ pub enum Message<L: Dupe> {
 
     MessageCannotApplyNonPolymorphicType,
 
-    MessageCannotAssignToObjectWithComputedProp(VirtualReason<L>),
+    MessageCannotAssignToObjectWithComputedProp(Box<MessageTypeReferenceData<L>>),
 
     MessageCannotAssignToObjectWithComputedPropWithKey {
-        reason_prop: VirtualReason<L>,
-        reason_key: VirtualReason<L>,
+        property: MessageTypeReferenceData<L>,
+        key: ExpressionReferenceData<L>,
         kind: InvalidObjKey,
     },
 
@@ -2009,7 +2029,7 @@ pub enum Message<L: Dupe> {
     MessageCannotOptimizeUnionInternally(OptimizedError<L>),
 
     MessageCannotPassReactRefAsArgument {
-        usage: VirtualReason<L>,
+        usage: ExpressionReferenceData<L>,
         in_hook: bool,
     },
 
@@ -2132,7 +2152,7 @@ pub enum Message<L: Dupe> {
         n: i32,
     },
 
-    MessageComponentMissingReturn(VirtualReason<L>),
+    MessageComponentMissingReturn(ComponentReferenceData<L>),
     MessageComponentMissingBody,
     MessageComponentBodyInAmbientContext,
     MessageComponentNonUpperCase,

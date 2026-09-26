@@ -65,6 +65,7 @@ use vec1::Vec1;
 use crate::intermediate_error_types::AbstractErrorKind;
 use crate::intermediate_error_types::AssignedConstLikeBindingType;
 use crate::intermediate_error_types::ClassKind;
+use crate::intermediate_error_types::ComponentReferenceData;
 use crate::intermediate_error_types::ConstantConditionKind;
 use crate::intermediate_error_types::ConstantConditionWarning;
 use crate::intermediate_error_types::DeclareComponentInvalidParamKind;
@@ -1565,18 +1566,15 @@ pub struct EComparisonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 /// Types rejected by a non-strict equality comparison.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ENonStrictEqualityComparisonData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reasons: (VirtualReason<L>, VirtualReason<L>),
-    pub lower_loc: L,
-    pub lower_desc: TypeOrTypeDesc<L>,
-    pub upper_loc: L,
-    pub upper_desc: TypeOrTypeDesc<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
 }
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq
     for ENonStrictEqualityComparisonData<L>
 {
     fn eq(&self, other: &Self) -> bool {
-        self.reasons == other.reasons
+        self.lower == other.lower && self.upper == other.upper
     }
 }
 
@@ -1586,7 +1584,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
     for ENonStrictEqualityComparisonData<L>
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.reasons.hash(state);
+        self.lower.hash(state);
+        self.upper.hash(state);
     }
 }
 
@@ -1600,7 +1599,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ENonStrictEqualityComparisonData<L> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.reasons.cmp(&other.reasons)
+        self.lower
+            .cmp(&other.lower)
+            .then_with(|| self.upper.cmp(&other.upper))
     }
 }
 
@@ -1786,7 +1787,6 @@ pub struct ECallTypeArityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EUnsupportedExactData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
     pub value_loc: L,
     pub value_desc: TypeOrTypeDesc<L>,
 }
@@ -2022,8 +2022,7 @@ pub struct EExportRenamedDefaultData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EInvalidObjectKitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub value: ErrorReference<L>,
-    pub value_desc: TypeOrTypeDesc<L>,
+    pub value: ErrorTypeReferenceData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -3065,7 +3064,7 @@ pub struct EKeySpreadPropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EReactIntrinsicOverlapData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub use_loc: VirtualReason<L>,
+    pub use_: NamedReferenceData<L>,
     pub def: L,
     pub type_: L,
     pub mixed: bool,
@@ -3580,7 +3579,13 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EObjectComputedPropertyAccess(Box<EObjectComputedPropertyAccessData<L>>),
 
-    EObjectComputedPropertyAssign(Box<(VirtualReason<L>, Option<VirtualReason<L>>, InvalidObjKey)>),
+    EObjectComputedPropertyAssign(
+        Box<(
+            ErrorTypeReferenceWithLocData<L>,
+            Option<ExpressionReferenceData<L>>,
+            InvalidObjKey,
+        )>,
+    ),
 
     EObjectComputedPropertyPotentialOverwrite(
         Box<EObjectComputedPropertyPotentialOverwriteData<L>>,
@@ -3601,7 +3606,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EInvalidThisArg(Box<EInvalidThisArgData<L>>),
 
     EReactRefInRender {
-        usage: VirtualReason<L>,
+        usage: ExpressionReferenceData<L>,
         kind: RefInRenderKind,
         in_hook: bool,
     },
@@ -3702,7 +3707,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         kind: DeclareComponentInvalidParamKind,
     },
 
-    EComponentMissingReturn(VirtualReason<L>),
+    EComponentMissingReturn(ComponentReferenceData<L>),
 
     EComponentMissingBody(L),
 
@@ -4935,17 +4940,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 value_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), value_desc),
             })),
 
-            EInvalidObjectKit(box EInvalidObjectKitData {
-                loc,
-                value,
-                value_desc,
-                use_op,
-            }) => EInvalidObjectKit(Box::new(EInvalidObjectKitData {
-                loc: f(loc),
-                value: map_error_ref(value),
-                value_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), value_desc),
-                use_op: map_use_op(use_op),
-            })),
+            EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
+                EInvalidObjectKit(Box::new(EInvalidObjectKitData {
+                    loc: f(loc),
+                    value: map_error_type_ref(value),
+                    use_op: map_use_op(use_op),
+                }))
+            }
 
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
@@ -5102,26 +5103,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }),
             })),
 
-            ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData {
-                reasons: (lower_reason, upper_reason),
-                lower_loc,
-                lower_desc,
-                upper_loc,
-                upper_desc,
-            }) => ENonStrictEqualityComparison(Box::new(ENonStrictEqualityComparisonData {
-                reasons: (map_reason(lower_reason), map_reason(upper_reason)),
-                lower_loc: f(lower_loc),
-                lower_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_desc),
-                upper_loc: f(upper_loc),
-                upper_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_desc),
-            })),
+            ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData { lower, upper }) => {
+                ENonStrictEqualityComparison(Box::new(ENonStrictEqualityComparisonData {
+                    lower: map_error_type_ref_with_reason(lower),
+                    upper: map_error_type_ref_with_reason(upper),
+                }))
+            }
 
             EUnsupportedExact(box EUnsupportedExactData {
-                reason,
                 value_loc,
                 value_desc,
             }) => EUnsupportedExact(Box::new(EUnsupportedExactData {
-                reason: map_reason(reason),
                 value_loc: f(value_loc),
                 value_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), value_desc),
             })),
@@ -5720,7 +5712,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EObjectComputedPropertyAssign(box (r1, r2, kind)) => {
-                EObjectComputedPropertyAssign(Box::new((map_reason(r1), r2.map(map_reason), kind)))
+                EObjectComputedPropertyAssign(Box::new((
+                    map_error_type_ref_with_reason(r1),
+                    r2.map(|expression| ExpressionReferenceData {
+                        loc: f(expression.loc),
+                        kind: expression.kind,
+                    }),
+                    kind,
+                )))
             }
 
             EObjectComputedPropertyPotentialOverwrite(
@@ -5743,7 +5742,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 kind,
                 in_hook,
             } => EReactRefInRender {
-                usage: map_reason(usage),
+                usage: ExpressionReferenceData {
+                    loc: f(usage.loc),
+                    kind: usage.kind,
+                },
                 kind,
                 in_hook,
             },
@@ -6049,7 +6051,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EDeclareComponentInvalidParam { loc, kind } => {
                 EDeclareComponentInvalidParam { loc: f(loc), kind }
             }
-            EComponentMissingReturn(r) => EComponentMissingReturn(map_reason(r)),
+            EComponentMissingReturn(ComponentReferenceData { loc, name }) => {
+                EComponentMissingReturn(ComponentReferenceData { loc: f(loc), name })
+            }
             EComponentMissingBody(loc) => EComponentMissingBody(f(loc)),
             EComponentBodyInAmbientContext(loc) => EComponentBodyInAmbientContext(f(loc)),
             ENestedComponent(loc) => ENestedComponent(f(loc)),
@@ -6171,12 +6175,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             },
 
             EReactIntrinsicOverlap(box EReactIntrinsicOverlapData {
-                use_loc: use_reason,
+                use_,
                 def,
                 type_,
                 mixed,
             }) => EReactIntrinsicOverlap(Box::new(EReactIntrinsicOverlapData {
-                use_loc: map_reason(use_reason),
+                use_: NamedReferenceData {
+                    loc: f(use_.loc),
+                    name: use_.name,
+                },
                 def: f(def),
                 type_: f(type_),
                 mixed,
@@ -6789,6 +6796,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 component: map_error_type_ref_with_reason(component),
             },
 
+            EReactRefInRender {
+                usage,
+                kind,
+                in_hook,
+            } => EReactRefInRender {
+                usage,
+                kind,
+                in_hook,
+            },
+
             ESketchyNumberLint(kind, value) => {
                 ESketchyNumberLint(kind, map_error_type_ref_with_reason(value))
             }
@@ -6941,6 +6958,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 kind,
             })),
 
+            EObjectComputedPropertyAssign(box (property, key, kind)) => {
+                EObjectComputedPropertyAssign(Box::new((
+                    map_error_type_ref_with_reason(property),
+                    key,
+                    kind,
+                )))
+            }
+
             EBigIntRShift3(box EArithmeticOperandData { loc, operand }) => {
                 EBigIntRShift3(Box::new(EArithmeticOperandData {
                     loc,
@@ -6969,19 +6994,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }),
             })),
 
-            ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData {
-                reasons,
-                lower_loc,
-                lower_desc,
-                upper_loc,
-                upper_desc,
-            }) => ENonStrictEqualityComparison(Box::new(ENonStrictEqualityComparisonData {
-                reasons,
-                lower_loc,
-                lower_desc: f(lower_desc),
-                upper_loc,
-                upper_desc: f(upper_desc),
-            })),
+            ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData { lower, upper }) => {
+                ENonStrictEqualityComparison(Box::new(ENonStrictEqualityComparisonData {
+                    lower: map_error_type_ref_with_reason(lower),
+                    upper: map_error_type_ref_with_reason(upper),
+                }))
+            }
 
             ETupleArityMismatch(box ETupleArityMismatchData {
                 use_op,
@@ -7589,24 +7607,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             })),
 
-            EInvalidObjectKit(box EInvalidObjectKitData {
-                loc,
-                value,
-                value_desc,
-                use_op,
-            }) => EInvalidObjectKit(Box::new(EInvalidObjectKitData {
-                loc,
-                value,
-                value_desc: f(value_desc),
-                use_op,
-            })),
+            EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
+                EInvalidObjectKit(Box::new(EInvalidObjectKitData {
+                    loc,
+                    value: map_error_type_ref(value),
+                    use_op,
+                }))
+            }
 
             EUnsupportedExact(box EUnsupportedExactData {
-                reason,
                 value_loc,
                 value_desc,
             }) => EUnsupportedExact(Box::new(EUnsupportedExactData {
-                reason,
                 value_loc,
                 value_desc: f(value_desc),
             })),
@@ -7918,6 +7930,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 })
             }
 
+            EComponentMissingReturn(component) => EComponentMissingReturn(component),
+
+            EReactIntrinsicOverlap(box EReactIntrinsicOverlapData {
+                use_,
+                def,
+                type_,
+                mixed,
+            }) => EReactIntrinsicOverlap(Box::new(EReactIntrinsicOverlapData {
+                use_,
+                def,
+                type_,
+                mixed,
+            })),
+
             ERecursiveDefinition(box ERecursiveDefinitionData {
                 definition,
                 recursion,
@@ -8064,9 +8090,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             }
 
             Self::ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData {
-                reasons: (lower_reason, _),
+                lower,
                 ..
-            }) => Some(lower_reason.loc.dupe()),
+            }) => Some(lower.loc.dupe()),
 
             Self::ETooFewTypeArgs(box ETooFewTypeArgsData { reason_tapp, .. })
             | Self::ETooManyTypeArgs(box ETooManyTypeArgsData { reason_tapp, .. }) => {
@@ -8098,8 +8124,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EInvalidExtends(box (loc, _)) => Some(loc.dupe()),
 
-            Self::EReactRefInRender { usage: reason, .. }
-            | Self::EComponentMissingReturn(reason) => Some(reason.loc.dupe()),
+            Self::EReactRefInRender { usage, .. } => Some(usage.loc.dupe()),
+
+            Self::EComponentMissingReturn(reason) => Some(reason.loc.dupe()),
 
             Self::ETypeParamConstInvalidPosition(reason) => Some(reason.0.dupe()),
 
@@ -9684,8 +9711,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageDeclareComponentInvalidParam(kind))
             }
 
-            ErrorMessage::EComponentMissingReturn(reason) => {
-                Normal(Message::MessageComponentMissingReturn(reason))
+            ErrorMessage::EComponentMissingReturn(component) => {
+                Normal(Message::MessageComponentMissingReturn(component))
             }
             ErrorMessage::EComponentMissingBody(_) => Normal(Message::MessageComponentMissingBody),
             ErrorMessage::EComponentBodyInAmbientContext(_) => {
@@ -10630,19 +10657,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ENonStrictEqualityComparison(box ENonStrictEqualityComparisonData {
-                lower_loc,
-                lower_desc,
-                upper_loc,
-                upper_desc,
-                ..
+                lower,
+                upper,
             }) => Normal(Message::MessageCannotCompareNonStrict {
                 lower: MessageTypeReferenceData {
-                    loc: lower_loc,
-                    desc: expect_type_desc(lower_desc),
+                    loc: lower.reference_loc,
+                    desc: expect_type_desc(lower.type_desc),
                 },
                 upper: MessageTypeReferenceData {
-                    loc: upper_loc,
-                    desc: expect_type_desc(upper_desc),
+                    loc: upper.reference_loc,
+                    desc: expect_type_desc(upper.type_desc),
                 },
             }),
 
@@ -11276,23 +11300,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotBuildTypedInterface(sve))
             }
 
-            ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData {
-                loc,
-                value,
-                value_desc,
-                use_op,
-            }) => UseOp(Box::new(UseOpData {
-                loc,
-                message: Message::MessageLowerIsNotWithPrintedType {
-                    lower: Box::new(MessageTypeReferenceData {
-                        loc: value.loc,
-                        desc: expect_type_desc(value_desc),
-                    }),
-                    requirement: LowerRequirement::Object,
-                },
-                explanation: None,
-                use_op,
-            })),
+            ErrorMessage::EInvalidObjectKit(box EInvalidObjectKitData { loc, value, use_op }) => {
+                UseOp(Box::new(UseOpData {
+                    loc,
+                    message: Message::MessageLowerIsNotWithPrintedType {
+                        lower: Box::new(expect_error_type_reference(value)),
+                        requirement: LowerRequirement::Object,
+                    },
+                    explanation: None,
+                    use_op,
+                }))
+            }
 
             ErrorMessage::EInvalidTypeof(box (_, typename)) => {
                 Normal(Message::MessageInvalidGenericRef(typename))
@@ -11316,21 +11334,25 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 kind,
             }),
 
-            ErrorMessage::EObjectComputedPropertyAssign(box (
-                reason_prop,
-                Some(reason_key),
-                kind,
-            )) => Normal(
+            ErrorMessage::EObjectComputedPropertyAssign(box (property, Some(key), kind)) => Normal(
                 Message::MessageCannotAssignToObjectWithComputedPropWithKey {
-                    reason_prop,
-                    reason_key,
+                    property: MessageTypeReferenceData {
+                        loc: property.reference_loc,
+                        desc: expect_type_desc(property.type_desc),
+                    },
+                    key,
                     kind,
                 },
             ),
 
-            ErrorMessage::EObjectComputedPropertyAssign(box (reason_prop, None, _)) => Normal(
-                Message::MessageCannotAssignToObjectWithComputedProp(reason_prop),
-            ),
+            ErrorMessage::EObjectComputedPropertyAssign(box (property, None, _)) => {
+                Normal(Message::MessageCannotAssignToObjectWithComputedProp(
+                    Box::new(MessageTypeReferenceData {
+                        loc: property.reference_loc,
+                        desc: expect_type_desc(property.type_desc),
+                    }),
+                ))
+            }
 
             ErrorMessage::EObjectComputedPropertyPotentialOverwrite(
                 box EObjectComputedPropertyPotentialOverwriteData {
@@ -11787,13 +11809,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EReactIntrinsicOverlap(box EReactIntrinsicOverlapData {
-                use_loc: use_reason,
+                use_,
                 def,
                 type_,
                 mixed,
             }) => Normal(Message::MessageReactIntrinsicOverlap(Box::new(
                 MessageReactIntrinsicOverlapData {
-                    use_: use_reason,
+                    use_,
                     def,
                     type_,
                     mixed,

@@ -1158,9 +1158,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- misc-incompatibles.js:9:3
 
-Cannot use boolean literal `true` [1] to assign a computed property. Computed properties may only be numeric or string
-literal values. See https://flow.org/en/docs/types/literals/ for more information on literal types.
-[invalid-computed-prop]
+Cannot use `true` [1] to assign a computed property. Computed properties may only be numeric or string literal values.
+See https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    9| o[true] = 42;
         ^^^^ [1]

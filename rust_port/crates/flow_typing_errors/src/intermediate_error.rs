@@ -5470,7 +5470,7 @@ where
                     text("Cannot read "),
                     code("current"),
                     text(" from "),
-                    ref_(usage),
+                    render_expression_reference(usage),
                     text(" because "),
                     code("ref"),
                     text(" values may not be read "),
@@ -5478,9 +5478,9 @@ where
                     text(". (https://react.dev/reference/react/useRef)."),
                 ])
             }
-            MessageCannotAssignToObjectWithComputedProp(reason_prop) => friendly::Message(vec![
+            MessageCannotAssignToObjectWithComputedProp(property) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_(reason_prop),
+                ref_of_ty_or_desc(&property.loc, &property.desc),
                 text(" to assign a computed property."),
                 text(" Computed properties may only be numeric or string literal values."),
                 text(
@@ -5590,6 +5590,7 @@ where
                 use super::intermediate_error_types::InvalidObjKey;
                 let suffix: Vec<friendly::MessageFeature<Loc>> = match kind {
                     InvalidObjKey::Other
+                    | InvalidObjKey::NullOrVoid
                     | InvalidObjKey::ComputedNotLiteral
                     | InvalidObjKey::ComputedTypeName => vec![],
                     InvalidObjKey::NumberNonInt => {
@@ -5610,7 +5611,12 @@ where
                     text("Cannot access "),
                     ref_of_ty_or_desc(&object.loc, &object.desc),
                     text(" with computed property using "),
-                    ref_of_ty_or_desc(&property.loc, &property.desc),
+                    match kind {
+                        InvalidObjKey::NullOrVoid => {
+                            hardcoded_string_desc_ref("null or undefined", &property.loc)
+                        }
+                        _ => ref_of_ty_or_desc(&property.loc, &property.desc),
+                    },
                     text("."),
                 ];
                 features.extend(suffix);
@@ -6203,7 +6209,7 @@ where
                 };
                 friendly::Message(vec![
                     text("Cannot pass "),
-                    ref_(usage),
+                    render_expression_reference(usage),
                     text(" as an argument because "),
                     code("ref"),
                     text(
@@ -6765,13 +6771,19 @@ where
                 ref_(x),
                 text(" in a derived constructor."),
             ]),
-            MessageComponentMissingReturn(reason) => friendly::Message(vec![
-                text("Cannot declare component because "),
-                ref_(reason),
-                text(
-                    " is not guaranteed to reach a return statement. An explicit return statement must be included for all possible branches.",
-                ),
-            ]),
+            MessageComponentMissingReturn(component) => {
+                let description = match &component.name {
+                    Some(name) => format!("component {name}"),
+                    None => "component".to_string(),
+                };
+                friendly::Message(vec![
+                    text("Cannot declare component because "),
+                    hardcoded_string_desc_ref(&description, &component.loc),
+                    text(
+                        " is not guaranteed to reach a return statement. An explicit return statement must be included for all possible branches.",
+                    ),
+                ])
+            }
             MessageComponentMissingBody => friendly::Message(vec![text(
                 "Components in non-ambient contexts must have a body.",
             )]),
@@ -8514,7 +8526,7 @@ where
                 mixed,
             }) => friendly::Message(vec![
                 text("The name of intrinsic element "),
-                ref_(use_),
+                hardcoded_string_desc_ref(&format!("`{}`", use_.name), &use_.loc),
                 text(" overlaps with a "),
                 friendly::hardcoded_string_desc_ref("local definition", loc_of_aloc(def)),
                 text(" which has a "),
@@ -9280,7 +9292,7 @@ where
                 use super::intermediate_error_types::InvalidObjKey;
                 use super::intermediate_error_types::ObjKind;
                 let suffix = match key_error_kind {
-                    InvalidObjKey::Other => vec![text(
+                    InvalidObjKey::Other | InvalidObjKey::NullOrVoid => vec![text(
                         " Only identifier, string literal, and number literal keys are allowed.",
                     )],
                     InvalidObjKey::NumberNonInt => {
@@ -10388,20 +10400,26 @@ where
                 friendly::Message(msg)
             }
             MessageCannotAssignToObjectWithComputedPropWithKey {
-                reason_prop,
-                reason_key,
+                property,
+                key,
                 kind,
             } => {
                 use crate::intermediate_error_types::InvalidObjKey;
                 let suffix = match kind {
                     InvalidObjKey::Other
+                    | InvalidObjKey::NullOrVoid
                     | InvalidObjKey::ComputedNotLiteral
                     | InvalidObjKey::ComputedTypeName => vec![
                         text(" Computed properties may only be numeric or string literal values,"),
                         text(" but this one is a "),
-                        ref_(reason_prop),
+                        match kind {
+                            InvalidObjKey::NullOrVoid => {
+                                hardcoded_string_desc_ref("null or undefined", &property.loc)
+                            }
+                            _ => ref_of_ty_or_desc(&property.loc, &property.desc),
+                        },
                         text(". Can you add an appropriate type annotation to "),
-                        ref_(&reason_key.dupe()),
+                        render_expression_reference(key),
                         text("?"),
                         text(
                             " See https://flow.org/en/docs/types/literals/ for more information on literal types.",
@@ -10423,7 +10441,7 @@ where
                 };
                 let mut features = vec![
                     text("Cannot use "),
-                    ref_(reason_key),
+                    render_expression_reference(key),
                     text(" to assign a computed property."),
                 ];
                 features.extend(suffix);

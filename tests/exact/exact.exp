@@ -488,7 +488,7 @@ Cannot create exact type from `boolean` [1]. [invalid-exact]
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:21:19
 
-Cannot create exact type from `A` [1]. [invalid-exact]
+Cannot create exact type from `{name: string, ...}` [1]. [invalid-exact]
 
    21| new A() as $Exact<A>;
                          ^ [1]
@@ -512,7 +512,7 @@ Cannot create exact type from `() => void` [1]. [invalid-exact]
 
 Error ---------------------------------------------------------------------------------------------- not_object.js:27:19
 
-Cannot create exact type from `A` [1]. [invalid-exact]
+Cannot create exact type from `{name: string, ...}` [1]. [invalid-exact]
 
    27| new A() as $Exact<typeof bar>;
                          ^^^^^^^^^^ [1]

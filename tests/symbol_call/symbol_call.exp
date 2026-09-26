@@ -169,7 +169,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:37:19
 
 Cannot use `rebindable` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `rebindable` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `rebindable` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:37:19
@@ -185,7 +185,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:40:19
 
 Cannot use `alsoRebindable` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `alsoRebindable` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `alsoRebindable` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:40:19
@@ -201,7 +201,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:45:25
 
 Cannot use `annotated` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `annotated` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `annotated` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:45:25
@@ -217,7 +217,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:51:22
 
 Cannot use `inObject.k` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `inObject.k` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `inObject.k` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:51:22
@@ -233,7 +233,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:54:21
 
 Cannot use `inArray[0]` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `inArray[0]` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `inArray[0]` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:54:21
@@ -249,7 +249,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:56:23
 
 Cannot use `Symbol()` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `Symbol()` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `Symbol()` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:56:23
@@ -265,7 +265,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:61:21
 
 Cannot use `throughComma` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `throughComma` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `throughComma` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:61:21
@@ -281,7 +281,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- mint.js:69:24
 
 Cannot use `fromCall` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `fromCall` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `fromCall` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:69:24
@@ -297,7 +297,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- mint.js:107:19
 
 Cannot use `anded` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a boolean [2]. Can you add an appropriate type annotation to `anded` [1]? See
+but this one is a `false` [2]. Can you add an appropriate type annotation to `anded` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    mint.js:107:19
@@ -329,7 +329,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ notcalls.js:11:24
 
 Cannot use `optional` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `optional` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `optional` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    notcalls.js:11:24
@@ -375,7 +375,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ notcalls.js:26:25
 
 Cannot use `elsewhere` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a symbol [2]. Can you add an appropriate type annotation to `elsewhere` [1]? See
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `elsewhere` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    notcalls.js:26:25
