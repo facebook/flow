@@ -430,33 +430,6 @@ impl TypeOfNameOptions {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LlmContextOptions {
-    pub files: Vec<String>,
-    pub token_budget: i32,
-    pub wait_for_recheck: Option<bool>,
-}
-
-impl From<server_prot::llm_context_options::T> for LlmContextOptions {
-    fn from(options: server_prot::llm_context_options::T) -> Self {
-        Self {
-            files: options.files,
-            token_budget: options.token_budget,
-            wait_for_recheck: options.wait_for_recheck,
-        }
-    }
-}
-
-impl From<LlmContextOptions> for server_prot::llm_context_options::T {
-    fn from(options: LlmContextOptions) -> Self {
-        Self {
-            files: options.files,
-            token_budget: options.token_budget,
-            wait_for_recheck: options.wait_for_recheck,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
 #[allow(non_camel_case_types)]
 pub enum CliCommand {
     APPLY_CODE_ACTION {
@@ -541,7 +514,6 @@ pub enum CliCommand {
         wait_for_recheck: Option<bool>,
         omit_targ_defaults: bool,
     },
-    LLM_CONTEXT(LlmContextOptions),
     STATUS {
         include_warnings: bool,
     },
@@ -693,7 +665,6 @@ impl From<server_prot::request::Command> for CliCommand {
                 wait_for_recheck,
                 omit_targ_defaults,
             },
-            server_prot::request::Command::LLM_CONTEXT(input) => Self::LLM_CONTEXT(input.into()),
             server_prot::request::Command::STATUS { include_warnings } => {
                 Self::STATUS { include_warnings }
             }
@@ -857,9 +828,6 @@ impl CliCommand {
                 wait_for_recheck,
                 omit_targ_defaults,
             },
-            CliCommand::LLM_CONTEXT(input) => {
-                server_prot::request::Command::LLM_CONTEXT(input.into())
-            }
             CliCommand::STATUS { include_warnings } => {
                 server_prot::request::Command::STATUS { include_warnings }
             }
@@ -1406,40 +1374,6 @@ pub mod inlay_hint {
     pub type Response = Result<Vec<Item>, String>;
 }
 
-pub mod llm_context {
-    use super::*;
-
-    #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-    pub struct T {
-        pub llm_context: String,
-        pub files_processed: Vec<String>,
-        pub tokens_used: i32,
-        pub truncated: bool,
-    }
-
-    impl From<server_prot::response::llm_context::T> for T {
-        fn from(response: server_prot::response::llm_context::T) -> Self {
-            Self {
-                llm_context: response.llm_context,
-                files_processed: response.files_processed,
-                tokens_used: response.tokens_used,
-                truncated: response.truncated,
-            }
-        }
-    }
-
-    impl T {
-        pub fn into_server_response(self) -> server_prot::response::llm_context::T {
-            server_prot::response::llm_context::T {
-                llm_context: self.llm_context,
-                files_processed: self.files_processed,
-                tokens_used: self.tokens_used,
-                truncated: self.truncated,
-            }
-        }
-    }
-}
-
 pub type AutocompleteResponse = Result<(completion::T, server_prot::response::AcType), String>;
 pub type ApplyCodeActionResponse = Result<Patch, String>;
 pub type AutofixExportsResponse = Result<(Patch, Vec<String>), String>;
@@ -1457,7 +1391,6 @@ pub type InferTypeResponse = Result<infer_type::T, String>;
 pub type InferTypeOfNameResponse = Result<infer_type_of_name::T, String>;
 pub type InsertTypeResponse = Result<Patch, String>;
 pub type CheckFileResponse = server_prot::response::CheckFileResponse;
-pub type LlmContextResponse = Result<llm_context::T, String>;
 pub type SuggestImportsResponse = Result<String, String>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1478,7 +1411,6 @@ pub enum CliResponse {
     GRAPH_DEP_GRAPH(GraphDepGraphResponse),
     INFER_TYPE(InferTypeResponse),
     INLAY_HINT(inlay_hint::Response),
-    LLM_CONTEXT(LlmContextResponse),
     TYPE_OF_NAME(Vec<InferTypeOfNameResponse>),
     INSERT_TYPE(InsertTypeResponse),
     SUGGEST_IMPORTS(SuggestImportsResponse),
@@ -1554,9 +1486,6 @@ impl CliResponse {
                 Ok(Self::INLAY_HINT(response.map(|items| {
                     items.into_iter().map(inlay_hint::Item::from).collect()
                 })))
-            }
-            server_prot::response::Response::LLM_CONTEXT(response) => {
-                Ok(Self::LLM_CONTEXT(response.map(llm_context::T::from)))
             }
             server_prot::response::Response::TYPE_OF_NAME(response) => Ok(Self::TYPE_OF_NAME(
                 response
@@ -1659,9 +1588,6 @@ impl CliResponse {
                         .collect()
                 }))
             }
-            CliResponse::LLM_CONTEXT(response) => server_prot::response::Response::LLM_CONTEXT(
-                response.map(llm_context::T::into_server_response),
-            ),
             CliResponse::TYPE_OF_NAME(response) => server_prot::response::Response::TYPE_OF_NAME(
                 response
                     .into_iter()
@@ -1714,10 +1640,7 @@ pub fn receive_message<R: Read, T: for<'de> Deserialize<'de>>(
 mod tests {
     use std::io::Cursor;
 
-    use super::CliResponse;
-    use super::llm_context;
     use super::receive_message;
-    use crate::server_prot;
 
     #[test]
     fn receive_message_accepts_small_frame() {
@@ -1728,34 +1651,5 @@ mod tests {
 
         let value: serde_json::Value = receive_message(&mut Cursor::new(framed)).unwrap();
         assert_eq!(value, payload);
-    }
-
-    #[test]
-    fn cli_response_supports_llm_context() {
-        let response = server_prot::response::Response::LLM_CONTEXT(Ok(
-            server_prot::response::llm_context::T {
-                llm_context: "ctx".to_string(),
-                files_processed: vec!["a.js".to_string()],
-                tokens_used: 123,
-                truncated: false,
-            },
-        ));
-
-        let response = CliResponse::try_from_server_response(response).unwrap();
-
-        match response {
-            CliResponse::LLM_CONTEXT(Ok(llm_context::T {
-                llm_context,
-                files_processed,
-                tokens_used,
-                truncated,
-            })) => {
-                assert_eq!(llm_context, "ctx");
-                assert_eq!(files_processed, vec!["a.js".to_string()]);
-                assert_eq!(tokens_used, 123);
-                assert!(!truncated);
-            }
-            _ => panic!("expected llm_context response"),
-        }
     }
 }

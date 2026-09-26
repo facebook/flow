@@ -437,34 +437,6 @@ pub mod rename_file_imports {
     pub type Result = WorkspaceEdit;
 }
 
-pub mod llm_context {
-    use lsp_types::WorkspaceFolder;
-
-    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct EnvironmentDetails {
-        pub workspace_folders: Vec<WorkspaceFolder>,
-        pub os: String,
-    }
-
-    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Params {
-        pub edited_file_paths: Vec<String>,
-        pub environment_details: EnvironmentDetails,
-        pub token_budget: i32,
-    }
-
-    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Result {
-        pub llm_context: String,
-        pub files_processed: Vec<String>,
-        pub tokens_used: i32,
-        pub truncated: bool,
-    }
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum LspRequest {
     InitializeRequest(InitializeParams),
@@ -504,7 +476,6 @@ pub enum LspRequest {
     ProvideDocumentPasteRequest(document_paste::ProvideParams),
     LinkedEditingRangeRequest(LinkedEditingRangeParams),
     RenameFileImportsRequest(rename_file_imports::Params),
-    LLMContextRequest(llm_context::Params),
     UnknownRequest(String, Option<serde_json::Value>),
 }
 
@@ -548,7 +519,6 @@ pub enum LspResult {
     ProvideDocumentPasteResult(WorkspaceEdit),
     LinkedEditingRangeResult(Option<LinkedEditingRanges>),
     RenameFileImportsResult(rename_file_imports::Result),
-    LLMContextResult(llm_context::Result),
     ErrorResult(error::T, String),
 }
 

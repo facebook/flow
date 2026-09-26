@@ -6,4 +6,3 @@
  */
 
 pub mod command_handler;
-pub mod llm_typed_context_provider;

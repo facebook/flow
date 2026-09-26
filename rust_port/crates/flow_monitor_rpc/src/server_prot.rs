@@ -71,15 +71,6 @@ pub mod type_of_name_options {
     }
 }
 
-pub mod llm_context_options {
-    #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-    pub struct T {
-        pub files: Vec<String>,
-        pub token_budget: i32,
-        pub wait_for_recheck: Option<bool>,
-    }
-}
-
 pub mod code_action {
     #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     pub enum T {
@@ -113,7 +104,6 @@ pub mod request {
     use crate::server_prot::code_action;
     use crate::server_prot::infer_type_options;
     use crate::server_prot::inlay_hint_options;
-    use crate::server_prot::llm_context_options;
     use crate::server_prot::type_of_name_options;
 
     #[derive(
@@ -262,7 +252,6 @@ pub mod request {
         STATUS {
             include_warnings: bool,
         },
-        LLM_CONTEXT(llm_context_options::T),
         // Appended last so the preceding shared variants' bincode indices stay stable.
         #[cfg(fbcode_build)]
         FOX(flow_facebook_fox_protocol::FoxCommand),
@@ -404,15 +393,6 @@ pub mod request {
                 };
                 format!("save-state {}", out)
             }
-            Command::LLM_CONTEXT(llm_context_options::T {
-                files,
-                token_budget,
-                ..
-            }) => format!(
-                "llm-context [{}] (budget: {})",
-                files.join(", "),
-                token_budget
-            ),
             #[cfg(fbcode_build)]
             Command::FOX(_) => "fox".to_string(),
         }
@@ -613,18 +593,6 @@ pub mod response {
 
     pub type GraphResponseSubgraph = Vec<(String, Vec<String>)>;
 
-    pub mod llm_context {
-        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-        pub struct T {
-            pub llm_context: String,
-            pub files_processed: Vec<String>,
-            pub tokens_used: i32,
-            pub truncated: bool,
-        }
-    }
-
-    pub type LlmContextResponse = Result<llm_context::T, String>;
-
     #[allow(non_camel_case_types)]
     #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
     pub enum StatusResponse {
@@ -670,7 +638,6 @@ pub mod response {
         },
         SAVE_STATE(Result<String, String>),
         SUGGEST_IMPORTS(SuggestImportsResponse),
-        LLM_CONTEXT(LlmContextResponse),
         // Appended last so the preceding shared variants' bincode indices stay stable.
         #[cfg(fbcode_build)]
         FOX(flow_facebook_fox_protocol::FoxResponse),
@@ -700,7 +667,6 @@ pub mod response {
             Response::STATUS { .. } => "status response",
             Response::SAVE_STATE(_) => "save_state response",
             Response::SUGGEST_IMPORTS(_) => "suggest imports response",
-            Response::LLM_CONTEXT(_) => "llm_context response",
             #[cfg(fbcode_build)]
             Response::FOX(_) => "fox response",
         }

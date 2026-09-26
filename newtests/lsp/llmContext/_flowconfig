@@ -1,4 +1,0 @@
-[options]
-component_syntax=true
-experimental.llm_context.include_imports=true
-builtin_lib=core-only

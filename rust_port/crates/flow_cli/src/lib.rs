@@ -42,7 +42,6 @@ mod glean_schema;
 mod graph_command;
 mod init_command;
 mod inlay_hint_command;
-mod llm_context_command;
 mod ls_command;
 mod lsp_command;
 mod offset_cache;
@@ -266,7 +265,6 @@ fn explicit_commands() -> Vec<flow_command_spec::Command> {
         glean_command::command(),
         init_command::command(),
         inlay_hint_command::command(),
-        llm_context_command::command(),
         lsp_command::command(),
         ls_command::command(),
         save_state_command::command(),

@@ -3341,99 +3341,6 @@ fn handle_inlay_hint(
     ))
 }
 
-fn handle_llm_context(
-    orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
-    options: &Options,
-    env: &server_env::Env,
-    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
-    input: &server_prot::llm_context_options::T,
-) -> EphemeralParallelizableResult {
-    let server_prot::llm_context_options::T {
-        files,
-        token_budget,
-        wait_for_recheck: _,
-    } = input;
-    let strip_root = Some(options.root.to_string_lossy().to_string());
-    let strip_root_ref = strip_root.as_deref();
-    let include_imports = options.llm_context_include_imports;
-    let file_sig_opts = flow_parser_utils::file_sig::FileSigOptions::default();
-    let file_contexts: Vec<crate::llm_typed_context_provider::FileContext> = files
-        .iter()
-        .filter_map(|file_path| {
-            let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(file_path);
-            let file_input = FileInput::FileName(file_path.clone());
-            let (_file_key, content) = match of_file_input(options, env, &file_input) {
-                Err(_) => return None,
-                Ok(v) => v,
-            };
-            let intermediate_result =
-                parse_contents(options, env.configured_libs(), &content, &file_key);
-            let file_artifacts_result = type_parse_artifacts(
-                orchestrator,
-                cache,
-                options,
-                env.configured_libs(),
-                transaction.clone(),
-                env.master_cx.clone(),
-                file_key.clone(),
-                intermediate_result,
-            );
-            match file_artifacts_result {
-                Err(_) => None,
-                Ok((parse_artifacts, typecheck_artifacts)) => {
-                    if include_imports {
-                        let context = crate::llm_typed_context_provider::generate_file_context(
-                            strip_root_ref,
-                            &file_key,
-                            &parse_artifacts.ast,
-                            &typecheck_artifacts.cx,
-                            &typecheck_artifacts.typed_ast,
-                            &transaction,
-                            &file_sig_opts,
-                        );
-                        let tokens = crate::llm_typed_context_provider::count_tokens(&context);
-                        let path = flow_common::reason::string_of_source(strip_root_ref, &file_key);
-                        Some(crate::llm_typed_context_provider::FileContext {
-                            path,
-                            context,
-                            tokens,
-                        })
-                    } else {
-                        None
-                    }
-                }
-            }
-        })
-        .collect();
-    let header = crate::llm_typed_context_provider::legacy_syntax_header();
-    let header_tokens = crate::llm_typed_context_provider::count_tokens(&header);
-    let mut remaining_budget = token_budget - header_tokens;
-    let mut acc_context = String::new();
-    let mut files_processed = Vec::new();
-    let mut truncated = false;
-    for fc in &file_contexts {
-        if fc.tokens <= remaining_budget {
-            remaining_budget -= fc.tokens;
-            acc_context.push_str(&fc.context);
-            acc_context.push('\n');
-            files_processed.push(fc.path.clone());
-        } else {
-            truncated = true;
-            break;
-        }
-    }
-    let full_context = format!("{}\n{}", header, acc_context);
-    let tokens_used = crate::llm_typed_context_provider::count_tokens(&full_context);
-    let result = Ok(server_prot::response::llm_context::T {
-        llm_context: full_context,
-        files_processed,
-        tokens_used,
-        truncated,
-    });
-    Ok((server_prot::response::Response::LLM_CONTEXT(result), None))
-}
-
 fn handle_insert_type(
     orchestrator: Option<&ServerOrchestratorHandle>,
     cache: &CheckContentsCache,
@@ -3710,9 +3617,6 @@ pub fn handle_ephemeral_command_for_standalone(
             let mut options = options.clone();
             options.include_warnings = options.include_warnings || include_warnings;
             handle_status(&options, env, &transaction)
-        }
-        server_prot::request::Command::LLM_CONTEXT(input) => {
-            handle_llm_context(orchestrator, cache, options, env, transaction, &input)
         }
         #[cfg(fbcode_build)]
         server_prot::request::Command::FOX(command) => {
@@ -4039,9 +3943,6 @@ fn get_ephemeral_handler(
         } => mk_parallelizable(*wait_for_recheck, options),
         server_prot::request::Command::STATUS { .. } => CommandHandler::HandleNonparallelizable,
         server_prot::request::Command::SAVE_STATE { .. } => CommandHandler::HandleNonparallelizable,
-        server_prot::request::Command::LLM_CONTEXT(input) => {
-            mk_parallelizable(input.wait_for_recheck, options)
-        }
         #[cfg(fbcode_build)]
         server_prot::request::Command::FOX(command) => {
             match flow_facebook_fox_server::get_command_handler(command) {
@@ -6237,87 +6138,6 @@ fn handle_persistent_coverage(
     }
 }
 
-fn handle_persistent_llm_context(
-    orchestrator: Option<&ServerOrchestratorHandle>,
-    cache: &CheckContentsCache,
-    options: &Options,
-    env: &server_env::Env,
-    transaction: Arc<flow_heap::parsing_heaps::Transaction>,
-    client_id: lsp_prot::ClientId,
-    id: lsp_prot::LspId,
-    params: &lsp::llm_context::Params,
-    metadata: lsp_prot::Metadata,
-) -> (lsp_prot::Response, lsp_prot::Metadata) {
-    let lsp::llm_context::Params {
-        edited_file_paths,
-        environment_details: _,
-        token_budget,
-    } = params;
-    let strip_root = Some(options.root.to_string_lossy().to_string());
-    let strip_root_ref = strip_root.as_deref();
-    let type_parse_artifacts_cache = persistent_connection::get_client(client_id)
-        .map(|client| persistent_connection::type_parse_artifacts_cache(&client));
-    let include_imports = options.llm_context_include_imports;
-    let file_sig_opts = flow_parser_utils::file_sig::FileSigOptions::default();
-    let file_artifacts = edited_file_paths
-        .iter()
-        .filter_map(|file_uri_str| {
-            let file_path = lsp_types::Uri::from_str(file_uri_str)
-                .ok()
-                .map(|uri| lsp_uri_to_flow_path(&uri))
-                .unwrap_or_else(|| file_uri_str.clone());
-            let file_key = flow_parser::file_key::FileKey::source_file_of_absolute(&file_path);
-            let text_document = lsp_types::TextDocumentIdentifier {
-                uri: lsp_types::Uri::from_str(file_uri_str).ok()?,
-            };
-            let file_input = file_input_of_text_document_identifier(client_id, &text_document);
-            let (_file_key, content) = match of_file_input(options, env, &file_input) {
-                Err(_) => return None,
-                Ok(v) => v,
-            };
-            let intermediate_result =
-                || parse_contents(options, env.configured_libs(), &content, &file_key);
-            let (file_artifacts_result, _did_hit_cache) = type_parse_artifacts_with_cache(
-                orchestrator,
-                cache,
-                options,
-                env.configured_libs(),
-                type_parse_artifacts_cache.as_ref(),
-                transaction.clone(),
-                env.master_cx.clone(),
-                file_key.clone(),
-                content.dupe(),
-                intermediate_result,
-            );
-            match file_artifacts_result {
-                Err(_) => None,
-                Ok(file_artifacts) => Some((file_artifacts, file_key)),
-            }
-        })
-        .collect::<Vec<_>>();
-    let typed_files = file_artifacts
-        .iter()
-        .map(|((parse_artifacts, typecheck_artifacts), file_key)| {
-            crate::llm_typed_context_provider::TypedFileInfo {
-                file_key: file_key.dupe(),
-                ast: parse_artifacts.ast.dupe(),
-                cx: &typecheck_artifacts.cx,
-                typed_ast: typecheck_artifacts.typed_ast.clone(),
-                transaction: transaction.as_ref(),
-            }
-        })
-        .collect::<Vec<_>>();
-    let result = crate::llm_typed_context_provider::generate_context(
-        strip_root_ref,
-        &typed_files,
-        *token_budget,
-        include_imports,
-        &file_sig_opts,
-    );
-    let response = LspMessage::ResponseMessage(id, LspResult::LLMContextResult(result));
-    (lsp_prot::Response::LspFromServer(Some(response)), metadata)
-}
-
 fn handle_persistent_ping(
     id: lsp_prot::LspId,
     metadata: lsp_prot::Metadata,
@@ -7974,35 +7794,6 @@ fn get_persistent_handler(
                 committed_heap,
                 Box::new(move |env, transaction, _cache| {
                     Ok(handle_persistent_rename_file_imports(
-                        &options_for_closure,
-                        env,
-                        transaction.dupe(),
-                        client_id,
-                        id,
-                        &params,
-                        metadata,
-                    ))
-                }),
-            )
-        }
-
-        lsp_prot::Request::LspToServer(LspMessage::RequestMessage(
-            id,
-            LspRequest::LLMContextRequest(params),
-        )) => {
-            let id = id.clone();
-            let metadata = metadata.clone();
-            let params = params.clone();
-            let options_for_closure = genv.options.clone();
-            // The closure outlives this call, so it needs an owned handle.
-            let orchestrator = orchestrator.clone();
-            mk_parallelizable_persistent(
-                options,
-                committed_heap,
-                Box::new(move |env, transaction, cache| {
-                    Ok(handle_persistent_llm_context(
-                        Some(&orchestrator),
-                        cache,
                         &options_for_closure,
                         env,
                         transaction.dupe(),

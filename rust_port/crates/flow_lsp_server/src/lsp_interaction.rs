@@ -30,7 +30,6 @@ pub enum Trigger {
     DocumentSymbol(LspId),
     FindReferences(LspId),
     Hover(LspId),
-    LLMContext(LspId),
     PrepareRename(LspId),
     PushedErrorsEndOfRecheck,
     PushedErrorsEnvChange,
@@ -110,7 +109,6 @@ fn string_of_trigger(trigger: &Trigger) -> &'static str {
         Trigger::DocumentSymbol(_) => "documentSymbol",
         Trigger::FindReferences(_) => "findReferences",
         Trigger::Hover(_) => "hover",
-        Trigger::LLMContext(_) => "llmContext",
         Trigger::PrepareRename(_) => "PrepareRename",
         Trigger::PushedErrorsEndOfRecheck => "endOfRecheck",
         Trigger::PushedErrorsRecheckStreaming => "recheckStreaming",
@@ -143,7 +141,6 @@ fn lsp_id_of_trigger(trigger: &Trigger) -> Option<&LspId> {
         | Trigger::DocumentSymbol(lsp_id)
         | Trigger::FindReferences(lsp_id)
         | Trigger::Hover(lsp_id)
-        | Trigger::LLMContext(lsp_id)
         | Trigger::Rage(lsp_id)
         | Trigger::PrepareRename(lsp_id)
         | Trigger::Rename(lsp_id)
@@ -232,7 +229,6 @@ fn source_of_trigger(trigger: &Trigger) -> Source {
         | Trigger::DocumentSymbol(_)
         | Trigger::FindReferences(_)
         | Trigger::Hover(_)
-        | Trigger::LLMContext(_)
         | Trigger::Rage(_)
         | Trigger::PrepareRename(_)
         | Trigger::Rename(_)
@@ -471,9 +467,6 @@ pub fn trigger_of_lsp_msg(msg: &LspMessage) -> Option<Trigger> {
         LspMessage::RequestMessage(lsp_id, LspRequest::HoverRequest(_)) => {
             Some(Trigger::Hover(lsp_id.clone()))
         }
-        LspMessage::RequestMessage(lsp_id, LspRequest::LLMContextRequest(_)) => {
-            Some(Trigger::LLMContext(lsp_id.clone()))
-        }
         LspMessage::RequestMessage(lsp_id, LspRequest::RageRequest) => {
             Some(Trigger::Rage(lsp_id.clone()))
         }
@@ -576,8 +569,7 @@ pub fn trigger_of_lsp_msg(msg: &LspMessage) -> Option<Trigger> {
             | LspResult::ProvideDocumentPasteResult(_)
             | LspResult::WillRenameFilesResult(_)
             | LspResult::LinkedEditingRangeResult(_)
-            | LspResult::RenameFileImportsResult(_)
-            | LspResult::LLMContextResult(_),
+            | LspResult::RenameFileImportsResult(_),
         ) => None,
         LspMessage::NotificationMessage(LspNotification::DidOpenNotification(_)) => {
             Some(Trigger::DidOpen)

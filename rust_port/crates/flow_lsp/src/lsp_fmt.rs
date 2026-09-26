@@ -721,13 +721,6 @@ mod rename_file_imports_fmt {
     }
 }
 
-mod llm_context_fmt {
-    use super::*;
-    pub fn json_of_result(r: &lsp::llm_context::Result) -> serde_json::Value {
-        serde_json::to_value(r).expect("LLMContext result should serialize to JSON")
-    }
-}
-
 // *********************************************************************
 // error response
 // *********************************************************************
@@ -861,7 +854,6 @@ pub fn request_name_to_string(request: &lsp::LspRequest) -> String {
         }
         lsp::LspRequest::WillRenameFilesRequest(_) => "workspace/willRenameFiles".to_string(),
         lsp::LspRequest::RenameFileImportsRequest(_) => "flow/renameFileImports".to_string(),
-        lsp::LspRequest::LLMContextRequest(_) => "llm/context".to_string(),
         lsp::LspRequest::UnknownRequest(method_, _params) => method_.clone(),
     }
 }
@@ -914,7 +906,6 @@ pub fn result_name_to_string(result: &lsp::LspResult) -> String {
             "textDocument/linkedEditingRange".to_string()
         }
         lsp::LspResult::RenameFileImportsResult(_) => "flow/renameFileImports".to_string(),
-        lsp::LspResult::LLMContextResult(_) => "llm/context".to_string(),
         lsp::LspResult::ErrorResult(e, _stack) => format!("ERROR/{}", e.message),
     }
 }
@@ -1167,11 +1158,6 @@ pub fn parse_lsp_request(
                 |e| parse_error_exception(format!("Failed to deserialize LSP params: {}", e)),
             )?,
         ),
-        "llm/context" => lsp::LspRequest::LLMContextRequest(
-            serde_json::from_value(params.cloned().unwrap_or(serde_json::Value::Null)).map_err(
-                |e| parse_error_exception(format!("Failed to deserialize LSP params: {}", e)),
-            )?,
-        ),
         "workspace/willRenameFiles" => lsp::LspRequest::WillRenameFilesRequest(
             serde_json::from_value(params.cloned().unwrap_or(serde_json::Value::Null)).map_err(
                 |e| parse_error_exception(format!("Failed to deserialize LSP params: {}", e)),
@@ -1308,7 +1294,6 @@ pub fn parse_lsp_result(
         | lsp::LspRequest::ProvideDocumentPasteRequest(_)
         | lsp::LspRequest::LinkedEditingRangeRequest(_)
         | lsp::LspRequest::RenameFileImportsRequest(_)
-        | lsp::LspRequest::LLMContextRequest(_)
         | lsp::LspRequest::UnknownRequest(_, _) => {
             return Err(parse_error_exception(format!(
                 "Don't know how to parse LSP response {}",
@@ -1396,7 +1381,6 @@ pub fn print_lsp_request(id: &LspId, request: &lsp::LspRequest) -> serde_json::V
         | lsp::LspRequest::AutoCloseJsxRequest(_)
         | lsp::LspRequest::LinkedEditingRangeRequest(_)
         | lsp::LspRequest::RenameFileImportsRequest(_)
-        | lsp::LspRequest::LLMContextRequest(_)
         | lsp::LspRequest::UnknownRequest(_, _) => {
             panic!("Don't know how to print request {}", method_)
         }
@@ -1463,7 +1447,6 @@ pub fn print_lsp_response(
         lsp::LspResult::ProvideDocumentPasteResult(r) => print_workspace_edit(r),
         lsp::LspResult::LinkedEditingRangeResult(r) => linked_editing_range_fmt::json_of_result(r),
         lsp::LspResult::RenameFileImportsResult(r) => rename_file_imports_fmt::json_of_result(r),
-        lsp::LspResult::LLMContextResult(r) => llm_context_fmt::json_of_result(r),
         lsp::LspResult::RegisterCapabilityResult
         | lsp::LspResult::ShowMessageRequestResult(_)
         | lsp::LspResult::ShowStatusResult(_)

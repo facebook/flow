@@ -110,8 +110,6 @@ pub struct T {
         Box<dyn Fn(&T, rename_file_imports::Params) -> rename_file_imports::Params>,
     pub of_rename_file_imports_result:
         Box<dyn Fn(&T, rename_file_imports::Result) -> rename_file_imports::Result>,
-    pub of_llm_context_params: Box<dyn Fn(&T, llm_context::Params) -> llm_context::Params>,
-    pub of_llm_context_result: Box<dyn Fn(&T, llm_context::Result) -> llm_context::Result>,
     pub of_selection_range: Box<dyn Fn(&T, SelectionRange) -> SelectionRange>,
     pub of_selection_range_params: Box<dyn Fn(&T, SelectionRangeParams) -> SelectionRangeParams>,
     pub of_selection_range_result: Box<dyn Fn(&T, Vec<SelectionRange>) -> Vec<SelectionRange>>,
@@ -831,9 +829,6 @@ pub fn default_mapper() -> T {
                 .of_rename_file_imports_result)(
                 mapper, r,
             )),
-            LspResult::LLMContextResult(r) => {
-                LspResult::LLMContextResult((mapper.of_llm_context_result)(mapper, r))
-            }
             LspResult::ErrorResult(err, s) => LspResult::ErrorResult(err, s),
         }),
         of_lsp_request: Box::new(|mapper, request| match request {
@@ -952,9 +947,6 @@ pub fn default_mapper() -> T {
             LspRequest::RenameFileImportsRequest(p) => LspRequest::RenameFileImportsRequest(
                 (mapper.of_rename_file_imports_params)(mapper, p),
             ),
-            LspRequest::LLMContextRequest(p) => {
-                LspRequest::LLMContextRequest((mapper.of_llm_context_params)(mapper, p))
-            }
             LspRequest::UnknownRequest(req, json) => LspRequest::UnknownRequest(req, json),
         }),
         of_location: Box::new(|mapper, loc| {
@@ -1005,8 +997,6 @@ pub fn default_mapper() -> T {
         of_rename_file_imports_result: Box::new(|mapper, result| {
             (mapper.of_workspace_edit)(mapper, result)
         }),
-        of_llm_context_params: Box::new(|_mapper, params| params),
-        of_llm_context_result: Box::new(|_mapper, result| result),
         of_selection_range_params: Box::new(|mapper, params| {
             let text_document = (mapper.of_text_document_identifier)(mapper, params.text_document);
             SelectionRangeParams {

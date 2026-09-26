@@ -191,7 +191,6 @@ pub mod opts {
         pub include_warnings: bool,
         pub jest_integration: bool,
         pub lazy_mode: Option<LazyMode>,
-        pub llm_context_include_imports: bool,
         pub log_per_error_typing_telemetry: bool,
         pub log_saving: BTreeMap<String, LogSaving>,
         pub max_files_checked_per_worker: u32,
@@ -351,7 +350,6 @@ pub mod opts {
             include_warnings: false,
             jest_integration: false,
             lazy_mode: None,
-            llm_context_include_imports: false,
             log_per_error_typing_telemetry: false,
             log_saving: BTreeMap::new(),
             max_files_checked_per_worker: 100,
@@ -2230,19 +2228,6 @@ pub mod opts {
             (
                 "experimental.interface_dictionary_typing_fix",
                 |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
-            ),
-            (
-                "experimental.llm_context.include_imports",
-                |values, config| {
-                    parse_boolean(
-                        |opts, v| {
-                            opts.llm_context_include_imports = v;
-                            Ok(())
-                        },
-                        values,
-                        config,
-                    )
-                },
             ),
             (
                 "experimental.log_per_error_typing_telemetry",

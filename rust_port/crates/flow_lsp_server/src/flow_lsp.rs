@@ -1541,7 +1541,6 @@ fn do_initialize(params: &lsp_types::InitializeParams) -> lsp_types::InitializeR
         "autoCloseJsx": true,
         "pasteProvider": true,
         "renameFileImports": true,
-        "llmContextProvider": true,
         "snippetTextEdit": server_snippet_text_edit,
     });
     lsp_types::InitializeResult {

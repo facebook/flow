@@ -165,7 +165,6 @@ pub struct Options {
     pub include_suppressions: bool,
     pub include_warnings: bool,
     pub lazy_mode: bool,
-    pub llm_context_include_imports: bool,
     pub log_per_error_typing_telemetry: bool,
     pub lint_severities: LintSettings<Severity>,
     pub log_file: Arc<PathBuf>,

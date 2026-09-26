@@ -2188,7 +2188,6 @@ pub fn make_options(
                 include_warnings,
                 jest_integration,
                 lazy_mode,
-                llm_context_include_imports,
                 log_per_error_typing_telemetry,
                 log_saving,
                 max_files_checked_per_worker,
@@ -2587,7 +2586,6 @@ pub fn make_options(
             || max_warnings_override.is_some()
             || include_warnings,
         lazy_mode,
-        llm_context_include_imports,
         log_per_error_typing_telemetry,
         lint_severities,
         log_file: Arc::new(log_file),
