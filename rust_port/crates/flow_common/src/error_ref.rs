@@ -6,6 +6,7 @@
  */
 
 use dupe::Dupe;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::reason::VirtualReasonDesc;
 
@@ -39,4 +40,82 @@ impl<L: Dupe> ErrorReference<L> {
     {
         ErrorReference::new(f(&self.loc), self.desc.map_locs(f))
     }
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum ExpressionFunctionKind {
+    Normal,
+    Async,
+    Generator,
+    AsyncGenerator,
+    Unknown,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum ExpressionReferenceKind {
+    Code(FlowSmolStr),
+    ObjectLiteral,
+    ArrayLiteral,
+    Function(ExpressionFunctionKind),
+    EmptyString,
+    TemplateString,
+    Expression,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct ExpressionReferenceData<L: Dupe> {
+    pub loc: L,
+    pub kind: ExpressionReferenceKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum FunctionReferenceKind {
+    Function,
+    FunctionType,
+    DefaultConstructor,
 }

@@ -72,6 +72,7 @@ use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::flow_error::error_of_msg;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_exists_check::ExistsCheck;
 use flow_typing_generics::GenericId;
 use flow_typing_loc_env::loc_env::LocEnv;
@@ -399,7 +400,7 @@ pub struct ComponentT<'cx> {
     // conservatively emit errors.
     voidable_checks: RefCell<Vec<VoidableCheck>>,
     test_prop_hits_and_misses: RefCell<IntHashMap<i32, TestPropHitOrMiss>>,
-    optional_chains_useful: RefCell<ALocMap<(Reason, bool)>>,
+    optional_chains_useful: RefCell<ALocMap<(Type, ExpressionReferenceData<ALoc>, bool)>>,
     conditions: RefCell<FlowVector<flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>>>,
     strict_comparisons: RefCell<
         FlowVector<(
@@ -2833,22 +2834,28 @@ impl<'cx> Context<'cx> {
         self.0.ccx.strict_comparisons.borrow().dupe()
     }
 
-    pub fn mark_optional_chain(&self, loc: ALoc, lhs_reason: Reason, useful: bool) {
+    pub fn mark_optional_chain(
+        &self,
+        loc: ALoc,
+        lhs: Type,
+        lhs_expression: ExpressionReferenceData<ALoc>,
+        useful: bool,
+    ) {
         let mut chains = self.0.ccx.optional_chains_useful.borrow_mut();
         chains
             .entry(loc)
-            .and_modify(|(_r, u)| {
+            .and_modify(|(_, _, u)| {
                 *u = *u || useful;
             })
-            .or_insert((lhs_reason, useful));
+            .or_insert((lhs, lhs_expression, useful));
     }
 
-    pub fn unnecessary_optional_chains(&self) -> Vec<(ALoc, Reason)> {
+    pub fn unnecessary_optional_chains(&self) -> Vec<(ALoc, Type, ExpressionReferenceData<ALoc>)> {
         let chains = self.0.ccx.optional_chains_useful.borrow();
         let mut result = Vec::new();
-        for (loc, (r, useful)) in chains.iter() {
+        for (loc, (lhs, lhs_expression, useful)) in chains.iter() {
             if !useful {
-                result.push((loc.dupe(), r.dupe()));
+                result.push((loc.dupe(), lhs.dupe(), lhs_expression.dupe()));
             }
         }
         result

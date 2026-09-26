@@ -8,6 +8,8 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
 
+use flow_typing_errors::error_message::EFunctionCallExtraArgData;
+use flow_typing_errors::intermediate_error_types::FunctionReferenceData;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
@@ -24,6 +26,14 @@ use flow_typing_type::type_::mk_methodtype;
 
 use super::helpers::*;
 use super::*;
+
+fn function_type_for_error(ft: &FunType) -> Type {
+    let reason = ft.def_reason.dupe();
+    Type::new(TypeInner::DefT(
+        reason.dupe(),
+        DefT::new(DefTInner::FunT(dummy_static(reason), Rc::new(ft.clone()))),
+    ))
+}
 
 // *******************************************************************
 // * subtyping a sequence of arguments with a sequence of parameters *
@@ -87,6 +97,7 @@ pub(super) fn multiflow_full<'cx>(
     reason_op: &Reason,
     is_strict: bool,
     def_reason: &Reason,
+    ft: &FunType,
     spread_arg: &Option<(Reason, ArrType, Option<GenericId>)>,
     rest_param: &Option<FunRestParam>,
     arglist: Vec<(Type, Option<GenericId>)>,
@@ -101,6 +112,7 @@ pub(super) fn multiflow_full<'cx>(
         reason_op,
         is_strict,
         def_reason,
+        ft,
         spread_arg,
         rest_param,
         arglist,
@@ -147,6 +159,7 @@ pub(super) fn multiflow_partial<'cx>(
     reason_op: &Reason,
     is_strict: bool,
     def_reason: &Reason,
+    ft: &FunType,
     spread_arg: &Option<(Reason, ArrType, Option<GenericId>)>,
     rest_param: &Option<FunRestParam>,
     arglist: Vec<(Type, Option<GenericId>)>,
@@ -231,15 +244,23 @@ pub(super) fn multiflow_partial<'cx>(
         None => {
             if is_strict {
                 if let Some((first_unused_arg, _)) = unused_arglist.front() {
+                    let function = function_type_for_error(ft);
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
-                        ErrorMessage::EFunctionCallExtraArg(Box::new((
-                            reason_of_t(first_unused_arg).loc().dupe(),
-                            def_reason.dupe(),
-                            original_parlist_len as i32,
-                            use_op.dupe(),
-                        ))),
+                        ErrorMessage::EFunctionCallExtraArg(Box::new(EFunctionCallExtraArgData {
+                            loc: reason_of_t(first_unused_arg).loc().dupe(),
+                            function: flow_js_utils::type_reference_at_loc_for_error(
+                                &function,
+                                def_reason.loc().dupe(),
+                            ),
+                            function_reference: FunctionReferenceData {
+                                loc: def_reason.loc().dupe(),
+                                kind: ft.function_reference_kind,
+                            },
+                            param_count: original_parlist_len as i32,
+                            use_op: use_op.dupe(),
+                        })),
                     )?;
                 }
             }
@@ -1234,6 +1255,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             return_t,
             type_guard,
             def_reason,
+            function_reference_kind,
             effect_,
             strictness_kind: _,
         } = ft;
@@ -1250,6 +1272,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             reason_op,
             true,
             def_reason,
+            ft,
             &spread_arg,
             rest_param,
             args,
@@ -1278,6 +1301,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
                     params_tlist,
                     rest_param,
                     def_reason,
+                    *function_reference_kind,
                     Some(params_names),
                     type_guard.clone(),
                     return_t.clone(),
@@ -1317,6 +1341,7 @@ pub(super) fn finish_resolve_spread_list<'cx>(
             reason_op,
             is_strict,
             def_reason,
+            ft,
             &spread_arg,
             rest_param,
             args,

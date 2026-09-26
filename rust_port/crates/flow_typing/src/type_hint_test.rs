@@ -388,6 +388,8 @@ mod tests {
                     return_t,
                     type_guard: None,
                     def_reason: dummy_reason(),
+                    function_reference_kind:
+                        flow_common::error_ref::FunctionReferenceKind::FunctionType,
                     effect_: ReactEffectType::AnyEffect,
                     strictness_kind: flow_common::type_strictness::TypeStrictnessKind::Flow,
                 }),

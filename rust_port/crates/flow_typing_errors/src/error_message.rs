@@ -81,6 +81,8 @@ use crate::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePr
 use crate::intermediate_error_types::ExplanationPropertyMissingDueToNeutralOptionalPropertyData;
 use crate::intermediate_error_types::ExplanationWithLazyParts;
 use crate::intermediate_error_types::ExponentialSpreadReasonGroup;
+use crate::intermediate_error_types::ExpressionReferenceData;
+use crate::intermediate_error_types::FunctionReferenceData;
 use crate::intermediate_error_types::IncorrectType;
 use crate::intermediate_error_types::IncorrectTypeErrorType;
 use crate::intermediate_error_types::InternalType;
@@ -112,6 +114,7 @@ use crate::intermediate_error_types::MessageDuplicateModuleProviderData;
 use crate::intermediate_error_types::MessageEnumDuplicateMemberNameData;
 use crate::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use crate::intermediate_error_types::MessageExponentialSpreadData;
+use crate::intermediate_error_types::MessageIllegalAssertObject;
 use crate::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use crate::intermediate_error_types::MessageIncompatibleTupleArityData;
 use crate::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
@@ -145,6 +148,7 @@ use crate::intermediate_error_types::StrictComparisonInfo;
 use crate::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use crate::intermediate_error_types::TupleElementReferenceData;
 use crate::intermediate_error_types::TypeGuardReferenceData;
+use crate::intermediate_error_types::UnnecessaryInvariantConditionKind;
 use crate::intermediate_error_types::UnsupportedSyntax;
 use crate::intermediate_error_types::ValueAsTypeReference;
 
@@ -2025,21 +2029,22 @@ pub struct EInvalidObjectKitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ECannotDeleteData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub expression: ErrorReference<L>,
-    pub expression_desc: TypeOrTypeDesc<L>,
+    pub expression: ErrorTypeReferenceData<L>,
 }
 
 /// Error data for an `invariant` call whose condition is always truthy.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EUnnecessaryInvariantData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub condition: ErrorReference<L>,
-    pub condition_desc: TypeOrTypeDesc<L>,
+    pub condition: ErrorTypeReferenceData<L>,
+    pub condition_kind: UnnecessaryInvariantConditionKind,
 }
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EUnnecessaryInvariantData<L> {
     fn eq(&self, other: &Self) -> bool {
-        self.loc == other.loc && self.condition == other.condition
+        self.loc == other.loc
+            && self.condition == other.condition
+            && self.condition_kind == other.condition_kind
     }
 }
 
@@ -2049,6 +2054,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EUnnecessaryIn
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.loc.hash(state);
         self.condition.hash(state);
+        self.condition_kind.hash(state);
     }
 }
 
@@ -2063,6 +2069,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EUnnecessaryInvariantD
         self.loc
             .cmp(&other.loc)
             .then_with(|| self.condition.cmp(&other.condition))
+            .then_with(|| self.condition_kind.cmp(&other.condition_kind))
     }
 }
 
@@ -2288,9 +2295,10 @@ pub struct EInvalidThisArgData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     /// Location of the `call`/`apply`/`bind` identifier.
     pub loc: L,
     pub name: FlowSmolStr,
+    pub callee: ErrorTypeReferenceData<L>,
     /// The receiver the first argument had to match, or, for
     /// [`InvalidThisArgKind::MissingReceiver`], the callee that has no receiver.
-    pub reason: VirtualReason<L>,
+    pub receiver_expression: ExpressionReferenceData<L>,
     pub kind: InvalidThisArgKind,
 }
 
@@ -3229,8 +3237,46 @@ pub struct EUnionOptimizationOnNonUnionData<L: Dupe + PartialOrd + Ord + Partial
 )]
 pub struct EIllegalAssertOperatorData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub op_loc: L,
-    pub obj: VirtualReason<L>,
+    pub obj: IllegalAssertObject<L>,
     pub specialized: bool,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum IllegalAssertObject<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    Typed {
+        expression: ExpressionReferenceData<L>,
+        type_: ErrorTypeReferenceData<L>,
+    },
+    Expression(ExpressionReferenceData<L>),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct EFunctionCallExtraArgData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    pub loc: L,
+    pub function: ErrorTypeReferenceData<L>,
+    pub function_reference: FunctionReferenceData<L>,
+    pub param_count: i32,
+    pub use_op: VirtualUseOp<L>,
 }
 
 #[derive(
@@ -3559,7 +3605,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         in_hook: bool,
     },
 
-    EFunctionCallExtraArg(Box<(L, VirtualReason<L>, i32, VirtualUseOp<L>)>),
+    EFunctionCallExtraArg(Box<EFunctionCallExtraArgData<L>>),
 
     EUnsupportedSetProto(L),
 
@@ -3604,7 +3650,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidPrototype(Box<EInvalidPrototypeData<L>>),
 
-    EUnnecessaryOptionalChain(Box<(L, VirtualReason<L>)>),
+    EUnnecessaryOptionalChain(Box<(L, ErrorTypeReferenceData<L>, ExpressionReferenceData<L>)>),
 
     EUnnecessaryInvariant(Box<EUnnecessaryInvariantData<L>>),
 
@@ -4963,18 +5009,36 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidThisArg(box EInvalidThisArgData {
                 loc,
                 name,
-                reason,
+                callee,
+                receiver_expression,
                 kind,
             }) => EInvalidThisArg(Box::new(EInvalidThisArgData {
                 loc: f(loc),
                 name,
-                reason: map_reason(reason),
+                callee: map_error_type_ref(callee),
+                receiver_expression: ExpressionReferenceData {
+                    loc: f(receiver_expression.loc),
+                    kind: receiver_expression.kind,
+                },
                 kind,
             })),
 
-            EFunctionCallExtraArg(box (rl, ru, n, op)) => {
-                EFunctionCallExtraArg(Box::new((f(rl), map_reason(ru), n, map_use_op(op))))
-            }
+            EFunctionCallExtraArg(box EFunctionCallExtraArgData {
+                loc,
+                function,
+                function_reference,
+                param_count,
+                use_op,
+            }) => EFunctionCallExtraArg(Box::new(EFunctionCallExtraArgData {
+                loc: f(loc),
+                function: map_error_type_ref(function),
+                function_reference: FunctionReferenceData {
+                    loc: f(function_reference.loc),
+                    kind: function_reference.kind,
+                },
+                param_count,
+                use_op: map_use_op(use_op),
+            })),
 
             EExportValueAsType(box (loc, s)) => EExportValueAsType(Box::new((f(loc), s))),
             EImportValueAsType(box (loc, s)) => EImportValueAsType(Box::new((f(loc), s))),
@@ -5742,28 +5806,32 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prototype_loc: f(prototype_loc),
                 prototype_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), prototype_desc),
             })),
-            EUnnecessaryOptionalChain(box (loc, r)) => {
-                EUnnecessaryOptionalChain(Box::new((f(loc), map_reason(r))))
+            EUnnecessaryOptionalChain(box (loc, lhs, lhs_expression)) => {
+                EUnnecessaryOptionalChain(Box::new((
+                    f(loc),
+                    map_error_type_ref(lhs),
+                    ExpressionReferenceData {
+                        loc: f(lhs_expression.loc),
+                        kind: lhs_expression.kind,
+                    },
+                )))
             }
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 loc,
                 condition,
-                condition_desc,
+                condition_kind,
             }) => EUnnecessaryInvariant(Box::new(EUnnecessaryInvariantData {
                 loc: f(loc),
-                condition: map_error_ref(condition),
-                condition_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), condition_desc),
+                condition: map_error_type_ref(condition),
+                condition_kind,
             })),
             EUnnecessaryDeclareTypeOnlyExport(loc) => EUnnecessaryDeclareTypeOnlyExport(f(loc)),
-            ECannotDelete(box ECannotDeleteData {
-                loc,
-                expression,
-                expression_desc,
-            }) => ECannotDelete(Box::new(ECannotDeleteData {
-                loc: f(loc),
-                expression: map_error_ref(expression),
-                expression_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), expression_desc),
-            })),
+            ECannotDelete(box ECannotDeleteData { loc, expression }) => {
+                ECannotDelete(Box::new(ECannotDeleteData {
+                    loc: f(loc),
+                    expression: map_error_type_ref(expression),
+                }))
+            }
 
             ESignatureBindingValidation(sve) => {
                 ESignatureBindingValidation(map_binding_validation(&f, sve))
@@ -6536,7 +6604,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 specialized,
             }) => EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                 op_loc: f(op_loc),
-                obj: map_reason(obj),
+                obj: match obj {
+                    IllegalAssertObject::Typed { expression, type_ } => {
+                        IllegalAssertObject::Typed {
+                            expression: ExpressionReferenceData {
+                                loc: f(expression.loc),
+                                kind: expression.kind,
+                            },
+                            type_: map_error_type_ref(type_),
+                        }
+                    }
+                    IllegalAssertObject::Expression(expression) => {
+                        IllegalAssertObject::Expression(ExpressionReferenceData {
+                            loc: f(expression.loc),
+                            kind: expression.kind,
+                        })
+                    }
+                },
                 specialized,
             })),
 
@@ -6990,22 +7074,71 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 loc,
                 condition,
-                condition_desc,
+                condition_kind,
             }) => EUnnecessaryInvariant(Box::new(EUnnecessaryInvariantData {
                 loc,
-                condition,
-                condition_desc: f(condition_desc),
+                condition: map_error_type_ref(condition),
+                condition_kind,
             })),
 
-            ECannotDelete(box ECannotDeleteData {
+            EUnnecessaryOptionalChain(box (loc, lhs, lhs_expression)) => {
+                EUnnecessaryOptionalChain(Box::new((loc, map_error_type_ref(lhs), lhs_expression)))
+            }
+
+            EInvalidThisArg(box EInvalidThisArgData {
                 loc,
-                expression,
-                expression_desc,
-            }) => ECannotDelete(Box::new(ECannotDeleteData {
+                name,
+                callee,
+                receiver_expression,
+                kind,
+            }) => EInvalidThisArg(Box::new(EInvalidThisArgData {
                 loc,
-                expression,
-                expression_desc: f(expression_desc),
+                name,
+                callee: map_error_type_ref(callee),
+                receiver_expression,
+                kind,
             })),
+
+            EFunctionCallExtraArg(box EFunctionCallExtraArgData {
+                loc,
+                function,
+                function_reference,
+                param_count,
+                use_op,
+            }) => EFunctionCallExtraArg(Box::new(EFunctionCallExtraArgData {
+                loc,
+                function: map_error_type_ref(function),
+                function_reference,
+                param_count,
+                use_op: map_use_op(&f, use_op),
+            })),
+
+            EIllegalAssertOperator(box EIllegalAssertOperatorData {
+                op_loc,
+                obj,
+                specialized,
+            }) => EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
+                op_loc,
+                obj: match obj {
+                    IllegalAssertObject::Typed { expression, type_ } => {
+                        IllegalAssertObject::Typed {
+                            expression,
+                            type_: map_error_type_ref(type_),
+                        }
+                    }
+                    IllegalAssertObject::Expression(expression) => {
+                        IllegalAssertObject::Expression(expression)
+                    }
+                },
+                specialized,
+            })),
+
+            ECannotDelete(box ECannotDeleteData { loc, expression }) => {
+                ECannotDelete(Box::new(ECannotDeleteData {
+                    loc,
+                    expression: map_error_type_ref(expression),
+                }))
+            }
 
             EEnumError(EnumErrorKind::EnumIncompatible(box EIncompatibleTypesWithUseOpData {
                 use_op,
@@ -7873,7 +8006,9 @@ where
         ErrorMessage::ENotAReactComponent(box ENotAReactComponentData { use_op, .. }) => {
             util(use_op)
         }
-        ErrorMessage::EFunctionCallExtraArg(box (_, _, _, use_op)) => util(use_op),
+        ErrorMessage::EFunctionCallExtraArg(box EFunctionCallExtraArgData { use_op, .. }) => {
+            util(use_op)
+        }
         ErrorMessage::EPrimitiveAsInterface(box EPrimitiveAsInterfaceData { use_op, .. }) => {
             util(use_op)
         }
@@ -8131,7 +8266,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnclearType(loc)
             | Self::EDeprecatedBool(loc)
             | Self::EInternalType(loc, _)
-            | Self::EUnnecessaryOptionalChain(box (loc, _))
+            | Self::EUnnecessaryOptionalChain(box (loc, _, _))
             | Self::EUnnecessaryInvariant(box EUnnecessaryInvariantData { loc, .. })
             | Self::EUnnecessaryDeclareTypeOnlyExport(loc)
             | Self::EUnusedSuppression(loc)
@@ -8436,7 +8571,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 LintError(SketchyNull(*kind))
             }
             ErrorMessage::ESketchyNumberLint(kind, _) => LintError(SketchyNumber(*kind)),
-            ErrorMessage::EUnnecessaryOptionalChain(box (_, _)) => {
+            ErrorMessage::EUnnecessaryOptionalChain(box (_, _, _)) => {
                 LintError(UnnecessaryOptionalChain)
             }
             ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData { .. }) => {
@@ -9023,19 +9158,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {
                 loc: _,
                 name,
-                reason,
+                callee,
+                receiver_expression,
                 kind,
             }) => match kind {
                 InvalidThisArgKind::MissingReceiver => {
                     Normal(Message::MessageInvalidThisArgMissingReceiver {
                         name,
-                        callee_object: reason,
+                        callee: expect_error_type_reference(callee),
+                        callee_expression: receiver_expression,
                     })
                 }
                 InvalidThisArgKind::ReceiverMismatch => {
                     Normal(Message::MessageInvalidThisArgReceiverMismatch {
                         name,
-                        receiver: reason,
+                        callee: expect_error_type_reference(callee),
+                        receiver_expression,
                     })
                 }
             },
@@ -9456,20 +9594,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
-            ErrorMessage::EUnnecessaryOptionalChain(box (_, lhs_reason)) => {
-                Normal(Message::MessageUnnecessaryOptionalChain(lhs_reason))
+            ErrorMessage::EUnnecessaryOptionalChain(box (_, lhs, lhs_expression)) => {
+                Normal(Message::MessageUnnecessaryOptionalChain {
+                    lhs: expect_error_type_reference(lhs),
+                    lhs_expression,
+                })
             }
 
             ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 condition,
-                condition_desc,
+                condition_kind,
                 ..
-            }) => Normal(Message::MessageUnnecessaryInvariant(Box::new(
-                MessageTypeReferenceData {
-                    loc: condition.loc,
-                    desc: expect_type_desc(condition_desc),
-                },
-            ))),
+            }) => Normal(Message::MessageUnnecessaryInvariant {
+                condition: Box::new(expect_error_type_reference(condition)),
+                condition_kind,
+            }),
 
             ErrorMessage::EArithmeticOperand(box EArithmeticOperandData { operand, .. }) => {
                 Normal(Message::MessageCannotPerformArithOnNonNumbersOrBigInt(
@@ -9591,17 +9730,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageUndocumentedFeature)
             }
 
-            ErrorMessage::EFunctionCallExtraArg(box (loc, def_reason, param_count, use_op)) => {
-                UseOp(Box::new(UseOpData {
-                    loc,
-                    message: Message::MessageCannotCallFunctionWithExtraArg {
-                        def_reason,
-                        param_count,
-                    },
-                    explanation: None,
-                    use_op,
-                }))
-            }
+            ErrorMessage::EFunctionCallExtraArg(box EFunctionCallExtraArgData {
+                loc,
+                function,
+                function_reference,
+                param_count,
+                use_op,
+            }) => UseOp(Box::new(UseOpData {
+                loc,
+                message: Message::MessageCannotCallFunctionWithExtraArg {
+                    function: expect_error_type_reference(function),
+                    function_reference,
+                    param_count,
+                },
+                explanation: None,
+                use_op,
+            })),
             ErrorMessage::EExponentialSpread(box EExponentialSpreadData {
                 reason,
                 reasons_for_operand1,
@@ -10231,7 +10375,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 obj,
                 specialized,
                 ..
-            }) => Normal(Message::MessageIllegalAssertOperator { obj, specialized }),
+            }) => Normal(Message::MessageIllegalAssertOperator {
+                obj: Box::new(match obj {
+                    IllegalAssertObject::Typed { expression, type_ } => {
+                        MessageIllegalAssertObject::Typed {
+                            expression,
+                            type_: expect_error_type_reference(type_),
+                        }
+                    }
+                    IllegalAssertObject::Expression(expression) => {
+                        MessageIllegalAssertObject::Expression(expression)
+                    }
+                }),
+                specialized,
+            }),
 
             ErrorMessage::EReferenceInDefault(box (def_loc, name, ref_loc)) => {
                 Normal(Message::MessageInvalidSelfReferencingDefault(Box::new(
@@ -11029,16 +11186,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MessageCannotExportRenamedDefaultData { name, is_reexport },
             ))),
 
-            ErrorMessage::ECannotDelete(box ECannotDeleteData {
-                expression,
-                expression_desc,
-                ..
-            }) => Normal(Message::MessageCannotDelete(Box::new(
-                MessageTypeReferenceData {
-                    loc: expression.loc,
-                    desc: expect_type_desc(expression_desc),
-                },
-            ))),
+            ErrorMessage::ECannotDelete(box ECannotDeleteData { expression, .. }) => Normal(
+                Message::MessageCannotDelete(Box::new(expect_error_type_reference(expression))),
+            ),
 
             ErrorMessage::ESignatureBindingValidation(sve) => {
                 use flow_type_sig::signature_error::BindingValidation as BV;
@@ -11857,7 +12007,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | Self::EUnsafeObjectAssign(_)
             | Self::ESketchyNullLint(box ESketchyNullLintData { .. })
             | Self::ESketchyNumberLint(_, _)
-            | Self::EUnnecessaryOptionalChain(box (_, _))
+            | Self::EUnnecessaryOptionalChain(box (_, _, _))
             | Self::EUnnecessaryInvariant(box EUnnecessaryInvariantData { .. })
             | Self::EUnnecessaryDeclareTypeOnlyExport(_)
             | Self::EAmbiguousObjectType(_)

@@ -10,6 +10,7 @@ use std::ops::Deref;
 use dupe::Dupe;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::callee_recorder;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -36,13 +37,14 @@ fn run_on_concretized<'cx>(
     l: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
+    lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
     upper: &UseT<Context<'cx>>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
     match l.deref() {
         TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::VoidT) => {
             callee_recorder::add_callee_use(env, callee_recorder::Kind::Tast, l.dupe(), upper);
-            cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), true);
+            cx.mark_optional_chain(reason.loc().dupe(), l.dupe(), lhs_expression.dupe(), true);
             if let Some(c) = voided_out_collector {
                 c.add(l.dupe());
             }
@@ -59,7 +61,7 @@ fn run_on_concretized<'cx>(
                     _ => Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT))),
                 }
             };
-            cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), true);
+            cx.mark_optional_chain(reason.loc().dupe(), l.dupe(), lhs_expression.dupe(), true);
             if let Some(c) = voided_out_collector {
                 c.add(void);
             }
@@ -137,6 +139,7 @@ fn run_on_concretized<'cx>(
                     let t = t.dupe();
                     let reason = reason.dupe();
                     let lhs_reason = lhs_reason.dupe();
+                    let lhs_expression = lhs_expression.dupe();
                     let upper = upper.dupe();
                     let voided_out_collector_clone = voided_out_collector.clone();
                     let f: Box<
@@ -149,6 +152,7 @@ fn run_on_concretized<'cx>(
                             &t,
                             &reason,
                             &lhs_reason,
+                            &lhs_expression,
                             &upper,
                             &voided_out_collector_clone,
                         )
@@ -175,7 +179,7 @@ fn run_on_concretized<'cx>(
         TypeInner::AnyT(_, _) => true,
         _ => false,
     };
-    cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), useful);
+    cx.mark_optional_chain(reason.loc().dupe(), l.dupe(), lhs_expression.dupe(), useful);
     FlowJs::flow_with_env(cx, env, l, upper)?;
     Ok(())
 }
@@ -186,6 +190,7 @@ pub fn run<'cx>(
     lhs: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
+    lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
     upper: &UseT<Context<'cx>>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
@@ -196,6 +201,7 @@ pub fn run<'cx>(
         lhs,
         reason,
         lhs_reason,
+        lhs_expression,
         upper,
         voided_out_collector,
     )
@@ -208,6 +214,7 @@ pub(super) fn run_with_env<'cx>(
     lhs: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
+    lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
     upper: &UseT<Context<'cx>>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
@@ -221,6 +228,7 @@ pub(super) fn run_with_env<'cx>(
             t,
             reason,
             lhs_reason,
+            lhs_expression,
             upper,
             voided_out_collector,
         )?;

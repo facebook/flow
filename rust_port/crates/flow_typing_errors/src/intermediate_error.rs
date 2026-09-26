@@ -77,7 +77,12 @@ use super::intermediate_error_types::ExplanationInvariantSubtypingDueToMutableAr
 use super::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertiesData;
 use super::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertyData;
 use super::intermediate_error_types::ExplanationPropertyMissingDueToNeutralOptionalPropertyData;
+use super::intermediate_error_types::ExpressionFunctionKind;
+use super::intermediate_error_types::ExpressionReferenceData;
+use super::intermediate_error_types::ExpressionReferenceKind;
 use super::intermediate_error_types::Frame as ErrorFrame;
+use super::intermediate_error_types::FunctionReferenceData;
+use super::intermediate_error_types::FunctionReferenceKind;
 use super::intermediate_error_types::IntermediateError;
 use super::intermediate_error_types::LowerRequirement;
 use super::intermediate_error_types::Message;
@@ -104,6 +109,7 @@ use super::intermediate_error_types::MessageDuplicateModuleProviderData;
 use super::intermediate_error_types::MessageEnumDuplicateMemberNameData;
 use super::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use super::intermediate_error_types::MessageExponentialSpreadData;
+use super::intermediate_error_types::MessageIllegalAssertObject;
 use super::intermediate_error_types::MessageIncompatibleDueToInvariantSubtypingData;
 use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use super::intermediate_error_types::MessageIncompatibleTupleArityData;
@@ -141,6 +147,7 @@ use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use super::intermediate_error_types::TupleElementReferenceData;
 use super::intermediate_error_types::TypeGuardReferenceData;
 use super::intermediate_error_types::TypeGuardReferenceKind;
+use super::intermediate_error_types::UnnecessaryInvariantConditionKind;
 use super::intermediate_error_types::ValueAsTypeReference;
 use crate::error_message::ConstructSignatureMissingInSubtypingData;
 use crate::error_message::EExpectedBigIntLitData;
@@ -4872,6 +4879,34 @@ where
         hardcoded_string_desc_ref(&description, &reference.loc)
     };
 
+    let render_expression_reference = |reference: &ExpressionReferenceData<L>| {
+        let description = match &reference.kind {
+            ExpressionReferenceKind::Code(code) => format!("`{code}`"),
+            ExpressionReferenceKind::ObjectLiteral => "object literal".to_string(),
+            ExpressionReferenceKind::ArrayLiteral => "array literal".to_string(),
+            ExpressionReferenceKind::Function(kind) => match kind {
+                ExpressionFunctionKind::Normal => "function".to_string(),
+                ExpressionFunctionKind::Async => "async function".to_string(),
+                ExpressionFunctionKind::Generator => "generator function".to_string(),
+                ExpressionFunctionKind::AsyncGenerator => "async generator function".to_string(),
+                ExpressionFunctionKind::Unknown => "unknown function".to_string(),
+            },
+            ExpressionReferenceKind::EmptyString => "empty string".to_string(),
+            ExpressionReferenceKind::TemplateString => "template string".to_string(),
+            ExpressionReferenceKind::Expression => "expression".to_string(),
+        };
+        hardcoded_string_desc_ref(&description, &reference.loc)
+    };
+
+    let render_function_reference = |reference: &FunctionReferenceData<L>| {
+        let description = match reference.kind {
+            FunctionReferenceKind::Function => "function",
+            FunctionReferenceKind::FunctionType => "function type",
+            FunctionReferenceKind::DefaultConstructor => "default constructor",
+        };
+        hardcoded_string_desc_ref(description, &reference.loc)
+    };
+
     fn ordinal(n: i32) -> String {
         match n {
             1 => "first".to_string(),
@@ -5722,7 +5757,8 @@ where
                 text("(https://react.dev/reference/rules/rules-of-hooks)"),
             ]),
             MessageCannotCallFunctionWithExtraArg {
-                def_reason,
+                function: _,
+                function_reference,
                 param_count,
             } => {
                 let msg = match param_count {
@@ -5733,7 +5769,7 @@ where
                 friendly::Message(vec![
                     text(&msg),
                     text(" "),
-                    ref_(def_reason),
+                    render_function_reference(function_reference),
                 ])
             }
             MessageCannotChangeEnumMember(enum_) => friendly::Message(vec![
@@ -7769,12 +7805,13 @@ where
             ]),
             MessageInvalidThisArgMissingReceiver {
                 name,
-                callee_object,
+                callee: _,
+                callee_expression,
             } => friendly::Message(vec![
                 text("Cannot use "),
                 code(name.as_str()),
                 text(" because "),
-                ref_(callee_object),
+                render_expression_reference(callee_expression),
                 text(" is not a member access. "),
                 code(&format!("Function.prototype.{}", name)),
                 text(" may only re-supply the receiver a method was read from, as in "),
@@ -7782,11 +7819,15 @@ where
                 text("."),
                 text(" See https://flow.org/en/docs/types/classes/#toc-this-rebinding"),
             ]),
-            MessageInvalidThisArgReceiverMismatch { name, receiver } => friendly::Message(vec![
+            MessageInvalidThisArgReceiverMismatch {
+                name,
+                callee: _,
+                receiver_expression,
+            } => friendly::Message(vec![
                 text("Cannot use "),
                 code(name.as_str()),
                 text(" because its first argument must be the exact same value as the receiver "),
-                ref_(receiver),
+                render_expression_reference(receiver_expression),
                 text(" the method was read from. "),
                 code(&format!("Function.prototype.{}", name)),
                 text(" may not rebind a method to a different receiver."),
@@ -8952,8 +8993,15 @@ where
                         "The assert operator can only be applied to values with nullable types.",
                     )]
                 };
+                let expression = match obj.as_ref() {
+                    MessageIllegalAssertObject::Typed {
+                        expression,
+                        type_: _,
+                    }
+                    | MessageIllegalAssertObject::Expression(expression) => expression,
+                };
                 let mut features = vec![
-                    ref_(obj),
+                    render_expression_reference(expression),
                     text(" is not a valid target of the nonnull assertion operator ("),
                     code("!"),
                     text("). "),
@@ -9139,16 +9187,32 @@ where
                 code("declare"),
                 text(" keyword is unnecessary for type exports."),
             ]),
-            MessageUnnecessaryInvariant(condition) => friendly::Message(vec![
-                text("This use of `invariant` is unnecessary because "),
-                ref_of_ty_or_desc(&condition.loc, &condition.desc),
-                text(" is always truthy."),
-            ]),
-            MessageUnnecessaryOptionalChain(lhs_reason) => friendly::Message(vec![
+            MessageUnnecessaryInvariant {
+                condition,
+                condition_kind,
+            } => {
+                let condition = match condition_kind {
+                    UnnecessaryInvariantConditionKind::Type => {
+                        ref_of_ty_or_desc(&condition.loc, &condition.desc)
+                    }
+                    UnnecessaryInvariantConditionKind::IntersectionType => {
+                        hardcoded_string_desc_ref("intersection type", &condition.loc)
+                    }
+                };
+                friendly::Message(vec![
+                    text("This use of `invariant` is unnecessary because "),
+                    condition,
+                    text(" is always truthy."),
+                ])
+            }
+            MessageUnnecessaryOptionalChain {
+                lhs: _,
+                lhs_expression,
+            } => friendly::Message(vec![
                 text("This use of optional chaining ("),
                 code("?."),
                 text(") is unnecessary because "),
-                ref_(lhs_reason),
+                render_expression_reference(lhs_expression),
                 text(" cannot be nullish or because an earlier "),
                 code("?."),
                 text(" will short-circuit the nullish case."),

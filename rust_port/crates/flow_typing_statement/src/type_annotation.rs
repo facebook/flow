@@ -3160,6 +3160,8 @@ fn convert_inner<'a>(
                         return_t,
                         type_guard,
                         def_reason: reason.dupe(),
+                        function_reference_kind:
+                            flow_common::error_ref::FunctionReferenceKind::FunctionType,
                         effect_: effect_flag,
                         strictness_kind: cx.type_strictness_kind(),
                     }),
@@ -6158,6 +6160,7 @@ fn mk_method_func_sig<'a>(
     let ret_annot_loc = type_util::loc_of_t(&return_t).dupe();
     let func_sig = func_class_sig_types::func::Func {
         reason,
+        function_reference_kind: flow_common::error_ref::FunctionReferenceKind::FunctionType,
         kind,
         tparams,
         fparams,

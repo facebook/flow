@@ -76,6 +76,7 @@ use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
@@ -84,6 +85,7 @@ use flow_typing_errors::error_message::TSSyntaxKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::ContextDependentUnsupportedStatement;
 use flow_typing_errors::intermediate_error_types::DeclareComponentInvalidParamKind;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_errors::intermediate_error_types::MatchInvalidCaseSyntax;
 use flow_typing_errors::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use flow_typing_errors::intermediate_error_types::TsLibSyntaxKind;
@@ -166,6 +168,7 @@ fn try_filter_map_btree_map<T, K: Ord, V, E>(
 mod optional_chain {
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
+    use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
     use flow_typing_flow_common::flow_js_utils::FlowJsException;
     use flow_typing_type::type_::DepthTrace;
     use flow_typing_type::type_::Type;
@@ -177,6 +180,7 @@ mod optional_chain {
         lhs: &Type,
         reason: &Reason,
         lhs_reason: &Reason,
+        lhs_expression: &ExpressionReferenceData<flow_aloc::ALoc>,
         upper: &UseT<Context<'a>>,
         voided_out_collector: &Option<TypeCollector>,
     ) -> Result<(), FlowJsException> {
@@ -186,6 +190,7 @@ mod optional_chain {
             lhs,
             reason,
             lhs_reason,
+            lhs_expression,
             upper,
             voided_out_collector,
         )
@@ -1190,6 +1195,7 @@ fn method_call_opt_use<'a>(
             type_::OptMethodAction::OptChainM(Box::new(type_::OptChainMData {
                 exp_reason,
                 lhs_reason: mk_expression_reason(expr),
+                lhs_expression: flow_js_utils::expression_reference_for_error(expr),
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint: type_::hint_unavailable(),
@@ -1314,6 +1320,7 @@ fn elem_call_opt_use<CX>(
     reason_call: Reason,
     reason_lookup: Reason,
     reason_expr: Reason,
+    lhs_expression: ExpressionReferenceData<ALoc>,
     reason_chain: Reason,
     targts: Option<Vec<Targ>>,
     argts: Vec<CallArg>,
@@ -1332,6 +1339,7 @@ fn elem_call_opt_use<CX>(
             type_::OptMethodAction::OptChainM(Box::new(type_::OptChainMData {
                 exp_reason: reason_chain,
                 lhs_reason: reason_expr,
+                lhs_expression,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint: type_::hint_unavailable(),
@@ -7248,6 +7256,7 @@ fn expression_<'a>(
                                 vec![],
                                 None,
                                 reason.dupe(),
+                                flow_common::error_ref::FunctionReferenceKind::FunctionType,
                                 Some(vec![]),
                                 None,
                                 proto,
@@ -9099,25 +9108,17 @@ pub fn optional_chain<'a>(
                                             ErrorMessage::EUnnecessaryInvariant(Box::new(
                                                 EUnnecessaryInvariantData {
                                                     loc: loc.dupe(),
-                                                    condition: ErrorReference::new(
-                                                        ref_loc_of_t(&concretized_cond_t).dupe(),
-                                                        reason_of_t(&concretized_cond_t)
-                                                            .desc(false)
-                                                            .clone(),
-                                                    ),
-                                                    condition_desc: if matches!(
+                                                    condition:
+                                                        flow_js_utils::type_reference_for_error(
+                                                            &concretized_cond_t,
+                                                        ),
+                                                    condition_kind: if matches!(
                                                         concretized_cond_t.deref(),
                                                         TypeInner::IntersectionT(_, _)
                                                     ) {
-                                                        TypeOrTypeDescT::TypeDesc(Err(reason_of_t(
-                                                            &concretized_cond_t,
-                                                        )
-                                                        .desc(false)
-                                                        .clone()))
+                                                        intermediate_error_types::UnnecessaryInvariantConditionKind::IntersectionType
                                                     } else {
-                                                        flow_js_utils::type_or_type_desc_for_error(
-                                                            &concretized_cond_t,
-                                                        )
+                                                        intermediate_error_types::UnnecessaryInvariantConditionKind::Type
                                                     },
                                                 },
                                             )),
@@ -9332,6 +9333,7 @@ pub fn optional_chain<'a>(
         assertion: bool,
         conf: ChainingConf<'a, '_, A, B>,
         lhs_reason: Reason,
+        lhs_expression: ExpressionReferenceData<ALoc>,
         loc: ALoc,
         chain_t: Type,
         voided_t: Vec<Type>,
@@ -9404,6 +9406,7 @@ pub fn optional_chain<'a>(
             &chain_t,
             &chain_reason,
             &lhs_reason,
+            &lhs_expression,
             &upper,
             &chain_voided_out_collector,
         ))?;
@@ -9554,6 +9557,7 @@ pub fn optional_chain<'a>(
             }
             OptState::AssertChain | OptState::NewChain => {
                 let lhs_reason = mk_expression_reason(obj_);
+                let lhs_expression = flow_js_utils::expression_reference_for_error(obj_);
                 let (filtered_t, voided_t, object_ast) =
                     optional_chain(EnclosingContext::NoContext, cx, obj_)?;
                 match (conf.refine)(cx)? {
@@ -9563,7 +9567,12 @@ pub fn optional_chain<'a>(
                             subexpressions,
                             ..
                         } = conf;
-                        cx.mark_optional_chain(loc.dupe(), lhs_reason, false);
+                        cx.mark_optional_chain(
+                            loc.dupe(),
+                            filtered_t.dupe(),
+                            lhs_expression,
+                            false,
+                        );
                         let (subexpression_types, subexpression_asts) = subexpressions(cx)?;
                         let tout = match &refinement_action {
                             Some(ra) => ra(cx, &subexpression_types, &filtered_t, t)?,
@@ -9594,6 +9603,7 @@ pub fn optional_chain<'a>(
                         opt == OptState::AssertChain,
                         conf,
                         lhs_reason,
+                        lhs_expression,
                         loc,
                         filtered_t,
                         voided_t,
@@ -10128,7 +10138,9 @@ pub fn optional_chain<'a>(
                             },
                         )
                     };
+                    let lhs_expression = flow_js_utils::expression_reference_for_error(callee);
                     let handle_refined_callee = {
+                        let lhs_expression = lhs_expression.dupe();
                         let reason_call = reason_call.dupe();
                         let targts = targts.clone();
                         let prop_t = prop_t.dupe();
@@ -10185,6 +10197,7 @@ pub fn optional_chain<'a>(
                                                     &f,
                                                     &chain_reason,
                                                     &lhs_reason,
+                                                    &lhs_expression,
                                                     &call_use,
                                                     &voided_out_collector_opt,
                                                 ),
@@ -10335,6 +10348,7 @@ pub fn optional_chain<'a>(
                     ))));
                     let call_voided_out_collector = TypeCollector::create();
                     let prop_t = flow_typing_tvar::mk(cx, reason_lookup.dupe());
+                    let lhs_expression = flow_js_utils::expression_reference_for_error(callee);
                     let get_opt_use: Rc<
                         dyn Fn(
                             &Context<'a>,
@@ -10343,6 +10357,7 @@ pub fn optional_chain<'a>(
                         ) -> type_::OptUseT<Context<'a>>,
                     > = {
                         let opt_state = opt_state.clone();
+                        let lhs_expression = lhs_expression.dupe();
                         let call_voided_out_collector = call_voided_out_collector.dupe();
                         let use_op = use_op.dupe();
                         let reason_call = reason_call.dupe();
@@ -10363,6 +10378,7 @@ pub fn optional_chain<'a>(
                                     reason_call.dupe(),
                                     reason_lookup.dupe(),
                                     expr_reason.dupe(),
+                                    lhs_expression.dupe(),
                                     mk_reason(ROptionalChain, loc.dupe()),
                                     targts.clone(),
                                     argts.clone(),
@@ -11591,35 +11607,44 @@ fn assign_member<'a>(
     ),
     CheckExprError,
 > {
-    let run_maybe_optional_chain =
-        |lhs_type: &Type, lhs_reason: &Reason, use_t: UseT<Context<'a>>| -> Result<(), JobError> {
-            match (&optional, &mode) {
-                (OptState::NewChain | OptState::AssertChain, SetMode::Delete) => {
-                    let reason = if optional == OptState::NewChain {
-                        mk_reason(ROptionalChain, lhs_loc.dupe())
-                    } else {
-                        mk_reason(RNonnullAssert, lhs_loc.dupe())
-                    };
+    let run_maybe_optional_chain = |lhs_type: &Type,
+                                    lhs_reason: &Reason,
+                                    lhs_expression: &ExpressionReferenceData<ALoc>,
+                                    use_t: UseT<Context<'a>>|
+     -> Result<(), JobError> {
+        match (&optional, &mode) {
+            (OptState::NewChain | OptState::AssertChain, SetMode::Delete) => {
+                let reason = if optional == OptState::NewChain {
+                    mk_reason(ROptionalChain, lhs_loc.dupe())
+                } else {
+                    mk_reason(RNonnullAssert, lhs_loc.dupe())
+                };
 
-                    // When deleting an optional chain, we only really care about the case
-                    // where the object type is non-nullable. The specification is:
-                    //
-                    //   delete a?.b
-                    //   is equivalent to
-                    //   a == null ? true : delete a.b
-                    //
-                    // So if a is null, no work has to be done. Hence, we don't collect
-                    // the nullable output for the optional chain.
-                    flow_js_utils::flow_js_result_to_job_error(optional_chain::run(
-                        cx, lhs_type, &reason, lhs_reason, &use_t, &None,
-                    ))?;
-                }
-                _ => {
-                    flow_js::flow_non_speculating(cx, (lhs_type, &use_t))?;
-                }
+                // When deleting an optional chain, we only really care about the case
+                // where the object type is non-nullable. The specification is:
+                //
+                //   delete a?.b
+                //   is equivalent to
+                //   a == null ? true : delete a.b
+                //
+                // So if a is null, no work has to be done. Hence, we don't collect
+                // the nullable output for the optional chain.
+                flow_js_utils::flow_js_result_to_job_error(optional_chain::run(
+                    cx,
+                    lhs_type,
+                    &reason,
+                    lhs_reason,
+                    lhs_expression,
+                    &use_t,
+                    &None,
+                ))?;
             }
-            Ok(())
-        };
+            _ => {
+                flow_js::flow_non_speculating(cx, (lhs_type, &use_t))?;
+            }
+        }
+        Ok(())
+    };
     let typecheck_object = |obj: &expression::Expression<ALoc, ALoc>| -> Result<
         (Type, expression::Expression<ALoc, (ALoc, Type)>),
         CheckExprError,
@@ -11722,6 +11747,7 @@ fn assign_member<'a>(
             let name: &FlowSmolStr = &pn.name;
             let comments = &lhs.comments;
             let lhs_reason = mk_expression_reason(&lhs.object);
+            let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
             let (o, _object) = typecheck_object(&lhs.object)?;
             let wr_ctx = match (_object.deref(), type_env::var_scope_kind(cx)) {
                 (
@@ -11746,6 +11772,7 @@ fn assign_member<'a>(
                         run_maybe_optional_chain(
                             &o,
                             &lhs_reason,
+                            &lhs_expression,
                             UseT::new(UseTInner::SetPrivatePropT(Box::new(SetPrivatePropTData {
                                 use_op,
                                 reason: reason.dupe(),
@@ -11793,6 +11820,7 @@ fn assign_member<'a>(
                 _ => WriteCtx::Normal,
             };
             let lhs_reason = mk_expression_reason(&lhs.object);
+            let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
             let (o, _object) = typecheck_object(&lhs.object)?;
             let prop_t = {
                 let reason = mk_reason(RPropertyAssignment(Some(name.dupe())), lhs_loc.dupe());
@@ -11810,6 +11838,7 @@ fn assign_member<'a>(
                         run_maybe_optional_chain(
                             &o,
                             &lhs_reason,
+                            &lhs_expression,
                             UseT::new(UseTInner::SetPropT(
                                 use_op,
                                 reason.dupe(),
@@ -11882,6 +11911,7 @@ fn assign_member<'a>(
             let comments = &lhs.comments;
             let reason = mk_reason(RPropertyAssignment(None), lhs_loc.dupe());
             let lhs_reason = mk_expression_reason(&lhs.object);
+            let lhs_expression = flow_js_utils::expression_reference_for_error(&lhs.object);
             let (o, _object) = typecheck_object(&lhs.object)?;
             let typed_index = expression_inner(
                 Some(EnclosingContext::IndexContext),
@@ -11900,6 +11930,7 @@ fn assign_member<'a>(
             run_maybe_optional_chain(
                 &o,
                 &lhs_reason,
+                &lhs_expression,
                 UseT::new(UseTInner::SetElemT(Box::new(SetElemTData {
                     use_op,
                     reason,
@@ -11968,7 +11999,12 @@ fn simple_assignment<'a>(
                         ErrorMessage::EIllegalAssertOperator(Box::new(
                             EIllegalAssertOperatorData {
                                 op_loc: lhs_loc.dupe(),
-                                obj: mk_expression_reason(unwrapped_expr),
+                                obj: IllegalAssertObject::Expression(ExpressionReferenceData {
+                                    loc: unwrapped_expr.loc().dupe(),
+                                    kind: flow_js_utils::expression_reference_kind_for_error(
+                                        unwrapped_expr,
+                                    ),
+                                }),
                                 specialized: true,
                             },
                         )),
@@ -12446,11 +12482,7 @@ fn delete<'a>(
                 cx,
                 ErrorMessage::ECannotDelete(Box::new(ECannotDeleteData {
                     loc: loc.dupe(),
-                    expression: ErrorReference::new(
-                        ref_loc_of_t(&t).dupe(),
-                        reason_of_t(&t).desc(false).clone(),
-                    ),
-                    expression_desc: flow_js_utils::type_or_type_desc_for_error(&t),
+                    expression: flow_js_utils::type_reference_for_error(&t),
                 })),
             );
             Ok(target_ast)
@@ -15955,6 +15987,8 @@ pub fn mk_class_sig<'a>(
                         };
                         Ok(func_class_sig_types::func::Func {
                             reason: mk_reason(VirtualReasonDesc::RConstructor, name_loc.dupe()),
+                            function_reference_kind:
+                                flow_common::error_ref::FunctionReferenceKind::FunctionType,
                             kind: func_class_sig_types::func::Kind::Ctor,
                             tparams: None,
                             fparams: func_class_sig_types::param::Param {
@@ -16601,6 +16635,8 @@ pub fn mk_class_sig<'a>(
                     let ret_annot_loc = loc_of_t(&return_t).dupe();
                     let func_sig = func_class_sig_types::func::Func {
                         reason,
+                        function_reference_kind:
+                            flow_common::error_ref::FunctionReferenceKind::FunctionType,
                         kind: func_kind,
                         tparams,
                         fparams,
@@ -18785,6 +18821,8 @@ pub fn mk_record_sig<'a>(
                         };
                         Ok(func::Func {
                             reason: mk_reason(VirtualReasonDesc::RConstructor, name_loc.dupe()),
+                            function_reference_kind:
+                                flow_common::error_ref::FunctionReferenceKind::FunctionType,
                             kind: func::Kind::Ctor,
                             tparams: None,
                             fparams: func_class_sig_types::param::Param {
@@ -20322,6 +20360,11 @@ pub fn mk_func_sig<'a>(
     };
     let func_stmt_sig = func::Func {
         reason: reason.dupe(),
+        function_reference_kind: if constructor {
+            flow_common::error_ref::FunctionReferenceKind::FunctionType
+        } else {
+            flow_common::error_ref::FunctionReferenceKind::Function
+        },
         kind: kind.clone(),
         tparams,
         fparams: fparams.clone(),

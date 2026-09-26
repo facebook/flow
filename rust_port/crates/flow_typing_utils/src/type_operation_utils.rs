@@ -18,7 +18,6 @@ use flow_aloc::ALoc;
 use flow_common::enclosing_context::EnclosingContext;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
-use flow_common::reason::mk_expression_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::expression;
 use flow_typing_context::Context;
@@ -36,9 +35,11 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumNotIterableData;
 use flow_typing_errors::error_message::EnumNotIterableForInData;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InvalidThisArgKind;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js;
@@ -2477,22 +2478,33 @@ pub mod type_assertions {
             return Ok(());
         }
 
-        let (kind, reason) = match receiver {
+        let (kind, receiver_expression) = match receiver {
             Some(receiver) => (
                 InvalidThisArgKind::ReceiverMismatch,
-                mk_expression_reason(receiver),
+                ExpressionReferenceData {
+                    loc: receiver.loc().dupe(),
+                    kind: flow_js_utils::expression_reference_kind_for_error(receiver),
+                },
             ),
             None => (
                 InvalidThisArgKind::MissingReceiver,
-                mk_expression_reason(callee_object),
+                ExpressionReferenceData {
+                    loc: callee_object.loc().dupe(),
+                    kind: flow_js_utils::expression_reference_kind_for_error(callee_object),
+                },
             ),
         };
+        let callee = flow_js_utils::type_reference_at_loc_for_error(
+            callee_object_t,
+            callee_object.loc().dupe(),
+        );
         flow_js_utils::add_output_non_speculating(
             cx,
             ErrorMessage::EInvalidThisArg(Box::new(EInvalidThisArgData {
                 loc: prop_loc.dupe(),
                 name: name.dupe(),
-                reason,
+                callee,
+                receiver_expression,
                 kind,
             })),
         );
@@ -3003,7 +3015,7 @@ pub mod type_assertions {
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         op_reason: &Reason,
-        obj_reason: &Reason,
+        obj_expression: &ExpressionReferenceData<ALoc>,
         obj: &Type,
         prop: Option<Name>,
     ) -> Result<(), FlowJsException> {
@@ -3031,7 +3043,13 @@ pub mod type_assertions {
                             ErrorMessage::EIllegalAssertOperator(Box::new(
                                 EIllegalAssertOperatorData {
                                     op_loc: op_reason.loc().dupe(),
-                                    obj: obj_reason.dupe(),
+                                    obj: IllegalAssertObject::Typed {
+                                        expression: obj_expression.dupe(),
+                                        type_: flow_js_utils::type_reference_at_loc_for_error(
+                                            obj,
+                                            obj_expression.loc.dupe(),
+                                        ),
+                                    },
                                     specialized: true,
                                 },
                             )),
@@ -3048,7 +3066,13 @@ pub mod type_assertions {
                     env,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op_loc: op_reason.loc().dupe(),
-                        obj: obj_reason.dupe(),
+                        obj: IllegalAssertObject::Typed {
+                            expression: obj_expression.dupe(),
+                            type_: flow_js_utils::type_reference_at_loc_for_error(
+                                obj,
+                                obj_expression.loc.dupe(),
+                            ),
+                        },
                         specialized: true,
                     })),
                 )
@@ -3061,7 +3085,13 @@ pub mod type_assertions {
                 env,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op_loc: op_reason.loc().dupe(),
-                    obj: obj_reason.dupe(),
+                    obj: IllegalAssertObject::Typed {
+                        expression: obj_expression.dupe(),
+                        type_: flow_js_utils::type_reference_at_loc_for_error(
+                            obj,
+                            obj_expression.loc.dupe(),
+                        ),
+                    },
                     specialized: true,
                 })),
             ),
@@ -3071,7 +3101,7 @@ pub mod type_assertions {
     pub fn check_specialized_assert_operator_property<'cx>(
         cx: &Context<'cx>,
         op_reason: &Reason,
-        obj_reason: &Reason,
+        obj_expression: &ExpressionReferenceData<ALoc>,
         t: &Type,
         prop: &str,
     ) {
@@ -3079,7 +3109,7 @@ pub mod type_assertions {
             cx,
             &FlowJsEnv::entry(),
             op_reason,
-            obj_reason,
+            obj_expression,
             t,
             prop,
         )
@@ -3089,7 +3119,7 @@ pub mod type_assertions {
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         op_reason: &Reason,
-        obj_reason: &Reason,
+        obj_expression: &ExpressionReferenceData<ALoc>,
         t: &Type,
         prop: &str,
     ) {
@@ -3106,7 +3136,7 @@ pub mod type_assertions {
                     cx,
                     env,
                     op_reason,
-                    obj_reason,
+                    obj_expression,
                     t,
                     Some(Name::new(prop)),
                 )
@@ -3119,7 +3149,7 @@ pub mod type_assertions {
     pub fn check_specialized_assert_operator_lookup<'cx>(
         cx: &Context<'cx>,
         op_reason: &Reason,
-        obj_reason: &Reason,
+        obj_expression: &ExpressionReferenceData<ALoc>,
         t1: &Type,
         t2: &Type,
     ) {
@@ -3127,7 +3157,7 @@ pub mod type_assertions {
             cx,
             &FlowJsEnv::entry(),
             op_reason,
-            obj_reason,
+            obj_expression,
             t1,
             t2,
         )
@@ -3137,7 +3167,7 @@ pub mod type_assertions {
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         op_reason: &Reason,
-        obj_reason: &Reason,
+        obj_expression: &ExpressionReferenceData<ALoc>,
         t1: &Type,
         t2: &Type,
     ) {
@@ -3145,7 +3175,7 @@ pub mod type_assertions {
             cx: &Context<'cx>,
             env: &FlowJsEnv,
             op_reason: &Reason,
-            obj_reason: &Reason,
+            obj_expression: &ExpressionReferenceData<ALoc>,
             (obj, prop): (&Type, &Type),
         ) -> Result<(), FlowJsException> {
             match prop.deref() {
@@ -3155,7 +3185,7 @@ pub mod type_assertions {
                             cx,
                             env,
                             op_reason,
-                            obj_reason,
+                            obj_expression,
                             obj,
                             Some(Name::new(value.dupe())),
                         );
@@ -3163,7 +3193,7 @@ pub mod type_assertions {
                 }
                 _ => {}
             }
-            assert_operator_receiver_base(cx, env, op_reason, obj_reason, obj, None)
+            assert_operator_receiver_base(cx, env, op_reason, obj_expression, obj, None)
         }
 
         distribute_union_intersection::distribute_2(
@@ -3179,7 +3209,7 @@ pub mod type_assertions {
                     .loc()
                     .dupe()
             },
-            &|cx, env, (obj, prop)| check_base(cx, env, op_reason, obj_reason, (obj, prop)),
+            &|cx, env, (obj, prop)| check_base(cx, env, op_reason, obj_expression, (obj, prop)),
             (t1, t2),
         )
         .unwrap()

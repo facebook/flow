@@ -12,6 +12,10 @@ use std::str::FromStr;
 use std::sync::Arc;
 
 use dupe::Dupe;
+pub use flow_common::error_ref::ExpressionFunctionKind;
+pub use flow_common::error_ref::ExpressionReferenceData;
+pub use flow_common::error_ref::ExpressionReferenceKind;
+pub use flow_common::error_ref::FunctionReferenceKind;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
@@ -1486,6 +1490,59 @@ pub struct NamedReferenceData<L: Dupe> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub struct FunctionReferenceData<L: Dupe> {
+    pub loc: L,
+    pub kind: FunctionReferenceKind,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum MessageIllegalAssertObject<L: Dupe> {
+    Typed {
+        expression: ExpressionReferenceData<L>,
+        type_: MessageTypeReferenceData<L>,
+    },
+    Expression(ExpressionReferenceData<L>),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum UnnecessaryInvariantConditionKind {
+    Type,
+    IntersectionType,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum TypeGuardReferenceKind {
     TypeGuard,
     Parameter(Option<FlowSmolStr>),
@@ -1869,7 +1926,8 @@ pub enum Message<L: Dupe> {
     MessageCannotCallReactHookWithIllegalName(L),
 
     MessageCannotCallFunctionWithExtraArg {
-        def_reason: VirtualReason<L>,
+        function: MessageTypeReferenceData<L>,
+        function_reference: FunctionReferenceData<L>,
         param_count: i32,
     },
 
@@ -2267,12 +2325,14 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidThisArgMissingReceiver {
         name: FlowSmolStr,
-        callee_object: VirtualReason<L>,
+        callee: MessageTypeReferenceData<L>,
+        callee_expression: ExpressionReferenceData<L>,
     },
 
     MessageInvalidThisArgReceiverMismatch {
         name: FlowSmolStr,
-        receiver: VirtualReason<L>,
+        callee: MessageTypeReferenceData<L>,
+        receiver_expression: ExpressionReferenceData<L>,
     },
 
     MessageInvalidKeyPropertyInSpread(Box<MessageInvalidKeyPropertyInSpreadData<L>>),
@@ -2473,7 +2533,7 @@ pub enum Message<L: Dupe> {
     MessageUndocumentedFeature,
 
     MessageIllegalAssertOperator {
-        obj: VirtualReason<L>,
+        obj: Box<MessageIllegalAssertObject<L>>,
         specialized: bool,
     },
 
@@ -2484,8 +2544,14 @@ pub enum Message<L: Dupe> {
     MessageUnknownParameterTypes(VirtualReason<L>),
     MessageUnknownParameterTypesWithPrintedType(Box<MessageTypeReferenceData<L>>),
     MessageUnnecessaryDeclareTypeOnlyExport,
-    MessageUnnecessaryInvariant(Box<MessageTypeReferenceData<L>>),
-    MessageUnnecessaryOptionalChain(VirtualReason<L>),
+    MessageUnnecessaryInvariant {
+        condition: Box<MessageTypeReferenceData<L>>,
+        condition_kind: UnnecessaryInvariantConditionKind,
+    },
+    MessageUnnecessaryOptionalChain {
+        lhs: MessageTypeReferenceData<L>,
+        lhs_expression: ExpressionReferenceData<L>,
+    },
     MessageUnreachableCode,
     MessageUnsafeGetterSetter,
     MessageUnsafeObjectAssign,

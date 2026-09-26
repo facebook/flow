@@ -14,6 +14,7 @@ use std::rc::Rc;
 
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
+use flow_common::error_ref::FunctionReferenceKind;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -148,6 +149,7 @@ pub mod func {
     // parameterized by Config. In Rust, we make Func generic over C: ConfigTypes.
     pub struct Func<C: ConfigTypes> {
         pub reason: Reason,
+        pub function_reference_kind: FunctionReferenceKind,
         pub kind: Kind,
         pub tparams: TypeParams,
         pub fparams: param::Param<C>,
@@ -162,6 +164,7 @@ pub mod func {
         fn clone(&self) -> Self {
             Func {
                 reason: self.reason.clone(),
+                function_reference_kind: self.function_reference_kind,
                 kind: self.kind.clone(),
                 tparams: self.tparams.clone(),
                 fparams: self.fparams.clone(),

@@ -892,6 +892,7 @@ fn type_of_hint_decomposition<'cx>(
             return_t,
             type_guard,
             def_reason: reason.dupe(),
+            function_reference_kind: flow_common::error_ref::FunctionReferenceKind::FunctionType,
             effect_: ReactEffectType::AnyEffect,
             strictness_kind: Default::default(),
         };
@@ -937,6 +938,7 @@ fn type_of_hint_decomposition<'cx>(
                             return_t: instance_type.dupe(),
                             type_guard: func.type_guard.clone(),
                             def_reason: func.def_reason.dupe(),
+                            function_reference_kind: func.function_reference_kind,
                             effect_: func.effect_.clone(),
                             strictness_kind: func.strictness_kind,
                         };

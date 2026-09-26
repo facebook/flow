@@ -549,6 +549,7 @@ pub(super) fn handle_generic<'cx>(
                 MethodAction::ChainM(box ChainMData {
                     exp_reason,
                     lhs_reason,
+                    lhs_expression,
                     methodcalltype,
                     voided_out_collector,
                     return_hint,
@@ -556,6 +557,7 @@ pub(super) fn handle_generic<'cx>(
                 }) => MethodAction::ChainM(Box::new(ChainMData {
                     exp_reason: exp_reason.dupe(),
                     lhs_reason: lhs_reason.dupe(),
+                    lhs_expression: lhs_expression.dupe(),
                     methodcalltype: MethodCallType {
                         meth_generic_this: Some(l),
                         ..methodcalltype.clone()
@@ -1270,6 +1272,7 @@ pub(super) fn apply_method_action<'cx>(
         MethodAction::ChainM(box ChainMData {
             exp_reason,
             lhs_reason,
+            lhs_expression,
             methodcalltype: app,
             voided_out_collector,
             return_hint,
@@ -1281,6 +1284,7 @@ pub(super) fn apply_method_action<'cx>(
             l,
             exp_reason,
             lhs_reason,
+            lhs_expression,
             &UseT::new(UseTInner::CallT(Box::new(CallTData {
                 use_op,
                 reason: reason_call,

@@ -20,6 +20,7 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::aloc_representation_do_not_use;
 use flow_common::alpha_rename;
+use flow_common::error_ref::FunctionReferenceKind;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::flow_symbol::Symbol;
@@ -659,6 +660,7 @@ fn add_default_constructor<T>(
                 vec![],
                 None,
                 reason.dupe(),
+                FunctionReferenceKind::DefaultConstructor,
                 None,
                 None,
                 return_t,
@@ -741,6 +743,7 @@ fn add_record_constructor<'cx>(
         vec![param],
         None,
         reason.dupe(),
+        FunctionReferenceKind::FunctionType,
         None,
         None,
         return_t,
@@ -2804,7 +2807,18 @@ fn merge_annot<'cx>(
         Annot::FunAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RFunctionType, loc.dupe());
             let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-            merge_fun(env, cx, file, reason, def, statics, false, false, false)
+            merge_fun(
+                env,
+                cx,
+                file,
+                reason,
+                FunctionReferenceKind::FunctionType,
+                def,
+                statics,
+                false,
+                false,
+                false,
+            )
         }
         Annot::ComponentAnnot(box (loc, def)) => {
             let reason = reason::mk_annot_reason(RComponentType, loc.dupe());
@@ -3228,7 +3242,18 @@ fn merge_value<'cx>(
             } = inner.as_ref();
             let reason = reason::func_reason(*async_, *generator, loc.dupe());
             let statics_t = merge_fun_statics(env, cx, file, reason.dupe(), statics);
-            merge_fun(env, cx, file, reason, def, statics_t, false, false, false)
+            merge_fun(
+                env,
+                cx,
+                file,
+                reason,
+                FunctionReferenceKind::Function,
+                def,
+                statics_t,
+                false,
+                false,
+                false,
+            )
         }
         Value::StringVal(box loc) => {
             let reason = reason::mk_reason(RString, loc.dupe());
@@ -3741,7 +3766,18 @@ fn merge_obj_value_prop<'cx>(
                  }: &ObjValueMethodData<ALoc, Pack::Packed<ALoc>>| {
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
                     let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-                    merge_fun(env, cx, file, reason, def, statics, false, false, false)
+                    merge_fun(
+                        env,
+                        cx,
+                        file,
+                        reason,
+                        FunctionReferenceKind::Function,
+                        def,
+                        statics,
+                        false,
+                        false,
+                        false,
+                    )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
         }
@@ -3780,7 +3816,16 @@ fn merge_class_prop<'cx>(
                     let reason = reason::func_reason(*async_, *generator, fn_loc.dupe());
                     let statics = type_::dummy_static(reason.dupe());
                     merge_fun(
-                        env, cx, file, reason, def, statics, true, is_static, uses_this,
+                        env,
+                        cx,
+                        file,
+                        reason,
+                        FunctionReferenceKind::Function,
+                        def,
+                        statics,
+                        true,
+                        is_static,
+                        uses_this,
                     )
                 };
             merge_overloaded_methods(ms, merge_one, |m| &m.id_loc)
@@ -3813,7 +3858,18 @@ fn merge_obj_annot_prop<'cx>(
         }) => {
             let reason = reason::mk_annot_reason(RFunctionType, fn_loc.dupe());
             let statics = merge_fun_statics(env, cx, file, reason.dupe(), &BTreeMap::new());
-            let type_ = merge_fun(env, cx, file, reason, def, statics, false, false, false);
+            let type_ = merge_fun(
+                env,
+                cx,
+                file,
+                reason,
+                FunctionReferenceKind::FunctionType,
+                def,
+                statics,
+                false,
+                false,
+                false,
+            );
             type_::Property::new(type_::PropertyInner::Method {
                 key_loc: Some(id_loc.dupe()),
                 type_,
@@ -3845,7 +3901,18 @@ fn merge_interface_prop<'cx>(
             let merge_one = |(_, fn_loc, def): &(ALoc, ALoc, FunSig<ALoc, Pack::Packed<ALoc>>)| {
                 let reason = reason::mk_reason(RFunctionType, fn_loc.dupe());
                 let statics = type_::dummy_static(reason.dupe());
-                merge_fun(env, cx, file, reason, def, statics, true, is_static, false)
+                merge_fun(
+                    env,
+                    cx,
+                    file,
+                    reason,
+                    FunctionReferenceKind::FunctionType,
+                    def,
+                    statics,
+                    true,
+                    is_static,
+                    false,
+                )
             };
             merge_overloaded_methods(ms, merge_one, |(id_loc, _, _)| id_loc)
         }
@@ -4923,6 +4990,7 @@ fn merge_fun<'cx>(
     cx: &Context<'cx>,
     file: &File<'cx>,
     reason: Reason,
+    function_reference_kind: FunctionReferenceKind,
     def: &FunSig<ALoc, Pack::Packed<ALoc>>,
     statics: Type,
     is_method: bool,
@@ -5027,6 +5095,7 @@ fn merge_fun<'cx>(
             return_t,
             type_guard,
             def_reason: reason2.dupe(),
+            function_reference_kind,
             effect_,
             strictness_kind: def_ref.strictness_kind,
         };
@@ -5582,6 +5651,7 @@ fn merge_declare_fun<'cx>(
                 cx,
                 file,
                 reason,
+                FunctionReferenceKind::FunctionType,
                 def,
                 statics_t.dupe(),
                 false,
@@ -5737,6 +5807,7 @@ pub fn merge_def<'cx>(
                 cx,
                 file,
                 reason.dupe(),
+                FunctionReferenceKind::Function,
                 &inner.def,
                 statics_t,
                 false,

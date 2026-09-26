@@ -154,6 +154,7 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                             tins,
                             rest_param,
                             reason.dupe(),
+                            flow_common::error_ref::FunctionReferenceKind::FunctionType,
                             Some(params_names),
                             type_guard,
                             tout,

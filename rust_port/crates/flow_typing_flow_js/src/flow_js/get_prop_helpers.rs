@@ -575,6 +575,7 @@ pub(super) fn write_obj_prop<'cx>(
                     vec![],
                     rest_param,
                     reason.dupe(),
+                    flow_common::error_ref::FunctionReferenceKind::Function,
                     None,
                     None,
                     any_t::untyped(reason.dupe()),

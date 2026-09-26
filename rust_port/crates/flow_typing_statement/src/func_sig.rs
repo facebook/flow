@@ -11,6 +11,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_common::error_ref::FunctionReferenceKind;
 use flow_common::reason;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -322,6 +323,7 @@ pub fn this_param<C: crate::func_params_intf::Config>(fparams: &param::Param<C>)
 pub fn default_constructor<C: ConfigTypes>(reason: Reason) -> Func<C> {
     Func {
         reason: reason.dupe(),
+        function_reference_kind: FunctionReferenceKind::DefaultConstructor,
         kind: Kind::Ctor,
         tparams: None,
         fparams: func_params::empty(Rc::new(|_, _, _| None)),
@@ -342,6 +344,7 @@ pub fn field_initializer<C: ConfigTypes>(
 ) -> Func<C> {
     Func {
         reason,
+        function_reference_kind: FunctionReferenceKind::FunctionType,
         kind: Kind::FieldInit {
             expr,
             fills_annotated_symbol,
@@ -400,6 +403,7 @@ pub fn functiontype<'a, C: crate::func_params_intf::Config>(
         effect_: effect_.clone(),
         type_guard,
         def_reason: reason.dupe(),
+        function_reference_kind: x.function_reference_kind,
         strictness_kind: cx.type_strictness_kind(),
     };
     let statics_t = match statics {
@@ -470,6 +474,7 @@ pub fn methodtype<'a, C: crate::func_params_intf::Config>(
         params_tlist,
         rest_param,
         reason.dupe(),
+        x.function_reference_kind,
         Some(params_names),
         type_guard,
         type_util::type_t_of_annotated_or_inferred(return_t).dupe(),

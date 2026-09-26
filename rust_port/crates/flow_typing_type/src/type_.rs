@@ -41,6 +41,8 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
+use flow_common::error_ref::ExpressionReferenceData;
+use flow_common::error_ref::FunctionReferenceKind;
 use flow_common::flow_symbol::Symbol;
 use flow_common::hint::HintKind;
 use flow_common::platform_set::PlatformSet;
@@ -4040,6 +4042,7 @@ pub struct CallMData<CX = ()> {
 pub struct ChainMData<CX = ()> {
     pub exp_reason: Reason,
     pub lhs_reason: Reason,
+    pub lhs_expression: ExpressionReferenceData<ALoc>,
     pub methodcalltype: MethodCallType,
     pub voided_out_collector: Option<type_collector::TypeCollector>,
     pub return_hint: LazyHintT<CX>,
@@ -4067,6 +4070,7 @@ impl<CX> Clone for MethodAction<CX> {
             MethodAction::ChainM(box ChainMData {
                 exp_reason,
                 lhs_reason,
+                lhs_expression,
                 methodcalltype,
                 voided_out_collector,
                 return_hint,
@@ -4074,6 +4078,7 @@ impl<CX> Clone for MethodAction<CX> {
             }) => MethodAction::ChainM(Box::new(ChainMData {
                 exp_reason: exp_reason.clone(),
                 lhs_reason: lhs_reason.clone(),
+                lhs_expression: lhs_expression.dupe(),
                 methodcalltype: methodcalltype.clone(),
                 voided_out_collector: voided_out_collector.clone(),
                 return_hint: return_hint.clone(),
@@ -4103,6 +4108,7 @@ impl<CX> PartialEq for MethodAction<CX> {
                 MethodAction::ChainM(box ChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
+                    lhs_expression: g1,
                     methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
@@ -4111,12 +4117,13 @@ impl<CX> PartialEq for MethodAction<CX> {
                 MethodAction::ChainM(box ChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
+                    lhs_expression: g2,
                     methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
                     specialized_callee: f2,
                 }),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
+            ) => a1 == a2 && b1 == b2 && g1 == g2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
             (MethodAction::NoMethodAction(a1), MethodAction::NoMethodAction(a2)) => a1 == a2,
             _ => false,
         }
@@ -4141,6 +4148,7 @@ impl<CX> std::hash::Hash for MethodAction<CX> {
             MethodAction::ChainM(box ChainMData {
                 exp_reason,
                 lhs_reason,
+                lhs_expression,
                 methodcalltype,
                 voided_out_collector,
                 return_hint,
@@ -4148,6 +4156,7 @@ impl<CX> std::hash::Hash for MethodAction<CX> {
             }) => {
                 exp_reason.hash(state);
                 lhs_reason.hash(state);
+                lhs_expression.hash(state);
                 methodcalltype.hash(state);
                 voided_out_collector.hash(state);
                 return_hint.hash(state);
@@ -4196,6 +4205,7 @@ impl<CX> Ord for MethodAction<CX> {
                 MethodAction::ChainM(box ChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
+                    lhs_expression: g1,
                     methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
@@ -4204,6 +4214,7 @@ impl<CX> Ord for MethodAction<CX> {
                 MethodAction::ChainM(box ChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
+                    lhs_expression: g2,
                     methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
@@ -4212,6 +4223,7 @@ impl<CX> Ord for MethodAction<CX> {
             ) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
+                .then_with(|| g1.cmp(g2))
                 .then_with(|| c1.cmp(c2))
                 .then_with(|| d1.cmp(d2))
                 .then_with(|| e1.cmp(e2))
@@ -4238,6 +4250,7 @@ impl<CX> std::fmt::Debug for MethodAction<CX> {
             MethodAction::ChainM(box ChainMData {
                 exp_reason,
                 lhs_reason,
+                lhs_expression,
                 methodcalltype,
                 voided_out_collector,
                 return_hint,
@@ -4246,6 +4259,7 @@ impl<CX> std::fmt::Debug for MethodAction<CX> {
                 .debug_struct("ChainM")
                 .field("exp_reason", exp_reason)
                 .field("lhs_reason", lhs_reason)
+                .field("lhs_expression", lhs_expression)
                 .field("methodcalltype", methodcalltype)
                 .field("voided_out_collector", voided_out_collector)
                 .field("return_hint", return_hint)
@@ -4265,6 +4279,7 @@ pub struct OptCallMData<CX = ()> {
 pub struct OptChainMData<CX = ()> {
     pub exp_reason: Reason,
     pub lhs_reason: Reason,
+    pub lhs_expression: ExpressionReferenceData<ALoc>,
     pub opt_methodcalltype: OptMethodCallType,
     pub voided_out_collector: Option<type_collector::TypeCollector>,
     pub return_hint: LazyHintT<CX>,
@@ -4292,6 +4307,7 @@ impl<CX> Clone for OptMethodAction<CX> {
             OptMethodAction::OptChainM(box OptChainMData {
                 exp_reason,
                 lhs_reason,
+                lhs_expression,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint,
@@ -4299,6 +4315,7 @@ impl<CX> Clone for OptMethodAction<CX> {
             }) => OptMethodAction::OptChainM(Box::new(OptChainMData {
                 exp_reason: exp_reason.clone(),
                 lhs_reason: lhs_reason.clone(),
+                lhs_expression: lhs_expression.dupe(),
                 opt_methodcalltype: opt_methodcalltype.clone(),
                 voided_out_collector: voided_out_collector.clone(),
                 return_hint: return_hint.clone(),
@@ -4328,6 +4345,7 @@ impl<CX> PartialEq for OptMethodAction<CX> {
                 OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
+                    lhs_expression: g1,
                     opt_methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
@@ -4336,12 +4354,13 @@ impl<CX> PartialEq for OptMethodAction<CX> {
                 OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
+                    lhs_expression: g2,
                     opt_methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
                     specialized_callee: f2,
                 }),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
+            ) => a1 == a2 && b1 == b2 && g1 == g2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
             (OptMethodAction::OptNoMethodAction(a1), OptMethodAction::OptNoMethodAction(a2)) => {
                 a1 == a2
             }
@@ -4368,6 +4387,7 @@ impl<CX> std::hash::Hash for OptMethodAction<CX> {
             OptMethodAction::OptChainM(box OptChainMData {
                 exp_reason,
                 lhs_reason,
+                lhs_expression,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint,
@@ -4375,6 +4395,7 @@ impl<CX> std::hash::Hash for OptMethodAction<CX> {
             }) => {
                 exp_reason.hash(state);
                 lhs_reason.hash(state);
+                lhs_expression.hash(state);
                 opt_methodcalltype.hash(state);
                 voided_out_collector.hash(state);
                 return_hint.hash(state);
@@ -4423,6 +4444,7 @@ impl<CX> Ord for OptMethodAction<CX> {
                 OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a1,
                     lhs_reason: b1,
+                    lhs_expression: g1,
                     opt_methodcalltype: c1,
                     voided_out_collector: d1,
                     return_hint: e1,
@@ -4431,6 +4453,7 @@ impl<CX> Ord for OptMethodAction<CX> {
                 OptMethodAction::OptChainM(box OptChainMData {
                     exp_reason: a2,
                     lhs_reason: b2,
+                    lhs_expression: g2,
                     opt_methodcalltype: c2,
                     voided_out_collector: d2,
                     return_hint: e2,
@@ -4439,6 +4462,7 @@ impl<CX> Ord for OptMethodAction<CX> {
             ) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
+                .then_with(|| g1.cmp(g2))
                 .then_with(|| c1.cmp(c2))
                 .then_with(|| d1.cmp(d2))
                 .then_with(|| e1.cmp(e2))
@@ -4467,6 +4491,7 @@ impl<CX> std::fmt::Debug for OptMethodAction<CX> {
             OptMethodAction::OptChainM(box OptChainMData {
                 exp_reason,
                 lhs_reason,
+                lhs_expression,
                 opt_methodcalltype,
                 voided_out_collector,
                 return_hint,
@@ -4475,6 +4500,7 @@ impl<CX> std::fmt::Debug for OptMethodAction<CX> {
                 .debug_struct("OptChainM")
                 .field("exp_reason", exp_reason)
                 .field("lhs_reason", lhs_reason)
+                .field("lhs_expression", lhs_expression)
                 .field("opt_methodcalltype", opt_methodcalltype)
                 .field("voided_out_collector", voided_out_collector)
                 .field("return_hint", return_hint)
@@ -4640,6 +4666,7 @@ pub struct FunType {
     pub return_t: Type,
     pub type_guard: Option<TypeGuard>,
     pub def_reason: Reason,
+    pub function_reference_kind: FunctionReferenceKind,
     pub effect_: ReactEffectType,
     pub strictness_kind: TypeStrictnessKind,
 }
@@ -11775,6 +11802,7 @@ pub fn mk_methodtype(
     tins: Vec<Type>,
     rest_param: Option<FunRestParam>,
     def_reason: Reason,
+    function_reference_kind: FunctionReferenceKind,
     params_names: Option<Vec<Option<Name>>>,
     type_guard: Option<TypeGuard>,
     tout: Type,
@@ -11798,6 +11826,7 @@ pub fn mk_methodtype(
         return_t: tout,
         type_guard,
         def_reason,
+        function_reference_kind,
         effect_,
         strictness_kind: TypeStrictnessKind::Flow,
     }
@@ -11829,6 +11858,7 @@ pub fn mk_boundfunctiontype(
     tins: Vec<Type>,
     rest_param: Option<FunRestParam>,
     def_reason: Reason,
+    function_reference_kind: FunctionReferenceKind,
     params_names: Option<Vec<Option<Name>>>,
     type_guard: Option<TypeGuard>,
     tout: Type,
@@ -11840,6 +11870,7 @@ pub fn mk_boundfunctiontype(
         tins,
         rest_param,
         def_reason,
+        function_reference_kind,
         params_names,
         type_guard,
         tout,
@@ -11857,6 +11888,7 @@ pub fn mk_functiontype(
     tins: Vec<Type>,
     rest_param: Option<FunRestParam>,
     def_reason: Reason,
+    function_reference_kind: FunctionReferenceKind,
     params_names: Option<Vec<Option<Name>>>,
     type_guard: Option<TypeGuard>,
     tout: Type,
@@ -11869,6 +11901,7 @@ pub fn mk_functiontype(
         tins,
         rest_param,
         def_reason,
+        function_reference_kind,
         params_names,
         type_guard,
         tout,
@@ -12054,6 +12087,7 @@ pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodA
         OptMethodAction::OptChainM(box OptChainMData {
             exp_reason,
             lhs_reason,
+            lhs_expression,
             opt_methodcalltype,
             voided_out_collector,
             return_hint,
@@ -12061,6 +12095,7 @@ pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodA
         }) => MethodAction::ChainM(Box::new(ChainMData {
             exp_reason,
             lhs_reason,
+            lhs_expression,
             methodcalltype: apply_opt_methodcalltype(opt_methodcalltype, t_out),
             voided_out_collector,
             return_hint,

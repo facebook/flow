@@ -61,10 +61,12 @@ use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::ESketchyNullLintData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
+use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionWarning;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_errors::intermediate_error_types::StrictComparisonInfo;
 use flow_typing_exists_check::ExistsCheck;
 use flow_typing_flow_common::flow_js_utils;
@@ -1139,10 +1141,14 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobErr
 }
 
 fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
-    for (loc, lhs_reason) in cx.unnecessary_optional_chains().iter() {
+    for (loc, lhs, lhs_expression) in cx.unnecessary_optional_chains().iter() {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EUnnecessaryOptionalChain(Box::new((loc.dupe(), lhs_reason.dupe()))),
+            ErrorMessage::EUnnecessaryOptionalChain(Box::new((
+                loc.dupe(),
+                flow_js_utils::type_reference_for_error(lhs),
+                lhs_expression.dupe(),
+            ))),
         );
     }
 }
@@ -1680,7 +1686,11 @@ fn check_assert_operator<'cx>(
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) {
-        let obj_reason = reason::mk_typed_expression_reason(expr);
+        let obj_expression = ExpressionReferenceData {
+            loc: expr.loc().0.dupe(),
+            kind: flow_js_utils::expression_reference_kind_for_error(expr),
+        };
+        let (_, expression_t) = expr.loc();
         match expr.deref() {
             ast::expression::ExpressionInner::Member { loc: _, inner }
                 if let ast::expression::member::Property::PropertyIdentifier(id) =
@@ -1691,7 +1701,7 @@ fn check_assert_operator<'cx>(
                 type_assertions::check_specialized_assert_operator_property(
                     cx,
                     op_reason,
-                    &obj_reason,
+                    &obj_expression,
                     obj_t,
                     name,
                 );
@@ -1705,7 +1715,7 @@ fn check_assert_operator<'cx>(
                 type_assertions::check_specialized_assert_operator_property(
                     cx,
                     op_reason,
-                    &obj_reason,
+                    &obj_expression,
                     obj_t,
                     name,
                 );
@@ -1719,7 +1729,7 @@ fn check_assert_operator<'cx>(
                 type_assertions::check_specialized_assert_operator_lookup(
                     cx,
                     op_reason,
-                    &obj_reason,
+                    &obj_expression,
                     obj_t,
                     prop_t,
                 );
@@ -1734,7 +1744,7 @@ fn check_assert_operator<'cx>(
                 type_assertions::check_specialized_assert_operator_lookup(
                     cx,
                     op_reason,
-                    &obj_reason,
+                    &obj_expression,
                     obj_t,
                     prop_t,
                 );
@@ -1744,7 +1754,13 @@ fn check_assert_operator<'cx>(
                     cx,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op_loc: op_reason.loc().dupe(),
-                        obj: obj_reason,
+                        obj: IllegalAssertObject::Typed {
+                            expression: obj_expression,
+                            type_: flow_js_utils::type_reference_at_loc_for_error(
+                                expression_t,
+                                expr.loc().0.dupe(),
+                            ),
+                        },
                         specialized: true,
                     })),
                 );
@@ -1756,7 +1772,10 @@ fn check_assert_operator<'cx>(
         op_reason: &Reason,
         expr: &ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) -> Result<(), JobError> {
-        let obj_reason = reason::mk_typed_expression_reason(expr);
+        let obj_expression = ExpressionReferenceData {
+            loc: expr.loc().0.dupe(),
+            kind: flow_js_utils::expression_reference_kind_for_error(expr),
+        };
         let (_, t) = expr.loc();
         let legal = type_assertions::check_assert_operator_nullable(cx, t)?
             || match expr.deref() {
@@ -1775,7 +1794,13 @@ fn check_assert_operator<'cx>(
                 cx,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op_loc: op_reason.loc().dupe(),
-                    obj: obj_reason,
+                    obj: IllegalAssertObject::Typed {
+                        expression: obj_expression,
+                        type_: flow_js_utils::type_reference_at_loc_for_error(
+                            t,
+                            expr.loc().0.dupe(),
+                        ),
+                    },
                     specialized: false,
                 })),
             );

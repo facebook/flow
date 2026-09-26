@@ -421,6 +421,7 @@ fn check_polarity_impl<'cx>(
                     return_t,
                     type_guard,
                     def_reason: _,
+                    function_reference_kind: _,
                     effect_: _,
                     strictness_kind: _,
                 } = f.deref();

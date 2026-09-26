@@ -114,6 +114,7 @@ pub fn default_resolve_touts<'cx>(
                 MethodAction::ChainM(box ChainMData {
                     exp_reason: _,
                     lhs_reason: _,
+                    lhs_expression: _,
                     methodcalltype,
                     voided_out_collector: _,
                     return_hint: _,

@@ -58,6 +58,7 @@ use flow_typing_errors::error_message::EExpectedStringLitData;
 use flow_typing_errors::error_message::EExponentialSpreadData;
 use flow_typing_errors::error_message::EExportRenamedDefaultData;
 use flow_typing_errors::error_message::EForInRHSData;
+use flow_typing_errors::error_message::EFunctionCallExtraArgData;
 use flow_typing_errors::error_message::EHookIncompatibleData;
 use flow_typing_errors::error_message::EHookRuleViolationData;
 use flow_typing_errors::error_message::EHookUniqueIncompatibleData;
@@ -156,6 +157,7 @@ use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitialized
 use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
+use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
 use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
@@ -177,6 +179,10 @@ use flow_typing_errors::error_message::string_of_invalid_render_type_kind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
 use flow_typing_errors::intermediate_error_types::DocblockError;
 use flow_typing_errors::intermediate_error_types::ExponentialSpreadReasonGroup;
+use flow_typing_errors::intermediate_error_types::ExpressionFunctionKind;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceKind;
+use flow_typing_errors::intermediate_error_types::FunctionReferenceKind;
 use flow_typing_errors::intermediate_error_types::ObjKind as IntermediateObjKind;
 use flow_typing_errors::intermediate_error_types::ValueAsTypeReference;
 use flow_typing_type::type_;
@@ -370,6 +376,25 @@ fn dump_value_as_type_reference(
         ),
         None => dump_loc_type_desc(cx, loc, type_desc),
     }
+}
+
+fn dump_expression_reference(reference: &ExpressionReferenceData<ALoc>) -> String {
+    let description = match &reference.kind {
+        ExpressionReferenceKind::Code(code) => format!("RCode({code:?})"),
+        ExpressionReferenceKind::ObjectLiteral => "RObjectLitUnsound".to_string(),
+        ExpressionReferenceKind::ArrayLiteral => "RArrayLit".to_string(),
+        ExpressionReferenceKind::Function(kind) => match kind {
+            ExpressionFunctionKind::Normal => "RFunction(RNormal)".to_string(),
+            ExpressionFunctionKind::Async => "RFunction(RAsync)".to_string(),
+            ExpressionFunctionKind::Generator => "RFunction(RGenerator)".to_string(),
+            ExpressionFunctionKind::AsyncGenerator => "RFunction(RAsyncGenerator)".to_string(),
+            ExpressionFunctionKind::Unknown => "RFunction(RUnknown)".to_string(),
+        },
+        ExpressionReferenceKind::EmptyString => "RStringLit(\"\")".to_string(),
+        ExpressionReferenceKind::TemplateString => "RTemplateString".to_string(),
+        ExpressionReferenceKind::Expression => "expression".to_string(),
+    };
+    format!("{} {description}", string_of_aloc(None, &reference.loc))
 }
 
 fn dump_tuple_element_reference(loc: &ALoc, name: Option<&str>) -> String {
@@ -2810,14 +2835,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {
             loc,
             name,
-            reason,
+            receiver_expression,
             kind,
+            ..
         }) => {
             format!(
                 "EInvalidThisArg ({}) ({}) ({}) ({:?})",
                 string_of_aloc(None, loc),
                 name,
-                dump_reason(cx, reason),
+                dump_expression_reference(receiver_expression),
                 kind
             )
         }
@@ -3245,11 +3271,25 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_use_op(use_op)
             )
         }
-        ErrorMessage::EFunctionCallExtraArg(box (loc, def_reason, param_count, use_op)) => {
+        ErrorMessage::EFunctionCallExtraArg(box EFunctionCallExtraArgData {
+            loc,
+            function_reference,
+            param_count,
+            use_op,
+            ..
+        }) => {
+            let function = match function_reference.kind {
+                FunctionReferenceKind::Function => "function",
+                FunctionReferenceKind::FunctionType => "function type",
+                FunctionReferenceKind::DefaultConstructor => "default constructor",
+            };
             format!(
                 "EFunctionCallExtraArg(Box::new(({}, {}, {}, {})))",
                 string_of_aloc(None, loc),
-                dump_reason(cx, def_reason),
+                format_args!(
+                    "{} {function:?}",
+                    string_of_aloc(None, &function_reference.loc)
+                ),
                 param_count,
                 string_of_use_op(use_op)
             )
@@ -3418,15 +3458,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 prototype,
             )
         }
-        ErrorMessage::EUnnecessaryOptionalChain(box (loc, _)) => {
+        ErrorMessage::EUnnecessaryOptionalChain(box (loc, _, _)) => {
             format!("EUnnecessaryOptionalChain ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData {
             loc,
-            condition_desc,
+            condition,
             ..
         }) => {
-            let condition = match condition_desc {
+            let condition = match &condition.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
@@ -3442,12 +3482,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc)
             )
         }
-        ErrorMessage::ECannotDelete(box ECannotDeleteData {
-            loc,
-            expression_desc,
-            ..
-        }) => {
-            let expression = match expression_desc {
+        ErrorMessage::ECannotDelete(box ECannotDeleteData { loc, expression }) => {
+            let expression = match &expression.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
@@ -4512,9 +4548,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             op_loc,
             specialized,
         }) => {
+            let obj = match obj {
+                IllegalAssertObject::Typed { expression, .. }
+                | IllegalAssertObject::Expression(expression) => {
+                    dump_expression_reference(expression)
+                }
+            };
             format!(
                 "EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {{obj={}, op={}, specialized={}}}))",
-                dump_reason(cx, obj),
+                obj,
                 string_of_aloc(None, op_loc),
                 specialized
             )

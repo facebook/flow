@@ -1156,6 +1156,7 @@ pub fn fun_type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             return_t: return_t_prime,
             type_guard: type_guard_prime,
             def_reason: t.def_reason.dupe(),
+            function_reference_kind: t.function_reference_kind,
             effect_: t.effect_.clone(),
             strictness_kind: t.strictness_kind,
         })

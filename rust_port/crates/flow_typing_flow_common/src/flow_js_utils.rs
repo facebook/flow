@@ -20,9 +20,11 @@ use flow_aloc::ALocId;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
+use flow_common::reason::code_desc_of_expression;
 use flow_common_utils::utils_js;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::ast;
 use flow_parser::loc_sig::LocSig;
 use flow_parser_utils::signature_utils;
 use flow_typing_context::Context;
@@ -44,6 +46,9 @@ use flow_typing_errors::error_message::ErrorTypeReferenceData;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::intermediate_error_types::Explanation;
+use flow_typing_errors::intermediate_error_types::ExpressionFunctionKind;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
+use flow_typing_errors::intermediate_error_types::ExpressionReferenceKind;
 use flow_typing_errors::intermediate_error_types::TupleElementReferenceData;
 use flow_typing_errors::intermediate_error_types::TypeGuardReferenceData;
 use flow_typing_errors::intermediate_error_types::TypeGuardReferenceKind;
@@ -1767,6 +1772,53 @@ pub fn type_guard_reference_for_error(reason: &Reason) -> TypeGuardReferenceData
     TypeGuardReferenceData {
         loc: reason.loc().dupe(),
         kind,
+    }
+}
+
+pub fn expression_reference_kind_for_error<M: Dupe, T: Dupe>(
+    expression: &ast::expression::Expression<M, T>,
+) -> ExpressionReferenceKind {
+    use ast::expression::ExpressionInner;
+
+    match expression.deref() {
+        ExpressionInner::TypeCast { inner, .. } => {
+            expression_reference_kind_for_error(&inner.expression)
+        }
+        ExpressionInner::Object { .. } => ExpressionReferenceKind::ObjectLiteral,
+        ExpressionInner::Array { .. } => ExpressionReferenceKind::ArrayLiteral,
+        ExpressionInner::ArrowFunction { inner, .. } => {
+            let kind = if inner.async_ {
+                ExpressionFunctionKind::Async
+            } else {
+                ExpressionFunctionKind::Normal
+            };
+            ExpressionReferenceKind::Function(kind)
+        }
+        ExpressionInner::Function { inner, .. } => {
+            let kind = match (inner.async_, inner.generator) {
+                (false, false) => ExpressionFunctionKind::Normal,
+                (true, false) => ExpressionFunctionKind::Async,
+                (false, true) => ExpressionFunctionKind::Generator,
+                (true, true) => ExpressionFunctionKind::AsyncGenerator,
+            };
+            ExpressionReferenceKind::Function(kind)
+        }
+        ExpressionInner::StringLiteral { inner, .. } if inner.value.is_empty() => {
+            ExpressionReferenceKind::EmptyString
+        }
+        ExpressionInner::TaggedTemplate { .. } | ExpressionInner::TemplateLiteral { .. } => {
+            ExpressionReferenceKind::TemplateString
+        }
+        _ => ExpressionReferenceKind::Code(code_desc_of_expression(false, expression).into()),
+    }
+}
+
+pub fn expression_reference_for_error<M: Dupe, T: Dupe>(
+    expression: &ast::expression::Expression<M, T>,
+) -> ExpressionReferenceData<T> {
+    ExpressionReferenceData {
+        loc: expression.loc().dupe(),
+        kind: expression_reference_kind_for_error(expression),
     }
 }
 
