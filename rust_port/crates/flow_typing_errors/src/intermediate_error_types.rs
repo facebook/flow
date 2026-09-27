@@ -27,6 +27,7 @@ use flow_common_errors::error_utils::ErrorKind;
 use flow_common_ty::ty::ALocTy;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api::AnnotLoc;
+use flow_env_builder::name_def_types::DefinitionReferenceKind;
 use flow_lint_settings::lint_settings::LintParseError;
 use flow_lint_settings::lints::PropertyAssignmentKind;
 use flow_lint_settings::lints::SketchyNullKind;
@@ -46,6 +47,11 @@ use flow_typing_type::type_::aconstraint::AnnotationInferenceOperation;
 use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDesc;
 use flow_typing_type::type_::union_rep::OptimizedError;
 use vec1::Vec1;
+
+use crate::error_message::DefinitionReferenceData;
+use crate::error_message::EnumReferenceData;
+use crate::error_message::TypeGuardBindingKind;
+use crate::error_message::TypeGuardParameterData;
 
 #[derive(
     Debug,
@@ -1219,7 +1225,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotYield(VirtualReasonDesc<L>),
 }
 
-pub type UnionEnumMap<L> = BTreeMap<UnionEnum, Vec1<MessageTypeReferenceData<L>>>;
+pub type UnionEnumMap<L> = BTreeMap<UnionEnum, Vec1<L>>;
 
 #[derive(
     Debug,
@@ -1384,7 +1390,7 @@ pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeGuardWithFunctionParamHavocedData<L: Dupe> {
     pub type_guard_desc: VirtualReasonDesc<L>,
-    pub param_reason: MessageTypeReferenceData<L>,
+    pub param: TypeGuardReferenceData<L>,
     pub call_locs: Vec<L>,
 }
 
@@ -1397,7 +1403,7 @@ pub struct MessageCannotUseTypeInValuePositionData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageDefinitionInvalidRecursiveData<L: Dupe> {
-    pub description: VirtualReasonDesc<L>,
+    pub definition: DefinitionReferenceKind,
     pub recursion: Vec<L>,
     pub annot_locs: Vec<AnnotLoc<L>>,
 }
@@ -1413,14 +1419,14 @@ pub struct MessageDuplicateModuleProviderData<L: Dupe> {
 pub struct MessageEnumDuplicateMemberNameData<L: Dupe> {
     pub member_name: String,
     pub prev_use_loc: L,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageEnumInvalidMemberInitializerData<L: Dupe> {
     pub member_name: String,
     pub explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1749,7 +1755,6 @@ pub struct MessagePropMissingData<L: Dupe> {
     pub upper: Option<VirtualReason<L>>,
     pub prop: Option<FlowSmolStr>,
     pub suggestion: Option<FlowSmolStr>,
-    pub indexer: Option<Box<MessageTypeReferenceData<L>>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1796,7 +1801,7 @@ pub struct MessageRedeclareComponentPropData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageShouldAnnotateVariableUsedInGenericContextData<L: Dupe> {
-    pub reason: MessageTypeReferenceData<L>,
+    pub declaration: NamedReferenceData<L>,
     pub null_loc: L,
     pub initialized: bool,
     pub possible_generic_escape_locs: Vec<L>,
@@ -1839,7 +1844,7 @@ pub struct MessageTupleNonIntegerIndexData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageVariableOnlyAssignedByNullData<L: Dupe> {
-    pub reason: MessageTypeReferenceData<L>,
+    pub declaration: NamedReferenceData<L>,
     pub null_loc: Option<L>,
 }
 
@@ -1950,7 +1955,7 @@ pub enum Message<L: Dupe> {
     MessageCannotCallNonHookSyntaxHook(L),
 
     MessageCannotCallObjectFunctionOnEnum {
-        reason: MessageTypeReferenceData<L>,
+        function: NamedReferenceData<L>,
         enum_: MessageTypeReferenceData<L>,
         enum_name: Option<FlowSmolStr>,
     },
@@ -2046,7 +2051,7 @@ pub enum Message<L: Dupe> {
     MessageCannotReassignConstant(VirtualReason<L>),
 
     MessageCannotReassignConstantLikeBinding {
-        definition: MessageTypeReferenceData<L>,
+        definition: NamedReferenceData<L>,
         binding_kind: AssignedConstLikeBindingType,
     },
 
@@ -2055,8 +2060,9 @@ pub enum Message<L: Dupe> {
     MessageCannotRedeclareVar(VirtualReason<L>),
 
     MessageCannotReferenceTypeGuardParameter {
-        type_guard_reason: MessageTypeReferenceData<L>,
-        binding_reason: MessageTypeReferenceData<L>,
+        type_guard: TypeGuardParameterData<L>,
+        binding_loc: L,
+        binding_kind: TypeGuardBindingKind,
     },
 
     MessageCannotResolveBuiltinName(FlowSmolStr),
@@ -2089,7 +2095,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotUseAsConstructor(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseAsPrototype(Box<MessageTypeReferenceData<L>>),
-    MessageCannotUseAsSuperClass(MessageTypeReferenceData<L>),
+    MessageCannotUseAsSuperClass(ExpressionReferenceData<L>),
     MessageCannotUseBeforeDeclaration(VirtualReason<L>),
 
     MessageCannotUseDefaultImportWithDestrucuturing,
@@ -2098,11 +2104,11 @@ pub enum Message<L: Dupe> {
     MessageCannotUseEnumMemberUsedAsType(Box<MessageCannotUseEnumMemberUsedAsTypeData<L>>),
 
     MessageCannotUseExportInNonLegalToplevelContext(FlowSmolStr),
-    MessageCannotUseImportStar(MessageTypeReferenceData<L>),
+    MessageCannotUseImportStar(L),
     MessageCannotUseInOperatorDueToBadLHS(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseInOperatorDueToBadRHS(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseInstanceOfOperatorDueToBadRHS(Box<MessageTypeReferenceData<L>>),
-    MessageCannotUseMixedImportAndRequire(MessageTypeReferenceData<L>),
+    MessageCannotUseMixedImportAndRequire(L),
 
     MessageCannotUseNonPolymorphicTypeWithTypeArgs {
         is_new: bool,
@@ -2158,7 +2164,7 @@ pub enum Message<L: Dupe> {
     MessageComponentNonUpperCase,
     MessageDeclareComponentInvalidParam(DeclareComponentInvalidParamKind),
 
-    MessageDefinitionCycle(Vec1<(MessageTypeReferenceData<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
+    MessageDefinitionCycle(Vec1<(DefinitionReferenceData<L>, Vec<L>, Vec<AnnotLoc<L>>)>),
 
     MessageDefinitionInvalidRecursive(Box<MessageDefinitionInvalidRecursiveData<L>>),
 
@@ -2185,7 +2191,7 @@ pub enum Message<L: Dupe> {
     },
 
     MessageDuplicateEnumMember {
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
         prev_use_loc: L,
     },
 
@@ -2198,49 +2204,49 @@ pub enum Message<L: Dupe> {
     MessageEnumDuplicateMemberName(Box<MessageEnumDuplicateMemberNameData<L>>),
 
     MessageEnumInconsistentMemberValues {
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageEnumInvalidMemberInitializer(Box<MessageEnumInvalidMemberInitializerData<L>>),
 
     MessageEnumBooleanMemberNotInitialized {
         member_name: String,
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageEnumNumberMemberNotInitialized {
         member_name: String,
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageEnumBigIntMemberNotInitialized {
         member_name: String,
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageEnumStringMemberInconsistentlyInitialized {
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageTSEnumInvalidMember {
         member_name: String,
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
         kind: TsEnumInvalidMemberKind,
     },
 
     MessageTSEnumInvalidSyntax {
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
         kind: TsEnumInvalidSyntaxKind,
     },
 
     MessageEnumNonIdentifierMemberName {
         member_name: String,
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageInvalidEnumMemberName {
         member_name: String,
-        enum_: MessageTypeReferenceData<L>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageExponentialSpread(Box<MessageExponentialSpreadData<L>>),
@@ -2348,7 +2354,7 @@ pub enum Message<L: Dupe> {
     MessageInvalidGraphQL(GraphqlError),
     MessageInvalidHookNaming,
 
-    MessageInvalidImportStarUse(MessageTypeReferenceData<L>),
+    MessageInvalidImportStarUse(L),
     MessageInvalidInferType,
 
     MessageInvalidLintSettings(LintParseError),
@@ -2410,8 +2416,8 @@ pub enum Message<L: Dupe> {
         type_: Box<MessageTypeReferenceData<L>>,
     },
 
-    MessageInvalidTypeGuardParamUnbound(MessageTypeReferenceData<L>),
-    MessageInvalidTypeGuardThisParam(MessageTypeReferenceData<L>),
+    MessageInvalidTypeGuardParamUnbound(TypeGuardParameterData<L>),
+    MessageInvalidTypeGuardThisParam(L),
     MessageInvalidUseOfFlowEnforceOptimized(Box<MessageTypeReferenceData<L>>),
 
     MessageLowerIsNotArray(VirtualReason<L>),
@@ -2453,7 +2459,7 @@ pub enum Message<L: Dupe> {
 
     MessageNoNamedExport(Box<MessageNoNamedExportData>),
 
-    MessageNonConstVarExport(Option<MessageTypeReferenceData<L>>),
+    MessageNonConstVarExport(Option<NamedReferenceData<L>>),
     MessageNonStrictImport,
     MessageNonToplevelExport,
 
@@ -2490,7 +2496,7 @@ pub enum Message<L: Dupe> {
     MessageRedeclareComponentProp(Box<MessageRedeclareComponentPropData<L>>),
 
     MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
-        reason: MessageTypeReferenceData<L>,
+        declaration: NamedReferenceData<L>,
         possible_generic_escape_locs: Vec<L>,
     },
 
@@ -2511,7 +2517,11 @@ pub enum Message<L: Dupe> {
     MessageThisInComponent(L),
     MessageThisInExportedFunction,
 
-    MessageThisSuperInObject(MessageTypeReferenceData<L>, ThisFinderKind),
+    MessageThisSuperInObject {
+        method_loc: L,
+        method_name: Option<FlowSmolStr>,
+        kind: ThisFinderKind,
+    },
 
     MessageTSNeverType,
     MessageTSReadonlyOperatorOnArray,
@@ -2546,8 +2556,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageTypeGuardIndexMismatch {
-        lower: MessageTypeReferenceData<L>,
-        upper: MessageTypeReferenceData<L>,
+        lower: TypeGuardParameterData<L>,
+        upper: TypeGuardParameterData<L>,
     },
 
     MessageTypeGuardImpliesMismatch {
@@ -2560,12 +2570,12 @@ pub enum Message<L: Dupe> {
         upper: NamedReferenceData<L>,
     },
 
-    MessageTypeParamConstInvalidPosition(MessageTypeReferenceData<L>),
+    MessageTypeParamConstInvalidPosition(NamedReferenceData<L>),
     MessageUnclearType,
 
     MessageUnderconstrainedImplicitInstantiaton {
         call: ImplicitInstantiationReferenceData<L>,
-        reason_tparam: MessageTypeReferenceData<L>,
+        type_param: NamedReferenceData<L>,
     },
 
     MessageUndocumentedFeature,
@@ -2615,7 +2625,7 @@ pub enum Message<L: Dupe> {
         reference: Option<ValueAsTypeReference>,
         value: MessageTypeReferenceData<L>,
     },
-    MessageVariableNeverInitAssignedAnnotated(MessageTypeReferenceData<L>),
+    MessageVariableNeverInitAssignedAnnotated(NamedReferenceData<L>),
 
     MessageVariableOnlyAssignedByNull(Box<MessageVariableOnlyAssignedByNullData<L>>),
 
@@ -2658,7 +2668,7 @@ pub enum Message<L: Dupe> {
     MessageMatchInvalidAsPattern,
 
     MessageMatchInvalidPatternReference {
-        binding_reason: MessageTypeReferenceData<L>,
+        binding: NamedReferenceData<L>,
     },
 
     MessageMatchInvalidObjectShorthand {

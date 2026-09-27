@@ -26,6 +26,7 @@ use flow_common_errors::error_utils::PrintableError;
 use flow_common_ty::ty::ALocTy;
 use flow_common_ty::ty::Ty;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::name_def_types::DefinitionReferenceKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
@@ -144,6 +145,7 @@ use super::intermediate_error_types::MessageTupleIndexOutOfBoundData;
 use super::intermediate_error_types::MessageTupleNonIntegerIndexData;
 use super::intermediate_error_types::MessageTypeReferenceData;
 use super::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
+use super::intermediate_error_types::NamedReferenceData;
 use super::intermediate_error_types::RootMessage;
 use super::intermediate_error_types::StrictComparisonInfo;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
@@ -160,6 +162,7 @@ use crate::error_message::EExpectedStringLitData;
 use crate::error_message::EIncompatiblePropData;
 use crate::error_message::EIncompatibleTypesWithUseOpData;
 use crate::error_message::EPropNotFoundInLookupData;
+use crate::error_message::EnumReferenceData;
 use crate::error_message::IncompatibleInvariantSubtypingData;
 use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
@@ -173,6 +176,8 @@ use crate::error_message::PropsExtraAgainstExactObjectData;
 use crate::error_message::PropsMissingInInvariantSubtypingData;
 use crate::error_message::PropsMissingInSubtypingData;
 use crate::error_message::SpeculationData;
+use crate::error_message::TypeGuardBindingKind;
+use crate::error_message::TypeGuardParameterData;
 use crate::error_message::UseOpData;
 
 /// Rank scores for signals of different strength on an x^2 scale so that
@@ -3068,8 +3073,7 @@ where
                                            prop: Option<FlowSmolStr>,
                                            lower: VirtualReason<L>,
                                            use_op: VirtualUseOp<L>,
-                                           suggestion: Option<FlowSmolStr>,
-                                           reason_indexer: Option<VirtualReason<L>>|
+                                           suggestion: Option<FlowSmolStr>|
      -> IntermediateError<L> {
         let lower = mod_lower_reason_according_to_use_ops(lower.dupe(), &use_op);
         mk_use_op_error(
@@ -3081,12 +3085,6 @@ where
                 upper: None,
                 prop,
                 suggestion,
-                indexer: reason_indexer.map(|reason| {
-                    Box::new(MessageTypeReferenceData {
-                        loc: reason.loc.dupe(),
-                        desc: Err(reason.desc.clone()),
-                    })
-                }),
             })),
         )
     };
@@ -3095,7 +3093,6 @@ where
                                               suggestion: Option<FlowSmolStr>,
                                               lower: VirtualReason<L>,
                                               upper: VirtualReason<L>,
-                                              indexer: Option<Box<MessageTypeReferenceData<L>>>,
                                               use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
         let loc = loc_of_aloc(&lower.loc);
@@ -3109,7 +3106,6 @@ where
                 upper: Some(upper),
                 prop,
                 suggestion,
-                indexer,
             })),
         )
     };
@@ -3596,19 +3592,13 @@ where
                 lower,
                 use_op,
                 None,
-                None,
             ),
 
             UpperKind::IncompatibleGetElemT(prop_loc)
             | UpperKind::IncompatibleSetElemT(prop_loc)
-            | UpperKind::IncompatibleCallElemT(prop_loc) => mk_prop_missing_in_lookup_error(
-                loc_of_aloc(&prop_loc),
-                None,
-                lower,
-                use_op,
-                None,
-                None,
-            ),
+            | UpperKind::IncompatibleCallElemT(prop_loc) => {
+                mk_prop_missing_in_lookup_error(loc_of_aloc(&prop_loc), None, lower, use_op, None)
+            }
 
             UpperKind::IncompatibleGetStaticsT => mk_use_op_error(
                 use_loc,
@@ -3802,7 +3792,6 @@ where
                 reason_obj,
                 use_op,
                 suggestion,
-                reason_indexer,
             }),
         ) => mk_prop_missing_in_lookup_error(
             loc_of_aloc(&loc),
@@ -3810,7 +3799,6 @@ where
             reason_obj,
             use_op,
             suggestion.dupe(),
-            reason_indexer,
         ),
 
         (
@@ -3855,7 +3843,6 @@ where
                 prop,
                 reason_lower,
                 reason_upper,
-                indexer,
                 suggestion,
                 use_op,
             }),
@@ -3864,7 +3851,6 @@ where
             suggestion.dupe(),
             reason_lower,
             reason_upper,
-            indexer,
             use_op,
         ),
 
@@ -4890,6 +4876,43 @@ where
         hardcoded_string_desc_ref(&description, &reference.loc)
     };
 
+    let type_guard_parameter_reference = |parameter: &TypeGuardParameterData<L>| {
+        hardcoded_string_desc_ref(
+            &format!("type guard parameter `{}`", parameter.name),
+            &parameter.loc,
+        )
+    };
+
+    let render_named_reference = |reference: &NamedReferenceData<L>| {
+        hardcoded_string_desc_ref(&format!("`{}`", reference.name), &reference.loc)
+    };
+
+    let render_enum_reference = |reference: &EnumReferenceData<L>| {
+        hardcoded_string_desc_ref(&format!("enum `{}`", reference.name), &reference.loc)
+    };
+
+    fn definition_description(kind: &DefinitionReferenceKind) -> String {
+        match kind {
+            DefinitionReferenceKind::Name(name) => format!("`{name}`"),
+            DefinitionReferenceKind::Function { async_, generator } => {
+                let prefix = match (async_, generator) {
+                    (true, true) => "async generator ",
+                    (true, false) => "async ",
+                    (false, true) => "generator ",
+                    (false, false) => "",
+                };
+                format!("{prefix}function")
+            }
+            DefinitionReferenceKind::Component(name) => format!("component {name}"),
+            DefinitionReferenceKind::Enum(name) => format!("enum `{name}`"),
+            DefinitionReferenceKind::Interface => "interface type".to_string(),
+            DefinitionReferenceKind::This => "this".to_string(),
+            DefinitionReferenceKind::Destructuring => "destructuring".to_string(),
+            DefinitionReferenceKind::Match => "match".to_string(),
+            DefinitionReferenceKind::Other => "definition".to_string(),
+        }
+    }
+
     let render_expression_reference = |reference: &ExpressionReferenceData<L>| {
         let description = match &reference.kind {
             ExpressionReferenceKind::Code(code) => format!("`{code}`"),
@@ -5732,7 +5755,7 @@ where
                 text("(https://react.dev/reference/rules/rules-of-hooks)"),
             ]),
             MessageCannotCallObjectFunctionOnEnum {
-                reason,
+                function,
                 enum_,
                 enum_name,
             } => {
@@ -5752,7 +5775,7 @@ where
                 };
                 let mut features = vec![
                     text("Cannot call function "),
-                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                    render_named_reference(function),
                     text(" with argument "),
                     ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
                     text(" because it is not an object."),
@@ -6129,15 +6152,13 @@ where
                     |x: &UnionEnum| -> friendly::MessageFeature<Loc> { code(&x.to_string()) };
                 let string_of_non_unique_key =
                     |name: &Name,
-                     map: &BTreeMap<UnionEnum, Vec1<MessageTypeReferenceData<L>>>|
+                     map: &BTreeMap<UnionEnum, Vec1<L>>|
                      -> Vec<friendly::MessageFeature<Loc>> {
-                        let ref_texts = |rs: &Vec1<MessageTypeReferenceData<L>>| -> Vec<
-                            friendly::MessageFeature<Loc>,
-                        > {
-                            let mut result = vec![ref_of_ty_or_desc(&rs[0].loc, &rs[0].desc)];
+                        let ref_texts = |rs: &Vec1<L>| -> Vec<friendly::MessageFeature<Loc>> {
+                            let mut result = vec![hardcoded_string_desc_ref("object type", &rs[0])];
                             for r in rs.iter().skip(1) {
                                     result.push(text(", "));
-                                    result.push(ref_of_ty_or_desc(&r.loc, &r.desc));
+                                    result.push(hardcoded_string_desc_ref("object type", r));
                                 }
                                 result
                             };
@@ -6265,7 +6286,7 @@ where
                 text("Cannot reassign "),
                 text(binding_kind.as_str()),
                 text(" binding "),
-                ref_of_ty_or_desc(&definition.loc, &definition.desc),
+                render_named_reference(definition),
                 text("."),
             ]),
             MessageCannotReassignEnum(x) => {
@@ -6280,15 +6301,26 @@ where
                 text(" because var redeclaration is not supported."),
             ]),
             MessageCannotReferenceTypeGuardParameter {
-                type_guard_reason,
-                binding_reason,
-            } => friendly::Message(vec![
-                text("A "),
-                ref_of_ty_or_desc(&type_guard_reason.loc, &type_guard_reason.desc),
-                text(" cannot reference "),
-                ref_of_ty_or_desc(&binding_reason.loc, &binding_reason.desc),
-                text("."),
-            ]),
+                type_guard,
+                binding_loc,
+                binding_kind,
+            } => {
+                let binding_description = match binding_kind {
+                    TypeGuardBindingKind::RestParameter => {
+                        format!("rest parameter `{}`", type_guard.name)
+                    }
+                    TypeGuardBindingKind::PatternParameter => {
+                        format!("pattern parameter `{}`", type_guard.name)
+                    }
+                };
+                friendly::Message(vec![
+                    text("A "),
+                    type_guard_parameter_reference(type_guard),
+                    text(" cannot reference "),
+                    hardcoded_string_desc_ref(&binding_description, binding_loc),
+                    text("."),
+                ])
+            }
             MessageCannotResolveBuiltinName(name) => {
                 friendly::Message(vec![text("Cannot resolve name "), code(name), text(".")])
             }
@@ -6475,9 +6507,9 @@ where
                 ref_of_ty_or_desc(&prototype.loc, &prototype.desc),
                 text(" as a prototype. Expected an object or null."),
             ]),
-            MessageCannotUseAsSuperClass(reason) => friendly::Message(vec![
+            MessageCannotUseAsSuperClass(expression) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                render_expression_reference(expression),
                 text(" as a superclass. Only variables and member expressions may be extended"),
             ]),
             MessageCannotUseBeforeDeclaration(x) => friendly::Message(vec![
@@ -6517,8 +6549,8 @@ where
                 code(name),
                 text(" may only be used as part of a legal top level export statement"),
             ]),
-            MessageCannotUseImportStar(import_star_reason) => friendly::Message(vec![
-                ref_of_ty_or_desc(&import_star_reason.loc, &import_star_reason.desc),
+            MessageCannotUseImportStar(import_star_loc) => friendly::Message(vec![
+                hardcoded_string_desc_ref("`import *`", import_star_loc),
                 text(" object can only be used by accessing one of its named exports"),
                 text(" with a member access or destructuring."),
             ]),
@@ -6543,9 +6575,9 @@ where
                 ref_of_ty_or_desc(&rhs.loc, &rhs.desc),
                 text("."),
             ]),
-            MessageCannotUseMixedImportAndRequire(import_reason) => friendly::Message(vec![
+            MessageCannotUseMixedImportAndRequire(import_loc) => friendly::Message(vec![
                 text("Cannot use a mix of non-type toplevel "),
-                ref_of_ty_or_desc(&import_reason.loc, &import_reason.desc),
+                hardcoded_string_desc_ref("`import`", import_loc),
                 text(" and "),
                 code("require"),
                 text(" statements in the same file."),
@@ -6648,7 +6680,7 @@ where
             MessageCannotUseTypeGuardWithFunctionParamHavoced(
                 box MessageCannotUseTypeGuardWithFunctionParamHavocedData {
                     type_guard_desc,
-                    param_reason,
+                    param,
                     call_locs,
                 },
             ) => {
@@ -6670,7 +6702,7 @@ where
                     text("Cannot use "),
                     friendly::desc_of_reason_desc(type_guard_desc),
                     text(", because "),
-                    ref_of_ty_or_desc(&param_reason.loc, &param_reason.desc),
+                    type_guard_reference(param),
                     text(" is reassigned "),
                 ];
                 features.extend(loc_str);
@@ -6816,7 +6848,7 @@ where
                 let deps: Vec<friendly::MessageFeature<Loc>> = dependencies
                     .iter()
                     .enumerate()
-                    .filter_map(|(i, (reason, dep, _annot_locs))| {
+                    .filter_map(|(i, (definition, dep, _annot_locs))| {
                         if dep.is_empty() {
                             return None;
                         }
@@ -6845,7 +6877,10 @@ where
                             .collect();
                         let mut result = vec![
                             text(" - "),
-                            ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                            hardcoded_string_desc_ref(
+                                &definition_description(&definition.kind),
+                                &definition.loc,
+                            ),
                             text(" depends on "),
                             friendly::hardcoded_string_desc_ref(
                                 "other definition",
@@ -6894,7 +6929,7 @@ where
                 friendly::Message(features)
             }
             MessageDefinitionInvalidRecursive(box MessageDefinitionInvalidRecursiveData {
-                description,
+                definition,
                 recursion,
                 annot_locs,
             }) => {
@@ -7003,12 +7038,12 @@ where
                         result
                     }
                 };
-                let mut features = vec![
-                    text("Cannot compute a type for "),
-                    friendly::desc_of_reason_desc(description),
-                    text(" because its definition includes references to "),
-                    itself,
-                ];
+                let friendly::Message(definition_desc) =
+                    friendly::message_of_string(&definition_description(definition));
+                let mut features = vec![text("Cannot compute a type for ")];
+                features.extend(definition_desc);
+                features.push(text(" because its definition includes references to "));
+                features.push(itself);
                 features.extend(tl_recur);
                 features.push(text(". Please add an annotation to "));
                 features.extend(annot_message);
@@ -7134,7 +7169,7 @@ where
                 text("has already been used for a "),
                 friendly::hardcoded_string_desc_ref("previous member", loc_of_aloc(prev_use_loc)),
                 text(" of "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text("."),
             ]),
             MessageDuplicateModuleProvider(box MessageDuplicateModuleProviderData {
@@ -7195,7 +7230,7 @@ where
                 text("Enum member names must be identifiers, not string literals. "),
                 code(member_name),
                 text(" is not a valid member name in "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text("."),
             ]),
             MessageInvalidEnumMemberName {
@@ -7217,7 +7252,7 @@ where
                     text(", consider using "),
                     code(&suggestion),
                     text(", in "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_reference(enum_),
                     text("."),
                 ])
             }
@@ -7231,11 +7266,11 @@ where
                 text(" has already been used for a "),
                 friendly::hardcoded_string_desc_ref("previous member", loc_of_aloc(prev_use_loc)),
                 text(" of "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text("."),
             ]),
             MessageEnumInconsistentMemberValues { enum_ } => friendly::Message(vec![
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text(
                     " has been specified with inconsistent member initializers. All members need to consistently either use no initializer, or have a literal (boolean, number, bigint, or string) initializer.",
                 ),
@@ -7251,7 +7286,7 @@ where
                         text("Symbol enum members cannot be initialized. Use "),
                         code(&format!("{member_name},")),
                         text(" in "),
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text("."),
                     ]),
                     Some(t) => {
@@ -7262,7 +7297,7 @@ where
                             text(" needs to be a "),
                             code(type_str),
                             text(" literal in "),
-                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                            render_enum_reference(enum_),
                             text("."),
                         ])
                     }
@@ -7272,7 +7307,7 @@ where
                         text(
                             " needs to be a literal (either a boolean, number, bigint, or string) in ",
                         ),
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text("."),
                     ]),
                 }
@@ -7284,7 +7319,7 @@ where
                 text("The enum member "),
                 code(member_name),
                 text(" of boolean "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text(
                     " has been left uninitialized. Boolean enum members need to be initialized, e.g. ",
                 ),
@@ -7298,7 +7333,7 @@ where
                 text("The enum member "),
                 code(member_name),
                 text(" of number "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text(
                     " has been left uninitialized. Number enum members need to be initialized, e.g. ",
                 ),
@@ -7312,7 +7347,7 @@ where
                 text("The enum member "),
                 code(member_name),
                 text(" of bigint "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text(
                     " has been left uninitialized. BigInt enum members need to be initialized, e.g. ",
                 ),
@@ -7322,7 +7357,7 @@ where
             MessageEnumStringMemberInconsistentlyInitialized { enum_ } => {
                 friendly::Message(vec![
                     text("String "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_reference(enum_),
                     text(
                         " has been specified with inconsistent member initializers. Either all members need a string literal initializer, or none.",
                     ),
@@ -7338,7 +7373,7 @@ where
                         text("The enum member initializer for "),
                         code(member_name),
                         text(" in "),
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text(
                             " must be a number or string literal, the only member types TypeScript enums allow.",
                         ),
@@ -7349,7 +7384,7 @@ where
                         text("The enum member "),
                         code(member_name),
                         text(" in "),
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text(
                             " must have an initializer because the preceding member is not a numeric constant, so it cannot be auto-numbered.",
                         ),
@@ -7360,7 +7395,7 @@ where
                         text("The enum member "),
                         code(member_name),
                         text(" in "),
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text(" cannot have a numeric name, which TypeScript does not allow."),
                     ])
                 }
@@ -7368,7 +7403,7 @@ where
             MessageTSEnumInvalidSyntax { enum_, kind } => match kind {
                 super::intermediate_error_types::TsEnumInvalidSyntaxKind::TSEnumUnknownMembers => {
                     friendly::Message(vec![
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text(
                             " cannot have unknown members (`...`), which is a Flow Enums feature that TypeScript enums do not support.",
                         ),
@@ -7376,7 +7411,7 @@ where
                 }
                 super::intermediate_error_types::TsEnumInvalidSyntaxKind::TSEnumExplicitType => {
                     friendly::Message(vec![
-                        ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                        render_enum_reference(enum_),
                         text(
                             " cannot have an explicit representation type (`of ...`), which is a Flow Enums feature that TypeScript enums do not support.",
                         ),
@@ -7781,9 +7816,9 @@ where
                 text(". "),
                 text("(https://react.dev/reference/rules/rules-of-hooks)"),
             ]),
-            MessageInvalidImportStarUse(import_star_reason) => friendly::Message(vec![
+            MessageInvalidImportStarUse(import_star_loc) => friendly::Message(vec![
                 text("The default export of a module cannot be accessed from an "),
-                ref_of_ty_or_desc(&import_star_reason.loc, &import_star_reason.desc),
+                hardcoded_string_desc_ref("`import *`", import_star_loc),
                 text(" object. To use the default export you must import it directly."),
             ]),
             MessageInvalidMappedTypeInInterfaceOrDeclaredClass => friendly::Message(vec![text(
@@ -8112,14 +8147,14 @@ where
                 features.push(text("."));
                 friendly::Message(features)
             }
-            MessageInvalidTypeGuardParamUnbound(reason) => friendly::Message(vec![
+            MessageInvalidTypeGuardParamUnbound(type_guard) => friendly::Message(vec![
                 text("Cannot find "),
-                ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                type_guard_parameter_reference(type_guard),
                 text(" in the parameters of this function (type)."),
             ]),
-            MessageInvalidTypeGuardThisParam(reason) => friendly::Message(vec![
+            MessageInvalidTypeGuardThisParam(loc) => friendly::Message(vec![
                 text("Cannot use "),
-                ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                hardcoded_string_desc_ref("this", loc),
                 text(" as a type guard variable in this context. "),
                 code("this"),
                 text(" type guards are only supported in non-static class or interface methods."),
@@ -8256,16 +8291,13 @@ where
                 }
                 friendly::Message(features)
             }
-            MessageNonConstVarExport(decl_reason) => {
-                let reason_part = match decl_reason {
-                    Some(reason) => vec![
-                        text("variable "),
-                        ref_of_ty_or_desc(&reason.loc, &reason.desc),
-                    ],
+            MessageNonConstVarExport(declaration) => {
+                let declaration_part = match declaration {
+                    Some(declaration) => vec![text("variable "), render_named_reference(declaration)],
                     None => vec![text("variable")],
                 };
                 let mut features = vec![text("Cannot export ")];
-                features.extend(reason_part);
+                features.extend(declaration_part);
                 features.extend(vec![
                     text(" declared using "),
                     code("var"),
@@ -8318,21 +8350,11 @@ where
                 upper,
                 prop,
                 suggestion,
-                indexer,
             }) => {
                 use super::error_message::mk_prop_message;
                 // If we were subtyping that add to the error message so our user knows what
                 // object required the missing property.
                 let prop_message = mk_prop_message(prop.as_deref());
-                let indexer_message: Vec<friendly::MessageFeature<Loc>> = match indexer {
-                    None => vec![],
-                    Some(indexer) => vec![
-                        text(". Any property that does not exist in "),
-                        ref_(lower),
-                        text(" must be compatible with its indexer "),
-                        ref_of_ty_or_desc(&indexer.loc, &indexer.desc),
-                    ],
-                };
                 let suggestion: Vec<friendly::MessageFeature<Loc>> = match suggestion {
                     Some(s) => vec![text(" (did you mean "), code(s), text("?)")],
                     None => vec![],
@@ -8344,7 +8366,6 @@ where
                         features.extend(vec![text(" is missing in "), ref_(lower)]);
                         features.extend(vec![text(" but exists in ")]);
                         features.push(ref_(upper));
-                        features.extend(indexer_message);
                         friendly::Message(features)
                     }
                     None => {
@@ -8596,12 +8617,12 @@ where
                 }
             }
             MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
-                reason,
+                declaration,
                 possible_generic_escape_locs,
             } => {
                 let mut features = vec![
                     text("Variable "),
-                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                    render_named_reference(declaration),
                     text(
                         " should be annotated, because it is only initialized in a generic context",
                     ),
@@ -8620,7 +8641,7 @@ where
             }
             MessageShouldAnnotateVariableUsedInGenericContext(
                 box MessageShouldAnnotateVariableUsedInGenericContextData {
-                    reason,
+                    declaration,
                     null_loc,
                     initialized,
                     possible_generic_escape_locs,
@@ -8636,7 +8657,7 @@ where
                 };
                 let mut features = vec![
                     text("Variable "),
-                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                    render_named_reference(declaration),
                     text(" should be annotated, because it is only ever assigned to by "),
                     null_ref,
                     text(" and in generic context"),
@@ -8727,7 +8748,11 @@ where
                 code("this"),
                 text(" in an exported function."),
             ]),
-            MessageThisSuperInObject(reason, kind) => {
+            MessageThisSuperInObject {
+                method_loc,
+                method_name,
+                kind,
+            } => {
                 use super::intermediate_error_types::ThisFinderKind;
                 let (v, suggestion) = match kind {
                     ThisFinderKind::This => (
@@ -8745,11 +8770,15 @@ where
                         vec![text(" Consider rewriting the object as a class.")],
                     ),
                 };
+                let method_description = match method_name {
+                    Some(name) => format!("method `{name}`"),
+                    None => "computed method".to_string(),
+                };
                 let mut features = vec![
                     text("Cannot reference "),
                     code(v),
                     text(" from within "),
-                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                    hardcoded_string_desc_ref(&method_description, method_loc),
                     text(". For safety, Flow restricts access to "),
                     code(v),
                     text(" inside object methods since these methods may be unbound and rebound."),
@@ -9025,9 +9054,9 @@ where
             ]),
             MessageUnderconstrainedImplicitInstantiaton {
                 call,
-                reason_tparam,
+                type_param,
             } => friendly::Message(vec![
-                ref_of_ty_or_desc(&reason_tparam.loc, &reason_tparam.desc),
+                render_named_reference(type_param),
                 text(" is underconstrained by "),
                 render_implicit_instantiation_reference(call),
                 text(
@@ -9160,9 +9189,9 @@ where
                 ])
             }
             MessageTypeGuardIndexMismatch { lower, upper } => friendly::Message(vec![
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                type_guard_parameter_reference(lower),
                 text(" does not appear in the same position as "),
-                ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                type_guard_parameter_reference(upper),
             ]),
             MessageTypeGuardImpliesMismatch { lower, upper } => friendly::Message(vec![
                 text("one-sided "),
@@ -9384,13 +9413,13 @@ where
                 code("typeof"),
                 text("."),
             ]),
-            MessageVariableNeverInitAssignedAnnotated(reason) => friendly::Message(vec![
+            MessageVariableNeverInitAssignedAnnotated(declaration) => friendly::Message(vec![
                 text("Variable "),
-                ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                render_named_reference(declaration),
                 text(" is never initialized, annotated, or assigned to."),
             ]),
             MessageVariableOnlyAssignedByNull(box MessageVariableOnlyAssignedByNullData {
-                reason,
+                declaration,
                 null_loc,
             }) => {
                 let null_ref = match null_loc {
@@ -9402,11 +9431,11 @@ where
                 };
                 friendly::Message(vec![
                     text("Variable "),
-                    ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                    render_named_reference(declaration),
                     text(" is only ever assigned to by "),
                     null_ref,
                     text(". This is likely unintended; if it is intended, annotate "),
-                    desc_of_ty_or_desc(&reason.desc),
+                    code(declaration.name.as_str()),
                     text(" with "),
                     code(": null"),
                     text(" to disambiguate."),
@@ -10051,9 +10080,9 @@ where
                 code("as"),
                 text(" pattern. Direct use on a binding pattern is not allowed."),
             ]),
-            MessageMatchInvalidPatternReference { binding_reason } => friendly::Message(vec![
+            MessageMatchInvalidPatternReference { binding } => friendly::Message(vec![
                 text("Can't use variable "),
-                ref_of_ty_or_desc(&binding_reason.loc, &binding_reason.desc),
+                render_named_reference(binding),
                 text(" within the same match pattern it is defined."),
             ]),
             MessageMatchInvalidObjectShorthand { name, pattern_kind } => {
@@ -10342,9 +10371,9 @@ where
                     text(" do not have matching const-modifier values"),
                 ])
             }
-            MessageTypeParamConstInvalidPosition(reason) => friendly::Message(vec![
+            MessageTypeParamConstInvalidPosition(type_param) => friendly::Message(vec![
                 text("Type parameter "),
-                ref_of_ty_or_desc(&reason.loc, &reason.desc),
+                render_named_reference(type_param),
                 text(" cannot be declared as 'const'. "),
                 text("'const' modifier can only appear on a function or method type parameter."),
             ]),

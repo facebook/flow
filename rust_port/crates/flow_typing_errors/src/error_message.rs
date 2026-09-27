@@ -18,7 +18,6 @@ use flow_common::error_ref::ErrorReference;
 use flow_common::flow_import_specifier::Userland;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
-use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::refinement_invalidation;
@@ -83,6 +82,7 @@ use crate::intermediate_error_types::ExplanationPropertyMissingDueToNeutralOptio
 use crate::intermediate_error_types::ExplanationWithLazyParts;
 use crate::intermediate_error_types::ExponentialSpreadReasonGroup;
 use crate::intermediate_error_types::ExpressionReferenceData;
+use crate::intermediate_error_types::ExpressionReferenceKind;
 use crate::intermediate_error_types::FunctionReferenceData;
 use crate::intermediate_error_types::ImplicitInstantiationReferenceData;
 use crate::intermediate_error_types::IncorrectType;
@@ -150,6 +150,7 @@ use crate::intermediate_error_types::StrictComparisonInfo;
 use crate::intermediate_error_types::SubComponentOfInvariantSubtypingError;
 use crate::intermediate_error_types::TupleElementReferenceData;
 use crate::intermediate_error_types::TypeGuardReferenceData;
+use crate::intermediate_error_types::TypeGuardReferenceKind;
 use crate::intermediate_error_types::UnnecessaryInvariantConditionKind;
 use crate::intermediate_error_types::UnsupportedSyntax;
 use crate::intermediate_error_types::ValueAsTypeReference;
@@ -1854,7 +1855,7 @@ pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct TypeGuardParameterData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+pub struct TypeGuardParameterData<L: Dupe> {
     pub loc: L,
     pub name: FlowSmolStr,
 }
@@ -8907,7 +8908,6 @@ pub struct PropMissingInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub suggestion: Option<FlowSmolStr>,
     pub reason_obj: VirtualReason<L>,
     pub use_op: VirtualUseOp<L>,
-    pub reason_indexer: Option<VirtualReason<L>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -8924,7 +8924,6 @@ pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + E
     pub suggestion: Option<FlowSmolStr>,
     pub reason_lower: VirtualReason<L>,
     pub reason_upper: VirtualReason<L>,
-    pub indexer: Option<Box<MessageTypeReferenceData<L>>>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -9091,44 +9090,6 @@ fn expect_error_type_reference<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
     }
 }
 
-fn message_identifier_reference<L: Dupe>(loc: L, name: FlowSmolStr) -> MessageTypeReferenceData<L> {
-    MessageTypeReferenceData {
-        loc,
-        desc: Err(VirtualReasonDesc::RIdentifier(name)),
-    }
-}
-
-fn definition_reference_desc<L: Dupe>(kind: DefinitionReferenceKind) -> VirtualReasonDesc<L> {
-    match kind {
-        DefinitionReferenceKind::Name(name) => VirtualReasonDesc::RIdentifier(name),
-        DefinitionReferenceKind::Function { async_, generator } => {
-            let function_kind = match (async_, generator) {
-                (true, true) => ReasonDescFunction::RAsyncGenerator,
-                (true, false) => ReasonDescFunction::RAsync,
-                (false, true) => ReasonDescFunction::RGenerator,
-                (false, false) => ReasonDescFunction::RNormal,
-            };
-            VirtualReasonDesc::RFunction(function_kind)
-        }
-        DefinitionReferenceKind::Component(name) => VirtualReasonDesc::RComponent(name),
-        DefinitionReferenceKind::Enum(name) => VirtualReasonDesc::REnum { name: Some(name) },
-        DefinitionReferenceKind::Interface => VirtualReasonDesc::RInterfaceType,
-        DefinitionReferenceKind::This => VirtualReasonDesc::RThis,
-        DefinitionReferenceKind::Destructuring => VirtualReasonDesc::RDestructuring,
-        DefinitionReferenceKind::Match => VirtualReasonDesc::RMatch,
-        DefinitionReferenceKind::Other => VirtualReasonDesc::RCustom("definition".into()),
-    }
-}
-
-fn message_enum_reference<L: Dupe>(enum_: EnumReferenceData<L>) -> MessageTypeReferenceData<L> {
-    MessageTypeReferenceData {
-        loc: enum_.loc,
-        desc: Err(VirtualReasonDesc::REnum {
-            name: Some(enum_.name),
-        }),
-    }
-}
-
 impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
     /// Transform an ErrorMessage into a FriendlyMessageRecipe.
     ///
@@ -9185,9 +9146,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidInfer { .. } => Normal(Message::MessageInvalidInferType),
 
             ErrorMessage::EInvalidExtends(box (loc, expression)) => Normal(
-                Message::MessageCannotUseAsSuperClass(MessageTypeReferenceData {
+                Message::MessageCannotUseAsSuperClass(ExpressionReferenceData {
                     loc,
-                    desc: Err(VirtualReasonDesc::RCode(expression)),
+                    kind: ExpressionReferenceKind::Code(expression),
                 }),
             ),
 
@@ -9322,7 +9283,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_obj,
                 use_op,
                 suggestion,
-                reason_indexer: None,
             })),
 
             ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
@@ -9336,7 +9296,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 suggestion,
                 reason_lower,
                 reason_upper,
-                indexer: None,
                 use_op,
             })),
 
@@ -9852,7 +9811,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )) => Normal(Message::MessageDuplicateEnumMember {
                 prev_use_loc,
-                enum_: message_enum_reference(enum_),
+                enum_,
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
                 enum_,
@@ -9992,18 +9951,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumInvalidMemberNameData {
                     enum_, member_name, ..
                 },
-            )) => Normal(Message::MessageInvalidEnumMemberName {
-                member_name,
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageInvalidEnumMemberName { member_name, enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName(
                 box EnumNonIdentifierMemberNameData {
                     enum_, member_name, ..
                 },
-            )) => Normal(Message::MessageEnumNonIdentifierMemberName {
-                member_name,
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageEnumNonIdentifierMemberName { member_name, enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName(
                 box EnumDuplicateMemberNameData {
                     prev_use_loc,
@@ -10015,14 +9968,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MessageEnumDuplicateMemberNameData {
                     member_name,
                     prev_use_loc,
-                    enum_: message_enum_reference(enum_),
+                    enum_,
                 },
             ))),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues(
                 box EnumInconsistentMemberValuesData { enum_, .. },
-            )) => Normal(Message::MessageEnumInconsistentMemberValues {
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageEnumInconsistentMemberValues { enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer(
                 box EnumInvalidMemberInitializerData {
                     enum_,
@@ -10034,38 +9985,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MessageEnumInvalidMemberInitializerData {
                     member_name,
                     explicit_type,
-                    enum_: message_enum_reference(enum_),
+                    enum_,
                 },
             ))),
             ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized(
                 box EnumBooleanMemberNotInitializedData {
                     enum_, member_name, ..
                 },
-            )) => Normal(Message::MessageEnumBooleanMemberNotInitialized {
-                member_name,
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageEnumBooleanMemberNotInitialized { member_name, enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized(
                 box EnumNumberMemberNotInitializedData {
                     enum_, member_name, ..
                 },
-            )) => Normal(Message::MessageEnumNumberMemberNotInitialized {
-                member_name,
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageEnumNumberMemberNotInitialized { member_name, enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized(
                 box EnumBigIntMemberNotInitializedData {
                     enum_, member_name, ..
                 },
-            )) => Normal(Message::MessageEnumBigIntMemberNotInitialized {
-                member_name,
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageEnumBigIntMemberNotInitialized { member_name, enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumStringMemberInconsistentlyInitialized(
                 box EnumStringMemberInconsistentlyInitializedData { enum_, .. },
-            )) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized {
-                enum_: message_enum_reference(enum_),
-            }),
+            )) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized { enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidMember(
                 box TSEnumInvalidMemberData {
                     enum_,
@@ -10075,15 +10015,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )) => Normal(Message::MessageTSEnumInvalidMember {
                 member_name,
-                enum_: message_enum_reference(enum_),
+                enum_,
                 kind,
             }),
             ErrorMessage::EEnumError(EnumErrorKind::TSEnumInvalidSyntax(
                 box TSEnumInvalidSyntaxData { enum_, kind, .. },
-            )) => Normal(Message::MessageTSEnumInvalidSyntax {
-                enum_: message_enum_reference(enum_),
-                kind,
-            }),
+            )) => Normal(Message::MessageTSEnumInvalidSyntax { enum_, kind }),
 
             ErrorMessage::EDuplicateClassMember(box EDuplicateClassMemberData {
                 name,
@@ -10101,11 +10038,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 name,
                 null_write: None,
                 possible_generic_escape_locs,
-            }) if possible_generic_escape_locs.is_empty() => {
-                Normal(Message::MessageVariableNeverInitAssignedAnnotated(
-                    message_identifier_reference(declaration_loc, name),
-                ))
-            }
+            }) if possible_generic_escape_locs.is_empty() => Normal(
+                Message::MessageVariableNeverInitAssignedAnnotated(NamedReferenceData {
+                    loc: declaration_loc,
+                    name,
+                }),
+            ),
             ErrorMessage::EInvalidDeclaration(box EInvalidDeclarationData {
                 declaration_loc,
                 name,
@@ -10113,7 +10051,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 possible_generic_escape_locs,
             }) => Normal(
                 Message::MessageShouldAnnotateVariableOnlyInitializedInGenericContext {
-                    reason: message_identifier_reference(declaration_loc, name),
+                    declaration: NamedReferenceData {
+                        loc: declaration_loc,
+                        name,
+                    },
                     possible_generic_escape_locs,
                 },
             ),
@@ -10130,7 +10071,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 };
                 Normal(Message::MessageVariableOnlyAssignedByNull(Box::new(
                     MessageVariableOnlyAssignedByNullData {
-                        reason: message_identifier_reference(declaration_loc, name),
+                        declaration: NamedReferenceData {
+                            loc: declaration_loc,
+                            name,
+                        },
                         null_loc,
                     },
                 )))
@@ -10142,7 +10086,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 possible_generic_escape_locs,
             }) => Normal(Message::MessageShouldAnnotateVariableUsedInGenericContext(
                 Box::new(MessageShouldAnnotateVariableUsedInGenericContextData {
-                    reason: message_identifier_reference(declaration_loc, name),
+                    declaration: NamedReferenceData {
+                        loc: declaration_loc,
+                        name,
+                    },
                     null_loc: null_write.null_loc,
                     initialized: null_write.initialized,
                     possible_generic_escape_locs,
@@ -10174,29 +10121,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 recursion,
                 annot_locs,
                 ..
-            }) => {
-                let definition_desc = definition_reference_desc(definition.kind);
-                Normal(Message::MessageDefinitionInvalidRecursive(Box::new(
-                    MessageDefinitionInvalidRecursiveData {
-                        description: definition_desc,
-                        recursion,
-                        annot_locs,
-                    },
-                )))
-            }
+            }) => Normal(Message::MessageDefinitionInvalidRecursive(Box::new(
+                MessageDefinitionInvalidRecursiveData {
+                    definition: definition.kind,
+                    recursion,
+                    annot_locs,
+                },
+            ))),
             ErrorMessage::EDefinitionCycle(dependencies) => {
-                Normal(Message::MessageDefinitionCycle(dependencies.mapped(
-                    |(definition, dependencies, annot_locs)| {
-                        (
-                            MessageTypeReferenceData {
-                                loc: definition.loc,
-                                desc: Err(definition_reference_desc(definition.kind)),
-                            },
-                            dependencies,
-                            annot_locs,
-                        )
-                    },
-                )))
+                Normal(Message::MessageDefinitionCycle(dependencies))
             }
             ErrorMessage::EReferenceInAnnotation(box (_, name, loc)) => {
                 Normal(Message::MessageInvalidSelfReferencingTypeAnnotation(
@@ -10386,7 +10319,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     binding_loc, name, ..
                 },
             )) => Normal(Message::MessageMatchInvalidPatternReference {
-                binding_reason: message_identifier_reference(binding_loc, name),
+                binding: NamedReferenceData {
+                    loc: binding_loc,
+                    name,
+                },
             }),
             ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand(
                 box MatchInvalidObjectShorthandData {
@@ -10459,7 +10395,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 reason_obj,
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
                 suggestion: None,
-                reason_indexer: None,
             })),
 
             ErrorMessage::EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData {
@@ -10945,27 +10880,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 type_guard,
                 binding_loc,
                 binding_kind,
-            }) => {
-                let TypeGuardParameterData { loc, name } = type_guard;
-                let binding_desc = match binding_kind {
-                    TypeGuardBindingKind::RestParameter => {
-                        VirtualReasonDesc::RRestParameter(Some(name.dupe()))
-                    }
-                    TypeGuardBindingKind::PatternParameter => {
-                        VirtualReasonDesc::RPatternParameter(name.dupe())
-                    }
-                };
-                Normal(Message::MessageCannotReferenceTypeGuardParameter {
-                    type_guard_reason: MessageTypeReferenceData {
-                        loc,
-                        desc: Err(VirtualReasonDesc::RTypeGuardParam(name)),
-                    },
-                    binding_reason: MessageTypeReferenceData {
-                        loc: binding_loc,
-                        desc: Err(binding_desc),
-                    },
-                })
-            }
+            }) => Normal(Message::MessageCannotReferenceTypeGuardParameter {
+                type_guard,
+                binding_loc,
+                binding_kind,
+            }),
 
             ErrorMessage::ETypeGuardIndexMismatch {
                 use_op,
@@ -10974,16 +10893,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageTypeGuardIndexMismatch {
-                        lower: MessageTypeReferenceData {
-                            loc: lower.loc,
-                            desc: Err(VirtualReasonDesc::RTypeGuardParam(lower.name)),
-                        },
-                        upper: MessageTypeReferenceData {
-                            loc: upper.loc,
-                            desc: Err(VirtualReasonDesc::RTypeGuardParam(upper.name)),
-                        },
-                    },
+                    message: Message::MessageTypeGuardIndexMismatch { lower, upper },
                     use_op,
                     explanation: None,
                 }))
@@ -11003,19 +10913,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ErrorMessage::ETypeGuardParamUnbound(TypeGuardParameterData { loc, name }) => Normal(
-                Message::MessageInvalidTypeGuardParamUnbound(MessageTypeReferenceData {
-                    loc,
-                    desc: Err(VirtualReasonDesc::RTypeGuardParam(name)),
-                }),
-            ),
+            ErrorMessage::ETypeGuardParamUnbound(type_guard) => {
+                Normal(Message::MessageInvalidTypeGuardParamUnbound(type_guard))
+            }
 
-            ErrorMessage::ETypeGuardThisParam(loc) => Normal(
-                Message::MessageInvalidTypeGuardThisParam(MessageTypeReferenceData {
-                    loc,
-                    desc: Err(VirtualReasonDesc::RThis),
-                }),
-            ),
+            ErrorMessage::ETypeGuardThisParam(loc) => {
+                Normal(Message::MessageInvalidTypeGuardThisParam(loc))
+            }
 
             ErrorMessage::ETypeGuardFunctionInvalidWrites(
                 box ETypeGuardFunctionInvalidWritesData {
@@ -11058,10 +10962,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::ETypeParamConstInvalidPosition(box (loc, name)) => Normal(
-                Message::MessageTypeParamConstInvalidPosition(MessageTypeReferenceData {
-                    loc,
-                    desc: Err(VirtualReasonDesc::RType(name)),
-                }),
+                Message::MessageTypeParamConstInvalidPosition(NamedReferenceData { loc, name }),
             ),
 
             ErrorMessage::ETypeGuardFunctionParamHavoced(
@@ -11073,20 +10974,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ) => {
                 let TypeGuardParameterData { name, .. } = type_guard;
-                let (type_guard_desc, param_desc) = if is_this {
-                    (VirtualReasonDesc::RThis, VirtualReasonDesc::RThis)
+                let (type_guard_desc, param_kind) = if is_this {
+                    (VirtualReasonDesc::RThis, TypeGuardReferenceKind::This)
                 } else {
                     (
                         VirtualReasonDesc::RTypeGuardParam(name.dupe()),
-                        VirtualReasonDesc::RParameter(Some(name)),
+                        TypeGuardReferenceKind::Parameter(Some(name)),
                     )
                 };
                 Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced(
                     Box::new(MessageCannotUseTypeGuardWithFunctionParamHavocedData {
                         type_guard_desc,
-                        param_reason: MessageTypeReferenceData {
+                        param: TypeGuardReferenceData {
                             loc: param_loc,
-                            desc: Err(param_desc),
+                            kind: param_kind,
                         },
                         call_locs,
                     }),
@@ -11191,32 +11092,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Message::MessageCannotUseExportInNonLegalToplevelContext(name),
             ),
 
-            ErrorMessage::EBadDefaultImportAccess(box (_, import_star_loc)) => Normal(
-                Message::MessageInvalidImportStarUse(MessageTypeReferenceData {
-                    loc: import_star_loc,
-                    desc: Err(VirtualReasonDesc::RCode("import *".into())),
-                }),
-            ),
+            ErrorMessage::EBadDefaultImportAccess(box (_, import_star_loc)) => {
+                Normal(Message::MessageInvalidImportStarUse(import_star_loc))
+            }
 
-            ErrorMessage::EInvalidImportStarUse(box (_, import_star_loc)) => Normal(
-                Message::MessageCannotUseImportStar(MessageTypeReferenceData {
-                    loc: import_star_loc,
-                    desc: Err(VirtualReasonDesc::RCode("import *".into())),
-                }),
-            ),
+            ErrorMessage::EInvalidImportStarUse(box (_, import_star_loc)) => {
+                Normal(Message::MessageCannotUseImportStar(import_star_loc))
+            }
 
             ErrorMessage::ENonConstVarExport(box (_, declaration)) => {
                 Normal(Message::MessageNonConstVarExport(
-                    declaration.map(|(loc, name)| message_identifier_reference(loc, name)),
+                    declaration.map(|(loc, name)| NamedReferenceData { loc, name }),
                 ))
             }
 
-            ErrorMessage::EMixedImportAndRequire(box (_, import_loc)) => Normal(
-                Message::MessageCannotUseMixedImportAndRequire(MessageTypeReferenceData {
-                    loc: import_loc,
-                    desc: Err(VirtualReasonDesc::RCode("import".into())),
-                }),
-            ),
+            ErrorMessage::EMixedImportAndRequire(box (_, import_loc)) => {
+                Normal(Message::MessageCannotUseMixedImportAndRequire(import_loc))
+            }
 
             ErrorMessage::EUnsupportedVarianceAnnotation(box (_, kind)) => {
                 Normal(Message::MessageUnsupportedVarianceAnnotation(kind))
@@ -11617,9 +11509,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     enum_name,
                 },
             )) => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
-                reason: MessageTypeReferenceData {
+                function: NamedReferenceData {
                     loc: operation_loc,
-                    desc: Err(VirtualReasonDesc::RIdentifier(function_name)),
+                    name: function_name,
                 },
                 enum_: MessageTypeReferenceData {
                     loc: enum_.reference_loc,
@@ -11634,7 +11526,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 binding_kind,
                 ..
             }) => Normal(Message::MessageCannotReassignConstantLikeBinding {
-                definition: message_identifier_reference(definition_loc, name),
+                definition: NamedReferenceData {
+                    loc: definition_loc,
+                    name,
+                },
                 binding_kind,
             }),
 
@@ -11648,13 +11543,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     ThisFinderKind::This => crate::intermediate_error_types::ThisFinderKind::This,
                     ThisFinderKind::Super => crate::intermediate_error_types::ThisFinderKind::Super,
                 };
-                Normal(Message::MessageThisSuperInObject(
-                    MessageTypeReferenceData {
-                        loc: method_loc,
-                        desc: Err(VirtualReasonDesc::RMethod(method_name)),
-                    },
-                    converted_kind,
-                ))
+                Normal(Message::MessageThisSuperInObject {
+                    method_loc,
+                    method_name,
+                    kind: converted_kind,
+                })
             }
 
             ErrorMessage::EComponentThisReference(box EComponentThisReferenceData {
@@ -11676,9 +11569,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     use_op,
                     message: Message::MessageUnderconstrainedImplicitInstantiaton {
                         call,
-                        reason_tparam: MessageTypeReferenceData {
+                        type_param: NamedReferenceData {
                             loc: type_param_loc,
-                            desc: Err(VirtualReasonDesc::RType(type_param_name)),
+                            name: type_param_name,
                         },
                     },
                     loc,
@@ -11863,12 +11756,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 .map(|(enum_key, type_references)| {
                                     (
                                         enum_key,
-                                        type_references.mapped(|type_reference| {
-                                            MessageTypeReferenceData {
-                                                loc: type_reference.loc,
-                                                desc: Err(VirtualReasonDesc::RObjectType),
-                                            }
-                                        }),
+                                        type_references.mapped(|type_reference| type_reference.loc),
                                     )
                                 })
                                 .collect(),
