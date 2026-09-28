@@ -22,6 +22,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
+# Isolate this test process's temp state before any tempfile use. CI stress
+# workers share /tmp, and Flow extracts shared libdefs under TMPDIR, so
+# concurrent full-checks can corrupt each other's reads. Children inherit this.
+_test_proc_tmpdir = tempfile.mkdtemp(prefix="flow-eval-test-proc-")
+os.environ["TMPDIR"] = _test_proc_tmpdir
+os.environ["TEMP"] = _test_proc_tmpdir
+os.environ["TMP"] = _test_proc_tmpdir
+tempfile.tempdir = _test_proc_tmpdir
+
 FLOW_BIN = os.environ.get("FLOW_BIN", "flow")
 CATEGORY = os.environ.get("TEST_CATEGORY", "")
 

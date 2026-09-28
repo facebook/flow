@@ -566,6 +566,15 @@ def run_eval(instance, args):
         env["EVAL_INPUT_DIR"] = str(eval_input_dir.resolve())
         if trajectory_path is not None and trajectory_path.exists():
             env["TRAJECTORY_PATH"] = str(trajectory_path)
+        # Give grading a private TMPDIR inside the workdir. Flow extracts
+        # shared libdefs under TMPDIR, so concurrent grading runs (CI stress
+        # workers, -j threads) would otherwise corrupt each other's reads.
+        # The workdir is removed after dry-run grading, taking this along.
+        eval_tmpdir = workdir / "tmp"
+        eval_tmpdir.mkdir(exist_ok=True)
+        env["TMPDIR"] = str(eval_tmpdir)
+        env["TEMP"] = str(eval_tmpdir)
+        env["TMP"] = str(eval_tmpdir)
 
         try:
             result = subprocess.run(
