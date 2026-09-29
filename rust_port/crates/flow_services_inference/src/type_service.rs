@@ -2588,6 +2588,7 @@ fn global_scope_changes(
     committed_heap: &Arc<CommittedHeap>,
     options: &Arc<Options>,
     saved_discovered: &BTreeSet<FileKey>,
+    saved_global_augmentations: &FlowOrdSet<FileKey>,
     updates: &FlowOrdSet<FileKey>,
 ) -> BTreeSet<FileKey> {
     let scratch = ActiveTransaction::new(committed_heap.dupe());
@@ -2599,6 +2600,12 @@ fn global_scope_changes(
         })
         .duped()
         .collect();
+    moved.extend(
+        saved_global_augmentations
+            .iter()
+            .filter(|file| parsing_service::did_content_change(&transaction, file))
+            .duped(),
+    );
     let unclassified: Vec<FileKey> = updates
         .iter()
         .filter(|file| {
@@ -2627,6 +2634,7 @@ fn process_saved_state_updates(
     options: &Arc<Options>,
     transaction: &Transaction,
     saved_discovered: &BTreeSet<FileKey>,
+    saved_global_augmentations: &FlowOrdSet<FileKey>,
     updates: &BTreeSet<String>,
 ) -> Result<FlowOrdSet<FileKey>, String> {
     let file_options = &options.file_options;
@@ -2687,6 +2695,7 @@ fn process_saved_state_updates(
         committed_heap,
         options,
         saved_discovered,
+        saved_global_augmentations,
         &filtered_updates,
     );
     if !global_scope_changes.is_empty() {
@@ -2759,6 +2768,7 @@ fn init_with_initial_state(
     saved_duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     saved_export_index: Option<ExportIndex>,
     saved_discovered_global_libdefs: BTreeSet<FileKey>,
+    saved_global_augmentations: FlowOrdSet<FileKey>,
     env: Option<&Env>,
     parsed: FlowOrdSet<FileKey>,
     unparsed: FlowOrdSet<FileKey>,
@@ -2779,16 +2789,12 @@ fn init_with_initial_state(
     flow_hh_logger::info!("Loading libraries");
     monitor_rpc::status_update(server_status::Event::LoadLibrariesStart);
     let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
-    let global_augmentation_files: FlowOrdSet<FileKey> = parsed
-        .iter()
-        .filter(|file| transaction.has_ts_global_augmentation(file))
-        .duped()
-        .collect();
 
     let additional_lib_files: Vec<FileKey> = ordered_libs
         .iter()
         .map(|name| files::lib_file_key(name))
         .chain(saved_discovered_global_libdefs)
+        .chain(saved_global_augmentations.iter().duped())
         .collect();
     let next: parsing_service::Next = {
         let mut files = Some(additional_lib_files);
@@ -2807,13 +2813,14 @@ fn init_with_initial_state(
         package_json: _package_json,
         all_unordered_libs: discovered_libs,
         dts_file_kinds: _,
-        ts_global_augmentation_files: _,
+        ts_global_augmentation_files,
     } = parse_results;
 
     let all_unordered_libs_set = Arc::new(discovered_libs);
     let global_lib_files = server_env::GlobalLibFiles::new(
         all_unordered_libs_set.dupe(),
         discovered_global_libdefs.dupe(),
+        ts_global_augmentation_files.dupe(),
     );
 
     let (libs_ok, local_errors, warnings, suppressions, lib_exports, master_cx) = init_libs(
@@ -2823,7 +2830,7 @@ fn init_with_initial_state(
         init::assemble_ordered_lib_inputs(
             &ordered_libs,
             &discovered_global_libdefs,
-            &global_augmentation_files,
+            &ts_global_augmentation_files,
         ),
         local_errors,
         BTreeMap::new(),
@@ -3035,6 +3042,7 @@ pub fn init_from_saved_state(
             None
         },
         global_lib_files.discovered,
+        global_lib_files.global_augmentations,
         env,
         parsed,
         unparsed,
@@ -3201,6 +3209,7 @@ pub fn init_from_scratch(
         let global_lib_files = server_env::GlobalLibFiles::new(
             all_unordered_libs_set.dupe(),
             discovered_global_libdefs.dupe(),
+            ts_global_augmentation_files.dupe(),
         );
 
         assert!(unchanged.is_empty());
@@ -3429,6 +3438,7 @@ pub fn load_saved_state(
                 options,
                 &transaction,
                 &saved_state.global_lib_files.discovered,
+                &saved_state.global_lib_files.global_augmentations,
                 &changed_files,
             ) {
                 Ok(updates) => updates,
@@ -3670,6 +3680,7 @@ fn reinit_full_check(
                     env.errors().duplicate_providers.clone(),
                     None,
                     env.discovered_global_libdefs().clone(),
+                    env.global_augmentation_files().dupe(),
                     Some(env.as_ref()),
                     env.files.dupe(),
                     env.unparsed.dupe(),

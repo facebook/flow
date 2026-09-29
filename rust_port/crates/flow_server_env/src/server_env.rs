@@ -161,13 +161,20 @@ pub struct GlobalLibFiles {
     configured: Arc<BTreeSet<FlowSmolStr>>,
     /// Source files classified as global TypeScript declaration libraries.
     discovered: Arc<BTreeSet<FileKey>>,
+    /// Source modules containing TypeScript `declare global` blocks.
+    global_augmentations: FlowOrdSet<FileKey>,
 }
 
 impl GlobalLibFiles {
-    pub fn new(configured: Arc<BTreeSet<FlowSmolStr>>, discovered: Arc<BTreeSet<FileKey>>) -> Self {
+    pub fn new(
+        configured: Arc<BTreeSet<FlowSmolStr>>,
+        discovered: Arc<BTreeSet<FileKey>>,
+        global_augmentations: FlowOrdSet<FileKey>,
+    ) -> Self {
         Self {
             configured,
             discovered,
+            global_augmentations,
         }
     }
 
@@ -177,6 +184,10 @@ impl GlobalLibFiles {
 
     pub fn discovered(&self) -> &Arc<BTreeSet<FileKey>> {
         &self.discovered
+    }
+
+    pub fn global_augmentations(&self) -> &FlowOrdSet<FileKey> {
+        &self.global_augmentations
     }
 
     pub fn contains(&self, file: &FileKey) -> bool {
@@ -228,6 +239,10 @@ impl Env {
 
     pub fn discovered_global_libdefs(&self) -> &BTreeSet<FileKey> {
         self.global_lib_files.discovered()
+    }
+
+    pub fn global_augmentation_files(&self) -> &FlowOrdSet<FileKey> {
+        self.global_lib_files.global_augmentations()
     }
 
     /// Returns whether a file contributes declarations to the global library scope.
@@ -345,6 +360,10 @@ impl EnvTransaction {
         self.global_lib_files().discovered()
     }
 
+    pub fn global_augmentation_files(&self) -> &FlowOrdSet<FileKey> {
+        self.global_lib_files().global_augmentations()
+    }
+
     /// Returns whether a file contributes declarations to the global library scope.
     pub fn is_lib_file(&self, file: &FileKey) -> bool {
         self.global_lib_files().contains(file)
@@ -430,6 +449,7 @@ impl EnvTransaction {
         self.global_lib_files = Some(GlobalLibFiles::new(
             Arc::new(configured),
             self.global_lib_files().discovered().dupe(),
+            self.global_lib_files().global_augmentations().dupe(),
         ));
     }
 
@@ -628,6 +648,7 @@ mod tests {
             global_lib_files: GlobalLibFiles::new(
                 Arc::new(BTreeSet::new()),
                 Arc::new(BTreeSet::new()),
+                FlowOrdSet::new(),
             ),
             unparsed: FlowOrdSet::new(),
             errors: env_cell(empty_errors()),

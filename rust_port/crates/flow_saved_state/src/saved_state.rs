@@ -37,9 +37,9 @@ use flow_typing_errors::flow_error::ErrorSet;
 const SAVED_STATE_FILE_TABLE_MAGIC: u64 = 0x464C4F5753465431; // "FLOWSFT1"
 const SAVED_STATE_RAW_BLOCK_MAGIC: u64 = 0x464C4F5752415731; // "FLOWRAW1"
 
-/// The saved-state counterpart of `server_env::GlobalLibFiles`, with the same split: the
-/// paths a `[libs]` stanza named, and the source files discovery classified as global
-/// TypeScript declaration libraries.
+/// The saved-state counterpart of `server_env::GlobalLibFiles`: the paths a `[libs]` stanza
+/// named, the source files discovery classified as global TypeScript declaration libraries,
+/// and the source modules containing `declare global` blocks.
 ///
 /// Not quite the same contents, though, hence the name: unlike the env's `configured`, the
 /// builtin flowlibs are left out, because the server which loads the saved state extracts
@@ -48,6 +48,7 @@ const SAVED_STATE_RAW_BLOCK_MAGIC: u64 = 0x464C4F5752415731; // "FLOWRAW1"
 pub struct SavedGlobalLibFiles {
     pub non_flowlib_configured: BTreeSet<FlowSmolStr>,
     pub discovered: BTreeSet<FileKey>,
+    pub global_augmentations: FlowOrdSet<FileKey>,
 }
 
 // The committed heap is dumped directly to disk via CommittedHeap.save_heap. This type holds only
@@ -93,6 +94,7 @@ struct SavedStateEnvBaseData {
     package_json_files: Vec<u32>,
     non_flowlib_configured: BTreeSet<FlowSmolStr>,
     discovered: Vec<u32>,
+    global_augmentations: Vec<u32>,
     local_errors: Vec<(u32, ErrorSet)>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
     duplicate_providers: BTreeMap<FlowSmolStr, (u32, Vec<u32>)>,
@@ -281,6 +283,7 @@ fn collect_global_lib_files(env: &Env, options: &Options) -> SavedGlobalLibFiles
     SavedGlobalLibFiles {
         non_flowlib_configured: collect_non_flowlib_configured_libs(env, options),
         discovered: env.discovered_global_libdefs().clone(),
+        global_augmentations: env.global_augmentation_files().dupe(),
     }
 }
 
@@ -702,6 +705,7 @@ fn serialize_saved_state_env_data(
     file_keys.extend(data.unparsed_files.iter().duped());
     file_keys.extend(data.package_json_files.iter().duped());
     file_keys.extend(data.global_lib_files.discovered.iter().duped());
+    file_keys.extend(data.global_lib_files.global_augmentations.iter().duped());
     file_keys.extend(data.local_errors.keys().duped());
     for (leader, others) in data.duplicate_providers.values() {
         file_keys.insert(leader.dupe());
@@ -754,6 +758,11 @@ fn serialize_saved_state_env_data(
                 .iter()
                 .map(|file| file_index(&file_to_index, file))
                 .collect(),
+            global_augmentations: global_lib_files
+                .global_augmentations
+                .iter()
+                .map(|file| file_index(&file_to_index, file))
+                .collect(),
             local_errors: local_errors
                 .into_iter()
                 .map(|(file, errors)| (file_index(&file_to_index, &file), errors))
@@ -792,6 +801,7 @@ fn deserialize_saved_state_base_data(
         package_json_files,
         non_flowlib_configured,
         discovered,
+        global_augmentations,
         local_errors,
         node_modules_containers,
         duplicate_providers,
@@ -808,6 +818,10 @@ fn deserialize_saved_state_base_data(
                 .into_iter()
                 .map(|file| file_from_index(files, file))
                 .collect::<Result<BTreeSet<_>, InvalidReason>>()?,
+            global_augmentations: global_augmentations
+                .into_iter()
+                .map(|file| file_from_index(files, file))
+                .collect::<Result<FlowOrdSet<_>, InvalidReason>>()?,
         },
         local_errors: local_errors
             .into_iter()

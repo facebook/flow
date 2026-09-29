@@ -96,8 +96,30 @@ No errors!
 no full reinit
 
 
-======saved state restores global contributors======
+======lazy saved-state load restores global augmentations======
 No errors!
+
+The Flow server is currently in lazy mode and is only checking 1/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+No errors!
+
+The Flow server is currently in lazy mode and is only checking 2/6 files.
+To learn more, visit flow.org/en/docs/lang/lazy-modes
+
+
+======an unreported changed global contributor rejects saved state======
+
+
+======a changed global contributor rejects saved state======
+
+
+======a deleted global contributor rejects saved state======
+
+
+======a new global contributor rejects saved state======
+
+
+======ordinary module change reuses saved state======
 
 
 ======ordinary dependency edit stays incremental======
