@@ -98,6 +98,8 @@ use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::poly;
 use flow_typing_type::type_::react;
+use flow_typing_type::type_::type_collector::TypeCollector;
+use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_::unsoundness;
 use flow_typing_type::type_util;
@@ -363,25 +365,20 @@ fn simplify_callee<'cx>(
     use_op: UseOp,
     func_t: &Type,
 ) -> Result<Type, SandboxError> {
-    let func_t = func_t.dupe();
-    let use_op = use_op.dupe();
-    let reason2 = reason.dupe();
-    Ok(flow_typing_tvar::mk_no_wrap_where(
-        cx,
+    let collector = TypeCollector::create();
+    let call_action = Box::new(CallAction::ConcretizeCallee(collector.dupe()));
+    let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
+        use_op,
+        reason: reason.dupe(),
+        call_action,
+        return_hint: hint_unavailable(),
+    })));
+    flow_js::flow_with_env(cx, env, (func_t, &use_t))?;
+    Ok(type_util::union_of_ts(
         reason.dupe(),
-        move |cx, r, id| {
-            let call_action =
-                Box::new(CallAction::ConcretizeCallee(Tvar::new(r.dupe(), id as u32)));
-            let use_t = UseT::new(UseTInner::CallT(Box::new(CallTData {
-                use_op,
-                reason: reason2,
-                call_action,
-                return_hint: hint_unavailable(),
-            })));
-            flow_js::flow_with_env(cx, env, (&func_t, &use_t))?;
-            Ok::<(), FlowJsException>(())
-        },
-    )?)
+        collector.collect_to_vec(),
+        Some(UnionKind::ResolvedKind),
+    ))
 }
 
 // A cheaper version of `instantiate_poly_with_targs` from flow_js_utils that only performs
@@ -1652,8 +1649,7 @@ fn type_of_hint_decomposition<'cx>(
             }
             ConcrHintDecompositionInner::SimplifyCallee(callee_reason) => {
                 let simplify = |fn_t: &Type| -> Result<Type, SandboxError> {
-                    let result = simplify_callee(cx, env, callee_reason, unknown_use(), fn_t)?;
-                    Ok(get_t(cx, result))
+                    simplify_callee(cx, env, callee_reason, unknown_use(), fn_t)
                 };
                 let simplified = simplify(&t)?;
                 match simplified.deref() {

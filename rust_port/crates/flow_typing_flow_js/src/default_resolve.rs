@@ -197,7 +197,10 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::CallT(box CallTData {
             call_action: box CallAction::ConcretizeCallee(tout),
             ..
-        }) => resolve_tvar(tout),
+        }) => {
+            tout.add(any.dupe());
+            Ok(())
+        }
         UseTInner::ConditionalT(box ConditionalTData { tout, .. }) => resolve_tvar(tout),
         UseTInner::MethodT(box MethodTData {
             method_action: action,

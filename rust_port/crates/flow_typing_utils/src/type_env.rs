@@ -863,26 +863,28 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, Jo
     fn simplify_callee<'cx>(cx: &Context<'cx>, func_t: &Type) -> Result<Type, JobError> {
         let errors = cx.errors();
         let result = cx.run_and_rolled_back_cache(|| {
+            use flow_typing_type::type_::UseT;
+            use flow_typing_type::type_::UseTInner;
+            use flow_typing_type::type_::type_collector::TypeCollector;
+            use flow_typing_type::type_::union_rep::UnionKind;
             let reason = flow_typing_type::type_util::reason_of_t(func_t);
-            flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, r, tvar_id| {
-                use flow_typing_type::type_::Tvar;
-                use flow_typing_type::type_::UseT;
-                use flow_typing_type::type_::UseTInner;
-                let u = UseT::new(UseTInner::CallT(Box::new(
-                    flow_typing_type::type_::CallTData {
-                        use_op: flow_typing_type::type_::unknown_use(),
-                        reason: reason.dupe(),
-                        call_action: Box::new(
-                            flow_typing_type::type_::CallAction::ConcretizeCallee(Tvar::new(
-                                r.dupe(),
-                                tvar_id as u32,
-                            )),
-                        ),
-                        return_hint: flow_typing_type::type_::hint_unavailable(),
-                    },
-                )));
-                flow_js::flow_non_speculating(cx, (func_t, &u))
-            })
+            let collector = TypeCollector::create();
+            let u = UseT::new(UseTInner::CallT(Box::new(
+                flow_typing_type::type_::CallTData {
+                    use_op: flow_typing_type::type_::unknown_use(),
+                    reason: reason.dupe(),
+                    call_action: Box::new(flow_typing_type::type_::CallAction::ConcretizeCallee(
+                        collector.dupe(),
+                    )),
+                    return_hint: flow_typing_type::type_::hint_unavailable(),
+                },
+            )));
+            flow_js::flow_non_speculating(cx, (func_t, &u))?;
+            Ok(flow_typing_type::type_util::union_of_ts(
+                reason.dupe(),
+                collector.collect_to_vec(),
+                Some(UnionKind::ResolvedKind),
+            ))
         });
         cx.reset_errors(errors);
         result
@@ -911,10 +913,7 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, Jo
             TypeInner::DefT(_, _) => Ok(on_ground(t)),
             _ => {
                 let simplified = simplify_callee(cx, t)?;
-                Ok(match cx.find_resolved(&simplified) {
-                    Some(resolved) => on_ground(&resolved),
-                    None => true,
-                })
+                Ok(on_ground(&simplified))
             }
         }
     }

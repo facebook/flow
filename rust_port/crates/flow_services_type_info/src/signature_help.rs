@@ -40,7 +40,6 @@ use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::PolyTData;
-use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UseT;
@@ -51,6 +50,8 @@ use flow_typing_type::type_::eval;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::property;
+use flow_typing_type::type_::type_collector::TypeCollector;
+use flow_typing_type::type_::union_rep::UnionKind;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
 
@@ -271,18 +272,19 @@ pub mod callee_finder {
         func_t: &Type,
     ) -> Result<Type, flow_utils_concurrency::job_error::JobError> {
         let reason = type_util::reason_of_t(func_t).dupe();
-        flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |_cx, _reason, t| {
-            let u = UseT::new(UseTInner::CallT(Box::new(CallTData {
-                use_op: unknown_use(),
-                reason: reason.dupe(),
-                call_action: Box::new(CallAction::ConcretizeCallee(Tvar::new(
-                    reason.dupe(),
-                    t as u32,
-                ))),
-                return_hint: hint_unavailable(),
-            })));
-            flow_js::flow_non_speculating(cx, (func_t, &u))
-        })
+        let collector = TypeCollector::create();
+        let u = UseT::new(UseTInner::CallT(Box::new(CallTData {
+            use_op: unknown_use(),
+            reason: reason.dupe(),
+            call_action: Box::new(CallAction::ConcretizeCallee(collector.dupe())),
+            return_hint: hint_unavailable(),
+        })));
+        flow_js::flow_non_speculating(cx, (func_t, &u))?;
+        Ok(type_util::union_of_ts(
+            reason,
+            collector.collect_to_vec(),
+            Some(UnionKind::ResolvedKind),
+        ))
     }
 
     pub fn get_func(

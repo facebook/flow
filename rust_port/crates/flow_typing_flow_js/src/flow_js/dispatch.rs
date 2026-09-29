@@ -3543,13 +3543,11 @@ fn __flow_impl<'cx>(
         (
             TypeInner::IntersectionT(_, _),
             UseTInner::CallT(box CallTData {
-                use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
         ) => {
-            let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
+            tout.add(l.dupe());
         }
         (
             TypeInner::IntersectionT(_, _),
@@ -4638,13 +4636,11 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(_, def_t),
             UseTInner::CallT(box CallTData {
-                use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
         ) if matches!(def_t.deref(), DefTInner::PolyT(box _)) => {
-            let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
+            tout.add(l.dupe());
         }
 
         // Calls to polymorphic functions may cause non-termination, e.g. when the
@@ -5129,13 +5125,11 @@ fn __flow_impl<'cx>(
         (
             TypeInner::DefT(_, def_t),
             UseTInner::CallT(box CallTData {
-                use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
         ) if matches!(def_t.deref(), DefTInner::FunT(_, _)) => {
-            let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
+            tout.add(l.dupe());
         }
         (
             TypeInner::DefT(reason_fundef, def_t),
@@ -5263,13 +5257,11 @@ fn __flow_impl<'cx>(
         (
             TypeInner::AnyT(_, _),
             UseTInner::CallT(box CallTData {
-                use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
         ) => {
-            let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
+            tout.add(l.dupe());
         }
         (
             TypeInner::AnyT(reason_fundef, src),
@@ -7975,13 +7967,11 @@ fn __flow_impl<'cx>(
         (
             TypeInner::FunProtoBindT(_),
             UseTInner::CallT(box CallTData {
-                use_op,
                 call_action: box CallAction::ConcretizeCallee(tout),
                 ..
             }),
         ) => {
-            let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, env, trace, use_op.dupe(), (l, &open_tout))?;
+            tout.add(l.dupe());
         }
         (
             TypeInner::FunProtoBindT(_),
@@ -10642,8 +10632,7 @@ fn __flow_impl<'cx>(
                 ..
             }),
         ) if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedFunction)) => {
-            let open_tout = Type::new(TypeInner::OpenT(tout.dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (l, &open_tout))?;
+            tout.add(l.dupe());
         }
         (
             TypeInner::DefT(lreason, def_t),

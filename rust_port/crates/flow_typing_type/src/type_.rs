@@ -3629,7 +3629,7 @@ pub enum EnumPossibleExhaustiveCheckT {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CallAction {
     Funcalltype(Box<FuncallType>),
-    ConcretizeCallee(Tvar),
+    ConcretizeCallee(type_collector::TypeCollector),
 }
 
 // opt_use_t: use_ts which can be part of an optional chain
