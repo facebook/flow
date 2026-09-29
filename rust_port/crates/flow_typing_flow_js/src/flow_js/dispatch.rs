@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -5985,8 +5986,11 @@ fn __flow_impl<'cx>(
                 None,
                 super_.dupe(),
             )?;
-            let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
+            let mut protos = Vec::new();
+            flow_js_utils::collect_lowers(true, cx, &mut BTreeSet::new(), &mut protos, vec![proto]);
+            for proto in protos {
+                t.add(proto);
+            }
         }
         (TypeInner::DefT(_, def_t), UseTInner::GetProtoT(reason_op, t))
             if let DefTInner::ObjT(obj) = def_t.deref() =>
@@ -6001,26 +6005,26 @@ fn __flow_impl<'cx>(
                 None,
                 proto_t.dupe(),
             )?;
-            let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
+            let mut protos = Vec::new();
+            flow_js_utils::collect_lowers(true, cx, &mut BTreeSet::new(), &mut protos, vec![proto]);
+            for proto in protos {
+                t.add(proto);
+            }
         }
         (TypeInner::ObjProtoT(_), UseTInner::GetProtoT(reason_op, t)) => {
             let proto = null::why(reason_op.dupe());
-            let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
+            t.add(proto);
         }
         (TypeInner::FunProtoT(reason), UseTInner::GetProtoT(reason_op, t)) => {
             let proto = Type::new(TypeInner::ObjProtoT(
                 reason.dupe().reposition(reason_op.loc().dupe()),
             ));
-            let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
+            t.add(proto);
         }
         (TypeInner::AnyT(_, src), UseTInner::GetProtoT(reason_op, t)) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let proto = any_t::why(src, reason_op.dupe());
-            let open_t = Type::new(TypeInner::OpenT((**t).dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
+            t.add(proto);
         }
 
         // ********************
@@ -9560,18 +9564,20 @@ fn __flow_impl<'cx>(
             }),
         ) if try_ts_on_failure.is_empty() && name == &Name::new("__proto__") => {
             // __proto__ is a getter/setter on Object.prototype
+            let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
                 env,
                 trace,
                 (
                     lookup_l,
-                    &UseT::new(UseTInner::GetProtoT(
-                        reason_op.dupe(),
-                        Box::new(tout.clone()),
-                    )),
+                    &UseT::new(UseTInner::GetProtoT(reason_op.dupe(), collector.dupe())),
                 ),
             )?;
+            let open_t = Type::new(TypeInner::OpenT(tout.dupe()));
+            for proto in collector.collect_to_vec() {
+                rec_flow_t(cx, env, trace, unknown_use(), (&proto, &open_t))?;
+            }
         }
         (
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),

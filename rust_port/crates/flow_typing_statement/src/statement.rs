@@ -14342,21 +14342,20 @@ fn static_method_call_object<'a>(
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
             let proto_reason = mk_reason(RPrototype, e.loc().dupe());
-            let t = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where::<JobError>(
+            let collector = TypeCollector::create();
+            flow_js::flow_non_speculating(
                 cx,
-                proto_reason.dupe(),
-                |cx, tout_reason, tout_id| {
-                    let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &e_t,
-                            &UseT::new(UseTInner::GetProtoT(proto_reason.dupe(), Box::new(tout))),
-                        ),
-                    )?;
-                    Ok(())
-                },
+                (
+                    &e_t,
+                    &UseT::new(UseTInner::GetProtoT(proto_reason.dupe(), collector.dupe())),
+                ),
             )?;
+            let t = union_of_ts_opt(
+                proto_reason.dupe(),
+                collector.collect_to_vec(),
+                Some(union_rep::UnionKind::ResolvedKind),
+            )
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(&proto_reason));
             (
                 t,
                 None,

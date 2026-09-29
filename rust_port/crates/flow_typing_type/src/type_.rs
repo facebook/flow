@@ -2547,7 +2547,7 @@ pub enum UseTInner<CX = ()> {
     GetElemT(Box<GetElemTData>),
     CallElemT(Box<CallElemTData<CX>>),
     GetStaticsT(Box<Tvar>),
-    GetProtoT(Reason, Box<Tvar>),
+    GetProtoT(Reason, type_collector::TypeCollector),
     SetProtoT(Reason, Type),
 
     // Repositioning

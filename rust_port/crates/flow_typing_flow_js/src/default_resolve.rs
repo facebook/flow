@@ -219,7 +219,11 @@ pub fn default_resolve_touts<'cx>(
             method_action: action,
             ..
         }) => resolve_method_action(action),
-        UseTInner::GetStaticsT(tvar) | UseTInner::GetProtoT(_, tvar) => resolve_tvar(tvar),
+        UseTInner::GetStaticsT(tvar) => resolve_tvar(tvar),
+        UseTInner::GetProtoT(_, collector) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::SetProtoT(..) => Ok(()),
         UseTInner::ReposLowerT { .. } | UseTInner::ReposUseT(..) => Ok(()),
         UseTInner::ConstructorT(data) => resolve(data.tout.dupe()),
