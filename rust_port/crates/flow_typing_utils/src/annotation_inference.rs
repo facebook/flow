@@ -1213,6 +1213,56 @@ fn elab_t_concrete<'cx>(
                 }
                 DefTInner::PolyT(box PolyTData {
                     tparams_loc,
+                    tparams,
+                    t_out,
+                    id,
+                    strictness_kind,
+                }) if matches!(kind, flow_typing_type::type_::TypeTKind::RenderTypeKind)
+                    && let TypeInner::DefT(_, inner) = t_out.deref()
+                    && let DefTInner::TypeT(TypeTKind::ImportTypeofKind, inner_t) =
+                        inner.deref()
+                    && let TypeInner::AnnotT(_, t_out_mono, _) = inner_t.deref() =>
+                {
+                    // `renders` over `import typeof` of a generic component must
+                    // behave like `renders` over the component itself. Unwrap the
+                    // alias to a polymorphic component and recurse so the direct
+                    // renders arm above applies.
+                    let poly = type_util::poly_type_of_tparam_list(
+                        id.dupe(),
+                        tparams_loc.dupe(),
+                        tparams.dupe(),
+                        t_out_mono.dupe(),
+                        *strictness_kind,
+                    );
+                    elab_t(cx, env, dst_cx, Some(seen), poly, op)
+                }
+                DefTInner::PolyT(box PolyTData {
+                    tparams_loc,
+                    tparams,
+                    t_out,
+                    id,
+                    strictness_kind,
+                }) if let TypeInner::DefT(_, inner) = t_out.deref()
+                    && let DefTInner::TypeT(TypeTKind::ImportTypeofKind, inner_t) =
+                        inner.deref()
+                    && let TypeInner::AnnotT(_, t_out_mono, _) = inner_t.deref() =>
+                {
+                    // `import typeof` of a generic function, class, or component is a
+                    // parameterized alias over the typeof of the body. Using it bare
+                    // must behave like `typeof v` (keep the polymorphism) rather than
+                    // reporting missing-type-arg, so rebuild the polymorphic typeof
+                    // from the alias pieces.
+                    let poly = type_util::poly_type_of_tparam_list(
+                        id.dupe(),
+                        tparams_loc.dupe(),
+                        tparams.dupe(),
+                        t_out_mono.dupe(),
+                        *strictness_kind,
+                    );
+                    type_util::typeof_annotation(reason.dupe(), poly, None)
+                }
+                DefTInner::PolyT(box PolyTData {
+                    tparams_loc,
                     tparams: ids,
                     t_out,
                     id,
