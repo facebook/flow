@@ -51,7 +51,8 @@ function test(items: Array<Item>) {
   );
 }
 
-// Test: rest pattern on a union type with spread annotation
+// Test: rest pattern on a union type with spread annotation. The annotation is
+// valid, and the assignment reports the incompatible union branches.
 function testRest(item: Item): void {
   const {
     name,
@@ -61,9 +62,6 @@ function testRest(item: Item): void {
     ...Item,
     name?: string,
  ...  } = item;
-  // Accessing a property that only exists on one branch of the union
-  // should produce an error, but should NOT produce a different error
-  // than the baseline.
 }
 
 // Test: destructured value used in switch (should preserve full type)

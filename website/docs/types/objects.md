@@ -311,9 +311,8 @@ const y: ObjB = {a: 1, b: 'hi', c: true}; // Works!
 const z: ObjB = {...x, c: true}; // Works!
 ```
 
-You have to be careful spreading inexact objects.
-Spreading inexact types only works when the spread appears **before any named properties** AND the resulting object is also inexact; otherwise make the spread source exact.
-The spread inexact object may have unknown properties that can override previous properties in unknown ways:
+Object type spread uses the declared properties of an inexact object type. Unknown
+properties allowed by the inexact type do not participate in the spread:
 
 ```js flow-check
 type Inexact = {
@@ -322,15 +321,16 @@ type Inexact = {
   ...
 };
 
-type ObjB = { // Error!
+type ObjB = {
   c: boolean,
-  ...Inexact, // Error
+  ...Inexact,
 };
 
 const x: ObjB = {a:1, b: 'hi', c: true};
 ```
 
-The same issue exists with objects with [indexers](#toc-objects-as-maps), as they also have unknown keys:
+Objects with [indexers](#toc-objects-as-maps) remain restricted because their
+unknown keys participate in the spread:
 
 ```js flow-check
 type Dict = {
@@ -345,9 +345,9 @@ type ObjB = { // Error!
 const x: ObjB = {a: 1, b: 2, c: true};
 ```
 
-Spreading an object value at runtime only spreads "own" properties, that is properties that are on the object directly, not the prototype chain.
-Object type spread works in the same way.
-Because of this, you can't spread [interfaces](./interfaces.md), as they don't track whether a property is "own" or not:
+Unlike value spread, which only copies own properties and therefore rejects
+Flow interface values, object type spread uses the declared shape of an
+[interface](./interfaces.md), including inherited properties:
 
 ```js flow-check
 interface Iface {
@@ -355,7 +355,7 @@ interface Iface {
   b: string;
 }
 
-type ObjB = { // Error!
+type ObjB = {
   c: boolean,
   ...Iface,
 };

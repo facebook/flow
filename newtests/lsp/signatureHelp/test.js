@@ -3469,7 +3469,16 @@ module.exports = suite(
             result: {
               activeParameter: 0,
               activeSignature: 0,
-              signatures: [],
+              signatures: [
+                {
+                  label: 'foo: number | string',
+                  parameters: [
+                    {
+                      label: 'foo: number | string',
+                    },
+                  ],
+                },
+              ],
             },
           },
         ],

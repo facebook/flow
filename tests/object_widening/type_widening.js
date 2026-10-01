@@ -226,4 +226,4 @@ if (true) {
 }
 
 declare function inexactSpread<T>(x: T): {bar: 3, ...T, ...{}, ...};
-const inexact_spread_err = inexactSpread(inexact);
+const inexact_spread = inexactSpread(inexact); // OK

@@ -8720,9 +8720,8 @@ pub mod object {
                 make_seal: SealType,
                 strictness_kind: TypeStrictnessKind,
             },
-            // It's more flexible to allow annotations to specify whether they should be
-            // exact or not. If the spread type is annotated to be exact, any inexact
-            // input types will cause a type error.
+            // Type spreads use the declared shape of inexact inputs. The annotation
+            // determines whether the resulting object is exact.
             Annot {
                 make_exact: bool,
                 strictness_kind: TypeStrictnessKind,

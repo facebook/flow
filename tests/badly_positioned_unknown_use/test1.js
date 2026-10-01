@@ -15,5 +15,5 @@ function f<
   };
 }
 
-// Error: inexact from foo vs exact from f
+// OK: type spreads accept inexact inputs
 var x = f<React.ComponentType<{...}>>()(foo(Comp));

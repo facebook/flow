@@ -276,43 +276,7 @@ Found 2 errors
 No errors!
 
 === block 23 ===
-Error ------------------------------------------------------------------------------ -:8:13
-
-Flow cannot determine a type for object type [1]. `Inexact` [2] is inexact, so it may contain `c` with a type that
-conflicts with `c`'s definition in object type [1]. Try making `Inexact` [2] exact. [cannot-spread-inexact]
-
-   -:8:13
-                   v----------
-    8| type ObjB = { // Error!
-    9|   c: boolean,
-   10|   ...Inexact, // Error
-   11| };
-       ^ [1]
-
-References:
-   -:10:6
-   10|   ...Inexact, // Error
-            ^^^^^^^ [2]
-
-Error ------------------------------------------------------------------------------ -:10:6
-
-Inexact `Inexact` [1] is incompatible with exact object type [2]. [incompatible-exact]
-
-   -:10:6
-   10|   ...Inexact, // Error
-            ^^^^^^^ [1]
-
-References:
-   -:8:13
-                   v----------
-    8| type ObjB = { // Error!
-    9|   c: boolean,
-   10|   ...Inexact, // Error
-   11| };
-       ^ [2]
-
-
-Found 2 errors
+No errors!
 
 === block 24 ===
 Error ------------------------------------------------------------------------------ -:6:13
@@ -341,26 +305,7 @@ References:
 Found 1 error
 
 === block 25 ===
-Error ------------------------------------------------------------------------------ -:7:13
-
-Flow cannot determine a type for object type [1]. `Iface` [2] cannot be spread because interfaces do not track the
-own-ness of their properties. Try using an object type instead. [cannot-spread-interface]
-
-   -:7:13
-                   v----------
-    7| type ObjB = { // Error!
-    8|   c: boolean,
-    9|   ...Iface,
-   10| };
-       ^ [1]
-
-References:
-   -:9:6
-    9|   ...Iface,
-            ^^^^^ [2]
-
-
-Found 1 error
+No errors!
 
 === block 26 ===
 No errors!

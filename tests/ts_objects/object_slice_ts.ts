@@ -13,10 +13,21 @@ import {
 
 export type TsMarker = {marker: string};
 
-export interface TsNarrowInterface {
+interface TsBaseInterface {
+  inherited: FlowDog;
+  inheritedFunction: () => string;
+  inheritedMethod(): string;
+}
+
+export interface TsNarrowInterface extends TsBaseInterface {
+  kind: "ts";
   value: FlowDog;
   extra: string;
+  ownFunction: () => string;
+  ownMethod(): string;
 }
+
+export declare const tsNarrowInterfaceValue: TsNarrowInterface;
 
 export type TsDefaults = {marker: string};
 export type TsNarrowValue = {value: FlowDog; extra: string};

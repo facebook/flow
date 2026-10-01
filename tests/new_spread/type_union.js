@@ -14,7 +14,7 @@ type Union2 = {bar: number} | {[number]: string};
 declare const x1: {...Union1, ...Union2, ...}; // Error, indexer on right
 x1 as {...};
 
-declare const x5: {...Union1, ...{...}, ...} // Error, spreading {} overwrites indexer
+declare const x5: {...Union1, ...{...}, ...} // OK
 x5 as {...};
 
 y = {}; // unsealed
@@ -34,5 +34,5 @@ declare const x3: {...Union3, ...Union4};
 
 interface I1 {}
 type Union5 = I1 | Union3 | Union4;
-declare const x4: {...Union5, ...};  // Error, cannot spread interface
+declare const x4: {...Union5, ...}; // OK
 x4 as {...};

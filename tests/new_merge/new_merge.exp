@@ -585,8 +585,8 @@ Cannot cast `p3_f_22` to empty because `string` [1] is incompatible with `empty`
         ^^^^^^^
 
 References:
-   eval_spread.js:9:22
-     9| type P3 = {...O1, f: string};
+   eval_spread.js:8:22
+     8| type P3 = {...O1, f: string};
                              ^^^^^^ [1]
    main.js:117:12
    117| p3_f_22 as empty; // error string ~> empty
@@ -602,8 +602,8 @@ Cannot cast `p4_f_22` to empty because `string` [1] is incompatible with `empty`
         ^^^^^^^
 
 References:
-   eval_spread.js:10:22
-    10| type P4 = {...O2, f: string};
+   eval_spread.js:9:22
+     9| type P4 = {...O2, f: string};
                              ^^^^^^ [1]
    main.js:118:12
    118| p4_f_22 as empty; // error string ~> empty
@@ -688,8 +688,8 @@ Cannot cast `p1_22` to object type because inexact `P1` [1] is incompatible with
         ^^^^^
 
 References:
-   eval_spread.js:12:24
-    12| declare export var p1: P1;
+   eval_spread.js:11:24
+    11| declare export var p1: P1;
                                ^^ [1]
    main.js:129:10
    129| p1_22 as {f: string, g: string}; // error incompatible exact
@@ -706,8 +706,8 @@ Cannot cast `p2_22` to object type because inexact `P2` [1] is incompatible with
         ^^^^^
 
 References:
-   eval_spread.js:13:24
-    13| declare export var p2: P2;
+   eval_spread.js:12:24
+    12| declare export var p2: P2;
                                ^^ [1]
    main.js:130:10
    130| p2_22 as {f: string, g: string}; // error incompatible exact

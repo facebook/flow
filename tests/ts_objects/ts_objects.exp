@@ -270,6 +270,115 @@ References:
                                 ^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------- object_slice_ts_interface.js:23:1
+
+Cannot cast `valueSpread.extra` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   object_slice_ts_interface.js:23:1
+   23| valueSpread.extra as empty; // ERROR: the result is not any
+       ^^^^^^^^^^^^^^^^^
+
+References:
+   object_slice_ts.ts:25:10
+   25|   extra: string;
+                ^^^^^^ [1]
+   object_slice_ts_interface.js:23:22
+   23| valueSpread.extra as empty; // ERROR: the result is not any
+                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:38:53
+
+Cannot spread object literal because Flow cannot determine a type for `TsNarrowInterface` [1]. `TsNarrowInterface` [1]
+is inexact and may have a property key that conflicts with `string` [2] or a property value that conflicts with
+`number` [3]. Try making `TsNarrowInterface` [1] exact. [cannot-spread-inexact]
+
+   object_slice_ts_interface.js:38:53
+   38| const valueSpreadAfterIndexer = {...indexedHead, ...tsNarrowInterfaceValue}; // ERROR
+                                                           ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_slice_ts.ts:30:46
+   30| export declare const tsNarrowInterfaceValue: TsNarrowInterface;
+                                                    ^^^^^^^^^^^^^^^^^ [1]
+   object_slice_ts_interface.js:37:30
+   37| declare const indexedHead: {[string]: number};
+                                    ^^^^^^ [2]
+   object_slice_ts_interface.js:37:39
+   37| declare const indexedHead: {[string]: number};
+                                             ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:48:33
+
+Cannot spread object literal because Flow cannot determine a type for `TsNarrowInterface` [1]. `FlowInterface` [2]
+cannot be spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   object_slice_ts_interface.js:48:33
+   48| const tsOrFlowInterfaceSpread = {...tsOrFlowInterface}; // ERROR
+                                       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   object_slice_ts.ts:22:18
+   22| export interface TsNarrowInterface extends TsBaseInterface {
+                        ^^^^^^^^^^^^^^^^^ [1]
+   object_slice_ts_interface.js:43:11
+   43| interface FlowInterface {
+                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:51:36
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `FlowInterface` [2] cannot be
+spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   object_slice_ts_interface.js:51:36
+   51| const flowInterfaceOrExactSpread = {...flowInterfaceOrExact}; // ERROR
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_slice_ts_interface.js:43:11
+   43| interface FlowInterface {
+                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:55:31
+
+Cannot spread object literal because Flow cannot determine a type for `TsNarrowInterface` [1]. `FlowInexact` [2] is
+inexact, so it may contain `sentinel` with a type that conflicts with `sentinel`'s definition in object literal [3]. Try
+making `FlowInexact` [2] exact. [cannot-spread-inexact]
+
+   object_slice_ts_interface.js:55:31
+   55| const tsOrFlowInexactSpread = {sentinel: true, ...tsOrFlowInexact}; // ERROR
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+References:
+   object_slice_ts.ts:22:18
+   22| export interface TsNarrowInterface extends TsBaseInterface {
+                        ^^^^^^^^^^^^^^^^^ [1]
+   object_slice_ts_interface.js:53:20
+   53| type FlowInexact = {kind: 'flow-inexact', flow: number, ...};
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:59:32
+
+Cannot spread object literal because Flow cannot determine a type for object literal [1]. `FlowDerivedInterface` [2]
+cannot be spread because interfaces do not track the own-ness of their properties. Try using an object type instead.
+[cannot-spread-interface]
+
+   object_slice_ts_interface.js:59:32
+   59| const flowDerivedValueSpread = {...flowDerivedInterfaceValue}; // ERROR
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   object_slice_ts_interface.js:58:42
+   58| declare const flowDerivedInterfaceValue: FlowDerivedInterface;
+                                                ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ object_to_class.ts:16:2
 
 Cannot cast object literal to `Point` because object literal [1] is incompatible with `Point` [2]. For example, property
@@ -337,4 +446,4 @@ References:
 
 
 
-Found 21 errors
+Found 27 errors

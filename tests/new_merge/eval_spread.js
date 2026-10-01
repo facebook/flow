@@ -5,7 +5,6 @@ type O2 = {f: number, g: string};
 
 type P1 = { ...O1, f: string, ... };
 type P2 = { ...O2, f: string, ... };
-// $FlowExpectedError[incompatible-exact]
 type P3 = {...O1, f: string};
 type P4 = {...O2, f: string};
 

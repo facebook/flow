@@ -477,6 +477,7 @@ fn spread2<'cx>(
     cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
+    allow_inexact: bool,
     (
         _inline1,
         inexact_reason1,
@@ -508,6 +509,8 @@ fn spread2<'cx>(
 ) -> Result<(bool, Option<Reason>, object::Slice), FlowJsException> {
     let exact1 = obj_type::is_exact(&flags1.obj_kind);
     let exact2 = obj_type::is_exact(&flags2.obj_kind);
+    let allow_inexact1 = allow_inexact || strictness_kind1.is_typescript_loose();
+    let allow_inexact2 = allow_inexact || strictness_kind2.is_typescript_loose();
     let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
     let dict2 = obj_type::get_dict_opt(&flags2.obj_kind);
     let dict = match (dict1, dict2) {
@@ -530,7 +533,7 @@ fn spread2<'cx>(
                 use_op: use_op.dupe(),
             }),
         ))),
-        (Some(d1), _) if !(exact2 || *inline2) => Err(Box::new(
+        (Some(d1), _) if !(exact2 || *inline2 || allow_inexact) => Err(Box::new(
             ErrorMessage::EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
                 spread_reason: reason.dupe(),
                 key: ErrorReference::new(
@@ -599,7 +602,7 @@ fn spread2<'cx>(
                 (_, Some(p2)) if *inline2 => Some(p2.dupe()),
                 (Some(p1), Some(p2)) => Some(merge_props(x, p1, p2)),
                 (Some(p1), None) => {
-                    if exact2 || *inline2 {
+                    if exact2 || *inline2 || allow_inexact2 {
                         Some(p1.dupe())
                     } else {
                         return Err(FlowJsException::Speculative(SpeculativeError(Box::new(
@@ -615,27 +618,25 @@ fn spread2<'cx>(
                         ))));
                     }
                 }
-                // We care about a few cases here. We want to make sure that we can
-                // infer a precise type. This is tricky when the left-hand slice is inexact,
-                // since it may contain p2 even though it's not explicitly specified.
+                // For value spreads, an inexact left-hand slice may contain p2 even though
+                // it is not explicitly specified. Type spreads use only the declared shape.
                 //
-                // If p2 is not optional, then we won't have to worry about anything because it will
-                // definitely overwrite a property with a key matching p2's on the left.
+                // If p2 is not optional, then we don't have to worry because it definitely
+                // overwrites a property with a matching key on the left.
                 //
-                // If p2 is optional, then we can split into a few more cases:
-                //   1. o1 is inexact: error, we cannot infer a precise type since o1 might contain p2
+                // For value spreads where p2 is optional, there are three cases:
+                //   1. o1 is Flow-inexact: error, we cannot infer a precise type since o1 might contain p2
                 //   2. o1 has an indexer: error, we would have to infer a union with the indexer type.
                 //      This would be sound, but it's not likely that anyone would intend it. If that
                 //      assumption turns out to be false, we can easily add support for it later.
                 //   3. o1 is exact: no problem, we don't need to worry about o1 having the
                 //      same property.
-                //
-                //  The if statement below handles 1. and 2., and the else statement
-                //  handles 3. and the case when p2 is not optional.
                 (None, Some(p2)) => {
                     let (_, opt2, _) = type_optionality_and_missing_property(p2);
                     match (&flags1.obj_kind, opt2) {
-                        (ObjKind::Indexed(_) | ObjKind::Inexact, true) => {
+                        (kind @ (ObjKind::Indexed(_) | ObjKind::Inexact), true)
+                            if !allow_inexact1 || matches!(kind, ObjKind::Indexed(_)) =>
+                        {
                             let error_kind = if obj_type::get_dict_opt(&flags1.obj_kind).is_some() {
                                 intermediate_error_types::ExactnessErrorKind::UnexpectedIndexer
                             } else {
@@ -722,6 +723,7 @@ pub fn spread<'cx>(
     cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
+    allow_inexact: bool,
     strictness_kind: TypeStrictnessKind,
     nel: (
         object::spread::AccElement,
@@ -776,7 +778,7 @@ pub fn spread<'cx>(
         let mut rest = xs.dupe();
         rest.drop_first();
         merge_result(
-            |a, b| spread2(dict_check, cx, use_op, reason, a, b),
+            |a, b| spread2(dict_check, cx, use_op, reason, allow_inexact, a, b),
             resolved_of_acc_element,
             x,
             (x1, rest),
@@ -941,24 +943,6 @@ pub fn object_spread_with_env<'cx, A>(
     let spread_id = state.spread_id;
     let union_reason = state.union_reason;
     let curr_resolve_idx = state.curr_resolve_idx;
-    for slice in x.iter() {
-        match options {
-            object::spread::Target::Annot { make_exact, .. }
-                if *make_exact && slice.flags.obj_kind == ObjKind::Inexact =>
-            {
-                add_output(
-                    cx,
-                    env,
-                    ErrorMessage::EIncompatibleWithExact(
-                        (slice.reason.dupe(), reason.dupe()),
-                        use_op.dupe(),
-                        intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
-                    ),
-                )?;
-            }
-            _ => {}
-        }
-    }
     let resolved = object::spread::AccElement::ResolvedSlice(object::Resolved(x.clone()));
 
     let mut acc: flow_data_structure_wrapper::list::FlowOcamlList<object::spread::AccElement> = acc;
@@ -1051,6 +1035,7 @@ pub fn object_spread_with_env<'cx, A>(
         cx,
         &use_op,
         &reason,
+        matches!(options, object::spread::Target::Annot { .. }),
         options.strictness_kind(),
         (resolved, acc),
     ) {
@@ -2040,6 +2025,7 @@ pub fn interface_slice<'cx>(
     static_: &Type,
     inst: InstType,
     id: properties::Id,
+    include_proto_props: bool,
     dict_polarity_override: Option<Polarity>,
     generics: object::GenericSpreadId,
 ) -> object::Slice {
@@ -2052,6 +2038,18 @@ pub fn interface_slice<'cx>(
     let flags = Flags {
         obj_kind,
         react_dro: None,
+    };
+    let id = if include_proto_props {
+        let proto_props = cx.find_props(inst.proto_props.dupe());
+        let own_props = cx.find_props(id);
+        let props = proto_props
+            .iter()
+            .chain(own_props.iter())
+            .map(|(name, prop)| (name.dupe(), prop.dupe()))
+            .collect();
+        cx.generate_property_map(props)
+    } else {
+        id
     };
     object_slice(
         cx,
@@ -2210,15 +2208,25 @@ fn resolve_with_env<'cx, A>(
                     x,
                 );
             }
-            // We take the fields from an InstanceT excluding methods (because methods
-            // are always on the prototype). We also want to resolve fields from the
-            // InstanceT's super class so we recurse.
+            // Interface declarations do not model runtime own-ness, so interface spreads include
+            // their prototype properties. We also recurse to collect inherited properties.
             DefTInner::InstanceT(inst_t) => {
                 let static_ = &inst_t.static_;
                 let super_t = &inst_t.super_;
                 let inst = &inst_t.inst;
                 let own_props = inst.own_props.dupe();
                 let inst_kind = &inst.inst_kind;
+                let is_type_spread = matches!(
+                    tool,
+                    object::Tool::Spread(box (object::spread::Target::Annot { .. }, _))
+                );
+                let is_typescript_interface_value_spread =
+                    matches!(
+                        tool,
+                        object::Tool::Spread(box (object::spread::Target::Value { .. }, _))
+                    ) && inst.strictness_kind.is_typescript_loose();
+                let include_proto_props = matches!(inst_kind, InstanceKind::InterfaceKind { .. })
+                    && (is_type_spread || is_typescript_interface_value_spread);
                 let resolve_tool_inner = object::ResolveTool::Super(
                     interface_slice(
                         cx,
@@ -2226,13 +2234,16 @@ fn resolve_with_env<'cx, A>(
                         static_,
                         inst.clone(),
                         own_props,
+                        include_proto_props,
                         dict_polarity_override,
                         t_generic_id,
                     ),
                     Rc::new(resolve_tool.clone()),
                 );
                 return match (tool, inst_kind) {
-                    (object::Tool::Spread(box (_, _)), InstanceKind::InterfaceKind { .. }) => {
+                    (object::Tool::Spread(box (_, _)), InstanceKind::InterfaceKind { .. })
+                        if !(is_type_spread || is_typescript_interface_value_spread) =>
+                    {
                         add_output(
                             cx,
                             env,
@@ -2713,19 +2724,34 @@ pub fn super_<'cx, A>(
         TypeInner::DefT(r, def_t) => {
             let inst_t = match &**def_t {
                 DefTInner::InstanceT(inst_t) => inst_t,
-                _ => return next(cx, use_op, tool, reason, Vec1::new(acc)),
+                _ => {
+                    return resolved(
+                        next,
+                        recurse,
+                        cx,
+                        env,
+                        use_op,
+                        reason,
+                        resolve_tool,
+                        tool,
+                        Vec1::new(acc),
+                    );
+                }
             };
             let static_ = &inst_t.static_;
             let super_t = &inst_t.super_;
             let inst = &inst_t.inst;
             let own_props = inst.own_props.dupe();
             let reason = &acc.reason;
+            let include_proto_props = matches!(tool, object::Tool::Spread(_))
+                && matches!(inst.inst_kind, InstanceKind::InterfaceKind { .. });
             let slice = interface_slice(
                 cx,
                 r,
                 static_,
                 inst.clone(),
                 own_props,
+                include_proto_props,
                 object_tool_dict_polarity_override(tool),
                 flow_typing_generics::spread_empty(),
             );
@@ -2747,7 +2773,17 @@ pub fn super_<'cx, A>(
         TypeInner::AnyT(_, src) => {
             return_(cx, use_op, Type::new(TypeInner::AnyT(reason.dupe(), *src)))
         }
-        _ => next(cx, use_op, tool, reason, Vec1::new(acc)),
+        _ => resolved(
+            next,
+            recurse,
+            cx,
+            env,
+            use_op,
+            reason,
+            resolve_tool,
+            tool,
+            Vec1::new(acc),
+        ),
     }
 }
 

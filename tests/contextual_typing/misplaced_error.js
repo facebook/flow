@@ -7,6 +7,6 @@ const EMPTY_TEMPLATE: CommitTemplate<{...}> = {
 };
 
 wrapCommitTemplateWithState(
-  {...EMPTY_TEMPLATE, title: ({a}) => `${a}`}, // missing-local-annot due to inexact ~> exact
+  {...EMPTY_TEMPLATE, title: ({a}) => `${a}`}, // OK
   {a: 'A'}
 );

@@ -26,8 +26,8 @@ o2 as {p:T, ...}; // error: o2.p is optional
 ({p:y} as O2); // error: y ~> T
 ({p:x,q:y} as O2); // ok
 
-// can't make exact from inexact (TODO: force EvalT eagerly)
-type O3 = {...{p:T, ...}}; ({p:x} as O3); // error: spread result is not exact
+// Type spreads can make an exact type from an inexact operand.
+type O3 = {...{p:T, ...}}; ({p:x} as O3); // ok
 
 // exact
 type O4 = {...{p:T}, ...};
@@ -58,8 +58,8 @@ o6 as {p:U, ...}; // ok
 ({p:y} as O6); // ok
 ({p:y,q:x} as O6); // ok
 
-// inexact p + exact p ~> exact (TODO: force EvalT eagerly)
-type O7 = {...{p:T, ...},...{p:U}}; ({p:y} as O7);// error: spread result is not exact
+// inexact p + exact p ~> exact
+type O7 = {...{p:T, ...},...{p:U}}; ({p:y} as O7); // ok
 
 // exact p + inexact p
 type O8 = {...{p:T},...{p:U, ...}, ...};
@@ -76,14 +76,14 @@ o9.p as T; // error: o9.p is optional
 o9.q as U; // ok
 
 // exact p + inexact q
-type O10 = {...{p:T},...{q:U, ...}, ...}; // Error, p may exist in second object
+type O10 = {...{p:T},...{q:U, ...}, ...}; // OK
 declare const o10: O10;
 o10 as {p:any, q: any, ...};
 
 // inexact p + inexact q
-type O11 = {...{p:T, ...},...{q:U, ...}, ...}; // Error, p may exist in second object
+type O11 = {...{p:T, ...},...{q:U, ...}, ...}; // OK
 declare const o11: O11;
-o11 as {p:any, q: any, ...}; // Error
+o11 as {p:any, q: any, ...}; // OK
 
 // exact + exact
 type O12 = {...{p:T},...{q:U}, ...};

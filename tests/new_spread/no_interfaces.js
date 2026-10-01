@@ -10,18 +10,18 @@ function spread<A extends interface {}, B extends interface {}>(x: A, y: B): {..
 declare const a: A;
 declare const b: B;
 
-spread<A, B>(a, b); // Error, can't spread interface
+spread<A, B>(a, b); // OK
 
-type X = {...A, ...B, ...}; // Error, can't spread interface
+type X = {...A, ...B, ...}; // OK
 
 declare const x: X;
 x as any;
 
-type Y = {...A, foo: number, ...}; // Error, can't spread interface
+type Y = {...A, foo: number, ...}; // OK
 declare const y: Y;
 y as any;
 
-type Z = {foo: number, ...A, ...}; // Error, can't spread interface
+type Z = {foo: number, ...A, ...}; // OK
 declare const z: Z;
 z as any;
 

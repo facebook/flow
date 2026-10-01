@@ -1,11 +1,11 @@
 //@flow
 
-// Cannot type spread non-object
+// Interfaces contribute their declared properties to type spreads.
 interface A {
   foo: number;
 }
-type B = {bar: number, ...A, ...}; // Error
-var b: B = {foo: 3};
+type B = {bar: number, ...A, ...}; // OK
+var b: B = {foo: 3}; // Error: bar is missing
 
 // Cannot spread with indexer on right
 type D = {[string]: number};
@@ -185,13 +185,13 @@ Y15 as D15;
 //--
 type A16 = {...};
 type B16 = {p?: string};
-type C16 = {...A16, ...B16, ...}; // Error, A16 might include p with an unknown type
+type C16 = {...A16, ...B16, ...}; // OK
 type D16 = {[string]: number, p?: string | number};
 
 declare const X16: D16;
 declare const Y16: C16;
-X16 as C16;
-Y16 as D16;
+X16 as C16; // Error
+Y16 as D16; // Error
 
 // Case3: O1 exact, O2 inexact
 type A17 = {p?: number};
@@ -218,7 +218,7 @@ Y18 as D18;
 // --
 type A19 = {p?: number};
 type B19 = {...};
-type C19 = {...A19, ...B19, ...}; // Error
+type C19 = {...A19, ...B19, ...}; // OK
 type D19 = {p?: number, ...};
 
 declare const X19: D19;
@@ -252,7 +252,7 @@ Y21 as D21;
 //--
 type A22 = {p: number};
 type B22 = {...};
-type C22 = {...A22, ...B22, ...}; // Error
+type C22 = {...A22, ...B22, ...}; // OK
 type D22 = {p: number, ...};
 
 declare const X22: D22;
@@ -264,7 +264,7 @@ Y22 as D22;
 //--
 type A23 = {[string]: number};
 type B23 = {p?: string, ...};
-type C23 = {...A23, ...B23, ...}; // Error inexact B23 may have properties that conflict with A23's indexer
+type C23 = {...A23, ...B23, ...}; // Error: A23's indexer conflicts with optional p
 type D23 = {[string]: number, p?: string | number};
 
 declare const X23: D23;
@@ -310,7 +310,7 @@ Y26 as D26;
 // --
 type A27 = {p?: number, ...};
 type B27 = {...};
-type C27 = {...A27, ...B27, ...}; // Error
+type C27 = {...A27, ...B27, ...}; // OK
 type D27 = {p?: number, ...};
 
 declare const X27: D27;
@@ -344,7 +344,7 @@ Y29 as D29;
 //--
 type A30 = {p: number, ...};
 type B30 = {...};
-type C30 = {...A30, ...B30, ...}; // Error
+type C30 = {...A30, ...B30, ...}; // OK
 type D30 = {p: number, ...};
 
 declare const X30: D30;
@@ -356,7 +356,7 @@ Y30 as D30;
 //--
 type A31 = {[string]: number};
 type B31 = {p?: string, ...};
-type C31 = {...A31, ...B31, ...}; // Error B31 may have props that conflict with A31's indexer
+type C31 = {...A31, ...B31, ...}; // Error: A31's indexer conflicts with optional p
 type D31 = {[string]: number, p?: string | number};
 
 declare const X31: D31;
@@ -368,7 +368,7 @@ Y31 as D31;
 //--
 type A32 = {...};
 type B32 = {p?: number, ...};
-type C32 = {...A32, ...B32, ...}; // Error, unknown type for p
+type C32 = {...A32, ...B32, ...}; // OK
 type D32 = {p?: number, ...};
 
 declare const X32: D32;
