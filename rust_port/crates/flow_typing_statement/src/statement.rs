@@ -6004,25 +6004,19 @@ fn object_<'a>(
                     let reason = mk_reason(VirtualReasonDesc::RPrototype, v_loc);
                     let v_typed = expression(None, None, Some(as_const), cx, v)?;
                     let (_, vt) = v_typed.loc();
-                    let vt_clone = vt.dupe();
-                    let reason_clone = reason.dupe();
-                    let t = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
+                    let collector = TypeCollector::create();
+                    flow_js::flow_non_speculating(
                         cx,
-                        reason,
-                        |cx, t| {
-                            flow_js::flow_non_speculating(
-                                cx,
-                                (
-                                    &vt_clone,
-                                    &UseT::new(UseTInner::ObjTestProtoT(
-                                        reason_clone.dupe(),
-                                        t.dupe(),
-                                    )),
-                                ),
-                            )?;
-                            Ok(())
-                        },
+                        (
+                            vt,
+                            &UseT::new(UseTInner::ObjTestProtoT(reason.dupe(), collector.dupe())),
+                        ),
                     )?;
+                    let t = collector
+                        .union_opt(reason.dupe())
+                        .unwrap_or_else(|| tvar_resolver::default_no_lowers(&reason));
+                    let t =
+                        tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, cx, t);
                     let acc = acc.add_proto(t);
                     prop_asts.push(Property::NormalProperty(NormalProperty::Init {
                         loc: prop_loc.dupe(),
@@ -14370,20 +14364,22 @@ fn static_method_call_object<'a>(
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
             let proto_reason = mk_reason(RPrototype, e.loc().dupe());
-            let proto = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
+            let collector = TypeCollector::create();
+            flow_js::flow_non_speculating(
                 cx,
-                proto_reason.dupe(),
-                |cx, t| {
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &e_t,
-                            &UseT::new(UseTInner::ObjTestProtoT(proto_reason.dupe(), t.dupe())),
-                        ),
-                    )?;
-                    Ok(())
-                },
+                (
+                    &e_t,
+                    &UseT::new(UseTInner::ObjTestProtoT(
+                        proto_reason.dupe(),
+                        collector.dupe(),
+                    )),
+                ),
             )?;
+            let proto = collector
+                .union_opt(proto_reason.dupe())
+                .unwrap_or_else(|| tvar_resolver::default_no_lowers(&proto_reason));
+            let proto =
+                tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, cx, proto);
             let t = obj_type::mk_with_proto(
                 cx,
                 reason.dupe(),
@@ -14418,20 +14414,22 @@ fn static_method_call_object<'a>(
             let e_ast = expression(None, None, None, cx, e)?;
             let e_t = e_ast.loc().1.dupe();
             let proto_reason = mk_reason(RPrototype, e.loc().dupe());
-            let proto = tvar_resolver::mk_tvar_and_fully_resolve_where::<JobError>(
+            let collector = TypeCollector::create();
+            flow_js::flow_non_speculating(
                 cx,
-                proto_reason.dupe(),
-                |cx, t| {
-                    flow_js::flow_non_speculating(
-                        cx,
-                        (
-                            &e_t,
-                            &UseT::new(UseTInner::ObjTestProtoT(proto_reason.dupe(), t.dupe())),
-                        ),
-                    )?;
-                    Ok(())
-                },
+                (
+                    &e_t,
+                    &UseT::new(UseTInner::ObjTestProtoT(
+                        proto_reason.dupe(),
+                        collector.dupe(),
+                    )),
+                ),
             )?;
+            let proto = collector
+                .union_opt(proto_reason.dupe())
+                .unwrap_or_else(|| tvar_resolver::default_no_lowers(&proto_reason));
+            let proto =
+                tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, cx, proto);
             let (pmap, properties_typed) = prop_map_of_object(cx, obj_properties)?;
             let propdesc_type =
                 flow_js_utils::lookup_builtin_type(cx, "PropertyDescriptor", reason.dupe());

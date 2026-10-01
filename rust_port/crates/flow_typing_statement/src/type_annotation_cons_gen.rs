@@ -86,10 +86,18 @@ pub fn obj_test_proto<'a>(cx: &Context<'a>, reason: Reason, t: Type) -> Type {
     let reason_inner = reason.dupe();
     let f = move |cx: &Context<'_>, t: Type| -> Result<Type, JobError> {
         let reason_for_proto = reason_inner.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner, move |cx, tout| {
-            let use_t = UseT::new(UseTInner::ObjTestProtoT(reason_for_proto, tout.dupe()));
-            flow_js::flow_non_speculating(cx, (&t, &use_t))
-        })
+        let collector = TypeCollector::create();
+        let use_t = UseT::new(UseTInner::ObjTestProtoT(reason_for_proto, collector.dupe()));
+        flow_js::flow_non_speculating(cx, (&t, &use_t))?;
+        let t = collector
+            .union_opt(reason_inner.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(&reason_inner));
+        Ok(tvar_resolver::resolved_t(
+            tvar_resolver::default_no_lowers,
+            true,
+            cx,
+            t,
+        ))
     };
     map_on_resolved_type(cx, reason, t, f)
 }

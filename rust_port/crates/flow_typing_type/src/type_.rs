@@ -2585,7 +2585,7 @@ pub enum UseTInner<CX = ()> {
 
     // Operations on objects
     ObjRestT(Reason, Rc<[String]>, Type, i32),
-    ObjTestProtoT(Reason, Type),
+    ObjTestProtoT(Reason, type_collector::TypeCollector),
     ObjTestT(Reason, Type, Type),
     ArrRestT(Box<ArrRestTData>),
     GetKeysT {
@@ -9138,6 +9138,14 @@ pub mod type_collector {
 
         pub fn collect_to_vec(&self) -> Vec<Type> {
             self.types.borrow().iter().map(|t| t.dupe()).collect()
+        }
+
+        pub fn union_opt(&self, reason: Reason) -> Option<Type> {
+            crate::type_util::union_of_ts_opt(
+                reason,
+                self.collect_to_vec(),
+                Some(union_rep::UnionKind::ResolvedKind),
+            )
         }
 
         pub fn iter<F>(&self, mut f: F) -> Result<(), flow_utils_concurrency::job_error::JobError>

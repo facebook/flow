@@ -5370,7 +5370,7 @@ fn __flow_impl<'cx>(
         }
         (TypeInner::AnyT(_, src), UseTInner::ObjTestProtoT(reason_op, u_inner)) => {
             let any = any_t::why(*src, reason_op.dupe());
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, u_inner))?;
+            u_inner.add(any);
         }
         (TypeInner::DefT(_, def_t), UseTInner::ObjTestProtoT(reason_op, u_inner))
             if matches!(def_t.deref(), DefTInner::NullT) =>
@@ -5378,7 +5378,7 @@ fn __flow_impl<'cx>(
             let null_proto = Type::new(TypeInner::NullProtoT(
                 reason_op.dupe().replace_desc(VirtualReasonDesc::RNull),
             ));
-            rec_flow_t(cx, env, trace, unknown_use(), (&null_proto, u_inner))?;
+            u_inner.add(null_proto);
         }
         (_, UseTInner::ObjTestProtoT(reason_op, u_inner)) => {
             let proto = if flow_js_utils::object_like(l) {
@@ -5403,7 +5403,7 @@ fn __flow_impl<'cx>(
                         .replace_desc(VirtualReasonDesc::RObjectPrototype),
                 ))
             };
-            rec_flow_t(cx, env, trace, unknown_use(), (&proto, u_inner))?;
+            u_inner.add(proto);
         }
 
         // **************************************************

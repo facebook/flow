@@ -247,7 +247,10 @@ pub fn default_resolve_touts<'cx>(
         }
         UseTInner::ObjRestT(_, _, t, _) | UseTInner::ObjTestT(_, _, t) => resolve(t.dupe()),
         UseTInner::ArrRestT(box ArrRestTData { tout: t, .. }) => resolve(t.dupe()),
-        UseTInner::ObjTestProtoT(_, t) => resolve(t.dupe()),
+        UseTInner::ObjTestProtoT(_, collector) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::GetDictValuesT(_, use_) => {
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), use_)
         }
