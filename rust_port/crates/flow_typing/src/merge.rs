@@ -1141,14 +1141,10 @@ fn detect_invalid_strict_comparison<'cx>(cx: &Context<'cx>) -> Result<(), JobErr
 }
 
 fn detect_unnecessary_optional_chains<'cx>(cx: &Context<'cx>) {
-    for (loc, lhs, lhs_expression) in cx.unnecessary_optional_chains().iter() {
+    for (loc, lhs_expression) in cx.unnecessary_optional_chains().iter() {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EUnnecessaryOptionalChain(Box::new((
-                loc.dupe(),
-                flow_js_utils::type_reference_for_error(lhs),
-                lhs_expression.dupe(),
-            ))),
+            ErrorMessage::EUnnecessaryOptionalChain(Box::new((loc.dupe(), lhs_expression.dupe()))),
         );
     }
 }

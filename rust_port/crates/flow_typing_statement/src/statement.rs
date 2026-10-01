@@ -9606,12 +9606,7 @@ pub fn optional_chain<'a>(
                             subexpressions,
                             ..
                         } = conf;
-                        cx.mark_optional_chain(
-                            loc.dupe(),
-                            filtered_t.dupe(),
-                            lhs_expression,
-                            false,
-                        );
+                        cx.mark_optional_chain(loc.dupe(), lhs_expression, false);
                         let (subexpression_types, subexpression_asts) = subexpressions(cx)?;
                         let tout = match &refinement_action {
                             Some(ra) => ra(cx, &subexpression_types, &filtered_t, t)?,

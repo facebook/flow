@@ -44,7 +44,7 @@ fn run_on_concretized<'cx>(
     match l.deref() {
         TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::VoidT) => {
             callee_recorder::add_callee_use(env, callee_recorder::Kind::Tast, l.dupe(), upper);
-            cx.mark_optional_chain(reason.loc().dupe(), l.dupe(), lhs_expression.dupe(), true);
+            cx.mark_optional_chain(reason.loc().dupe(), lhs_expression.dupe(), true);
             if let Some(c) = voided_out_collector {
                 c.add(l.dupe());
             }
@@ -61,7 +61,7 @@ fn run_on_concretized<'cx>(
                     _ => Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT))),
                 }
             };
-            cx.mark_optional_chain(reason.loc().dupe(), l.dupe(), lhs_expression.dupe(), true);
+            cx.mark_optional_chain(reason.loc().dupe(), lhs_expression.dupe(), true);
             if let Some(c) = voided_out_collector {
                 c.add(void);
             }
@@ -179,7 +179,7 @@ fn run_on_concretized<'cx>(
         TypeInner::AnyT(_, _) => true,
         _ => false,
     };
-    cx.mark_optional_chain(reason.loc().dupe(), l.dupe(), lhs_expression.dupe(), useful);
+    cx.mark_optional_chain(reason.loc().dupe(), lhs_expression.dupe(), useful);
     FlowJs::flow_with_env(cx, env, l, upper)?;
     Ok(())
 }

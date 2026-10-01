@@ -9288,10 +9288,7 @@ where
                     text(" is always truthy."),
                 ])
             }
-            MessageUnnecessaryOptionalChain {
-                lhs: _,
-                lhs_expression,
-            } => friendly::Message(vec![
+            MessageUnnecessaryOptionalChain { lhs_expression } => friendly::Message(vec![
                 text("This use of optional chaining ("),
                 code("?."),
                 text(") is unnecessary because "),

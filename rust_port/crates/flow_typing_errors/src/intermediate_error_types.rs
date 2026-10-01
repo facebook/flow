@@ -2595,7 +2595,6 @@ pub enum Message<L: Dupe> {
         condition_kind: UnnecessaryInvariantConditionKind,
     },
     MessageUnnecessaryOptionalChain {
-        lhs: MessageTypeReferenceData<L>,
         lhs_expression: ExpressionReferenceData<L>,
     },
     MessageUnreachableCode,

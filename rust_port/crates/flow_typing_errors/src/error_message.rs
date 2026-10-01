@@ -3656,7 +3656,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EInvalidPrototype(Box<EInvalidPrototypeData<L>>),
 
-    EUnnecessaryOptionalChain(Box<(L, ErrorTypeReferenceData<L>, ExpressionReferenceData<L>)>),
+    EUnnecessaryOptionalChain(Box<(L, ExpressionReferenceData<L>)>),
 
     EUnnecessaryInvariant(Box<EUnnecessaryInvariantData<L>>),
 
@@ -5807,10 +5807,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prototype_loc: f(prototype_loc),
                 prototype_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), prototype_desc),
             })),
-            EUnnecessaryOptionalChain(box (loc, lhs, lhs_expression)) => {
+            EUnnecessaryOptionalChain(box (loc, lhs_expression)) => {
                 EUnnecessaryOptionalChain(Box::new((
                     f(loc),
-                    map_error_type_ref(lhs),
                     ExpressionReferenceData {
                         loc: f(lhs_expression.loc),
                         kind: lhs_expression.kind,
@@ -7101,8 +7100,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 condition_kind,
             })),
 
-            EUnnecessaryOptionalChain(box (loc, lhs, lhs_expression)) => {
-                EUnnecessaryOptionalChain(Box::new((loc, map_error_type_ref(lhs), lhs_expression)))
+            EUnnecessaryOptionalChain(box (loc, lhs_expression)) => {
+                EUnnecessaryOptionalChain(Box::new((loc, lhs_expression)))
             }
 
             EInvalidThisArg(box EInvalidThisArgData {
@@ -8309,7 +8308,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnclearType(loc)
             | Self::EDeprecatedBool(loc)
             | Self::EInternalType(loc, _)
-            | Self::EUnnecessaryOptionalChain(box (loc, _, _))
+            | Self::EUnnecessaryOptionalChain(box (loc, _))
             | Self::EUnnecessaryInvariant(box EUnnecessaryInvariantData { loc, .. })
             | Self::EUnnecessaryDeclareTypeOnlyExport(loc)
             | Self::EUnusedSuppression(loc)
@@ -8614,7 +8613,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 LintError(SketchyNull(*kind))
             }
             ErrorMessage::ESketchyNumberLint(kind, _) => LintError(SketchyNumber(*kind)),
-            ErrorMessage::EUnnecessaryOptionalChain(box (_, _, _)) => {
+            ErrorMessage::EUnnecessaryOptionalChain(box (_, _)) => {
                 LintError(UnnecessaryOptionalChain)
             }
             ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData { .. }) => {
@@ -9592,11 +9591,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
-            ErrorMessage::EUnnecessaryOptionalChain(box (_, lhs, lhs_expression)) => {
-                Normal(Message::MessageUnnecessaryOptionalChain {
-                    lhs: expect_error_type_reference(lhs),
-                    lhs_expression,
-                })
+            ErrorMessage::EUnnecessaryOptionalChain(box (_, lhs_expression)) => {
+                Normal(Message::MessageUnnecessaryOptionalChain { lhs_expression })
             }
 
             ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData {
@@ -11929,7 +11925,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | Self::EUnsafeObjectAssign(_)
             | Self::ESketchyNullLint(box ESketchyNullLintData { .. })
             | Self::ESketchyNumberLint(_, _)
-            | Self::EUnnecessaryOptionalChain(box (_, _, _))
+            | Self::EUnnecessaryOptionalChain(box (_, _))
             | Self::EUnnecessaryInvariant(box EUnnecessaryInvariantData { .. })
             | Self::EUnnecessaryDeclareTypeOnlyExport(_)
             | Self::EAmbiguousObjectType(_)

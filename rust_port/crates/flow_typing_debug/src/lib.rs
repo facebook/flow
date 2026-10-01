@@ -3443,7 +3443,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 prototype,
             )
         }
-        ErrorMessage::EUnnecessaryOptionalChain(box (loc, _, _)) => {
+        ErrorMessage::EUnnecessaryOptionalChain(box (loc, _)) => {
             format!("EUnnecessaryOptionalChain ({})", string_of_aloc(None, loc))
         }
         ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData {

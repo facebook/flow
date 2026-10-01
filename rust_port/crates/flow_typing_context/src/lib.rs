@@ -402,7 +402,7 @@ pub struct ComponentT<'cx> {
     // conservatively emit errors.
     voidable_checks: RefCell<Vec<VoidableCheck>>,
     test_prop_hits_and_misses: RefCell<IntHashMap<i32, TestPropHitOrMiss>>,
-    optional_chains_useful: RefCell<ALocMap<(Type, ExpressionReferenceData<ALoc>, bool)>>,
+    optional_chains_useful: RefCell<ALocMap<(ExpressionReferenceData<ALoc>, bool)>>,
     conditions: RefCell<FlowVector<flow_parser::ast::expression::Expression<ALoc, (ALoc, Type)>>>,
     strict_comparisons: RefCell<
         FlowVector<(
@@ -2844,25 +2844,24 @@ impl<'cx> Context<'cx> {
     pub fn mark_optional_chain(
         &self,
         loc: ALoc,
-        lhs: Type,
         lhs_expression: ExpressionReferenceData<ALoc>,
         useful: bool,
     ) {
         let mut chains = self.0.ccx.optional_chains_useful.borrow_mut();
         chains
             .entry(loc)
-            .and_modify(|(_, _, u)| {
+            .and_modify(|(_, u)| {
                 *u = *u || useful;
             })
-            .or_insert((lhs, lhs_expression, useful));
+            .or_insert((lhs_expression, useful));
     }
 
-    pub fn unnecessary_optional_chains(&self) -> Vec<(ALoc, Type, ExpressionReferenceData<ALoc>)> {
+    pub fn unnecessary_optional_chains(&self) -> Vec<(ALoc, ExpressionReferenceData<ALoc>)> {
         let chains = self.0.ccx.optional_chains_useful.borrow();
         let mut result = Vec::new();
-        for (loc, (lhs, lhs_expression, useful)) in chains.iter() {
+        for (loc, (lhs_expression, useful)) in chains.iter() {
             if !useful {
-                result.push((loc.dupe(), lhs.dupe(), lhs_expression.dupe()));
+                result.push((loc.dupe(), lhs_expression.dupe()));
             }
         }
         result
