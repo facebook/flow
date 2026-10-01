@@ -492,6 +492,17 @@ fn record_expressions_become_nested_new_expressions_with_objects_and_spreads() {
 }
 
 #[test]
+fn record_lowering_preserves_source_locations_in_estree() {
+    let source = read_test_data(&fixture_dir().join("record_lowering/source.js"));
+    let lowered = record_lowering::lower_program(&parse(&source)).expect("record should lower");
+    assert_snapshot("record_lowering/lowered.js", &print(&lowered));
+    assert_snapshot(
+        "record_lowering/estree.json",
+        &print_estree(&source, &lowered),
+    );
+}
+
+#[test]
 fn record_lowering_rejects_computed_property_keys() {
     // `record R { [key]: number }` is rejected by the parser, so the computed key has to be
     // grafted onto a parsed AST to reach the lowering's own check at all.
@@ -635,13 +646,8 @@ class R {
     this.value = value;
   }
 }
-
 function Foo({value}: $ReadOnly<{ value: R }>): React.Node {
-  const record = new R(
-    {
-      value,
-    },
-  );
+  const record = new R({ value });
 }
 "#
     );
@@ -654,13 +660,8 @@ class R {
     this.value = value;
   }
 }
-
 function Foo({value}: $ReadOnly<{ value: R }>): React.Node {
-  const record = new R(
-    {
-      value,
-    },
-  );
+  const record = new R({ value });
 }
 "#
     );

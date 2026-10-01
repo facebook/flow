@@ -1,0 +1,1352 @@
+{
+  "body": [
+    {
+      "body": {
+        "body": [
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 1,
+                  "line": 8
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 0,
+                  "line": 1
+                }
+              },
+              "name": "constructor",
+              "optional": false,
+              "range": [
+                0,
+                125
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "constructor",
+            "loc": {
+              "end": {
+                "column": 1,
+                "line": 8
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 0,
+                "line": 1
+              }
+            },
+            "range": [
+              0,
+              125
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "directive": null,
+                    "expression": {
+                      "left": {
+                        "computed": false,
+                        "loc": {
+                          "end": {
+                            "column": 18,
+                            "line": 2
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 2
+                          }
+                        },
+                        "object": {
+                          "loc": {
+                            "end": {
+                              "column": 18,
+                              "line": 2
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 2
+                            }
+                          },
+                          "range": [
+                            13,
+                            29
+                          ],
+                          "type": "ThisExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "loc": {
+                            "end": {
+                              "column": 9,
+                              "line": 2
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 2
+                            }
+                          },
+                          "name": "default",
+                          "optional": false,
+                          "range": [
+                            13,
+                            20
+                          ],
+                          "type": "Identifier",
+                          "typeAnnotation": null
+                        },
+                        "range": [
+                          13,
+                          29
+                        ],
+                        "type": "MemberExpression"
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 18,
+                          "line": 2
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 2
+                        }
+                      },
+                      "operator": "=",
+                      "range": [
+                        13,
+                        29
+                      ],
+                      "right": {
+                        "loc": {
+                          "end": {
+                            "column": 18,
+                            "line": 2
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 2
+                          }
+                        },
+                        "name": "$$gen$r0",
+                        "optional": false,
+                        "range": [
+                          13,
+                          29
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "type": "AssignmentExpression"
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 18,
+                        "line": 2
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 2
+                      }
+                    },
+                    "range": [
+                      13,
+                      29
+                    ],
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "directive": null,
+                    "expression": {
+                      "left": {
+                        "computed": true,
+                        "loc": {
+                          "end": {
+                            "column": 16,
+                            "line": 3
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 3
+                          }
+                        },
+                        "object": {
+                          "loc": {
+                            "end": {
+                              "column": 16,
+                              "line": 3
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 3
+                            }
+                          },
+                          "range": [
+                            32,
+                            46
+                          ],
+                          "type": "ThisExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "loc": {
+                            "end": {
+                              "column": 3,
+                              "line": 3
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 3
+                            }
+                          },
+                          "range": [
+                            32,
+                            33
+                          ],
+                          "raw": "1",
+                          "type": "Literal",
+                          "value": 1
+                        },
+                        "range": [
+                          32,
+                          46
+                        ],
+                        "type": "MemberExpression"
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 16,
+                          "line": 3
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 3
+                        }
+                      },
+                      "operator": "=",
+                      "range": [
+                        32,
+                        46
+                      ],
+                      "right": {
+                        "loc": {
+                          "end": {
+                            "column": 16,
+                            "line": 3
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 3
+                          }
+                        },
+                        "name": "$$gen$r1",
+                        "optional": false,
+                        "range": [
+                          32,
+                          46
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "type": "AssignmentExpression"
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 16,
+                        "line": 3
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 3
+                      }
+                    },
+                    "range": [
+                      32,
+                      46
+                    ],
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "directive": null,
+                    "expression": {
+                      "left": {
+                        "computed": false,
+                        "loc": {
+                          "end": {
+                            "column": 16,
+                            "line": 4
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 4
+                          }
+                        },
+                        "object": {
+                          "loc": {
+                            "end": {
+                              "column": 16,
+                              "line": 4
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 4
+                            }
+                          },
+                          "range": [
+                            49,
+                            63
+                          ],
+                          "type": "ThisExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "loc": {
+                            "end": {
+                              "column": 7,
+                              "line": 4
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 4
+                            }
+                          },
+                          "name": "value",
+                          "optional": false,
+                          "range": [
+                            49,
+                            54
+                          ],
+                          "type": "Identifier",
+                          "typeAnnotation": null
+                        },
+                        "range": [
+                          49,
+                          63
+                        ],
+                        "type": "MemberExpression"
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 16,
+                          "line": 4
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 4
+                        }
+                      },
+                      "operator": "=",
+                      "range": [
+                        49,
+                        63
+                      ],
+                      "right": {
+                        "loc": {
+                          "end": {
+                            "column": 16,
+                            "line": 4
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 4
+                          }
+                        },
+                        "name": "value",
+                        "optional": false,
+                        "range": [
+                          49,
+                          63
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "type": "AssignmentExpression"
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 16,
+                        "line": 4
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 2,
+                        "line": 4
+                      }
+                    },
+                    "range": [
+                      49,
+                      63
+                    ],
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "loc": {
+                  "end": {
+                    "column": 1,
+                    "line": 8
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 0,
+                    "line": 1
+                  }
+                },
+                "range": [
+                  0,
+                  125
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 1,
+                  "line": 8
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 0,
+                  "line": 1
+                }
+              },
+              "params": [
+                {
+                  "loc": {
+                    "end": {
+                      "column": 1,
+                      "line": 8
+                    },
+                    "source": "lowering-test.js",
+                    "start": {
+                      "column": 0,
+                      "line": 1
+                    }
+                  },
+                  "optional": false,
+                  "properties": [
+                    {
+                      "computed": false,
+                      "key": {
+                        "loc": {
+                          "end": {
+                            "column": 9,
+                            "line": 2
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 2
+                          }
+                        },
+                        "name": "default",
+                        "optional": false,
+                        "range": [
+                          13,
+                          20
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "kind": "init",
+                      "loc": {
+                        "end": {
+                          "column": 18,
+                          "line": 2
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 2
+                        }
+                      },
+                      "method": false,
+                      "range": [
+                        13,
+                        29
+                      ],
+                      "shorthand": false,
+                      "type": "Property",
+                      "value": {
+                        "loc": {
+                          "end": {
+                            "column": 18,
+                            "line": 2
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 2
+                          }
+                        },
+                        "name": "$$gen$r0",
+                        "optional": false,
+                        "range": [
+                          13,
+                          29
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      }
+                    },
+                    {
+                      "computed": false,
+                      "key": {
+                        "loc": {
+                          "end": {
+                            "column": 3,
+                            "line": 3
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 3
+                          }
+                        },
+                        "range": [
+                          32,
+                          33
+                        ],
+                        "raw": "1",
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "kind": "init",
+                      "loc": {
+                        "end": {
+                          "column": 16,
+                          "line": 3
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 3
+                        }
+                      },
+                      "method": false,
+                      "range": [
+                        32,
+                        46
+                      ],
+                      "shorthand": false,
+                      "type": "Property",
+                      "value": {
+                        "left": {
+                          "loc": {
+                            "end": {
+                              "column": 16,
+                              "line": 3
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 2,
+                              "line": 3
+                            }
+                          },
+                          "name": "$$gen$r1",
+                          "optional": false,
+                          "range": [
+                            32,
+                            46
+                          ],
+                          "type": "Identifier",
+                          "typeAnnotation": null
+                        },
+                        "loc": {
+                          "end": {
+                            "column": 15,
+                            "line": 3
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 3
+                          }
+                        },
+                        "range": [
+                          32,
+                          45
+                        ],
+                        "right": {
+                          "loc": {
+                            "end": {
+                              "column": 15,
+                              "line": 3
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 14,
+                              "line": 3
+                            }
+                          },
+                          "range": [
+                            44,
+                            45
+                          ],
+                          "raw": "1",
+                          "type": "Literal",
+                          "value": 1
+                        },
+                        "type": "AssignmentPattern"
+                      }
+                    },
+                    {
+                      "computed": false,
+                      "key": {
+                        "loc": {
+                          "end": {
+                            "column": 7,
+                            "line": 4
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 4
+                          }
+                        },
+                        "name": "value",
+                        "optional": false,
+                        "range": [
+                          49,
+                          54
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "kind": "init",
+                      "loc": {
+                        "end": {
+                          "column": 16,
+                          "line": 4
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 2,
+                          "line": 4
+                        }
+                      },
+                      "method": false,
+                      "range": [
+                        49,
+                        63
+                      ],
+                      "shorthand": true,
+                      "type": "Property",
+                      "value": {
+                        "loc": {
+                          "end": {
+                            "column": 16,
+                            "line": 4
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 2,
+                            "line": 4
+                          }
+                        },
+                        "name": "value",
+                        "optional": false,
+                        "range": [
+                          49,
+                          63
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      }
+                    }
+                  ],
+                  "range": [
+                    0,
+                    125
+                  ],
+                  "type": "ObjectPattern",
+                  "typeAnnotation": null
+                }
+              ],
+              "predicate": null,
+              "range": [
+                0,
+                125
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 8,
+                  "line": 5
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 2,
+                  "line": 5
+                }
+              },
+              "name": "method",
+              "optional": false,
+              "range": [
+                66,
+                72
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 13,
+                "line": 5
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 2,
+                "line": 5
+              }
+            },
+            "range": [
+              66,
+              77
+            ],
+            "static": false,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 13,
+                    "line": 5
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 11,
+                    "line": 5
+                  }
+                },
+                "range": [
+                  75,
+                  77
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 5
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 8,
+                  "line": 5
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                72,
+                77
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          },
+          {
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 6
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 9,
+                  "line": 6
+                }
+              },
+              "name": "item",
+              "optional": false,
+              "range": [
+                87,
+                91
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 26,
+                "line": 6
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 2,
+                "line": 6
+              }
+            },
+            "optional": false,
+            "range": [
+              80,
+              104
+            ],
+            "static": true,
+            "tsAccessibility": null,
+            "type": "PropertyDefinition",
+            "typeAnnotation": null,
+            "value": {
+              "loc": {
+                "end": {
+                  "column": 25,
+                  "line": 6
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 24,
+                  "line": 6
+                }
+              },
+              "range": [
+                102,
+                103
+              ],
+              "raw": "2",
+              "type": "Literal",
+              "value": 2
+            },
+            "variance": null
+          },
+          {
+            "computed": false,
+            "decorators": [],
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 13,
+                  "line": 7
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 9,
+                  "line": 7
+                }
+              },
+              "name": "make",
+              "optional": false,
+              "range": [
+                114,
+                118
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "kind": "method",
+            "loc": {
+              "end": {
+                "column": 18,
+                "line": 7
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 2,
+                "line": 7
+              }
+            },
+            "range": [
+              107,
+              123
+            ],
+            "static": true,
+            "tsAccessibility": null,
+            "type": "MethodDefinition",
+            "value": {
+              "async": false,
+              "body": {
+                "body": [],
+                "loc": {
+                  "end": {
+                    "column": 18,
+                    "line": 7
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 16,
+                    "line": 7
+                  }
+                },
+                "range": [
+                  121,
+                  123
+                ],
+                "type": "BlockStatement"
+              },
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 7
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 13,
+                  "line": 7
+                }
+              },
+              "params": [],
+              "predicate": null,
+              "range": [
+                118,
+                123
+              ],
+              "returnType": null,
+              "type": "FunctionExpression",
+              "typeParameters": null
+            }
+          }
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 8
+          },
+          "source": "lowering-test.js",
+          "start": {
+            "column": 0,
+            "line": 1
+          }
+        },
+        "range": [
+          0,
+          125
+        ],
+        "type": "ClassBody"
+      },
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 8,
+            "line": 1
+          },
+          "source": "lowering-test.js",
+          "start": {
+            "column": 7,
+            "line": 1
+          }
+        },
+        "name": "R",
+        "optional": false,
+        "range": [
+          7,
+          8
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 8
+        },
+        "source": "lowering-test.js",
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        125
+      ],
+      "superClass": null,
+      "superTypeArguments": null,
+      "type": "ClassDeclaration",
+      "typeParameters": null
+    },
+    {
+      "declarations": [
+        {
+          "id": {
+            "loc": {
+              "end": {
+                "column": 12,
+                "line": 9
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 6,
+                "line": 9
+              }
+            },
+            "name": "result",
+            "optional": false,
+            "range": [
+              132,
+              138
+            ],
+            "type": "Identifier",
+            "typeAnnotation": null
+          },
+          "init": {
+            "arguments": [
+              {
+                "loc": {
+                  "end": {
+                    "column": 47,
+                    "line": 9
+                  },
+                  "source": "lowering-test.js",
+                  "start": {
+                    "column": 17,
+                    "line": 9
+                  }
+                },
+                "properties": [
+                  {
+                    "argument": {
+                      "loc": {
+                        "end": {
+                          "column": 25,
+                          "line": 9
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 21,
+                          "line": 9
+                        }
+                      },
+                      "name": "base",
+                      "optional": false,
+                      "range": [
+                        147,
+                        151
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "loc": {
+                      "end": {
+                        "column": 25,
+                        "line": 9
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 18,
+                        "line": 9
+                      }
+                    },
+                    "range": [
+                      144,
+                      151
+                    ],
+                    "type": "SpreadElement"
+                  },
+                  {
+                    "computed": false,
+                    "key": {
+                      "loc": {
+                        "end": {
+                          "column": 32,
+                          "line": 9
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 27,
+                          "line": 9
+                        }
+                      },
+                      "name": "child",
+                      "optional": false,
+                      "range": [
+                        153,
+                        158
+                      ],
+                      "type": "Identifier",
+                      "typeAnnotation": null
+                    },
+                    "kind": "init",
+                    "loc": {
+                      "end": {
+                        "column": 46,
+                        "line": 9
+                      },
+                      "source": "lowering-test.js",
+                      "start": {
+                        "column": 27,
+                        "line": 9
+                      }
+                    },
+                    "method": false,
+                    "range": [
+                      153,
+                      172
+                    ],
+                    "shorthand": false,
+                    "type": "Property",
+                    "value": {
+                      "arguments": [
+                        {
+                          "loc": {
+                            "end": {
+                              "column": 46,
+                              "line": 9
+                            },
+                            "source": "lowering-test.js",
+                            "start": {
+                              "column": 36,
+                              "line": 9
+                            }
+                          },
+                          "properties": [
+                            {
+                              "computed": false,
+                              "key": {
+                                "loc": {
+                                  "end": {
+                                    "column": 42,
+                                    "line": 9
+                                  },
+                                  "source": "lowering-test.js",
+                                  "start": {
+                                    "column": 37,
+                                    "line": 9
+                                  }
+                                },
+                                "name": "value",
+                                "optional": false,
+                                "range": [
+                                  163,
+                                  168
+                                ],
+                                "type": "Identifier",
+                                "typeAnnotation": null
+                              },
+                              "kind": "init",
+                              "loc": {
+                                "end": {
+                                  "column": 45,
+                                  "line": 9
+                                },
+                                "source": "lowering-test.js",
+                                "start": {
+                                  "column": 37,
+                                  "line": 9
+                                }
+                              },
+                              "method": false,
+                              "range": [
+                                163,
+                                171
+                              ],
+                              "shorthand": false,
+                              "type": "Property",
+                              "value": {
+                                "loc": {
+                                  "end": {
+                                    "column": 45,
+                                    "line": 9
+                                  },
+                                  "source": "lowering-test.js",
+                                  "start": {
+                                    "column": 44,
+                                    "line": 9
+                                  }
+                                },
+                                "range": [
+                                  170,
+                                  171
+                                ],
+                                "raw": "1",
+                                "type": "Literal",
+                                "value": 1
+                              }
+                            }
+                          ],
+                          "range": [
+                            162,
+                            172
+                          ],
+                          "type": "ObjectExpression"
+                        }
+                      ],
+                      "callee": {
+                        "loc": {
+                          "end": {
+                            "column": 35,
+                            "line": 9
+                          },
+                          "source": "lowering-test.js",
+                          "start": {
+                            "column": 34,
+                            "line": 9
+                          }
+                        },
+                        "name": "S",
+                        "optional": false,
+                        "range": [
+                          160,
+                          161
+                        ],
+                        "type": "Identifier",
+                        "typeAnnotation": null
+                      },
+                      "loc": {
+                        "end": {
+                          "column": 46,
+                          "line": 9
+                        },
+                        "source": "lowering-test.js",
+                        "start": {
+                          "column": 34,
+                          "line": 9
+                        }
+                      },
+                      "range": [
+                        160,
+                        172
+                      ],
+                      "type": "NewExpression",
+                      "typeArguments": null
+                    }
+                  }
+                ],
+                "range": [
+                  143,
+                  173
+                ],
+                "type": "ObjectExpression"
+              }
+            ],
+            "callee": {
+              "loc": {
+                "end": {
+                  "column": 16,
+                  "line": 9
+                },
+                "source": "lowering-test.js",
+                "start": {
+                  "column": 15,
+                  "line": 9
+                }
+              },
+              "name": "R",
+              "optional": false,
+              "range": [
+                141,
+                142
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 47,
+                "line": 9
+              },
+              "source": "lowering-test.js",
+              "start": {
+                "column": 15,
+                "line": 9
+              }
+            },
+            "range": [
+              141,
+              173
+            ],
+            "type": "NewExpression",
+            "typeArguments": null
+          },
+          "loc": {
+            "end": {
+              "column": 47,
+              "line": 9
+            },
+            "source": "lowering-test.js",
+            "start": {
+              "column": 6,
+              "line": 9
+            }
+          },
+          "range": [
+            132,
+            173
+          ],
+          "type": "VariableDeclarator"
+        }
+      ],
+      "kind": "const",
+      "loc": {
+        "end": {
+          "column": 48,
+          "line": 9
+        },
+        "source": "lowering-test.js",
+        "start": {
+          "column": 0,
+          "line": 9
+        }
+      },
+      "range": [
+        126,
+        174
+      ],
+      "type": "VariableDeclaration"
+    }
+  ],
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 48,
+      "line": 9
+    },
+    "source": "lowering-test.js",
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    174
+  ],
+  "type": "Program"
+}
