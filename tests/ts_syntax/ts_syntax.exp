@@ -354,7 +354,9 @@ References:
 
 Error ---------------------------------------------------------------------- deprecated/excluded_dir/readonlymap.js:2:14
 
-Cannot assign `3` to `x` because `3` [1] is incompatible with `$ReadOnlyMap<string, number>` [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1], a primitive, cannot be used as a subtype of
+`$ReadOnlyMap<string, number>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    deprecated/excluded_dir/readonlymap.js:2:14
    2| const x: T = 3; // ERROR
@@ -469,7 +471,9 @@ The utility type `$ReadOnlyMap` is deprecated, use `ReadonlyMap` instead. [depre
 
 Error ----------------------------------------------------------------------------------- deprecated/readonlymap.js:2:14
 
-Cannot assign `3` to `x` because `3` [1] is incompatible with `$ReadOnlyMap<string, number>` [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1], a primitive, cannot be used as a subtype of
+`$ReadOnlyMap<string, number>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use
+it as a subtype of an interface. [incompatible-type]
 
    deprecated/readonlymap.js:2:14
    2| const x: T = 3; // ERROR
@@ -939,7 +943,9 @@ and tuple types you can use `Readonly<T>`. [unsupported-syntax]
 
 Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
-Cannot assign `3` to `x` because `3` [1] is incompatible with `$ReadOnlyMap<string, number>` [2]. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1], a primitive, cannot be used as a subtype of `ReadonlyMap<string, number>` [2].
+You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    readonlymap.js:2:14
    2| const x: T = 3; // ERROR

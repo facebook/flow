@@ -50,8 +50,8 @@ Cannot cast `quasis.raw` to empty because `ReadonlyArray<string>` [1] is incompa
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1110:17
-   1110|   readonly raw: ReadonlyArray<string>;
+   <BUILTINS>/lib.es5.js:1116:17
+   1116|   readonly raw: ReadonlyArray<string>;
                          ^^^^^^^^^^^^^^^^^^^^^ [1]
    tagged_template.js:25:19
      25|     quasis.raw as empty; // ERROR
@@ -67,9 +67,9 @@ Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. 
            ^
 
 References:
-   <BUILTINS>/lib.es5.js:1372:122
-   1372|     static raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                                                                                                                  ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1382:115
+   1382|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                                                                                                           ^^^^^^ [1]
    tagged_template.js:34:8
      34|   x as empty; // ERROR
                 ^^^^^ [2]
@@ -86,9 +86,9 @@ object and attempt to use it as a subtype of an interface. [incompatible-type]
                       ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1372:28
-   1372|     static raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1382:21
+   1382|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:45:3
@@ -100,9 +100,9 @@ Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. 
            ^
 
 References:
-   <BUILTINS>/lib.es5.js:1372:122
-   1372|     static raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                                                                                                                  ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1382:115
+   1382|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                                                                                                           ^^^^^^ [1]
    tagged_template.js:45:8
      45|   x as empty; // ERROR
                 ^^^^^ [2]

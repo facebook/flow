@@ -504,7 +504,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:5:5
 
-Cannot call `b.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+Cannot call `b.add` because property `add` is missing in `ReadonlySet` [1]. [prop-missing]
 
    type_names.js:5:5
    5|   b.add(3); // error: readonly
@@ -518,7 +518,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:7:5
 
-Cannot call `c.add` because property `add` is missing in `$ReadOnlyMap` [1]. [prop-missing]
+Cannot call `c.add` because property `add` is missing in `ReadonlyMap` [1]. [prop-missing]
 
    type_names.js:7:5
    7|   c.add(3, ''); // error: readonly
@@ -569,7 +569,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_names.js:17:32
 
-Cannot call `exported_with_ts_typenames.b.add` because property `add` is missing in `$ReadOnlySet` [1]. [prop-missing]
+Cannot call `exported_with_ts_typenames.b.add` because property `add` is missing in `ReadonlySet` [1]. [prop-missing]
 
    type_names.js:17:32
    17|   exported_with_ts_typenames.b.add(3); // error: readonly
@@ -583,7 +583,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_names.js:18:32
 
-Cannot call `exported_with_ts_typenames.c.add` because property `add` is missing in `$ReadOnlyMap` [1]. [prop-missing]
+Cannot call `exported_with_ts_typenames.c.add` because property `add` is missing in `ReadonlyMap` [1]. [prop-missing]
 
    type_names.js:18:32
    18|   exported_with_ts_typenames.c.add(3, ''); // error: readonly

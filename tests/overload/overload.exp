@@ -29,9 +29,9 @@ Cannot assign `"".match(...)[0]` to `x1` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1101:31
-   1101| type RegExpMatchArray = Array<string> & {
-                                       ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1108:42
+   1108| interface RegExpMatchArray extends Array<string> {
+                                                  ^^^^^^ [1]
    overload.js:7:9
       7| var x1: number = "".match(0)[0];
                  ^^^^^^ [2]
@@ -46,8 +46,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                       ^
 
 References:
-   <BUILTINS>/lib.es5.js:1239:56
-   1239|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:1244:56
+   1244|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                 ^^^^ [1]
 
 
@@ -55,21 +55,19 @@ Error --------------------------------------------------------------------------
 
 Cannot call `"".match` with `0` bound to `regexp` because: [incompatible-type]
  - Either `0` [1] is incompatible with `string` [2].
- - Or `0` [1] is incompatible with `RegExp` [3].
-
-Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
-not shown. To see all branches, re-run Flow with --show-all-branches.
+ - Or `0` [1], a primitive, cannot be used as a subtype of `RegExp` [3]. You can wrap it in `new Number(...))` to turn
+   it into an object and attempt to use it as a subtype of an interface.
 
    overload.js:7:27
       7| var x1: number = "".match(0)[0];
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1239:19
-   1239|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:1244:19
+   1244|     match(regexp: string | RegExp): RegExpMatchArray | null;
                            ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1239:28
-   1239|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:1244:28
+   1244|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                     ^^^^^^ [3]
 
 
@@ -82,9 +80,9 @@ Cannot assign `"".match(...)[0]` to `x2` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1101:31
-   1101| type RegExpMatchArray = Array<string> & {
-                                       ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1108:42
+   1108| interface RegExpMatchArray extends Array<string> {
+                                                  ^^^^^^ [1]
    overload.js:8:9
       8| var x2: number = "".match(/pattern/)[0];
                  ^^^^^^ [2]
@@ -99,8 +97,8 @@ Cannot get `"".match(...)[0]` because null [1] does not have properties. [incomp
                                               ^
 
 References:
-   <BUILTINS>/lib.es5.js:1239:56
-   1239|     match(regexp: string | RegExp): RegExpMatchArray | null;
+   <BUILTINS>/lib.es5.js:1244:56
+   1244|     match(regexp: string | RegExp): RegExpMatchArray | null;
                                                                 ^^^^ [1]
 
 
@@ -113,8 +111,8 @@ Cannot assign `"".split(...)[0]` to `x4` because `string` [1] is incompatible wi
                           ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1312:63
-   1312|     split(separator?: string | RegExp, limit?: number): Array<string>;
+   <BUILTINS>/lib.es5.js:1317:63
+   1317|     split(separator?: string | RegExp, limit?: number): Array<string>;
                                                                        ^^^^^^ [1]
    overload.js:10:9
      10| var x4: number = "".split(/pattern/)[0];

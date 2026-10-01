@@ -181,20 +181,20 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- conversion.js:10:1
 
-Cannot cast `Object(...)` to `Number` because `{[key: any]: any}` [1] is incompatible with `Number` [2].
-[incompatible-type]
+Cannot cast `Object(...)` to `Number` because in property `valueOf` > the return value: `unknown` [1] is incompatible
+with `number` [2]. [incompatible-type]
 
    conversion.js:10:1
-   10| Object(undefined) as Number; // error
-       ^^^^^^^^^^^^^^^^^
+    10| Object(undefined) as Number; // error
+        ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:84:24
-   84|     static (o: ?void): { [key: any]: any, ... };
-                              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   conversion.js:10:22
-   10| Object(undefined) as Number; // error
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:244:16
+   244|     valueOf(): unknown;
+                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:382:16
+   382|     valueOf(): number;
+                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- conversion.js:19:3

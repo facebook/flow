@@ -125,9 +125,9 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                         ^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:150:19
-   150| declare class Set<T> extends $ReadOnlySet<T> {
-                          ^ [1]
+   <BUILTINS>/lib.es2015.collection.js:186:9
+   186|     new<T>(iterable?: ?Iterable<T>): Set<T>;
+                ^ [1]
    -:2:13
      2| const set = new Set(); // Error
                     ^^^^^^^^^ [2]

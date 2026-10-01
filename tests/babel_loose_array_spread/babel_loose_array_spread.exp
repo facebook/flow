@@ -28,8 +28,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -45,8 +45,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -62,8 +62,8 @@ References:
    iterables.js:1:11
      1| const it: Iterable<number> = [7, 8, 9];
                   ^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -79,8 +79,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -96,8 +96,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -113,8 +113,8 @@ References:
    opaque.js:6:30
      6| export const opaqueIterable: OpaqueIterable = [];
                                      ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -127,11 +127,11 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   maps.js:1:14
-     1| const map1 = new Map<string, string>();
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es2015.collection.js:77:76
+    77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                                                                   ^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -144,11 +144,11 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   maps.js:2:14
-     2| const map2 = new Map<string, string>();
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es2015.collection.js:77:76
+    77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                                                                   ^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -161,11 +161,11 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   maps.js:1:14
-     1| const map1 = new Map<string, string>();
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es2015.collection.js:77:76
+    77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                                                                   ^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 
@@ -178,11 +178,11 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   maps.js:2:14
-     2| const map2 = new Map<string, string>();
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:595:15
-   595| declare class $ReadOnlyArray<out T> {
+   <BUILTINS>/lib.es2015.collection.js:77:76
+    77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+                                                                                   ^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:602:15
+   602| declare class $ReadOnlyArray<out T> {
                       ^^^^^^^^^^^^^^ [2]
 
 

@@ -47,8 +47,8 @@ string literal `Map` [2]. [incompatible-type]
         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:147:36
-   147|     readonly [Symbol.toStringTag]: 'Set';
+   <BUILTINS>/lib.es2015.collection.js:159:36
+   159|     readonly [Symbol.toStringTag]: 'Set';
                                            ^^^^^ [1]
    collection_to_string_tag.js:12:30
     12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
@@ -68,8 +68,8 @@ References:
    collection_to_string_tag.js:19:54
     19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
                                                              ^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:147:36
-   147|     readonly [Symbol.toStringTag]: 'Set';
+   <BUILTINS>/lib.es2015.collection.js:159:36
+   159|     readonly [Symbol.toStringTag]: 'Set';
                                            ^^^^^ [2]
 
 

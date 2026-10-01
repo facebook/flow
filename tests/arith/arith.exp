@@ -647,9 +647,9 @@ Cannot get `(x + y).length` because property `length` is missing in `Number` [1]
                     ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:272:15
-   272| declare class Number {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:354:11
+   354| interface Number {
+                  ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- Arith.js:88:13
@@ -661,9 +661,9 @@ Cannot get `(1 + 2).length` because property `length` is missing in `Number` [1]
                     ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:272:15
-   272| declare class Number {
-                      ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:354:11
+   354| interface Number {
+                  ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:94:1

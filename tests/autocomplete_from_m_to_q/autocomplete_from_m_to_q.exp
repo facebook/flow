@@ -326,14 +326,11 @@ namespace.js:12:12
 Flags: --pretty
 {
   "result":[
-    {"name":"AggregateError","type":"typeof AggregateError"},
+    {"name":"AggregateError","type":"AggregateErrorConstructor"},
     {"name":"Array","type":"typeof Array"},
     {"name":"ArrayBuffer","type":"ArrayBufferConstructor"},
     {"name":"atob","type":"(encodedString: string) => string"},
-    {
-      "name":"Atomics",
-      "type":"{add(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, and(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, compareExchange(typedArray: $SharedIntegerTypedArray, index: number, expectedValue: number, replacementValue: number): number, exchange(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, isLockFree(size: number): boolean, load(typedArray: $SharedIntegerTypedArray, index: number): number, notify(typedArray: Int32Array<ArrayBufferLike>, index: number, count: number): number, or(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, store(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, sub(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, wait(typedArray: Int32Array<ArrayBufferLike>, index: number, value: number, timeout?: number): \"ok\" | \"not-equal\" | \"timed-out\", xor(typedArray: $SharedIntegerTypedArray, index: number, value: number): number, readonly [toStringTag]: \"Atomics\", ...}"
-    },
+    {"name":"Atomics","type":"Atomics"},
     {"name":"BigInt","type":"typeof BigInt"},
     {"name":"BigInt64Array","type":"BigInt64ArrayConstructor"},
     {"name":"BigUint64Array","type":"BigUint64ArrayConstructor"},
@@ -347,14 +344,14 @@ Flags: --pretty
       "type":"{_exception(...data: Array<any>): void, assert(condition: unknown, ...data: Array<any>): void, clear(): void, count(label?: string): void, countReset(label?: string): void, debug(...data: Array<any>): void, dir(...data: Array<any>): void, dirxml(...data: Array<any>): void, error(...data: Array<any>): void, group(...data: Array<any>): void, groupCollapsed(...data: Array<any>): void, groupEnd(): void, info(...data: Array<any>): void, log(...data: Array<any>): void, profile(name?: string): void, profileEnd(name?: string): void, table(tabularData: {[key: string]: any} | Array<{[key: string]: any}> | Array<Array<any>>): void, time(label?: string): void, timeEnd(label: string): void, timeLog(label?: string, ...data: Array<any>): void, timeStamp(label?: string): void, trace(...data: Array<any>): void, warn(...data: Array<any>): void, ...}"
     },
     {"name":"DataView","type":"DataViewConstructor"},
-    {"name":"Date","type":"typeof Date"},
+    {"name":"Date","type":"DateConstructor"},
     {"name":"decodeURI","type":"(encodedURI: string) => string"},
     {"name":"decodeURIComponent","type":"(encodedURIComponent: string) => string"},
     {"name":"encodeURI","type":"(uri: string) => string"},
     {"name":"encodeURIComponent","type":"(uriComponent: string) => string"},
-    {"name":"Error","type":"typeof Error"},
+    {"name":"Error","type":"ErrorConstructor"},
     {"name":"escape","type":"(str: string) => string"},
-    {"name":"EvalError","type":"typeof EvalError"},
+    {"name":"EvalError","type":"EvalErrorConstructor"},
     {"name":"exports","type":"{writeonly [key: string]: unknown}"},
     {"name":"FinalizationRegistry","type":"typeof FinalizationRegistry"},
     {"name":"Float16Array","type":"Float16ArrayConstructor"},
@@ -370,21 +367,15 @@ Flags: --pretty
     {"name":"isFinite","type":"(number: unknown) => boolean"},
     {"name":"isNaN","type":"(number: unknown) => boolean"},
     {"name":"Iterator","type":"IteratorConstructor"},
-    {
-      "name":"JSON",
-      "type":"{readonly parse: (text: string, reviver?: (key: any, value: any) => any) => any, readonly stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<unknown>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: unknown, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)}"
-    },
-    {"name":"Map","type":"typeof Map"},
-    {
-      "name":"Math",
-      "type":"{E: number, LN10: number, LN2: number, LOG10E: number, LOG2E: number, PI: number, SQRT1_2: number, SQRT2: number, abs(x: number): number, acos(x: number): number, acosh(x: number): number, asin(x: number): number, asinh(x: number): number, atan(x: number): number, atan2(y: number, x: number): number, atanh(x: number): number, cbrt(x: number): number, ceil(x: number): number, clz32(x: number): number, cos(x: number): number, cosh(x: number): number, exp(x: number): number, expm1(x: number): number, f16round(x: number): number, floor(x: number): number, fround(x: number): number, hypot(...values: Array<number>): number, imul(x: number, y: number): number, log(x: number): number, log10(x: number): number, log1p(x: number): number, log2(x: number): number, max(...values: Array<number>): number, min(...values: Array<number>): number, pow(x: number, y: number): number, random(): number, round(x: number): number, sign(x: number): number, sin(x: number): number, sinh(x: number): number, sqrt(x: number): number, tan(x: number): number, tanh(x: number): number, trunc(x: number): number, ...}"
-    },
+    {"name":"JSON","type":"JSON"},
+    {"name":"Map","type":"MapConstructor"},
+    {"name":"Math","type":"Math"},
     {
       "name":"module",
       "type":"{children: Array<any>, exports: any, filename: string, id: string, isPreloading: boolean, loaded: boolean, parent: any, path: string, paths: Array<string>, require(id: string): any, ...}"
     },
     {"name":"NaN","type":"number"},
-    {"name":"Number","type":"typeof Number"},
+    {"name":"Number","type":"NumberConstructor"},
     {"name":"Object","type":"typeof Object"},
     {"name":"parseFloat","type":"(string: unknown) => number"},
     {"name":"parseInt","type":"(string: unknown, radix?: number) => number"},
@@ -394,18 +385,18 @@ Flags: --pretty
       "name":"queueMicrotask",
       "type":"<TArguments extends ReadonlyArray<unknown>>(callback: (...args: TArguments) => unknown) => void"
     },
-    {"name":"RangeError","type":"typeof RangeError"},
-    {"name":"ReferenceError","type":"typeof ReferenceError"},
+    {"name":"RangeError","type":"RangeErrorConstructor"},
+    {"name":"ReferenceError","type":"ReferenceErrorConstructor"},
     {
       "name":"Reflect",
       "type":"{apply(target: (...any) => any, thisArg?: any, argumentsList?: Array<any>): any, construct(target: (...any) => any, argumentsList?: Array<any>, newTarget?: any): any, defineProperty(o: any, p: any, attributes: any): boolean, deleteProperty(o: any, p: any): boolean, get(o: any, p: any, receiver?: any): any, getOwnPropertyDescriptor(o: any, p: any): any, getPrototypeOf: (o: $NotNullOrVoid) => any, has(o: any, p: any): boolean, isExtensible(o: any): boolean, ownKeys(o: any): Array<any>, preventExtensions(o: any): boolean, set(o: any, p: any, value: any, receiver?: any): boolean, setPrototypeOf: (target: any, prototype: {[any]: any} | null) => boolean, ...}"
     },
-    {"name":"RegExp","type":"typeof RegExp"},
+    {"name":"RegExp","type":"RegExpConstructor"},
     {
       "name":"require",
       "type":"{(id: string): any, cache: any, main: {children: Array<any>, exports: any, filename: string, id: string, isPreloading: boolean, loaded: boolean, parent: any, path: string, paths: Array<string>, require(id: string): any, ...}, resolve: (id: string, options?: {paths?: Array<string>, ...}) => string, ...}"
     },
-    {"name":"Set","type":"typeof Set"},
+    {"name":"Set","type":"SetConstructor"},
     {
       "name":"setInterval",
       "type":"<TArguments extends Array<unknown>>(callback: (...args: TArguments) => unknown, ms?: number, ...args: TArguments) => IntervalID"
@@ -415,20 +406,20 @@ Flags: --pretty
       "type":"<TArguments extends Array<unknown>>(callback: (...args: TArguments) => unknown, ms?: number, ...args: TArguments) => TimeoutID"
     },
     {"name":"SharedArrayBuffer","type":"typeof SharedArrayBuffer"},
-    {"name":"String","type":"typeof String"},
+    {"name":"String","type":"StringConstructor"},
     {"name":"Symbol","type":"typeof Symbol"},
-    {"name":"SyntaxError","type":"typeof SyntaxError"},
-    {"name":"TypeError","type":"typeof TypeError"},
+    {"name":"SyntaxError","type":"SyntaxErrorConstructor"},
+    {"name":"TypeError","type":"TypeErrorConstructor"},
     {"name":"Uint16Array","type":"Uint16ArrayConstructor"},
     {"name":"Uint32Array","type":"Uint32ArrayConstructor"},
     {"name":"Uint8Array","type":"Uint8ArrayConstructor"},
     {"name":"Uint8ClampedArray","type":"Uint8ClampedArrayConstructor"},
     {"name":"undefined","type":"void"},
     {"name":"unescape","type":"(str: string) => string"},
-    {"name":"URIError","type":"typeof URIError"},
-    {"name":"WeakMap","type":"typeof WeakMap"},
+    {"name":"URIError","type":"URIErrorConstructor"},
+    {"name":"WeakMap","type":"WeakMapConstructor"},
     {"name":"WeakRef","type":"typeof WeakRef"},
-    {"name":"WeakSet","type":"typeof WeakSet"}
+    {"name":"WeakSet","type":"WeakSetConstructor"}
   ]
 }
 

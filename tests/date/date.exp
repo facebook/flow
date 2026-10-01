@@ -7,8 +7,8 @@ Cannot assign `d.getTime()` to `x` because `number` [1] is incompatible with `st
                         ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1454:16
-   1454|     getTime(): number;
+   <BUILTINS>/lib.es5.js:1469:16
+   1469|     getTime(): number;
                         ^^^^^^ [1]
    date.js:2:7
       2| var x:string = d.getTime(); // expect error
@@ -20,23 +20,25 @@ Error --------------------------------------------------------------------------
 Cannot assign `d` to `y` because `Date` [1] is incompatible with `number` [2]. [incompatible-type]
 
    date.js:4:16
-   4| var y:number = d; // expect error
-                     ^
+      4| var y:number = d; // expect error
+                        ^
 
 References:
-   date.js:1:9
-   1| var d = new Date(0);
-              ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1617:41
+   1617|     new(value: number | Date | string): Date;
+                                                 ^^^^ [1]
    date.js:4:7
-   4| var y:number = d; // expect error
-            ^^^^^^ [2]
+      4| var y:number = d; // expect error
+               ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:18:5
 
 Cannot call `Date` because: [incompatible-type]
- - Either object literal [1] is incompatible with `Date` [2].
- - Or object literal [1] is incompatible with `number` [3].
+ - Either 
+    - object literal [1] is incompatible with `Date` [2]
+       - in property `valueOf` > the return value: `unknown` [3] is incompatible with `number` [4]
+ - Or object literal [1] is incompatible with `number` [5].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -49,12 +51,18 @@ References:
    date.js:18:10
      18| new Date({});
                   ^^ [1]
-   <BUILTINS>/lib.es5.js:1435:33
-   1435|     constructor(value: number | Date | string): void;
-                                         ^^^^ [2]
-   <BUILTINS>/lib.es5.js:1435:24
-   1435|     constructor(value: number | Date | string): void;
-                                ^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1617:25
+   1617|     new(value: number | Date | string): Date;
+                                 ^^^^ [2]
+   <BUILTINS>/lib.es5.js:244:16
+    244|     valueOf(): unknown;
+                        ^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1610:16
+   1610|     valueOf(): number;
+                        ^^^^^^ [4]
+   <BUILTINS>/lib.es5.js:1617:16
+   1617|     new(value: number | Date | string): Date;
+                        ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:19:5
@@ -74,12 +82,12 @@ References:
    date.js:19:16
      19| new Date(2015, '6');
                         ^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:38
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                              ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:30
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                                      ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:20:5
@@ -99,12 +107,12 @@ References:
    date.js:20:19
      20| new Date(2015, 6, '18');
                            ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:52
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                            ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:44
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:21:5
@@ -124,12 +132,12 @@ References:
    date.js:21:23
      21| new Date(2015, 6, 18, '11');
                                ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:67
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:59
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                                                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:22:5
@@ -149,12 +157,12 @@ References:
    date.js:22:27
      22| new Date(2015, 6, 18, 11, '55');
                                    ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:84
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                            ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:76
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                                                                                    ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:23:5
@@ -174,12 +182,12 @@ References:
    date.js:23:31
      23| new Date(2015, 6, 18, 11, 55, '42');
                                        ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:101
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                                             ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:93
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                                                                                                     ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:24:5
@@ -199,12 +207,12 @@ References:
    date.js:24:35
      24| new Date(2015, 6, 18, 11, 55, 42, '999');
                                            ^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:123
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                                                                                                                                   ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:115
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                                                                                                                           ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:25:5
@@ -219,15 +227,15 @@ Cannot call `Date` because: [incompatible-type]
              ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1435:5
-   1435|     constructor(value: number | Date | string): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1436:5
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1617:5
+   1617|     new(value: number | Date | string): Date;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1618:5
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:26:5
@@ -247,12 +255,12 @@ References:
    date.js:26:10
      26| new Date('2015', 6);
                   ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1436:23
-   1436|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1434:5
-   1434|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1618:15
+   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+                       ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1616:5
+   1616|     new(): Date;
+             ^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- date.js:28:17
@@ -260,16 +268,16 @@ Error --------------------------------------------------------------------------
 Cannot compare `Date` [1] to `number` [2]. [invalid-compare]
 
    date.js:28:17
-   28| var b:boolean = d > 0; // expect error
-                       ^
+     28| var b:boolean = d > 0; // expect error
+                         ^
 
 References:
-   date.js:1:9
-    1| var d = new Date(0);
-               ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1617:41
+   1617|     new(value: number | Date | string): Date;
+                                                 ^^^^ [1]
    date.js:28:21
-   28| var b:boolean = d > 0; // expect error
-                           ^ [2]
+     28| var b:boolean = d > 0; // expect error
+                             ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- date.js:29:17
@@ -277,16 +285,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `-` with operands `Date` [1] and `number` [2] [unsafe-arithmetic]
 
    date.js:29:17
-   29| var n1:number = d - 12; // expect error
-                       ^^^^^^
+     29| var n1:number = d - 12; // expect error
+                         ^^^^^^
 
 References:
-   date.js:1:9
-    1| var d = new Date(0);
-               ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1617:41
+   1617|     new(value: number | Date | string): Date;
+                                                 ^^^^ [1]
    date.js:29:21
-   29| var n1:number = d - 12; // expect error
-                           ^^ [2]
+     29| var n1:number = d - 12; // expect error
+                             ^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- date.js:30:17
@@ -294,16 +302,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `&` with operands `Date` [1] and `number` [2] [unsafe-arithmetic]
 
    date.js:30:17
-   30| var n2:number = d & 255; // expect error
-                       ^^^^^^^
+     30| var n2:number = d & 255; // expect error
+                         ^^^^^^^
 
 References:
-   date.js:1:9
-    1| var d = new Date(0);
-               ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1617:41
+   1617|     new(value: number | Date | string): Date;
+                                                 ^^^^ [1]
    date.js:30:21
-   30| var n2:number = d & 255; // expect error
-                           ^^^ [2]
+     30| var n2:number = d & 255; // expect error
+                             ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- date.js:31:17
@@ -311,16 +319,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `+` with operands `Date` [1] and `number` [2] [unsafe-addition]
 
    date.js:31:17
-   31| var n3:number = d + 12; // expect error
-                       ^^^^^^
+     31| var n3:number = d + 12; // expect error
+                         ^^^^^^
 
 References:
-   date.js:1:9
-    1| var d = new Date(0);
-               ^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1617:41
+   1617|     new(value: number | Date | string): Date;
+                                                 ^^^^ [1]
    date.js:31:21
-   31| var n3:number = d + 12; // expect error
-                           ^^ [2]
+     31| var n3:number = d + 12; // expect error
+                             ^^ [2]
 
 
 
