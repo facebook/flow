@@ -2,8 +2,8 @@
 
 
 [lints]
-unsafe-getters-setters=error
 
 [strict]
+unsafe-getters-setters
 
 [libs]
