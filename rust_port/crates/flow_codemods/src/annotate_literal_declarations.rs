@@ -8,6 +8,7 @@
 use dupe::Dupe;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common_ty::ty::ALocTy;
+use flow_common_ty::ty::Elt;
 use flow_parser::ast;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc::Loc;
@@ -177,19 +178,19 @@ impl<'a, 'cx> AnnotateLiteralDeclarationsMapper<'a, 'cx> {
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                             lower_array_loc,
                             lower_array_desc: TypeOrTypeDescT::TypeDesc(Err(lower_desc)),
-                            upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                            upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
                             ..
                         } => Some((lower_array_loc, lower_desc, upper_ty.dupe())),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                             lower_obj_loc,
                             lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(lower_desc)),
-                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
                             ..
                         } => Some((lower_obj_loc, lower_desc, upper_ty.dupe())),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
                             lower_obj_loc,
                             lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(lower_desc)),
-                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                            upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
                             ..
                         } => Some((lower_obj_loc, lower_desc, upper_ty.dupe())),
                         _ => None,

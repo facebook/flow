@@ -356,7 +356,7 @@ pub mod friendly {
     /// "hello `world`" becomes: [Text "hello ", Code "world"].
     ///
     /// The inverse of string_of_message_inlines.
-    fn message_inlines_of_string(s: &str) -> Vec<MessageInline> {
+    pub fn message_inlines_of_string(s: &str) -> Vec<MessageInline> {
         s.split('`')
             .enumerate()
             .map(|(i, s)| {

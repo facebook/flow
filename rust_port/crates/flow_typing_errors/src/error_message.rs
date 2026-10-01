@@ -27,7 +27,7 @@ use flow_common_errors::error_utils::InferWarningKind;
 use flow_common_errors::error_utils::friendly::MessageFeature;
 use flow_common_errors::error_utils::friendly::code;
 use flow_common_errors::error_utils::friendly::text;
-use flow_common_ty::ty::ALocTy;
+use flow_common_ty::ty::ALocElt;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api::AnnotLoc;
 use flow_env_builder::env_api::DefLocType;
@@ -1014,7 +1014,7 @@ pub struct EAnnotationInferenceData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
     pub operation: AnnotationInferenceOperation,
     pub operation_loc: L,
     pub target_loc: L,
-    pub target_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub target_desc: Result<ALocElt, VirtualReasonDesc<L>>,
 }
 
 // The normalized target type is presentation-only, so it does not affect error identity.
@@ -8777,7 +8777,7 @@ pub struct IncompatibleTypeUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub loc: L,
     pub upper_kind: UpperKind<L>,
     pub reason_lower: VirtualReason<L>,
-    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -8831,8 +8831,8 @@ pub struct IncompatibleInvariantSubtypingData<L: Dupe + PartialOrd + Ord + Parti
     pub sub_component: Option<SubComponentOfInvariantSubtypingError>,
     pub lower_loc: L,
     pub upper_loc: L,
-    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-    pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub use_op: VirtualUseOp<L>,
     pub explanation: Option<Explanation<L>>,
 }
@@ -8925,8 +8925,8 @@ pub struct PropsMissingInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + Par
     pub reason_upper: VirtualReason<L>,
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
-    pub lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-    pub upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -8962,8 +8962,8 @@ pub struct IncompatibleTypesWithExampleData<L: Dupe + PartialOrd + Ord + Partial
     pub loc: L,
     pub lower_loc: L,
     pub upper_loc: L,
-    pub lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-    pub upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+    pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub use_op: VirtualUseOp<L>,
     pub explanation: Option<Explanation<L>>,
     pub example: Box<ErrorMessage<L>>,
@@ -9009,7 +9009,7 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
 fn expect_type_desc<L: Dupe>(
     type_or_desc: TypeOrTypeDesc<L>,
-) -> Result<ALocTy, VirtualReasonDesc<L>> {
+) -> Result<ALocElt, VirtualReasonDesc<L>> {
     match type_or_desc {
         TypeOrTypeDesc::Type(_) => {
             panic!("At this point, we should no longer have TypeOrTypeDesc::Type")

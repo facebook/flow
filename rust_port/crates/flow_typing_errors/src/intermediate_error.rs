@@ -23,7 +23,9 @@ use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::ErrorKind;
 use flow_common_errors::error_utils::PrintableError;
-use flow_common_ty::ty::ALocTy;
+use flow_common_ty::ty::ALocElt;
+use flow_common_ty::ty::Decl;
+use flow_common_ty::ty::Elt;
 use flow_common_ty::ty::Ty;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::name_def_types::DefinitionReferenceKind;
@@ -309,7 +311,7 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
                 },
                 _ => TypeCategory::Other,
             },
-            TypeOrTypeDescT::TypeDesc(Ok(t)) => match t.as_ref() {
+            TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(t))) => match t.as_ref() {
                 Ty::Null | Ty::Void => TypeCategory::Nullish,
                 Ty::Symbol
                 | Ty::Num
@@ -323,7 +325,7 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
                 Ty::Arr(_) | Ty::Tup { .. } => TypeCategory::Array,
                 _ => TypeCategory::Other,
             },
-            TypeOrTypeDescT::TypeDesc(Err(_)) => TypeCategory::Other,
+            TypeOrTypeDescT::TypeDesc(Ok(Elt::Decl(_)) | Err(_)) => TypeCategory::Other,
         }
     }
 
@@ -3191,8 +3193,8 @@ where
          sub_component: Option<SubComponentOfInvariantSubtypingError>,
          lower_loc: L,
          upper_loc: L,
-         lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-         upper_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+         lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+         upper_desc: Result<ALocElt, VirtualReasonDesc<L>>,
          use_op: VirtualUseOp<L>|
          -> IntermediateError<L> {
             mk_use_op_error(
@@ -3217,8 +3219,8 @@ where
          reason_upper: VirtualReason<L>,
          lower_obj_loc: L,
          upper_obj_loc: L,
-         lower_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
-         upper_obj_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+         lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+         upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
          use_op: VirtualUseOp<L>|
          -> IntermediateError<L> {
             let reason_lower = mod_lower_reason_according_to_use_ops(reason_lower.dupe(), &use_op);
@@ -3448,7 +3450,7 @@ where
     let mk_incompatible_use_error = |use_loc: Loc,
                                      use_kind: super::error_message::UpperKind<L>,
                                      lower: VirtualReason<L>,
-                                     lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
+                                     lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
                                      use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
         use super::error_message::UpperKind;
@@ -4055,11 +4057,41 @@ where
         }
     };
 
+    fn decl_description(decl: &Decl<ALoc>) -> String {
+        match decl {
+            Decl::ClassDecl(box (name, _)) => format!("class `{}`", name.sym_name),
+            Decl::InterfaceDecl(box (name, _)) => format!("interface `{}`", name.sym_name),
+            Decl::EnumDecl(box flow_common_ty::ty::DeclEnumDeclData { name, .. }) => {
+                format!("enum `{}`", name.sym_name)
+            }
+            Decl::NominalComponentDecl(box flow_common_ty::ty::DeclNominalComponentDeclData {
+                name,
+                ..
+            }) => format!("component {}", name.sym_name),
+            Decl::TypeAliasDecl(box flow_common_ty::ty::DeclTypeAliasDeclData { name, .. }) => {
+                format!("`{}`", name.sym_name)
+            }
+            Decl::VariableDecl(_)
+            | Decl::RecordDecl(_)
+            | Decl::NamespaceDecl(_)
+            | Decl::ModuleDecl(_) => format!(
+                "`{}`",
+                flow_common_ty::ty_printer::string_of_decl_single_line(
+                    decl,
+                    &flow_common_ty::ty_printer::PrinterOptions::default(),
+                )
+            ),
+        }
+    }
+
     let ref_of_ty_or_desc = |loc: &L,
-                             ty_or_desc: &Result<ALocTy, VirtualReasonDesc<L>>|
+                             ty_or_desc: &Result<ALocElt, VirtualReasonDesc<L>>|
      -> friendly::MessageFeature<Loc> {
         match ty_or_desc {
-            Ok(ty) => {
+            Ok(Elt::Decl(decl)) => {
+                friendly::hardcoded_string_desc_ref(&decl_description(decl), loc_of_aloc(loc))
+            }
+            Ok(Elt::Type(ty)) => {
                 let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
                 let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
                     &ty,
@@ -4081,8 +4113,11 @@ where
         }
     };
 
-    let desc_of_ty_or_desc = |ty_or_desc: &Result<ALocTy, VirtualReasonDesc<L>>| match ty_or_desc {
-        Ok(ty) => {
+    let desc_of_ty_or_desc = |ty_or_desc: &Result<ALocElt, VirtualReasonDesc<L>>| match ty_or_desc {
+        Ok(Elt::Decl(decl)) => friendly::MessageFeature::Inline(
+            friendly::message_inlines_of_string(&decl_description(decl)),
+        ),
+        Ok(Elt::Type(ty)) => {
             let ty = flow_common_ty::ty_utils::simplify_type(true, None, ty.dupe());
             let ty_str = flow_common_ty::ty_printer::string_of_t_single_line(
                 &ty,
@@ -4094,7 +4129,7 @@ where
     };
 
     let desc_of_name_or_ty_or_desc =
-        |name: Option<&FlowSmolStr>, ty_or_desc: &Result<ALocTy, VirtualReasonDesc<L>>| {
+        |name: Option<&FlowSmolStr>, ty_or_desc: &Result<ALocElt, VirtualReasonDesc<L>>| {
             name.map_or_else(
                 || desc_of_ty_or_desc(ty_or_desc),
                 |name| code(name.as_str()),
@@ -4391,7 +4426,7 @@ where
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_obj_desc, upper_obj_desc) {
                         // lower is literal, upper is type
-                        (Err(lower_desc), Ok(_))
+                        (Err(lower_desc), Ok(Elt::Type(_)))
                             if matches!(
                                 lower_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4408,7 +4443,7 @@ where
                             ]
                         }
                         // upper is literal, lower is type
-                        (Ok(_), Err(upper_desc))
+                        (Ok(Elt::Type(_)), Err(upper_desc))
                             if matches!(
                                 upper_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4456,7 +4491,7 @@ where
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_array_desc, upper_array_desc) {
-                        (Err(lower_desc), Ok(_))
+                        (Err(lower_desc), Ok(Elt::Type(_)))
                             if matches!(
                                 lower_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4472,7 +4507,7 @@ where
                                 ref_of_ty_or_desc(upper_array_loc, upper_array_desc),
                             ]
                         }
-                        (Ok(_), Err(upper_desc))
+                        (Ok(Elt::Type(_)), Err(upper_desc))
                             if matches!(
                                 upper_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4532,7 +4567,7 @@ where
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_obj_desc, upper_obj_desc) {
-                        (Err(lower_desc), Ok(_))
+                        (Err(lower_desc), Ok(Elt::Type(_)))
                             if matches!(
                                 lower_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4548,7 +4583,7 @@ where
                                 ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
                             ]
                         }
-                        (Ok(_), Err(upper_desc))
+                        (Ok(Elt::Type(_)), Err(upper_desc))
                             if matches!(
                                 upper_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4609,7 +4644,7 @@ where
 
                 let fix_suggestion: Vec<friendly::MessageFeature<Loc>> =
                     match (lower_obj_desc, upper_obj_desc) {
-                        (Err(lower_desc), Ok(_))
+                        (Err(lower_desc), Ok(Elt::Type(_)))
                             if matches!(
                                 lower_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -4625,7 +4660,7 @@ where
                                 ref_of_ty_or_desc(upper_obj_loc, upper_obj_desc),
                             ]
                         }
-                        (Ok(_), Err(upper_desc))
+                        (Ok(Elt::Type(_)), Err(upper_desc))
                             if matches!(
                                 upper_desc,
                                 RObjectLit | RObjectLitUnsound | RArrayLit | RArrayLitUnsound
@@ -5370,7 +5405,7 @@ where
             }) => {
                 let mut features = vec![text("Cannot access ")];
                 match (member_name, description) {
-                    (None, Ok(ty)) => match ty.as_ref() {
+                    (None, Ok(Elt::Type(ty))) => match ty.as_ref() {
                         Ty::StrLit(value) => {
                             features.extend(vec![text("string literal "), code(value.as_str())])
                         }

@@ -1283,9 +1283,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- equality.js:63:1
 
-Cannot compare `E` [1] to `F` [2], because enum `E` [1] is not a subtype of enum `F` [2] and enum `F` [2] is not a
-subtype of enum `E` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping relationship.
-If that happens, you can cast one side to the union of both types to pass the flow check.  [invalid-compare]
+Cannot compare enum `E` [1] to enum `F` [2], because enum `E` [1] is not a subtype of enum `F` [2] and enum `F` [2] is
+not a subtype of enum `E` [1]. In **rare** cases, these types may have overlapping values but lack a subtyping
+relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
 
    equality.js:63:1
    63| E === F; // ERROR

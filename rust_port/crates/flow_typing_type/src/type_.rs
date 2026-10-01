@@ -9217,14 +9217,14 @@ pub mod concretize_seen {
 /// Therefore, we create a variant for this. During inference, we will always
 /// have Type. After inference, we turn it into `TypeDesc`  
 pub mod type_or_type_desc {
-    use flow_common_ty::ty::ALocTy;
+    use flow_common_ty::ty::ALocElt;
 
     use super::*;
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub enum TypeOrTypeDescT<L: Dupe> {
         Type(Type),
-        TypeDesc(Result<ALocTy, VirtualReasonDesc<L>>),
+        TypeDesc(Result<ALocElt, VirtualReasonDesc<L>>),
     }
 
     impl<L> serde::Serialize for TypeOrTypeDescT<L>
@@ -9238,7 +9238,7 @@ pub mod type_or_type_desc {
             #[derive(serde::Serialize)]
             enum TypeOrTypeDescSerde<'a, L: Dupe> {
                 Type(&'a VirtualReasonDesc<L>),
-                TypeDesc(&'a Result<ALocTy, VirtualReasonDesc<L>>),
+                TypeDesc(&'a Result<ALocElt, VirtualReasonDesc<L>>),
             }
 
             match self {
@@ -9264,7 +9264,7 @@ pub mod type_or_type_desc {
             #[derive(serde::Deserialize)]
             enum TypeOrTypeDescSerde<L: Dupe> {
                 Type(VirtualReasonDesc<L>),
-                TypeDesc(Result<ALocTy, VirtualReasonDesc<L>>),
+                TypeDesc(Result<ALocElt, VirtualReasonDesc<L>>),
             }
 
             Ok(match TypeOrTypeDescSerde::deserialize(deserializer)? {
