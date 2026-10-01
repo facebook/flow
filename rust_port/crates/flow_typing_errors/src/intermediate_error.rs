@@ -5830,7 +5830,6 @@ where
                 text("(https://react.dev/reference/rules/rules-of-hooks)"),
             ]),
             MessageCannotCallFunctionWithExtraArg {
-                function: _,
                 function_reference,
                 param_count,
             } => {

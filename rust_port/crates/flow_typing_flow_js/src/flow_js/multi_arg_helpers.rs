@@ -27,14 +27,6 @@ use flow_typing_type::type_::mk_methodtype;
 use super::helpers::*;
 use super::*;
 
-fn function_type_for_error(ft: &FunType) -> Type {
-    let reason = ft.def_reason.dupe();
-    Type::new(TypeInner::DefT(
-        reason.dupe(),
-        DefT::new(DefTInner::FunT(dummy_static(reason), Rc::new(ft.clone()))),
-    ))
-}
-
 // *******************************************************************
 // * subtyping a sequence of arguments with a sequence of parameters *
 // *******************************************************************
@@ -244,16 +236,11 @@ pub(super) fn multiflow_partial<'cx>(
         None => {
             if is_strict {
                 if let Some((first_unused_arg, _)) = unused_arglist.front() {
-                    let function = function_type_for_error(ft);
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
                         ErrorMessage::EFunctionCallExtraArg(Box::new(EFunctionCallExtraArgData {
                             loc: reason_of_t(first_unused_arg).loc().dupe(),
-                            function: flow_js_utils::type_reference_at_loc_for_error(
-                                &function,
-                                def_reason.loc().dupe(),
-                            ),
                             function_reference: FunctionReferenceData {
                                 loc: def_reason.loc().dupe(),
                                 kind: ft.function_reference_kind,

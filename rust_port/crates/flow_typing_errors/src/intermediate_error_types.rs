@@ -1969,7 +1969,6 @@ pub enum Message<L: Dupe> {
     MessageCannotCallReactHookWithIllegalName(L),
 
     MessageCannotCallFunctionWithExtraArg {
-        function: MessageTypeReferenceData<L>,
         function_reference: FunctionReferenceData<L>,
         param_count: i32,
     },

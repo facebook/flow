@@ -3273,7 +3273,6 @@ pub enum IllegalAssertObject<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EFunctionCallExtraArgData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub function: ErrorTypeReferenceData<L>,
     pub function_reference: FunctionReferenceData<L>,
     pub param_count: i32,
     pub use_op: VirtualUseOp<L>,
@@ -5025,13 +5024,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EFunctionCallExtraArg(box EFunctionCallExtraArgData {
                 loc,
-                function,
                 function_reference,
                 param_count,
                 use_op,
             }) => EFunctionCallExtraArg(Box::new(EFunctionCallExtraArgData {
                 loc: f(loc),
-                function: map_error_type_ref(function),
                 function_reference: FunctionReferenceData {
                     loc: f(function_reference.loc),
                     kind: function_reference.kind,
@@ -7118,13 +7115,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EFunctionCallExtraArg(box EFunctionCallExtraArgData {
                 loc,
-                function,
                 function_reference,
                 param_count,
                 use_op,
             }) => EFunctionCallExtraArg(Box::new(EFunctionCallExtraArgData {
                 loc,
-                function: map_error_type_ref(function),
                 function_reference,
                 param_count,
                 use_op: map_use_op(&f, use_op),
@@ -9726,14 +9721,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EFunctionCallExtraArg(box EFunctionCallExtraArgData {
                 loc,
-                function,
                 function_reference,
                 param_count,
                 use_op,
             }) => UseOp(Box::new(UseOpData {
                 loc,
                 message: Message::MessageCannotCallFunctionWithExtraArg {
-                    function: expect_error_type_reference(function),
                     function_reference,
                     param_count,
                 },
