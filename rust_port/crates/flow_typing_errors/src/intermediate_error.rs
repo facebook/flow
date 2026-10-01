@@ -3448,22 +3448,19 @@ where
     let mk_incompatible_use_error = |use_loc: Loc,
                                      use_kind: super::error_message::UpperKind<L>,
                                      lower: VirtualReason<L>,
-                                     lower_desc: Option<Result<ALocTy, VirtualReasonDesc<L>>>,
+                                     lower_desc: Result<ALocTy, VirtualReasonDesc<L>>,
                                      use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
         use super::error_message::UpperKind;
 
         let lower = mod_lower_reason_according_to_use_ops(lower, &use_op);
-        let lower_type_ref = lower_desc.map(|desc| MessageTypeReferenceData {
+        let lower_type_ref = MessageTypeReferenceData {
             loc: lower.annot_loc().unwrap_or_else(|| lower.def_loc()).dupe(),
-            desc,
-        });
-        let lower_is_not = |requirement, reason_message| match lower_type_ref.clone() {
-            Some(lower) => Message::MessageLowerIsNotWithPrintedType {
-                lower: Box::new(lower),
-                requirement,
-            },
-            None => reason_message,
+            desc: lower_desc,
+        };
+        let lower_is_not = |requirement| Message::MessageLowerIsNotWithPrintedType {
+            lower: Box::new(lower_type_ref.clone()),
+            requirement,
         };
 
         match use_kind {
@@ -3471,10 +3468,7 @@ where
                 use_loc,
                 use_op,
                 None,
-                lower_is_not(
-                    LowerRequirement::ArrayIndex,
-                    Message::MessageLowerIsNotArrayIndex(lower),
-                ),
+                lower_is_not(LowerRequirement::ArrayIndex),
             ),
 
             UpperKind::IncompatibleGetPrivatePropT | UpperKind::IncompatibleSetPrivatePropT => {
@@ -3482,10 +3476,7 @@ where
                     use_loc,
                     use_op,
                     None,
-                    lower_is_not(
-                        LowerRequirement::ClassWithPrivateProperties,
-                        Message::MessageLowerIsNotClassWithPrivateProps(lower),
-                    ),
+                    lower_is_not(LowerRequirement::ClassWithPrivateProperties),
                 )
             }
 
@@ -3493,34 +3484,20 @@ where
                 use_loc,
                 use_op,
                 None,
-                match lower_type_ref.clone() {
-                    Some(lower) => {
-                        Message::MessageUnknownParameterTypesWithPrintedType(Box::new(lower))
-                    }
-                    None => Message::MessageUnknownParameterTypes(lower),
-                },
+                Message::MessageUnknownParameterTypesWithPrintedType(Box::new(
+                    lower_type_ref.clone(),
+                )),
             ),
 
             UpperKind::IncompatibleCallT => mk_use_op_error(
                 use_loc,
                 use_op,
                 None,
-                lower_is_not(
-                    LowerRequirement::Function,
-                    Message::MessageLowerIsNotFunction(lower),
-                ),
+                lower_is_not(LowerRequirement::Function),
             ),
 
             UpperKind::IncompatibleObjAssignFromTSpread | UpperKind::IncompatibleArrRestT => {
-                mk_use_op_error(
-                    use_loc,
-                    use_op,
-                    None,
-                    lower_is_not(
-                        LowerRequirement::Array,
-                        Message::MessageLowerIsNotArray(lower),
-                    ),
-                )
+                mk_use_op_error(use_loc, use_op, None, lower_is_not(LowerRequirement::Array))
             }
 
             UpperKind::IncompatibleObjAssignFromT
@@ -3530,34 +3507,23 @@ where
                 use_loc,
                 use_op,
                 None,
-                lower_is_not(
-                    LowerRequirement::Object,
-                    Message::MessageLowerIsNotObject(lower),
-                ),
+                lower_is_not(LowerRequirement::Object),
             ),
 
             UpperKind::IncompatibleMapTypeTObject(upper) => mk_use_op_error(
                 use_loc,
                 use_op,
                 None,
-                match lower_type_ref.clone() {
-                    Some(lower) => Message::MessageInvalidArgumentWithPrintedType(Box::new(
-                        MessageInvalidArgumentWithPrintedTypeData { lower, upper },
-                    )),
-                    None => Message::MessageInvalidArgument { lower, upper },
-                },
+                Message::MessageInvalidArgumentWithPrintedType(Box::new(
+                    MessageInvalidArgumentWithPrintedTypeData {
+                        lower: lower_type_ref.clone(),
+                        upper,
+                    },
+                )),
             ),
 
             UpperKind::IncompatibleMixinT | UpperKind::IncompatibleThisSpecializeT => {
-                mk_use_op_error(
-                    use_loc,
-                    use_op,
-                    None,
-                    lower_is_not(
-                        LowerRequirement::Class,
-                        Message::MessageLowerIsNotClass(lower),
-                    ),
-                )
+                mk_use_op_error(use_loc, use_op, None, lower_is_not(LowerRequirement::Class))
             }
 
             UpperKind::IncompatibleSpecializeT | UpperKind::IncompatibleVarianceCheckT => {
@@ -3565,10 +3531,7 @@ where
                     use_loc,
                     use_op,
                     None,
-                    lower_is_not(
-                        LowerRequirement::PolymorphicType,
-                        Message::MessageLowerIsNotPolymorphicType(lower),
-                    ),
+                    lower_is_not(LowerRequirement::PolymorphicType),
                 )
             }
 
@@ -3576,10 +3539,7 @@ where
                 use_loc,
                 use_op,
                 None,
-                lower_is_not(
-                    LowerRequirement::Inheritable,
-                    Message::MessageLowerIsNotInheritable(lower),
-                ),
+                lower_is_not(LowerRequirement::Inheritable),
             ),
 
             UpperKind::IncompatibleGetPropT(prop_loc, prop)
@@ -3603,37 +3563,23 @@ where
                 use_loc,
                 use_op,
                 None,
-                lower_is_not(
-                    LowerRequirement::InstanceType,
-                    Message::MessageLowerIsNotInstanceType(lower),
-                ),
+                lower_is_not(LowerRequirement::InstanceType),
             ),
 
             UpperKind::IncompatibleBindT => mk_use_op_error(
                 use_loc,
                 use_op,
                 None,
-                lower_is_not(
-                    LowerRequirement::FunctionType,
-                    Message::MessageLowerIsNotFunctionType(lower),
-                ),
+                lower_is_not(LowerRequirement::FunctionType),
             ),
 
             UpperKind::IncompatibleUnclassified(ctor) => mk_use_op_error(
                 use_loc,
                 use_op,
                 None,
-                match lower_type_ref {
-                    Some(lower) => {
-                        Message::MessageLowerIsNotSupportedByUnclassifiedUseWithPrintedType {
-                            lower: Box::new(lower),
-                            ctor: ctor.to_string().into(),
-                        }
-                    }
-                    None => Message::MessageLowerIsNotSupportedByUnclassifiedUse {
-                        lower,
-                        ctor: ctor.to_string().into(),
-                    },
+                Message::MessageLowerIsNotSupportedByUnclassifiedUseWithPrintedType {
+                    lower: Box::new(lower_type_ref),
+                    ctor: ctor.to_string().into(),
                 },
             ),
         }
@@ -3968,7 +3914,7 @@ where
             loc_of_aloc(&loc),
             upper_kind,
             reason_lower,
-            Some(lower_desc),
+            lower_desc,
             use_op,
         ),
 
@@ -5592,11 +5538,6 @@ where
                 parts.extend(upper_parts);
                 friendly::Message(parts)
             }
-            MessageInvalidArgument { lower, upper } => friendly::Message(vec![
-                ref_(lower),
-                text(" is not a valid argument of "),
-                ref_(upper),
-            ]),
             MessageInvalidArgumentWithPrintedType(
                 box MessageInvalidArgumentWithPrintedTypeData { lower, upper },
             ) => friendly::Message(vec![
@@ -8175,37 +8116,6 @@ where
                 friendly::desc_of_reason_desc(d),
                 text(" because generic functions must be fully annotated."),
             ]),
-            MessageLowerIsNotArray(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not an array")])
-            }
-            MessageLowerIsNotArrayIndex(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not an array index")])
-            }
-            MessageLowerIsNotClass(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not a class")])
-            }
-            MessageLowerIsNotClassWithPrivateProps(lower) => friendly::Message(vec![
-                ref_(lower),
-                text(" is not a class with private properties"),
-            ]),
-            MessageLowerIsNotFunction(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not a function")])
-            }
-            MessageLowerIsNotFunctionType(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not a function type")])
-            }
-            MessageLowerIsNotInheritable(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not inheritable")])
-            }
-            MessageLowerIsNotInstanceType(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not an instance type")])
-            }
-            MessageLowerIsNotObject(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not an object")])
-            }
-            MessageLowerIsNotPolymorphicType(lower) => {
-                friendly::Message(vec![ref_(lower), text(" is not a polymorphic type")])
-            }
             MessageLowerIsNotReactComponent(lower) => {
                 friendly::Message(vec![
                     ref_of_ty_or_desc(&lower.loc, &lower.desc),
@@ -8235,11 +8145,6 @@ where
                     text(suffix),
                 ])
             }
-            MessageLowerIsNotSupportedByUnclassifiedUse { lower, ctor } => friendly::Message(vec![
-                ref_(lower),
-                text(" is not supported by unclassified use "),
-                text(ctor),
-            ]),
             MessageLowerIsNotSupportedByUnclassifiedUseWithPrintedType { lower, ctor } => {
                 friendly::Message(vec![
                     ref_of_ty_or_desc(&lower.loc, &lower.desc),
@@ -9246,11 +9151,6 @@ where
                     }
                 }
             }
-            MessageUnknownParameterTypes(lower) => friendly::Message(vec![
-                text("the parameter types of an "),
-                ref_(lower),
-                text(" are unknown"),
-            ]),
             MessageUnknownParameterTypesWithPrintedType(lower) => friendly::Message(vec![
                 text("the parameter types of an "),
                 ref_of_ty_or_desc(&lower.loc, &lower.desc),

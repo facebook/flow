@@ -2315,11 +2315,6 @@ pub enum Message<L: Dupe> {
 
     MessageIncorrectType(IncorrectType),
 
-    MessageInvalidArgument {
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
-    },
-
     MessageInvalidArgumentWithPrintedType(Box<MessageInvalidArgumentWithPrintedTypeData<L>>),
 
     MessageInvalidCatchParameterAnnotation {
@@ -2398,26 +2393,11 @@ pub enum Message<L: Dupe> {
     MessageInvalidTypeGuardThisParam(L),
     MessageInvalidUseOfFlowEnforceOptimized(Box<MessageTypeReferenceData<L>>),
 
-    MessageLowerIsNotArray(VirtualReason<L>),
-    MessageLowerIsNotArrayIndex(VirtualReason<L>),
-    MessageLowerIsNotClass(VirtualReason<L>),
-    MessageLowerIsNotClassWithPrivateProps(VirtualReason<L>),
-    MessageLowerIsNotFunction(VirtualReason<L>),
-    MessageLowerIsNotFunctionType(VirtualReason<L>),
-    MessageLowerIsNotInheritable(VirtualReason<L>),
-    MessageLowerIsNotInstanceType(VirtualReason<L>),
-    MessageLowerIsNotObject(VirtualReason<L>),
-    MessageLowerIsNotPolymorphicType(VirtualReason<L>),
     MessageLowerIsNotReactComponent(Box<MessageTypeReferenceData<L>>),
 
     MessageLowerIsNotWithPrintedType {
         lower: Box<MessageTypeReferenceData<L>>,
         requirement: LowerRequirement,
-    },
-
-    MessageLowerIsNotSupportedByUnclassifiedUse {
-        lower: VirtualReason<L>,
-        ctor: FlowSmolStr,
     },
 
     MessageLowerIsNotSupportedByUnclassifiedUseWithPrintedType {
@@ -2567,7 +2547,6 @@ pub enum Message<L: Dupe> {
 
     MessageUninitializedInstanceProperty(PropertyAssignmentKind),
 
-    MessageUnknownParameterTypes(VirtualReason<L>),
     MessageUnknownParameterTypesWithPrintedType(Box<MessageTypeReferenceData<L>>),
     MessageUnnecessaryDeclareTypeOnlyExport,
     MessageUnnecessaryInvariant {
