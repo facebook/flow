@@ -273,6 +273,18 @@ fn non_exhaustive_match_keeps_the_existing_fallthrough_message() {
 }
 
 #[test]
+fn match_lowering_preserves_source_locations_in_estree() {
+    let source = read_test_data(&fixture_dir().join("match_lowering/source.js"));
+    let lowered =
+        match_lowering::lower_program(&source, &parse(&source)).expect("matches should lower");
+    assert_snapshot("match_lowering/lowered.js", &print(&lowered));
+    assert_snapshot(
+        "match_lowering/estree.json",
+        &print_estree(&source, &lowered),
+    );
+}
+
+#[test]
 fn match_lowering_documents_unsupported_and_invalid_patterns() {
     let cases = [
         (

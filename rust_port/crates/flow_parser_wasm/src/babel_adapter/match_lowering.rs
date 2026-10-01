@@ -113,10 +113,10 @@ impl MatchLowerer<'_> {
         None
     }
 
-    fn gen_identifier(&mut self) -> ast::Identifier<Loc, Loc> {
+    fn gen_identifier(&mut self, loc: &Loc) -> ast::Identifier<Loc, Loc> {
         let name = self.gen_id.id();
         ast::Identifier::new(ast::IdentifierInner {
-            loc: builders::generated_loc(),
+            loc: loc.dupe(),
             name,
             comments: None,
         })
@@ -511,7 +511,7 @@ impl MatchLowerer<'_> {
                 for (index, element) in inner.elements.iter().enumerate() {
                     let mut child_key = key.to_vec();
                     child_key.push(Key::Number(
-                        builders::generated_loc(),
+                        element.pattern.loc().dupe(),
                         ast_builder::int_literal(None, index as i32),
                     ));
                     let (mut child_conditions, mut child_bindings) =
@@ -629,11 +629,11 @@ impl MatchLowerer<'_> {
         key.iter()
             .fold(root.clone(), |object, property| match property {
                 Key::Identifier(id) => ast_builder::expressions::member(
-                    Some(builders::generated_loc()),
+                    Some(root.loc().dupe()),
                     ast_builder::expressions::members::identifier(None, id.dupe(), object),
                 ),
                 _ => ast_builder::expressions::member(
-                    Some(builders::generated_loc()),
+                    Some(root.loc().dupe()),
                     ast_builder::expressions::members::expression(
                         None,
                         Self::key_expression(property),
@@ -643,49 +643,67 @@ impl MatchLowerer<'_> {
             })
     }
 
+    // `ast_builder`'s `logical_and` / `logical_or` / `block` / `labeled` shorthands hardcode
+    // `Loc::none()`, so these build the nodes through the loc-taking forms instead. Each combined
+    // node takes the span of its left operand, which is the first test in source order.
     fn conjunction(mut tests: Vec<Expr>) -> Expr {
         let first = tests.remove(0);
-        tests
-            .into_iter()
-            .fold(first, ast_builder::expressions::logical_and)
+        tests.into_iter().fold(first, |left, right| {
+            let loc = left.loc().dupe();
+            ast_builder::expressions::logical(
+                Some(loc),
+                None,
+                expression::LogicalOperator::And,
+                left,
+                right,
+            )
+        })
     }
 
     fn disjunction(mut tests: Vec<Expr>) -> Expr {
         let first = tests.remove(0);
-        tests
-            .into_iter()
-            .fold(first, ast_builder::expressions::logical_or)
+        tests.into_iter().fold(first, |left, right| {
+            let loc = left.loc().dupe();
+            ast_builder::expressions::logical(
+                Some(loc),
+                None,
+                expression::LogicalOperator::Or,
+                left,
+                right,
+            )
+        })
     }
 
     fn typeof_equals(value: Expr, type_name: &str) -> Expr {
+        let loc = value.loc().dupe();
         ast_builder::expressions::binary(
-            Some(builders::generated_loc()),
+            Some(loc.dupe()),
             None,
             expression::BinaryOperator::StrictEqual,
             ast_builder::expressions::unary(
-                Some(builders::generated_loc()),
+                Some(loc.dupe()),
                 None,
                 expression::UnaryOperator::Typeof,
                 value,
             ),
-            builders::string_literal(&builders::generated_loc(), type_name),
+            builders::string_literal(&loc, type_name),
         )
     }
 
     fn tests_of_condition(&self, root: &Expr, condition: &Condition) -> Vec<Expr> {
         match condition {
             Condition::Eq { key, arg } => vec![ast_builder::expressions::binary(
-                Some(builders::generated_loc()),
+                Some(root.loc().dupe()),
                 None,
                 expression::BinaryOperator::StrictEqual,
                 Self::expression_of_key(root, key),
                 arg.clone(),
             )],
             Condition::IsNan { key } => vec![builders::call(
-                &builders::generated_loc(),
+                &root.loc().dupe(),
                 builders::member(
-                    &builders::generated_loc(),
-                    builders::identifier(&builders::generated_loc(), "Number"),
+                    &root.loc().dupe(),
+                    builders::identifier(&root.loc().dupe(), "Number"),
                     "isNaN",
                 ),
                 vec![Self::expression_of_key(root, key)],
@@ -698,25 +716,25 @@ impl MatchLowerer<'_> {
                 let value = Self::expression_of_key(root, key);
                 vec![
                     builders::call(
-                        &builders::generated_loc(),
+                        &root.loc().dupe(),
                         builders::member(
-                            &builders::generated_loc(),
-                            builders::identifier(&builders::generated_loc(), "Array"),
+                            &root.loc().dupe(),
+                            builders::identifier(&root.loc().dupe(), "Array"),
                             "isArray",
                         ),
                         vec![value.clone()],
                     ),
                     ast_builder::expressions::binary(
-                        Some(builders::generated_loc()),
+                        Some(root.loc().dupe()),
                         None,
                         if *at_least {
                             expression::BinaryOperator::GreaterThanEqual
                         } else {
                             expression::BinaryOperator::StrictEqual
                         },
-                        builders::member(&builders::generated_loc(), value, "length"),
+                        builders::member(&root.loc().dupe(), value, "length"),
                         ast_builder::int_literal_expression(
-                            Some(builders::generated_loc()),
+                            Some(root.loc().dupe()),
                             None,
                             *length as i32,
                         ),
@@ -728,12 +746,12 @@ impl MatchLowerer<'_> {
                 let object = Self::conjunction(vec![
                     Self::typeof_equals(value.clone(), "object"),
                     ast_builder::expressions::binary(
-                        Some(builders::generated_loc()),
+                        Some(root.loc().dupe()),
                         None,
                         expression::BinaryOperator::StrictNotEqual,
                         value.clone(),
                         expression::Expression::new(ExpressionInner::NullLiteral {
-                            loc: builders::generated_loc(),
+                            loc: root.loc().dupe(),
                             inner: Arc::new(None),
                         }),
                     ),
@@ -745,7 +763,7 @@ impl MatchLowerer<'_> {
             }
             Condition::InstanceOf { key, constructor } => {
                 vec![ast_builder::expressions::binary(
-                    Some(builders::generated_loc()),
+                    Some(root.loc().dupe()),
                     None,
                     expression::BinaryOperator::Instanceof,
                     Self::expression_of_key(root, key),
@@ -753,10 +771,10 @@ impl MatchLowerer<'_> {
                 )]
             }
             Condition::PropExists { key, name } => vec![ast_builder::expressions::binary(
-                Some(builders::generated_loc()),
+                Some(root.loc().dupe()),
                 None,
                 expression::BinaryOperator::In,
-                builders::string_literal(&builders::generated_loc(), name.as_str()),
+                builders::string_literal(&root.loc().dupe(), name.as_str()),
                 Self::expression_of_key(root, key),
             )],
             Condition::Or(alternatives) => vec![Self::disjunction(
@@ -776,12 +794,13 @@ impl MatchLowerer<'_> {
     }
 
     fn variable(kind: ast::VariableKind, id: pattern::Pattern<Loc, Loc>, init: Expr) -> Stmt {
+        let loc = init.loc().dupe();
         ast_builder::statements::variable_declaration(
             Some(kind),
-            Some(builders::generated_loc()),
+            Some(loc.dupe()),
             None,
             vec![ast_builder::statements::variable_declarator_generic(
-                Some(builders::generated_loc()),
+                Some(loc),
                 id,
                 Some(init),
             )],
@@ -806,14 +825,14 @@ impl MatchLowerer<'_> {
                     *kind,
                     builders::identifier_pattern(id),
                     builders::call(
-                        &builders::generated_loc(),
+                        &root.loc().dupe(),
                         builders::member(
-                            &builders::generated_loc(),
+                            &root.loc().dupe(),
                             Self::expression_of_key(root, key),
                             "slice",
                         ),
                         vec![ast_builder::int_literal_expression(
-                            Some(builders::generated_loc()),
+                            Some(root.loc().dupe()),
                             None,
                             *exclude as i32,
                         )],
@@ -831,15 +850,15 @@ impl MatchLowerer<'_> {
                             let property_key = match key {
                                 Key::Identifier(id) => pattern::object::Key::Identifier(id.dupe()),
                                 _ => pattern::object::Key::Computed(ast::ComputedKey {
-                                    loc: builders::generated_loc(),
+                                    loc: root.loc().dupe(),
                                     expression: Self::key_expression(key),
                                     comments: None,
                                 }),
                             };
-                            let temp = self.gen_identifier();
+                            let temp = self.gen_identifier(root.loc());
                             pattern::object::Property::NormalProperty(
                                 pattern::object::NormalProperty {
-                                    loc: builders::generated_loc(),
+                                    loc: root.loc().dupe(),
                                     key: property_key,
                                     pattern: builders::identifier_pattern(&temp),
                                     default: None,
@@ -850,16 +869,16 @@ impl MatchLowerer<'_> {
                         .collect::<Vec<_>>();
                     properties.push(pattern::object::Property::RestElement(
                         pattern::RestElement {
-                            loc: builders::generated_loc(),
+                            loc: root.loc().dupe(),
                             argument: builders::identifier_pattern(id),
                             comments: None,
                         },
                     ));
                     let object_pattern = pattern::Pattern::Object {
-                        loc: builders::generated_loc(),
+                        loc: root.loc().dupe(),
                         inner: Arc::new(pattern::Object {
                             properties: properties.into(),
-                            annot: ast::types::AnnotationOrHint::Missing(builders::generated_loc()),
+                            annot: ast::types::AnnotationOrHint::Missing(root.loc().dupe()),
                             optional: false,
                             comments: None,
                         }),
@@ -872,21 +891,21 @@ impl MatchLowerer<'_> {
 
     fn fallthrough(root: &Expr) -> Stmt {
         let message = ast_builder::expressions::binary(
-            Some(builders::generated_loc()),
+            Some(root.loc().dupe()),
             None,
             expression::BinaryOperator::Plus,
             builders::string_literal(
-                &builders::generated_loc(),
+                &root.loc().dupe(),
                 "Match: No case succesfully matched. Make exhaustive or add a wildcard case using '_'. Argument: ",
             ),
             root.clone(),
         );
         statement::Statement::new(StatementInner::Throw {
-            loc: builders::generated_loc(),
+            loc: root.loc().dupe(),
             inner: Arc::new(statement::Throw {
                 argument: builders::call(
-                    &builders::generated_loc(),
-                    builders::identifier(&builders::generated_loc(), "Error"),
+                    &root.loc().dupe(),
+                    builders::identifier(&root.loc().dupe(), "Error"),
                     vec![message],
                 ),
                 comments: None,
@@ -915,11 +934,23 @@ impl MatchLowerer<'_> {
         }
     }
 
-    fn block(statements: Vec<Stmt>) -> Stmt {
-        ast_builder::statements::block(None, statements)
+    /// Takes the span of its first statement; an empty block has nothing to derive from, so the
+    /// caller-supplied fallback is used.
+    fn block(fallback: &Loc, statements: Vec<Stmt>) -> Stmt {
+        let loc = statements
+            .first()
+            .map_or_else(|| fallback.dupe(), |statement| statement.loc().dupe());
+        statement::Statement::new(StatementInner::Block {
+            loc,
+            inner: Arc::new(statement::Block {
+                body: statements.into(),
+                comments: None,
+            }),
+        })
     }
 
     fn iife(
+        loc: &Loc,
         statements: Vec<Stmt>,
         param: Option<&ast::Identifier<Loc, Loc>>,
         arg: Option<Expr>,
@@ -927,38 +958,44 @@ impl MatchLowerer<'_> {
         let params = param
             .map(|id| {
                 vec![ast_builder::functions::param(
-                    Some(builders::generated_loc()),
+                    Some(id.loc.dupe()),
                     None,
                     builders::identifier_pattern(id),
                 )]
             })
             .unwrap_or_default();
         let arrow = ast_builder::expressions::arrow_function(
-            Some(builders::generated_loc()),
+            Some(loc.dupe()),
             Some(false),
             Some(ast_builder::functions::params(
-                Some(builders::generated_loc()),
+                Some(loc.dupe()),
                 None,
                 None,
                 None,
                 params,
             )),
             Some(ast_builder::functions::body(
-                Some(builders::generated_loc()),
+                Some(loc.dupe()),
                 None,
                 statements,
             )),
         );
-        builders::call(&builders::generated_loc(), arrow, arg.into_iter().collect())
+        builders::call(loc, arrow, arg.into_iter().collect())
     }
 
+    /// `construct_loc` is the span of the whole `match (...) { ... }`. Nodes derived from the
+    /// scrutinee take its span (the generated root identifier is given the scrutinee's location
+    /// precisely so everything built from it stays anchored there); nodes derived from an arm
+    /// take that arm's body span; the IIFE wrapper falls back to the construct.
     fn lower_match_expression(
         &mut self,
+        construct_loc: &Loc,
         match_: &expression::MatchExpression<Loc, Loc>,
     ) -> Option<Expr> {
         let mut analyses = self.analyze_cases(&match_.cases)?;
         let simple = !analyses.has_bindings && Self::is_simple_argument(&match_.arg);
-        let generated_root = (!simple).then(|| self.gen_identifier());
+        let arg_loc = match_.arg.loc().dupe();
+        let generated_root = (!simple).then(|| self.gen_identifier(&arg_loc));
         let root = generated_root
             .as_ref()
             .map(Self::identifier_expression)
@@ -971,7 +1008,7 @@ impl MatchLowerer<'_> {
                     .map(|case| case.body)
                     .expect("wildcard analysis exists")
             } else {
-                Self::iife(vec![Self::fallthrough(&root)], None, None)
+                Self::iife(construct_loc, vec![Self::fallthrough(&root)], None, None)
             };
             return Some(
                 analyses
@@ -981,8 +1018,9 @@ impl MatchLowerer<'_> {
                     .fold(last, |alternate, case| {
                         let mut tests = self.tests_of_conditions(&root, &case.conditions);
                         tests.extend(case.guard);
+                        let case_loc = case.body.loc().dupe();
                         ast_builder::expressions::conditional(
-                            Some(builders::generated_loc()),
+                            Some(case_loc),
                             None,
                             Self::conjunction(tests),
                             case.body,
@@ -993,14 +1031,12 @@ impl MatchLowerer<'_> {
         }
         let mut statements = Vec::new();
         for case in analyses.cases {
-            let return_statement = ast_builder::statements::return_(
-                Some(builders::generated_loc()),
-                None,
-                Some(case.body),
-            );
+            let case_loc = case.body.loc().dupe();
+            let return_statement =
+                ast_builder::statements::return_(Some(case_loc.dupe()), None, Some(case.body));
             let body = if let Some(guard) = case.guard {
                 ast_builder::statements::if_(
-                    Some(builders::generated_loc()),
+                    Some(case_loc.dupe()),
                     None,
                     guard,
                     return_statement,
@@ -1015,14 +1051,14 @@ impl MatchLowerer<'_> {
                 statements.push(if case.bindings.is_empty() {
                     case_body.pop().expect("case body has return")
                 } else {
-                    Self::block(case_body)
+                    Self::block(&case_loc, case_body)
                 });
             } else {
                 statements.push(ast_builder::statements::if_(
-                    Some(builders::generated_loc()),
+                    Some(case_loc.dupe()),
                     None,
                     Self::conjunction(self.tests_of_conditions(&root, &case.conditions)),
-                    Self::block(case_body),
+                    Self::block(&case_loc, case_body),
                     None,
                 ));
             }
@@ -1031,17 +1067,27 @@ impl MatchLowerer<'_> {
             statements.push(Self::fallthrough(&root));
         }
         let argument = generated_root.as_ref().map(|_| match_.arg.clone());
-        Some(Self::iife(statements, generated_root.as_ref(), argument))
+        Some(Self::iife(
+            construct_loc,
+            statements,
+            generated_root.as_ref(),
+            argument,
+        ))
     }
 
+    /// Same anchoring as `lower_match_expression`: scrutinee-derived nodes take the scrutinee's
+    /// span, arm-derived nodes take that arm's, and the label wrapping the whole block falls
+    /// back to `construct_loc`.
     fn lower_match_statement(
         &mut self,
+        construct_loc: &Loc,
         match_: &statement::MatchStatement<Loc, Loc>,
     ) -> Option<Stmt> {
         let analyses = self.analyze_cases(&match_.cases)?;
-        let label = self.gen_identifier();
+        let label = self.gen_identifier(construct_loc);
         let simple = !analyses.has_bindings && Self::is_simple_argument(&match_.arg);
-        let generated_root = (!simple).then(|| self.gen_identifier());
+        let arg_loc = match_.arg.loc().dupe();
+        let generated_root = (!simple).then(|| self.gen_identifier(&arg_loc));
         let root = generated_root
             .as_ref()
             .map(Self::identifier_expression)
@@ -1061,18 +1107,19 @@ impl MatchLowerer<'_> {
                     "Match statement case body must be a block.",
                 );
             };
+            let case_loc = case.body.loc().dupe();
             let mut body_statements = body.body.to_vec();
             body_statements.push(ast_builder::statements::break_(
-                Some(builders::generated_loc()),
+                Some(case_loc.dupe()),
                 None,
                 Some(label.dupe()),
             ));
             let guarded = if let Some(guard) = case.guard {
                 vec![ast_builder::statements::if_(
-                    Some(builders::generated_loc()),
+                    Some(case_loc.dupe()),
                     None,
                     guard,
-                    Self::block(body_statements),
+                    Self::block(&case_loc, body_statements),
                     None,
                 )]
             } else {
@@ -1081,13 +1128,13 @@ impl MatchLowerer<'_> {
             let mut case_body = self.statements_of_bindings(&root, &case.bindings);
             case_body.extend(guarded);
             statements.push(if case.conditions.is_empty() {
-                Self::block(case_body)
+                Self::block(&case_loc, case_body)
             } else {
                 ast_builder::statements::if_(
-                    Some(builders::generated_loc()),
+                    Some(case_loc.dupe()),
                     None,
                     Self::conjunction(self.tests_of_conditions(&root, &case.conditions)),
-                    Self::block(case_body),
+                    Self::block(&case_loc, case_body),
                     None,
                 )
             });
@@ -1095,11 +1142,15 @@ impl MatchLowerer<'_> {
         if !analyses.has_wildcard {
             statements.push(Self::fallthrough(&root));
         }
-        Some(ast_builder::statements::labeled(
-            None,
-            label,
-            Self::block(statements),
-        ))
+        let body = Self::block(construct_loc, statements);
+        Some(statement::Statement::new(StatementInner::Labeled {
+            loc: construct_loc.dupe(),
+            inner: Arc::new(statement::Labeled {
+                label,
+                body,
+                comments: None,
+            }),
+        }))
     }
 }
 
@@ -1121,8 +1172,8 @@ impl<'ast> AstVisitor<'ast, Loc> for MatchLowerer<'_> {
     }
 
     fn map_expression(&mut self, expression: &'ast Expr) -> Expr {
-        if let ExpressionInner::Match { inner, .. } = &**expression
-            && let Some(lowered) = self.lower_match_expression(inner)
+        if let ExpressionInner::Match { loc, inner } = &**expression
+            && let Some(lowered) = self.lower_match_expression(loc, inner)
         {
             return self.map_expression(&lowered);
         }
@@ -1130,8 +1181,8 @@ impl<'ast> AstVisitor<'ast, Loc> for MatchLowerer<'_> {
     }
 
     fn map_statement(&mut self, statement: &'ast Stmt) -> Stmt {
-        if let StatementInner::Match { inner, .. } = &**statement
-            && let Some(lowered) = self.lower_match_statement(inner)
+        if let StatementInner::Match { loc, inner } = &**statement
+            && let Some(lowered) = self.lower_match_statement(loc, inner)
         {
             return self.map_statement(&lowered);
         }

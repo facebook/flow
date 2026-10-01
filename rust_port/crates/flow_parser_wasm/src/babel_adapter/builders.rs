@@ -15,16 +15,6 @@ use flow_parser::ast::pattern;
 use flow_parser::loc::Loc;
 use flow_parser_utils::ast_builder;
 
-/// Placeholder for synthesized nodes that have not yet been given a real source position.
-///
-/// Line 1 column 0 is a *reachable* position, so a node carrying this is indistinguishable from
-/// one genuinely at the top of the file — which is why it is being migrated out. `enum_lowering`
-/// no longer uses it; `record_lowering` and `match_lowering` still do, and each call site that
-/// passes it marks work remaining. `rg generated_loc` lists what is left.
-pub fn generated_loc() -> Loc {
-    Loc::mk(None, 1, 0, 1, 0)
-}
-
 pub fn identifier(loc: &Loc, name: &str) -> expression::Expression<Loc, Loc> {
     ast_builder::expressions::identifier(Some(loc.dupe()), None, name)
 }
