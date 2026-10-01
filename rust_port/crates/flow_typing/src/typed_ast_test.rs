@@ -50,6 +50,7 @@ use crate::type_inference;
 // pretty much copied from Flow_dot_js
 fn metadata() -> Metadata {
     let frozen = FrozenMetadata {
+        asserts_call_analysis: true,
         hook_compatibility: true,
         ts_syntax: true,
         ts_utility_syntax: true,
@@ -135,6 +136,7 @@ fn check_before_and_after_stmts(relative_path: &str, file_name: &str) {
     let aloc_ast = flow_aloc::loc_to_aloc_ast(&ast);
     let type_sig_options = TypeSigOptions::of_options(
         &Options {
+            asserts_call_analysis: true,
             hook_compatibility: true,
             ts_syntax: true,
             ts_utility_syntax: true,

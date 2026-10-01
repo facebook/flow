@@ -257,6 +257,7 @@ pub mod opts {
         pub deprecated_colon_extends_excludes: Vec<String>,
         pub enable_custom_error: bool,
         pub assert_operator: AssertOperator,
+        pub asserts_call_analysis: bool,
         pub type_expansion_recursion_limit: u32,
         pub unsuppressable_error_codes: HashSet<String>,
         pub use_unknown_in_catch_variables: Option<bool>,
@@ -429,6 +430,7 @@ pub mod opts {
             deprecated_colon_extends_excludes: Vec::new(),
             enable_custom_error: false,
             assert_operator: AssertOperator::Disabled,
+            asserts_call_analysis: false,
             type_expansion_recursion_limit: 3,
             unsuppressable_error_codes: HashSet::new(),
             use_unknown_in_catch_variables: None,
@@ -2121,6 +2123,16 @@ pub mod opts {
             ("experimental.assert_operator", |values, config| {
                 assert_operator_parser(values, config)
             }),
+            ("experimental.asserts_call_analysis", |values, config| {
+                parse_boolean(
+                    |opts, v| {
+                        opts.asserts_call_analysis = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )
+            }),
             (
                 "experimental.casting_syntax.only_support_as.excludes",
                 |values, config| {
@@ -3744,6 +3756,30 @@ mod tests {
 
             assert!(matches!(result, Err(Error(2, _))));
         }
+    }
+
+    #[test]
+    fn experimental_asserts_call_analysis_is_off_by_default_and_can_be_enabled() {
+        let mut config = empty_config();
+        assert!(!config.options.asserts_call_analysis);
+
+        let result = parse(
+            &mut config,
+            vec![
+                (1, "[options]".to_owned()),
+                (2, "experimental.asserts_call_analysis=true".to_owned()),
+            ],
+            true,
+        );
+
+        match result {
+            Ok(warnings) => assert!(warnings.is_empty()),
+            Err(Error(line, message)) => panic!(
+                "experimental.asserts_call_analysis errored at line {}: {}",
+                line, message
+            ),
+        }
+        assert!(config.options.asserts_call_analysis);
     }
 
     #[cfg(fbcode_build)]

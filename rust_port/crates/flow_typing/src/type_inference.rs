@@ -749,7 +749,7 @@ fn initialize_env_with_mode<'cx>(
                 ast,
                 type_sig_options,
                 current_type_sig,
-            } => declared_types::pack(
+            } if cx.asserts_call_analysis() => declared_types::pack(
                 type_sig_options,
                 cx,
                 ast,
@@ -759,6 +759,7 @@ fn initialize_env_with_mode<'cx>(
                 current_type_sig,
             )
             .map(|analysis| declared_types::resolve(cx, analysis)),
+            DeclaredTypesMode::Compute { .. } => None,
         };
         let info = info.to_env_info();
         let autocomplete_hooks = AutocompleteHooks {

@@ -2252,6 +2252,7 @@ pub fn make_options(
                 deprecated_colon_extends_excludes,
                 enable_custom_error,
                 assert_operator,
+                asserts_call_analysis,
                 type_expansion_recursion_limit,
                 unsuppressable_error_codes,
                 use_unknown_in_catch_variables,
@@ -2539,6 +2540,7 @@ pub fn make_options(
     Options {
         all,
         assert_operator,
+        asserts_call_analysis,
         autoimports,
         autoimports_min_characters,
         autoimports_ranked_by_usage,
