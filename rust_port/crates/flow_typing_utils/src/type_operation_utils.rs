@@ -35,7 +35,6 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumNotIterableData;
 use flow_typing_errors::error_message::EnumNotIterableForInData;
 use flow_typing_errors::error_message::ErrorMessage;
-use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InvalidThisArgKind;
 use flow_typing_errors::error_message::MatchErrorKind;
@@ -3042,13 +3041,7 @@ pub mod type_assertions {
                             ErrorMessage::EIllegalAssertOperator(Box::new(
                                 EIllegalAssertOperatorData {
                                     op_loc: op_reason.loc().dupe(),
-                                    obj: IllegalAssertObject::Typed {
-                                        expression: obj_expression.dupe(),
-                                        type_: flow_js_utils::type_reference_at_loc_for_error(
-                                            obj,
-                                            obj_expression.loc.dupe(),
-                                        ),
-                                    },
+                                    obj: obj_expression.dupe(),
                                     specialized: true,
                                 },
                             )),
@@ -3065,13 +3058,7 @@ pub mod type_assertions {
                     env,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op_loc: op_reason.loc().dupe(),
-                        obj: IllegalAssertObject::Typed {
-                            expression: obj_expression.dupe(),
-                            type_: flow_js_utils::type_reference_at_loc_for_error(
-                                obj,
-                                obj_expression.loc.dupe(),
-                            ),
-                        },
+                        obj: obj_expression.dupe(),
                         specialized: true,
                     })),
                 )
@@ -3084,13 +3071,7 @@ pub mod type_assertions {
                 env,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op_loc: op_reason.loc().dupe(),
-                    obj: IllegalAssertObject::Typed {
-                        expression: obj_expression.dupe(),
-                        type_: flow_js_utils::type_reference_at_loc_for_error(
-                            obj,
-                            obj_expression.loc.dupe(),
-                        ),
-                    },
+                    obj: obj_expression.dupe(),
                     specialized: true,
                 })),
             ),

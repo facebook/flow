@@ -116,7 +116,6 @@ use crate::intermediate_error_types::MessageDuplicateModuleProviderData;
 use crate::intermediate_error_types::MessageEnumDuplicateMemberNameData;
 use crate::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use crate::intermediate_error_types::MessageExponentialSpreadData;
-use crate::intermediate_error_types::MessageIllegalAssertObject;
 use crate::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use crate::intermediate_error_types::MessageIncompatibleTupleArityData;
 use crate::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
@@ -3237,27 +3236,8 @@ pub struct EUnionOptimizationOnNonUnionData<L: Dupe + PartialOrd + Ord + Partial
 )]
 pub struct EIllegalAssertOperatorData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub op_loc: L,
-    pub obj: IllegalAssertObject<L>,
+    pub obj: ExpressionReferenceData<L>,
     pub specialized: bool,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub enum IllegalAssertObject<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    Typed {
-        expression: ExpressionReferenceData<L>,
-        type_: ErrorTypeReferenceData<L>,
-    },
-    Expression(ExpressionReferenceData<L>),
 }
 
 #[derive(
@@ -6609,22 +6589,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 specialized,
             }) => EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                 op_loc: f(op_loc),
-                obj: match obj {
-                    IllegalAssertObject::Typed { expression, type_ } => {
-                        IllegalAssertObject::Typed {
-                            expression: ExpressionReferenceData {
-                                loc: f(expression.loc),
-                                kind: expression.kind,
-                            },
-                            type_: map_error_type_ref(type_),
-                        }
-                    }
-                    IllegalAssertObject::Expression(expression) => {
-                        IllegalAssertObject::Expression(ExpressionReferenceData {
-                            loc: f(expression.loc),
-                            kind: expression.kind,
-                        })
-                    }
+                obj: ExpressionReferenceData {
+                    loc: f(obj.loc),
+                    kind: obj.kind,
                 },
                 specialized,
             })),
@@ -7131,17 +7098,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 specialized,
             }) => EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                 op_loc,
-                obj: match obj {
-                    IllegalAssertObject::Typed { expression, type_ } => {
-                        IllegalAssertObject::Typed {
-                            expression,
-                            type_: map_error_type_ref(type_),
-                        }
-                    }
-                    IllegalAssertObject::Expression(expression) => {
-                        IllegalAssertObject::Expression(expression)
-                    }
-                },
+                obj,
                 specialized,
             })),
 
@@ -10340,17 +10297,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 specialized,
                 ..
             }) => Normal(Message::MessageIllegalAssertOperator {
-                obj: Box::new(match obj {
-                    IllegalAssertObject::Typed { expression, type_ } => {
-                        MessageIllegalAssertObject::Typed {
-                            expression,
-                            type_: expect_error_type_reference(type_),
-                        }
-                    }
-                    IllegalAssertObject::Expression(expression) => {
-                        MessageIllegalAssertObject::Expression(expression)
-                    }
-                }),
+                obj: Box::new(obj),
                 specialized,
             }),
 

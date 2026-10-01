@@ -157,7 +157,6 @@ use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitialized
 use flow_typing_errors::error_message::EnumUnknownNotCheckedData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
-use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
 use flow_typing_errors::error_message::InvalidTemplateLiteralTypeErrorKind;
@@ -4533,15 +4532,9 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             op_loc,
             specialized,
         }) => {
-            let obj = match obj {
-                IllegalAssertObject::Typed { expression, .. }
-                | IllegalAssertObject::Expression(expression) => {
-                    dump_expression_reference(expression)
-                }
-            };
             format!(
                 "EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {{obj={}, op={}, specialized={}}}))",
-                obj,
+                dump_expression_reference(obj),
                 string_of_aloc(None, op_loc),
                 specialized
             )

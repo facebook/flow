@@ -1542,25 +1542,6 @@ pub struct ImplicitInstantiationReferenceData<L: Dupe> {
 #[derive(
     Debug,
     Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub enum MessageIllegalAssertObject<L: Dupe> {
-    Typed {
-        expression: ExpressionReferenceData<L>,
-        type_: MessageTypeReferenceData<L>,
-    },
-    Expression(ExpressionReferenceData<L>),
-}
-
-#[derive(
-    Debug,
-    Clone,
     Copy,
     PartialEq,
     Eq,
@@ -2578,7 +2559,7 @@ pub enum Message<L: Dupe> {
     MessageUndocumentedFeature,
 
     MessageIllegalAssertOperator {
-        obj: Box<MessageIllegalAssertObject<L>>,
+        obj: Box<ExpressionReferenceData<L>>,
         specialized: bool,
     },
 

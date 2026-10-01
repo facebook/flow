@@ -61,7 +61,6 @@ use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::ESketchyNullLintData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
-use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::flow_error;
 use flow_typing_errors::flow_error::FlowError;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
@@ -1686,7 +1685,6 @@ fn check_assert_operator<'cx>(
             loc: expr.loc().0.dupe(),
             kind: flow_js_utils::expression_reference_kind_for_error(expr),
         };
-        let (_, expression_t) = expr.loc();
         match expr.deref() {
             ast::expression::ExpressionInner::Member { loc: _, inner }
                 if let ast::expression::member::Property::PropertyIdentifier(id) =
@@ -1750,13 +1748,7 @@ fn check_assert_operator<'cx>(
                     cx,
                     ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                         op_loc: op_reason.loc().dupe(),
-                        obj: IllegalAssertObject::Typed {
-                            expression: obj_expression,
-                            type_: flow_js_utils::type_reference_at_loc_for_error(
-                                expression_t,
-                                expr.loc().0.dupe(),
-                            ),
-                        },
+                        obj: obj_expression,
                         specialized: true,
                     })),
                 );
@@ -1790,13 +1782,7 @@ fn check_assert_operator<'cx>(
                 cx,
                 ErrorMessage::EIllegalAssertOperator(Box::new(EIllegalAssertOperatorData {
                     op_loc: op_reason.loc().dupe(),
-                    obj: IllegalAssertObject::Typed {
-                        expression: obj_expression,
-                        type_: flow_js_utils::type_reference_at_loc_for_error(
-                            t,
-                            expr.loc().0.dupe(),
-                        ),
-                    },
+                    obj: obj_expression,
                     specialized: false,
                 })),
             );

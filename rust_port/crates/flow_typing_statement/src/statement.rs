@@ -76,7 +76,6 @@ use flow_typing_errors::error_message::EnumNumberMemberNotInitializedData;
 use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::EnumStringMemberInconsistentlyInitializedData;
 use flow_typing_errors::error_message::ErrorMessage;
-use flow_typing_errors::error_message::IllegalAssertObject;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::MatchInvalidCaseSyntaxData;
@@ -12040,12 +12039,12 @@ fn simple_assignment<'a>(
                         ErrorMessage::EIllegalAssertOperator(Box::new(
                             EIllegalAssertOperatorData {
                                 op_loc: lhs_loc.dupe(),
-                                obj: IllegalAssertObject::Expression(ExpressionReferenceData {
+                                obj: ExpressionReferenceData {
                                     loc: unwrapped_expr.loc().dupe(),
                                     kind: flow_js_utils::expression_reference_kind_for_error(
                                         unwrapped_expr,
                                     ),
-                                }),
+                                },
                                 specialized: true,
                             },
                         )),

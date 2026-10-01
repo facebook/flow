@@ -113,7 +113,6 @@ use super::intermediate_error_types::MessageDuplicateModuleProviderData;
 use super::intermediate_error_types::MessageEnumDuplicateMemberNameData;
 use super::intermediate_error_types::MessageEnumInvalidMemberInitializerData;
 use super::intermediate_error_types::MessageExponentialSpreadData;
-use super::intermediate_error_types::MessageIllegalAssertObject;
 use super::intermediate_error_types::MessageIncompatibleDueToInvariantSubtypingData;
 use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesData;
 use super::intermediate_error_types::MessageIncompatibleTupleArityData;
@@ -9075,15 +9074,8 @@ where
                         "The assert operator can only be applied to values with nullable types.",
                     )]
                 };
-                let expression = match obj.as_ref() {
-                    MessageIllegalAssertObject::Typed {
-                        expression,
-                        type_: _,
-                    }
-                    | MessageIllegalAssertObject::Expression(expression) => expression,
-                };
                 let mut features = vec![
-                    render_expression_reference(expression),
+                    render_expression_reference(obj),
                     text(" is not a valid target of the nonnull assertion operator ("),
                     code("!"),
                     text("). "),
