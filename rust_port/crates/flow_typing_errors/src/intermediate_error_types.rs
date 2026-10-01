@@ -2369,13 +2369,11 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidThisArgMissingReceiver {
         name: FlowSmolStr,
-        callee: MessageTypeReferenceData<L>,
         callee_expression: ExpressionReferenceData<L>,
     },
 
     MessageInvalidThisArgReceiverMismatch {
         name: FlowSmolStr,
-        callee: MessageTypeReferenceData<L>,
         receiver_expression: ExpressionReferenceData<L>,
     },
 

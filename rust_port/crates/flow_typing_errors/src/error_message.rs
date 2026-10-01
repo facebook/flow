@@ -2296,7 +2296,6 @@ pub struct EInvalidThisArgData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     /// Location of the `call`/`apply`/`bind` identifier.
     pub loc: L,
     pub name: FlowSmolStr,
-    pub callee: ErrorTypeReferenceData<L>,
     /// The receiver the first argument had to match, or, for
     /// [`InvalidThisArgKind::MissingReceiver`], the callee that has no receiver.
     pub receiver_expression: ExpressionReferenceData<L>,
@@ -5012,13 +5011,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidThisArg(box EInvalidThisArgData {
                 loc,
                 name,
-                callee,
                 receiver_expression,
                 kind,
             }) => EInvalidThisArg(Box::new(EInvalidThisArgData {
                 loc: f(loc),
                 name,
-                callee: map_error_type_ref(callee),
                 receiver_expression: ExpressionReferenceData {
                     loc: f(receiver_expression.loc),
                     kind: receiver_expression.kind,
@@ -7111,13 +7108,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EInvalidThisArg(box EInvalidThisArgData {
                 loc,
                 name,
-                callee,
                 receiver_expression,
                 kind,
             }) => EInvalidThisArg(Box::new(EInvalidThisArgData {
                 loc,
                 name,
-                callee: map_error_type_ref(callee),
                 receiver_expression,
                 kind,
             })),
@@ -9166,21 +9161,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {
                 loc: _,
                 name,
-                callee,
                 receiver_expression,
                 kind,
             }) => match kind {
                 InvalidThisArgKind::MissingReceiver => {
                     Normal(Message::MessageInvalidThisArgMissingReceiver {
                         name,
-                        callee: expect_error_type_reference(callee),
                         callee_expression: receiver_expression,
                     })
                 }
                 InvalidThisArgKind::ReceiverMismatch => {
                     Normal(Message::MessageInvalidThisArgReceiverMismatch {
                         name,
-                        callee: expect_error_type_reference(callee),
                         receiver_expression,
                     })
                 }

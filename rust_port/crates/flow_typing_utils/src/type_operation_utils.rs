@@ -2498,16 +2498,11 @@ pub mod type_assertions {
                 },
             ),
         };
-        let callee = flow_js_utils::type_reference_at_loc_for_error(
-            callee_object_t,
-            callee_object.loc().dupe(),
-        );
         flow_js_utils::add_output_non_speculating(
             cx,
             ErrorMessage::EInvalidThisArg(Box::new(EInvalidThisArgData {
                 loc: prop_loc.dupe(),
                 name: name.dupe(),
-                callee,
                 receiver_expression,
                 kind,
             })),

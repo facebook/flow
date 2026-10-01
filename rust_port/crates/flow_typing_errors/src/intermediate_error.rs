@@ -7896,7 +7896,6 @@ where
             ]),
             MessageInvalidThisArgMissingReceiver {
                 name,
-                callee: _,
                 callee_expression,
             } => friendly::Message(vec![
                 text("Cannot use "),
@@ -7912,7 +7911,6 @@ where
             ]),
             MessageInvalidThisArgReceiverMismatch {
                 name,
-                callee: _,
                 receiver_expression,
             } => friendly::Message(vec![
                 text("Cannot use "),
