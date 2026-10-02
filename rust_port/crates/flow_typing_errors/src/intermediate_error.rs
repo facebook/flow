@@ -3489,9 +3489,7 @@ where
                 use_loc,
                 use_op,
                 None,
-                Message::MessageUnknownParameterTypesWithPrintedType(Box::new(
-                    lower_type_ref.clone(),
-                )),
+                Message::MessageUnknownParameterTypes(lower_type_ref.loc.dupe()),
             ),
 
             UpperKind::IncompatibleCallT => mk_use_op_error(
@@ -9197,9 +9195,9 @@ where
                     }
                 }
             }
-            MessageUnknownParameterTypesWithPrintedType(lower) => friendly::Message(vec![
+            MessageUnknownParameterTypes(function_loc) => friendly::Message(vec![
                 text("the parameter types of an "),
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                hardcoded_string_desc_ref("unknown function", function_loc),
                 text(" are unknown"),
             ]),
             MessageUnnecessaryDeclareTypeOnlyExport => friendly::Message(vec![

@@ -2546,7 +2546,9 @@ pub enum Message<L: Dupe> {
 
     MessageUninitializedInstanceProperty(PropertyAssignmentKind),
 
-    MessageUnknownParameterTypesWithPrintedType(Box<MessageTypeReferenceData<L>>),
+    /// A value known only to be some function is called or flows into a function type. The loc is
+    /// that value's.
+    MessageUnknownParameterTypes(L),
     MessageUnnecessaryDeclareTypeOnlyExport,
     MessageUnnecessaryInvariant {
         condition: Box<MessageTypeReferenceData<L>>,
