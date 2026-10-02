@@ -1997,10 +1997,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotIterateEnum(EnumReferenceData<L>),
 
-    MessageCannotIterateEnumForIn {
-        enum_: MessageTypeReferenceData<L>,
-        enum_name: Option<FlowSmolStr>,
-    },
+    MessageCannotIterateEnumForIn(EnumReferenceData<L>),
 
     MessageCannotIterateWithForIn(Box<MessageTypeReferenceData<L>>),
     MessageCannotMutateThisPrototype,

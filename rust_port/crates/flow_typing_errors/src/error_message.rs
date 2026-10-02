@@ -386,8 +386,8 @@ pub struct EnumNotIterableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Deserialize
 )]
 pub struct EnumNotIterableForInData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
-    pub enum_name: Option<FlowSmolStr>,
+    pub loc: L,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -5372,10 +5372,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             enum_: map_enum_ref(enum_),
                         }))
                     }
-                    EnumNotIterableForIn(box EnumNotIterableForInData { enum_, enum_name }) => {
+                    EnumNotIterableForIn(box EnumNotIterableForInData { loc, enum_ }) => {
                         EnumNotIterableForIn(Box::new(EnumNotIterableForInData {
-                            enum_: map_error_type_ref_with_reason(enum_),
-                            enum_name,
+                            loc: f(loc),
+                            enum_: map_enum_ref(enum_),
                         }))
                     }
                     EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {
@@ -7189,16 +7189,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
-            EEnumError(EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData {
-                enum_,
-                enum_name,
-            })) => EEnumError(EnumErrorKind::EnumNotIterableForIn(Box::new(
-                EnumNotIterableForInData {
-                    enum_: map_error_type_ref_with_reason(enum_),
-                    enum_name,
-                },
-            ))),
-
             EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
                 box EnumMemberAlreadyCheckedData {
                     case_test_loc,
@@ -8125,10 +8115,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             })) => Some(loc.dupe()),
 
             Self::EEnumError(EnumErrorKind::EnumNotIterableForIn(
-                box EnumNotIterableForInData {
-                    enum_: ErrorTypeReferenceWithLocData { loc, .. },
-                    ..
-                },
+                box EnumNotIterableForInData { loc, .. },
             ))
             | Self::EEnumError(EnumErrorKind::EnumInvalidObjectFunction(
                 box EnumInvalidObjectFunctionData {
@@ -9728,14 +9715,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 enum_,
             })) => Normal(Message::MessageCannotIterateEnum(enum_)),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
-                box EnumNotIterableForInData { enum_, enum_name },
-            )) => Normal(Message::MessageCannotIterateEnumForIn {
-                enum_: MessageTypeReferenceData {
-                    loc: enum_.reference_loc,
-                    desc: expect_type_desc(enum_.type_desc),
-                },
-                enum_name,
-            }),
+                box EnumNotIterableForInData { enum_, .. },
+            )) => Normal(Message::MessageCannotIterateEnumForIn(enum_)),
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
                 box EnumMemberAlreadyCheckedData {
                     prev_check_loc,

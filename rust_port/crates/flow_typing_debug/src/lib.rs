@@ -3745,7 +3745,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData { enum_, .. }) => {
                 format!(
                     "EEnumError (EnumNotIterableForIn ({}))",
-                    dump_error_type_reference(cx, enum_)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumMemberAlreadyChecked(box EnumMemberAlreadyCheckedData {

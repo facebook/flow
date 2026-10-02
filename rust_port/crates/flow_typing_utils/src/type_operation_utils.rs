@@ -2683,11 +2683,11 @@ pub mod type_assertions {
                                 env,
                                 ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
                                     Box::new(EnumNotIterableForInData {
-                                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                                            t,
-                                            enum_reason.dupe(),
-                                        ),
-                                        enum_name: enum_info.enum_name().map(Dupe::dupe),
+                                        loc: enum_reason.loc().dupe(),
+                                        enum_: EnumReferenceData {
+                                            loc: type_util::ref_loc_of_t(t).dupe(),
+                                            name: enum_info.enum_name().map(Dupe::dupe),
+                                        },
                                     }),
                                 )),
                             )

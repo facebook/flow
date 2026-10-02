@@ -6065,8 +6065,8 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateEnumForIn { enum_, enum_name } => {
-                let suggestion = match enum_name {
+            MessageCannotIterateEnumForIn(enum_) => {
+                let suggestion = match &enum_.name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use "),
@@ -6079,7 +6079,7 @@ where
                     text("Cannot iterate using a "),
                     code("for...in"),
                     text(" loop because "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_reference(enum_),
                     text(" is not an object, null, or undefined."),
                 ];
                 features.extend(suggestion);
