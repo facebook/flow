@@ -1884,26 +1884,14 @@ pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
     }))
 }
 
-/// Builds an invalid-constructor error while preserving module provenance that
-/// the normalized namespace object type cannot express.
 pub fn invalid_constructor_error(t: &Type) -> ErrorMessage<ALoc> {
-    use flow_common::reason::VirtualReasonDesc;
     use flow_typing_errors::error_message::EInvalidConstructorData;
     use flow_typing_type::type_util;
 
-    let reason = type_util::reason_of_t(t);
-    let value_desc = if matches!(
-        reason.desc(true),
-        VirtualReasonDesc::RExports | VirtualReasonDesc::RModule(_)
-    ) {
-        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
-    } else {
-        type_or_type_desc_for_error(t)
-    };
     ErrorMessage::EInvalidConstructor(Box::new(EInvalidConstructorData {
-        loc: reason.loc().dupe(),
+        loc: type_util::reason_of_t(t).loc().dupe(),
         value_loc: type_util::ref_loc_of_t(t).dupe(),
-        value_desc,
+        value_desc: type_or_type_desc_for_error(t),
     }))
 }
 

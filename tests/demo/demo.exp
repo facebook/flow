@@ -35,7 +35,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ 2/B.js:3:13
 
-Cannot use `new` on exports [1]. Only classes and interfaces with a construct signature can be constructed.
+Cannot use `new` on `{}` [1]. Only classes and interfaces with a construct signature can be constructed.
 [invalid-constructor]
 
    2/B.js:3:13
