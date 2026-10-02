@@ -10,6 +10,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use flow_typing_debug::verbose::print_types_if_verbose;
+use flow_typing_errors::error_message::CallTypeArityCallee;
 use flow_typing_errors::error_message::ECallTypeArityData;
 use flow_typing_errors::error_message::EIncompatiblePropData;
 use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
@@ -5211,8 +5212,9 @@ fn __flow_impl<'cx>(
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_callsite.loc().dupe(),
                         is_new: false,
-                        callee_loc: type_util::ref_loc_of_t(l).dupe(),
-                        callee_desc: flow_js_utils::type_or_type_desc_for_error(l),
+                        callee: CallTypeArityCallee::Type(flow_js_utils::type_reference_for_error(
+                            l,
+                        )),
                         expected_arity: 0,
                     })),
                 )?;
@@ -5611,8 +5613,9 @@ fn __flow_impl<'cx>(
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: annot_loc.dupe(),
                         is_new: true,
-                        callee_loc: type_util::ref_loc_of_t(this).dupe(),
-                        callee_desc: flow_js_utils::type_or_type_desc_for_error(this),
+                        callee: CallTypeArityCallee::Type(flow_js_utils::type_reference_for_error(
+                            this,
+                        )),
                         expected_arity: 0,
                     })),
                 )?;
@@ -7999,8 +8002,9 @@ fn __flow_impl<'cx>(
                     ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                         call_loc: reason_op.loc().dupe(),
                         is_new: false,
-                        callee_loc: type_util::ref_loc_of_t(l).dupe(),
-                        callee_desc: flow_js_utils::type_or_type_desc_for_error(l),
+                        callee: CallTypeArityCallee::Type(flow_js_utils::type_reference_for_error(
+                            l,
+                        )),
                         expected_arity: 0,
                     })),
                 )?;

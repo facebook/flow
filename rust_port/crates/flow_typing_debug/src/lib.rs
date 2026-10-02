@@ -27,6 +27,7 @@ use flow_type_sig::signature_error::BindingValidation;
 use flow_type_sig::signature_error::SignatureError;
 use flow_typing_context::Context;
 use flow_typing_default::Default;
+use flow_typing_errors::error_message::CallTypeArityCallee;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::EAnnotationInferenceData;
 use flow_typing_errors::error_message::EArithmeticOperandData;
@@ -2759,13 +2760,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::ECallTypeArity(box ECallTypeArityData {
             call_loc,
             is_new,
-            callee_desc,
+            callee,
             expected_arity,
-            ..
         }) => {
-            let callee = match callee_desc {
-                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
-                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+            let callee = match callee {
+                CallTypeArityCallee::Type(callee) => {
+                    dump_loc_type_desc(cx, &callee.reference_loc, &callee.type_desc)
+                }
+                CallTypeArityCallee::Builtin(name) => name.to_string(),
+                CallTypeArityCallee::Function => "function".to_string(),
             };
             format!(
                 "ECallTypeArity(Box::new(ECallTypeArityData {{ call_loc={}; is_new={}; callee={}; expected_arity={}; }}))",

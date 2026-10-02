@@ -48,6 +48,7 @@ use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT as TypeOrTypeDes
 use flow_typing_type::type_::union_rep::OptimizedError;
 use vec1::Vec1;
 
+use crate::error_message::CallTypeArityCallee;
 use crate::error_message::DefinitionReferenceData;
 use crate::error_message::EnumReferenceData;
 use crate::error_message::TypeGuardBindingKind;
@@ -2088,7 +2089,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotUseNonPolymorphicTypeWithTypeArgs {
         is_new: bool,
-        callee: Box<MessageTypeReferenceData<L>>,
+        callee: Box<CallTypeArityCallee<MessageTypeReferenceData<L>>>,
         expected_arity: i32,
     },
 

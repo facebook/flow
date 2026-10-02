@@ -52,6 +52,7 @@ use flow_parser::polymorphic_ast_mapper;
 use flow_parser_utils::graphql;
 use flow_parser_utils::symbol_call;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::CallTypeArityCallee;
 use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::ECallTypeArityData;
 use flow_typing_errors::error_message::ECannotDeleteData;
@@ -7313,10 +7314,7 @@ fn expression_<'a>(
                         ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                             call_loc: loc.dupe(),
                             is_new: true,
-                            callee_loc: ALoc::none(),
-                            callee_desc: TypeOrTypeDescT::TypeDesc(Err(VirtualReasonDesc::RType(
-                                FlowSmolStr::new("Function"),
-                            ))),
+                            callee: CallTypeArityCallee::Builtin(name.name.dupe()),
                             expected_arity: 0,
                         })),
                     );
@@ -7382,8 +7380,7 @@ fn expression_<'a>(
                 (Some(_), _) => Err(ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: true,
-                    callee_loc: ALoc::none(),
-                    callee_desc: TypeOrTypeDescT::TypeDesc(Err(VirtualReasonDesc::RType(n.dupe()))),
+                    callee: CallTypeArityCallee::Builtin(n.dupe()),
                     expected_arity: 1,
                 }))),
             };
@@ -8645,10 +8642,7 @@ pub fn optional_chain<'a>(
                             ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                                 call_loc: loc.dupe(),
                                 is_new: false,
-                                callee_loc: ALoc::none(),
-                                callee_desc: TypeOrTypeDescT::TypeDesc(Err(
-                                    VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
-                                )),
+                                callee: CallTypeArityCallee::Function,
                                 expected_arity: 0,
                             })),
                         );
@@ -9204,10 +9198,7 @@ pub fn optional_chain<'a>(
                             ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                                 call_loc: loc.dupe(),
                                 is_new: false,
-                                callee_loc: ALoc::none(),
-                                callee_desc: TypeOrTypeDescT::TypeDesc(Err(
-                                    VirtualReasonDesc::RFunction(ReasonDescFunction::RNormal),
-                                )),
+                                callee: CallTypeArityCallee::Function,
                                 expected_arity: 0,
                             })),
                         );
@@ -14890,10 +14881,7 @@ fn static_method_call_object<'a>(
                 ErrorMessage::ECallTypeArity(Box::new(ECallTypeArityData {
                     call_loc: loc.dupe(),
                     is_new: false,
-                    callee_loc: ALoc::none(),
-                    callee_desc: TypeOrTypeDescT::TypeDesc(Err(RFunction(
-                        ReasonDescFunction::RNormal,
-                    ))),
+                    callee: CallTypeArityCallee::Function,
                     expected_arity: arity,
                 })),
             );

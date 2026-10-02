@@ -1787,9 +1787,27 @@ pub struct ETupleInvalidTypeSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + 
 pub struct ECallTypeArityData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub call_loc: L,
     pub is_new: bool,
-    pub callee_loc: L,
-    pub callee_desc: TypeOrTypeDesc<L>,
+    pub callee: CallTypeArityCallee<ErrorTypeReferenceData<L>>,
     pub expected_arity: i32,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum CallTypeArityCallee<T> {
+    Type(T),
+    /// A builtin checked syntactically, such as `new Array<T>(..)`. There is no callee type.
+    Builtin(FlowSmolStr),
+    /// A call checked syntactically, such as `require<T>(..)`. There is no callee type.
+    Function,
 }
 
 #[derive(
@@ -5117,14 +5135,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ECallTypeArity(box ECallTypeArityData {
                 call_loc,
                 is_new,
-                callee_loc,
-                callee_desc,
+                callee,
                 expected_arity,
             }) => ECallTypeArity(Box::new(ECallTypeArityData {
                 call_loc: f(call_loc),
                 is_new,
-                callee_loc: f(callee_loc),
-                callee_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), callee_desc),
+                callee: match callee {
+                    CallTypeArityCallee::Type(callee) => {
+                        CallTypeArityCallee::Type(map_error_type_ref(callee))
+                    }
+                    CallTypeArityCallee::Builtin(name) => CallTypeArityCallee::Builtin(name),
+                    CallTypeArityCallee::Function => CallTypeArityCallee::Function,
+                },
                 expected_arity,
             })),
 
@@ -7529,14 +7551,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ECallTypeArity(box ECallTypeArityData {
                 call_loc,
                 is_new,
-                callee_loc,
-                callee_desc,
+                callee,
                 expected_arity,
             }) => ECallTypeArity(Box::new(ECallTypeArityData {
                 call_loc,
                 is_new,
-                callee_loc,
-                callee_desc: f(callee_desc),
+                callee: match callee {
+                    CallTypeArityCallee::Type(callee) => {
+                        CallTypeArityCallee::Type(map_error_type_ref(callee))
+                    }
+                    CallTypeArityCallee::Builtin(name) => CallTypeArityCallee::Builtin(name),
+                    CallTypeArityCallee::Function => CallTypeArityCallee::Function,
+                },
                 expected_arity,
             })),
 
@@ -10328,15 +10354,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ECallTypeArity(box ECallTypeArityData {
                 is_new,
-                callee_loc,
-                callee_desc,
+                callee,
                 expected_arity,
                 ..
             }) => Normal(Message::MessageCannotUseNonPolymorphicTypeWithTypeArgs {
                 is_new,
-                callee: Box::new(MessageTypeReferenceData {
-                    loc: callee_loc,
-                    desc: expect_type_desc(callee_desc),
+                callee: Box::new(match callee {
+                    CallTypeArityCallee::Type(callee) => {
+                        CallTypeArityCallee::Type(expect_error_type_reference(callee))
+                    }
+                    CallTypeArityCallee::Builtin(name) => CallTypeArityCallee::Builtin(name),
+                    CallTypeArityCallee::Function => CallTypeArityCallee::Function,
                 }),
                 expected_arity,
             }),

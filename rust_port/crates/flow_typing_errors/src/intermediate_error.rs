@@ -155,6 +155,7 @@ use super::intermediate_error_types::TypeGuardReferenceData;
 use super::intermediate_error_types::TypeGuardReferenceKind;
 use super::intermediate_error_types::UnnecessaryInvariantConditionKind;
 use super::intermediate_error_types::ValueAsTypeReference;
+use crate::error_message::CallTypeArityCallee;
 use crate::error_message::ConstructSignatureMissingInSubtypingData;
 use crate::error_message::EExpectedBigIntLitData;
 use crate::error_message::EExpectedBooleanLitData;
@@ -6554,12 +6555,17 @@ where
                 expected_arity,
             } => {
                 let use_word = if *is_new { "construct " } else { "call " };
+                let callee = match callee.as_ref() {
+                    CallTypeArityCallee::Type(callee) => ref_of_ty_or_desc(&callee.loc, &callee.desc),
+                    CallTypeArityCallee::Builtin(name) => code(name),
+                    CallTypeArityCallee::Function => text("function"),
+                };
                 if *expected_arity == 0 {
                     friendly::Message(vec![
                         text("Cannot "),
                         text(use_word),
                         text("non-polymorphic "),
-                        ref_of_ty_or_desc(&callee.loc, &callee.desc),
+                        callee,
                         text(" with type arguments."),
                     ])
                 } else {
@@ -6567,7 +6573,7 @@ where
                     friendly::Message(vec![
                         text("Cannot "),
                         text(use_word),
-                        ref_of_ty_or_desc(&callee.loc, &callee.desc),
+                        callee,
                         text(" without exactly "),
                         text(&format!("{} type argument{}.", expected_arity, suffix)),
                     ])
