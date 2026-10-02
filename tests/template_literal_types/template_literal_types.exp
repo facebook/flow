@@ -1,3 +1,218 @@
+Error -------------------------------------------------------------------------------------------------- as_const.js:9:3
+
+Cannot cast `x` to template literal type because `string` [1] is incompatible with ``${string}px`` [2].
+[incompatible-type]
+
+   as_const.js:9:3
+   9|   x as `${string}px`; // ERROR
+        ^
+
+References:
+   as_const.js:6:13
+   6|   const x = `${s}dp` as const;
+                  ^^^^^^^^ [1]
+   as_const.js:9:8
+   9|   x as `${string}px`; // ERROR
+             ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:18:3
+
+Cannot cast `x` to template literal type because `string` [1] is incompatible with ``info-${string}`` [2].
+[incompatible-type]
+
+   as_const.js:18:3
+   18|   x as `info-${string}`; // ERROR
+         ^
+
+References:
+   as_const.js:15:13
+   15|   const x = `data-${s}` as const;
+                   ^^^^^^^^^^^ [1]
+   as_const.js:18:8
+   18|   x as `info-${string}`; // ERROR
+              ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:26:3
+
+Cannot cast `x` to template literal type because `string` [1] is incompatible with ``pre-${string}-other`` [2].
+[incompatible-type]
+
+   as_const.js:26:3
+   26|   x as `pre-${string}-other`; // ERROR
+         ^
+
+References:
+   as_const.js:23:13
+   23|   const x = `pre-${s}-suf` as const;
+                   ^^^^^^^^^^^^^^ [1]
+   as_const.js:26:8
+   26|   x as `pre-${string}-other`; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:27:3
+
+Cannot cast `x` to template literal type because `string` [1] is incompatible with ``other-${string}-suf`` [2].
+[incompatible-type]
+
+   as_const.js:27:3
+   27|   x as `other-${string}-suf`; // ERROR
+         ^
+
+References:
+   as_const.js:23:13
+   23|   const x = `pre-${s}-suf` as const;
+                   ^^^^^^^^^^^^^^ [1]
+   as_const.js:27:8
+   27|   x as `other-${string}-suf`; // ERROR
+              ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:36:3
+
+Cannot cast `x` to template literal type because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   as_const.js:36:3
+   36|   x as `a${number}b${number}c`; // ERROR - string is not number
+         ^
+
+References:
+   as_const.js:1:18
+    1| declare const s: string;
+                        ^^^^^^ [1]
+   as_const.js:36:12
+   36|   x as `a${number}b${number}c`; // ERROR - string is not number
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:52:3
+
+Cannot cast `x` to string literal `hello mars` because string literal `hello world` [1] is incompatible with string
+literal `hello mars` [2]. [incompatible-type]
+
+   as_const.js:52:3
+   52|   x as "hello mars"; // ERROR
+         ^
+
+References:
+   as_const.js:49:13
+   49|   const x = `hello ${lit}` as const;
+                   ^^^^^^^^^^^^^^ [1]
+   as_const.js:52:8
+   52|   x as "hello mars"; // ERROR
+              ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:60:3
+
+Cannot cast `x` to string literal `n124` because string literal `n123` [1] is incompatible with string literal
+`n124` [2]. [incompatible-type]
+
+   as_const.js:60:3
+   60|   x as "n124"; // ERROR
+         ^
+
+References:
+   as_const.js:57:13
+   57|   const x = `n${123}` as const;
+                   ^^^^^^^^^ [1]
+   as_const.js:60:8
+   60|   x as "n124"; // ERROR
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:71:3
+
+Cannot cast `x` to string literal `xa` because string literal `xb` [1] is incompatible with string literal `xa` [2].
+[incompatible-type]
+
+   as_const.js:71:3
+   71|   x as "xa"; // ERROR - missing "xb"
+         ^
+
+References:
+   as_const.js:68:13
+   68|   const x = `x${u}` as const;
+                   ^^^^^^^ [1]
+   as_const.js:71:8
+   71|   x as "xa"; // ERROR - missing "xb"
+              ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- as_const.js:98:3
+
+Cannot cast `x` to string literal `bye` because string literal `hello` [1] is incompatible with string literal
+`bye` [2]. [incompatible-type]
+
+   as_const.js:98:3
+   98|   x as "bye"; // ERROR
+         ^
+
+References:
+   as_const.js:95:13
+   95|   const x = `hello` as const;
+                   ^^^^^^^ [1]
+   as_const.js:98:8
+   98|   x as "bye"; // ERROR
+              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ as_const.js:105:3
+
+Cannot cast `y` to template literal type because `string` [1] is incompatible with ``${string}dp`` [2].
+[incompatible-type]
+
+   as_const.js:105:3
+   105|   y as `${string}dp`; // ERROR - no precision without as const
+          ^
+
+References:
+   as_const.js:103:13
+   103|   const y = `${s}dp`;
+                    ^^^^^^^^ [1]
+   as_const.js:105:8
+   105|   y as `${string}dp`; // ERROR - no precision without as const
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- as_const_import.js:5:1
+
+Cannot cast `exported_suffix` to template literal type because `string` [1] is incompatible with ``${string}px`` [2].
+[incompatible-type]
+
+   as_const_import.js:5:1
+     5| exported_suffix as `${string}px`; // ERROR
+        ^^^^^^^^^^^^^^^
+
+References:
+   as_const.js:109:32
+   109| export const exported_suffix = `${s}dp` as const;
+                                       ^^^^^^^^ [1]
+   as_const_import.js:5:20
+     5| exported_suffix as `${string}px`; // ERROR
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- as_const_import.js:9:1
+
+Cannot cast `exported_folded` to string literal `hello mars` because string literal `hello world` [1] is incompatible
+with string literal `hello mars` [2]. [incompatible-type]
+
+   as_const_import.js:9:1
+     9| exported_folded as "hello mars"; // ERROR
+        ^^^^^^^^^^^^^^^
+
+References:
+   as_const.js:110:32
+   110| export const exported_folded = `hello ${"world"}` as const;
+                                       ^^^^^^^^^^^^^^^^^^ [1]
+   as_const_import.js:9:20
+     9| exported_folded as "hello mars"; // ERROR
+                           ^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- basic.js:5:1
 
 Cannot cast `"world"` to `Plain` because string literal `world` [1] is incompatible with string literal `hello` [2].
@@ -2169,4 +2384,4 @@ References:
 
 
 
-Found 140 errors
+Found 152 errors

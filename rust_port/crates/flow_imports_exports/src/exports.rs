@@ -399,6 +399,7 @@ mod eval {
                 | PackedValue::FunExpr(_)
                 | PackedValue::StringVal(_)
                 | PackedValue::StringLit(..)
+                | PackedValue::TemplateLiteral(..)
                 | PackedValue::NumberVal(_)
                 | PackedValue::NumberLit(..)
                 | PackedValue::BooleanVal(_)

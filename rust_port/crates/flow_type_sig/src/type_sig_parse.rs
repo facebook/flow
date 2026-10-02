@@ -2299,6 +2299,17 @@ pub(crate) mod scope {
                         .collect(),
                     strictness_kind: inner.strictness_kind,
                 })),
+                Value::TemplateLiteral(inner) => {
+                    Value::TemplateLiteral(Box::new(ValueTemplateLiteral {
+                        loc: inner.loc.dupe(),
+                        quasis: inner.quasis.clone(),
+                        types: inner
+                            .types
+                            .iter()
+                            .map(|t| rename_tparams_in_parsed(rename_map, t))
+                            .collect(),
+                    }))
+                }
                 Value::AsConst(value) => {
                     Value::AsConst(Box::new(rename_tparams_in_value(rename_map, value)))
                 }
@@ -9766,6 +9777,35 @@ fn template_literal<'arena, 'ast>(
     }
 }
 
+fn template_literal_expression<'arena: 'ast, 'ast>(
+    opts: &TypeSigOptions,
+    scope: ScopeId,
+    scopes: &mut scope::Scopes<'arena, 'ast>,
+    tbls: &mut Tables<'arena, 'ast>,
+    frozen: FrozenKind,
+    loc: LocNode<'arena>,
+    quasi: &'ast ast::expression::TemplateLiteral<Loc, Loc>,
+) -> Parsed<'arena, 'ast> {
+    match quasi.quasis.as_ref() {
+        [element] => string_literal(frozen, loc, &element.value.cooked),
+        _ => {
+            let quasis = quasi
+                .quasis
+                .iter()
+                .map(|element| element.value.cooked.dupe())
+                .collect();
+            let types = quasi
+                .expressions
+                .iter()
+                .map(|expr| expression(opts, scope, scopes, tbls, FrozenKind::NotFrozen, expr))
+                .collect();
+            Parsed::Value(Box::new(ParsedValue::TemplateLiteral(Box::new(
+                ValueTemplateLiteral { loc, quasis, types },
+            ))))
+        }
+    }
+}
+
 fn graphql_literal<'arena, 'ast>(
     opts: &TypeSigOptions,
     tbls: &mut Tables<'arena, 'ast>,
@@ -10007,7 +10047,9 @@ fn expression<'arena: 'ast, 'ast>(
             }
             _ => template_literal(loc, &inner.quasi.1.quasis),
         },
-        E::TemplateLiteral { inner, .. } => template_literal(loc, &inner.quasis),
+        E::TemplateLiteral { inner, .. } => {
+            template_literal_expression(opts, scope, scopes, tbls, frozen, loc, inner)
+        }
         E::Identifier { inner, .. } => {
             let id_loc = tbls.push_loc(inner.loc.dupe());
             val_ref(false, scope, id_loc, inner.name.dupe())

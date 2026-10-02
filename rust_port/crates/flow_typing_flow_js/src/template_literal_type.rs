@@ -917,6 +917,67 @@ pub fn resolve<'cx>(
     }
 }
 
+/// Value-inference counterpart of [resolve] for `as const` template literals.
+/// Mirrors TypeScript: `` `prefix${x}` as const `` infers `` `prefix${string}` ``
+/// when `x: string`, and eagerly folds to a string literal when every
+/// placeholder is literal.
+///
+/// Unlike [resolve], this never emits placeholder or complexity errors: the
+/// substituted expressions were already checked for string coercion during
+/// statement inference, so erroring here would only duplicate diagnostics.
+/// Overly complex literal cross products silently fall back to TemplateLiteralT.
+pub fn resolve_for_value<'cx>(
+    quasis: Vec<FlowSmolStr>,
+    types: Vec<Type>,
+    loc: ALoc,
+    cx: &Context<'cx>,
+) -> Type {
+    let unresolved = || {
+        let reason = reason::mk_reason(VirtualReasonDesc::RTemplateString, loc.dupe());
+        Type::new(TypeInner::TemplateLiteralT {
+            reason,
+            quasis: quasis.to_vec(),
+            types: types.to_vec(),
+        })
+    };
+    if types.is_empty() {
+        let s: FlowSmolStr = quasis.iter().map(|s| s.as_str()).collect::<String>().into();
+        let reason = reason::mk_annot_reason(VirtualReasonDesc::RStringLit(s.dupe()), loc.dupe());
+        return Type::new(TypeInner::DefT(
+            reason,
+            DefT::new(DefTInner::SingletonStrT {
+                from_annot: true,
+                value: s,
+            }),
+        ));
+    }
+    let Some(string_lists) = try_resolve_eagerly(&types) else {
+        return unresolved();
+    };
+    if cross_product_size(&string_lists) > MAX_CROSS_PRODUCT_SIZE {
+        return unresolved();
+    }
+    let Some(strings) = cartesian_product(&quasis, &string_lists) else {
+        return unresolved();
+    };
+    let mk_str = |s: &FlowSmolStr| {
+        let r = reason::mk_annot_reason(VirtualReasonDesc::RStringLit(s.dupe()), loc.dupe());
+        Type::new(TypeInner::DefT(
+            r,
+            DefT::new(DefTInner::SingletonStrT {
+                from_annot: true,
+                value: s.dupe(),
+            }),
+        ))
+    };
+    let union_reason = reason::mk_reason(VirtualReasonDesc::RTemplateString, loc.dupe());
+    let union_aloc = cx.make_aloc_id(&loc);
+    match mk_singleton_or_union(&union_reason, union_aloc, mk_str, &strings) {
+        Some(t) => t,
+        None => unresolved(),
+    }
+}
+
 // =========================================================================
 // Subtyping helpers (callers: subtyping_kit)
 // =========================================================================

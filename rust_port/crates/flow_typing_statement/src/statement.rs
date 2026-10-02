@@ -99,6 +99,7 @@ use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
 use flow_typing_flow_js::natural_inference;
 use flow_typing_flow_js::natural_inference::SyntacticFlags;
+use flow_typing_flow_js::template_literal_type;
 use flow_typing_flow_js::tvar_resolver;
 use flow_typing_flow_js::type_inference_hooks_js;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -7936,12 +7937,17 @@ fn expression_<'a>(
                     (t, vec![])
                 }
                 _ => {
+                    let is_as_const = *as_const;
                     let t_out = type_::str_module_t::at(loc.dupe());
                     let expressions: Vec<_> = inner
                         .expressions
                         .iter()
                         .map(|expr| {
-                            let e = expression(None, None, None, cx, expr)?;
+                            let e = if is_as_const {
+                                expression(None, None, Some(true), cx, expr)?
+                            } else {
+                                expression(None, None, None, cx, expr)?
+                            };
                             let t = e.loc().1.dupe();
                             let reason = reason_of_t(&t).dupe();
                             let concrete_types = flow_js_utils::flow_js_result_to_job_error(
@@ -7988,7 +7994,26 @@ fn expression_<'a>(
                             Ok(e)
                         })
                         .collect::<Result<_, CheckExprError>>()?;
-                    (t_out, expressions)
+                    let t = if is_as_const {
+                        let quasis = inner
+                            .quasis
+                            .iter()
+                            .map(|quasi| quasi.value.cooked.dupe())
+                            .collect();
+                        // Resolve tvars (e.g. identifier lookups) so literal
+                        // unions fold eagerly, matching TypeScript.
+                        let types = expressions
+                            .iter()
+                            .map(|e| {
+                                let t = e.loc().1.dupe();
+                                cx.find_resolved(&t).unwrap_or(t)
+                            })
+                            .collect();
+                        template_literal_type::resolve_for_value(quasis, types, loc.dupe(), cx)
+                    } else {
+                        t_out
+                    };
+                    (t, expressions)
                 }
             };
             expression::Expression::new(ExpressionInner::TemplateLiteral {

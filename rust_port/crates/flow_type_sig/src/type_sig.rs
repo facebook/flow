@@ -1833,11 +1833,19 @@ pub struct ValueArrayLit<Loc, T> {
 }
 
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct ValueTemplateLiteral<Loc, T> {
+    pub loc: Loc,
+    pub quasis: Vec<FlowSmolStr>,
+    pub types: Vec<T>,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Value<Loc, T> {
     ClassExpr(Box<(Loc, ClassSig<Loc, T>)>),
     FunExpr(Box<ValueFunExpr<Loc, T>>),
     StringVal(Box<Loc>),
     StringLit(Box<(Loc, FlowSmolStr)>),
+    TemplateLiteral(Box<ValueTemplateLiteral<Loc, T>>),
     NumberVal(Box<Loc>),
     NumberLit(Box<(Loc, f64, FlowSmolStr)>),
     BigIntVal(Box<Loc>),
@@ -1873,6 +1881,11 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T>
             Value::StringLit(inner) => {
                 inner.0.hash(state);
                 inner.1.hash(state);
+            }
+            Value::TemplateLiteral(inner) => {
+                inner.loc.hash(state);
+                inner.quasis.hash(state);
+                inner.types.hash(state);
             }
             Value::NumberVal(loc) => loc.hash(state),
             Value::NumberLit(inner) => {
@@ -1950,6 +1963,12 @@ impl<Loc, T> Value<Loc, T> {
             }
             Value::StringVal(loc) => f_loc(cx, loc),
             Value::StringLit(inner) => f_loc(cx, &inner.0),
+            Value::TemplateLiteral(inner) => {
+                f_loc(cx, &inner.loc);
+                for t in &inner.types {
+                    f_t(cx, t);
+                }
+            }
             Value::NumberVal(loc) => f_loc(cx, loc),
             Value::NumberLit(inner) => f_loc(cx, &inner.0),
             Value::BigIntVal(loc) => f_loc(cx, loc),
@@ -2020,6 +2039,13 @@ impl<Loc, T> Value<Loc, T> {
             Value::StringVal(loc) => Value::StringVal(Box::new(f_loc(cx, loc))),
             Value::StringLit(inner) => {
                 Value::StringLit(Box::new((f_loc(cx, &inner.0), inner.1.dupe())))
+            }
+            Value::TemplateLiteral(inner) => {
+                Value::TemplateLiteral(Box::new(ValueTemplateLiteral {
+                    loc: f_loc(cx, &inner.loc),
+                    quasis: inner.quasis.clone(),
+                    types: inner.types.iter().map(|t| f_t(cx, t)).collect(),
+                }))
             }
             Value::NumberVal(loc) => Value::NumberVal(Box::new(f_loc(cx, loc))),
             Value::NumberLit(inner) => {

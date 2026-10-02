@@ -3280,6 +3280,27 @@ fn merge_value<'cx>(
                 ))
             }
         }
+        Value::TemplateLiteral(inner) => {
+            let ValueTemplateLiteral { loc, quasis, types } = inner.as_ref();
+            if as_const {
+                let ts = types
+                    .iter()
+                    .map(|t| merge_impl(env, cx, file, t, as_const, false))
+                    .collect();
+                flow_typing_flow_js::template_literal_type::resolve_for_value(
+                    quasis.clone(),
+                    ts,
+                    loc.dupe(),
+                    cx,
+                )
+            } else {
+                let reason = reason::mk_reason(RString, loc.dupe());
+                Type::new(type_::TypeInner::DefT(
+                    reason,
+                    type_::DefT::new(type_::DefTInner::StrGeneralT(type_::Literal::AnyLiteral)),
+                ))
+            }
+        }
         Value::NumberVal(box loc) => {
             let reason = reason::mk_reason(RNumber, loc.dupe());
             Type::new(type_::TypeInner::DefT(
