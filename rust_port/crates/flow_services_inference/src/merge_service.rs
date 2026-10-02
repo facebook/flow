@@ -1001,7 +1001,6 @@ pub fn check_contents_context(
     ast: Arc<ast::Program<Loc, Loc>>,
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
-    type_sig: Option<Arc<flow_type_sig::packed_type_sig::Module<Loc>>>,
     type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
     (Context<'static>, ast::Program<ALoc, (ALoc, Type)>),
@@ -1073,7 +1072,10 @@ pub fn check_contents_context(
         comments,
         ast_ref.as_ref(),
         aloc_ast,
-        type_sig,
+        // Fresh contents may not match the transaction's ALoc table. Repack
+        // the small set of roots needed by declared-types analysis from the
+        // fresh AST instead of reusing its keyed signature.
+        None,
     )?;
     Ok((cx, typed_ast))
 }

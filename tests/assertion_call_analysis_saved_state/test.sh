@@ -20,6 +20,7 @@ start_flow . \
   --saved-state-fetcher local \
   --saved-state-no-fallback
 
-# Disabled assertion-call analysis must not resolve the fresh signature's
-# location keys against the missing saved-state table.
+# Targeted call analysis collects ordinary named calls before classifying their
+# signatures. It must repack roots from the fresh AST instead of resolving
+# signature keys against the missing saved-state table.
 assert_ok "$FLOW" check-contents --no-auto-start test.js < test.js

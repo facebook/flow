@@ -167,7 +167,7 @@ pub struct FrozenMetadata {
     pub slow_to_check_logging: SlowToCheckLogging,
     pub verbose: Option<Arc<Verbose>>,
     pub assert_operator: AssertOperator,
-    pub asserts_call_analysis: bool,
+    pub assertion_functions: bool,
     pub automatic_require_default: bool,
     pub babel_loose_array_spread: bool,
     pub ban_spread_key_props: bool,
@@ -230,7 +230,7 @@ impl Default for FrozenMetadata {
             slow_to_check_logging: SlowToCheckLogging::default(),
             verbose: None,
             assert_operator: AssertOperator::Disabled,
-            asserts_call_analysis: false,
+            assertion_functions: false,
             automatic_require_default: false,
             babel_loose_array_spread: false,
             ban_spread_key_props: false,
@@ -684,7 +684,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             typescript_library_definition_support: options.typescript_library_definition_support,
             deprecated_utilities: options.deprecated_utilities.dupe(),
             assert_operator: options.assert_operator,
-            asserts_call_analysis: options.asserts_call_analysis,
+            assertion_functions: options.assertion_functions,
             type_expansion_recursion_limit: options.type_expansion_recursion_limit,
             use_unknown_in_catch_variables: options.use_unknown_in_catch_variables,
             ban_spread_key_props: options.ban_spread_key_props,
@@ -1464,8 +1464,8 @@ impl<'cx> Context<'cx> {
         self.0.metadata.frozen.assert_operator.specialized()
     }
 
-    pub fn asserts_call_analysis(&self) -> bool {
-        self.0.metadata.frozen.asserts_call_analysis
+    pub fn assertion_functions_enabled(&self) -> bool {
+        self.0.metadata.frozen.assertion_functions
     }
 
     pub fn type_expansion_recursion_limit(&self) -> i32 {

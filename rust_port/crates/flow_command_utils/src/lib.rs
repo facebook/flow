@@ -2252,7 +2252,7 @@ pub fn make_options(
                 deprecated_colon_extends_excludes,
                 enable_custom_error,
                 assert_operator,
-                asserts_call_analysis,
+                assertion_functions,
                 type_expansion_recursion_limit,
                 unsuppressable_error_codes,
                 use_unknown_in_catch_variables,
@@ -2270,6 +2270,11 @@ pub fn make_options(
     let tslib_syntax = tslib_syntax.unwrap_or(ts_syntax);
 
     let all = all_override || all.unwrap_or(false);
+    let assertion_functions = match std::env::var("FLOW_ASSERTION_FUNCTIONS").ok().as_deref() {
+        Some("1" | "true") => true,
+        Some("0" | "false") => false,
+        _ => assertion_functions.unwrap_or(false),
+    };
     let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
     let autoimports_min_characters = autoimports_min_characters.unwrap_or(0) as i32;
     let autoimports_ranked_by_usage_boost_exact_match_min_length =
@@ -2532,7 +2537,7 @@ pub fn make_options(
     Options {
         all,
         assert_operator,
-        asserts_call_analysis,
+        assertion_functions,
         autoimports,
         autoimports_min_characters,
         autoimports_ranked_by_usage,

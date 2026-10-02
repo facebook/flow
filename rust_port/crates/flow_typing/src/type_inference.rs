@@ -749,7 +749,7 @@ fn initialize_env_with_mode<'cx>(
                 ast,
                 type_sig_options,
                 current_type_sig,
-            } if cx.asserts_call_analysis() => declared_types::pack(
+            } if cx.assertion_functions_enabled() => declared_types::pack(
                 type_sig_options,
                 cx,
                 ast,
@@ -885,8 +885,9 @@ pub fn initialize_env<'cx>(
 
 /// Lint suppressions are handled iff lint_severities is Some.
 /// `type_sig_options` must be the options used to parse `ast`.
-/// `current_type_sig` must come from the same parse as `ast`. Pass `None` when
-/// no matching packed signature exists; the required roots are then repacked from `ast`.
+/// `current_type_sig`'s location keys must resolve through `cx`'s ALoc table for
+/// `filename`, i.e. both must come from the same parse as `ast`. Pass `None` when
+/// no such signature exists; the required roots are then repacked from `ast`.
 pub fn infer_ast<'a>(
     lint_severities: &LintSettings<Severity>,
     cx: &Context<'a>,

@@ -5802,6 +5802,27 @@ fn convert_return_annotation_inner<'a>(
             )
         }
         ReturnAnnotation::TypeGuard(guard)
+            if guard.kind == ast::types::TypeGuardKind::Asserts
+                && !cx.assertion_functions_enabled() =>
+        {
+            let loc = guard.loc.dupe();
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUnsupportedSyntax(Box::new((
+                    loc.dupe(),
+                    intermediate_error_types::UnsupportedSyntax::UserDefinedTypeGuards {
+                        kind: guard.kind,
+                    },
+                ))),
+            );
+            let any_t = type_::any_t::at(type_::AnySource::AnyError(None), loc);
+            let Ok(mapped_ret) = polymorphic_ast_mapper::function_type_return_annotation(
+                &mut typed_ast_utils::ErrorMapper,
+                return_annot,
+            );
+            (any_t, mapped_ret, None)
+        }
+        ReturnAnnotation::TypeGuard(guard)
             if guard.guard.0.name.as_str() == "this" && has_guard_payload(guard) =>
         {
             let x = &guard.guard.0;

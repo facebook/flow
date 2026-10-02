@@ -33,7 +33,6 @@ use flow_services_inference_types::FileArtifacts;
 use flow_services_inference_types::ParseArtifacts;
 use flow_services_inference_types::TypeContentsError;
 use flow_services_inference_types::TypecheckArtifacts;
-use flow_type_sig::packed_type_sig::Module as PackedTypeSigModule;
 use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing_context::Context;
 use flow_typing_context::MasterContext;
@@ -419,7 +418,6 @@ pub fn check_contents(
     ast: Arc<ast::Program<Loc, Loc>>,
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
-    type_sig: Option<Arc<PackedTypeSigModule<Loc>>>,
     type_sig_options: Arc<TypeSigOptions>,
 ) -> Result<
     Result<(Context<'static>, ast::Program<ALoc, (ALoc, Type)>), CheckedDependenciesCanceled>,
@@ -441,7 +439,6 @@ pub fn check_contents(
             ast,
             docblock,
             file_sig,
-            type_sig,
             type_sig_options,
         )?))
     })
@@ -532,7 +529,6 @@ pub fn type_parse_artifacts(
                             ast.dupe(),
                             &requires,
                             file_sig.dupe(),
-                            type_sig.dupe(),
                             type_sig_options.dupe(),
                         )
                     })

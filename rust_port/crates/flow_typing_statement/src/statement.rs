@@ -20308,8 +20308,11 @@ pub fn mk_func_sig<'a>(
             let (ref id_name, ref guard_type_opt) = guard_annot.guard.guard;
             let guard_comments = guard_annot.guard.comments.as_ref();
             // A bare `asserts x` needs no guard type; every other kind does.
-            let representable =
-                guard_type_opt.is_some() || guard_kind == ast::types::TypeGuardKind::Asserts;
+            let representable = if guard_kind == ast::types::TypeGuardKind::Asserts {
+                cx.assertion_functions_enabled()
+            } else {
+                guard_type_opt.is_some()
+            };
             match (guard_kind, representable) {
                 (kind, true) => {
                     let fparams_value = crate::func_params::value::<
