@@ -1,3 +1,21 @@
+### 0.334.0
+
+Likely to cause new Flow errors:
+* Improved generic type inference with conditional types. Some places might infer a different type and cause new errors.
+* `Number`, `String`, `RegExp`, `Date`, native errors, maps, and sets now use TypeScript-style instance and constructor interfaces, while Math, JSON, and Atomics use named interfaces. Existing code relying on their previous class or object typing may produce new errors.
+
+New Features:
+* Allow object type spreads over interfaces and inexact object types.
+
+Notable bug fixes:
+* Allow classes to extend generic construct-signature interfaces.
+* Generic values re-exported through annotated CommonJS getters retain their polymorphic types.
+* Preserve record lowering source locations.
+* Preserve match lowering source locations.
+
+Parser:
+* Support semicolonless abstract method declarations.
+
 ### 0.333.0
 
 Likely to cause new Flow errors:
