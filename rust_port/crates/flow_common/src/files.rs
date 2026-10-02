@@ -14,7 +14,6 @@ use std::ffi::OsStr;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::path::Component;
-use std::path::MAIN_SEPARATOR;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -226,29 +225,36 @@ impl SymlinkMap {
         self.complete_paths.get().is_some()
     }
 
-    /// Returns `None` when resolving the path requires filesystem semantics.
-    pub fn try_resolve<'a>(&self, path: &'a str, crawl_covers_path: bool) -> Option<Cow<'a, str>> {
+    /// Returns `None` when the map is not complete (e.g. not a full init run).
+    pub fn try_resolve<'a>(&self, normalized_path: &'a str) -> Option<Cow<'a, str>> {
         let paths = self.complete_paths.get()?;
-        let path_buf = Path::new(path);
-        if path_buf
-            .components()
-            .any(|component| component == Component::ParentDir)
-        {
-            return None;
-        }
-
-        let normalized = if path.split(MAIN_SEPARATOR).any(|component| component == ".") {
-            Cow::Owned(path_buf.components().collect::<PathBuf>())
-        } else {
-            Cow::Borrowed(path_buf)
-        };
-        let resolved = match paths.get(normalized.as_ref()) {
-            Some(resolved) => resolved.as_path(),
-            None if crawl_covers_path => normalized.as_ref(),
-            None => return None,
-        };
-        Some(resolved_path(path, resolved))
+        let normalized_path_buf = Path::new(normalized_path);
+        let resolved = paths
+            .get(normalized_path_buf)
+            .map_or(normalized_path_buf, PathBuf::as_path);
+        Some(resolved_path(normalized_path, resolved))
     }
+}
+
+pub fn lexically_normalize_path(path: &str) -> Cow<'_, str> {
+    if !path
+        .split(&['/', '\\'][..])
+        .any(|component| component == "." || component == "..")
+    {
+        return Cow::Borrowed(path);
+    }
+
+    let mut normalized = PathBuf::new();
+    for component in Path::new(path).components() {
+        match component {
+            Component::CurDir => {}
+            Component::ParentDir => {
+                normalized.pop();
+            }
+            component => normalized.push(component),
+        }
+    }
+    resolved_path(path, &normalized)
 }
 
 pub const GLOBAL_FILE_NAME: &str = "(global)";
@@ -972,7 +978,9 @@ fn no_subdir_path_filter(
 
 /// Whether the initial full crawl covers a path, making an absent alias mapping conclusive.
 pub fn initial_crawl_covers_path(options: &FileOptions, root: &Path, path: &Path) -> bool {
-    path_is_in_crawl_scope(options, root, path, true) && wanted_filter(options, path, false, true)
+    path_is_in_crawl_scope(options, root, path, true)
+        && (wanted_filter(options, path, false, true)
+            || has_symlink_ancestor_under_root(root, path, &mut HashMap::new()))
 }
 
 /// Creates a "next" function for finding the files in a given FlowConfig root.
@@ -1091,9 +1099,11 @@ pub fn make_next_files(
             }
             let path = entry.path();
 
-            if entry.path_is_symlink()
-                && let Some(symlink_map) = symlink_map
+            if let Some(symlink_map) = symlink_map
+                && (entry.path_is_symlink()
+                    || has_symlink_ancestor_under_root(root, &path, &mut symlink_ancestor_cache))
                 && let Ok(real_path) = cached_canonicalize(&path)
+                && real_path != path
             {
                 symlink_map.insert(path.clone(), real_path);
             }
@@ -1118,11 +1128,6 @@ pub fn make_next_files(
                     if path == real_path
                         || realpath_filter(&options, &real_path, all, include_libdef)
                     {
-                        if path != real_path
-                            && let Some(symlink_map) = symlink_map
-                        {
-                            symlink_map.insert(path, real_path.clone());
-                        }
                         chunk.push(real_path);
                         if chunk.len() == MAX_FILES {
                             chunk.reverse();

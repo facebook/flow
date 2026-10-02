@@ -1,0 +1,39 @@
+====== fast symlink resolution enabled ======
+Error ------------------------------------------------------------------------------------------------------ foo.js:1:43
+
+Cannot resolve module `./ignored_dir/sub/alias`. [cannot-resolve-module]
+
+   1| var alias_in_pruned_ignored_dir = require('./ignored_dir/sub/alias');
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:2:41
+
+Cannot resolve module `../unwatched/alias`. [cannot-resolve-module]
+
+   2| var alias_outside_crawl_scope = require('../unwatched/alias');
+                                              ^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors
+
+====== fast symlink resolution disabled ======
+Error ------------------------------------------------------------------------------------------------------ foo.js:1:43
+
+Cannot resolve module `./ignored_dir/sub/alias`. [cannot-resolve-module]
+
+   1| var alias_in_pruned_ignored_dir = require('./ignored_dir/sub/alias');
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ foo.js:2:41
+
+Cannot resolve module `../unwatched/alias`. [cannot-resolve-module]
+
+   2| var alias_outside_crawl_scope = require('../unwatched/alias');
+                                              ^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors

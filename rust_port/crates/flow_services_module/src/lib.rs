@@ -318,20 +318,33 @@ impl<'a> ModuleResolver<'a> {
     }
 
     fn resolve_symlinks<'b>(&self, path: &'b str) -> Cow<'b, str> {
-        let Some(symlink_paths) = self.symlink_paths else {
-            return files::canonicalize_path(path);
+        let normalized_path = files::lexically_normalize_path(path);
+        let resolved_path = match self.symlink_paths {
+            Some(symlink_paths) => symlink_paths
+                .try_resolve(&normalized_path)
+                .unwrap_or_else(|| Cow::Borrowed(normalized_path.as_ref())),
+            None if self.options.fast_symlink_resolution && cfg!(unix) => {
+                // The map is incomplete, such as after a saved-state init.
+                files::canonicalize_path(&normalized_path)
+            }
+            None => {
+                let crawl_covers_path = files::initial_crawl_covers_path(
+                    &self.options.file_options,
+                    &self.options.root,
+                    Path::new(normalized_path.as_ref()),
+                );
+                if crawl_covers_path {
+                    files::canonicalize_path(&normalized_path)
+                } else {
+                    Cow::Borrowed(normalized_path.as_ref())
+                }
+            }
         };
-        let crawl_covers_path = files::initial_crawl_covers_path(
-            &self.options.file_options,
-            &self.options.root,
-            Path::new(path),
-        );
-        symlink_paths
-            .try_resolve(path, crawl_covers_path)
-            .unwrap_or_else(|| match Path::new(path).try_exists() {
-                Ok(false) => Cow::Borrowed(path),
-                Ok(true) | Err(_) => files::canonicalize_path(path),
-            })
+        if resolved_path == path {
+            Cow::Borrowed(path)
+        } else {
+            Cow::Owned(resolved_path.into_owned())
+        }
     }
 
     fn get_dependency(&self, modulename: &Modulename) -> Option<Dependency> {
