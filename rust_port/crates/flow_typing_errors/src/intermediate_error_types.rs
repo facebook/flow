@@ -1936,8 +1936,7 @@ pub enum Message<L: Dupe> {
 
     MessageCannotCallObjectFunctionOnEnum {
         function: NamedReferenceData<L>,
-        enum_: MessageTypeReferenceData<L>,
-        enum_name: Option<FlowSmolStr>,
+        enum_: EnumReferenceData<L>,
     },
 
     MessageCannotCallReactComponent(MessageTypeReferenceData<L>),

@@ -5730,12 +5730,8 @@ where
                 text(") but it is not defined with hook syntax. "),
                 text("(https://react.dev/reference/rules/rules-of-hooks)"),
             ]),
-            MessageCannotCallObjectFunctionOnEnum {
-                function,
-                enum_,
-                enum_name,
-            } => {
-                let suggestion = match enum_name {
+            MessageCannotCallObjectFunctionOnEnum { function, enum_ } => {
+                let suggestion = match &enum_.name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use "),
@@ -5753,7 +5749,7 @@ where
                     text("Cannot call function "),
                     render_named_reference(function),
                     text(" with argument "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_reference(enum_),
                     text(" because it is not an object."),
                 ];
                 features.extend(suggestion);
