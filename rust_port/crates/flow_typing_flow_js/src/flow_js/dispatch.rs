@@ -21,6 +21,7 @@ use flow_typing_errors::error_message::ETupleInvalidTypeSpreadData;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
+use flow_typing_errors::error_message::EnumMemberAccess;
 use flow_typing_errors::error_message::EnumModificationData;
 use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
@@ -8755,7 +8756,7 @@ fn __flow_impl<'cx>(
         // *********
         // * enums *
         // *********
-        (TypeInner::DefT(enum_reason, def_t), UseTInner::GetPropT(box data))
+        (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::EnumObjectT {
                 enum_value_t,
                 enum_info,
@@ -8771,7 +8772,6 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 &trace,
-                enum_reason,
                 l.dupe(),
                 enum_value_t.dupe(),
                 enum_info,
@@ -8878,24 +8878,23 @@ fn __flow_impl<'cx>(
                 action,
             )?;
         }
-        (
-            TypeInner::DefT(enum_reason, def_t),
-            UseTInner::GetElemT(box GetElemTData { key_t, tout, .. }),
-        ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
+        (TypeInner::DefT(_, def_t), UseTInner::GetElemT(box GetElemTData { key_t, tout, .. }))
+            if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
+        {
             let reason = reason_of_t(key_t);
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(Box::new(
                     EnumInvalidMemberAccessData {
-                        member_name: None,
-                        suggestion: None,
-                        member_loc: reason.loc().dupe(),
-                        member_type: Some(flow_js_utils::type_reference_for_error(key_t)),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            l,
-                            enum_reason.dupe(),
+                        member: EnumMemberAccess::Computed(
+                            flow_js_utils::type_reference_for_error(key_t),
                         ),
+                        member_loc: reason.loc().dupe(),
+                        enum_: EnumReferenceData {
+                            loc: type_util::ref_loc_of_t(l).dupe(),
+                            name: enum_info.enum_name().map(Dupe::dupe),
+                        },
                     },
                 ))),
             )?;

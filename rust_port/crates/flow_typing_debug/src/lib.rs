@@ -143,6 +143,7 @@ use flow_typing_errors::error_message::EnumInvalidMemberInitializerData;
 use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
+use flow_typing_errors::error_message::EnumMemberAccess;
 use flow_typing_errors::error_message::EnumMemberAlreadyCheckedData;
 use flow_typing_errors::error_message::EnumMemberDuplicateValueData;
 use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
@@ -3656,41 +3657,28 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 )
             }
             EnumErrorKind::EnumInvalidMemberAccess(box EnumInvalidMemberAccessData {
-                member_name,
-                suggestion,
+                member,
                 member_loc,
-                member_type,
                 enum_,
             }) => {
-                let member_str = match member_name {
-                    Some(n) => n.to_string(),
-                    None => "<None>".to_string(),
+                let (member_str, suggestion_str, member) = match member {
+                    EnumMemberAccess::Named { name, suggestion } => (
+                        name.to_string(),
+                        suggestion.as_ref().map_or("<None>", |s| s.as_str()),
+                        format!("{} {}", string_of_aloc(None, member_loc), name),
+                    ),
+                    EnumMemberAccess::Computed(type_ref) => (
+                        "<None>".to_string(),
+                        "<None>",
+                        dump_loc_type_desc(cx, &type_ref.reference_loc, &type_ref.type_desc),
+                    ),
                 };
-                let suggestion_str = match suggestion {
-                    Some(s) => s.as_str(),
-                    None => "<None>",
-                };
-                let member = member_type.as_ref().map_or_else(
-                    || {
-                        format!(
-                            "{} {:?}",
-                            string_of_aloc(None, member_loc),
-                            VirtualReasonDesc::<ALoc>::RIdentifier(
-                                member_name
-                                    .as_ref()
-                                    .expect("named enum access has a member name")
-                                    .display_smol_str(),
-                            )
-                        )
-                    },
-                    |type_ref| dump_loc_type_desc(cx, &type_ref.reference_loc, &type_ref.type_desc),
-                );
                 format!(
                     "EEnumError (EnumInvalidMemberAccess ({}) ({}) ({}) ({}))",
                     member_str,
                     suggestion_str,
                     member,
-                    dump_error_type_reference(cx, enum_)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumModification(box EnumModificationData { loc, enum_ }) => {

@@ -67,6 +67,7 @@ use flow_typing_errors::error_message::EVarianceKeywordData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidMemberNameData;
+use flow_typing_errors::error_message::EnumMemberAccess;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::FriendlyMessageRecipe;
 use flow_typing_errors::error_message::IncompatibleTypeUseData;
@@ -1356,9 +1357,11 @@ pub fn ast_transforms_of_error(
         ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
             box EnumInvalidMemberAccessData {
                 member_loc: reason_loc,
-                member_name: Some(member_name),
-                member_type: None,
-                suggestion: Some(fixed_prop_name),
+                member:
+                    EnumMemberAccess::Named {
+                        name: member_name,
+                        suggestion: Some(fixed_prop_name),
+                    },
                 ..
             },
         )) => {

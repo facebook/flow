@@ -22,7 +22,9 @@ use flow_typing_errors::error_message::EAnnotationInferenceData;
 use flow_typing_errors::error_message::EMissingTypeArgsData;
 use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
+use flow_typing_errors::error_message::EnumMemberAccess;
 use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_flow_common::flow_js_utils;
@@ -2613,7 +2615,7 @@ fn elab_t_concrete<'cx>(
                 // *********
                 // * Enums *
                 //  *********
-                TypeInner::DefT(enum_reason, def_t)
+                TypeInner::DefT(_, def_t)
                     if let DefTInner::EnumObjectT {
                         enum_value_t,
                         enum_info,
@@ -2637,7 +2639,6 @@ fn elab_t_concrete<'cx>(
                         cx,
                         env,
                         &trace,
-                        enum_reason,
                         t.dupe(),
                         enum_value_t.dupe(),
                         enum_concrete_info,
@@ -2961,13 +2962,13 @@ fn elab_t_concrete<'cx>(
             elab_t(cx, env, dst_cx, Some(seen), statics, op)
         }
         (
-            TypeInner::DefT(enum_reason, def_t),
+            TypeInner::DefT(_, def_t),
             OpInner::AnnotGetElemT {
                 reason: reason_op,
                 use_op: _,
                 key: elem,
             },
-        ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
+        ) if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() => {
             let elem_type = elem.dupe();
             let reason = type_util::reason_of_t(&elem_type);
             flow_js_utils::add_output_non_speculating(
@@ -2975,14 +2976,14 @@ fn elab_t_concrete<'cx>(
                 flow_typing_errors::error_message::ErrorMessage::EEnumError(
                     flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess(
                         Box::new(EnumInvalidMemberAccessData {
-                            member_name: None,
-                            suggestion: None,
-                            member_loc: reason.loc().dupe(),
-                            member_type: Some(flow_js_utils::type_reference_for_error(&elem_type)),
-                            enum_: flow_js_utils::type_reference_with_reason_for_error(
-                                &t,
-                                enum_reason.dupe(),
+                            member: EnumMemberAccess::Computed(
+                                flow_js_utils::type_reference_for_error(&elem_type),
                             ),
+                            member_loc: reason.loc().dupe(),
+                            enum_: EnumReferenceData {
+                                loc: type_util::ref_loc_of_t(&t).dupe(),
+                                name: enum_info.enum_name().map(Dupe::dupe),
+                            },
                         }),
                     ),
                 ),

@@ -1289,10 +1289,9 @@ pub struct MessageAlreadyExhaustivelyCheckOneEnumMemberData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotAccessEnumMemberData<L: Dupe> {
-    pub member_name: Option<Name>,
+    pub member_name: Name,
     pub suggestion: Option<FlowSmolStr>,
-    pub description: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -1900,6 +1899,11 @@ pub enum Message<L: Dupe> {
     MessageInterfaceMergeTparamMismatch(VirtualReason<L>),
 
     MessageCannotAccessEnumMember(Box<MessageCannotAccessEnumMemberData<L>>),
+
+    MessageCannotAccessEnumWithComputedProp {
+        description: Result<ALocElt, VirtualReasonDesc<L>>,
+        enum_: EnumReferenceData<L>,
+    },
 
     MessageCannotAccessObjectWithComputedProp {
         object: MessageTypeReferenceData<L>,

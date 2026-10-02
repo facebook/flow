@@ -265,11 +265,30 @@ pub struct EUnionPartialOptimizationNonUniqueKeyData<L: Dupe + PartialOrd + Ord 
     serde::Deserialize
 )]
 pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub member_name: Option<Name>,
-    pub suggestion: Option<FlowSmolStr>,
+    pub member: EnumMemberAccess<L>,
     pub member_loc: L,
-    pub member_type: Option<ErrorTypeReferenceData<L>>,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: EnumReferenceData<L>,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum EnumMemberAccess<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    /// `E.name`
+    Named {
+        name: Name,
+        suggestion: Option<FlowSmolStr>,
+    },
+    /// `E[key]`
+    Computed(ErrorTypeReferenceData<L>),
 }
 
 #[derive(
@@ -5316,17 +5335,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumsNotEnabled(loc) => EnumsNotEnabled(f(loc)),
                     EnumConstNotSupported(loc) => EnumConstNotSupported(f(loc)),
                     EnumInvalidMemberAccess(box EnumInvalidMemberAccessData {
-                        member_name,
-                        suggestion,
+                        member,
                         member_loc,
-                        member_type,
                         enum_,
                     }) => EnumInvalidMemberAccess(Box::new(EnumInvalidMemberAccessData {
-                        member_name,
-                        suggestion,
+                        member: match member {
+                            EnumMemberAccess::Named { name, suggestion } => {
+                                EnumMemberAccess::Named { name, suggestion }
+                            }
+                            EnumMemberAccess::Computed(key) => {
+                                EnumMemberAccess::Computed(map_error_type_ref(key))
+                            }
+                        },
                         member_loc: f(member_loc),
-                        member_type: member_type.map(map_error_type_ref),
-                        enum_: map_error_type_ref_with_reason(enum_),
+                        enum_: map_enum_ref(enum_),
                     })),
                     EnumModification(box EnumModificationData { loc, enum_ }) => {
                         EnumModification(Box::new(EnumModificationData {
@@ -7135,19 +7157,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
                 box EnumInvalidMemberAccessData {
-                    member_name,
-                    suggestion,
+                    member,
                     member_loc,
-                    member_type,
                     enum_,
                 },
             )) => EEnumError(EnumErrorKind::EnumInvalidMemberAccess(Box::new(
                 EnumInvalidMemberAccessData {
-                    member_name,
-                    suggestion,
+                    member: match member {
+                        EnumMemberAccess::Named { name, suggestion } => {
+                            EnumMemberAccess::Named { name, suggestion }
+                        }
+                        EnumMemberAccess::Computed(key) => {
+                            EnumMemberAccess::Computed(map_error_type_ref(key))
+                        }
+                    },
                     member_loc,
-                    member_type: member_type.map(map_error_type_ref),
-                    enum_: map_error_type_ref_with_reason(enum_),
+                    enum_,
                 },
             ))),
 
@@ -9630,36 +9655,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ))),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
                 box EnumInvalidMemberAccessData {
-                    member_name,
-                    suggestion,
+                    member: EnumMemberAccess::Named { name, suggestion },
                     member_loc: _,
-                    member_type,
                     enum_,
                 },
-            )) => {
-                let description = member_type.map_or_else(
-                    || {
-                        Err(VirtualReasonDesc::RIdentifier(
-                            member_name
-                                .as_ref()
-                                .expect("named enum access has a member name")
-                                .display_smol_str(),
-                        ))
-                    },
-                    |member| expect_error_type_reference(member).desc,
-                );
-                Normal(Message::MessageCannotAccessEnumMember(Box::new(
-                    MessageCannotAccessEnumMemberData {
-                        member_name,
-                        suggestion,
-                        description,
-                        enum_: MessageTypeReferenceData {
-                            loc: enum_.reference_loc,
-                            desc: expect_type_desc(enum_.type_desc),
-                        },
-                    },
-                )))
-            }
+            )) => Normal(Message::MessageCannotAccessEnumMember(Box::new(
+                MessageCannotAccessEnumMemberData {
+                    member_name: name,
+                    suggestion,
+                    enum_,
+                },
+            ))),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
+                box EnumInvalidMemberAccessData {
+                    member: EnumMemberAccess::Computed(key),
+                    member_loc: _,
+                    enum_,
+                },
+            )) => Normal(Message::MessageCannotAccessEnumWithComputedProp {
+                description: expect_type_desc(key.type_desc),
+                enum_,
+            }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumModification(
                 box EnumModificationData { enum_, .. },
             )) => Normal(Message::MessageCannotChangeEnumMember(enum_)),

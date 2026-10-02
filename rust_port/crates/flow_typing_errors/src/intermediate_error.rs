@@ -5401,12 +5401,31 @@ where
             MessageCannotAccessEnumMember(box MessageCannotAccessEnumMemberData {
                 member_name,
                 suggestion,
-                description,
                 enum_,
             }) => {
+                let name = member_name.display_smol_str();
+                let mut features = vec![
+                    text("Cannot access "),
+                    code(&name),
+                    text(" because "),
+                    code(&name),
+                    text(" is not a member of "),
+                    render_enum_reference(enum_),
+                    text("."),
+                ];
+                if let Some(sugg) = suggestion {
+                    features.extend(vec![
+                        text(" Did you mean the member "),
+                        code(sugg),
+                        text("?"),
+                    ]);
+                }
+                friendly::Message(features)
+            }
+            MessageCannotAccessEnumWithComputedProp { description, enum_ } => {
                 let mut features = vec![text("Cannot access ")];
-                match (member_name, description) {
-                    (None, Ok(Elt::Type(ty))) => match ty.as_ref() {
+                match description {
+                    Ok(Elt::Type(ty)) => match ty.as_ref() {
                         Ty::StrLit(value) => {
                             features.extend(vec![text("string literal "), code(value.as_str())])
                         }
@@ -5431,31 +5450,11 @@ where
                     },
                     _ => features.push(desc_of_ty_or_desc(description)),
                 }
-                match member_name {
-                    Some(name) => {
-                        features.extend(vec![
-                            text(" because "),
-                            code(&name.display_smol_str()),
-                            text(" is not a member of "),
-                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
-                            text("."),
-                        ]);
-                        if let Some(sugg) = suggestion {
-                            features.extend(vec![
-                                text(" Did you mean the member "),
-                                code(sugg),
-                                text("?"),
-                            ]);
-                        }
-                    }
-                    None => {
-                        features.extend(vec![
-                            text(" on "),
-                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
-                            text(" because computed access is not allowed on enums."),
-                        ]);
-                    }
-                }
+                features.extend(vec![
+                    text(" on "),
+                    render_enum_reference(enum_),
+                    text(" because computed access is not allowed on enums."),
+                ]);
                 friendly::Message(features)
             }
             MessageCannotApplyNonPolymorphicType => friendly::Message(vec![text(

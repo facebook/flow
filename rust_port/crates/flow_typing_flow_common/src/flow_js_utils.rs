@@ -7136,6 +7136,8 @@ pub mod get_prop_t_kit {
     use flow_typing_errors::error_message::EObjectComputedPropertyAccessData;
     use flow_typing_errors::error_message::EPropNotReadableData;
     use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
+    use flow_typing_errors::error_message::EnumMemberAccess;
+    use flow_typing_errors::error_message::EnumReferenceData;
     use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_;
     use flow_typing_type::type_::DefT;
@@ -7603,7 +7605,6 @@ pub mod get_prop_t_kit {
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         trace: &DepthTrace,
-        enum_reason: &Reason,
         enum_object_t: Type,
         enum_value_t: Type,
         enum_info: &type_::EnumConcreteInfo,
@@ -7611,6 +7612,7 @@ pub mod get_prop_t_kit {
     ) -> Result<F::R, FlowJsException> {
         let (_, access_reason, _, (prop_reason, member_name)) = access;
         let type_::EnumConcreteInfoInner {
+            enum_name,
             members,
             representation_t,
             ..
@@ -7623,14 +7625,15 @@ pub mod get_prop_t_kit {
                     flow_typing_errors::error_message::ErrorMessage::EEnumError(
                         flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess(
                             Box::new(EnumInvalidMemberAccessData {
-                                member_name: Some(member_name.dupe()),
-                                suggestion,
+                                member: EnumMemberAccess::Named {
+                                    name: member_name.dupe(),
+                                    suggestion,
+                                },
                                 member_loc: prop_reason.loc().dupe(),
-                                member_type: None,
-                                enum_: type_reference_with_reason_for_error(
-                                    &enum_object_t,
-                                    enum_reason.dupe(),
-                                ),
+                                enum_: EnumReferenceData {
+                                    loc: type_util::ref_loc_of_t(&enum_object_t).dupe(),
+                                    name: Some(enum_name.dupe()),
+                                },
                             }),
                         ),
                     ),
