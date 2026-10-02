@@ -1919,26 +1919,23 @@ pub fn invalid_prototype_error(loc: ALoc, t: &Type) -> ErrorMessage<ALoc> {
     }))
 }
 
-/// Builds an invalid React create-element error while preserving the React
-/// identifier referenced by the diagnostic's remediation text.
+/// Builds an invalid React create-element error referencing the identifier
+/// `react_name`, whose value is `react_t`.
 pub fn invalid_react_create_element_error(
     create_element_loc: ALoc,
+    react_name: FlowSmolStr,
     react_t: &Type,
 ) -> ErrorMessage<ALoc> {
-    use flow_common::reason::VirtualReasonDesc;
     use flow_typing_errors::error_message::EInvalidReactCreateElementData;
+    use flow_typing_errors::intermediate_error_types::NamedReferenceData;
     use flow_typing_type::type_util;
 
-    let reason = type_util::reason_of_t(react_t);
-    let react_desc = if matches!(reason.desc(true), VirtualReasonDesc::RIdentifier(_)) {
-        TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone()))
-    } else {
-        type_or_type_desc_for_error(react_t)
-    };
     ErrorMessage::EInvalidReactCreateElement(Box::new(EInvalidReactCreateElementData {
         create_element_loc,
-        react_loc: type_util::ref_loc_of_t(react_t).dupe(),
-        react_desc,
+        react: NamedReferenceData {
+            loc: type_util::ref_loc_of_t(react_t).dupe(),
+            name: react_name,
+        },
     }))
 }
 

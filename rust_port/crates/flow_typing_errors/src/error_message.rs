@@ -2272,8 +2272,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIncompatibleTypesWith
 )]
 pub struct EInvalidReactCreateElementData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub create_element_loc: L,
-    pub react_loc: L,
-    pub react_desc: TypeOrTypeDesc<L>,
+    pub react: NamedReferenceData<L>,
 }
 
 #[derive(
@@ -4996,12 +4995,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidReactCreateElement(box EInvalidReactCreateElementData {
                 create_element_loc,
-                react_loc,
-                react_desc,
+                react,
             }) => EInvalidReactCreateElement(Box::new(EInvalidReactCreateElementData {
                 create_element_loc: f(create_element_loc),
-                react_loc: f(react_loc),
-                react_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), react_desc),
+                react: NamedReferenceData {
+                    loc: f(react.loc),
+                    name: react.name,
+                },
             })),
 
             EInvalidThisArg(box EInvalidThisArgData {
@@ -7564,12 +7564,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidReactCreateElement(box EInvalidReactCreateElementData {
                 create_element_loc,
-                react_loc,
-                react_desc,
+                react,
             }) => EInvalidReactCreateElement(Box::new(EInvalidReactCreateElementData {
                 create_element_loc,
-                react_loc,
-                react_desc: f(react_desc),
+                react,
             })),
 
             EInvalidPrototype(box EInvalidPrototypeData {
@@ -9051,15 +9049,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ),
 
             ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
-                react_loc,
-                react_desc,
+                react,
                 ..
-            }) => Normal(Message::MessageInvalidReactCreateElement(Box::new(
-                MessageTypeReferenceData {
-                    loc: react_loc,
-                    desc: expect_type_desc(react_desc),
-                },
-            ))),
+            }) => Normal(Message::MessageInvalidReactCreateElement(Box::new(react))),
 
             ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {
                 loc: _,

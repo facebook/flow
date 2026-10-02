@@ -2336,7 +2336,7 @@ pub enum Message<L: Dupe> {
     MessageInvalidTemplateLiteralTypeComplexity,
     MessageInvalidTemplateLiteralTypePlaceholder,
 
-    MessageInvalidReactCreateElement(Box<MessageTypeReferenceData<L>>),
+    MessageInvalidReactCreateElement(Box<NamedReferenceData<L>>),
 
     MessageInvalidThisArgMissingReceiver {
         name: FlowSmolStr,

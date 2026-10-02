@@ -2809,17 +2809,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EInvalidReactCreateElement(box EInvalidReactCreateElementData {
             create_element_loc,
-            react_desc,
-            ..
+            react,
         }) => {
-            let react = match react_desc {
-                TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
-                TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
-            };
             format!(
-                "EInvalidReactCreateElement {{ loc = {}; react = {} }}",
+                "EInvalidReactCreateElement {{ loc = {}; react = {} {} }}",
                 string_of_aloc(None, create_element_loc),
-                react,
+                string_of_aloc(None, &react.loc),
+                react.name,
             )
         }
         ErrorMessage::EInvalidThisArg(box EInvalidThisArgData {

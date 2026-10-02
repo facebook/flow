@@ -13647,11 +13647,12 @@ fn react_jsx_desugar<'a>(
             // - Then we validate that we are calling the right one. By modeling React$CreateElement
             //   as an opaque type bounded by the real definition, we can reliable check it.
             // Validate that we are actually calling the right React.createElement
+            let react_name = FlowSmolStr::new_inline("React");
             let react_t = type_env::var_ref(
                 Some(type_env::LookupMode::ForValue),
                 cx,
                 None,
-                &FlowSmolStr::new_inline("React"),
+                &react_name,
                 loc_element.dupe(),
             )?;
             let create_element_t = get_prop(
@@ -13688,7 +13689,11 @@ fn react_jsx_desugar<'a>(
             {
                 flow_js_utils::add_output_non_speculating(
                     cx,
-                    flow_js_utils::invalid_react_create_element_error(loc_element.dupe(), &react_t),
+                    flow_js_utils::invalid_react_create_element_error(
+                        loc_element.dupe(),
+                        react_name,
+                        &react_t,
+                    ),
                 );
             }
         }
