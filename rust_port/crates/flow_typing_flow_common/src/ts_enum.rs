@@ -162,7 +162,7 @@ pub fn mk_ts_enum_namespace<'cx>(
     } = body;
     let enum_reference = || EnumReferenceData {
         loc: name_loc.dupe(),
-        name: enum_name.dupe(),
+        name: Some(enum_name.dupe()),
     };
     // Flow Enums allow syntax that a TypeScript enum does not: unknown members
     // (`...`) and an explicit representation type (`enum E of string`). These reach

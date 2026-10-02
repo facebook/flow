@@ -329,7 +329,7 @@ fn dump_enum_reference(enum_: &EnumReferenceData<ALoc>) -> String {
         "{} {:?}",
         string_of_aloc(None, &enum_.loc),
         VirtualReasonDesc::<ALoc>::REnum {
-            name: Some(enum_.name.clone()),
+            name: enum_.name.clone(),
         }
     )
 }
@@ -3697,7 +3697,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumModification ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_error_type_reference(cx, enum_)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {

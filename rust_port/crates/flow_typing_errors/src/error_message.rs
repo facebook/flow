@@ -285,7 +285,7 @@ pub struct EnumInvalidMemberAccessData<L: Dupe + PartialOrd + Ord + PartialEq + 
 )]
 pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -302,7 +302,8 @@ pub struct EnumModificationData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct EnumReferenceData<L: Dupe> {
     pub loc: L,
-    pub name: FlowSmolStr,
+    /// `None` for an abstract enum.
+    pub name: Option<FlowSmolStr>,
 }
 
 #[derive(
@@ -5333,7 +5334,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumModification(box EnumModificationData { loc, enum_ }) => {
                         EnumModification(Box::new(EnumModificationData {
                             loc: f(loc),
-                            enum_: map_error_type_ref_with_reason(enum_),
+                            enum_: map_enum_ref(enum_),
                         }))
                     }
                     EnumMemberDuplicateValue(box EnumMemberDuplicateValueData {
@@ -7154,16 +7155,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     suggestion,
                     member_loc,
                     member_type: member_type.map(map_error_type_ref),
-                    enum_: map_error_type_ref_with_reason(enum_),
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumModification(box EnumModificationData {
-                loc,
-                enum_,
-            })) => EEnumError(EnumErrorKind::EnumModification(Box::new(
-                EnumModificationData {
-                    loc,
                     enum_: map_error_type_ref_with_reason(enum_),
                 },
             ))),
@@ -9735,12 +9726,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
             ErrorMessage::EEnumError(EnumErrorKind::EnumModification(
                 box EnumModificationData { enum_, .. },
-            )) => Normal(Message::MessageCannotChangeEnumMember(
-                MessageTypeReferenceData {
-                    loc: enum_.reference_loc,
-                    desc: expect_type_desc(enum_.type_desc),
-                },
-            )),
+            )) => Normal(Message::MessageCannotChangeEnumMember(enum_)),
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue(
                 box EnumMemberDuplicateValueData {
                     prev_use_loc,

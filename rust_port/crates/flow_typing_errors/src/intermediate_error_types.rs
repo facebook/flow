@@ -1954,7 +1954,7 @@ pub enum Message<L: Dupe> {
         param_count: i32,
     },
 
-    MessageCannotChangeEnumMember(MessageTypeReferenceData<L>),
+    MessageCannotChangeEnumMember(EnumReferenceData<L>),
 
     MessageCannotCompare(Box<MessageCannotCompareData<L>>),
 

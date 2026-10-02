@@ -21359,7 +21359,7 @@ pub fn mk_enum<'a>(
     let result = enum_validate::classify_enum_body(body, &body.loc);
     let enum_reference = || EnumReferenceData {
         loc: name_loc.dupe(),
-        name: enum_name.dupe(),
+        name: Some(enum_name.dupe()),
     };
     // Report validation errors
     for err in &result.errors {

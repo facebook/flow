@@ -4867,8 +4867,9 @@ where
         hardcoded_string_desc_ref(&format!("`{}`", reference.name), &reference.loc)
     };
 
-    let render_enum_reference = |reference: &EnumReferenceData<L>| {
-        hardcoded_string_desc_ref(&format!("enum `{}`", reference.name), &reference.loc)
+    let render_enum_reference = |reference: &EnumReferenceData<L>| match &reference.name {
+        Some(name) => hardcoded_string_desc_ref(&format!("enum `{}`", name), &reference.loc),
+        None => hardcoded_string_desc_ref("enum", &reference.loc),
     };
 
     fn definition_description(kind: &DefinitionReferenceKind) -> String {
@@ -5821,7 +5822,7 @@ where
             }
             MessageCannotChangeEnumMember(enum_) => friendly::Message(vec![
                 text("Cannot change member of "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_reference(enum_),
                 text(" because enums are frozen."),
             ]),
             MessageCannotCompare(box MessageCannotCompareData {

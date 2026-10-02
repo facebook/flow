@@ -22,6 +22,7 @@ use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidObjectFunctionData;
 use flow_typing_errors::error_message::EnumInvalidObjectUtilTypeData;
 use flow_typing_errors::error_message::EnumModificationData;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_flow_common::flow_js_utils::get_prop_t_kit::IndexerFallbackMode;
 use flow_typing_flow_js_env::FlowJsEnv;
@@ -8902,20 +8903,19 @@ fn __flow_impl<'cx>(
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
         }
-        (
-            TypeInner::DefT(enum_reason, def_t),
-            UseTInner::SetPropT(_, op_reason, _, _, _, _, tout),
-        ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
+        (TypeInner::DefT(_, def_t), UseTInner::SetPropT(_, op_reason, _, _, _, _, tout))
+            if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
+        {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
                     EnumModificationData {
                         loc: op_reason.loc().dupe(),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            l,
-                            enum_reason.dupe(),
-                        ),
+                        enum_: EnumReferenceData {
+                            loc: type_util::ref_loc_of_t(l).dupe(),
+                            name: enum_info.enum_name().map(Dupe::dupe),
+                        },
                     },
                 ))),
             )?;
@@ -8925,7 +8925,7 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            TypeInner::DefT(enum_reason, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::SetElemT(box SetElemTData {
                 use_op: _,
                 reason: op_reason,
@@ -8934,17 +8934,17 @@ fn __flow_impl<'cx>(
                 tin: _,
                 tout,
             }),
-        ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
+        ) if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() => {
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
                 ErrorMessage::EEnumError(EnumErrorKind::EnumModification(Box::new(
                     EnumModificationData {
                         loc: op_reason.loc().dupe(),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            l,
-                            enum_reason.dupe(),
-                        ),
+                        enum_: EnumReferenceData {
+                            loc: type_util::ref_loc_of_t(l).dupe(),
+                            name: enum_info.enum_name().map(Dupe::dupe),
+                        },
                     },
                 ))),
             )?;
