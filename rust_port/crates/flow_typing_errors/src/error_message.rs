@@ -1918,6 +1918,23 @@ pub struct EConstantConditionData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     serde::Serialize,
     serde::Deserialize
 )]
+pub enum TypeGuardFuncReference<L: Dupe, T> {
+    Type(T),
+    /// A type guard that has no guard type.
+    TypeGuard(TypeGuardReferenceData<L>),
+}
+
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct TypeGuardParameterData<L: Dupe> {
     pub loc: L,
     pub name: FlowSmolStr,
@@ -3528,8 +3545,8 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     ETypeGuardFuncIncompatibility {
         use_op: VirtualUseOp<L>,
-        lower: ErrorTypeReferenceWithLocData<L>,
-        upper: ErrorTypeReferenceWithLocData<L>,
+        lower: TypeGuardFuncReference<L, ErrorTypeReferenceWithLocData<L>>,
+        upper: TypeGuardFuncReference<L, ErrorTypeReferenceWithLocData<L>>,
     },
 
     ETypeGuardInvalidParameter(Box<ETypeGuardInvalidParameterData<L>>),
@@ -5237,11 +5254,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 lower,
                 upper,
-            } => ETypeGuardFuncIncompatibility {
-                use_op: map_use_op(use_op),
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-            },
+            } => {
+                let map_reference = |reference| match reference {
+                    TypeGuardFuncReference::Type(reference) => {
+                        TypeGuardFuncReference::Type(map_error_type_ref_with_reason(reference))
+                    }
+                    TypeGuardFuncReference::TypeGuard(reference) => {
+                        TypeGuardFuncReference::TypeGuard(TypeGuardReferenceData {
+                            loc: f(reference.loc),
+                            kind: reference.kind,
+                        })
+                    }
+                };
+                ETypeGuardFuncIncompatibility {
+                    use_op: map_use_op(use_op),
+                    lower: map_reference(lower),
+                    upper: map_reference(upper),
+                }
+            }
 
             ETypeGuardInvalidParameter(box ETypeGuardInvalidParameterData {
                 type_guard,
@@ -6863,11 +6893,19 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 lower,
                 upper,
-            } => ETypeGuardFuncIncompatibility {
-                use_op: map_use_op(&f, use_op),
-                lower: map_error_type_ref_with_reason(lower),
-                upper: map_error_type_ref_with_reason(upper),
-            },
+            } => {
+                let map_reference = |reference| match reference {
+                    TypeGuardFuncReference::Type(reference) => {
+                        TypeGuardFuncReference::Type(map_error_type_ref_with_reason(reference))
+                    }
+                    reference @ TypeGuardFuncReference::TypeGuard(_) => reference,
+                };
+                ETypeGuardFuncIncompatibility {
+                    use_op: map_use_op(&f, use_op),
+                    lower: map_reference(lower),
+                    upper: map_reference(upper),
+                }
+            }
 
             EHookIncompatible(box EHookIncompatibleData {
                 use_op,
@@ -10813,18 +10851,29 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 lower,
                 upper,
             } => {
-                let loc = lower.loc.dupe();
+                let loc = match &lower {
+                    TypeGuardFuncReference::Type(lower) => lower.loc.dupe(),
+                    TypeGuardFuncReference::TypeGuard(lower) => lower.loc.dupe(),
+                };
+                let message_reference = |reference: TypeGuardFuncReference<
+                    L,
+                    ErrorTypeReferenceWithLocData<L>,
+                >| match reference {
+                    TypeGuardFuncReference::Type(reference) => {
+                        TypeGuardFuncReference::Type(MessageTypeReferenceData {
+                            loc: reference.reference_loc,
+                            desc: expect_type_desc(reference.type_desc),
+                        })
+                    }
+                    TypeGuardFuncReference::TypeGuard(reference) => {
+                        TypeGuardFuncReference::TypeGuard(reference)
+                    }
+                };
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageIncompatibleNonTypeGuardToTypeGuard {
-                        lower: MessageTypeReferenceData {
-                            loc: lower.reference_loc,
-                            desc: expect_type_desc(lower.type_desc),
-                        },
-                        upper: MessageTypeReferenceData {
-                            loc: upper.reference_loc,
-                            desc: expect_type_desc(upper.type_desc),
-                        },
+                        lower: message_reference(lower),
+                        upper: message_reference(upper),
                     },
                     use_op,
                     explanation: None,

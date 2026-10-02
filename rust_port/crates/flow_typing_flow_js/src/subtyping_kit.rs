@@ -44,9 +44,12 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InternalError;
+use flow_typing_errors::error_message::TypeGuardFuncReference;
 use flow_typing_errors::error_message::TypeGuardParameterData;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::NamedReferenceData;
+use flow_typing_errors::intermediate_error_types::TypeGuardReferenceData;
+use flow_typing_errors::intermediate_error_types::TypeGuardReferenceKind;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::instantiation_utils;
@@ -458,18 +461,21 @@ fn func_type_guard_compat<'cx>(
         ),
         (None, None) => Ok(()),
         _ => {
+            let reference = |t: Option<&Type>, reason: &Reason| match t {
+                Some(t) => TypeGuardFuncReference::Type(
+                    flow_js_utils::type_reference_with_reason_for_error(t, reason.dupe()),
+                ),
+                None => TypeGuardFuncReference::TypeGuard(TypeGuardReferenceData {
+                    loc: reason.loc().dupe(),
+                    kind: TypeGuardReferenceKind::TypeGuard,
+                }),
+            };
             flow_js_utils::add_output(
                 cx,
                 ErrorMessage::ETypeGuardFuncIncompatibility {
                     use_op,
-                    lower: flow_js_utils::type_reference_with_reason_or_desc_for_error(
-                        t1,
-                        reason1.dupe(),
-                    ),
-                    upper: flow_js_utils::type_reference_with_reason_or_desc_for_error(
-                        t2,
-                        reason2.dupe(),
-                    ),
+                    lower: reference(t1, reason1),
+                    upper: reference(t2, reason2),
                 },
             )?;
             Ok(())
@@ -675,13 +681,11 @@ fn funt_to_funt_check<'cx>(
                 env,
                 ErrorMessage::ETypeGuardFuncIncompatibility {
                     use_op: use_op.dupe(),
-                    lower: flow_js_utils::type_reference_with_reason_for_error(
-                        lower,
-                        lreason.dupe(),
+                    lower: TypeGuardFuncReference::Type(
+                        flow_js_utils::type_reference_with_reason_for_error(lower, lreason.dupe()),
                     ),
-                    upper: flow_js_utils::type_reference_with_reason_for_error(
-                        upper,
-                        ureason.dupe(),
+                    upper: TypeGuardFuncReference::Type(
+                        flow_js_utils::type_reference_with_reason_for_error(upper, ureason.dupe()),
                     ),
                 },
             )?;
@@ -692,13 +696,17 @@ fn funt_to_funt_check<'cx>(
                     cx,
                     ErrorMessage::ETypeGuardFuncIncompatibility {
                         use_op: use_op.dupe(),
-                        lower: flow_js_utils::type_reference_with_reason_for_error(
-                            lower,
-                            lreason.dupe(),
+                        lower: TypeGuardFuncReference::Type(
+                            flow_js_utils::type_reference_with_reason_for_error(
+                                lower,
+                                lreason.dupe(),
+                            ),
                         ),
-                        upper: flow_js_utils::type_reference_with_reason_for_error(
-                            upper,
-                            ureason.dupe(),
+                        upper: TypeGuardFuncReference::Type(
+                            flow_js_utils::type_reference_with_reason_for_error(
+                                upper,
+                                ureason.dupe(),
+                            ),
                         ),
                     },
                 )?;

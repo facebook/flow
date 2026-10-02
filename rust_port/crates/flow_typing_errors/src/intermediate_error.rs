@@ -180,6 +180,7 @@ use crate::error_message::PropsMissingInInvariantSubtypingData;
 use crate::error_message::PropsMissingInSubtypingData;
 use crate::error_message::SpeculationData;
 use crate::error_message::TypeGuardBindingKind;
+use crate::error_message::TypeGuardFuncReference;
 use crate::error_message::TypeGuardParameterData;
 use crate::error_message::UseOpData;
 
@@ -7561,12 +7562,23 @@ where
                 text("incompatible with "),
                 ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
-            MessageIncompatibleNonTypeGuardToTypeGuard { lower, upper } => friendly::Message(vec![
-                ref_of_ty_or_desc(&lower.loc, &lower.desc),
-                text(", a non-type-guard function, is incompatible with "),
-                ref_of_ty_or_desc(&upper.loc, &upper.desc),
-                text(", which is a type-guard function"),
-            ]),
+            MessageIncompatibleNonTypeGuardToTypeGuard { lower, upper } => {
+                let reference = |reference: &TypeGuardFuncReference<
+                    L,
+                    MessageTypeReferenceData<L>,
+                >| match reference {
+                    TypeGuardFuncReference::Type(reference) => {
+                        ref_of_ty_or_desc(&reference.loc, &reference.desc)
+                    }
+                    TypeGuardFuncReference::TypeGuard(reference) => type_guard_reference(reference),
+                };
+                friendly::Message(vec![
+                    reference(lower),
+                    text(", a non-type-guard function, is incompatible with "),
+                    reference(upper),
+                    text(", which is a type-guard function"),
+                ])
+            }
             MessageIncompatibleReactHooksDueToUniqueness { lower, upper } => {
                 friendly::Message(vec![
                     ref_of_ty_or_desc(&lower.loc, &lower.desc),

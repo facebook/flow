@@ -53,6 +53,7 @@ use crate::error_message::DefinitionReferenceData;
 use crate::error_message::EnumReferenceData;
 use crate::error_message::MatchExampleReference;
 use crate::error_message::TypeGuardBindingKind;
+use crate::error_message::TypeGuardFuncReference;
 use crate::error_message::TypeGuardParameterData;
 
 #[derive(
@@ -2282,8 +2283,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageIncompatibleNonTypeGuardToTypeGuard {
-        lower: MessageTypeReferenceData<L>,
-        upper: MessageTypeReferenceData<L>,
+        lower: TypeGuardFuncReference<L, MessageTypeReferenceData<L>>,
+        upper: TypeGuardFuncReference<L, MessageTypeReferenceData<L>>,
     },
 
     MessageIncompatibleReactHooksDueToUniqueness {
