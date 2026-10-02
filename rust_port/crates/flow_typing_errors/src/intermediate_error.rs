@@ -6085,11 +6085,8 @@ where
                 features.extend(suggestion);
                 friendly::Message(features)
             }
-            MessageCannotIterateEnum {
-                enum_,
-                enum_name,
-            } => {
-                let suggestion = match enum_name {
+            MessageCannotIterateEnum(enum_) => {
+                let suggestion = match &enum_.name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use "),
@@ -6099,7 +6096,7 @@ where
                     None => vec![],
                 };
                 let mut features = vec![
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_reference(enum_),
                     text(" is not an iterable."),
                 ];
                 features.extend(suggestion);

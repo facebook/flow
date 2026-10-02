@@ -3736,15 +3736,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     dump_error_type_reference(cx, enum_)
                 )
             }
-            EnumErrorKind::EnumNotIterable(box EnumNotIterableData { enum_, .. }) => {
-                let enum_desc = match &enum_.type_desc {
-                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
-                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
-                };
+            EnumErrorKind::EnumNotIterable(box EnumNotIterableData { enum_ }) => {
                 format!(
-                    "EEnumError (EnumNotIterable ({} {}))",
-                    string_of_aloc(None, &enum_.loc),
-                    enum_desc
+                    "EEnumError (EnumNotIterable ({}))",
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData { enum_, .. }) => {

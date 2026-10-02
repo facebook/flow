@@ -34,6 +34,7 @@ use flow_typing_errors::error_message::ETupleElementNotReadableData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumNotIterableData;
 use flow_typing_errors::error_message::EnumNotIterableForInData;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::IncompatibleUpperData;
 use flow_typing_errors::error_message::InvalidThisArgKind;
@@ -2910,8 +2911,10 @@ pub mod type_assertions {
                             env,
                             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(Box::new(
                                 EnumNotIterableData {
-                                    enum_: flow_js_utils::type_reference_for_error(ti),
-                                    enum_name: enum_info.enum_name().map(Dupe::dupe),
+                                    enum_: EnumReferenceData {
+                                        loc: enum_reason.loc().dupe(),
+                                        name: enum_info.enum_name().map(Dupe::dupe),
+                                    },
                                 },
                             ))),
                         ),

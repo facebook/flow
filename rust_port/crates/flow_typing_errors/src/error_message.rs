@@ -371,8 +371,7 @@ pub struct EnumInvalidObjectFunctionData<L: Dupe + PartialOrd + Ord + PartialEq 
     serde::Deserialize
 )]
 pub struct EnumNotIterableData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub enum_: ErrorTypeReferenceData<L>,
-    pub enum_name: Option<FlowSmolStr>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -5368,10 +5367,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         enum_: map_error_type_ref_with_reason(enum_),
                         enum_name,
                     })),
-                    EnumNotIterable(box EnumNotIterableData { enum_, enum_name }) => {
+                    EnumNotIterable(box EnumNotIterableData { enum_ }) => {
                         EnumNotIterable(Box::new(EnumNotIterableData {
-                            enum_: map_error_type_ref(enum_),
-                            enum_name,
+                            enum_: map_enum_ref(enum_),
                         }))
                     }
                     EnumNotIterableForIn(box EnumNotIterableForInData { enum_, enum_name }) => {
@@ -7191,16 +7189,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ))),
 
-            EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
-                enum_,
-                enum_name,
-            })) => EEnumError(EnumErrorKind::EnumNotIterable(Box::new(
-                EnumNotIterableData {
-                    enum_: map_error_type_ref(enum_),
-                    enum_name,
-                },
-            ))),
-
             EEnumError(EnumErrorKind::EnumNotIterableForIn(box EnumNotIterableForInData {
                 enum_,
                 enum_name,
@@ -8133,8 +8121,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             ) => Some(loc.dupe()),
 
             Self::EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
-                enum_: ErrorTypeReferenceData { loc, .. },
-                ..
+                enum_: EnumReferenceData { loc, .. },
             })) => Some(loc.dupe()),
 
             Self::EEnumError(EnumErrorKind::EnumNotIterableForIn(
@@ -9739,14 +9726,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable(box EnumNotIterableData {
                 enum_,
-                enum_name,
-            })) => Normal(Message::MessageCannotIterateEnum {
-                enum_: MessageTypeReferenceData {
-                    loc: enum_.loc,
-                    desc: expect_type_desc(enum_.type_desc),
-                },
-                enum_name,
-            }),
+            })) => Normal(Message::MessageCannotIterateEnum(enum_)),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterableForIn(
                 box EnumNotIterableForInData { enum_, enum_name },
             )) => Normal(Message::MessageCannotIterateEnumForIn {

@@ -1995,10 +1995,7 @@ pub enum Message<L: Dupe> {
         Box<MessageCannotInstantiateObjectUtilTypeWithEnumData<L>>,
     ),
 
-    MessageCannotIterateEnum {
-        enum_: MessageTypeReferenceData<L>,
-        enum_name: Option<FlowSmolStr>,
-    },
+    MessageCannotIterateEnum(EnumReferenceData<L>),
 
     MessageCannotIterateEnumForIn {
         enum_: MessageTypeReferenceData<L>,
