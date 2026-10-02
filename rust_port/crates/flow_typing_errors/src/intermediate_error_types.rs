@@ -51,6 +51,7 @@ use vec1::Vec1;
 use crate::error_message::CallTypeArityCallee;
 use crate::error_message::DefinitionReferenceData;
 use crate::error_message::EnumReferenceData;
+use crate::error_message::MatchExampleReference;
 use crate::error_message::TypeGuardBindingKind;
 use crate::error_message::TypeGuardParameterData;
 
@@ -2583,7 +2584,10 @@ pub enum Message<L: Dupe> {
     MessageVariableOnlyAssignedByNull(Box<MessageVariableOnlyAssignedByNullData<L>>),
 
     MessageMatchNotExhaustive {
-        examples: Vec<(FlowSmolStr, Vec<MessageTypeReferenceData<L>>)>,
+        examples: Vec<(
+            FlowSmolStr,
+            Vec<MatchExampleReference<L, MessageTypeReferenceData<L>>>,
+        )>,
     },
 
     MessageMatchUnnecessaryPattern {

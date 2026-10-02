@@ -170,6 +170,7 @@ use crate::error_message::IncompatibleSubtypingData;
 use crate::error_message::IncompatibleTypeUseData;
 use crate::error_message::IncompatibleTypesWithExampleData;
 use crate::error_message::IndexerCheckFailedData;
+use crate::error_message::MatchExampleReference;
 use crate::error_message::PrivatePropMissingInLookupData;
 use crate::error_message::PropMissingInLookupData;
 use crate::error_message::PropMissingInSubtypingData;
@@ -9757,11 +9758,28 @@ where
                     .map(|(pattern, reasons)| {
                         let reason_refs: Vec<friendly::Message<Loc>> = reasons
                             .iter()
-                            .map(|reason| {
-                                friendly::Message(vec![ref_of_ty_or_desc(
-                                    &reason.loc,
-                                    &reason.desc,
-                                )])
+                            .map(|reference| {
+                                friendly::Message(vec![match reference {
+                                    MatchExampleReference::Type(reference) => {
+                                        ref_of_ty_or_desc(&reference.loc, &reference.desc)
+                                    }
+                                    MatchExampleReference::EnumMember {
+                                        loc,
+                                        member_name,
+                                        enum_name,
+                                    } => hardcoded_string_desc_ref(
+                                        &format!("member {member_name} of enum `{enum_name}`"),
+                                        loc,
+                                    ),
+                                    MatchExampleReference::EnumUnknownMembers { loc, enum_name } => {
+                                        hardcoded_string_desc_ref(
+                                            &format!(
+                                                "the unknown members of enum `{enum_name}` (specified using `...`)"
+                                            ),
+                                            loc,
+                                        )
+                                    }
+                                }])
                             })
                             .collect();
                         let friendly::Message(concat_result) =

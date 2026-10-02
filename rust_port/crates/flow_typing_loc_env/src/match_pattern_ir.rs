@@ -1047,7 +1047,8 @@ pub mod value_union {
         pub tuples: FlowVector<value_object::ValueObject<'cx, CX>>,
         pub arrays: FlowVector<value_object::ValueObject<'cx, CX>>,
         pub objects: FlowVector<value_object::ValueObject<'cx, CX>>,
-        pub enum_unknown_members: FlowVector<(Reason, LeafSet)>,
+        /// The enum's reason, its name, and its known members.
+        pub enum_unknown_members: FlowVector<(Reason, FlowSmolStr, LeafSet)>,
         pub inexhaustible: FlowVector<Type>,
     }
 
@@ -1203,7 +1204,7 @@ pub mod value_union {
             let wildcard = match (inexhaustible.front(), enum_unknown_members.front()) {
                 (None, None) => None,
                 (Some(first_t), _) => Some(type_util::reason_of_t(first_t).dupe()),
-                (None, Some((reason, _))) => Some(reason.dupe()),
+                (None, Some((reason, _, _))) => Some(reason.dupe()),
             };
 
             pattern_union::PatternUnion {
@@ -1242,7 +1243,7 @@ pub mod value_union {
                     .collect::<Vec<_>>(),
                 enum_unknown_members
                     .iter()
-                    .flat_map(|(_, leaf_set)| leaf_set.iter().map(|l| l.to_type()))
+                    .flat_map(|(_, _, leaf_set)| leaf_set.iter().map(|l| l.to_type()))
                     .collect::<Vec<_>>(),
                 inexhaustible.iter().duped().collect::<Vec<_>>(),
             ]

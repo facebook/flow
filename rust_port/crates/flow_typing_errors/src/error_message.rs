@@ -782,8 +782,37 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct MatchNotExhaustiveData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<L>>)>,
+    pub examples: Vec<(
+        FlowSmolStr,
+        Vec<MatchExampleReference<L, ErrorTypeReferenceWithLocData<L>>>,
+    )>,
     pub missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
+}
+
+/// What a missing `match` pattern would match.
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum MatchExampleReference<L: Dupe, T> {
+    Type(T),
+    EnumMember {
+        loc: L,
+        member_name: FlowSmolStr,
+        enum_name: FlowSmolStr,
+    },
+    /// The members of an enum declared with `...`.
+    EnumUnknownMembers {
+        loc: L,
+        enum_name: FlowSmolStr,
+    },
 }
 
 #[derive(
@@ -6433,12 +6462,34 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         loc: f(loc),
                         examples: examples
                             .into_iter()
-                            .map(|(pattern, reasons)| {
+                            .map(|(pattern, references)| {
                                 (
                                     pattern,
-                                    reasons
+                                    references
                                         .into_iter()
-                                        .map(&map_error_type_ref_with_reason)
+                                        .map(|reference| match reference {
+                                            MatchExampleReference::Type(reference) => {
+                                                MatchExampleReference::Type(
+                                                    map_error_type_ref_with_reason(reference),
+                                                )
+                                            }
+                                            MatchExampleReference::EnumMember {
+                                                loc,
+                                                member_name,
+                                                enum_name,
+                                            } => MatchExampleReference::EnumMember {
+                                                loc: f(loc),
+                                                member_name,
+                                                enum_name,
+                                            },
+                                            MatchExampleReference::EnumUnknownMembers {
+                                                loc,
+                                                enum_name,
+                                            } => MatchExampleReference::EnumUnknownMembers {
+                                                loc: f(loc),
+                                                enum_name,
+                                            },
+                                        })
                                         .collect(),
                                 )
                             })
@@ -7774,12 +7825,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     loc,
                     examples: examples
                         .into_iter()
-                        .map(|(pattern, reasons)| {
+                        .map(|(pattern, references)| {
                             (
                                 pattern,
-                                reasons
+                                references
                                     .into_iter()
-                                    .map(&map_error_type_ref_with_reason)
+                                    .map(|reference| {
+                                        match reference {
+                                        MatchExampleReference::Type(reference) => {
+                                            MatchExampleReference::Type(
+                                                map_error_type_ref_with_reason(reference),
+                                            )
+                                        }
+                                        reference @ (MatchExampleReference::EnumMember { .. }
+                                        | MatchExampleReference::EnumUnknownMembers { .. }) => {
+                                            reference
+                                        }
+                                    }
+                                    })
                                     .collect(),
                             )
                         })
@@ -10124,14 +10187,33 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => Normal(Message::MessageMatchNotExhaustive {
                 examples: examples
                     .into_iter()
-                    .map(|(pattern, reasons)| {
+                    .map(|(pattern, references)| {
                         (
                             pattern,
-                            reasons
+                            references
                                 .into_iter()
-                                .map(|reason| MessageTypeReferenceData {
-                                    loc: reason.reference_loc,
-                                    desc: expect_type_desc(reason.type_desc),
+                                .map(|reference| match reference {
+                                    MatchExampleReference::Type(reference) => {
+                                        MatchExampleReference::Type(MessageTypeReferenceData {
+                                            loc: reference.reference_loc,
+                                            desc: expect_type_desc(reference.type_desc),
+                                        })
+                                    }
+                                    MatchExampleReference::EnumMember {
+                                        loc,
+                                        member_name,
+                                        enum_name,
+                                    } => MatchExampleReference::EnumMember {
+                                        loc,
+                                        member_name,
+                                        enum_name,
+                                    },
+                                    MatchExampleReference::EnumUnknownMembers {
+                                        loc,
+                                        enum_name,
+                                    } => {
+                                        MatchExampleReference::EnumUnknownMembers { loc, enum_name }
+                                    }
                                 })
                                 .collect(),
                         )

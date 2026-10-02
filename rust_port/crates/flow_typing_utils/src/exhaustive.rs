@@ -30,6 +30,7 @@ use flow_typing_errors::error_message::EnumInvalidCheckData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::MatchExampleReference;
 use flow_typing_errors::error_message::MatchInvalidIdentOrMemberPatternData;
 use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
 use flow_typing_errors::error_message::MatchNonExplicitEnumCheckData;
@@ -1001,9 +1002,11 @@ mod value_union_builder {
                                         Arc::new(enum_reason.desc(true).clone()),
                                     ),
                                 );
-                                value_union
-                                    .enum_unknown_members
-                                    .push((reason, enum_leafs.dupe()));
+                                value_union.enum_unknown_members.push((
+                                    reason,
+                                    enum_info.enum_name.dupe(),
+                                    enum_leafs.dupe(),
+                                ));
                             }
                             value_union.leafs.extend(enum_leafs);
                         }
@@ -2307,7 +2310,7 @@ pub fn analyze<'cx>(
         let pattern_leafs = &pattern_union.leafs;
         let wildcard = &pattern_union.wildcard;
         if let Some(wildcard_reason) = wildcard {
-            for (_, enum_leafs) in enum_unknown_members.iter() {
+            for (_, _, enum_leafs) in enum_unknown_members.iter() {
                 if !enum_leafs.is_subset(&**pattern_leafs) {
                     let unchecked_members: Vec<FlowSmolStr> = enum_leafs
                         .iter()
@@ -2336,18 +2339,34 @@ pub fn analyze<'cx>(
             enum_unknown_members,
             inexhaustible,
         } = &value_left;
-        let mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<ALoc>>)> = Vec::new();
+        let mut examples: Vec<(
+            FlowSmolStr,
+            Vec<MatchExampleReference<ALoc, ErrorTypeReferenceWithLocData<ALoc>>>,
+        )> = Vec::new();
         let mut asts: Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)> = Vec::new();
         for leaf in leafs.iter() {
             let leaf::Leaf(reason, leaf_ctor) = leaf;
             let example: FlowSmolStr = leaf_ctor.to_string().into();
-            examples.push((
-                example,
-                vec![flow_js_utils::type_reference_with_reason_for_error(
-                    &leaf.to_type(),
-                    reason.dupe(),
-                )],
-            ));
+            let reference = match leaf_ctor {
+                leaf::LeafCtor::EnumMemberC(leaf::EnumMember {
+                    enum_info,
+                    member_name,
+                }) => MatchExampleReference::EnumMember {
+                    loc: reason
+                        .annot_loc()
+                        .unwrap_or_else(|| reason.def_loc())
+                        .dupe(),
+                    member_name: member_name.dupe(),
+                    enum_name: enum_info.enum_name.dupe(),
+                },
+                _ => MatchExampleReference::Type(
+                    flow_js_utils::type_reference_with_reason_for_error(
+                        &leaf.to_type(),
+                        reason.dupe(),
+                    ),
+                ),
+            };
+            examples.push((example, vec![reference]));
             asts.push(leaf_ctor.to_ast());
         }
 
@@ -2401,7 +2420,11 @@ pub fn analyze<'cx>(
         for (example, (_, pattern, types_by_reason)) in tuple_entries {
             let type_refs = types_by_reason
                 .into_iter()
-                .map(|(reason, t)| flow_js_utils::type_reference_with_reason_for_error(&t, reason))
+                .map(|(reason, t)| {
+                    MatchExampleReference::Type(
+                        flow_js_utils::type_reference_with_reason_for_error(&t, reason),
+                    )
+                })
                 .collect();
             examples.push((example, type_refs));
             asts.push(pattern.to_ast());
@@ -2438,40 +2461,54 @@ pub fn analyze<'cx>(
         for (example, (_, pattern, types_by_reason)) in object_entries {
             let type_refs = types_by_reason
                 .into_iter()
-                .map(|(reason, t)| flow_js_utils::type_reference_with_reason_for_error(&t, reason))
+                .map(|(reason, t)| {
+                    MatchExampleReference::Type(
+                        flow_js_utils::type_reference_with_reason_for_error(&t, reason),
+                    )
+                })
                 .collect();
             examples.push((example, type_refs));
             asts.push(pattern.to_ast());
         }
         let wildcard_example =
             |reason: Reason,
-             mut examples: Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<ALoc>>)>,
+             mut examples: Vec<(
+                FlowSmolStr,
+                Vec<MatchExampleReference<ALoc, ErrorTypeReferenceWithLocData<ALoc>>>,
+            )>,
              mut asts: Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)>|
              -> (
-                Vec<(FlowSmolStr, Vec<ErrorTypeReferenceWithLocData<ALoc>>)>,
+                Vec<(
+                    FlowSmolStr,
+                    Vec<MatchExampleReference<ALoc, ErrorTypeReferenceWithLocData<ALoc>>>,
+                )>,
                 Vec<(Loc, ast::match_pattern::MatchPattern<Loc, Loc>)>,
             ) {
                 let pattern = match_pattern_ir::wildcard_pattern(reason);
                 let example: FlowSmolStr = pattern.to_string().into();
-                let mut types_by_reason: BTreeMap<Reason, Type> = inexhaustible
+                let mut refs_by_reason: BTreeMap<
+                    Reason,
+                    MatchExampleReference<ALoc, ErrorTypeReferenceWithLocData<ALoc>>,
+                > = inexhaustible
                     .iter()
-                    .map(|t| (reason_of_t(t).dupe(), t.dupe()))
-                    .collect();
-                for (r, leafs) in enum_unknown_members.iter() {
-                    let t = type_util::union_of_ts(
-                        r.dupe(),
-                        leafs.iter().map(|leaf| leaf.to_type()).collect(),
-                        None,
-                    );
-                    types_by_reason.insert(r.dupe(), t);
-                }
-                let type_refs = types_by_reason
-                    .into_iter()
-                    .map(|(reason, t)| {
-                        flow_js_utils::type_reference_with_reason_for_error(&t, reason)
+                    .map(|t| {
+                        let reason = reason_of_t(t).dupe();
+                        let reference = MatchExampleReference::Type(
+                            flow_js_utils::type_reference_with_reason_for_error(t, reason.dupe()),
+                        );
+                        (reason, reference)
                     })
                     .collect();
-                examples.push((example, type_refs));
+                for (r, enum_name, _) in enum_unknown_members.iter() {
+                    refs_by_reason.insert(
+                        r.dupe(),
+                        MatchExampleReference::EnumUnknownMembers {
+                            loc: r.annot_loc().unwrap_or_else(|| r.def_loc()).dupe(),
+                            enum_name: enum_name.dupe(),
+                        },
+                    );
+                }
+                examples.push((example, refs_by_reason.into_values().collect()));
                 asts.push(pattern.to_ast());
                 (examples, asts)
             };
@@ -2479,7 +2516,7 @@ pub fn analyze<'cx>(
         let (examples, asts) = match (inexhaustible.front(), enum_unknown_members.front()) {
             (None, None) => (examples, asts),
             (Some(first_t), _) => wildcard_example(reason_of_t(first_t).dupe(), examples, asts),
-            (None, Some((reason, _))) => wildcard_example(reason.dupe(), examples, asts),
+            (None, Some((reason, _, _))) => wildcard_example(reason.dupe(), examples, asts),
         };
 
         let missing_pattern_asts: Vec<ast::match_pattern::MatchPattern<Loc, Loc>> =
