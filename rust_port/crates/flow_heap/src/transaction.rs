@@ -886,6 +886,7 @@ impl Transaction {
             data.file_dependents = base.file_dependents.clone();
             data.haste_dependents = base.haste_dependents.clone();
             data.haste_provider_candidates = base.haste_provider_candidates.clone();
+            data.symlinks = base.symlinks.clone();
         }
         heap
     }
@@ -1376,6 +1377,9 @@ impl Transaction {
             file_dependents,
             haste_dependents,
             haste_provider_candidates: provider_candidates,
+            // Dumps don't carry the symlink table: its paths must be stored root-relative, so the
+            // saved state keeps it with the env data and installs it after loading the dump.
+            symlinks: Default::default(),
         })
     }
 

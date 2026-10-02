@@ -18,6 +18,7 @@ use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::ast::Program;
@@ -237,6 +238,22 @@ impl Transaction {
     pub fn get_package_info_unsafe(&self, file: &FileKey) -> Arc<PackageJson> {
         let pkg = self.get_package_parse_unsafe(file);
         pkg.package_info.dupe()
+    }
+
+    pub fn symlink_target(&self, path: &str) -> Option<FlowSmolStr> {
+        self.latest_reader().reader().symlink_target(path)
+    }
+
+    pub fn symlinks(&self) -> BTreeMap<FlowSmolStr, FlowSmolStr> {
+        self.latest_reader().reader().symlinks()
+    }
+
+    pub fn set_symlink(&self, path: FlowSmolStr, target: FlowSmolStr) {
+        self.heap_writer().writer().set_symlink(path, target);
+    }
+
+    pub fn remove_symlink(&self, path: FlowSmolStr) {
+        self.heap_writer().writer().remove_symlink(path);
     }
 
     pub fn get_file_hash_unsafe(&self, file: &FileKey) -> u64 {
