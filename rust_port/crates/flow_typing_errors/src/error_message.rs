@@ -337,8 +337,7 @@ pub struct EnumMemberDuplicateValueData<L: Dupe + PartialOrd + Ord + PartialEq +
 pub struct EnumInvalidObjectUtilTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub operation_loc: L,
     pub operation_name: FlowSmolStr,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
-    pub enum_name: Option<FlowSmolStr>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -5349,12 +5348,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         operation_loc,
                         operation_name,
                         enum_,
-                        enum_name,
                     }) => EnumInvalidObjectUtilType(Box::new(EnumInvalidObjectUtilTypeData {
                         operation_loc: f(operation_loc),
                         operation_name,
-                        enum_: map_error_type_ref_with_reason(enum_),
-                        enum_name,
+                        enum_: map_enum_ref(enum_),
                     })),
                     EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {
                         operation_loc,
@@ -7154,22 +7151,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     member_loc,
                     member_type: member_type.map(map_error_type_ref),
                     enum_: map_error_type_ref_with_reason(enum_),
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(
-                box EnumInvalidObjectUtilTypeData {
-                    operation_loc,
-                    operation_name,
-                    enum_,
-                    enum_name,
-                },
-            )) => EEnumError(EnumErrorKind::EnumInvalidObjectUtilType(Box::new(
-                EnumInvalidObjectUtilTypeData {
-                    operation_loc,
-                    operation_name,
-                    enum_: map_error_type_ref_with_reason(enum_),
-                    enum_name,
                 },
             ))),
 
@@ -11362,17 +11343,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 box EnumInvalidObjectUtilTypeData {
                     operation_name,
                     enum_,
-                    enum_name,
                     ..
                 },
             )) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum(
                 Box::new(MessageCannotInstantiateObjectUtilTypeWithEnumData {
-                    description: Err(VirtualReasonDesc::RType(operation_name)),
-                    enum_: MessageTypeReferenceData {
-                        loc: enum_.reference_loc,
-                        desc: expect_type_desc(enum_.type_desc),
-                    },
-                    enum_name,
+                    operation_name,
+                    enum_,
                 }),
             )),
 

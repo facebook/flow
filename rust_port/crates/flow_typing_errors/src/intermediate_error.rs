@@ -6041,12 +6041,11 @@ where
             ]),
             MessageCannotInstantiateObjectUtilTypeWithEnum(
                 box MessageCannotInstantiateObjectUtilTypeWithEnumData {
-                    description,
+                    operation_name,
                     enum_,
-                    enum_name,
                 },
             ) => {
-                let suggestion = match enum_name {
+                let suggestion = match &enum_.name {
                     Some(enum_name) => vec![
                         text(" "),
                         text("You can use the enum's name "),
@@ -6057,9 +6056,9 @@ where
                 };
                 let mut features = vec![
                     text("Cannot instantiate "),
-                    desc_of_ty_or_desc(description),
+                    code(operation_name),
                     text(" because "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_reference(enum_),
                     text(" is not an object."),
                 ];
                 features.extend(suggestion);

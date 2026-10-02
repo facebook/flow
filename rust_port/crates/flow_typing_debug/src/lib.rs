@@ -3721,7 +3721,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumInvalidObjectUtilType ({} RType({operation_name:?})) ({}))",
                     string_of_aloc(None, operation_loc),
-                    dump_error_type_reference(cx, enum_)
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumInvalidObjectFunction(box EnumInvalidObjectFunctionData {

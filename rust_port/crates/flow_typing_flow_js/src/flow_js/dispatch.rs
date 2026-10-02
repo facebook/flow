@@ -8953,7 +8953,7 @@ fn __flow_impl<'cx>(
                 rec_flow_t(cx, env, trace, unknown_use(), (&any, tout))?;
             }
         }
-        (TypeInner::DefT(enum_reason, def_t), UseTInner::GetValuesT(op_reason, tout))
+        (TypeInner::DefT(_, def_t), UseTInner::GetValuesT(op_reason, tout))
             if let DefTInner::EnumObjectT { enum_info, .. } = def_t.deref() =>
         {
             flow_js_utils::add_output_with_env(
@@ -8963,11 +8963,10 @@ fn __flow_impl<'cx>(
                     EnumInvalidObjectUtilTypeData {
                         operation_loc: op_reason.loc().dupe(),
                         operation_name: "Values".into(),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            l,
-                            enum_reason.dupe(),
-                        ),
-                        enum_name: enum_info.enum_name().map(Dupe::dupe),
+                        enum_: EnumReferenceData {
+                            loc: type_util::ref_loc_of_t(l).dupe(),
+                            name: enum_info.enum_name().map(Dupe::dupe),
+                        },
                     },
                 ))),
             )?;

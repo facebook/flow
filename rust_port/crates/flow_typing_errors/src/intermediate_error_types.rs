@@ -1338,9 +1338,8 @@ pub struct MessageCannotExhaustivelyCheckEnumWithUnknownsData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotInstantiateObjectUtilTypeWithEnumData<L: Dupe> {
-    pub description: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub enum_: MessageTypeReferenceData<L>,
-    pub enum_name: Option<FlowSmolStr>,
+    pub operation_name: FlowSmolStr,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
