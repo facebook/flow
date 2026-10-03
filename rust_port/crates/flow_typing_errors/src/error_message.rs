@@ -2113,10 +2113,12 @@ pub struct ECannotDeleteData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub expression: ErrorTypeReferenceData<L>,
 }
 
-/// Error data for an `invariant` call whose condition is always truthy.
+/// Error data for an assertion call (builtin `invariant` or a bare `asserts x`
+/// callee) whose condition is always truthy.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EUnnecessaryInvariantData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
+    pub callee: FlowSmolStr,
     pub condition: ErrorTypeReferenceData<L>,
     pub condition_kind: UnnecessaryInvariantConditionKind,
 }
@@ -2124,6 +2126,7 @@ pub struct EUnnecessaryInvariantData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EUnnecessaryInvariantData<L> {
     fn eq(&self, other: &Self) -> bool {
         self.loc == other.loc
+            && self.callee == other.callee
             && self.condition == other.condition
             && self.condition_kind == other.condition_kind
     }
@@ -2134,6 +2137,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for EUnnecessaryInvariantDa
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EUnnecessaryInvariantData<L> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.loc.hash(state);
+        self.callee.hash(state);
         self.condition.hash(state);
         self.condition_kind.hash(state);
     }
@@ -2149,6 +2153,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EUnnecessaryInvariantD
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.loc
             .cmp(&other.loc)
+            .then_with(|| self.callee.cmp(&other.callee))
             .then_with(|| self.condition.cmp(&other.condition))
             .then_with(|| self.condition_kind.cmp(&other.condition_kind))
     }
@@ -5891,10 +5896,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 loc,
+                callee,
                 condition,
                 condition_kind,
             }) => EUnnecessaryInvariant(Box::new(EUnnecessaryInvariantData {
                 loc: f(loc),
+                callee,
                 condition: map_error_type_ref(condition),
                 condition_kind,
             })),
@@ -7182,10 +7189,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUnnecessaryInvariant(box EUnnecessaryInvariantData {
                 loc,
+                callee,
                 condition,
                 condition_kind,
             }) => EUnnecessaryInvariant(Box::new(EUnnecessaryInvariantData {
                 loc,
+                callee,
                 condition: map_error_type_ref(condition),
                 condition_kind,
             })),
@@ -9619,10 +9628,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EUnnecessaryInvariant(box EUnnecessaryInvariantData {
+                callee,
                 condition,
                 condition_kind,
                 ..
             }) => Normal(Message::MessageUnnecessaryInvariant {
+                callee,
                 condition: Box::new(expect_error_type_reference(condition)),
                 condition_kind,
             }),

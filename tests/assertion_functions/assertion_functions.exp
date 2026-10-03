@@ -1465,5 +1465,188 @@ References:
                           ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:18:1
 
-Found 89 errors
+This use of `assert` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:18:1
+   18| assert(t); // error: unnecessary, names `assert`
+       ^^^^^^^^^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:18:8
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   unnecessary.js:18:8
+   18| assert(t); // error: unnecessary, names `assert`
+              ^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:19:1
+
+This use of `assert` is unnecessary because `1` [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:19:1
+   19| assert(one); // error
+       ^^^^^^^^^^^
+
+References:
+   unnecessary.js:10:20
+   10| declare const one: 1;
+                          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:20:1
+
+This use of `assert` is unnecessary because `{}` [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:20:1
+   20| assert(obj); // error
+       ^^^^^^^^^^^
+
+References:
+   unnecessary.js:11:20
+   11| declare const obj: {};
+                          ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:21:1
+
+This use of `assert` is unnecessary because intersection type [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:21:1
+   21| assert(both); // error: intersection type
+       ^^^^^^^^^^^^
+
+References:
+   unnecessary.js:12:21
+   12| declare const both: false & true;
+                           ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:21:8
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   unnecessary.js:21:8
+   21| assert(both); // error: intersection type
+              ^^^^
+
+References:
+   unnecessary.js:12:21
+   12| declare const both: false & true;
+                           ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:22:1
+
+This use of `assertSecond` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:22:1
+   22| assertSecond('msg', t); // error: asserted parameter is not the first
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unnecessary.js:22:21
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   unnecessary.js:22:21
+   22| assertSecond('msg', t); // error: asserted parameter is not the first
+                           ^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:23:1
+
+This use of `assertGeneric` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:23:1
+   23| assertGeneric<true>(t); // error
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unnecessary.js:23:21
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   unnecessary.js:23:21
+   23| assertGeneric<true>(t); // error
+                           ^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- unnecessary.js:24:1
+
+This use of `ns.assert` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+
+   unnecessary.js:24:1
+   24| ns.assert(t); // error: names `ns.assert`
+       ^^^^^^^^^^^^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- unnecessary.js:24:11
+
+This condition is likely truthy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   unnecessary.js:24:11
+   24| ns.assert(t); // error: names `ns.assert`
+                 ^
+
+References:
+   unnecessary.js:9:18
+    9| declare const t: true;
+                        ^^^^ [1]
+
+
+
+Found 101 errors

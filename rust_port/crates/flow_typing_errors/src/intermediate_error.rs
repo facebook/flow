@@ -9206,6 +9206,7 @@ where
                 text(" keyword is unnecessary for type exports."),
             ]),
             MessageUnnecessaryInvariant {
+                callee,
                 condition,
                 condition_kind,
             } => {
@@ -9218,7 +9219,7 @@ where
                     }
                 };
                 friendly::Message(vec![
-                    text("This use of `invariant` is unnecessary because "),
+                    text(&format!("This use of `{callee}` is unnecessary because ")),
                     condition,
                     text(" is always truthy."),
                 ])

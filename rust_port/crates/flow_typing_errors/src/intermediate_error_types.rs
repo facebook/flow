@@ -2551,6 +2551,7 @@ pub enum Message<L: Dupe> {
     MessageUnknownParameterTypes(L),
     MessageUnnecessaryDeclareTypeOnlyExport,
     MessageUnnecessaryInvariant {
+        callee: FlowSmolStr,
         condition: Box<MessageTypeReferenceData<L>>,
         condition_kind: UnnecessaryInvariantConditionKind,
     },

@@ -8342,6 +8342,57 @@ fn expression_<'a>(
     })
 }
 
+/// Reports an assertion call (builtin `invariant` or a proven bare `asserts x`
+/// callee) whose asserted condition is always truthy.
+fn check_unnecessary_assertion(
+    cx: &Context<'_>,
+    loc: ALoc,
+    callee: FlowSmolStr,
+    cond_t: &Type,
+) -> Result<(), CheckExprError> {
+    let concretized_cond_t =
+        match FlowJs::singleton_concrete_type_for_inspection(cx, reason_of_t(cond_t), cond_t) {
+            Ok(v) => v,
+            Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
+            Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
+            Err(err) => panic!("Should not be under speculation: {:?}", err),
+        };
+    match concretized_cond_t.deref() {
+        // If condition is empty, it means that the branch is unreachable. The assertion is
+        // still useless, but it's not useless because it's always truthy, which is what the
+        // code below tries to report.
+        TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {}
+        // any will fail the test below, but it's not always truthy.
+        TypeInner::AnyT(_, _) => {}
+        _ => {
+            let filter_result =
+                flow_typing_utils::type_filter::not_truthy(cx, concretized_cond_t.dupe());
+            if let TypeInner::DefT(_, def_t) = filter_result.type_.deref()
+                && matches!(def_t.deref(), DefTInner::EmptyT)
+            {
+                let condition_kind = if matches!(
+                    concretized_cond_t.deref(),
+                    TypeInner::IntersectionT(_, _)
+                ) {
+                    intermediate_error_types::UnnecessaryInvariantConditionKind::IntersectionType
+                } else {
+                    intermediate_error_types::UnnecessaryInvariantConditionKind::Type
+                };
+                flow_js::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnnecessaryInvariant(Box::new(EUnnecessaryInvariantData {
+                        loc,
+                        callee,
+                        condition: flow_js_utils::type_reference_for_error(&concretized_cond_t),
+                        condition_kind,
+                    })),
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
 /// Whether a call to a proven bare assertion function (`asserts x`) provably
 /// never returns because the asserted argument is the literal `false`.
 /// Keyed on the targeted callee analysis (persisted in env info) rather than
@@ -9157,60 +9208,12 @@ pub fn optional_chain<'a>(
                             None,
                             cond_src,
                         )?;
-                        let cond_t = cond.loc().1.dupe();
-                        let concretized_cond_t =
-                            match FlowJs::singleton_concrete_type_for_inspection(
-                                cx,
-                                reason_of_t(&cond_t),
-                                &cond_t,
-                            ) {
-                                Ok(v) => v,
-                                Err(FlowJsException::WorkerCanceled(c)) => return Err(c.into()),
-                                Err(FlowJsException::TimedOut(t)) => return Err(t.into()),
-                                Err(err) => panic!("Should not be under speculation: {:?}", err),
-                            };
-                        match concretized_cond_t.deref() {
-                            // If condition is empty, it means that the branch is unreachable. The invariant is
-                            // still useless, but it's not useless because it's always truthy, which is what the
-                            // code below tries to report.
-                            TypeInner::DefT(_, def_t)
-                                if matches!(def_t.deref(), DefTInner::EmptyT) => {}
-                            // any will fail the test below, but it's not always truthy.
-                            TypeInner::AnyT(_, _) => {}
-                            _ => {
-                                let filter_result = flow_typing_utils::type_filter::not_truthy(
-                                    cx,
-                                    concretized_cond_t.dupe(),
-                                );
-                                match filter_result.type_.deref() {
-                                    TypeInner::DefT(_, def_t)
-                                        if matches!(def_t.deref(), DefTInner::EmptyT) =>
-                                    {
-                                        flow_js::add_output_non_speculating(
-                                            cx,
-                                            ErrorMessage::EUnnecessaryInvariant(Box::new(
-                                                EUnnecessaryInvariantData {
-                                                    loc: loc.dupe(),
-                                                    condition:
-                                                        flow_js_utils::type_reference_for_error(
-                                                            &concretized_cond_t,
-                                                        ),
-                                                    condition_kind: if matches!(
-                                                        concretized_cond_t.deref(),
-                                                        TypeInner::IntersectionT(_, _)
-                                                    ) {
-                                                        intermediate_error_types::UnnecessaryInvariantConditionKind::IntersectionType
-                                                    } else {
-                                                        intermediate_error_types::UnnecessaryInvariantConditionKind::Type
-                                                    },
-                                                },
-                                            )),
-                                        );
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
+                        check_unnecessary_assertion(
+                            cx,
+                            loc.dupe(),
+                            FlowSmolStr::new_inline("invariant"),
+                            &cond.loc().1,
+                        )?;
                         let t = type_::void::at(loc.dupe());
                         let mut all_arguments = Vec::with_capacity(1 + rest_arguments.len());
                         all_arguments.push(expression::ExpressionOrSpread::Expression(cond));
@@ -10349,7 +10352,10 @@ pub fn optional_chain<'a>(
                             (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
                             CheckExprError,
                         >,
-                    > = { Box::new(move |cx: &Context<'a>| call_arg_list(cx, callee, arguments)) };
+                    > = {
+                        let loc = loc.dupe();
+                        Box::new(move |cx: &Context<'a>| call_arg_list(cx, loc, callee, arguments))
+                    };
                     let conf = ChainingConf {
                         subexpressions: eval_args,
                         get_result: get_mem_t,
@@ -10519,6 +10525,7 @@ pub fn optional_chain<'a>(
                                 CheckExprError,
                             > + '_,
                     > = {
+                        let loc = loc.dupe();
                         Box::new(move |cx: &Context<'a>| {
                             let typed_prop_expr = expression_inner(
                                 Some(EnclosingContext::IndexContext),
@@ -10530,7 +10537,7 @@ pub fn optional_chain<'a>(
                                 prop_expr,
                             )?;
                             let elem_t = typed_prop_expr.loc().1.dupe();
-                            let (argts, arguments_ast) = call_arg_list(cx, callee, arguments)?;
+                            let (argts, arguments_ast) = call_arg_list(cx, loc, callee, arguments)?;
                             Ok(((argts, elem_t), (arguments_ast, typed_prop_expr)))
                         })
                     };
@@ -10687,7 +10694,10 @@ pub fn optional_chain<'a>(
                     (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
                     CheckExprError,
                 >,
-            > = { Box::new(move |cx: &Context<'a>| call_arg_list(cx, callee, arguments)) };
+            > = {
+                let loc = loc.dupe();
+                Box::new(move |cx: &Context<'a>| call_arg_list(cx, loc, callee, arguments))
+            };
             let conf = ChainingConf {
                 refinement_action: None,
                 subexpressions: eval_args,
@@ -10765,9 +10775,11 @@ fn arg_list<'a>(
 /// Like `arg_list`, but when the callee is a proven bare assertion (e.g. a
 /// userland `invariant`), checks the asserted argument with `condition` so
 /// property reads in it narrow their base objects, mirroring the old builtin
-/// `invariant` handling.
+/// `invariant` handling, and reports the assertion when that argument is
+/// always truthy.
 fn call_arg_list<'a>(
     cx: &Context<'a>,
+    loc: ALoc,
     callee: &expression::Expression<ALoc, ALoc>,
     args: &expression::ArgList<ALoc, ALoc>,
 ) -> Result<(Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>), CheckExprError> {
@@ -10791,7 +10803,14 @@ fn call_arg_list<'a>(
         {
             let argument_ast =
                 condition(cx, EnclosingContext::OtherTestContext, None, None, argument)?;
-            argts.push(CallArg::arg(argument_ast.loc().1.dupe()));
+            let (_, t) = argument_ast.loc();
+            check_unnecessary_assertion(
+                cx,
+                loc.dupe(),
+                FlowSmolStr::new(code_desc_of_expression(false, callee)),
+                t,
+            )?;
+            argts.push(CallArg::arg(t.dupe()));
             arg_asts.push(expression::ExpressionOrSpread::Expression(argument_ast));
         } else {
             let (argt, arg_ast) = expression_or_spread(cx, argument)?;
