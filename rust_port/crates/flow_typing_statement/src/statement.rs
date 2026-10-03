@@ -42,6 +42,7 @@ use flow_common::reason::string_of_desc;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::env_api::EnvKey;
 use flow_parser::ast;
@@ -10348,7 +10349,7 @@ pub fn optional_chain<'a>(
                             (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
                             CheckExprError,
                         >,
-                    > = { Box::new(move |cx: &Context<'a>| arg_list(cx, arguments)) };
+                    > = { Box::new(move |cx: &Context<'a>| call_arg_list(cx, callee, arguments)) };
                     let conf = ChainingConf {
                         subexpressions: eval_args,
                         get_result: get_mem_t,
@@ -10529,7 +10530,7 @@ pub fn optional_chain<'a>(
                                 prop_expr,
                             )?;
                             let elem_t = typed_prop_expr.loc().1.dupe();
-                            let (argts, arguments_ast) = arg_list(cx, arguments)?;
+                            let (argts, arguments_ast) = call_arg_list(cx, callee, arguments)?;
                             Ok(((argts, elem_t), (arguments_ast, typed_prop_expr)))
                         })
                     };
@@ -10686,7 +10687,7 @@ pub fn optional_chain<'a>(
                     (Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>),
                     CheckExprError,
                 >,
-            > = { Box::new(move |cx: &Context<'a>| arg_list(cx, arguments)) };
+            > = { Box::new(move |cx: &Context<'a>| call_arg_list(cx, callee, arguments)) };
             let conf = ChainingConf {
                 refinement_action: None,
                 subexpressions: eval_args,
@@ -10757,6 +10758,53 @@ fn arg_list<'a>(
             loc: arg_list.loc.dupe(),
             arguments: arg_asts.into(),
             comments: arg_list.comments.dupe(),
+        },
+    ))
+}
+
+/// Like `arg_list`, but when the callee is a proven bare assertion (e.g. a
+/// userland `invariant`), checks the asserted argument with `condition` so
+/// property reads in it narrow their base objects, mirroring the old builtin
+/// `invariant` handling.
+fn call_arg_list<'a>(
+    cx: &Context<'a>,
+    callee: &expression::Expression<ALoc, ALoc>,
+    args: &expression::ArgList<ALoc, ALoc>,
+) -> Result<(Vec<CallArg>, expression::ArgList<ALoc, (ALoc, Type)>), CheckExprError> {
+    let assertion = cx
+        .environment()
+        .var_info
+        .assertion_calls
+        .get(callee.loc())
+        .copied();
+    let Some(asserted) = assertion.and_then(|assertion| {
+        bare_asserted_argument(assertion, &args.arguments)?;
+        Some(assertion.parameter_index)
+    }) else {
+        return arg_list(cx, args);
+    };
+    let mut argts = Vec::with_capacity(args.arguments.len());
+    let mut arg_asts = Vec::with_capacity(args.arguments.len());
+    for (i, argument) in args.arguments.iter().enumerate() {
+        if i == asserted
+            && let expression::ExpressionOrSpread::Expression(argument) = argument
+        {
+            let argument_ast =
+                condition(cx, EnclosingContext::OtherTestContext, None, None, argument)?;
+            argts.push(CallArg::arg(argument_ast.loc().1.dupe()));
+            arg_asts.push(expression::ExpressionOrSpread::Expression(argument_ast));
+        } else {
+            let (argt, arg_ast) = expression_or_spread(cx, argument)?;
+            argts.push(argt);
+            arg_asts.push(arg_ast);
+        }
+    }
+    Ok((
+        argts,
+        expression::ArgList {
+            loc: args.loc.dupe(),
+            arguments: arg_asts.into(),
+            comments: args.comments.dupe(),
         },
     ))
 }

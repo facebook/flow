@@ -47,14 +47,32 @@ pub struct AssertionInfo {
 /// Whether a spread precedes the asserted parameter index. Spreads shift
 /// every later positional argument, so the argument at the asserted index
 /// is not necessarily the asserted one.
-pub fn spread_before_index(
-    arguments: &[ExpressionOrSpread<ALoc, ALoc>],
+pub fn spread_before_index<M: Dupe, T: Dupe>(
+    arguments: &[ExpressionOrSpread<M, T>],
     parameter_index: usize,
 ) -> bool {
     arguments
         .iter()
         .take(parameter_index)
         .any(|argument| matches!(argument, ExpressionOrSpread::Spread(_)))
+}
+
+/// The argument asserted by a call to a proven bare assertion function
+/// (`asserts x`), when it is positionally known: no spread precedes it and it
+/// is not itself a spread.
+pub fn bare_asserted_argument<M: Dupe, T: Dupe>(
+    assertion: AssertionInfo,
+    arguments: &[ExpressionOrSpread<M, T>],
+) -> Option<&Expression<M, T>> {
+    if assertion.kind != AssertionKind::Bare
+        || spread_before_index(arguments, assertion.parameter_index)
+    {
+        return None;
+    }
+    match arguments.get(assertion.parameter_index)? {
+        ExpressionOrSpread::Expression(argument) => Some(argument),
+        ExpressionOrSpread::Spread(_) => None,
+    }
 }
 
 /// Whether a call to a proven bare assertion function (`asserts x`) provably
@@ -65,22 +83,11 @@ pub fn bare_assertion_call_always_throws(
     assertion: AssertionInfo,
     arguments: &[ExpressionOrSpread<ALoc, ALoc>],
 ) -> bool {
-    if !matches!(assertion.kind, AssertionKind::Bare) {
-        return false;
-    }
-    if spread_before_index(arguments, assertion.parameter_index) {
-        return false;
-    }
-    match arguments.get(assertion.parameter_index) {
-        // An omitted argument is not necessarily falsy: the callee may
-        // supply a default parameter value, in which case the call can
-        // return normally.
-        None => false,
-        Some(ExpressionOrSpread::Expression(argument)) => {
-            matches!(argument.deref(), ExpressionInner::BooleanLiteral { inner, .. } if !inner.value)
-        }
-        Some(ExpressionOrSpread::Spread(_)) => false,
-    }
+    // An omitted argument is not necessarily falsy: the callee may supply a
+    // default parameter value, in which case the call can return normally.
+    bare_asserted_argument(assertion, arguments).is_some_and(|argument| {
+        matches!(argument.deref(), ExpressionInner::BooleanLiteral { inner, .. } if !inner.value)
+    })
 }
 
 /// Which export an imported callee root refers to.

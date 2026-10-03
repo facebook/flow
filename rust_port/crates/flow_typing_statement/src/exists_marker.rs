@@ -9,8 +9,7 @@ use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
-use flow_env_builder::assertion_call_target::AssertionInfo;
-use flow_env_builder::assertion_call_target::AssertionKind;
+use flow_env_builder::assertion_call_target::bare_asserted_argument;
 use flow_parser::ast;
 use flow_parser::ast::expression;
 use flow_parser::ast::expression::ExpressionInner;
@@ -96,18 +95,12 @@ impl<'a, 'cx> Marker<'a, 'cx> {
     }
 
     /// If this call targets a proven bare assertion function (`asserts x`)
-    /// whose asserted argument is positionally known, returns the assertion
-    /// and that argument. Returns None when a spread precedes the asserted
-    /// index, since positions shift and the positional argument is not
-    /// necessarily the asserted one. Explicit type arguments are fine:
-    /// assertion functions can be generic.
+    /// whose asserted argument is positionally known, returns the asserted
+    /// index and that argument.
     fn bare_assertion_condition<'ast>(
         &self,
         call: &'ast expression::Call<ALoc, (ALoc, Type)>,
-    ) -> Option<(
-        AssertionInfo,
-        &'ast expression::ExpressionOrSpread<ALoc, (ALoc, Type)>,
-    )> {
+    ) -> Option<(usize, &'ast expression::Expression<ALoc, (ALoc, Type)>)> {
         let assertion = self
             .cx
             .environment()
@@ -115,22 +108,8 @@ impl<'a, 'cx> Marker<'a, 'cx> {
             .assertion_calls
             .get(&call.callee.loc().0)
             .copied()?;
-        if assertion.kind != AssertionKind::Bare {
-            return None;
-        }
-        if call
-            .arguments
-            .arguments
-            .iter()
-            .take(assertion.parameter_index)
-            .any(|argument| matches!(argument, expression::ExpressionOrSpread::Spread(_)))
-        {
-            return None;
-        }
-        call.arguments
-            .arguments
-            .get(assertion.parameter_index)
-            .map(|asserted| (assertion, asserted))
+        let asserted = bare_asserted_argument(assertion, &call.arguments.arguments)?;
+        Some((assertion.parameter_index, asserted))
     }
 }
 
@@ -216,18 +195,14 @@ impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Ma
             arguments,
             comments: _,
         } = expr;
-        if let Some((assertion, asserted)) = self.bare_assertion_condition(expr) {
+        if let Some((asserted_index, conditional)) = self.bare_assertion_condition(expr) {
             // A call to a proven bare assertion function: visit the asserted
             // argument as a condition. This is the userland equivalent of the
             // old `invariant` special case.
             self.expression(callee)?;
-            if let expression::ExpressionOrSpread::Expression(conditional) = asserted {
-                self.base_expression(true, conditional);
-            } else {
-                self.expression_or_spread(asserted)?;
-            }
+            self.base_expression(true, conditional);
             for (index, arg) in arguments.arguments.iter().enumerate() {
-                if index != assertion.parameter_index {
+                if index != asserted_index {
                     self.expression_or_spread(arg)?;
                 }
             }
