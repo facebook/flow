@@ -1507,13 +1507,13 @@ Error --------------------------------------------------------------------------
 `new Boolean(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    invalid.js:19:34
-    19| function *generator(x: unknown): x is number { // error
-                                         ^^^^^^^^^^^ [1]
+   19| function *generator(x: unknown): x is number { // error
+                                        ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:161:11
-   161| interface Iterable<out Yield,out Return=void,in Next=void> {
-                  ^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:20:10

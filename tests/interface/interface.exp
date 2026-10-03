@@ -1099,16 +1099,16 @@ Error --------------------------------------------------------------------------
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    string.js:5:17
-     5| for (const c of s) {} // ERROR
-                        ^
+    5| for (const c of s) {} // ERROR
+                       ^
 
 References:
    string.js:1:18
-     1| declare const s: string;
-                         ^^^^^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:161:11
-   161| interface Iterable<out Yield,out Return=void,in Next=void> {
-                  ^^^^^^^^ [2]
+    1| declare const s: string;
+                        ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:24:1

@@ -123,25 +123,25 @@ Cannot yield `xs` because: [incompatible-type]
       `string` [5]
 
    class.js:72:12
-    72|     yield *xs;
-                   ^^
+   72|     yield *xs;
+                  ^^
 
 References:
    class.js:71:31
-    71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                      ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:161:11
-   161| interface Iterable<out Yield,out Return=void,in Next=void> {
-                  ^^^^^^^^ [2]
+   71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
+                                     ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:49
-    41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                                                        ^^^^ [3]
-   <BUILTINS>/lib.es2015.iterable.js:51:60
-    51| interface IteratorObject<out Yield,out Return=void,in Next=void> extends Iterator<Yield,Return,Next>, Iterable<Yield,Return,Next> {
-                                                                   ^^^^ [4]
+   41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                                                       ^^^^ [3]
+   <BUILTINS>/lib.esnext.iterator.js:23:60
+   23| interface IteratorObject<out Yield,out Return=void,in Next=void> {
+                                                                  ^^^^ [4]
    class.js:71:71
-    71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                                                              ^^^^^^ [5]
+   71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
+                                                                             ^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:40

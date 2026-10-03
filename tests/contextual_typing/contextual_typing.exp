@@ -335,13 +335,13 @@ Error --------------------------------------------------------------------------
 Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
 
    encountered_placeholder_failure.js:27:8
-    27| id([...(item) => 1]); // error
-               ^^^^^^^^^^^ [1]
+   27| id([...(item) => 1]); // error
+              ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:161:11
-   161| interface Iterable<out Yield,out Return=void,in Next=void> {
-                  ^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:9
@@ -485,8 +485,8 @@ Cannot cast `a` to `Set` because in type argument `T` [1]: `string` [2] is incom
           ^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:225:15
-   225| interface Set<T> {
+   <BUILTINS>/lib.es2015.iterable.js:116:15
+   116| interface Set<T> {
                       ^ [1]
    implicit_instantiation.js:144:29
    144| function test12(foo: ?Array<string>) {
@@ -506,8 +506,8 @@ Cannot cast `b` to `Set` because in type argument `T` [1]: `string` [2] is incom
           ^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:225:15
-   225| interface Set<T> {
+   <BUILTINS>/lib.es2015.iterable.js:116:15
+   116| interface Set<T> {
                       ^ [1]
    implicit_instantiation.js:144:29
    144| function test12(foo: ?Array<string>) {

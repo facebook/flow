@@ -55,13 +55,13 @@ Error --------------------------------------------------------------------------
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply-array-like.js:5:16
-     5| test.apply("", "foo"); // ERROR
-                       ^^^^^ [1]
+    5| test.apply("", "foo"); // ERROR
+                      ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:161:11
-   161| interface Iterable<out Yield,out Return=void,in Next=void> {
-                  ^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- apply-array-like.js:12:6
@@ -416,13 +416,13 @@ Error --------------------------------------------------------------------------
 `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    apply.js:22:16
-    22| test.apply("", "not array"); // error: string ~> object
-                       ^^^^^^^^^^^ [1]
+   22| test.apply("", "not array"); // error: string ~> object
+                      ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:161:11
-   161| interface Iterable<out Yield,out Return=void,in Next=void> {
-                  ^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.iterable.js:63:11
+   63| interface Iterable<out Yield,out Return=void,in Next=void> {
+                 ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:29:1

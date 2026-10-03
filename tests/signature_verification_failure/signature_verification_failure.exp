@@ -188,16 +188,16 @@ In property `@@iterator`: `number` [1] is incompatible with
 `(this: Iterable<empty, any, any>) => Iterator<empty, any, any>` [2]. [incompatible-type]
 
    misc.js:7:22
-     7| export const d = [...c];
-                             ^
+    7| export const d = [...c];
+                            ^
 
 References:
    misc.js:5:32
-     5| export const c = {['a' + 'b']: 42};
-                                       ^^ [1]
-   <BUILTINS>/lib.es2015.iterable.js:162:5
-   162|     @@iterator(): Iterator<Yield,Return,Next>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    5| export const c = {['a' + 'b']: 42};
+                                      ^^ [1]
+   <BUILTINS>/lib.es2015.iterable.js:64:5
+   64|     @@iterator(): Iterator<Yield,Return,Next>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:9:19

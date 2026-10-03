@@ -58,6 +58,7 @@ const SPLIT_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es5.js',
   'lib.esnext.collection.js',
   'lib.esnext.float16.js',
+  'lib.esnext.iterator.js',
   'misc.js',
   'react.js',
   'dom_extra_to_be_removed.js',

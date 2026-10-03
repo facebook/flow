@@ -59,6 +59,7 @@ flowlib_file!(LIB_ES2024_COLLECTION_JS, "lib.es2024.collection.js");
 flowlib_file!(LIB_ES2024_PROMISE_JS, "lib.es2024.promise.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
 flowlib_file!(LIB_ESNEXT_FLOAT16_JS, "lib.esnext.float16.js");
+flowlib_file!(LIB_ESNEXT_ITERATOR_JS, "lib.esnext.iterator.js");
 flowlib_file!(MISC_JS, "misc.js");
 flowlib_file!(REACT_JS, "react.js");
 flowlib_file!(DOM_EXTRA_TO_BE_REMOVED_JS, "dom_extra_to_be_removed.js");
@@ -106,6 +107,7 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es5.js", LIB_ES5_JS),
     ("lib.esnext.collection.js", LIB_ESNEXT_COLLECTION_JS),
     ("lib.esnext.float16.js", LIB_ESNEXT_FLOAT16_JS),
+    ("lib.esnext.iterator.js", LIB_ESNEXT_ITERATOR_JS),
     ("misc.js", MISC_JS),
     ("react.js", REACT_JS),
 ];
