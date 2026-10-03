@@ -43,22 +43,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    array_lib.js:13:24
-     13| var e: Array<string> = a.reverse();
-                                ^^^^^^^^^^^
+    13| var e: Array<string> = a.reverse();
+                               ^^^^^^^^^^^
 
 References:
    array_lib.js:4:10
-      4| var a = [0];
-                  ^ [1]
+     4| var a = [0];
+                 ^ [1]
    array_lib.js:13:14
-     13| var e: Array<string> = a.reverse();
-                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1051:16
-   1051|     reverse(): Array<T>;
-                        ^^^^^^^^ [3]
+    13| var e: Array<string> = a.reverse();
+                     ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:897:16
+   897|     reverse(): Array<T>;
+                       ^^^^^^^^ [3]
    array_lib.js:13:8
-     13| var e: Array<string> = a.reverse();
-                ^^^^^^^^^^^^^ [4]
+    13| var e: Array<string> = a.reverse();
+               ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:26:24
@@ -76,14 +76,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:622:53
-   622|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:468:53
+   468|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                             ^^^^^ [1]
    array_lib.js:26:14
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:622:47
-   622|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:468:47
+   468|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                       ^^^^^^^^^^^^ [3]
    array_lib.js:26:8
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
@@ -102,8 +102,8 @@ References:
    array_lib.js:58:4
      58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/lib.es5.js:1360:13
-   1360|     length: number;
+   <BUILTINS>/lib.es5.js:1100:13
+   1100|     length: number;
                      ^^^^^^ [2]
 
 
@@ -119,8 +119,8 @@ References:
    array_lib.js:59:4
      59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
             ^^ [1]
-   <BUILTINS>/lib.es5.js:1360:13
-   1360|     length: number;
+   <BUILTINS>/lib.es5.js:1100:13
+   1100|     length: number;
                      ^^^^^^ [2]
 
 
@@ -135,22 +135,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    array_lib.js:71:3
-     71|   Array.from('abcd') as Array<empty>; // ERROR
-           ^^^^^^^^^^^^^^^^^^
+    71|   Array.from('abcd') as Array<empty>; // ERROR
+          ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1094:37
-   1094|     static from(str: string): Array<string>;
-                                             ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:940:37
+   940|     static from(str: string): Array<string>;
+                                            ^^^^^^ [1]
    array_lib.js:71:31
-     71|   Array.from('abcd') as Array<empty>; // ERROR
-                                       ^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1094:31
-   1094|     static from(str: string): Array<string>;
-                                       ^^^^^^^^^^^^^ [3]
+    71|   Array.from('abcd') as Array<empty>; // ERROR
+                                      ^^^^^ [2]
+   <BUILTINS>/lib.es5.js:940:31
+   940|     static from(str: string): Array<string>;
+                                      ^^^^^^^^^^^^^ [3]
    array_lib.js:71:25
-     71|   Array.from('abcd') as Array<empty>; // ERROR
-                                 ^^^^^^^^^^^^ [4]
+    71|   Array.from('abcd') as Array<empty>; // ERROR
+                                ^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:79:9
@@ -163,25 +163,25 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    array_lib.js:79:9
-     79|   Array.from(arrayLike) as Array<number>; // ERROR
-                 ^^^^
+    79|   Array.from(arrayLike) as Array<number>; // ERROR
+                ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1102:25
-   1102| interface ArrayLike<out T> {
-                                 ^ [1]
+   <BUILTINS>/lib.es5.js:948:25
+   948| interface ArrayLike<out T> {
+                                ^ [1]
    array_lib.js:75:30
-     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
-                                      ^^^^^^ [2]
+    75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
+                                     ^^^^^^ [2]
    array_lib.js:79:34
-     79|   Array.from(arrayLike) as Array<number>; // ERROR
-                                          ^^^^^^ [3]
+    79|   Array.from(arrayLike) as Array<number>; // ERROR
+                                         ^^^^^^ [3]
    array_lib.js:75:20
-     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
-                            ^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:1089:31
-   1089|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
-                                       ^^^^^^ [5]
+    75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
+                           ^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/lib.es5.js:935:31
+   935|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
+                                      ^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:80:3
@@ -239,8 +239,8 @@ Cannot call `arr.at` because function [1] requires another argument. [incompatib
             ^^
 
 References:
-   <BUILTINS>/lib.es5.js:612:5
-   612|     at(index: number): T | void;
+   <BUILTINS>/lib.es5.js:458:5
+   458|     at(index: number): T | void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -254,8 +254,8 @@ Cannot call `arr.at` with `"1"` bound to `index` because `"1"` [1] is incompatib
                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:612:15
-   612|     at(index: number): T | void;
+   <BUILTINS>/lib.es5.js:458:15
+   458|     at(index: number): T | void;
                       ^^^^^^ [2]
 
 
@@ -268,8 +268,8 @@ Cannot call `roArr.at` because function [1] requires another argument. [incompat
               ^^
 
 References:
-   <BUILTINS>/lib.es5.js:612:5
-   612|     at(index: number): T | void;
+   <BUILTINS>/lib.es5.js:458:5
+   458|     at(index: number): T | void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -283,8 +283,8 @@ Cannot call `roArr.at` with `"1"` bound to `index` because `"1"` [1] is incompat
                  ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:612:15
-   612|     at(index: number): T | void;
+   <BUILTINS>/lib.es5.js:458:15
+   458|     at(index: number): T | void;
                       ^^^^^^ [2]
 
 
@@ -316,11 +316,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                  ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1360:13
-   1360|     length: number;
+   <BUILTINS>/lib.es5.js:1100:13
+   1100|     length: number;
                      ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:947:109
-    947|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+   <BUILTINS>/lib.es5.js:793:109
+    793|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
                                                                                                                      ^^^^^^^^^^^^^^^^^^ [2]
    filter_error_msg_quality_test.js:2:30
       2| declare const str_arr: Array<string>;
@@ -353,8 +353,8 @@ References:
    filter_error_msg_quality_test.js:7:25
      7| nullable_str_arr.filter(s => !!s) as Array<string>;
                                 ^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:940:24
-   940|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
+   <BUILTINS>/lib.es5.js:786:24
+   786|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
                                ^^^^^^^^^^^^^^ [4]
 
 
@@ -373,14 +373,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:789:34
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:34
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:3:24
      3| const result1_1: Array<string> = arr1.flat(); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:789:28
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:28
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:3:18
      3| const result1_1: Array<string> = arr1.flat(); // Error
@@ -420,14 +420,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:789:34
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:34
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:9:24
      9| const result2_1: Array<string> = arr2.flat(); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:789:28
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:28
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:9:18
      9| const result2_1: Array<string> = arr2.flat(); // Error
@@ -455,8 +455,8 @@ References:
    flat.js:11:24
     11| const result2_3: Array<number> = arr2.flat(0); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:782:8
-   782|     ): Array<T>;
+   <BUILTINS>/lib.es5.js:628:8
+   628|     ): Array<T>;
                ^^^^^^^^ [3]
    flat.js:11:18
     11| const result2_3: Array<number> = arr2.flat(0); // Error
@@ -478,14 +478,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:789:34
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:34
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:13:24
     13| const result2_5: Array<string> = arr2.flat(1); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:789:28
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:28
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:13:18
     13| const result2_5: Array<string> = arr2.flat(1); // Error
@@ -509,14 +509,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:789:34
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:34
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:17:24
     17| const result3_1: Array<number> = arr3.flat(); // Error
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:789:28
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:28
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:17:18
     17| const result3_1: Array<number> = arr3.flat(); // Error
@@ -538,14 +538,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:796:32
-   796|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/lib.es5.js:642:32
+   642|     flat(depth: number): Array<unknown>;
                                        ^^^^^^^ [1]
    flat.js:20:24
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:796:26
-   796|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/lib.es5.js:642:26
+   642|     flat(depth: number): Array<unknown>;
                                  ^^^^^^^^^^^^^^ [3]
    flat.js:20:18
     20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
@@ -567,14 +567,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:796:32
-   796|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/lib.es5.js:642:32
+   642|     flat(depth: number): Array<unknown>;
                                        ^^^^^^^ [1]
    flat.js:25:24
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
                                ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:796:26
-   796|     flat(depth: number): Array<unknown>;
+   <BUILTINS>/lib.es5.js:642:26
+   642|     flat(depth: number): Array<unknown>;
                                  ^^^^^^^^^^^^^^ [3]
    flat.js:25:18
     25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
@@ -598,14 +598,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:789:34
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:34
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:30:24
     30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
                                ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:789:28
-   789|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+   <BUILTINS>/lib.es5.js:635:28
+   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:30:18
     30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>

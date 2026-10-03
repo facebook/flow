@@ -333,22 +333,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    indexer.js:129:3
-    129|   values as Array<number>; // ERROR
-           ^^^^^^
+   129|   values as Array<number>; // ERROR
+          ^^^^^^
 
 References:
    indexer.js:122:22
-    122|   readonly [number]: string;
-                              ^^^^^^ [1]
+   122|   readonly [number]: string;
+                             ^^^^^^ [1]
    indexer.js:129:19
-    129|   values as Array<number>; // ERROR
-                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1075:59
-   1075|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
-                                                                   ^^^^^^^^ [3]
+   129|   values as Array<number>; // ERROR
+                          ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:921:59
+   921|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
+                                                                  ^^^^^^^^ [3]
    indexer.js:129:13
-    129|   values as Array<number>; // ERROR
-                     ^^^^^^^^^^^^^ [4]
+   129|   values as Array<number>; // ERROR
+                    ^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- indexer.js:167:3

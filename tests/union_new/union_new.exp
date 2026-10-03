@@ -181,8 +181,8 @@ References:
    test20.js:14:2
      14| [""].reduce((acc,str) => acc * str.length);
           ^^ [1]
-   <BUILTINS>/lib.es5.js:1360:13
-   1360|     length: number;
+   <BUILTINS>/lib.es5.js:1100:13
+   1100|     length: number;
                      ^^^^^^ [2]
 
 

@@ -38,13 +38,13 @@ Cannot call `images.sort` with function bound to `compareFn` because in the retu
 with `number` [2]. [incompatible-type]
 
    arrows.js:7:36
-      7|     images = images.sort((a, b) => (a.width - b.width) + "");
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+     7|     images = images.sort((a, b) => (a.width - b.width) + "");
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1057:38
-   1057|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
-                                              ^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:903:38
+   903|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+                                             ^^^^^^ [2]
 
 
 

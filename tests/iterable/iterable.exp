@@ -112,25 +112,25 @@ Cannot return `map` because: [incompatible-type]
       with `string` [5]
 
    map.js:14:10
-   14|   return map;
-                ^^^
+    14|   return map;
+                 ^^^
 
 References:
    map.js:13:24
-   13| function mapTest4(map: Map<number, string>): Iterable<string> {
-                              ^^^^^^^^^^^^^^^^^^^ [1]
+    13| function mapTest4(map: Map<number, string>): Iterable<string> {
+                               ^^^^^^^^^^^^^^^^^^^ [1]
    map.js:13:46
-   13| function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                    ^^^^^^^^^^^^^^^^ [2]
+    13| function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                     ^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
-   41| interface Iterator<out Yield,out Return=void,in Next=void> {
-                              ^^^^^ [3]
-   <BUILTINS>/lib.es2015.collection.js:51:31
-   51|     @@iterator(): MapIterator<[K, V]>;
-                                     ^^^^^^ [4]
+    41| interface Iterator<out Yield,out Return=void,in Next=void> {
+                               ^^^^^ [3]
+   <BUILTINS>/lib.es2015.iterable.js:190:31
+   190|     @@iterator(): MapIterator<[K, V]>;
+                                      ^^^^^^ [4]
    map.js:13:55
-   13| function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                             ^^^^^^ [5]
+    13| function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                              ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10

@@ -46,16 +46,16 @@ Cannot cast `quasis.raw` to empty because `ReadonlyArray<string>` [1] is incompa
 [incompatible-type]
 
    tagged_template.js:25:5
-     25|     quasis.raw as empty; // ERROR
-             ^^^^^^^^^^
+    25|     quasis.raw as empty; // ERROR
+            ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1116:17
-   1116|   readonly raw: ReadonlyArray<string>;
-                         ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:961:17
+   961|   readonly raw: ReadonlyArray<string>;
+                        ^^^^^^^^^^^^^^^^^^^^^ [1]
    tagged_template.js:25:19
-     25|     quasis.raw as empty; // ERROR
-                           ^^^^^ [2]
+    25|     quasis.raw as empty; // ERROR
+                          ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:34:3
@@ -63,16 +63,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_template.js:34:3
-     34|   x as empty; // ERROR
-           ^
+    34|   x as empty; // ERROR
+          ^
 
 References:
-   <BUILTINS>/lib.es5.js:1382:115
-   1382|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                                                                                                           ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.core.js:269:115
+   269|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                                                                                                          ^^^^^^ [1]
    tagged_template.js:34:8
-     34|   x as empty; // ERROR
-                ^^^^^ [2]
+    34|   x as empty; // ERROR
+               ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- tagged_template.js:36:14
@@ -82,13 +82,13 @@ of `interface {readonly raw: ReadonlyArray<string>}` [2]. You can wrap it in `ne
 object and attempt to use it as a subtype of an interface. [incompatible-type]
 
    tagged_template.js:36:14
-     36|   String.raw('foo'); // ERROR
-                      ^^^^^ [1]
+    36|   String.raw('foo'); // ERROR
+                     ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1382:21
-   1382|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.core.js:269:21
+   269|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ tagged_template.js:45:3
@@ -96,16 +96,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to empty because `string` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    tagged_template.js:45:3
-     45|   x as empty; // ERROR
-           ^
+    45|   x as empty; // ERROR
+          ^
 
 References:
-   <BUILTINS>/lib.es5.js:1382:115
-   1382|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
-                                                                                                                           ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.core.js:269:115
+   269|     raw: (callSite: interface {readonly raw: ReadonlyArray<string>}, ...substitutions: ReadonlyArray<unknown>) => string;
+                                                                                                                          ^^^^^^ [1]
    tagged_template.js:45:8
-     45|   x as empty; // ERROR
-                ^^^^^ [2]
+    45|   x as empty; // ERROR
+               ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- template.js:3:1

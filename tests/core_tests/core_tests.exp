@@ -8,8 +8,8 @@ Cannot use `new` on `JSON` [1]. Only classes and interfaces with a construct sig
              ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1752:19
-   1752| declare var JSON: JSON;
+   <BUILTINS>/lib.es5.js:1444:19
+   1444| declare var JSON: JSON;
                            ^^^^ [1]
 
 
@@ -30,8 +30,8 @@ Cannot cast `JSON.stringify(...)` to string because `void` [1] is incompatible w
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1749:21
-   1749|       ) => string | void,
+   <BUILTINS>/lib.es5.js:1441:21
+   1441|       ) => string | void,
                              ^^^^ [1]
    json_stringify.js:7:25
       7| JSON.stringify(bad1) as string;
@@ -50,8 +50,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:77:27
-   77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:46:27
+   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -59,8 +59,8 @@ References:
    map.js:28:22
    28|     let x = new Map(['foo', 123]); // error
                             ^^^^^ [4]
-   <BUILTINS>/lib.es2015.collection.js:77:36
-   77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:46:36
+   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -76,8 +76,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:77:27
-   77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:46:27
+   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -85,8 +85,8 @@ References:
    map.js:28:29
    28|     let x = new Map(['foo', 123]); // error
                                    ^^^ [4]
-   <BUILTINS>/lib.es2015.collection.js:77:36
-   77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:46:36
+   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -102,8 +102,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                                                 ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:77:27
-   77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:46:27
+   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -128,8 +128,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                                                 ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:77:27
-   77|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:46:27
+   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -151,8 +151,8 @@ Cannot cast `x.get(...)` to boolean because `void` [1] is incompatible with `boo
            ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:59:22
-   59|     get(key: K): V | void;
+   <BUILTINS>/lib.es2015.collection.js:36:22
+   36|     get(key: K): V | void;
                             ^^^^ [1]
    map.js:34:21
    34|     x.get('foo') as boolean; // error, string | void
@@ -325,11 +325,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -348,11 +348,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -371,11 +371,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -394,11 +394,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -417,11 +417,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -440,11 +440,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -466,11 +466,11 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1759:28
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:28
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1759:68
-   1759| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1451:68
+   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 

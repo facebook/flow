@@ -192,8 +192,8 @@ References:
    <BUILTINS>/lib.es5.js:244:16
    244|     valueOf(): unknown;
                        ^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:382:16
-   382|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:327:16
+   327|     valueOf(): number;
                        ^^^^^^ [2]
 
 

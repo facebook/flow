@@ -7,8 +7,8 @@ Cannot assign `d.getTime()` to `x` because `number` [1] is incompatible with `st
                         ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1469:16
-   1469|     getTime(): number;
+   <BUILTINS>/lib.es5.js:1165:16
+   1165|     getTime(): number;
                         ^^^^^^ [1]
    date.js:2:7
       2| var x:string = d.getTime(); // expect error
@@ -24,8 +24,8 @@ Cannot assign `d` to `y` because `Date` [1] is incompatible with `number` [2]. [
                         ^
 
 References:
-   <BUILTINS>/lib.es5.js:1617:41
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:41
+   1312|     new(value: number | Date | string): Date;
                                                  ^^^^ [1]
    date.js:4:7
       4| var y:number = d; // expect error
@@ -51,17 +51,17 @@ References:
    date.js:18:10
      18| new Date({});
                   ^^ [1]
-   <BUILTINS>/lib.es5.js:1617:25
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:25
+   1312|     new(value: number | Date | string): Date;
                                  ^^^^ [2]
    <BUILTINS>/lib.es5.js:244:16
     244|     valueOf(): unknown;
                         ^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:1610:16
-   1610|     valueOf(): number;
+   <BUILTINS>/lib.es5.js:1306:16
+   1306|     valueOf(): number;
                         ^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:1617:16
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:16
+   1312|     new(value: number | Date | string): Date;
                         ^^^^^^ [5]
 
 
@@ -82,11 +82,11 @@ References:
    date.js:19:16
      19| new Date(2015, '6');
                         ^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:30
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:30
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                                       ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -107,11 +107,11 @@ References:
    date.js:20:19
      20| new Date(2015, 6, '18');
                            ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:44
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:44
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                                                     ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -132,11 +132,11 @@ References:
    date.js:21:23
      21| new Date(2015, 6, 18, '11');
                                ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:59
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:59
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                                                                    ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -157,11 +157,11 @@ References:
    date.js:22:27
      22| new Date(2015, 6, 18, 11, '55');
                                    ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:76
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:76
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                                                                                     ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -182,11 +182,11 @@ References:
    date.js:23:31
      23| new Date(2015, 6, 18, 11, 55, '42');
                                        ^^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:93
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:93
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                                                                                                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -207,11 +207,11 @@ References:
    date.js:24:35
      24| new Date(2015, 6, 18, 11, 55, 42, '999');
                                            ^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:115
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:115
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                                                                                                                            ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -227,14 +227,14 @@ Cannot call `Date` because: [incompatible-type]
              ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1617:5
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:5
+   1312|     new(value: number | Date | string): Date;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1618:5
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:5
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -255,11 +255,11 @@ References:
    date.js:26:10
      26| new Date('2015', 6);
                   ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1618:15
-   1618|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
+   <BUILTINS>/lib.es5.js:1313:15
+   1313|     new(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): Date;
                        ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1616:5
-   1616|     new(): Date;
+   <BUILTINS>/lib.es5.js:1311:5
+   1311|     new(): Date;
              ^^^^^^^^^^^ [3]
 
 
@@ -272,8 +272,8 @@ Cannot compare `Date` [1] to `number` [2]. [invalid-compare]
                          ^
 
 References:
-   <BUILTINS>/lib.es5.js:1617:41
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:41
+   1312|     new(value: number | Date | string): Date;
                                                  ^^^^ [1]
    date.js:28:21
      28| var b:boolean = d > 0; // expect error
@@ -289,8 +289,8 @@ Cannot use operator `-` with operands `Date` [1] and `number` [2] [unsafe-arithm
                          ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1617:41
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:41
+   1312|     new(value: number | Date | string): Date;
                                                  ^^^^ [1]
    date.js:29:21
      29| var n1:number = d - 12; // expect error
@@ -306,8 +306,8 @@ Cannot use operator `&` with operands `Date` [1] and `number` [2] [unsafe-arithm
                          ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1617:41
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:41
+   1312|     new(value: number | Date | string): Date;
                                                  ^^^^ [1]
    date.js:30:21
      30| var n2:number = d & 255; // expect error
@@ -323,8 +323,8 @@ Cannot use operator `+` with operands `Date` [1] and `number` [2] [unsafe-additi
                          ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1617:41
-   1617|     new(value: number | Date | string): Date;
+   <BUILTINS>/lib.es5.js:1312:41
+   1312|     new(value: number | Date | string): Date;
                                                  ^^^^ [1]
    date.js:31:21
      31| var n3:number = d + 12; // expect error

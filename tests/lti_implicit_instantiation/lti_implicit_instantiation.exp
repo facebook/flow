@@ -304,8 +304,8 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
             ^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:901:21
-   901| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/lib.es5.js:747:21
+   747| declare class Array<T> extends $ReadOnlyArray<T> {
                             ^ [1]
    underconstrained_class_constructor.js:18:1
     18| new Array(1); // Error
@@ -823,8 +823,8 @@ Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-miss
              ^^^
 
 References:
-   <BUILTINS>/lib.es5.js:901:15
-   901| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/lib.es5.js:747:15
+   747| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
 
 
@@ -859,8 +859,8 @@ Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-miss
              ^^^
 
 References:
-   <BUILTINS>/lib.es5.js:901:15
-   901| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/lib.es5.js:747:15
+   747| declare class Array<T> extends $ReadOnlyArray<T> {
                       ^^^^^ [1]
 
 

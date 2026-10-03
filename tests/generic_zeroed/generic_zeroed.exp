@@ -72,22 +72,22 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    reduce.js:7:15
-      7|   return nums.reduce<T>(
-                       ^^^^^^
+     7|   return nums.reduce<T>(
+                      ^^^^^^
 
 References:
    reduce.js:8:27
-      8|     ((prevnum, curnum) => curnum + prevnum),
-                                   ^^^^^^^^^^^^^^^^ [1]
+     8|     ((prevnum, curnum) => curnum + prevnum),
+                                  ^^^^^^^^^^^^^^^^ [1]
    reduce.js:7:22
-      7|   return nums.reduce<T>(
-                              ^ [2]
-   <BUILTINS>/lib.es5.js:1020:5
-             v------
-   1020|     reduce(
-   1021|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
-   1022|     ): T;
-             ---^ [3]
+     7|   return nums.reduce<T>(
+                             ^ [2]
+   <BUILTINS>/lib.es5.js:866:5
+            v------
+   866|     reduce(
+   867|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: Array<T>) => T,
+   868|     ): T;
+            ---^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- wc.js:6:12

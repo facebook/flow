@@ -29,8 +29,8 @@ string literal `Set` [2]. [incompatible-type]
        ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:47:36
-   47|     readonly [Symbol.toStringTag]: 'Map';
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:28:36
+   28|     readonly [Symbol.toStringTag]: 'Map';
                                           ^^^^^ [1]
    collection_to_string_tag.js:11:28
    11| map[Symbol.toStringTag] as 'Set'; // ERROR
@@ -43,16 +43,16 @@ Cannot cast `roSet[Symbol.toStringTag]` to string literal `Map` because string l
 string literal `Map` [2]. [incompatible-type]
 
    collection_to_string_tag.js:12:1
-    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
-        ^^^^^^^^^^^^^^^^^^^^^^^^^
+   12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:159:36
-   159|     readonly [Symbol.toStringTag]: 'Set';
-                                           ^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:32:36
+   32|     readonly [Symbol.toStringTag]: 'Set';
+                                          ^^^^^ [1]
    collection_to_string_tag.js:12:30
-    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
-                                     ^^^^^ [2]
+   12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
+                                    ^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------- collection_to_string_tag.js:22:1
@@ -61,16 +61,16 @@ Cannot cast `set` to `TaggedMap` because in property `[toStringTag]`: string lit
 string literal `Set` [2]. [incompatible-type]
 
    collection_to_string_tag.js:22:1
-    22| set as TaggedMap; // ERROR
-        ^^^
+   22| set as TaggedMap; // ERROR
+       ^^^
 
 References:
    collection_to_string_tag.js:19:54
-    19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
-                                                             ^^^^^ [1]
-   <BUILTINS>/lib.es2015.collection.js:159:36
-   159|     readonly [Symbol.toStringTag]: 'Set';
-                                           ^^^^^ [2]
+   19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
+                                                            ^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:32:36
+   32|     readonly [Symbol.toStringTag]: 'Set';
+                                          ^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:1
