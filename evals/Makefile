@@ -18,7 +18,7 @@
 #
 # Filtering (pass via ARGS, repeatable): runs a subset of evals.
 #   make dry-run ARGS="--category ts_to_flow"     Only the Category 4 (TS->Flow) evals
-#   make run     ARGS="--category ts_to_flow --model claude-sonnet-5"
+#   make run     ARGS="--category ts_to_flow --model claude-sonnet-5-5"
 #   make dry-run ARGS="--tag match"               Only evals tagged 'match'
 #   make dry-run ARGS="--eval variance_advanced"  By name (substring/glob)
 

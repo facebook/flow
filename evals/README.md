@@ -85,7 +85,7 @@ python3 run_swebench.py --flow-bin /path/to/flow --dry-run
 ```sh
 make validate          # compile + apply gold patches + grade (no API calls)
 make list              # list all eval names
-make run ARGS="--model claude-sonnet-5"   # run all evals against Claude
+make run ARGS="--model claude-sonnet-5-5"   # run all evals against Claude
 make clean             # remove build/
 ```
 
@@ -99,7 +99,7 @@ Filters can be passed through `ARGS` (repeatable) to run a subset:
 make dry-run ARGS="--category 04_ts_to_flow"
 make dry-run ARGS="--tag match"
 make dry-run ARGS="--eval variance_advanced"   # substring or glob
-make run     ARGS="--model claude-sonnet-5 --limit 20"
+make run     ARGS="--model claude-sonnet-5-5 --limit 20"
 ```
 
 `make run` runs 4 evals in parallel; pass `-j N` through `ARGS` to change the

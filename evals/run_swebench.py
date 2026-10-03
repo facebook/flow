@@ -42,7 +42,7 @@ DEFAULT_JSONL = SCRIPT_DIR / "build" / "swebench" / "flow_evals.jsonl"
 # Default to the `flow` binary installed by `yarn install` (the flow-bin npm
 # package). Pass --flow-bin to point at a locally built binary instead.
 DEFAULT_FLOW_BIN = SCRIPT_DIR / "node_modules" / ".bin" / "flow"
-DEFAULT_MODEL = "claude-sonnet-5"
+DEFAULT_MODEL = "claude-sonnet-5-5"
 # Where --docs stages the documentation inside each eval workdir.
 DOCS_SUBDIR = "flow-docs"
 
