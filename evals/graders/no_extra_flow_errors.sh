@@ -14,9 +14,11 @@
 # For code_writing evals (Cat 2/3) no errors are expected. Set
 # FLOW_ERROR_THRESHOLD=0 explicitly (the default is 1 to cover Cat 1).
 #
-# An "erroneous flow call" is a tool result with is_error=true whose content
-# begins with "Exit code" (a non-zero exit) AND whose originating Bash command
-# actually *executed* Flow (e.g. `./flow check .`, `$FLOW_BIN .`, bare `flow`).
+# An "erroneous flow call" is a tool result whose content contains Flow's own
+# error output AND whose originating Bash command actually *executed* Flow
+# (e.g. `./flow check .`, `$FLOW_BIN .`, bare `flow`). The exit code is
+# deliberately ignored: a pipeline exits with its last command's status, so
+# `./flow check . | head` reports success even when Flow found errors.
 # Detection is by command position (see is_flow_invocation): a command that only
 # names a flow path as an argument to another program — `ls node_modules/.bin/flow`,
 # `grep ... /repo/flow/...`, `readlink ./flow` — is NOT a Flow run and is ignored,
@@ -77,11 +79,13 @@ _RUNNER_VERBS = {"run", "exec", "x", "dlx"}
 
 # A Flow type-check that finds errors prints its own diagnostic output: an
 # "Error ----" banner per error and a "Found N errors" summary. Requiring this
-# signature (in addition to a Flow command word) means a non-zero exit that
-# actually came from a *chained* non-Flow command — `cat .flowconfig && ./flow
-# version` failing on the missing file, or `... && ./flow check` short-circuited
-# before Flow ran — is not miscounted, and neither are non-check subcommands
+# signature (in addition to a Flow command word) means a failure that actually
+# came from a *chained* non-Flow command — `cat .flowconfig && ./flow version`
+# failing on the missing file, or `... && ./flow check` short-circuited before
+# Flow ran — is not miscounted, and neither are non-check subcommands
 # (`flow version`, `flow ast`) or a check killed by `timeout` (no summary).
+# Output that a pipe filters down to neither marker (`./flow check | grep -c
+# Error`) is still missed.
 _FLOW_ERROR_OUTPUT = re.compile(r"Found \d+ error|Error -{5,}")
 
 
@@ -188,13 +192,14 @@ with open(traj_path) as f:
             for block in content:
                 if not isinstance(block, dict) or block.get("type") != "tool_result":
                     continue
-                if block.get("is_error") is not True:
-                    continue
                 block_content = block.get("content", "")
-                if not (
-                    isinstance(block_content, str)
-                    and block_content.startswith("Exit code")
-                ):
+                if isinstance(block_content, list):
+                    block_content = "\n".join(
+                        part.get("text", "")
+                        for part in block_content
+                        if isinstance(part, dict)
+                    )
+                if not isinstance(block_content, str):
                     continue
                 command = commands.get(block.get("tool_use_id"), "")
                 if is_flow_invocation(command) and _FLOW_ERROR_OUTPUT.search(
