@@ -424,11 +424,11 @@ flowDotJsExports.configSchema = `[
     "desc": "Error on the unsafe 'any', 'Object', and 'Function' type annotations."
   },
   {
-    "key": "unnecessary-invariant",
+    "key": "unnecessary-assertion",
     "kind": "lint",
     "type": "bool",
     "default": false,
-    "desc": "Error when a usage of 'invariant' is unnecessary."
+    "desc": "Error when a usage of 'invariant' or another assertion function is unnecessary."
   },
   {
     "key": "unnecessary-optional-chain",

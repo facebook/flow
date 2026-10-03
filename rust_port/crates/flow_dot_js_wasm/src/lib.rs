@@ -143,7 +143,7 @@ fn config_options(config: Option<&Value>) -> Options {
         "sketchy-null",
         "sketchy-number",
         "unclear-type",
-        "unnecessary-invariant",
+        "unnecessary-assertion",
         "unnecessary-optional-chain",
         "unsafe-getters-setters",
         "unused-promise",

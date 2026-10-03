@@ -318,13 +318,15 @@ declare const c: Object; // Error
 declare const d: Function; // Error
 ```
 
-### `unnecessary-invariant` {#toc-unnecessary-invariant}
+### `unnecessary-assertion` {#toc-unnecessary-assertion}
 Triggers when you use `invariant` to check a condition which we know must be truthy based on the available type information. This is quite conservative: for example, if all we know about the condition is that it is a `boolean`, then the lint will not fire even if the condition must be `true` at runtime.
 
 Note that this lint does not trigger when we know a condition is always `false`. It is a common idiom to use `invariant()` or `invariant(false, ...)` to throw in code that should be unreachable.
 
+This lint was previously named `unnecessary-invariant`; that name is still accepted in configuration and suppression comments.
+
 ```js flow-check
-// flowlint unnecessary-invariant:error
+// flowlint unnecessary-assertion:error
 declare function invariant(boolean): void;
 
 declare const x: Array<string>; // Array is truthy

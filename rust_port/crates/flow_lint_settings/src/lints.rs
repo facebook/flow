@@ -166,7 +166,7 @@ impl LintKind {
             LintKind::UnsafeGettersSetters => "unsafe-getters-setters",
             LintKind::UnsafeObjectAssign => "unsafe-object-assign",
             LintKind::UnnecessaryOptionalChain => "unnecessary-optional-chain",
-            LintKind::UnnecessaryInvariant => "unnecessary-invariant",
+            LintKind::UnnecessaryInvariant => "unnecessary-assertion",
             LintKind::UninitializedInstanceProperty => "uninitialized-instance-property",
             LintKind::AmbiguousObjectType => "ambiguous-object-type",
             LintKind::RequireExplicitEnumChecks => "require-explicit-enum-checks",
@@ -230,6 +230,8 @@ impl LintKind {
             "unsafe-getters-setters" => Some(vec![LintKind::UnsafeGettersSetters]),
             "unsafe-object-assign" => Some(vec![LintKind::UnsafeObjectAssign]),
             "unnecessary-optional-chain" => Some(vec![LintKind::UnnecessaryOptionalChain]),
+            "unnecessary-assertion" => Some(vec![LintKind::UnnecessaryInvariant]),
+            // Former name, kept so existing configs keep working.
             "unnecessary-invariant" => Some(vec![LintKind::UnnecessaryInvariant]),
             "ambiguous-object-type" => Some(vec![LintKind::AmbiguousObjectType]),
             "require-explicit-enum-checks" => Some(vec![LintKind::RequireExplicitEnumChecks]),

@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- index.js:4:1
 
-This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
 
    index.js:4:1
    4| invariant(a); // constant-condition error
@@ -99,7 +99,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:11:5
 
-This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
 
    index.js:11:5
    11| c ? invariant(c) : invariant(c); // constant-condition error
@@ -147,7 +147,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:17:1
 
-This use of `invariant` is unnecessary because `1` [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because `1` [1] is always truthy. [unnecessary-assertion]
 
    index.js:17:1
    17| invariant(e);
@@ -161,7 +161,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- index.js:23:1
 
-This use of `invariant` is unnecessary because intersection type [1] is always truthy. [unnecessary-invariant]
+This use of `invariant` is unnecessary because intersection type [1] is always truthy. [unnecessary-assertion]
 
    index.js:23:1
    23| invariant(g); // constant-condition error

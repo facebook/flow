@@ -1467,7 +1467,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:18:1
 
-This use of `assert` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+This use of `assert` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:18:1
    18| assert(t); // error: unnecessary, names `assert`
@@ -1498,7 +1498,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:19:1
 
-This use of `assert` is unnecessary because `1` [1] is always truthy. [unnecessary-invariant]
+This use of `assert` is unnecessary because `1` [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:19:1
    19| assert(one); // error
@@ -1512,7 +1512,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:20:1
 
-This use of `assert` is unnecessary because `{}` [1] is always truthy. [unnecessary-invariant]
+This use of `assert` is unnecessary because `{}` [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:20:1
    20| assert(obj); // error
@@ -1526,7 +1526,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:21:1
 
-This use of `assert` is unnecessary because intersection type [1] is always truthy. [unnecessary-invariant]
+This use of `assert` is unnecessary because intersection type [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:21:1
    21| assert(both); // error: intersection type
@@ -1557,7 +1557,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:22:1
 
-This use of `assertSecond` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+This use of `assertSecond` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:22:1
    22| assertSecond('msg', t); // error: asserted parameter is not the first
@@ -1588,7 +1588,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:23:1
 
-This use of `assertGeneric` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+This use of `assertGeneric` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:23:1
    23| assertGeneric<true>(t); // error
@@ -1619,7 +1619,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- unnecessary.js:24:1
 
-This use of `ns.assert` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
+This use of `ns.assert` is unnecessary because `true` [1] is always truthy. [unnecessary-assertion]
 
    unnecessary.js:24:1
    24| ns.assert(t); // error: names `ns.assert`
@@ -1648,5 +1648,19 @@ References:
                         ^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------- unnecessary_alias.js:13:1
 
-Found 101 errors
+This use of `assert` is unnecessary because `{}` [1] is always truthy. [unnecessary-assertion]
+
+   unnecessary_alias.js:13:1
+   13| assert(obj); // error: reported as unnecessary-assertion
+       ^^^^^^^^^^^
+
+References:
+   unnecessary_alias.js:5:20
+    5| declare const obj: {};
+                          ^^ [1]
+
+
+
+Found 102 errors

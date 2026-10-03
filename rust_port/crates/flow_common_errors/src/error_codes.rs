@@ -254,6 +254,15 @@ pub fn code_of_lint(lint_kind: &LintKind) -> ErrorCode {
     }
 }
 
+/// Maps a former error code name to its current name, so suppression comments
+/// written against the old name still apply.
+pub fn canonical_code_name(code: &str) -> &str {
+    match code {
+        "unnecessary-invariant" => ErrorCode::UnnecessaryInvariant.as_str(),
+        _ => code,
+    }
+}
+
 impl ErrorCode {
     pub fn as_str(self) -> &'static str {
         use ErrorCode::*;
@@ -416,7 +425,7 @@ impl ErrorCode {
             UninitializedInstanceProperty => "uninitialized-instance-property",
             UnionUnoptimizable => "union-unoptimizable",
             UnionPartiallyOptimizableNonUniqueKeys => "union-partially-optimizable-non-unique-keys",
-            UnnecessaryInvariant => "unnecessary-invariant",
+            UnnecessaryInvariant => "unnecessary-assertion",
             UnnecessaryOptionalChain => "unnecessary-optional-chain",
             UnnecessaryDeclareTypeOnlyExport => "unnecessary-declare-type-only-export",
             UnreachableCode => "unreachable-code",

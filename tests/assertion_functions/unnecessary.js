@@ -1,4 +1,4 @@
-// flowlint unnecessary-invariant:error
+// flowlint unnecessary-assertion:error
 
 declare function assert(condition: unknown, message?: string): asserts condition;
 declare function assertSecond(message: string, condition: unknown): asserts condition;

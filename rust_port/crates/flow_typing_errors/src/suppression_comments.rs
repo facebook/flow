@@ -17,6 +17,7 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 use dupe::Dupe;
+use flow_common_errors::error_codes::canonical_code_name;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::loc::Loc;
 
@@ -275,7 +276,7 @@ pub fn should_suppress(
                                 let code = &comment[..index];
                                 if code.chars().all(is_valid_code_char) {
                                     Ok(Some(ApplicableCodes::Specific(CodeSet::singleton(
-                                        code.to_string(),
+                                        canonical_code_name(code).to_string(),
                                         loc.dupe(),
                                     ))))
                                 } else {
