@@ -18,8 +18,7 @@ branded types).
 │   │                  #   ignores .ts, so it is grader-inert and never enters
 │   │                  #   the gold patch — it is absent from ideal/)
 │   ├── main.js        # `// @flow` + a TODO stub
-│   └── .flowconfig    # React evals enable
-│                      #   experimental.opaque_type_new_bound_syntax + [libs] flow-typed
+│   └── .flowconfig    # React evals add [libs] flow-typed
 └── ideal/
     └── main.js        # authored reference solution (the gold patch);
                        #   multi-file evals add more files (e.g. ids.js, money.js)

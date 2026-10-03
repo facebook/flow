@@ -594,6 +594,9 @@ def run_eval(instance, args):
                 "cost_usd": cost_usd if not args.dry_run else None,
                 "time_s": elapsed if not args.dry_run else None,
                 "log": log + ["      TIMEOUT: grading exceeded 120s"],
+                "workdir": str(workdir)
+                if (args.keep_tmp or not args.dry_run)
+                else None,
             }
 
         # Parse TAP
@@ -830,6 +833,7 @@ def main():
     results = []
     total_passed = 0
     total_failed = 0
+    total_errors = 0
 
     if args.parallel > 1:
         with concurrent.futures.ThreadPoolExecutor(
@@ -865,7 +869,9 @@ def main():
             print()
             for result in results:
                 print_result(result)
-                if "error" not in result:
+                if "error" in result:
+                    total_errors += 1
+                else:
                     if result["failed"] == 0:
                         total_passed += 1
                     else:
@@ -875,14 +881,16 @@ def main():
             result = run_eval(inst, args)
             results.append(result)
             print_result(result)
-            if "error" not in result:
+            if "error" in result:
+                total_errors += 1
+            else:
                 if result["failed"] == 0:
                     total_passed += 1
                 else:
                     total_failed += 1
 
     # Summary table
-    total = total_passed + total_failed
+    total = len(results)
     print(f"\n{'=' * 80}")
 
     has_stats = any(r.get("turns") for r in results)
@@ -918,11 +926,14 @@ def main():
             f"{'':>10} {'':>7} {total_time:.0f}s{'':>4} ${total_cost:.4f}"
         )
     else:
-        print(
-            f"Results: {total_passed}/{total} passed ({total_passed / total * 100:.0f}%)"
-            if total
-            else "No results"
-        )
+        if total:
+            print(
+                f"Results: {total_passed}/{total} passed "
+                f"({total_passed / total * 100:.0f}%); "
+                f"{total_failed} failed, {total_errors} errors"
+            )
+        else:
+            print("No results")
 
     # Write results
     output_path = args.output or str(Path(args.jsonl).parent / "results.json")
@@ -936,6 +947,7 @@ def main():
                 "total": total,
                 "passed": total_passed,
                 "failed": total_failed,
+                "errors": total_errors,
                 "score": total_passed / total if total else 0,
                 "results": results,
             },
@@ -965,6 +977,9 @@ def main():
             print(f"\nWorkdirs:")
             for name, wd in workdirs:
                 print(f"  {name}: {wd}")
+
+    if args.dry_run and (total_failed > 0 or total_errors > 0):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

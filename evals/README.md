@@ -47,7 +47,7 @@ graders, reporting per-eval pass/fail.
 ## Requirements
 
 - **Python 3.9+** — standard library only, no third-party packages
-- **Node.js and npm** — used to install the Flow binary; you do **not**
+- **Node.js and Yarn or npm** — used to install the Flow binary; you do **not**
   need to build Flow from source
 - **A POSIX shell environment** — the graders are `bash` scripts that use
   common Unix tools (`jq`, `grep`, `cmp`, `patch`)
@@ -57,6 +57,8 @@ graders, reporting per-eval pass/fail.
 ## Setup
 
 ```sh
+yarn install
+# or
 npm install
 ```
 
@@ -64,8 +66,8 @@ This installs the [`flow-bin`](https://www.npmjs.com/package/flow-bin) package,
 which provides a prebuilt `flow` binary at `node_modules/.bin/flow`. That is the
 default binary the harness uses — no Flow build step is required.
 
-The `make` targets run `npm install` automatically the first time if
-`node_modules/` is missing, so you can also just run `make validate` directly.
+The `make` targets run `npm ci` automatically when the Flow binary is missing
+or out of date, so you can also just run `make validate` directly.
 (Passing your own `FLOW_BIN`, below, skips the install.)
 
 ### Using a locally built Flow binary

@@ -8,6 +8,6 @@
     "flow": "flow"
   },
   "dependencies": {
-    "flow-bin": "^0.322.0"
+    "flow-bin": "^0.334.0"
   }
 }

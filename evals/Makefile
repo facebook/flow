@@ -12,7 +12,7 @@
 #   make clean             Remove build/
 #
 # Flow binary: by default the `flow` from the flow-bin npm package is used, and
-# `npm install` is run automatically the first time if node_modules/ is missing.
+# `npm ci` is run automatically if the Flow binary is missing or out of date.
 # Point at a locally built binary with FLOW_BIN (skips the install), e.g.
 #   make run FLOW_BIN=/path/to/flow
 #
@@ -29,13 +29,13 @@ EVALS_SRC := $(shell find evals -type f 2>/dev/null)
 FLOW_BIN ?= node_modules/.bin/flow
 
 # Only auto-install the bundled Flow binary when the default is in use; a
-# caller-supplied FLOW_BIN (e.g. a locally built binary) skips `npm install`.
+# caller-supplied FLOW_BIN (e.g. a locally built binary) skips `npm ci`.
 ifeq ($(FLOW_BIN),node_modules/.bin/flow)
-FLOW_DEP := node_modules
+FLOW_DEP := node_modules/.bin/flow
 endif
 
-node_modules:
-	npm install
+node_modules/.bin/flow: package.json package-lock.json
+	npm ci
 
 compile: build/swebench/.stamp
 

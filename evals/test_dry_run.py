@@ -131,6 +131,10 @@ def _make_test(eval_name):
             f"Expected exactly one result for '{eval_name}', got {len(matching)}",
         )
         res = matching[0]
+        self.assertIsNone(
+            res.get("error"),
+            f"Dry-run error for '{eval_name}': {res.get('error')}",
+        )
         failing = [t["name"] for t in res.get("tests", []) if not t["passed"]]
         self.assertEqual(
             failing,

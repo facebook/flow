@@ -21,14 +21,12 @@ facebook.fbt=FbtElement
 munge_underscores=true
 
 relay_integration=true
-experimental.opaque_type_new_bound_syntax=true
 experimental.module.automatic_require_default=true
 experimental.facebook_module_interop=true
 experimental.strict_es6_import_export=true
 
 babel_loose_array_spread=true
 
-react.runtime=classic
 ban_spread_key_props=true
 
 format.bracket_spacing=false
