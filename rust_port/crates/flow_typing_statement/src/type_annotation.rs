@@ -2171,6 +2171,10 @@ fn convert_inner<'a>(
                             let (elemts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let elem_t = elemts.into_iter().next().unwrap();
+                            // The annotation desugars to a builtin array type,
+                            // but the head still names the `Array` class, so
+                            // record that on the identifier for hover.
+                            let id_t = unapplied_type_identifier_opt(cx, name, name_loc.dupe())?;
                             Ok(reconstruct_ast(
                                 Type::new(type_::TypeInner::DefT(
                                     reason::mk_annot_reason(
@@ -2186,7 +2190,7 @@ fn convert_inner<'a>(
                                         })),
                                     ))),
                                 )),
-                                None,
+                                id_t,
                                 targs_ast,
                             ))
                         })?
@@ -2901,6 +2905,9 @@ fn convert_inner<'a>(
                             let (elemts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let elemt = elemts.into_iter().next().unwrap();
+                            // As with `Array` above, the head still names the
+                            // `ReadonlyArray` alias, so record that for hover.
+                            let id_t = unapplied_type_identifier_opt(cx, name, name_loc.dupe())?;
                             Ok(reconstruct_ast(
                                 Type::new(type_::TypeInner::DefT(
                                     reason::mk_annot_reason(
@@ -2911,7 +2918,7 @@ fn convert_inner<'a>(
                                         type_::ArrType::ROArrayAT(Box::new((elemt, None))),
                                     ))),
                                 )),
-                                None,
+                                id_t,
                                 targs_ast,
                             ))
                         })?
@@ -6628,6 +6635,23 @@ fn type_identifier<'a>(
         &|r: Reason| r.reposition(loc.dupe()),
         &t,
     ))
+}
+
+/// The unapplied generic named by an annotation head that desugars to a
+/// builtin (e.g. `Array` in `Array<T>`), recorded on the identifier for
+/// hover. `None` when the name has no binding, in which case the identifier
+/// keeps the applied type. The lookup itself would report an unbound name,
+/// so it only runs when the global resolves.
+fn unapplied_type_identifier_opt<'a>(
+    cx: &Context<'a>,
+    name: &FlowSmolStr,
+    loc: ALoc,
+) -> Result<Option<Type>, flow_utils_concurrency::job_error::JobError> {
+    if cx.builtin_type_opt(name.as_str()).is_some() {
+        Ok(Some(type_identifier(cx, name, loc)?))
+    } else {
+        Ok(None)
+    }
 }
 
 pub fn binding_kind_of_generic_id_pre_convert(
