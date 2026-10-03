@@ -1,0 +1,53 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:9:10
+
+Cannot return `match` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:9:10
+   9|     _ => myAssert(false),
+               ^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:48
+   1| declare function myAssert(condition: boolean): asserts condition;
+                                                     ^^^^^^^^^^^^^^^^^ [1]
+   test.js:5:50
+   5| function reproNeverReturnsInMatch(type: string): string {
+                                                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:14:10
+
+Cannot return `myAssert(...)` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
+
+   test.js:14:10
+   14|   return myAssert(false);
+                ^^^^^^^^^^^^^^^
+
+References:
+   test.js:1:48
+    1| declare function myAssert(condition: boolean): asserts condition;
+                                                      ^^^^^^^^^^^^^^^^^ [1]
+   test.js:13:39
+   13| function reproNeverReturnsInReturn(): empty {
+                                             ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:20:10
+
+Cannot return `s` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:20:10
+   20|   return s;
+                ^
+
+References:
+   test.js:1:48
+    1| declare function myAssert(condition: boolean): asserts condition;
+                                                      ^^^^^^^^^^^^^^^^^ [1]
+   test.js:17:59
+   17| function reproNeverReturnsInNestedTernary(level: string): string {
+                                                                 ^^^^^^ [2]
+
+
+
+Found 3 errors

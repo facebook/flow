@@ -536,114 +536,97 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:35:3
+Error ---------------------------------------------------------------------------------------------------- local.js:39:3
 
 Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:35:3
-   35|   value as string; // error: assertion narrowed to number
+   local.js:39:3
+   39|   value as string; // error: assertion narrowed to number
          ^^^^^
 
 References:
    local.js:1:65
     1| declare function assertNumber(value: unknown): asserts value is number;
                                                                        ^^^^^^ [1]
-   local.js:35:12
-   35|   value as string; // error: assertion narrowed to number
+   local.js:39:12
+   39|   value as string; // error: assertion narrowed to number
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:41:3
+Error ---------------------------------------------------------------------------------------------------- local.js:45:3
 
 Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:41:3
-   41|   value as string; // error: assertion narrowed to number
+   local.js:45:3
+   45|   value as string; // error: assertion narrowed to number
          ^^^^^
 
 References:
-   local.js:15:55
-   15| const annotated: (value: unknown) => asserts value is number = assertNumber;
+   local.js:19:55
+   19| const annotated: (value: unknown) => asserts value is number = assertNumber;
                                                              ^^^^^^ [1]
-   local.js:41:12
-   41|   value as string; // error: assertion narrowed to number
+   local.js:45:12
+   45|   value as string; // error: assertion narrowed to number
                   ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:47:3
+Error ---------------------------------------------------------------------------------------------------- local.js:51:3
 
 Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:47:3
-   47|   value as string; // error: assertion narrowed to number
+   local.js:51:3
+   51|   value as string; // error: assertion narrowed to number
          ^^^^^
 
 References:
-   local.js:20:52
-   20|     assertNumber(value: unknown): asserts value is number,
+   local.js:24:52
+   24|     assertNumber(value: unknown): asserts value is number,
                                                           ^^^^^^ [1]
-   local.js:47:12
-   47|   value as string; // error: assertion narrowed to number
+   local.js:51:12
+   51|   value as string; // error: assertion narrowed to number
                   ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- local.js:53:3
-
-Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   local.js:53:3
-   53|   value1 as string; // error: type-alias annotation is an assertion
-         ^^^^^^
-
-References:
-   local.js:27:61
-   27| type NumberAssertion = (value: unknown) => asserts value is number;
-                                                                   ^^^^^^ [1]
-   local.js:53:13
-   53|   value1 as string; // error: type-alias annotation is an assertion
-                   ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:57:3
 
-Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    local.js:57:3
-   57|   value2 as string; // error: interface annotation is an assertion
+   57|   value1 as string; // error: type-alias annotation is an assertion
          ^^^^^^
 
 References:
-   local.js:29:50
-   29|   assertNumber(value: unknown): asserts value is number;
-                                                        ^^^^^^ [1]
+   local.js:31:61
+   31| type NumberAssertion = (value: unknown) => asserts value is number;
+                                                                   ^^^^^^ [1]
    local.js:57:13
-   57|   value2 as string; // error: interface annotation is an assertion
+   57|   value1 as string; // error: type-alias annotation is an assertion
                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:67:3
+Error ---------------------------------------------------------------------------------------------------- local.js:61:3
 
-Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:67:3
-   67|   value1 as string; // error: inferred alias narrows to number
+   local.js:61:3
+   61|   value2 as string; // error: interface annotation is an assertion
          ^^^^^^
 
 References:
-   local.js:1:65
-    1| declare function assertNumber(value: unknown): asserts value is number;
-                                                                       ^^^^^^ [1]
-   local.js:67:13
-   67|   value1 as string; // error: inferred alias narrows to number
+   local.js:33:50
+   33|   assertNumber(value: unknown): asserts value is number;
+                                                        ^^^^^^ [1]
+   local.js:61:13
+   61|   value2 as string; // error: interface annotation is an assertion
                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:71:3
 
-Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    local.js:71:3
-   71|   value2 as string; // error: inferred object property narrows to number
+   71|   value1 as string; // error: inferred alias narrows to number
          ^^^^^^
 
 References:
@@ -651,449 +634,522 @@ References:
     1| declare function assertNumber(value: unknown): asserts value is number;
                                                                        ^^^^^^ [1]
    local.js:71:13
-   71|   value2 as string; // error: inferred object property narrows to number
+   71|   value1 as string; // error: inferred alias narrows to number
                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- local.js:75:3
 
-Cannot cast `value3` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    local.js:75:3
-   75|   value3 as string; // error: return annotation propagates through the variable
+   75|   value2 as string; // error: inferred object property narrows to number
          ^^^^^^
 
 References:
-   local.js:17:63
-   17| const inferredFromReturn = (value: unknown): asserts value is number => assertNumber(value);
-                                                                     ^^^^^^ [1]
+   local.js:1:65
+    1| declare function assertNumber(value: unknown): asserts value is number;
+                                                                       ^^^^^^ [1]
    local.js:75:13
-   75|   value3 as string; // error: return annotation propagates through the variable
+   75|   value2 as string; // error: inferred object property narrows to number
                    ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:81:3
+Error ---------------------------------------------------------------------------------------------------- local.js:79:3
+
+Cannot cast `value3` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:79:3
+   79|   value3 as string; // error: return annotation propagates through the variable
+         ^^^^^^
+
+References:
+   local.js:21:63
+   21| const inferredFromReturn = (value: unknown): asserts value is number => assertNumber(value);
+                                                                     ^^^^^^ [1]
+   local.js:79:13
+   79|   value3 as string; // error: return annotation propagates through the variable
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:85:3
 
 Cannot cast `value` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
 
-   local.js:81:3
-   81|   value as null; // error: assertion removed null and void
+   local.js:85:3
+   85|   value as null; // error: assertion removed null and void
          ^^^^^
 
 References:
-   local.js:78:23
-   78| function bare(value: ?string) {
+   local.js:82:23
+   82| function bare(value: ?string) {
                              ^^^^^^ [1]
-   local.js:81:12
-   81|   value as null; // error: assertion removed null and void
+   local.js:85:12
+   85|   value as null; // error: assertion removed null and void
                   ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- local.js:86:3
+Error ---------------------------------------------------------------------------------------------------- local.js:90:3
 
 Unreachable code. [unreachable-code]
 
-   86|   return 0; // error: unreachable after a bare assertion of false
+   90|   return 0; // error: unreachable after a bare assertion of false
          ^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:102:3
+Error --------------------------------------------------------------------------------------------------- local.js:94:28
+
+Cannot call `assertWithMessage` with `42` bound to `message` because `42` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   local.js:94:28
+   94|   assertWithMessage(false, 42); // error: number is incompatible with string
+                                  ^^ [1]
+
+References:
+   local.js:6:12
+    6|   message: string,
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:98:3
+
+Cannot call `assertWithMessage` because function [1] requires another argument. [incompatible-type]
+
+   local.js:98:3
+   98|   assertWithMessage(false); // error: missing required argument
+         ^^^^^^^^^^^^^^^^^
+
+References:
+   local.js:4:35
+                                         v
+    4| declare function assertWithMessage(
+    5|   condition: boolean,
+    6|   message: string,
+    7| ): asserts condition;
+       -------------------^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- local.js:112:25
+
+Cannot cast `'not a number'` to number because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   local.js:112:25
+   112|   (assertWithDefault(), 'not a number' as number); // error: the assertion call may return
+                                ^^^^^^^^^^^^^^ [1]
+
+References:
+   local.js:112:43
+   112|   (assertWithDefault(), 'not a number' as number); // error: the assertion call may return
+                                                  ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:118:3
 
 Cannot cast `value` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
 
-   local.js:102:3
-   102|   value as null; // error: assertion removed null and void
+   local.js:118:3
+   118|   value as null; // error: assertion removed null and void
           ^^^^^
 
 References:
-   local.js:99:39
-    99| function bareDefaultedRefines(value: ?string) {
+   local.js:115:39
+   115| function bareDefaultedRefines(value: ?string) {
                                               ^^^^^^ [1]
-   local.js:102:12
-   102|   value as null; // error: assertion removed null and void
+   local.js:118:12
+   118|   value as null; // error: assertion removed null and void
                    ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:124:3
+Error --------------------------------------------------------------------------------------------------- local.js:140:3
 
 Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:124:3
-   124|   value as number; // error: assertion narrowed to string
+   local.js:140:3
+   140|   value as number; // error: assertion narrowed to string
           ^^^^^
 
 References:
-   local.js:13:21
-    13| ): asserts value is string;
+   local.js:17:21
+    17| ): asserts value is string;
                             ^^^^^^ [1]
-   local.js:124:12
-   124|   value as number; // error: assertion narrowed to string
+   local.js:140:12
+   140|   value as number; // error: assertion narrowed to string
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:130:3
+Error --------------------------------------------------------------------------------------------------- local.js:146:3
 
 Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:130:3
-   130|   value as number; // error: only expression-statement calls assert
+   local.js:146:3
+   146|   value as number; // error: only expression-statement calls assert
           ^^^^^
 
 References:
-   local.js:127:49
-   127| function expressionPositionDoesNotAssert(value: unknown) {
+   local.js:143:49
+   143| function expressionPositionDoesNotAssert(value: unknown) {
                                                         ^^^^^^^ [1]
-   local.js:130:12
-   130|   value as number; // error: only expression-statement calls assert
+   local.js:146:12
+   146|   value as number; // error: only expression-statement calls assert
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:137:5
+Error --------------------------------------------------------------------------------------------------- local.js:153:5
 
 Cannot cast `field.name` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:137:5
-   137|     field.name as number; // error: refinement survives the assertion call
+   local.js:153:5
+   153|     field.name as number; // error: refinement survives the assertion call
             ^^^^^^^^^^
 
 References:
-   local.js:133:50
-   133| function assertionCallsDoNotHavoc(field: {name: ?string}, value: unknown) {
+   local.js:149:50
+   149| function assertionCallsDoNotHavoc(field: {name: ?string}, value: unknown) {
                                                          ^^^^^^ [1]
-   local.js:137:19
-   137|     field.name as number; // error: refinement survives the assertion call
+   local.js:153:19
+   153|     field.name as number; // error: refinement survives the assertion call
                           ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:165:3
+Error --------------------------------------------------------------------------------------------------- local.js:181:3
 
 Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:165:3
-   165|   value as string; // error: annotated static method is an assertion
+   local.js:181:3
+   181|   value as string; // error: annotated static method is an assertion
           ^^^^^
 
 References:
-   local.js:153:57
-   153|   static assertNumber(value: unknown): asserts value is number {
+   local.js:169:57
+   169|   static assertNumber(value: unknown): asserts value is number {
                                                                 ^^^^^^ [1]
-   local.js:165:12
-   165|   value as string; // error: annotated static method is an assertion
+   local.js:181:12
+   181|   value as string; // error: annotated static method is an assertion
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:172:3
+Error --------------------------------------------------------------------------------------------------- local.js:188:3
 
 Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:172:3
-   172|   value as number; // error: typed instance method is an assertion
+   local.js:188:3
+   188|   value as number; // error: typed instance method is an assertion
           ^^^^^
 
 References:
-   local.js:157:50
-   157|   assertString(value: unknown): asserts value is string {
+   local.js:173:50
+   173|   assertString(value: unknown): asserts value is string {
                                                          ^^^^^^ [1]
-   local.js:172:12
-   172|   value as number; // error: typed instance method is an assertion
+   local.js:188:12
+   188|   value as number; // error: typed instance method is an assertion
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:178:3
+Error --------------------------------------------------------------------------------------------------- local.js:194:3
 
 Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:178:3
-   178|   value as number; // error: unannotated body-locals have no signature roots
+   local.js:194:3
+   194|   value as number; // error: unannotated body-locals have no signature roots
           ^^^^^
 
 References:
-   local.js:175:44
-   175| function unannotatedBodyLocalSilent(value: unknown) {
+   local.js:191:44
+   191| function unannotatedBodyLocalSilent(value: unknown) {
                                                    ^^^^^^^ [1]
-   local.js:178:12
-   178|   value as number; // error: unannotated body-locals have no signature roots
+   local.js:194:12
+   194|   value as number; // error: unannotated body-locals have no signature roots
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:179:3
+Error --------------------------------------------------------------------------------------------------- local.js:195:3
 
 Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:179:3
-   179|   value as string; // error: unannotated body-locals have no signature roots
+   local.js:195:3
+   195|   value as string; // error: unannotated body-locals have no signature roots
           ^^^^^
 
 References:
-   local.js:175:44
-   175| function unannotatedBodyLocalSilent(value: unknown) {
+   local.js:191:44
+   191| function unannotatedBodyLocalSilent(value: unknown) {
                                                    ^^^^^^^ [1]
-   local.js:179:12
-   179|   value as string; // error: unannotated body-locals have no signature roots
+   local.js:195:12
+   195|   value as string; // error: unannotated body-locals have no signature roots
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:186:5
+Error --------------------------------------------------------------------------------------------------- local.js:202:5
 
 Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:186:5
-   186|     value as string; // error: assertion applies inside loops
+   local.js:202:5
+   202|     value as string; // error: assertion applies inside loops
             ^^^^^
 
 References:
    local.js:1:65
      1| declare function assertNumber(value: unknown): asserts value is number;
                                                                         ^^^^^^ [1]
-   local.js:186:14
-   186|     value as string; // error: assertion applies inside loops
+   local.js:202:14
+   202|     value as string; // error: assertion applies inside loops
                      ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:197:5
+Error --------------------------------------------------------------------------------------------------- local.js:213:5
 
 Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:197:5
-   197|     x as string; // error: the pre-loop narrowing is preserved after the loop
+   local.js:213:5
+   213|     x as string; // error: the pre-loop narrowing is preserved after the loop
             ^
 
 References:
-   local.js:192:7
-   192|   if (typeof x === 'number') {
+   local.js:208:7
+   208|   if (typeof x === 'number') {
               ^^^^^^^^^^^^^^^^^^^^^ [1]
-   local.js:197:10
-   197|     x as string; // error: the pre-loop narrowing is preserved after the loop
+   local.js:213:10
+   213|     x as string; // error: the pre-loop narrowing is preserved after the loop
                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:209:3
+Error --------------------------------------------------------------------------------------------------- local.js:225:3
 
 Cannot cast `value` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:209:3
-   209|   value as number; // error: instantiated alias is an assertion
+   local.js:225:3
+   225|   value as number; // error: instantiated alias is an assertion
           ^^^^^
 
 References:
-   local.js:204:51
-   204| declare const genericAliasAssertion: AssertionFor<boolean>;
+   local.js:220:51
+   220| declare const genericAliasAssertion: AssertionFor<boolean>;
                                                           ^^^^^^^ [1]
-   local.js:209:12
-   209|   value as number; // error: instantiated alias is an assertion
+   local.js:225:12
+   225|   value as number; // error: instantiated alias is an assertion
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:224:3
+Error --------------------------------------------------------------------------------------------------- local.js:240:3
 
 Cannot cast `numberValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:224:3
-   224|   numberValue as string; // error: mapped property narrows to its instantiated result
+   local.js:240:3
+   240|   numberValue as string; // error: mapped property narrows to its instantiated result
           ^^^^^^^^^^^
 
 References:
-   local.js:213:11
-   213|   number: number,
+   local.js:229:11
+   229|   number: number,
                   ^^^^^^ [1]
-   local.js:224:18
-   224|   numberValue as string; // error: mapped property narrows to its instantiated result
+   local.js:240:18
+   240|   numberValue as string; // error: mapped property narrows to its instantiated result
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:228:3
+Error --------------------------------------------------------------------------------------------------- local.js:244:3
 
 Cannot cast `stringValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:228:3
-   228|   stringValue as number; // error: each mapped property gets its own result type
+   local.js:244:3
+   244|   stringValue as number; // error: each mapped property gets its own result type
           ^^^^^^^^^^^
 
 References:
-   local.js:214:11
-   214|   string: string,
+   local.js:230:11
+   230|   string: string,
                   ^^^^^^ [1]
-   local.js:228:18
-   228|   stringValue as number; // error: each mapped property gets its own result type
+   local.js:244:18
+   244|   stringValue as number; // error: each mapped property gets its own result type
                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:242:3
+Error --------------------------------------------------------------------------------------------------- local.js:258:3
 
 Cannot cast `value` to number because `bigint` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:242:3
-   242|   value as number; // error: nested generic property is an assertion
+   local.js:258:3
+   258|   value as number; // error: nested generic property is an assertion
           ^^^^^
 
 References:
-   local.js:237:55
-   237| declare const nestedGenericAssertion: NestedAssertion<bigint>;
+   local.js:253:55
+   253| declare const nestedGenericAssertion: NestedAssertion<bigint>;
                                                               ^^^^^^ [1]
-   local.js:242:12
-   242|   value as number; // error: nested generic property is an assertion
-                   ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:261:3
-
-Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   local.js:261:3
-   261|   value1 as string; // error: local object method is an assertion
-          ^^^^^^
-
-References:
-   local.js:248:50
-   248|   assertNumber(value: unknown): asserts value is number {
-                                                         ^^^^^^ [1]
-   local.js:261:13
-   261|   value1 as string; // error: local object method is an assertion
-                    ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:265:3
-
-Cannot cast `value2` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   local.js:265:3
-   265|   value2 as number; // error: nested local object method is an assertion
-          ^^^^^^
-
-References:
-   local.js:252:52
-   252|     assertString(value: unknown): asserts value is string {
-                                                           ^^^^^^ [1]
-   local.js:265:13
-   265|   value2 as number; // error: nested local object method is an assertion
-                    ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:271:3
-
-Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   local.js:271:3
-   271|   value as string; // error: annotated parameter is an assertion
-          ^^^^^
-
-References:
-   local.js:27:61
-    27| type NumberAssertion = (value: unknown) => asserts value is number;
-                                                                    ^^^^^^ [1]
-   local.js:271:12
-   271|   value as string; // error: annotated parameter is an assertion
-                   ^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------------- local.js:274:37
-
-Missing an annotation on `cb`. [missing-local-annot]
-
-   274| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
-                                            ^^
-
-
-Error --------------------------------------------------------------------------------------------------- local.js:276:3
-
-Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   local.js:276:3
-   276|   value as number; // error: unannotated parameters have no signature roots
-          ^^^^^
-
-References:
-   local.js:274:48
-   274| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
-                                                       ^^^^^^^ [1]
-   local.js:276:12
-   276|   value as number; // error: unannotated parameters have no signature roots
+   local.js:258:12
+   258|   value as number; // error: nested generic property is an assertion
                    ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:277:3
 
-Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
 
    local.js:277:3
-   277|   value as string; // error: unannotated parameters have no signature roots
+   277|   value1 as string; // error: local object method is an assertion
+          ^^^^^^
+
+References:
+   local.js:264:50
+   264|   assertNumber(value: unknown): asserts value is number {
+                                                         ^^^^^^ [1]
+   local.js:277:13
+   277|   value1 as string; // error: local object method is an assertion
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:281:3
+
+Cannot cast `value2` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:281:3
+   281|   value2 as number; // error: nested local object method is an assertion
+          ^^^^^^
+
+References:
+   local.js:268:52
+   268|     assertString(value: unknown): asserts value is string {
+                                                           ^^^^^^ [1]
+   local.js:281:13
+   281|   value2 as number; // error: nested local object method is an assertion
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:287:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:287:3
+   287|   value as string; // error: annotated parameter is an assertion
           ^^^^^
 
 References:
-   local.js:274:48
-   274| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
-                                                       ^^^^^^^ [1]
-   local.js:277:12
-   277|   value as string; // error: unannotated parameters have no signature roots
+   local.js:31:61
+    31| type NumberAssertion = (value: unknown) => asserts value is number;
+                                                                    ^^^^^^ [1]
+   local.js:287:12
+   287|   value as string; // error: annotated parameter is an assertion
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:289:3
+Error -------------------------------------------------------------------------------------------------- local.js:290:37
+
+Missing an annotation on `cb`. [missing-local-annot]
+
+   290| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
+                                            ^^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:292:3
 
 Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:289:3
-   289|   value as number; // error: union callees never classify, even when members agree
+   local.js:292:3
+   292|   value as number; // error: unannotated parameters have no signature roots
           ^^^^^
 
 References:
-   local.js:287:35
-   287| function agreedUnionSilent(value: unknown) {
-                                          ^^^^^^^ [1]
-   local.js:289:12
-   289|   value as number; // error: union callees never classify, even when members agree
+   local.js:290:48
+   290| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
+                                                       ^^^^^^^ [1]
+   local.js:292:12
+   292|   value as number; // error: unannotated parameters have no signature roots
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:290:3
+Error --------------------------------------------------------------------------------------------------- local.js:293:3
 
 Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:290:3
-   290|   value as string; // error: union callees never classify, even when members agree
+   local.js:293:3
+   293|   value as string; // error: unannotated parameters have no signature roots
           ^^^^^
 
 References:
-   local.js:287:35
-   287| function agreedUnionSilent(value: unknown) {
-                                          ^^^^^^^ [1]
-   local.js:290:12
-   290|   value as string; // error: union callees never classify, even when members agree
+   local.js:290:48
+   290| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
+                                                       ^^^^^^^ [1]
+   local.js:293:12
+   293|   value as string; // error: unannotated parameters have no signature roots
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:295:3
+Error --------------------------------------------------------------------------------------------------- local.js:305:3
 
-Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   local.js:295:3
-   295|   value as string; // error: disagreeing union members do not assert
+   local.js:305:3
+   305|   value as number; // error: union callees never classify, even when members agree
           ^^^^^
 
 References:
-   local.js:293:38
-   293| function disagreedUnionSilent(value: unknown) {
+   local.js:303:35
+   303| function agreedUnionSilent(value: unknown) {
+                                          ^^^^^^^ [1]
+   local.js:305:12
+   305|   value as number; // error: union callees never classify, even when members agree
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:306:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:306:3
+   306|   value as string; // error: union callees never classify, even when members agree
+          ^^^^^
+
+References:
+   local.js:303:35
+   303| function agreedUnionSilent(value: unknown) {
+                                          ^^^^^^^ [1]
+   local.js:306:12
+   306|   value as string; // error: union callees never classify, even when members agree
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:311:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:311:3
+   311|   value as string; // error: disagreeing union members do not assert
+          ^^^^^
+
+References:
+   local.js:309:38
+   309| function disagreedUnionSilent(value: unknown) {
                                              ^^^^^^^ [1]
-   local.js:295:12
-   295|   value as string; // error: disagreeing union members do not assert
+   local.js:311:12
+   311|   value as string; // error: disagreeing union members do not assert
                    ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- local.js:300:3
+Error --------------------------------------------------------------------------------------------------- local.js:316:3
 
 Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   local.js:300:3
-   300|   value as string; // error: intersections never classify
+   local.js:316:3
+   316|   value as string; // error: intersections never classify
           ^^^^^
 
 References:
-   local.js:298:36
-   298| function intersectionSilent(value: unknown) {
+   local.js:314:36
+   314| function intersectionSilent(value: unknown) {
                                            ^^^^^^^ [1]
-   local.js:300:12
-   300|   value as string; // error: intersections never classify
+   local.js:316:12
+   316|   value as string; // error: intersections never classify
                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:321:3
+
+Unreachable code. [unreachable-code]
+
+   321|   return 0; // error: unreachable after a bare assertion of false
+          ^^^^^^^^^
 
 
 Error -------------------------------------------------------------------------------------------------- spreads.js:15:3
@@ -1147,20 +1203,35 @@ References:
                   ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------------- spreads.js:41:3
+Error ------------------------------------------------------------------------------------------------- spreads.js:34:37
+
+Cannot cast `'not a number'` to number because `"not a number"` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   spreads.js:34:37
+   34|   (assertSecondTruthy(...s, false), 'not a number' as number); // error: the assertion call may return
+                                           ^^^^^^^^^^^^^^ [1]
+
+References:
+   spreads.js:34:55
+   34|   (assertSecondTruthy(...s, false), 'not a number' as number); // error: the assertion call may return
+                                                             ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:45:3
 
 Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
-   spreads.js:41:3
-   41|   value as number; // error: trailing spread does not shift the asserted index
+   spreads.js:45:3
+   45|   value as number; // error: trailing spread does not shift the asserted index
          ^^^^^
 
 References:
    spreads.js:10:21
    10| ): asserts value is string;
                            ^^^^^^ [1]
-   spreads.js:41:12
-   41|   value as number; // error: trailing spread does not shift the asserted index
+   spreads.js:45:12
+   45|   value as number; // error: trailing spread does not shift the asserted index
                   ^^^^^^ [2]
 
 
@@ -1327,4 +1398,4 @@ References:
 
 
 
-Found 80 errors
+Found 85 errors

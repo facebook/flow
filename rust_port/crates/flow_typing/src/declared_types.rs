@@ -96,13 +96,21 @@ pub(crate) fn pack(
         .collect::<BTreeMap<_, _>>()
         .into_values()
         .collect();
-    // Merge all local roots; imports resolve separately.
+    // Only roots bound in this file are merged here: unannotated locals need
+    // their semantic types to detect assertion behavior used without an
+    // annotation. Import roots resolve through the import machinery instead,
+    // and global roots (e.g. lib declarations) through builtins below.
+    let here = cx.file().dupe();
     let roots = canonical_candidates
         .iter()
-        .filter(|candidate| candidate.import.is_none() || !candidate.provider_locs.is_empty())
+        .filter(|candidate| {
+            !candidate.is_global
+                && candidate.root_binding_loc.source() == Some(&here)
+                && (candidate.import.is_none() || !candidate.provider_locs.is_empty())
+        })
         .map(|candidate| candidate.root_binding_loc.dupe())
         .collect::<BTreeSet<_>>();
-    let source = Some(cx.file().dupe());
+    let source = Some(here.dupe());
     let aloc_tables = cx.aloc_tables();
     let reused_roots = current_type_sig
         .as_ref()
@@ -201,8 +209,28 @@ pub(crate) fn resolve<'cx>(cx: &Context<'cx>, analysis: PackedAnalysis) -> Resol
                 })
                 .as_ref()
                 .and_then(|callee_type| assertion_info_of_type(cx, &reason, callee_type));
-            if let Some(info) = assertion {
-                classified.insert(canonical, info);
+            match assertion {
+                Some(info) => {
+                    classified.insert(canonical, info);
+                }
+                None if candidate.is_global => {
+                    // Global roots (e.g. lib declarations) are never merged here.
+                    // Their annotation lives in the lib itself, so a guard refines directly.
+                    if let Some((_, global_t)) = cx
+                        .builtins()
+                        .get_builtin_type_opt(cx, candidate.root_name.as_str())
+                        && let Some(callee_type) = callee_type_for_classification(
+                            cx,
+                            &candidate.callee_loc,
+                            &candidate.property_path,
+                            &global_t,
+                        )
+                        && let Some(info) = assertion_info_of_type(cx, &reason, &callee_type)
+                    {
+                        classified.insert(canonical, info);
+                    }
+                }
+                None => {}
             }
         }
         let mut assertion_calls = BTreeMap::new();

@@ -1,4 +1,6 @@
 [lints]
+sketchy-null-number=error
+sketchy-null-string=error
 unnecessary-invariant=error
 
 [options]

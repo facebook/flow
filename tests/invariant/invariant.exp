@@ -190,5 +190,65 @@ References:
                         ^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------- nullable_condition.js:13:13
 
-Found 12 errors
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [1]? [sketchy-null-string]
+
+   nullable_condition.js:13:13
+   13|   invariant(field?.label, 'Field must have a label');
+                   ^^^^^^^^^^^^
+
+References:
+   nullable_condition.js:6:11
+    6|   label?: string,
+                 ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- nullable_condition.js:24:13
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-number]
+
+   nullable_condition.js:24:13
+   24|   invariant(result.allocation, `Missing allocation in ${key}`);
+                   ^^^^^^^^^^^^^^^^^
+
+References:
+   nullable_condition.js:18:16
+   18|   allocation?: number,
+                      ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- nullable_condition.js:31:7
+
+Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [1]?
+[sketchy-null-number]
+
+   nullable_condition.js:31:7
+   31|   if (result.allocation) {
+             ^^^^^^^^^^^^^^^^^
+
+References:
+   nullable_condition.js:18:16
+   18|   allocation?: number,
+                      ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- nullable_condition.js:38:7
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [1]? [sketchy-null-string]
+
+   nullable_condition.js:38:7
+   38|   if (field?.label) {
+             ^^^^^^^^^^^^
+
+References:
+   nullable_condition.js:6:11
+    6|   label?: string,
+                 ^^^^^^ [1]
+
+
+
+Found 16 errors

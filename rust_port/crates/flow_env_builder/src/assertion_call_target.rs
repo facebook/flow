@@ -103,9 +103,10 @@ pub struct ImportedCallee {
 }
 
 /// A call whose callee is rooted in a binding that could hold an assertion
-/// function: an import, a named definition, an annotated provider, or a plain
+/// function: an import, a named definition, an annotated provider, a plain
 /// lexical value binding (which is classified later, erroring when it carries
-/// assertion behavior without an annotation).
+/// assertion behavior without an annotation), or a global reference such as a
+/// lib declaration (classified by name through builtins).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CalleeTarget<L> {
     pub call_loc: L,
@@ -113,6 +114,7 @@ pub struct CalleeTarget<L> {
     pub root_use_loc: L,
     pub root_binding_loc: L,
     pub root_name: FlowSmolStr,
+    pub is_global: bool,
     pub provider_locs: Vec<L>,
     pub property_path: Vec<FlowSmolStr>,
     pub import: Option<ImportedCallee>,
@@ -159,7 +161,25 @@ impl<'a, L: LocSig> Collector<'a, L> {
 
     fn target_for_call(&self, call_loc: &L, callee: &Expression<L, L>) -> Option<CalleeTarget<L>> {
         let (root_use_loc, property_path) = Self::callee_path(callee)?;
-        let def = self.scope_info.def_of_use_opt(root_use_loc)?;
+        let Some(def) = self.scope_info.def_of_use_opt(root_use_loc) else {
+            // No scope definition: a global reference (e.g. a lib
+            // declaration), classified by name through builtins. Only plain
+            // identifiers qualify; member roots on unbound objects stay out.
+            let ExpressionInner::Identifier { inner, .. } = &**callee else {
+                return None;
+            };
+            return Some(CalleeTarget {
+                call_loc: call_loc.dupe(),
+                callee_loc: callee.loc().dupe(),
+                root_use_loc: root_use_loc.dupe(),
+                root_binding_loc: root_use_loc.dupe(),
+                root_name: inner.name.dupe(),
+                is_global: true,
+                provider_locs: Vec::new(),
+                property_path,
+                import: None,
+            });
+        };
         let is_import = matches!(def.kind, Kind::Import { .. } | Kind::TsImport);
         // Functions and classes classify from their merged types, so they
         // are collected even when provider analysis does not attribute an
@@ -211,6 +231,7 @@ impl<'a, L: LocSig> Collector<'a, L> {
             root_use_loc: root_use_loc.dupe(),
             root_binding_loc,
             root_name: def.actual_name.dupe(),
+            is_global: false,
             provider_locs,
             property_path,
             import,

@@ -1881,6 +1881,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         self.env_state.pred_func_map.dupe()
     }
 
+    fn take_assertion_calls(&mut self) -> BTreeMap<ALoc, AssertionInfo> {
+        std::mem::take(&mut self.assertion_calls)
+    }
+
     fn interface_merge_conflicts(&self) -> FlowOrdMap<ALoc, Vec<ALoc>> {
         self.env_state
             .interface_merge_conflicts
@@ -7769,6 +7773,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 self.call_type_args(targs)?;
             }
             self.arg_list(arguments)?;
+            if let Some(assertion) = self.assertion_calls.get(callee.loc()).copied()
+                && bare_assertion_call_always_throws(assertion, &call.arguments.arguments)
+            {
+                self.raise_abrupt_completion(AbruptCompletion::Throw)?;
+            }
             self.havoc_current_env(
                 flow_common::refinement_invalidation::Reason::FunctionCall,
                 loc.dupe(),
@@ -10876,6 +10885,11 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                     }
                 } else {
                     let assertion = self.assertion_calls.get(callee.loc()).copied();
+                    if let Some(assertion) = assertion
+                        && bare_assertion_call_always_throws(assertion, &expr.arguments.arguments)
+                    {
+                        self.raise_abrupt_completion(AbruptCompletion::Throw)?;
+                    }
                     // Proven assertion calls (e.g. a userland `invariant`) are assumed
                     // pure: unlike ordinary calls they do not invalidate refinements.
                     if assertion.is_none() {
@@ -12214,6 +12228,7 @@ pub struct NameResolverResult {
     pub cyclic_type_param_locs: FlowOrdSet<ALoc>,
     pub declare_namespace_read_paths:
         FlowOrdMap<ALoc, FlowVector<env_api::DeclareNamespaceReadPathElement<ALoc>>>,
+    pub assertion_calls: BTreeMap<ALoc, AssertionInfo>,
 }
 
 impl NameResolverResult {
@@ -12233,6 +12248,7 @@ impl NameResolverResult {
             invalid_type_param_default_locs: Rc::new(self.invalid_type_param_default_locs),
             cyclic_type_param_locs: Rc::new(self.cyclic_type_param_locs),
             declare_namespace_read_paths: self.declare_namespace_read_paths,
+            assertion_calls: self.assertion_calls,
         }
     }
 }
@@ -12339,6 +12355,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
         .env_state
         .declare_namespace_read_recorder
         .paths_by_read_loc();
+    let assertion_calls = env_walk.take_assertion_calls();
     (
         completion_state,
         NameResolverResult {
@@ -12355,6 +12372,7 @@ pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
             invalid_type_param_default_locs,
             cyclic_type_param_locs,
             declare_namespace_read_paths,
+            assertion_calls,
         },
     )
 }

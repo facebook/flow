@@ -30,6 +30,10 @@ function spreadBeforeFalseIndexDoesNotEndPath(s: Array<unknown>): number {
   return 0;
 }
 
+function spreadBeforeFalseIndexDoesNotEndSequence(s: Array<unknown>): void {
+  (assertSecondTruthy(...s, false), 'not a number' as number); // error: the assertion call may return
+}
+
 function spreadAtAssertedIndexDoesNotEndPath(s: Array<?string>): Array<?string> {
   assertTruthyValue(...s);
   return s;

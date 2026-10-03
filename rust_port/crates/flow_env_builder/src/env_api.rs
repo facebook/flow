@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Deref;
@@ -25,6 +26,7 @@ use flow_parser::ast::expression::CallTypeArgs;
 use flow_parser::ast::expression::Expression;
 use flow_parser::loc_sig::LocSig;
 
+use crate::assertion_call_target::AssertionInfo;
 use crate::provider_api;
 
 #[derive(
@@ -576,6 +578,10 @@ where
     /// values and types are available later during checking. This persisted map
     /// lets checking recover that namespace context after resolver traversal ends.
     pub declare_namespace_read_paths: FlowOrdMap<L, FlowVector<DeclareNamespaceReadPathElement<L>>>,
+    /// Calls proven to be assertions by the targeted callee analysis, keyed
+    /// by callee loc. This persisted map lets checking apply assertion
+    /// behavior after resolver traversal ends.
+    pub assertion_calls: BTreeMap<L, AssertionInfo>,
 }
 
 #[derive(
@@ -630,6 +636,7 @@ where
             invalid_type_param_default_locs: Rc::new(FlowOrdSet::new()),
             cyclic_type_param_locs: Rc::new(FlowOrdSet::new()),
             declare_namespace_read_paths: FlowOrdMap::new(),
+            assertion_calls: BTreeMap::new(),
         }
     }
 }

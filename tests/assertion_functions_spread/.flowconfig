@@ -1,0 +1,6 @@
+[options]
+all=true
+experimental.assertion_functions=true
+
+[lints]
+all=error

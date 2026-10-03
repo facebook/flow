@@ -9,6 +9,8 @@ use std::ops::Deref;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_env_builder::assertion_call_target::AssertionInfo;
+use flow_env_builder::assertion_call_target::AssertionKind;
 use flow_parser::ast;
 use flow_parser::ast::expression;
 use flow_parser::ast::expression::ExpressionInner;
@@ -91,6 +93,44 @@ impl<'a, 'cx> Marker<'a, 'cx> {
             }
         }
         let Ok(()) = ast_visitor::expression_default(self, expr);
+    }
+
+    /// If this call targets a proven bare assertion function (`asserts x`)
+    /// whose asserted argument is positionally known, returns the assertion
+    /// and that argument. Returns None when a spread precedes the asserted
+    /// index, since positions shift and the positional argument is not
+    /// necessarily the asserted one. Explicit type arguments are fine:
+    /// assertion functions can be generic.
+    fn bare_assertion_condition<'ast>(
+        &self,
+        call: &'ast expression::Call<ALoc, (ALoc, Type)>,
+    ) -> Option<(
+        AssertionInfo,
+        &'ast expression::ExpressionOrSpread<ALoc, (ALoc, Type)>,
+    )> {
+        let assertion = self
+            .cx
+            .environment()
+            .var_info
+            .assertion_calls
+            .get(&call.callee.loc().0)
+            .copied()?;
+        if assertion.kind != AssertionKind::Bare {
+            return None;
+        }
+        if call
+            .arguments
+            .arguments
+            .iter()
+            .take(assertion.parameter_index)
+            .any(|argument| matches!(argument, expression::ExpressionOrSpread::Spread(_)))
+        {
+            return None;
+        }
+        call.arguments
+            .arguments
+            .get(assertion.parameter_index)
+            .map(|asserted| (assertion, asserted))
     }
 }
 
@@ -176,12 +216,27 @@ impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Ma
             arguments,
             comments: _,
         } = expr;
-        let is_invariant = matches!(
-            callee.deref(),
-            ExpressionInner::Identifier { inner, .. }
-            if inner.name.as_str() == "invariant"
-        );
-        if is_invariant && targs.is_none() {
+        if let Some((assertion, asserted)) = self.bare_assertion_condition(expr) {
+            // A call to a proven bare assertion function: visit the asserted
+            // argument as a condition. This is the userland equivalent of the
+            // old `invariant` special case.
+            self.expression(callee)?;
+            if let expression::ExpressionOrSpread::Expression(conditional) = asserted {
+                self.base_expression(true, conditional);
+            } else {
+                self.expression_or_spread(asserted)?;
+            }
+            for (index, arg) in arguments.arguments.iter().enumerate() {
+                if index != assertion.parameter_index {
+                    self.expression_or_spread(arg)?;
+                }
+            }
+            return Ok(());
+        }
+        // Builtin `invariant` without an `asserts` annotation: visit the first
+        // argument as a condition, preserving the old behavior (and its
+        // sketchy-null errors). Annotated callees are handled above.
+        if ast_utils::is_call_to_invariant(callee) && targs.is_none() {
             if let Some((expression::ExpressionOrSpread::Expression(conditional), rest_args)) =
                 arguments.arguments.split_first()
             {

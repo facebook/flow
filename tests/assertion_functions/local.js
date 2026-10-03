@@ -1,6 +1,10 @@
 declare function assertNumber(value: unknown): asserts value is number;
 declare function assertTruthy<T>(value: ?T): asserts value;
 declare function assertOptional(value?: unknown): asserts value;
+declare function assertWithMessage(
+  condition: boolean,
+  message: string,
+): asserts condition;
 
 function assertWithDefault(value: unknown = true): asserts value {
   if (!value) {
@@ -86,6 +90,14 @@ function bareFalseIsAbrupt(): number {
   return 0; // error: unreachable after a bare assertion of false
 }
 
+function bareFalseStillChecksArgumentTypes(): void {
+  assertWithMessage(false, 42); // error: number is incompatible with string
+}
+
+function bareFalseStillChecksArity(): void {
+  assertWithMessage(false); // error: missing required argument
+}
+
 function bareMissingArgumentIsReachable(): number {
   assertOptional();
   return 0; // no error: an omitted argument may hit a callee default, so the call can return
@@ -94,6 +106,10 @@ function bareMissingArgumentIsReachable(): number {
 function bareDefaultedMissingArgumentIsReachable(): number {
   assertWithDefault();
   return 0; // no error: the default applies, so the call can return normally
+}
+
+function bareDefaultedMissingArgumentDoesNotEndSequence(): void {
+  (assertWithDefault(), 'not a number' as number); // error: the assertion call may return
 }
 
 function bareDefaultedRefines(value: ?string) {
@@ -298,4 +314,9 @@ function disagreedUnionSilent(value: unknown) {
 function intersectionSilent(value: unknown) {
   intersected(value);
   value as string; // error: intersections never classify
+}
+
+function bareFalseWithTargsIsAbrupt(): number {
+  assertTruthy<boolean>(false);
+  return 0; // error: unreachable after a bare assertion of false
 }

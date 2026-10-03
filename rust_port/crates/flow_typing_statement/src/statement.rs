@@ -42,6 +42,7 @@ use flow_common::reason::string_of_desc;
 use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
 use flow_env_builder::env_api::EnvKey;
 use flow_parser::ast;
 use flow_parser::ast::expression;
@@ -8340,6 +8341,29 @@ fn expression_<'a>(
     })
 }
 
+/// Whether a call to a proven bare assertion function (`asserts x`) provably
+/// never returns because the asserted argument is the literal `false`.
+/// Keyed on the targeted callee analysis (persisted in env info) rather than
+/// the callee's type, whose assertion behavior is stripped on ordinary
+/// references. This is the userland equivalent of the old `invariant`
+/// special case.
+fn proven_bare_assertion_throw(
+    cx: &Context<'_>,
+    callee_loc: &ALoc,
+    arguments: &[expression::ExpressionOrSpread<ALoc, ALoc>],
+) -> bool {
+    let Some(assertion) = cx
+        .environment()
+        .var_info
+        .assertion_calls
+        .get(callee_loc)
+        .copied()
+    else {
+        return false;
+    };
+    bare_assertion_call_always_throws(assertion, arguments)
+}
+
 /// Handles operations that may traverse optional chains
 ///
 /// Returns a tuple:
@@ -9338,6 +9362,14 @@ pub fn optional_chain<'a>(
     };
 
     let (e_prime, opt_state, call_ast, member_ast) = factor_out_optional(loc.dupe(), e);
+    let bare_assertion_always_throws = match (&opt_state, &e_prime) {
+        // Explicit type arguments are fine: assertion functions can be generic.
+        (OptState::NonOptional, ExpressionInner::Call { inner, .. }) => {
+            proven_bare_assertion_throw(cx, inner.callee.loc(), &inner.arguments.arguments)
+        }
+        _ => false,
+    };
+    let abnormal_loc = loc.dupe();
 
     // When traversing an optional chain, we need to track the "successful" types
     // (if all optional chain operators in the sequence filtered out null/void),
@@ -9839,7 +9871,7 @@ pub fn optional_chain<'a>(
         _ => (e_prime, None),
     };
 
-    Ok(match (&e_prime, &method_receiver_and_state) {
+    let result = match (&e_prime, &method_receiver_and_state) {
         // e1[e2]
         (ExpressionInner::Member { inner, .. }, _)
             if let expression::member::Property::PropertyExpression(index) = &inner.property =>
@@ -10702,7 +10734,11 @@ pub fn optional_chain<'a>(
             let t = res.loc().1.dupe();
             (t, vec![], res)
         }
-    })
+    };
+    if bare_assertion_always_throws {
+        return Err(AbnormalControlFlow(abnormal_loc, result.2).into());
+    }
+    Ok(result)
 }
 
 fn arg_list<'a>(
