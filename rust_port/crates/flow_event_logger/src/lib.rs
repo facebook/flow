@@ -43,6 +43,8 @@ mod stub {
     use std::sync::OnceLock;
     use std::time::SystemTime;
 
+    use flow_common_exit_status::FlowExitStatus;
+
     #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
     pub struct MonitorOptions {
         pub file_watcher: String,
@@ -472,7 +474,9 @@ mod stub {
 
     pub fn out_of_date() {}
 
-    pub fn exit(_error: Option<&Error>, _msg: &str, _code: i32) {}
+    pub fn exit(_error: Option<&Error>, _msg: &str, _status: &str) {}
+
+    pub fn log_exit(_status: FlowExitStatus, _msg: Option<&str>) {}
 
     pub fn report_from_monitor_server_exit_due_to_signal(_signal: i32) {}
 
@@ -683,6 +687,7 @@ mod fb_facade {
     use std::sync::OnceLock;
     use std::time::SystemTime;
 
+    use flow_common_exit_status::FlowExitStatus;
     use flow_facebook_logging::flow_event_logger as fb;
     use flow_facebook_logging::scuba;
 
@@ -1105,19 +1110,28 @@ mod fb_facade {
         fb::out_of_date();
     }
 
-    // SHIM: maps OSS `(Option<&Error>, &str, i32)` to FB
-    // `(Option<&fb::Error>, Option<String>, &str)`. Promotes the numeric code
-    // into a string for the FB exit_status column; an empty `msg` becomes
-    // `None`. Step 5 caller migration should pass a symbolic status string.
-    pub fn exit(error: Option<&Error>, msg: &str, code: i32) {
+    // SHIM: maps OSS `(Option<&Error>, &str, &str)` to FB
+    // `(Option<&fb::Error>, Option<String>, &str)`. The status is already the
+    // symbolic string for the FB exit_status column; an empty `msg` becomes
+    // `None`.
+    pub fn exit(error: Option<&Error>, msg: &str, status: &str) {
         let fb_err = error.map(to_fb_error);
-        let status = format!("{}", code);
         let msg_owned = if msg.is_empty() {
             None
         } else {
             Some(msg.to_string())
         };
-        fb::exit(fb_err.as_ref(), msg_owned, &status);
+        fb::exit(fb_err.as_ref(), msg_owned, status);
+    }
+
+    /// Log an EXIT event for `status`, for the `flow_common_exit_status` exit
+    /// hook. The sample is delivered by the logger's at-exit flush.
+    pub fn log_exit(status: FlowExitStatus, msg: Option<&str>) {
+        exit(
+            None,
+            msg.unwrap_or(""),
+            flow_common_exit_status::to_string(status),
+        )
     }
 
     // SHIM: forwards directly; FB and OSS share identical signature.

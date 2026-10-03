@@ -194,6 +194,7 @@ fn internal_start(
     options: Arc<Options>,
     args: StartArgs,
 ) -> Result<(), String> {
+    flow_common_exit_status::set_exit_hook(flow_event_logger::log_exit);
     flow_tokio_runtime::init_worker_threads(NonZeroUsize::MIN);
 
     if matches!(args.file_watcher, FileWatcher::EdenFS(_)) {

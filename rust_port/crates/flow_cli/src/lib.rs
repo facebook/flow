@@ -360,6 +360,10 @@ fn flow_shell_main() {
 }
 
 pub fn main() {
+    // Log an EXIT telemetry event on every exit below; the logger's at-exit
+    // hook delivers it.
+    flow_common_exit_status::set_exit_hook(flow_event_logger::log_exit);
+
     #[cfg(unix)]
     unsafe {
         libc::signal(libc::SIGPIPE, libc::SIG_IGN);
@@ -386,14 +390,14 @@ pub fn main() {
             };
             if err_msg.contains("Out_of_shared_memory") || err_msg.contains("Out of shared memory")
             {
-                eprintln!("Out of shared memory");
-                flow_common_exit_status::exit(
+                flow_common_exit_status::exit_with_msg(
                     flow_common_exit_status::FlowExitStatus::OutOfSharedMemory,
+                    "Out of shared memory",
                 );
             } else {
-                eprintln!("Unhandled exception: {}", err_msg);
-                flow_common_exit_status::exit(
+                flow_common_exit_status::exit_with_msg(
                     flow_common_exit_status::FlowExitStatus::UnknownError,
+                    &format!("Unhandled exception: {}", err_msg),
                 );
             }
         }

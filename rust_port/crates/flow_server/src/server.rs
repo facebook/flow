@@ -583,28 +583,35 @@ pub fn run_from_daemonize(
             let err_msg = panic_message(&*e);
             let err_display: &dyn std::fmt::Display = &err_msg;
             let status = flow_common_exit_status::exit_status_for_panic_message(&err_msg);
-            match status {
+            let log_msg = match status {
                 FlowExitStatus::OutOfSharedMemory => {
                     let msg = exit_msg_of_exception(err_display, "Out of shared memory");
                     flow_hh_logger::info!("{}", msg);
+                    msg
                 }
                 FlowExitStatus::HashTableFull => {
                     let msg = exit_msg_of_exception(err_display, "Hash table is full");
                     flow_hh_logger::info!("{}", msg);
+                    msg
                 }
                 FlowExitStatus::HeapFull => {
                     let msg = exit_msg_of_exception(err_display, "Heap is full");
                     flow_hh_logger::info!("{}", msg);
+                    msg
                 }
                 FlowExitStatus::KilledByMonitor => {
-                    flow_hh_logger::info!("Monitor died unexpectedly");
+                    let msg = "Monitor died unexpectedly";
+                    flow_hh_logger::info!("{}", msg);
+                    msg.to_string()
                 }
                 _ => {
-                    flow_hh_logger::info!("Unhandled exception: {}", err_msg);
+                    let msg = format!("Unhandled exception: {}", err_msg);
+                    flow_hh_logger::info!("{}", msg);
                     log_worker_exception(&err_msg);
+                    msg
                 }
-            }
-            flow_common_exit_status::exit(status);
+            };
+            flow_common_exit_status::exit_with_log_msg(status, &log_msg);
         }
     }
 }

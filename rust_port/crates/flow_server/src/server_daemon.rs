@@ -159,6 +159,7 @@ fn server_entry_handler(param: ServerEntryParam, pair: ChannelPair<(), ()>) {
     flow_event_logger::restore_context(logging_context);
     flow_event_logger::set_command(Some("server".to_string()));
     flow_event_logger::init_flow_command(&init_id);
+    flow_common_exit_status::set_exit_hook(flow_event_logger::log_exit);
 
     let build = *SERVER_OPTIONS_BUILDER.get().unwrap_or_else(|| {
         panic!(

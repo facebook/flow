@@ -266,11 +266,47 @@ pub fn exit_status_for_panic_message(msg: &str) -> FlowExitStatus {
     }
 }
 
+/// Telemetry hook run before the process exits. Receives the exit status and
+/// the message recorded in the EXIT event, if any. Registered once per
+/// process by each binary's entry point. Lives here (rather than in
+/// `flow_event_logger`) because the logger depends on this crate.
+pub type ExitHook = fn(FlowExitStatus, Option<&str>);
+
+static EXIT_HOOK: std::sync::OnceLock<ExitHook> = std::sync::OnceLock::new();
+
+/// Register the process-wide exit hook. Only the first registration wins;
+/// later ones are ignored so every entry point can register defensively.
+pub fn set_exit_hook(hook: ExitHook) {
+    match EXIT_HOOK.set(hook) {
+        Ok(()) | Err(_) => {}
+    }
+}
+
+fn run_exit_hook(status: FlowExitStatus, msg: Option<&str>) {
+    if let Some(hook) = EXIT_HOOK.get() {
+        // Telemetry must never break exiting: a hook failure is swallowed and
+        // the exit proceeds.
+        match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| hook(status, msg))) {
+            Ok(()) | Err(_) => {}
+        }
+    }
+}
+
 pub fn exit(status: FlowExitStatus) -> ! {
+    run_exit_hook(status, None);
     std::process::exit(error_code(status))
 }
 
 pub fn exit_with_msg(status: FlowExitStatus, msg: &str) -> ! {
     eprintln!("{}", msg);
+    run_exit_hook(status, Some(msg));
+    std::process::exit(error_code(status))
+}
+
+/// Like `exit_with_msg`, but records `msg` only in the EXIT telemetry event
+/// without printing it: for callers that already reported the message through
+/// another channel (e.g. the server and monitor logs).
+pub fn exit_with_log_msg(status: FlowExitStatus, msg: &str) -> ! {
+    run_exit_hook(status, Some(msg));
     std::process::exit(error_code(status))
 }

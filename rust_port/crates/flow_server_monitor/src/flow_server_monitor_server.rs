@@ -95,7 +95,7 @@ pub fn exit(
 
     // Protect this thread from getting canceled
     std::thread::sleep(std::time::Duration::from_secs(1));
-    flow_common_exit_status::exit(exit_status);
+    flow_common_exit_status::exit_with_log_msg(exit_status, msg);
 }
 
 pub enum StopReason {

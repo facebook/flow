@@ -978,6 +978,7 @@ name = "flow_event_logger"
 version = "0.0.0"
 dependencies = [
  "flow_common",
+ "flow_common_exit_status",
  "serde",
  "serde_json",
 ]

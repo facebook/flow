@@ -38,5 +38,9 @@ pub fn exit(status: FlowExitStatus, msg: Option<&str>) -> ! {
             print_json_endline(pretty, &json);
         }
     }
-    flow_common_exit_status::exit(status)
+    // The message was already printed above; record it in telemetry only.
+    match msg {
+        Some(msg) => flow_common_exit_status::exit_with_log_msg(status, msg),
+        None => flow_common_exit_status::exit(status),
+    }
 }
