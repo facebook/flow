@@ -1,4 +1,4 @@
-declare function invariant(condition: unknown, ...args: Array<unknown>): void;
+declare function invariant(condition: unknown, ...args: Array<unknown>): asserts condition;
 declare function takesString(s: string): void;
 
 function laterArgReassignsRefinedBinding(y: unknown, z: number): void {
@@ -14,8 +14,5 @@ function pureLaterArgStillRefines(y: unknown, msg: string): void {
 }
 
 function laterArgReadUsesRefinedEnv(x: unknown): void {
-  // TODO: replaying later args re-records their reads in the refined env,
-  // so the unknown-to-string error here is suppressed. Once replay skips
-  // read-recording, this call should error.
-  invariant(typeof x === 'string', takesString(x));
+  invariant(typeof x === 'string', takesString(x)); // error: later args are evaluated before the assertion applies
 }

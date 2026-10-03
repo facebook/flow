@@ -1,4 +1,4 @@
-declare function invariant(): void;
+declare function invariant(condition?: unknown, message?: string): asserts condition;
 
 declare const a: true;
 invariant(a); // constant-condition error
@@ -8,7 +8,7 @@ invariant(b); // constant-condition error
 
 declare const c: boolean;
 invariant(c);
-c ? invariant(c) : invariant(c); // constant-condition error
+c ? invariant(c) : invariant(c); // constant-condition error on `c`; invariant inside an expression is not a supported position
 
 declare const d: 0;
 invariant(d);

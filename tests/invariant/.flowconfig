@@ -5,3 +5,5 @@ unnecessary-invariant=error
 
 [options]
 all=true
+experimental.assertion_functions=true
+experimental.disable_invariant_special_casing=true

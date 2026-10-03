@@ -1,6 +1,6 @@
 // @flow
 
-declare function invariant(condition: unknown, ...args: Array<unknown>): void;
+declare function invariant(condition: unknown, ...args: Array<unknown>): asserts condition;
 
 type FieldConfig = {
   label?: string,
