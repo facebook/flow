@@ -1,0 +1,1330 @@
+Error ------------------------------------------------------------------------------------------------ arg_order.js:12:3
+
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   arg_order.js:12:3
+   12|   x as string; // error: x holds y (number); the assertion described the earlier value
+         ^
+
+References:
+   arg_order.js:10:58
+   10| function laterArgReassignsAssertedBinding(x: unknown, y: number) {
+                                                                ^^^^^^ [1]
+   arg_order.js:12:8
+   12|   x as string; // error: x holds y (number); the assertion described the earlier value
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:18:3
+
+Cannot cast `x` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   arg_order.js:18:3
+   18|   x as string; // error: x is null; the truthiness assertion described the earlier value
+         ^
+
+References:
+   arg_order.js:16:47
+   16| function laterArgReassignsBare(x: ?string, y: null) {
+                                                     ^^^^ [1]
+   arg_order.js:18:8
+   18|   x as string; // error: x is null; the truthiness assertion described the earlier value
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:30:3
+
+Cannot cast `captured` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   arg_order.js:30:3
+   30|   captured as string; // error: the later call reassigned the asserted binding
+         ^^^^^^^^
+
+References:
+   arg_order.js:22:15
+   22| let captured: unknown;
+                     ^^^^^^^ [1]
+   arg_order.js:30:15
+   30|   captured as string; // error: the later call reassigned the asserted binding
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:36:3
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   arg_order.js:36:3
+   36|   x as number; // error: genuine narrowing is preserved
+         ^
+
+References:
+   arg_order.js:1:82
+    1| declare function assertFirst(value: unknown, ignored: unknown): asserts value is string;
+                                                                                        ^^^^^^ [1]
+   arg_order.js:36:8
+   36|   x as number; // error: genuine narrowing is preserved
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:42:3
+
+Cannot cast `x` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   arg_order.js:42:3
+   42|   x as number; // error: earlier writes precede observation, narrowing is preserved
+         ^
+
+References:
+   arg_order.js:6:21
+    6| ): asserts value is string;
+                           ^^^^^^ [1]
+   arg_order.js:42:8
+   42|   x as number; // error: earlier writes precede observation, narrowing is preserved
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:49:30
+
+Cannot call `takesString` with `x` bound to `s` because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   arg_order.js:49:30
+   49|   assertFirst(x, takesString(x)); // error: unknown argument for string param
+                                    ^
+
+References:
+   arg_order.js:45:42
+   45| function laterArgReadUsesUnrefinedEnv(x: unknown) {
+                                                ^^^^^^^ [1]
+   arg_order.js:8:33
+    8| declare function takesString(s: string): void;
+                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:54:30
+
+Cannot call `takesString` with `x.name` bound to `s` because `unknown` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   arg_order.js:54:30
+   54|   assertNamed(x, takesString(x.name)); // error: unknown argument for string param
+                                    ^^^^^^
+
+References:
+   arg_order.js:53:55
+   53| function laterArgMemberReadUsesUnrefinedEnv(x: {name: unknown}) {
+                                                             ^^^^^^^ [1]
+   arg_order.js:8:33
+    8| declare function takesString(s: string): void;
+                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- arg_order.js:59:34
+
+Cannot call `takesString` with `x` bound to `s` because `null` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   arg_order.js:59:34
+   59|   assertFirstBare(x, takesString(x)); // error: possibly-null argument for string param
+                                        ^
+
+References:
+   arg_order.js:58:55
+   58| function laterArgReadUsesUnrefinedEnvBare(x: string | null) {
+                                                             ^^^^ [1]
+   arg_order.js:8:33
+    8| declare function takesString(s: string): void;
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:66:3
+
+Cannot cast `y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   arg_order.js:66:3
+   66|   y as number; // error: assertion narrowing on y is preserved
+         ^
+
+References:
+   arg_order.js:1:82
+    1| declare function assertFirst(value: unknown, ignored: unknown): asserts value is string;
+                                                                                        ^^^^^^ [1]
+   arg_order.js:66:8
+   66|   y as number; // error: assertion narrowing on y is preserved
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:67:3
+
+Cannot cast `x` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   arg_order.js:67:3
+   67|   x as string; // error: x copies y's pre-refinement value; copies don't inherit narrowing
+         ^
+
+References:
+   arg_order.js:63:52
+   63| function laterArgWritesOtherBindingFromAsserted(y: unknown, x: unknown) {
+                                                          ^^^^^^^ [1]
+   arg_order.js:67:8
+   67|   x as string; // error: x copies y's pre-refinement value; copies don't inherit narrowing
+              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:68:3
+
+Cannot cast `x` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   arg_order.js:68:3
+   68|   x as number; // error: x holds y's earlier value, which is not a number
+         ^
+
+References:
+   arg_order.js:63:52
+   63| function laterArgWritesOtherBindingFromAsserted(y: unknown, x: unknown) {
+                                                          ^^^^^^^ [1]
+   arg_order.js:68:8
+   68|   x as number; // error: x holds y's earlier value, which is not a number
+              ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:23:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:23:3
+   23|   value as string; // error: assertion narrowed to number
+         ^^^^^
+
+References:
+   exports.js:1:72
+    1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                              ^^^^^^ [1]
+   imports.js:23:12
+   23|   value as string; // error: assertion narrowed to number
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:29:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:29:3
+   29|   value as string; // error: renamed import is an assertion
+         ^^^^^
+
+References:
+   exports.js:1:72
+    1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                              ^^^^^^ [1]
+   imports.js:29:12
+   29|   value as string; // error: renamed import is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:35:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imports.js:35:3
+   35|   value as number; // error: assertion narrowed to string
+         ^^^^^
+
+References:
+   exports.js:2:65
+    2| declare function assertString(value: unknown): asserts value is string;
+                                                                       ^^^^^^ [1]
+   imports.js:35:12
+   35|   value as number; // error: assertion narrowed to string
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:41:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:41:3
+   41|   value as string; // error: annotated export is an assertion
+         ^^^^^
+
+References:
+   exports.js:4:63
+    4| declare const annotated: (value: unknown) => asserts value is number;
+                                                                     ^^^^^^ [1]
+   imports.js:41:12
+   41|   value as string; // error: annotated export is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:47:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:47:3
+   47|   value as string; // error: nested exported property is an assertion
+         ^^^^^
+
+References:
+   exports.js:13:52
+   13|     assertNumber(value: unknown): asserts value is number,
+                                                          ^^^^^^ [1]
+   imports.js:47:12
+   47|   value as string; // error: nested exported property is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:53:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:53:3
+   53|   value as string; // error: namespace member is an assertion
+         ^^^^^
+
+References:
+   exports.js:1:72
+    1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                              ^^^^^^ [1]
+   imports.js:53:12
+   53|   value as string; // error: namespace member is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:59:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:59:3
+   59|   value as string; // error: imported static method is an assertion
+         ^^^^^
+
+References:
+   exports.js:21:57
+   21|   static assertNumber(value: unknown): asserts value is number {
+                                                               ^^^^^^ [1]
+   imports.js:59:12
+   59|   value as string; // error: imported static method is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:65:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:65:3
+   65|   value as string; // error: imported type annotation is an assertion
+         ^^^^^
+
+References:
+   exports.js:26:70
+   26| export type ImportedAssertion = (value: unknown) => asserts value is number;
+                                                                            ^^^^^^ [1]
+   imports.js:65:12
+   65|   value as string; // error: imported type annotation is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:71:3
+
+Cannot cast `value` to number because `symbol` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imports.js:71:3
+   71|   value as number; // error: instantiated imported alias is an assertion
+         ^^^^^
+
+References:
+   imports.js:18:61
+   18| declare const fromImportedGenericType: ImportedAssertionFor<symbol>;
+                                                                   ^^^^^^ [1]
+   imports.js:71:12
+   71|   value as number; // error: instantiated imported alias is an assertion
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:77:3
+
+Cannot cast `numberValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:77:3
+   77|   numberValue as string; // error: imported mapped property narrows to number
+         ^^^^^^^^^^^
+
+References:
+   exports.js:41:11
+   41|   number: number,
+                 ^^^^^^ [1]
+   imports.js:77:18
+   77|   numberValue as string; // error: imported mapped property narrows to number
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:81:3
+
+Cannot cast `stringValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imports.js:81:3
+   81|   stringValue as number; // error: imported mapped property narrows to string
+         ^^^^^^^^^^^
+
+References:
+   exports.js:42:11
+   42|   string: string,
+                 ^^^^^^ [1]
+   imports.js:81:18
+   81|   stringValue as number; // error: imported mapped property narrows to string
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:86:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imports.js:86:3
+   86|   value as number; // error: union callees never classify, even when members agree
+         ^^^^^
+
+References:
+   imports.js:84:43
+   84| function importedAgreedUnionSilent(value: unknown) {
+                                                 ^^^^^^^ [1]
+   imports.js:86:12
+   86|   value as number; // error: union callees never classify, even when members agree
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:87:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:87:3
+   87|   value as string; // error: union callees never classify, even when members agree
+         ^^^^^
+
+References:
+   imports.js:84:43
+   84| function importedAgreedUnionSilent(value: unknown) {
+                                                 ^^^^^^^ [1]
+   imports.js:87:12
+   87|   value as string; // error: union callees never classify, even when members agree
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:93:3
+
+Cannot cast `value` to string because `symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:93:3
+   93|   value as string; // error: imported generic application is an assertion
+         ^^^^^
+
+References:
+   exports.js:38:64
+   38| declare export const genericAppAssertion: ImportedAssertionFor<symbol>;
+                                                                      ^^^^^^ [1]
+   imports.js:93:12
+   93|   value as string; // error: imported generic application is an assertion
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:103:3
+
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:103:3
+   103|   value1 as string; // error: inferred export narrows to number
+          ^^^^^^
+
+References:
+   exports.js:7:60
+     7| export const inferred = (value: unknown): asserts value is number => assertNumber(value);
+                                                                   ^^^^^^ [1]
+   imports.js:103:13
+   103|   value1 as string; // error: inferred export narrows to number
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:107:3
+
+Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:107:3
+   107|   value2 as string; // error: inferred alias export narrows to number
+          ^^^^^^
+
+References:
+   exports.js:1:72
+     1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                               ^^^^^^ [1]
+   imports.js:107:13
+   107|   value2 as string; // error: inferred alias export narrows to number
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imports.js:111:3
+
+Cannot cast `value3` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:111:3
+   111|   value3 as string; // error: inferred object export narrows to number
+          ^^^^^^
+
+References:
+   exports.js:1:72
+     1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                               ^^^^^^ [1]
+   imports.js:111:13
+   111|   value3 as string; // error: inferred object export narrows to number
+                    ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:1:47
+
+Cannot find type guard parameter `y` [1] in the parameters of this function (type). [function-predicate]
+
+   1| declare function unbound(x: unknown): asserts y is string; // error: name is not a parameter
+                                                    ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:5:12
+
+A type guard parameter `xs` [1] cannot reference rest parameter `xs` [2]. [function-predicate]
+
+   invalid.js:5:12
+   5| ): asserts xs is Array<string>; // error: rest parameters cannot be asserted
+                 ^^ [1]
+
+References:
+   invalid.js:4:6
+   4|   ...xs: Array<unknown>
+           ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:7:51
+
+A type guard parameter `x` [1] cannot reference pattern parameter `x` [2]. [function-predicate]
+
+   invalid.js:7:51
+   7| function destructured({x}: {x: unknown}): asserts x is string {} // error: destructured params have no root binding
+                                                        ^ [1]
+
+References:
+   invalid.js:7:24
+   7| function destructured({x}: {x: unknown}): asserts x is string {} // error: destructured params have no root binding
+                             ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- invalid.js:9:51
+
+Cannot find type guard parameter `y` [1] in the parameters of this function (type). [function-predicate]
+
+   9| declare function unboundBare(x: unknown): asserts y; // error: name is not a parameter
+                                                        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- invalid.js:11:58
+
+The type predicate number [1] needs to be compatible with parameter `x`'s type: `number` [1] is incompatible with
+`string` [2]. [incompatible-type-guard]
+
+   invalid.js:11:58
+   11| declare function widerThanParam(x: string): asserts x is number; // error: guard must be a subtype of parameter
+                                                                ^^^^^^ [1]
+
+References:
+   invalid.js:11:36
+   11| declare function widerThanParam(x: string): asserts x is number; // error: guard must be a subtype of parameter
+                                          ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:35:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:35:3
+   35|   value as string; // error: assertion narrowed to number
+         ^^^^^
+
+References:
+   local.js:1:65
+    1| declare function assertNumber(value: unknown): asserts value is number;
+                                                                       ^^^^^^ [1]
+   local.js:35:12
+   35|   value as string; // error: assertion narrowed to number
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:41:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:41:3
+   41|   value as string; // error: assertion narrowed to number
+         ^^^^^
+
+References:
+   local.js:15:55
+   15| const annotated: (value: unknown) => asserts value is number = assertNumber;
+                                                             ^^^^^^ [1]
+   local.js:41:12
+   41|   value as string; // error: assertion narrowed to number
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:47:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:47:3
+   47|   value as string; // error: assertion narrowed to number
+         ^^^^^
+
+References:
+   local.js:20:52
+   20|     assertNumber(value: unknown): asserts value is number,
+                                                          ^^^^^^ [1]
+   local.js:47:12
+   47|   value as string; // error: assertion narrowed to number
+                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:53:3
+
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:53:3
+   53|   value1 as string; // error: type-alias annotation is an assertion
+         ^^^^^^
+
+References:
+   local.js:27:61
+   27| type NumberAssertion = (value: unknown) => asserts value is number;
+                                                                   ^^^^^^ [1]
+   local.js:53:13
+   53|   value1 as string; // error: type-alias annotation is an assertion
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:57:3
+
+Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:57:3
+   57|   value2 as string; // error: interface annotation is an assertion
+         ^^^^^^
+
+References:
+   local.js:29:50
+   29|   assertNumber(value: unknown): asserts value is number;
+                                                        ^^^^^^ [1]
+   local.js:57:13
+   57|   value2 as string; // error: interface annotation is an assertion
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:67:3
+
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:67:3
+   67|   value1 as string; // error: inferred alias narrows to number
+         ^^^^^^
+
+References:
+   local.js:1:65
+    1| declare function assertNumber(value: unknown): asserts value is number;
+                                                                       ^^^^^^ [1]
+   local.js:67:13
+   67|   value1 as string; // error: inferred alias narrows to number
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:71:3
+
+Cannot cast `value2` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:71:3
+   71|   value2 as string; // error: inferred object property narrows to number
+         ^^^^^^
+
+References:
+   local.js:1:65
+    1| declare function assertNumber(value: unknown): asserts value is number;
+                                                                       ^^^^^^ [1]
+   local.js:71:13
+   71|   value2 as string; // error: inferred object property narrows to number
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:75:3
+
+Cannot cast `value3` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:75:3
+   75|   value3 as string; // error: return annotation propagates through the variable
+         ^^^^^^
+
+References:
+   local.js:17:63
+   17| const inferredFromReturn = (value: unknown): asserts value is number => assertNumber(value);
+                                                                     ^^^^^^ [1]
+   local.js:75:13
+   75|   value3 as string; // error: return annotation propagates through the variable
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:81:3
+
+Cannot cast `value` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   local.js:81:3
+   81|   value as null; // error: assertion removed null and void
+         ^^^^^
+
+References:
+   local.js:78:23
+   78| function bare(value: ?string) {
+                             ^^^^^^ [1]
+   local.js:81:12
+   81|   value as null; // error: assertion removed null and void
+                  ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- local.js:86:3
+
+Unreachable code. [unreachable-code]
+
+   86|   return 0; // error: unreachable after a bare assertion of false
+         ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:102:3
+
+Cannot cast `value` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   local.js:102:3
+   102|   value as null; // error: assertion removed null and void
+          ^^^^^
+
+References:
+   local.js:99:39
+    99| function bareDefaultedRefines(value: ?string) {
+                                              ^^^^^^ [1]
+   local.js:102:12
+   102|   value as null; // error: assertion removed null and void
+                   ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:124:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:124:3
+   124|   value as number; // error: assertion narrowed to string
+          ^^^^^
+
+References:
+   local.js:13:21
+    13| ): asserts value is string;
+                            ^^^^^^ [1]
+   local.js:124:12
+   124|   value as number; // error: assertion narrowed to string
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:130:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:130:3
+   130|   value as number; // error: only expression-statement calls assert
+          ^^^^^
+
+References:
+   local.js:127:49
+   127| function expressionPositionDoesNotAssert(value: unknown) {
+                                                        ^^^^^^^ [1]
+   local.js:130:12
+   130|   value as number; // error: only expression-statement calls assert
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:137:5
+
+Cannot cast `field.name` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:137:5
+   137|     field.name as number; // error: refinement survives the assertion call
+            ^^^^^^^^^^
+
+References:
+   local.js:133:50
+   133| function assertionCallsDoNotHavoc(field: {name: ?string}, value: unknown) {
+                                                         ^^^^^^ [1]
+   local.js:137:19
+   137|     field.name as number; // error: refinement survives the assertion call
+                          ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:165:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:165:3
+   165|   value as string; // error: annotated static method is an assertion
+          ^^^^^
+
+References:
+   local.js:153:57
+   153|   static assertNumber(value: unknown): asserts value is number {
+                                                                ^^^^^^ [1]
+   local.js:165:12
+   165|   value as string; // error: annotated static method is an assertion
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:172:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:172:3
+   172|   value as number; // error: typed instance method is an assertion
+          ^^^^^
+
+References:
+   local.js:157:50
+   157|   assertString(value: unknown): asserts value is string {
+                                                         ^^^^^^ [1]
+   local.js:172:12
+   172|   value as number; // error: typed instance method is an assertion
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:178:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:178:3
+   178|   value as number; // error: unannotated body-locals have no signature roots
+          ^^^^^
+
+References:
+   local.js:175:44
+   175| function unannotatedBodyLocalSilent(value: unknown) {
+                                                   ^^^^^^^ [1]
+   local.js:178:12
+   178|   value as number; // error: unannotated body-locals have no signature roots
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:179:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:179:3
+   179|   value as string; // error: unannotated body-locals have no signature roots
+          ^^^^^
+
+References:
+   local.js:175:44
+   175| function unannotatedBodyLocalSilent(value: unknown) {
+                                                   ^^^^^^^ [1]
+   local.js:179:12
+   179|   value as string; // error: unannotated body-locals have no signature roots
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:186:5
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:186:5
+   186|     value as string; // error: assertion applies inside loops
+            ^^^^^
+
+References:
+   local.js:1:65
+     1| declare function assertNumber(value: unknown): asserts value is number;
+                                                                        ^^^^^^ [1]
+   local.js:186:14
+   186|     value as string; // error: assertion applies inside loops
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:197:5
+
+Cannot cast `x` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:197:5
+   197|     x as string; // error: the pre-loop narrowing is preserved after the loop
+            ^
+
+References:
+   local.js:192:7
+   192|   if (typeof x === 'number') {
+              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   local.js:197:10
+   197|     x as string; // error: the pre-loop narrowing is preserved after the loop
+                 ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:209:3
+
+Cannot cast `value` to number because `boolean` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:209:3
+   209|   value as number; // error: instantiated alias is an assertion
+          ^^^^^
+
+References:
+   local.js:204:51
+   204| declare const genericAliasAssertion: AssertionFor<boolean>;
+                                                          ^^^^^^^ [1]
+   local.js:209:12
+   209|   value as number; // error: instantiated alias is an assertion
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:224:3
+
+Cannot cast `numberValue` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:224:3
+   224|   numberValue as string; // error: mapped property narrows to its instantiated result
+          ^^^^^^^^^^^
+
+References:
+   local.js:213:11
+   213|   number: number,
+                  ^^^^^^ [1]
+   local.js:224:18
+   224|   numberValue as string; // error: mapped property narrows to its instantiated result
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:228:3
+
+Cannot cast `stringValue` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:228:3
+   228|   stringValue as number; // error: each mapped property gets its own result type
+          ^^^^^^^^^^^
+
+References:
+   local.js:214:11
+   214|   string: string,
+                  ^^^^^^ [1]
+   local.js:228:18
+   228|   stringValue as number; // error: each mapped property gets its own result type
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:242:3
+
+Cannot cast `value` to number because `bigint` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:242:3
+   242|   value as number; // error: nested generic property is an assertion
+          ^^^^^
+
+References:
+   local.js:237:55
+   237| declare const nestedGenericAssertion: NestedAssertion<bigint>;
+                                                              ^^^^^^ [1]
+   local.js:242:12
+   242|   value as number; // error: nested generic property is an assertion
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:261:3
+
+Cannot cast `value1` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:261:3
+   261|   value1 as string; // error: local object method is an assertion
+          ^^^^^^
+
+References:
+   local.js:248:50
+   248|   assertNumber(value: unknown): asserts value is number {
+                                                         ^^^^^^ [1]
+   local.js:261:13
+   261|   value1 as string; // error: local object method is an assertion
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:265:3
+
+Cannot cast `value2` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:265:3
+   265|   value2 as number; // error: nested local object method is an assertion
+          ^^^^^^
+
+References:
+   local.js:252:52
+   252|     assertString(value: unknown): asserts value is string {
+                                                           ^^^^^^ [1]
+   local.js:265:13
+   265|   value2 as number; // error: nested local object method is an assertion
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:271:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:271:3
+   271|   value as string; // error: annotated parameter is an assertion
+          ^^^^^
+
+References:
+   local.js:27:61
+    27| type NumberAssertion = (value: unknown) => asserts value is number;
+                                                                    ^^^^^^ [1]
+   local.js:271:12
+   271|   value as string; // error: annotated parameter is an assertion
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- local.js:274:37
+
+Missing an annotation on `cb`. [missing-local-annot]
+
+   274| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
+                                            ^^
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:276:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:276:3
+   276|   value as number; // error: unannotated parameters have no signature roots
+          ^^^^^
+
+References:
+   local.js:274:48
+   274| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
+                                                       ^^^^^^^ [1]
+   local.js:276:12
+   276|   value as number; // error: unannotated parameters have no signature roots
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:277:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:277:3
+   277|   value as string; // error: unannotated parameters have no signature roots
+          ^^^^^
+
+References:
+   local.js:274:48
+   274| function unannotatedParameterSilent(cb, value: unknown) { // error: missing annotation on cb
+                                                       ^^^^^^^ [1]
+   local.js:277:12
+   277|   value as string; // error: unannotated parameters have no signature roots
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:289:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:289:3
+   289|   value as number; // error: union callees never classify, even when members agree
+          ^^^^^
+
+References:
+   local.js:287:35
+   287| function agreedUnionSilent(value: unknown) {
+                                          ^^^^^^^ [1]
+   local.js:289:12
+   289|   value as number; // error: union callees never classify, even when members agree
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:290:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:290:3
+   290|   value as string; // error: union callees never classify, even when members agree
+          ^^^^^
+
+References:
+   local.js:287:35
+   287| function agreedUnionSilent(value: unknown) {
+                                          ^^^^^^^ [1]
+   local.js:290:12
+   290|   value as string; // error: union callees never classify, even when members agree
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:295:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:295:3
+   295|   value as string; // error: disagreeing union members do not assert
+          ^^^^^
+
+References:
+   local.js:293:38
+   293| function disagreedUnionSilent(value: unknown) {
+                                             ^^^^^^^ [1]
+   local.js:295:12
+   295|   value as string; // error: disagreeing union members do not assert
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:300:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:300:3
+   300|   value as string; // error: intersections never classify
+          ^^^^^
+
+References:
+   local.js:298:36
+   298| function intersectionSilent(value: unknown) {
+                                           ^^^^^^^ [1]
+   local.js:300:12
+   300|   value as string; // error: intersections never classify
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:15:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   spreads.js:15:3
+   15|   value as string; // error: spread shifts positional arguments
+         ^^^^^
+
+References:
+   spreads.js:13:75
+   13| function spreadBeforeAssertedIndexDoesNotRefine(s: Array<unknown>, value: unknown) {
+                                                                                 ^^^^^^^ [1]
+   spreads.js:15:12
+   15|   value as string; // error: spread shifts positional arguments
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:20:3
+
+Cannot cast `value` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   spreads.js:20:3
+   20|   value as string; // error: spread shifts positional arguments
+         ^^^^^
+
+References:
+   spreads.js:18:74
+   18| function spreadBeforeBareArgumentDoesNotRefine(s: Array<unknown>, value: ?string) {
+                                                                                ^^^^^^^ [1]
+   spreads.js:20:12
+   20|   value as string; // error: spread shifts positional arguments
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:20:3
+
+Cannot cast `value` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   spreads.js:20:3
+   20|   value as string; // error: spread shifts positional arguments
+         ^^^^^
+
+References:
+   spreads.js:18:74
+   18| function spreadBeforeBareArgumentDoesNotRefine(s: Array<unknown>, value: ?string) {
+                                                                                ^^^^^^^ [1]
+   spreads.js:20:12
+   20|   value as string; // error: spread shifts positional arguments
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- spreads.js:41:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   spreads.js:41:3
+   41|   value as number; // error: trailing spread does not shift the asserted index
+         ^^^^^
+
+References:
+   spreads.js:10:21
+   10| ): asserts value is string;
+                           ^^^^^^ [1]
+   spreads.js:41:12
+   41|   value as number; // error: trailing spread does not shift the asserted index
+                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:12:1
+
+Cannot cast `assertion` to `Guard` because `Asserts` [1], a non-type-guard function, is incompatible with `Guard` [2],
+which is a type-guard function. [function-predicate]
+
+   subtyping.js:12:1
+   12| assertion as Guard; // error: assertion and conditional guards are distinct
+       ^^^^^^^^^
+
+References:
+   subtyping.js:6:24
+    6| declare var assertion: Asserts;
+                              ^^^^^^^ [1]
+   subtyping.js:12:14
+   12| assertion as Guard; // error: assertion and conditional guards are distinct
+                    ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:13:1
+
+Cannot cast `assertion` to `Implies` because `Asserts` [1], a non-type-guard function, is incompatible with
+`Implies` [2], which is a type-guard function. [function-predicate]
+
+   subtyping.js:13:1
+   13| assertion as Implies; // error: assertion and one-sided guards are distinct
+       ^^^^^^^^^
+
+References:
+   subtyping.js:6:24
+    6| declare var assertion: Asserts;
+                              ^^^^^^^ [1]
+   subtyping.js:13:14
+   13| assertion as Implies; // error: assertion and one-sided guards are distinct
+                    ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:14:1
+
+Cannot cast `assertion` to `Plain` because in the return value: `void` [1] is incompatible with `boolean` [2].
+[incompatible-type]
+
+   subtyping.js:14:1
+   14| assertion as Plain; // error: assertions return void
+       ^^^^^^^^^
+
+References:
+   subtyping.js:1:32
+    1| type Asserts = (x: unknown) => asserts x is string;
+                                      ^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:4:30
+    4| type Plain = (x: unknown) => boolean;
+                                    ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:15:1
+
+Cannot cast `guard` to `Asserts` because `Guard` [1], a non-type-guard function, is incompatible with `Asserts` [2],
+which is a type-guard function. [function-predicate]
+
+   subtyping.js:15:1
+   15| guard as Asserts; // error: conditional guard is not an assertion
+       ^^^^^
+
+References:
+   subtyping.js:7:20
+    7| declare var guard: Guard;
+                          ^^^^^ [1]
+   subtyping.js:15:10
+   15| guard as Asserts; // error: conditional guard is not an assertion
+                ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:16:1
+
+Cannot cast `implies` to `Asserts` because `Implies` [1], a non-type-guard function, is incompatible with `Asserts` [2],
+which is a type-guard function. [function-predicate]
+
+   subtyping.js:16:1
+   16| implies as Asserts; // error: one-sided guard is not an assertion
+       ^^^^^^^
+
+References:
+   subtyping.js:8:22
+    8| declare var implies: Implies;
+                            ^^^^^^^ [1]
+   subtyping.js:16:12
+   16| implies as Asserts; // error: one-sided guard is not an assertion
+                  ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:17:1
+
+Cannot cast `plain` to `Asserts` because `Plain` [1], a non-type-guard function, is incompatible with `Asserts` [2],
+which is a type-guard function. [function-predicate]
+
+   subtyping.js:17:1
+   17| plain as Asserts; // error: plain function is not an assertion
+       ^^^^^
+
+References:
+   subtyping.js:9:20
+    9| declare var plain: Plain;
+                          ^^^^^ [1]
+   subtyping.js:17:10
+   17| plain as Asserts; // error: plain function is not an assertion
+                ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:23:1
+
+Cannot cast `bare` to `Asserts` because in the type predicate: type guard [1], a non-type-guard function, is
+incompatible with `string` [2], which is a type-guard function. [function-predicate]
+
+   subtyping.js:23:1
+   23| bare as Asserts; // error: truthiness assertion and typed assertion differ
+       ^^^^
+
+References:
+   subtyping.js:19:36
+   19| type BareAsserts = (x: unknown) => asserts x;
+                                          ^^^^^^^^^ [1]
+   subtyping.js:1:45
+    1| type Asserts = (x: unknown) => asserts x is string;
+                                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:24:1
+
+Cannot cast `assertion` to `BareAsserts` because in the type predicate: `string` [1], a non-type-guard function, is
+incompatible with type guard [2], which is a type-guard function. [function-predicate]
+
+   subtyping.js:24:1
+   24| assertion as BareAsserts; // error: typed assertion and truthiness assertion differ
+       ^^^^^^^^^
+
+References:
+   subtyping.js:1:45
+    1| type Asserts = (x: unknown) => asserts x is string;
+                                                   ^^^^^^ [1]
+   subtyping.js:19:36
+   19| type BareAsserts = (x: unknown) => asserts x;
+                                          ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ subtyping.js:30:1
+
+Cannot cast `second` to `AssertsFirst` because in the type predicate: type guard parameter `y` [1] does not appear in
+the same position as type guard parameter `x` [2]. [function-predicate]
+
+   subtyping.js:30:1
+   30| second as AssertsFirst; // error: asserted parameter positions differ
+       ^^^^^^
+
+References:
+   subtyping.js:26:58
+   26| type AssertsSecond = (x: unknown, y: unknown) => asserts y is string;
+                                                                ^ [1]
+   subtyping.js:27:57
+   27| type AssertsFirst = (x: unknown, y: unknown) => asserts x is string;
+                                                               ^ [2]
+
+
+
+Found 80 errors

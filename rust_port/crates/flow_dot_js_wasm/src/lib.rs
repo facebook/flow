@@ -1239,11 +1239,15 @@ mod tests {
     use super::*;
 
     fn check_content_value(content: &str) -> Value {
+        check_content_value_with_config(content, json!({}))
+    }
+
+    fn check_content_value_with_config(content: &str, config: Value) -> Value {
         ensure_roots();
         check_content(&json!({
             "filename": "test.js",
             "content": content,
-            "config": {},
+            "config": config,
         }))
         .expect("checkContent should succeed")
     }
@@ -1291,6 +1295,22 @@ mod tests {
                 .expect("warnings should serialize")
                 .contains("ambiguous-object-type"),
             "warning lint should be reported as a warning: {value}"
+        );
+    }
+
+    #[test]
+    fn check_content_supports_assertion_functions() {
+        let value = check_content_value_with_config(
+            "declare function assertString(value: mixed): asserts value is string;\n\
+             declare const value: mixed;\n\
+             assertString(value);\n\
+             value as string;\n",
+            json!({"experimental.assertion_functions": true}),
+        );
+
+        assert!(
+            diagnostics(&value).is_empty(),
+            "assertion function should refine its argument: {value}"
         );
     }
 }

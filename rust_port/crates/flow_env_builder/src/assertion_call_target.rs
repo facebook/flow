@@ -7,14 +7,17 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::ops::Deref;
 
 use dupe::Dupe;
+use flow_aloc::ALoc;
 use flow_analysis::bindings::Kind;
 use flow_analysis::scope_api::ScopeInfo;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::expression::Expression;
 use flow_parser::ast::expression::ExpressionInner;
+use flow_parser::ast::expression::ExpressionOrSpread;
 use flow_parser::ast::expression::member;
 use flow_parser::ast::statement::ImportKind;
 use flow_parser::ast_visitor;
@@ -39,6 +42,45 @@ pub enum AssertionKind {
 pub struct AssertionInfo {
     pub parameter_index: usize,
     pub kind: AssertionKind,
+}
+
+/// Whether a spread precedes the asserted parameter index. Spreads shift
+/// every later positional argument, so the argument at the asserted index
+/// is not necessarily the asserted one.
+pub fn spread_before_index(
+    arguments: &[ExpressionOrSpread<ALoc, ALoc>],
+    parameter_index: usize,
+) -> bool {
+    arguments
+        .iter()
+        .take(parameter_index)
+        .any(|argument| matches!(argument, ExpressionOrSpread::Spread(_)))
+}
+
+/// Whether a call to a proven bare assertion function (`asserts x`) provably
+/// never returns: no spread precedes the asserted index, and the asserted
+/// argument is present and is the literal `false`. A missing argument may
+/// hit a callee default, so those calls can return normally.
+pub fn bare_assertion_call_always_throws(
+    assertion: AssertionInfo,
+    arguments: &[ExpressionOrSpread<ALoc, ALoc>],
+) -> bool {
+    if !matches!(assertion.kind, AssertionKind::Bare) {
+        return false;
+    }
+    if spread_before_index(arguments, assertion.parameter_index) {
+        return false;
+    }
+    match arguments.get(assertion.parameter_index) {
+        // An omitted argument is not necessarily falsy: the callee may
+        // supply a default parameter value, in which case the call can
+        // return normally.
+        None => false,
+        Some(ExpressionOrSpread::Expression(argument)) => {
+            matches!(argument.deref(), ExpressionInner::BooleanLiteral { inner, .. } if !inner.value)
+        }
+        Some(ExpressionOrSpread::Spread(_)) => false,
+    }
 }
 
 /// Which export an imported callee root refers to.

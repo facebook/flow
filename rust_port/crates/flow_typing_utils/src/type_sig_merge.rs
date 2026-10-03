@@ -5063,6 +5063,15 @@ fn merge_fun<'cx>(
         let return_t = merge_impl(env, cx, file, &def_ref.return_, false, false);
         let type_guard = match &def_ref.type_guard {
             None => None,
+            // `asserts` guards are experimental: without the flag, drop the
+            // guard at load so unflagged importers neither refine from the
+            // export nor see assertion-flavored subtyping errors.
+            Some(type_sig::TypeGuard { kind, .. })
+                if matches!(kind, type_sig::TypeGuardKind::Asserts)
+                    && !cx.assertion_functions_enabled() =>
+            {
+                None
+            }
             Some(type_sig::TypeGuard {
                 loc,
                 param_name,

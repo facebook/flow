@@ -38,6 +38,10 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::red_black_tree_map::FlowRedBlackTreeMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_data_structure_wrapper::vector::FlowVector;
+use flow_env_builder::assertion_call_target::AssertionInfo;
+use flow_env_builder::assertion_call_target::AssertionKind;
+use flow_env_builder::assertion_call_target::bare_assertion_call_always_throws;
+use flow_env_builder::assertion_call_target::spread_before_index;
 use flow_env_builder::env_api;
 use flow_env_builder::invalidation_api;
 use flow_env_builder::provider_api;
@@ -1110,6 +1114,22 @@ struct NameResolverState {
     in_param_default: bool,
     invalid_type_param_default_locs: FlowOrdSet<ALoc>,
     cyclic_type_param_locs: FlowOrdSet<ALoc>,
+    /// True while scouting a loop body for written variables. Assertion
+    /// refinements are skipped during scouting: they are persistent, so
+    /// they would survive into the scout's post-env and masquerade as
+    /// writes (fresh SSA ids), spuriously havocing e.g.
+    /// `while (c) { assertNumber(x); }` and losing x's pre-loop narrowing
+    /// after the loop. Provably-throwing bare calls still run so abrupt
+    /// completion is observed like any `throw`.
+    in_loop_scout: bool,
+    /// True while replaying the later arguments of an assertion call.
+    /// Reads keep the entries recorded by the first traversal
+    /// (pre-refinement): re-recording a later-arg read of the asserted
+    /// binding would resolve it to the lazy `AssertionR` refinement,
+    /// whose forcing re-enters the same pred-func lazy while the call's
+    /// arguments are being typed and panics. Writes and havoc still
+    /// apply so later arguments can invalidate the refinement.
+    skip_read_recording: bool,
 }
 
 impl NameResolverState {
@@ -1146,6 +1166,8 @@ impl NameResolverState {
             in_param_default: false,
             invalid_type_param_default_locs: FlowOrdSet::new(),
             cyclic_type_param_locs: FlowOrdSet::new(),
+            in_loop_scout: false,
+            skip_read_recording: false,
         }
     }
 }
@@ -1655,6 +1677,7 @@ struct NameResolver<'a, Cx: Context, Fl: Flow<Cx = Cx>> {
     provider_info: Rc<provider_api::Info<ALoc>>,
     prepass_info: &'a flow_analysis::scope_api::ScopeInfo<ALoc>,
     prepass_values: &'a flow_analysis::ssa_api::Values<ALoc>,
+    assertion_calls: BTreeMap<ALoc, AssertionInfo>,
     invalidation_caches: RefCell<invalidation_api::InvalidationCaches<ALoc>>,
     _phantom: std::marker::PhantomData<Fl>,
 }
@@ -1736,6 +1759,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             &BTreeSet<FlowSmolStr>,
         ),
         provider_info: Rc<provider_api::Info<ALoc>>,
+        assertion_calls: BTreeMap<ALoc, AssertionInfo>,
         program_loc: ALoc,
     ) -> Self {
         let (prepass_info, prepass_values, unbound_names) = prepass;
@@ -1764,6 +1788,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             provider_info,
             prepass_info,
             prepass_values,
+            assertion_calls,
             invalidation_caches: RefCell::new(invalidation_api::InvalidationCaches::new()),
             class_stack: FlowVector::new(),
             _phantom: std::marker::PhantomData,
@@ -3626,6 +3651,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 .invalid_type_param_default_locs
                 .insert(loc.dupe());
         }
+        if self.env_state.skip_read_recording {
+            return;
+        }
         let entry = ReadEntry {
             def_loc: env_val.def_loc.dupe(),
             value: v,
@@ -3661,6 +3689,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             self.env_state
                 .invalid_type_param_default_locs
                 .insert(loc.dupe());
+        }
+        if self.env_state.skip_read_recording {
+            return;
         }
         let entry = ReadEntry {
             def_loc: env_val.def_loc.dupe(),
@@ -4064,7 +4095,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 r.visit_match_pattern(&arg, pattern)?;
 
                 match r.get_val_of_expression(&arg) {
-                    Some(refined_value) => {
+                    Some(refined_value) if !r.env_state.skip_read_recording => {
                         r.env_state.values.insert(
                             case_match_root_loc.dupe(),
                             ReadEntry {
@@ -4075,7 +4106,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                             },
                         );
                     }
-                    None => {}
+                    _ => {}
                 }
                 let completion_state = r.run_to_completion(|resolver| {
                     if let Some(g) = guard {
@@ -4916,6 +4947,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         // because a scout should be followed-up by a run that revisits everything visited by
         // the scout. with_env_state will ensure that all mutable state is restored.
         self.with_env_state(|this| {
+            this.env_state.in_loop_scout = true;
             let pre_env = this.env_snapshot();
             let completion_state = this.run_to_completion(scout);
             this.run_to_completion(|r| {
@@ -5076,10 +5108,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             .iter()
             .any(|(c, _)| matches!(c, AbruptCompletion::Break(None)))
         {
-            self.push_refinement_scope(RefinementMaps::empty());
-            self.expression_refinement(guard)?;
-            self.negate_new_refinements();
-            self.pop_refinement_scope_without_unrefining();
+            self.with_persistent_refinement_scope(|this| {
+                this.expression_refinement(guard)?;
+                this.negate_new_refinements();
+                Ok(())
+            })?;
             let final_env = self.env_snapshot();
             self.reset_env(env_before_guard);
             self.push_refinement_scope(RefinementMaps::empty());
@@ -6176,6 +6209,15 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         self.env_state.latest_refinements.pop();
     }
 
+    /// Run `f` under a fresh refinement scope, popped without unrefining so
+    /// statement-level facts live on in the env.
+    fn with_persistent_refinement_scope<T>(&mut self, f: impl FnOnce(&mut Self) -> T) -> T {
+        self.push_refinement_scope(empty_refinements());
+        let result = f(self);
+        self.pop_refinement_scope_without_unrefining();
+        result
+    }
+
     // When a refinement scope ends, we need to undo the refinement applied to the
     // variables mentioned in the latest_refinements head. Some of these values may no
     // longer be the refined value, in which case Val.unrefine will be a no-op. Otherwise,
@@ -6506,6 +6548,101 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     ) {
         let refis = self.start_refinement(key, refining_locs, refi_kind);
         self.commit_refinement(refis);
+    }
+
+    /// Runs `f` with read recording disabled: writes and havoc still apply,
+    /// but reads keep the entries recorded by the first traversal instead
+    /// of being re-recorded in the current (possibly refined) env. Used
+    /// when replaying assertion-call arguments for invalidation effects.
+    fn with_skip_read_recording<R>(&mut self, f: impl FnOnce(&mut Self) -> R) -> R {
+        let was_skipping = std::mem::replace(&mut self.env_state.skip_read_recording, true);
+        let result = f(self);
+        self.env_state.skip_read_recording = was_skipping;
+        result
+    }
+
+    fn add_assertion_call_refinement(
+        &mut self,
+        loc: &ALoc,
+        call: &flow_parser::ast::expression::Call<ALoc, ALoc>,
+        assertion: AssertionInfo,
+    ) -> Result<(), AbruptCompletion> {
+        use flow_parser::ast::expression::ExpressionOrSpread;
+
+        if spread_before_index(&call.arguments.arguments, assertion.parameter_index) {
+            return Ok(());
+        }
+        self.with_persistent_refinement_scope(|this| {
+            match assertion.kind {
+                AssertionKind::Bare => {
+                    if bare_assertion_call_always_throws(assertion, &call.arguments.arguments) {
+                        return this.raise_abrupt_completion(AbruptCompletion::Throw);
+                    }
+                    match call.arguments.arguments.get(assertion.parameter_index) {
+                        Some(ExpressionOrSpread::Expression(argument)) => {
+                            this.expression_refinement(argument)
+                        }
+                        None | Some(ExpressionOrSpread::Spread(_)) => Ok(()),
+                    }
+                }
+                AssertionKind::TypeGuard => {
+                    let Some(ExpressionOrSpread::Expression(argument)) =
+                        call.arguments.arguments.get(assertion.parameter_index)
+                    else {
+                        return Ok(());
+                    };
+                    let Some(key) = refinement_key::RefinementKey::of_expression(argument) else {
+                        return Ok(());
+                    };
+                    let call_expr = Expression::new(ExpressionInner::Call {
+                        loc: loc.dupe(),
+                        inner: Arc::new(call.clone()),
+                    });
+                    this.add_pred_func_info(
+                        call.callee.loc().dupe(),
+                        call_expr,
+                        call.callee.clone(),
+                        call.targs.clone(),
+                        call.arguments.clone(),
+                    );
+                    let mut refining_locs = empty_refining_locs();
+                    refining_locs.insert(loc.dupe());
+                    this.add_single_refinement(
+                        &key,
+                        refining_locs,
+                        env_api::RefinementKind::AssertionR {
+                            func: Rc::new(call.callee.clone()),
+                            targs: call.targs.clone().map(Rc::new),
+                            arguments: Rc::new(call.arguments.clone()),
+                            index: Rc::from([assertion.parameter_index as i32].as_slice()),
+                        },
+                    );
+                    Ok(())
+                }
+            }?;
+            // Arguments after the asserted one are evaluated after the asserted
+            // value is observed, so replay them to let their writes and havoc
+            // invalidate the refinement when they touch the asserted binding.
+            // This mirrors the handling of `invariant` conditions in `call`,
+            // except reads are not re-recorded: they keep the entries from
+            // the first traversal (pre-refinement), so a later-arg read of
+            // the asserted binding neither resolves to the lazy `AssertionR`
+            // (whose forcing would re-enter the same pred-func lazy while
+            // the call's arguments are being typed and panic) nor has real
+            // errors suppressed.
+            this.with_skip_read_recording(|this| {
+                for arg in call
+                    .arguments
+                    .arguments
+                    .iter()
+                    .skip(assertion.parameter_index + 1)
+                {
+                    this.expression_or_spread(arg)?;
+                }
+                Ok(())
+            })?;
+            Ok(())
+        })
     }
 
     fn add_pred_func_info(
@@ -7763,6 +7900,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     fn record_member_read(&mut self, expr: &flow_parser::ast::expression::Expression<ALoc, ALoc>) {
         use flow_parser::ast::expression::ExpressionInner;
 
+        // Reads keep their first-traversal entries while replaying
+        // assertion arguments for invalidation effects only.
+        if self.env_state.skip_read_recording {
+            return;
+        }
         let loc = expr.loc().dupe();
         match expr.deref() {
             ExpressionInner::OptionalMember { .. } | ExpressionInner::Member { .. } => {
@@ -10717,17 +10859,28 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                             self.raise_abrupt_completion(AbruptCompletion::Throw)?;
                         }
                         (None, Some(ExpressionOrSpread::Expression(cond))) => {
-                            self.push_refinement_scope(empty_refinements());
-                            self.expression_refinement(cond)?;
-                            for arg in args.iter().skip(1) {
-                                self.expression_or_spread(arg)?;
-                            }
-                            self.pop_refinement_scope_without_unrefining();
+                            self.with_persistent_refinement_scope(|this| {
+                                this.expression_refinement(cond)?;
+                                // TODO: re-traversing later args re-records their reads in the
+                                // refined env (e.g. `invariant(typeof x === "string",
+                                // takesString(x))` records the inner `x` as `string`),
+                                // suppressing real errors. Replay should apply only
+                                // invalidation effects and skip read-recording.
+                                for arg in args.iter().skip(1) {
+                                    this.expression_or_spread(arg)?;
+                                }
+                                Ok(())
+                            })?;
                         }
                         _ => {}
                     }
                 } else {
-                    self.havoc_current_env(Reason::FunctionCall, loc.dupe());
+                    let assertion = self.assertion_calls.get(callee.loc()).copied();
+                    // Proven assertion calls (e.g. a userland `invariant`) are assumed
+                    // pure: unlike ordinary calls they do not invalidate refinements.
+                    if assertion.is_none() {
+                        self.havoc_current_env(Reason::FunctionCall, loc.dupe());
+                    }
                 }
             }
         }
@@ -11035,7 +11188,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         use flow_parser::ast::expression::ExpressionInner;
 
         self.handle_array_providers(expr);
-        match expr.deref() {
+        let result = match expr.deref() {
             ExpressionInner::Call { .. }
             | ExpressionInner::OptionalCall { .. }
             | ExpressionInner::Member { .. }
@@ -11050,7 +11203,16 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 res
             }
             _ => ast_visitor::expression_default(self, expr),
+        };
+        result?;
+        if let ExpressionInner::Call { loc, inner } = expr.deref()
+            && let Some(assertion) = self.assertion_calls.get(inner.callee.loc()).copied()
+            && (!self.env_state.in_loop_scout
+                || bare_assertion_call_always_throws(assertion, &inner.arguments.arguments))
+        {
+            self.add_assertion_call_refinement(loc, inner, assertion)?;
         }
+        Ok(())
     }
 
     fn component_param(
@@ -12075,12 +12237,20 @@ impl NameResolverResult {
     }
 }
 
-pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
+/// The shared structural analyses that both the targeted callee analysis and
+/// name resolution consume. Built once; the targeted analysis runs between
+/// this and the resolver walk so assertion calls are known before control
+/// flow is modeled.
+pub fn prepass<Cx: Context>(
     cx: &Cx,
-    is_lib: bool,
-    exclude_syms: FlowOrdSet<FlowSmolStr>,
     program: &Program<ALoc, ALoc>,
-) -> (Option<AbruptCompletion>, NameResolverResult) {
+) -> (
+    ALoc,
+    flow_analysis::scope_api::ScopeInfo<ALoc>,
+    flow_analysis::ssa_api::Values<ALoc>,
+    BTreeSet<FlowSmolStr>,
+    Rc<provider_api::Info<ALoc>>,
+) {
     use flow_analysis::scope_builder;
     use flow_analysis::ssa_builder;
 
@@ -12094,11 +12264,56 @@ pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
     let scopes = scope_builder::program(enable_enums, true, program);
     let (_ssa_completion_state, (ssa_values, unbound_names)) =
         ssa_builder::program_with_scope_and_jsx_pragma(enable_enums, jsx_ast, program);
-    let prepass = (&scopes, &ssa_values, &unbound_names);
     let providers = Rc::new(provider_api::find_providers(program));
+    (loc, scopes, ssa_values, unbound_names, providers)
+}
 
-    let mut env_walk =
-        NameResolver::<Cx, Fl>::new(cx, is_lib, exclude_syms, prepass, providers.dupe(), loc);
+pub fn program_with_scope<Cx: Context, Fl: Flow<Cx = Cx>>(
+    cx: &Cx,
+    is_lib: bool,
+    exclude_syms: FlowOrdSet<FlowSmolStr>,
+    program: &Program<ALoc, ALoc>,
+) -> (Option<AbruptCompletion>, NameResolverResult) {
+    let (loc, scopes, ssa_values, unbound_names, providers) = prepass(cx, program);
+    walk_with_prepass::<Cx, Fl>(
+        cx,
+        is_lib,
+        exclude_syms,
+        loc,
+        scopes,
+        ssa_values,
+        unbound_names,
+        providers,
+        BTreeMap::new(),
+        program,
+    )
+}
+
+/// Used when the targeted callee analysis must run between the prepass and this walk.
+#[allow(clippy::too_many_arguments)]
+pub fn walk_with_prepass<Cx: Context, Fl: Flow<Cx = Cx>>(
+    cx: &Cx,
+    is_lib: bool,
+    exclude_syms: FlowOrdSet<FlowSmolStr>,
+    program_loc: ALoc,
+    scopes: flow_analysis::scope_api::ScopeInfo<ALoc>,
+    ssa_values: flow_analysis::ssa_api::Values<ALoc>,
+    unbound_names: BTreeSet<FlowSmolStr>,
+    providers: Rc<provider_api::Info<ALoc>>,
+    assertion_calls: BTreeMap<ALoc, AssertionInfo>,
+    program: &Program<ALoc, ALoc>,
+) -> (Option<AbruptCompletion>, NameResolverResult) {
+    let prepass = (&scopes, &ssa_values, &unbound_names);
+
+    let mut env_walk = NameResolver::<Cx, Fl>::new(
+        cx,
+        is_lib,
+        exclude_syms,
+        prepass,
+        providers.dupe(),
+        assertion_calls,
+        program_loc,
+    );
     let completion_state = env_walk.visit_program(program);
     env_walk.cache.borrow_mut().clear();
     // Fill in dead code reads

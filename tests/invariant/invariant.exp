@@ -1,3 +1,37 @@
+Error ------------------------------------------------------------------------------------------------- arg_order.js:6:3
+
+Cannot cast `y` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   arg_order.js:6:3
+   6|   y as string; // error: y holds z (number); the condition described the earlier value
+        ^
+
+References:
+   arg_order.js:4:57
+   4| function laterArgReassignsRefinedBinding(y: unknown, z: number): void {
+                                                              ^^^^^^ [1]
+   arg_order.js:6:8
+   6|   y as string; // error: y holds z (number); the condition described the earlier value
+             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ arg_order.js:13:3
+
+Cannot cast `y` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   arg_order.js:13:3
+   13|   y as number; // error: genuine refinement is preserved
+         ^
+
+References:
+   arg_order.js:11:13
+   11|   invariant(typeof y === 'string', msg);
+                   ^^^^^^^^^^^^^^^^^^^^^ [1]
+   arg_order.js:13:8
+   13|   y as number; // error: genuine refinement is preserved
+              ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- index.js:4:1
 
 This use of `invariant` is unnecessary because `true` [1] is always truthy. [unnecessary-invariant]
@@ -157,4 +191,4 @@ References:
 
 
 
-Found 10 errors
+Found 12 errors

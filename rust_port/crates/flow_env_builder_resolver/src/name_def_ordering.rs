@@ -355,6 +355,12 @@ where
                     targs,
                     arguments,
                     index: _,
+                }
+                | RefinementKind::AssertionR {
+                    func,
+                    targs,
+                    arguments,
+                    index: _,
                 } => {
                     let Ok(()) = this.expression(func.as_ref());
                     if let Some(targs) = targs {

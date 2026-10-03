@@ -401,6 +401,12 @@ pub mod refi {
             arguments: Rc<expression::ArgList<L, L>>,
             index: Rc<[i32]>,
         },
+        AssertionR {
+            func: Rc<expression::Expression<L, L>>,
+            targs: Option<Rc<expression::CallTypeArgs<L, L>>>,
+            arguments: Rc<expression::ArgList<L, L>>,
+            index: Rc<[i32]>,
+        },
         LatentThisR {
             func: Rc<expression::Expression<L, L>>,
             targs: Option<Rc<expression::CallTypeArgs<L, L>>>,
@@ -917,6 +923,10 @@ pub fn show_refinement_kind_without_locs<L: Dupe>(kind: &RefinementKind<L>) -> S
         RefinementKind::LatentR { index, .. } => {
             let indices: Vec<String> = index.iter().map(|i| i.to_string()).collect();
             format!("LatentR (index = {})", indices.join(", "))
+        }
+        RefinementKind::AssertionR { index, .. } => {
+            let indices: Vec<String> = index.iter().map(|i| i.to_string()).collect();
+            format!("AssertionR (index = {})", indices.join(", "))
         }
         RefinementKind::LatentThisR { .. } => "LatentThisR".to_string(),
         RefinementKind::PropTruthyR { propname, .. } => format!("PropTruthyR ({})", propname),

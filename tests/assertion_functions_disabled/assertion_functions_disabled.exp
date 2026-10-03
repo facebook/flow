@@ -1,0 +1,135 @@
+Error -------------------------------------------------------------------------------------------------- exports.js:1:55
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   1| declare export function assertString(value: unknown): asserts value is string; // error: unsupported syntax
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- exports.js:3:53
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   3| declare export function assertBare(value: unknown): asserts value; // error: unsupported syntax
+                                                          ^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- exports.js:5:53
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   5| declare export const annotated: (value: unknown) => asserts value is number; // error: unsupported syntax
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- exports.js:7:53
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   7| export type ExportedAssertion = (value: unknown) => asserts value is boolean; // error: unsupported syntax
+                                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- imports.js:8:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:8:3
+   8|   value as string; // error: no refinement without the flag
+        ^^^^^
+
+References:
+   imports.js:6:30
+   6| function noRefinement(value: unknown) {
+                                   ^^^^^^^ [1]
+   imports.js:8:12
+   8|   value as string; // error: no refinement without the flag
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:13:3
+
+Cannot cast `value` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:13:3
+   13|   value as string; // error: no refinement without the flag
+         ^^^^^
+
+References:
+   imports.js:11:34
+   11| function noBareRefinement(value: ?string) {
+                                        ^^^^^^^ [1]
+   imports.js:13:12
+   13|   value as string; // error: no refinement without the flag
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:13:3
+
+Cannot cast `value` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   imports.js:13:3
+   13|   value as string; // error: no refinement without the flag
+         ^^^^^
+
+References:
+   imports.js:11:34
+   11| function noBareRefinement(value: ?string) {
+                                        ^^^^^^^ [1]
+   imports.js:13:12
+   13|   value as string; // error: no refinement without the flag
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:18:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   imports.js:18:3
+   18|   value as number; // error: no refinement without the flag
+         ^^^^^
+
+References:
+   imports.js:16:39
+   16| function noAnnotatedRefinement(value: unknown) {
+                                             ^^^^^^^ [1]
+   imports.js:18:12
+   18|   value as number; // error: no refinement without the flag
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- imports.js:23:3
+
+Cannot cast `value` to boolean because `unknown` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   imports.js:23:3
+   23|   value as boolean; // error: no refinement without the flag
+         ^^^^^
+
+References:
+   imports.js:21:42
+   21| function noImportedTypeRefinement(value: unknown) {
+                                                ^^^^^^^ [1]
+   imports.js:23:12
+   23|   value as boolean; // error: no refinement without the flag
+                  ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:1:48
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   1| declare function assertNumber(value: unknown): asserts value is number; // error: unsupported syntax
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:3:40
+
+Type guard assertions are not yet supported. [unsupported-syntax]
+
+   3| function assertTruthy(value: unknown): asserts value {} // error: unsupported syntax
+                                             ^^^^^^^^^^^^^
+
+
+
+Found 11 errors

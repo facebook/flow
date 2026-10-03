@@ -736,31 +736,48 @@ fn initialize_env_with_mode<'cx>(
         flow_utils_concurrency::job_error::JobError,
     > = (|| {
         let dep_cx = DepSigsContext(cx);
+        let (program_loc, scopes, ssa_values, unbound_names, providers) =
+            name_resolver::prepass(&dep_cx, aloc_ast);
+        // The targeted callee analysis runs between the prepass and the
+        // resolver walk; files without candidates return early from packing.
+        let resolved_declared_types = if cx.assertion_functions_enabled() {
+            match declared_types_mode {
+                DeclaredTypesMode::Skip => None,
+                DeclaredTypesMode::Compute {
+                    ast,
+                    type_sig_options,
+                    current_type_sig,
+                } => declared_types::pack(
+                    type_sig_options,
+                    cx,
+                    ast,
+                    aloc_ast,
+                    &scopes,
+                    &providers,
+                    current_type_sig,
+                )
+                .map(|analysis| declared_types::resolve(cx, analysis)),
+            }
+        } else {
+            None
+        };
+        let assertion_calls = resolved_declared_types
+            .as_ref()
+            .map(|resolved| declared_types::assertion_calls(resolved).clone())
+            .unwrap_or_default();
         let (_abrupt_completion, info) =
-            name_resolver::program_with_scope::<DepSigsContext<'_, '_>, FlowJsUtilsFlow<'_, '_>>(
+            name_resolver::walk_with_prepass::<DepSigsContext<'_, '_>, FlowJsUtilsFlow<'_, '_>>(
                 &dep_cx,
                 lib,
                 exclude_syms.into_iter().collect(),
+                program_loc,
+                scopes,
+                ssa_values,
+                unbound_names,
+                providers,
+                assertion_calls,
                 aloc_ast,
             );
-        let resolved_declared_types = match declared_types_mode {
-            DeclaredTypesMode::Skip => None,
-            DeclaredTypesMode::Compute {
-                ast,
-                type_sig_options,
-                current_type_sig,
-            } if cx.assertion_functions_enabled() => declared_types::pack(
-                type_sig_options,
-                cx,
-                ast,
-                aloc_ast,
-                &info.scopes,
-                &info.providers,
-                current_type_sig,
-            )
-            .map(|analysis| declared_types::resolve(cx, analysis)),
-            DeclaredTypesMode::Compute { .. } => None,
-        };
         let info = info.to_env_info();
         let autocomplete_hooks = AutocompleteHooks {
             id_hook: Box::new(|name: &str, loc: &ALoc| {

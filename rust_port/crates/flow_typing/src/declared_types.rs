@@ -160,10 +160,6 @@ pub(crate) fn pack(
 }
 
 pub(crate) struct ResolvedAnalysis {
-    #[expect(
-        dead_code,
-        reason = "consumed by the assertion integration in a descendant commit"
-    )]
     assertion_calls: BTreeMap<ALoc, AssertionInfo>,
 }
 
@@ -173,7 +169,7 @@ pub(crate) fn resolve<'cx>(cx: &Context<'cx>, analysis: PackedAnalysis) -> Resol
             .local
             .map(|local| MergedLocalAnalysis::new(cx, local));
         // Classify once per canonical callee, then fan out to all call sites.
-        // Locals need a covering annotation; imports use dependency types.
+        // Locals resolve from merged signature types; imports use dependency types.
         let mut classified = BTreeMap::new();
         for candidate in &analysis.canonical_candidates {
             let canonical = CanonicalCallee::of_target(candidate);
@@ -219,6 +215,10 @@ pub(crate) fn resolve<'cx>(cx: &Context<'cx>, analysis: PackedAnalysis) -> Resol
         Ok(ResolvedAnalysis { assertion_calls })
     });
     result
+}
+
+pub(crate) fn assertion_calls(analysis: &ResolvedAnalysis) -> &BTreeMap<ALoc, AssertionInfo> {
+    &analysis.assertion_calls
 }
 
 fn assertion_of_function(function: &flow_typing_type::type_::FunType) -> Option<AssertionInfo> {
@@ -280,9 +280,7 @@ fn imported_assertion_info(
     assertion_info_of_type(cx, reason, &callee_type)
 }
 
-/// Classify a fully-navigated callee type, shared by locals and imports.
-/// Navigation (mapped consumption + `get_prop`) runs before, in
-/// `callee_type_for_classification`.
+/// Classify a callee type that has already been navigated.
 fn assertion_info_of_type(
     cx: &Context<'_>,
     reason: &Reason,

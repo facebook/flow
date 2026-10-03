@@ -53,6 +53,7 @@ use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeGuardKind;
 use flow_typing_type::type_::UseOp;
 use flow_utils_concurrency::job_error::JobError;
 
@@ -852,7 +853,11 @@ fn read_pred_func_info_exn<'cx>(
 }
 
 /// Returns [true] iff the input type is potentially a predicate function.
-fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
+fn maybe_predicate_function<'cx>(
+    cx: &Context<'cx>,
+    t: &Type,
+    assertion: bool,
+) -> Result<bool, JobError> {
     use std::ops::Deref;
 
     use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -890,14 +895,21 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, Jo
         result
     }
 
-    fn on_ground(t: &Type) -> bool {
+    fn matches_position(fun_t: &flow_typing_type::type_::FunType, assertion: bool) -> bool {
+        fun_t
+            .type_guard
+            .as_deref()
+            .is_some_and(|guard| matches!(guard.kind, TypeGuardKind::Asserts) == assertion)
+    }
+
+    fn on_ground(t: &Type, assertion: bool) -> bool {
         match t.deref() {
             TypeInner::AnyT(_, _) => false,
             TypeInner::DefT(_, def_t) => match def_t.deref() {
-                DefTInner::FunT(_, fun_t) => fun_t.type_guard.is_some(),
+                DefTInner::FunT(_, fun_t) => matches_position(fun_t, assertion),
                 DefTInner::PolyT(box PolyTData { t_out, .. }) => match t_out.deref() {
                     TypeInner::DefT(_, inner_def_t) => match inner_def_t.deref() {
-                        DefTInner::FunT(_, fun_t) => fun_t.type_guard.is_some(),
+                        DefTInner::FunT(_, fun_t) => matches_position(fun_t, assertion),
                         _ => false,
                     },
                     _ => false,
@@ -908,31 +920,31 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, Jo
         }
     }
 
-    fn on_non_inter<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
+    fn on_non_inter<'cx>(cx: &Context<'cx>, t: &Type, assertion: bool) -> Result<bool, JobError> {
         match t.deref() {
-            TypeInner::DefT(_, _) => Ok(on_ground(t)),
+            TypeInner::DefT(_, _) => Ok(on_ground(t, assertion)),
             _ => {
                 let simplified = simplify_callee(cx, t)?;
-                Ok(on_ground(&simplified))
+                Ok(on_ground(&simplified, assertion))
             }
         }
     }
 
-    fn on_concrete<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
+    fn on_concrete<'cx>(cx: &Context<'cx>, t: &Type, assertion: bool) -> Result<bool, JobError> {
         match t.deref() {
             TypeInner::IntersectionT(_, rep) => {
                 for m in rep.members_iter() {
-                    if on_t(cx, m)? {
+                    if on_t(cx, m, assertion)? {
                         return Ok(true);
                     }
                 }
                 Ok(false)
             }
-            _ => on_non_inter(cx, t),
+            _ => on_non_inter(cx, t, assertion),
         }
     }
 
-    fn on_t<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, JobError> {
+    fn on_t<'cx>(cx: &Context<'cx>, t: &Type, assertion: bool) -> Result<bool, JobError> {
         let reason = flow_typing_type::type_util::reason_of_t(t);
         let cts = match FlowJs::possible_concrete_types_for_inspection(cx, reason, t) {
             Ok(v) => v,
@@ -948,14 +960,14 @@ fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> Result<bool, Jo
             Err(err) => panic!("Non speculating: {:?}", err),
         };
         for ct in cts.iter() {
-            if on_concrete(cx, ct)? {
+            if on_concrete(cx, ct, assertion)? {
                 return Ok(true);
             }
         }
         Ok(false)
     }
 
-    on_t(cx, t)
+    on_t(cx, t, assertion)
 }
 
 fn predicate_of_refinement<'cx>(
@@ -1108,7 +1120,7 @@ fn predicate_of_refinement<'cx>(
                         // Only the callee is needed to decide whether this is a predicate
                         // function; the arguments are typed lazily by `info.full` below.
                         let t = info.callee.try_get_forced(cx)?;
-                        if maybe_predicate_function(cx, t)? {
+                        if maybe_predicate_function(cx, t, false)? {
                             Some(Predicate::new(PredicateInner::LatentP(
                                 read_pred_func_info_exn(cx, func_loc)?,
                                 index.dupe(),
@@ -1117,6 +1129,27 @@ fn predicate_of_refinement<'cx>(
                             None
                         }
                     }
+                    None => None,
+                }
+            }
+            RefinementKind::AssertionR {
+                func,
+                index,
+                targs: _,
+                arguments: _,
+            } => {
+                // The callee was already proven by the pre-resolution analysis,
+                // so unlike `LatentR` there is no callee-type check here.
+                let func_loc = func.loc().dupe();
+                let lazy_info = {
+                    let env = cx.environment();
+                    env.pred_func_map.get(&func_loc).duped()
+                };
+                match lazy_info {
+                    Some(_) => Some(Predicate::new(PredicateInner::LatentP(
+                        read_pred_func_info_exn(cx, func_loc)?,
+                        index.dupe(),
+                    ))),
                     None => None,
                 }
             }
@@ -1133,7 +1166,7 @@ fn predicate_of_refinement<'cx>(
                 match lazy_info {
                     Some(info) => {
                         let t = info.callee.try_get_forced(cx)?;
-                        if maybe_predicate_function(cx, t)? {
+                        if maybe_predicate_function(cx, t, false)? {
                             Some(Predicate::new(PredicateInner::LatentThisP(
                                 read_pred_func_info_exn(cx, func_loc)?,
                             )))
