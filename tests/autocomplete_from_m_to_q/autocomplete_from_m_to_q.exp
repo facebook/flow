@@ -407,7 +407,7 @@ Flags: --pretty
     },
     {"name":"SharedArrayBuffer","type":"typeof SharedArrayBuffer"},
     {"name":"String","type":"StringConstructor"},
-    {"name":"Symbol","type":"typeof Symbol"},
+    {"name":"Symbol","type":"SymbolConstructor"},
     {"name":"SyntaxError","type":"SyntaxErrorConstructor"},
     {"name":"TypeError","type":"TypeErrorConstructor"},
     {"name":"Uint16Array","type":"Uint16ArrayConstructor"},

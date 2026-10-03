@@ -177,9 +177,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:40:19
@@ -193,9 +193,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:45:25
@@ -225,9 +225,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                             ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:54:21
@@ -241,9 +241,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:56:23
@@ -257,9 +257,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                              ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:61:21
@@ -273,9 +273,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:69:24
@@ -289,9 +289,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mint.js:107:19
@@ -317,13 +317,13 @@ values, but this one is a `Symbol` [2]. Can you add an appropriate type annotati
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    notcalls.js:7:27
-   7| const fromConstructed = {[constructed]: 1}; // ERROR: an instance is not a key
-                                ^^^^^^^^^^^ [1]
+    7| const fromConstructed = {[constructed]: 1}; // ERROR: an instance is not a key
+                                 ^^^^^^^^^^^ [1]
 
 References:
-   notcalls.js:6:21
-   6| const constructed = new Symbol();
-                          ^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:34:10
+   34|   new(): Symbol;
+                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:11:24
@@ -337,54 +337,56 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:28:29
-   28|   static (value?: unknown): symbol;
-                                   ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:39:22
+   39|   (value?: unknown): symbol;
+                            ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ notcalls.js:16:26
+Error ------------------------------------------------------------------------------------------------ notcalls.js:17:25
 
-An index signature declaring the expected key / value type is missing in class `Symbol` [1]. [incompatible-use]
+Cannot use `bracketed` [1] to assign a computed property. Computed properties may only be numeric or string literal
+values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `bracketed` [1]? See
+https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
-   notcalls.js:16:26
-   16| const bracketed = Symbol['for']('a key'); // ERROR: no index signature on `Symbol`
-                                ^^^^^
+   notcalls.js:17:25
+   17| const fromBracketed = {[bracketed]: 1}; // ERROR: `symbol` is not a key
+                               ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:23:15
-   23| declare class Symbol {
-                     ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:50:21
+   50|   for(key: string): symbol;
+                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ notcalls.js:21:22
+Error ------------------------------------------------------------------------------------------------ notcalls.js:22:22
 
 Cannot use `keyOf` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
 but this one is a null or undefined [2]. Can you add an appropriate type annotation to `keyOf` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
-   notcalls.js:21:22
-   21| const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
+   notcalls.js:22:22
+   22| const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
                             ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:64:31
-   64|   static keyFor(sym: symbol): ?string;
-                                     ^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:71:24
+   71|   keyFor(sym: symbol): ?string;
+                              ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ notcalls.js:26:25
+Error ------------------------------------------------------------------------------------------------ notcalls.js:27:25
 
 Cannot use `elsewhere` [1] to assign a computed property. Computed properties may only be numeric or string literal
 values, but this one is a `symbol` [2]. Can you add an appropriate type annotation to `elsewhere` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
-   notcalls.js:26:25
-   26| const fromElsewhere = {[elsewhere]: 1}; // ERROR: `symbol` is not a key
+   notcalls.js:27:25
+   27| const fromElsewhere = {[elsewhere]: 1}; // ERROR: `symbol` is not a key
                                ^^^^^^^^^ [1]
 
 References:
-   notcalls.js:24:48
-   24| declare const registry: {for: (key: string) => symbol};
+   notcalls.js:25:48
+   25| declare const registry: {for: (key: string) => symbol};
                                                       ^^^^^^ [2]
 
 

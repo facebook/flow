@@ -11,9 +11,10 @@ const optional = Symbol?.();
 const fromOptional = {[optional]: 1}; // ERROR: `symbol` is not a key
 
 // The registry lookup is read as the property `for` written as a name, so the
-// bracketed spelling is an ordinary element access, which the class does not
-// answer at all.
-const bracketed = Symbol['for']('a key'); // ERROR: no index signature on `Symbol`
+// bracketed spelling is an ordinary element access, which returns a plain
+// `symbol`.
+const bracketed = Symbol['for']('a key');
+const fromBracketed = {[bracketed]: 1}; // ERROR: `symbol` is not a key
 
 // Another static of `Symbol` is not the registry lookup.
 declare const someSymbol: symbol;
