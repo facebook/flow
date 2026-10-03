@@ -320,3 +320,42 @@ function bareFalseWithTargsIsAbrupt(): number {
   assertTruthy<boolean>(false);
   return 0; // error: unreachable after a bare assertion of false
 }
+
+function localDeclareFunction(value: ?string) {
+  declare function assertLocal(value: unknown): asserts value;
+  assertLocal(value);
+  value as string;
+  value as null; // error: function-local declare function is an assertion
+}
+
+function localDeclareConst(value: unknown) {
+  declare const assertLocal: (value: unknown) => asserts value is number;
+  assertLocal(value);
+  value as number;
+  value as string; // error: function-local declare const is an assertion
+}
+
+function localFunction(value: unknown) {
+  function assertLocal(value: unknown): asserts value is number {
+    if (typeof value !== 'number') {
+      throw new Error();
+    }
+  }
+  assertLocal(value);
+  value as number;
+  value as string; // error: function-local function declaration is an assertion
+}
+
+function localShadowsModuleLevel(value: unknown) {
+  declare function assertNumber(value: unknown): asserts value is string;
+  assertNumber(value);
+  value as string;
+  value as number; // error: the local declaration shadows the module-level one
+}
+
+function localOverloadedSilent(value: unknown) {
+  declare function assertLocal(value: unknown): asserts value is number;
+  declare function assertLocal(value: unknown, message: string): void;
+  assertLocal(value);
+  value as number; // error: overloaded callees never classify
+}

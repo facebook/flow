@@ -1169,6 +1169,91 @@ Unreachable code. [unreachable-code]
           ^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- local.js:328:3
+
+Cannot cast `value` to null because `string` [1] is incompatible with `null` [2]. [incompatible-type]
+
+   local.js:328:3
+   328|   value as null; // error: function-local declare function is an assertion
+          ^^^^^
+
+References:
+   local.js:324:39
+   324| function localDeclareFunction(value: ?string) {
+                                              ^^^^^^ [1]
+   local.js:328:12
+   328|   value as null; // error: function-local declare function is an assertion
+                   ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:335:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:335:3
+   335|   value as string; // error: function-local declare const is an assertion
+          ^^^^^
+
+References:
+   local.js:332:67
+   332|   declare const assertLocal: (value: unknown) => asserts value is number;
+                                                                          ^^^^^^ [1]
+   local.js:335:12
+   335|   value as string; // error: function-local declare const is an assertion
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:346:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   local.js:346:3
+   346|   value as string; // error: function-local function declaration is an assertion
+          ^^^^^
+
+References:
+   local.js:339:58
+   339|   function assertLocal(value: unknown): asserts value is number {
+                                                                 ^^^^^^ [1]
+   local.js:346:12
+   346|   value as string; // error: function-local function declaration is an assertion
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:353:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:353:3
+   353|   value as number; // error: the local declaration shadows the module-level one
+          ^^^^^
+
+References:
+   local.js:350:67
+   350|   declare function assertNumber(value: unknown): asserts value is string;
+                                                                          ^^^^^^ [1]
+   local.js:353:12
+   353|   value as number; // error: the local declaration shadows the module-level one
+                   ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- local.js:360:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   local.js:360:3
+   360|   value as number; // error: overloaded callees never classify
+          ^^^^^
+
+References:
+   local.js:356:39
+   356| function localOverloadedSilent(value: unknown) {
+                                              ^^^^^^^ [1]
+   local.js:360:12
+   360|   value as number; // error: overloaded callees never classify
+                   ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- spreads.js:15:3
 
 Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1663,4 +1748,4 @@ References:
 
 
 
-Found 102 errors
+Found 107 errors

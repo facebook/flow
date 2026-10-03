@@ -14771,7 +14771,9 @@ pub(super) fn statement<'arena: 'ast, 'ast>(
 // scopes. A targeted root naming such a binding therefore resolves to
 // nothing. When the binding carries its own annotation, bind it here from
 // the annotation alone, so scope+provider-targeted analyses can address
-// parameters and function-local definitions.
+// parameters and function-local definitions. Function-local declarations
+// (`declare function`, `declare const`, `function`) bind through the same
+// handlers module-level ones use.
 struct LexicalAnnotRoot<'ast> {
     loc: Loc,
     name: FlowSmolStr,
@@ -14784,9 +14786,24 @@ enum LexicalAnnotKind {
     Var(ast::VariableKind),
 }
 
+struct LexicalDeclRoot<'ast> {
+    loc: Loc,
+    name: FlowSmolStr,
+    decl: LexicalDecl<'ast>,
+}
+
+enum LexicalDecl<'ast> {
+    // All same-named overloads in the statement list, so they merge into one
+    // binding as they do at module level.
+    DeclareFunctions(Vec<&'ast ast::statement::DeclareFunction<Loc, Loc>>),
+    DeclareVariable(&'ast ast::statement::DeclareVariable<Loc, Loc>),
+    Function(&'ast ast::function::Function<Loc, Loc>),
+}
+
 struct LexicalAnnotCollector<'a, 'ast> {
     targets: &'a BTreeSet<Loc>,
     roots: Vec<LexicalAnnotRoot<'ast>>,
+    decls: Vec<LexicalDeclRoot<'ast>>,
 }
 
 impl<'a, 'ast> LexicalAnnotCollector<'a, 'ast> {
@@ -14817,6 +14834,60 @@ impl<'a, 'ast> LexicalAnnotCollector<'a, 'ast> {
     ) {
         if let ast::pattern::Pattern::Identifier { inner, .. } = pattern {
             self.record_identifier(kind, inner);
+        }
+    }
+
+    fn record_declarations(&mut self, stmts: &'ast [ast::statement::Statement<Loc, Loc>]) {
+        let declare_functions_named = |name: &FlowSmolStr| {
+            stmts
+                .iter()
+                .filter_map(|stmt| match stmt.deref() {
+                    StatementInner::DeclareFunction { inner, .. }
+                        if inner.id.as_ref().is_some_and(|id| id.name == *name) =>
+                    {
+                        Some(inner.as_ref())
+                    }
+                    _ => None,
+                })
+                .collect()
+        };
+        for stmt in stmts {
+            match stmt.deref() {
+                StatementInner::DeclareFunction { inner, .. }
+                    if let Some(id) = inner.id.as_ref()
+                        && self.targets.contains(&id.loc) =>
+                {
+                    self.decls.push(LexicalDeclRoot {
+                        loc: id.loc.dupe(),
+                        name: id.name.dupe(),
+                        decl: LexicalDecl::DeclareFunctions(declare_functions_named(&id.name)),
+                    });
+                }
+                StatementInner::DeclareVariable { inner, .. } => {
+                    for declarator in inner.declarations.iter() {
+                        if let ast::pattern::Pattern::Identifier { inner: id, .. } = &declarator.id
+                            && self.targets.contains(&id.name.loc)
+                        {
+                            self.decls.push(LexicalDeclRoot {
+                                loc: id.name.loc.dupe(),
+                                name: id.name.name.dupe(),
+                                decl: LexicalDecl::DeclareVariable(inner),
+                            });
+                        }
+                    }
+                }
+                StatementInner::FunctionDeclaration { inner, .. }
+                    if let Some(id) = inner.id.as_ref()
+                        && self.targets.contains(&id.loc) =>
+                {
+                    self.decls.push(LexicalDeclRoot {
+                        loc: id.loc.dupe(),
+                        name: id.name.dupe(),
+                        decl: LexicalDecl::Function(inner),
+                    });
+                }
+                _ => {}
+            }
         }
     }
 }
@@ -14859,10 +14930,18 @@ impl<'a, 'ast> AstVisitor<'ast, Loc> for LexicalAnnotCollector<'a, 'ast> {
         }
         ast_visitor::catch_clause_default(self, clause)
     }
+
+    fn statement_list(
+        &mut self,
+        stmts: &'ast [ast::statement::Statement<Loc, Loc>],
+    ) -> Result<(), !> {
+        self.record_declarations(stmts);
+        ast_visitor::statement_list_default(self, stmts)
+    }
 }
 
 pub(crate) fn bind_lexical_annotation_roots<'arena: 'ast, 'ast>(
-    _opts: &TypeSigOptions,
+    opts: &TypeSigOptions,
     module_scope: ScopeId,
     scopes: &mut scope::Scopes<'arena, 'ast>,
     tbls: &mut Tables<'arena, 'ast>,
@@ -14872,6 +14951,7 @@ pub(crate) fn bind_lexical_annotation_roots<'arena: 'ast, 'ast>(
     let mut collector = LexicalAnnotCollector {
         targets: missing,
         roots: vec![],
+        decls: vec![],
     };
     let Ok(()) = collector.program(program);
     let mut bound = BTreeMap::new();
@@ -14939,6 +15019,33 @@ pub(crate) fn bind_lexical_annotation_roots<'arena: 'ast, 'ast>(
         }
         if let Some(node) = slot.borrow().as_ref() {
             bound.insert(loc, BindingNode::LocalBinding(node.dupe()));
+        }
+    }
+    for LexicalDeclRoot { loc, name, decl } in collector.decls {
+        let lex = scope::push_lex(scopes, module_scope);
+        let slot: RefCell<Option<LocalDefNode>> = RefCell::new(None);
+        let record = |_: &mut scope::Scopes<'arena, 'ast>,
+                      bound_name: &FlowSmolStr,
+                      node: LocalDefNode<'arena, 'ast>| {
+            if *bound_name == name {
+                *slot.borrow_mut() = Some(node);
+            }
+        };
+        match decl {
+            LexicalDecl::DeclareFunctions(decls) => {
+                for decl in decls {
+                    declare_function_decl(lex, scopes, tbls, decl, &record);
+                }
+            }
+            LexicalDecl::DeclareVariable(decl) => {
+                declare_variable_decl(opts, lex, scopes, tbls, decl, &record);
+            }
+            LexicalDecl::Function(decl) => {
+                function_decl(lex, scopes, tbls, decl, &record);
+            }
+        }
+        if let Some(node) = slot.into_inner() {
+            bound.insert(loc, BindingNode::LocalBinding(node));
         }
     }
     bound
