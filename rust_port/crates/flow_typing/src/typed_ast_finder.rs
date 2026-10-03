@@ -1077,7 +1077,7 @@ pub mod type_at_pos {
             &mut self,
             ident: &'ast ast::jsx::Identifier<ALoc, (ALoc, Type)>,
         ) -> Result<(), FoundResult> {
-            let (loc, _) = &ident.loc;
+            let (loc, value_t) = &ident.loc;
             if self.covers_target(loc) {
                 let reason = reason::mk_reason(
                     VirtualReasonDesc::RProperty(Some(Name::new(ident.name.dupe()))),
@@ -1122,7 +1122,17 @@ pub mod type_at_pos {
                             self.find_loc(loc, &t, false, None)
                         }
                     }
-                    None => ast_visitor::jsx_attribute_name_identifier_default(self, ident),
+                    // No hint: the prop is not in the component's declared
+                    // props (an extra prop on an inexact props object). Frame
+                    // the value type as a property of the props object being
+                    // passed, rather than reporting it bare.
+                    None => self.find_binder_with_owner(
+                        loc,
+                        value_t,
+                        BinderKind::Property,
+                        &ident.name,
+                        None,
+                    ),
                 }
             } else {
                 ast_visitor::jsx_attribute_name_identifier_default(self, ident)

@@ -307,6 +307,24 @@ component IndexedComp(foo: number, ...{[string]: number})
 
 test.js:162:19,162:29
 
+test.js:172:15
+Flags:
+(property) label: void | Node
+
+'Node' defined at (lib) react.js:443:22
+
+test.js:172:15,172:19
+
+test.js:175:15
+Flags:
+(property) extra: "value"
+test.js:175:15,175:19
+
+test.js:178:15
+Flags:
+(property) flag: true
+test.js:178:15,178:18
+
 jsx_instantiation.js:3:19
 Flags:
 component Foo1<T>(x: T, y: T)

@@ -161,3 +161,19 @@ declare component OverComp(...props: OverProps);
 
 declare component IndexedComp(...props: {[string]: number, foo: number});
 //                ^
+
+// An attribute naming a prop not in the declared props (allowed by inexact
+// `...`) still frames as a property, using the value type.
+
+type InexactProps = {label?: React.Node, ...};
+
+declare function InexactComp(props: InexactProps): React.Node;
+
+(<InexactComp label="foo" />);
+//            ^
+
+(<InexactComp extra="value" />);
+//            ^
+
+(<InexactComp flag={true} />);
+//            ^

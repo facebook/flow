@@ -38,9 +38,9 @@ jsx.js:7:29 = (property) data: A
 'A' defined at jsx.js:4:20
 
 jsx.js:7:29,7:32
-jsx.js:7:35 = "literal"
+jsx.js:7:35 = (property) id: "literal"
 jsx.js:7:35,7:36
-jsx.js:7:48 = true
+jsx.js:7:48 = (property) hidden: true
 jsx.js:7:48,7:53
 jsx.js:7:59 = const props: {data: A, name: string, ...}
 
