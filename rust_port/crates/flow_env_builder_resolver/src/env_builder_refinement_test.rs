@@ -63,6 +63,10 @@ impl Context for TestCx {
         false
     }
 
+    fn invariant_special_casing_disabled(&self) -> bool {
+        false
+    }
+
     fn stylex_shorthand_prop(&self) -> Option<&str> {
         None
     }

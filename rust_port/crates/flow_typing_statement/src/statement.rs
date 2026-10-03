@@ -9066,7 +9066,8 @@ pub fn optional_chain<'a>(
             }
             // See ~/www/static_upstream/core/
             ExpressionInner::Call { inner, .. }
-                if flow_parser::ast_utils::is_call_to_invariant(&inner.callee) =>
+                if !cx.invariant_special_casing_disabled()
+                    && flow_parser::ast_utils::is_call_to_invariant(&inner.callee) =>
             {
                 // TODO: require
                 let callee_ast = expression(None, None, None, cx, &inner.callee)?;
@@ -20212,12 +20213,14 @@ pub fn mk_func_sig<'a>(
         VirtualReasonDesc::RReturn,
         crate::func_sig::return_loc(func),
     );
-    let has_nonvoid_return =
-        flow_env_builder::nonvoid_return::might_have_nonvoid_return(&loc, func)
-            || (!matches!(
-                kind,
-                func::Kind::Ordinary | func::Kind::Async | func::Kind::Ctor
-            ));
+    let has_nonvoid_return = flow_env_builder::nonvoid_return::might_have_nonvoid_return(
+        &loc,
+        func,
+        cx.invariant_special_casing_disabled(),
+    ) || (!matches!(
+        kind,
+        func::Kind::Ordinary | func::Kind::Async | func::Kind::Ctor
+    ));
     let type_guard_incompatible = match &kind {
         func::Kind::Async
         | func::Kind::Generator { .. }

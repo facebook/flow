@@ -686,6 +686,10 @@ impl<'a, 'cx> dependency_sigs::Context for DepSigsContext<'a, 'cx> {
         self.0.enable_const_params()
     }
 
+    fn invariant_special_casing_disabled(&self) -> bool {
+        self.0.invariant_special_casing_disabled()
+    }
+
     fn stylex_shorthand_prop(&self) -> Option<&str> {
         self.0.stylex_shorthand_prop()
     }
@@ -794,6 +798,7 @@ fn initialize_env_with_mode<'cx>(
         let (name_def_graph, ast_hint_map) = match name_def::find_defs(
             &autocomplete_hooks,
             react_jsx,
+            cx.invariant_special_casing_disabled(),
             &info,
             toplevel_scope_kind,
             aloc_ast,

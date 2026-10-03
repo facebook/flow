@@ -101,6 +101,10 @@ mod tests {
         fn enable_const_params(&self) -> bool {
             self.0.enable_const_params()
         }
+
+        fn invariant_special_casing_disabled(&self) -> bool {
+            self.0.invariant_special_casing_disabled()
+        }
         fn stylex_shorthand_prop(&self) -> Option<&str> {
             self.0.stylex_shorthand_prop()
         }

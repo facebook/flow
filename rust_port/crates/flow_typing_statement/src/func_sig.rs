@@ -165,7 +165,9 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, JobError>
         loc: &'ast (ALoc, Type),
         expr: &'ast ast::expression::Call<ALoc, (ALoc, Type)>,
     ) -> Result<(), JobError> {
-        if ast_utils::is_call_to_invariant(&expr.callee) {
+        if !self.cx.invariant_special_casing_disabled()
+            && ast_utils::is_call_to_invariant(&expr.callee)
+        {
             match expr.arguments.arguments.as_ref() {
                 [] => {
                     self.has_throw = true;

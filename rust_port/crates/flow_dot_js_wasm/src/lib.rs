@@ -177,6 +177,11 @@ fn config_options(config: Option<&Value>) -> Options {
         assertion_functions: bool_config(config, "experimental.assertion_functions", false),
         babel_loose_array_spread: bool_config(config, "babel_loose_array_spread", false),
         component_syntax: true,
+        disable_invariant_special_casing: bool_config(
+            config,
+            "experimental.disable_invariant_special_casing",
+            false,
+        ),
         enable_const_params: bool_config(config, "experimental.const_params", false),
         enable_pattern_matching: true,
         enable_records: true,

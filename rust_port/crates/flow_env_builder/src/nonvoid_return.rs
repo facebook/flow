@@ -23,11 +23,15 @@ use flow_parser::ast_visitor::AstVisitor;
 
 struct ReturnFinder {
     acc: bool,
+    invariant_special_casing_disabled: bool,
 }
 
 impl ReturnFinder {
-    fn new() -> Self {
-        Self { acc: false }
+    fn new(invariant_special_casing_disabled: bool) -> Self {
+        Self {
+            acc: false,
+            invariant_special_casing_disabled,
+        }
     }
 
     fn set_acc(&mut self, value: bool) {
@@ -60,7 +64,7 @@ impl<'ast, Loc: Dupe> AstVisitor<'ast, Loc> for ReturnFinder {
         _loc: &'ast Loc,
         expr: &'ast ast::expression::Call<Loc, Loc>,
     ) -> Result<(), !> {
-        if is_call_to_invariant(&expr.callee) {
+        if !self.invariant_special_casing_disabled && is_call_to_invariant(&expr.callee) {
             // invariant() and invariant(false, ...) are treated like throw
             match &expr.arguments.arguments[..] {
                 [] => self.set_acc(true),
@@ -143,8 +147,9 @@ impl<'ast, Loc: Dupe> AstVisitor<'ast, Loc> for ReturnFinder {
 pub fn might_have_nonvoid_return<'ast, L: Clone + Dupe>(
     loc: &'ast L,
     function: &'ast function::Function<L, L>,
+    invariant_special_casing_disabled: bool,
 ) -> bool {
-    let mut finder = ReturnFinder::new();
+    let mut finder = ReturnFinder::new(invariant_special_casing_disabled);
     let Ok(()) = finder.function_(loc, function);
     finder.acc
 }

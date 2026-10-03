@@ -2253,6 +2253,7 @@ pub fn make_options(
                 enable_custom_error,
                 assert_operator,
                 assertion_functions,
+                disable_invariant_special_casing,
                 type_expansion_recursion_limit,
                 unsuppressable_error_codes,
                 use_unknown_in_catch_variables,
@@ -2275,6 +2276,15 @@ pub fn make_options(
         Some("0" | "false") => false,
         _ => assertion_functions.unwrap_or(false),
     };
+    let disable_invariant_special_casing =
+        match std::env::var("FLOW_DISABLE_INVARIANT_SPECIAL_CASING")
+            .ok()
+            .as_deref()
+        {
+            Some("1" | "true") => true,
+            Some("0" | "false") => false,
+            _ => disable_invariant_special_casing.unwrap_or(false),
+        };
     let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
     let autoimports_min_characters = autoimports_min_characters.unwrap_or(0) as i32;
     let autoimports_ranked_by_usage_boost_exact_match_min_length =
@@ -2555,6 +2565,7 @@ pub fn make_options(
         deprecated_utilities_excludes,
         deprecated_colon_extends_excludes,
         dev_only_refinement_info_as_errors,
+        disable_invariant_special_casing,
         distributed: distributed_override,
         enable_const_params,
         enable_custom_error,

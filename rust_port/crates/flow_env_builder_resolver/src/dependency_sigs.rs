@@ -17,6 +17,7 @@ pub trait Context {
     fn jsx(&self) -> JsxMode;
     fn react_runtime(&self) -> ReactRuntime;
     fn enable_const_params(&self) -> bool;
+    fn invariant_special_casing_disabled(&self) -> bool;
     fn stylex_shorthand_prop(&self) -> Option<&str>;
     fn add_exhaustive_check(&self, loc: ALoc, cases: (Vec<ALoc>, bool));
     fn exhaustive_check(&self, loc: &ALoc) -> Option<(Vec<ALoc>, bool)>;

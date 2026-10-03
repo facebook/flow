@@ -7737,150 +7737,151 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             return Ok(());
         }
 
-        if !ast_utils::is_call_to_invariant(&call.callee) {
-            let callee = &call.callee;
-            let arguments = &call.arguments;
-            let targs = &call.targs;
+        if !self.cx.invariant_special_casing_disabled()
+            && ast_utils::is_call_to_invariant(&call.callee)
+        {
+            return self.call(&loc, call);
+        }
 
-            // This case handles predicate functions. We ensure that this
-            // is not a call to invariant.
-            // The only other criterion that must be met for this call to produce
-            // a refinement is that the arguments cannot contain a spread.
-            //
-            // Assuming there are no spreads we create a mapping from each argument
-            // index to the refinement key at that index.
-            //
-            // The semantics for passing the same argument multiple times to predicate
-            // function are sketchy. Pre-LTI Flow allows you to do this but it is buggy. See
-            // https://fburl.com/vf52s7rb on v0.155.0
-            //
-            // We should strongly consider disallowing the same refinement key to
-            // appear multiple times in the arguments. *)
-            let arglist = &arguments.arguments;
-            let has_spread = arglist
+        let callee = &call.callee;
+        let arguments = &call.arguments;
+        let targs = &call.targs;
+
+        // This case handles predicate functions. We ensure that this
+        // is not a call to invariant.
+        // The only other criterion that must be met for this call to produce
+        // a refinement is that the arguments cannot contain a spread.
+        //
+        // Assuming there are no spreads we create a mapping from each argument
+        // index to the refinement key at that index.
+        //
+        // The semantics for passing the same argument multiple times to predicate
+        // function are sketchy. Pre-LTI Flow allows you to do this but it is buggy. See
+        // https://fburl.com/vf52s7rb on v0.155.0
+        //
+        // We should strongly consider disallowing the same refinement key to
+        // appear multiple times in the arguments. *)
+        let arglist = &arguments.arguments;
+        let has_spread = arglist
+            .iter()
+            .any(|arg| matches!(arg, ExpressionOrSpread::Spread(_)));
+        let refinement_keys: Vec<Option<refinement_key::RefinementKey<ALoc>>> = if has_spread {
+            Vec::new()
+        } else {
+            arglist
                 .iter()
-                .any(|arg| matches!(arg, ExpressionOrSpread::Spread(_)));
-            let refinement_keys: Vec<Option<refinement_key::RefinementKey<ALoc>>> = if has_spread {
-                Vec::new()
-            } else {
-                arglist
-                    .iter()
-                    .map(refinement_key::RefinementKey::of_argument)
-                    .collect()
-            };
-            self.expression(callee)?;
-            if let Some(targs) = targs {
-                self.call_type_args(targs)?;
+                .map(refinement_key::RefinementKey::of_argument)
+                .collect()
+        };
+        self.expression(callee)?;
+        if let Some(targs) = targs {
+            self.call_type_args(targs)?;
+        }
+        self.arg_list(arguments)?;
+        if let Some(assertion) = self.assertion_calls.get(callee.loc()).copied()
+            && bare_assertion_call_always_throws(assertion, &call.arguments.arguments)
+        {
+            self.raise_abrupt_completion(AbruptCompletion::Throw)?;
+        }
+        self.havoc_current_env(
+            flow_common::refinement_invalidation::Reason::FunctionCall,
+            loc.dupe(),
+        );
+
+        let mut refis: BTreeMap<Lookup, (ALoc, env_api::refi::Refinement<ALoc>)> = BTreeMap::new();
+
+        // Paremeter type-guard refinements *)
+        // Function calls may introduce refinements if the function called is a
+        // type-guard function. The EnvBuilder has no idea if a function is a
+        // type-guard function or not. To handle that, we encode that a variable
+        // _might_ be havoced by a function call if that variable is passed
+        // as an argument. Variables not passed into the function are havoced if
+        // the invalidation api says they can be invalidated.
+        let callee_loc = callee.loc().dupe();
+        let call_exp = Expression::new(ExpressionInner::Call {
+            loc: loc.dupe(),
+            inner: Arc::new(call.clone()),
+        });
+        let mut key_map: BTreeMap<Lookup, (refinement_key::RefinementKey<ALoc>, Vec<i32>)> =
+            BTreeMap::new();
+        for (index, key_opt) in refinement_keys.iter().enumerate() {
+            if let Some(key) = key_opt {
+                let entry = key_map
+                    .entry(key.lookup.dupe())
+                    .or_insert_with(|| (key.dupe(), Vec::new()));
+                // Handles cases like `if (foo(x, x)) {}`
+                entry.1.push(index as i32);
             }
-            self.arg_list(arguments)?;
-            if let Some(assertion) = self.assertion_calls.get(callee.loc()).copied()
-                && bare_assertion_call_always_throws(assertion, &call.arguments.arguments)
-            {
-                self.raise_abrupt_completion(AbruptCompletion::Throw)?;
-            }
-            self.havoc_current_env(
-                flow_common::refinement_invalidation::Reason::FunctionCall,
-                loc.dupe(),
+        }
+
+        if !key_map.is_empty() {
+            self.add_pred_func_info(
+                callee_loc.dupe(),
+                call_exp.clone(),
+                callee.clone(),
+                targs.clone(),
+                arguments.clone(),
             );
-
-            let mut refis: BTreeMap<Lookup, (ALoc, env_api::refi::Refinement<ALoc>)> =
-                BTreeMap::new();
-
-            // Paremeter type-guard refinements *)
-            // Function calls may introduce refinements if the function called is a
-            // type-guard function. The EnvBuilder has no idea if a function is a
-            // type-guard function or not. To handle that, we encode that a variable
-            // _might_ be havoced by a function call if that variable is passed
-            // as an argument. Variables not passed into the function are havoced if
-            // the invalidation api says they can be invalidated.
-            let callee_loc = callee.loc().dupe();
-            let call_exp = Expression::new(ExpressionInner::Call {
-                loc: loc.dupe(),
-                inner: Arc::new(call.clone()),
-            });
-            let mut key_map: BTreeMap<Lookup, (refinement_key::RefinementKey<ALoc>, Vec<i32>)> =
-                BTreeMap::new();
-            for (index, key_opt) in refinement_keys.iter().enumerate() {
-                if let Some(key) = key_opt {
-                    let entry = key_map
-                        .entry(key.lookup.dupe())
-                        .or_insert_with(|| (key.dupe(), Vec::new()));
-                    // Handles cases like `if (foo(x, x)) {}`
-                    entry.1.push(index as i32);
-                }
-            }
-
-            if !key_map.is_empty() {
-                self.add_pred_func_info(
-                    callee_loc.dupe(),
-                    call_exp.clone(),
-                    callee.clone(),
-                    targs.clone(),
-                    arguments.clone(),
+            for (key, indices) in key_map.values() {
+                let mut refining_locs = empty_refining_locs();
+                refining_locs.insert(loc.dupe());
+                refis = self.extend_refinement(
+                    key,
+                    refining_locs,
+                    RefinementKind::LatentR {
+                        func: Rc::new(callee.clone()),
+                        targs: targs.clone().map(Rc::new),
+                        arguments: Rc::new(arguments.clone()),
+                        index: Rc::from(indices.as_slice()),
+                    },
+                    refis,
                 );
-                for (key, indices) in key_map.values() {
-                    let mut refining_locs = empty_refining_locs();
-                    refining_locs.insert(loc.dupe());
-                    refis = self.extend_refinement(
-                        key,
-                        refining_locs,
-                        RefinementKind::LatentR {
-                            func: Rc::new(callee.clone()),
-                            targs: targs.clone().map(Rc::new),
-                            arguments: Rc::new(arguments.clone()),
-                            index: Rc::from(indices.as_slice()),
-                        },
-                        refis,
-                    );
-                }
             }
+        }
 
-            if let ExpressionInner::Member {
-                inner,
-                loc: member_loc,
-                ..
-            } = callee.deref()
-            {
-                if let MemberProperty::PropertyIdentifier(_) = &inner.property {
-                    if let Some(key) = refinement_key::RefinementKey::of_expression(&inner.object) {
-                        if !key_map.contains_key(&key.lookup) {
-                            // TODO For now in `x.f(x)` we do not consider the this-refinement on x.
-                            // This is not fundamentally impossible, but causes crashes. *)
-                            let call_exp = Expression::new(ExpressionInner::Call {
-                                loc: loc.dupe(),
-                                inner: Arc::new(call.clone()),
-                            });
-                            self.add_pred_func_info(
-                                member_loc.dupe(),
-                                call_exp,
-                                callee.clone(),
-                                targs.clone(),
-                                arguments.clone(),
-                            );
-                            let mut refining_locs = empty_refining_locs();
-                            refining_locs.insert(loc.dupe());
-                            refis = self.extend_refinement(
-                                &key,
-                                refining_locs,
-                                RefinementKind::LatentThisR {
-                                    func: Rc::new(callee.clone()),
-                                    targs: targs.clone().map(Rc::new),
-                                    arguments: Rc::new(arguments.clone()),
-                                },
-                                refis,
-                            );
-                        }
+        if let ExpressionInner::Member {
+            inner,
+            loc: member_loc,
+            ..
+        } = callee.deref()
+        {
+            if let MemberProperty::PropertyIdentifier(_) = &inner.property {
+                if let Some(key) = refinement_key::RefinementKey::of_expression(&inner.object) {
+                    if !key_map.contains_key(&key.lookup) {
+                        // TODO For now in `x.f(x)` we do not consider the this-refinement on x.
+                        // This is not fundamentally impossible, but causes crashes. *)
+                        let call_exp = Expression::new(ExpressionInner::Call {
+                            loc: loc.dupe(),
+                            inner: Arc::new(call.clone()),
+                        });
+                        self.add_pred_func_info(
+                            member_loc.dupe(),
+                            call_exp,
+                            callee.clone(),
+                            targs.clone(),
+                            arguments.clone(),
+                        );
+                        let mut refining_locs = empty_refining_locs();
+                        refining_locs.insert(loc.dupe());
+                        refis = self.extend_refinement(
+                            &key,
+                            refining_locs,
+                            RefinementKind::LatentThisR {
+                                func: Rc::new(callee.clone()),
+                                targs: targs.clone().map(Rc::new),
+                                arguments: Rc::new(arguments.clone()),
+                            },
+                            refis,
+                        );
                     }
                 }
             }
-
-            if !refis.is_empty() {
-                self.commit_refinement(refis);
-            }
-            return Ok(());
         }
 
-        self.call(&loc, call)
+        if !refis.is_empty() {
+            self.commit_refinement(refis);
+        }
+        Ok(())
     }
 
     fn unary_refinement(
@@ -10853,7 +10854,9 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
             }
             None => {
                 ast_visitor::call_default(self, loc, expr)?;
-                if ast_utils::is_call_to_invariant(callee) {
+                if !self.cx.invariant_special_casing_disabled()
+                    && ast_utils::is_call_to_invariant(callee)
+                {
                     let args = &arguments.arguments;
                     match (targs, args.first()) {
                         // invariant() with no args - treated like throw

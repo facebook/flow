@@ -833,6 +833,7 @@ pub fn pattern_has_annot(p: &ast::pattern::Pattern<ALoc, ALoc>) -> bool {
 }
 
 fn func_is_synthesizable_from_annotation(
+    invariant_special_casing_disabled: bool,
     f: &ast::function::Function<ALoc, ALoc>,
 ) -> FunctionSynthKind {
     use ast::function::ReturnAnnot;
@@ -841,7 +842,12 @@ fn func_is_synthesizable_from_annotation(
             FunctionSynthKind::FunctionSynthesizable
         }
         ReturnAnnot::Missing(loc) => {
-            if nonvoid_return::might_have_nonvoid_return(&ALoc::none(), f) || f.generator {
+            if nonvoid_return::might_have_nonvoid_return(
+                &ALoc::none(),
+                f,
+                invariant_special_casing_disabled,
+            ) || f.generator
+            {
                 FunctionSynthKind::MissingReturn(loc.dupe())
             } else {
                 FunctionSynthKind::FunctionSynthesizable
@@ -890,6 +896,7 @@ fn obj_this_write_locs(obj: &ast::expression::Object<ALoc, ALoc>) -> EnvSet<ALoc
 }
 
 fn obj_properties_synthesizable(
+    invariant_special_casing_disabled: bool,
     this_write_locs: EnvSet<ALoc>,
     obj: &ast::expression::Object<ALoc, ALoc>,
 ) -> ObjectSynthKind {
@@ -907,6 +914,7 @@ fn obj_properties_synthesizable(
     }
 
     fn synthesizable_expression(
+        invariant_special_casing_disabled: bool,
         acc: &mut Vec<ObjectMissingAnnot>,
         this_write_locs: &mut EnvSet<ALoc>,
         expr: &ast::expression::Expression<ALoc, ALoc>,
@@ -941,11 +949,16 @@ fn obj_properties_synthesizable(
                 }
             }
             ExpressionInner::ArrowFunction { inner, .. }
-            | ExpressionInner::Function { inner, .. } => {
-                handle_fun(acc, func_is_synthesizable_from_annotation(inner))
-            }
+            | ExpressionInner::Function { inner, .. } => handle_fun(
+                acc,
+                func_is_synthesizable_from_annotation(invariant_special_casing_disabled, inner),
+            ),
             ExpressionInner::Object { inner, .. } => {
-                match obj_properties_synthesizable(obj_this_write_locs(inner), inner) {
+                match obj_properties_synthesizable(
+                    invariant_special_casing_disabled,
+                    obj_this_write_locs(inner),
+                    inner,
+                ) {
                     ObjectSynthKind::ObjectSynthesizable {
                         this_write_locs: new_this_write_locs,
                     } => {
@@ -973,12 +986,18 @@ fn obj_properties_synthesizable(
 
                 for elem in inner.elements.iter() {
                     let recursion_result = match elem {
-                        ArrayElement::Expression(exp) => {
-                            synthesizable_expression(acc, this_write_locs, exp)
-                        }
-                        ArrayElement::Spread(spread) => {
-                            synthesizable_expression(acc, this_write_locs, &spread.argument)
-                        }
+                        ArrayElement::Expression(exp) => synthesizable_expression(
+                            invariant_special_casing_disabled,
+                            acc,
+                            this_write_locs,
+                            exp,
+                        ),
+                        ArrayElement::Spread(spread) => synthesizable_expression(
+                            invariant_special_casing_disabled,
+                            acc,
+                            this_write_locs,
+                            &spread.argument,
+                        ),
                         ArrayElement::Hole(_) => Err(()),
                     };
                     if recursion_result.is_err() {
@@ -1023,8 +1042,13 @@ fn obj_properties_synthesizable(
                         }
                     }
                     if let object::Key::Identifier(_) = key {
-                        if synthesizable_expression(&mut acc, &mut current_this_write_locs, value)
-                            .is_err()
+                        if synthesizable_expression(
+                            invariant_special_casing_disabled,
+                            &mut acc,
+                            &mut current_this_write_locs,
+                            value,
+                        )
+                        .is_err()
                         {
                             return ObjectSynthKind::Unsynthesizable;
                         }
@@ -1038,8 +1062,14 @@ fn obj_properties_synthesizable(
                     ..
                 } => {
                     let (_, fn_inner) = value;
-                    if handle_fun(&mut acc, func_is_synthesizable_from_annotation(fn_inner))
-                        .is_err()
+                    if handle_fun(
+                        &mut acc,
+                        func_is_synthesizable_from_annotation(
+                            invariant_special_casing_disabled,
+                            fn_inner,
+                        ),
+                    )
+                    .is_err()
                     {
                         return ObjectSynthKind::Unsynthesizable;
                     }
@@ -1356,6 +1386,7 @@ pub fn expression_is_definitely_synthesizable(
 }
 
 fn def_of_function(
+    invariant_special_casing_disabled: bool,
     tparams_map: TparamsMap,
     hints: AstHints,
     has_this_def: bool,
@@ -1367,7 +1398,10 @@ fn def_of_function(
 ) -> Def {
     Def::Function(Box::new(FunctionDefData {
         hints,
-        synthesizable_from_annotation: func_is_synthesizable_from_annotation(&function_),
+        synthesizable_from_annotation: func_is_synthesizable_from_annotation(
+            invariant_special_casing_disabled,
+            &function_,
+        ),
         arrow,
         has_this_def,
         function_loc,
@@ -1611,6 +1645,7 @@ fn definition_reference_kind(def: &Def) -> DefinitionReferenceKind {
 struct DefFinder<'a> {
     autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
     react_jsx: bool,
+    invariant_special_casing_disabled: bool,
     env_info: &'a crate::env_api::EnvInfo<ALoc>,
 
     // Accumulator (the result being built)
@@ -1627,12 +1662,14 @@ impl<'a> DefFinder<'a> {
     fn new(
         autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
         react_jsx: bool,
+        invariant_special_casing_disabled: bool,
         env_info: &'a crate::env_api::EnvInfo<ALoc>,
         toplevel_scope: ScopeKind,
     ) -> Self {
         Self {
             autocomplete_hooks,
             react_jsx,
+            invariant_special_casing_disabled,
             env_info,
             env_map: EnvMap::empty(),
             hint_map: ALocMap::new(),
@@ -2405,7 +2442,10 @@ impl<'a> DefFinder<'a> {
 
                 let binding = Binding::Root(Root::FunctionValue(Box::new(FunctionValueData {
                     hints: func_hints_clone.clone(),
-                    synthesizable_from_annotation: func_is_synthesizable_from_annotation(expr),
+                    synthesizable_from_annotation: func_is_synthesizable_from_annotation(
+                        this.invariant_special_casing_disabled,
+                        expr,
+                    ),
                     function_loc: function_loc.dupe(),
                     function_: expr.clone(),
                     statics: statics_clone.clone(),
@@ -2432,6 +2472,7 @@ impl<'a> DefFinder<'a> {
                 };
                 let reason = func_reason(async_, generator, reason_loc);
                 let def = def_of_function(
+                    this_ref.invariant_special_casing_disabled,
                     this_ref.tparams.clone(),
                     func_hints_clone.clone(),
                     has_this_def,
@@ -2485,6 +2526,7 @@ impl<'a> DefFinder<'a> {
             this.visit_function(&scope_kind, &vec![], &vec![], expr)?;
             let reason = func_reason(async_, generator, sig_loc.dupe());
             let def = def_of_function(
+                this.invariant_special_casing_disabled,
                 this.tparams.clone(),
                 vec![],
                 true, // has_this_def:true
@@ -3356,7 +3398,7 @@ impl<'a> DefFinder<'a> {
             self.call_type_args(targs)?;
         }
 
-        if is_call_to_invariant(callee) {
+        if !self.invariant_special_casing_disabled && is_call_to_invariant(callee) {
             // In invariant(...) call, the first argument is under conditional context
             for (i, arg) in arguments.iter().enumerate() {
                 match arg {
@@ -3378,116 +3420,116 @@ impl<'a> DefFinder<'a> {
                     }
                 }
             }
-        } else {
-            match &**arguments {
-                [ast::expression::ExpressionOrSpread::Expression(expr)]
-                    if is_call_to_is_array(callee) =>
-                {
-                    self.visit_expression(cond.clone(), &vec![], expr)?;
-                }
-                [ast::expression::ExpressionOrSpread::Expression(expr)]
-                    if is_call_to_require(callee) =>
-                {
-                    self.visit_expression(cond.clone(), &vec![], expr)?;
-                }
-                [ast::expression::ExpressionOrSpread::Expression(expr)]
-                    if is_call_to_object_dot_freeze(callee) =>
-                {
-                    self.visit_expression(EnclosingContext::NoContext, hints, expr)?;
-                }
-                _ if is_call_to_object_static_method(callee) => {
-                    for arg in arguments.iter() {
-                        match arg {
-                            ast::expression::ExpressionOrSpread::Expression(expr) => {
-                                self.visit_expression(EnclosingContext::NoContext, &vec![], expr)?;
-                            }
-                            ast::expression::ExpressionOrSpread::Spread(spread) => {
-                                self.visit_expression(
-                                    EnclosingContext::NoContext,
-                                    &vec![],
-                                    &spread.argument,
-                                )?;
-                            }
+            return Ok(());
+        }
+
+        match &**arguments {
+            [ast::expression::ExpressionOrSpread::Expression(expr)]
+                if is_call_to_is_array(callee) =>
+            {
+                self.visit_expression(cond.clone(), &vec![], expr)?;
+            }
+            [ast::expression::ExpressionOrSpread::Expression(expr)]
+                if is_call_to_require(callee) =>
+            {
+                self.visit_expression(cond.clone(), &vec![], expr)?;
+            }
+            [ast::expression::ExpressionOrSpread::Expression(expr)]
+                if is_call_to_object_dot_freeze(callee) =>
+            {
+                self.visit_expression(EnclosingContext::NoContext, hints, expr)?;
+            }
+            _ if is_call_to_object_static_method(callee) => {
+                for arg in arguments.iter() {
+                    match arg {
+                        ast::expression::ExpressionOrSpread::Expression(expr) => {
+                            self.visit_expression(EnclosingContext::NoContext, &vec![], expr)?;
+                        }
+                        ast::expression::ExpressionOrSpread::Spread(spread) => {
+                            self.visit_expression(
+                                EnclosingContext::NoContext,
+                                &vec![],
+                                &spread.argument,
+                            )?;
                         }
                     }
                 }
-                _ => {
-                    let build_member_hints = |member: &ast::expression::Member<ALoc, ALoc>,
-                                              class_stack: &ClassStack|
-                     -> AstHints {
-                        let base_hint: AstHints = vec![Hint::HintT(
-                            HintNode::ValueHint(EnclosingContext::NoContext, member.object.clone()),
-                            HintKind::ExpectedTypeHint,
-                        )];
-                        match &member.property {
-                            ast::expression::member::Property::PropertyIdentifier(id) => {
-                                let decomp = HintDecomposition::new(
-                                    HintDecompositionInner::DecompMethodName(id.name.dupe()),
-                                );
-                                Hint::decompose(decomp, base_hint)
-                            }
-                            ast::expression::member::Property::PropertyPrivateName(pn) => {
-                                let decomp = HintDecomposition::new(
-                                    HintDecompositionInner::DecompMethodPrivateName(
-                                        pn.name.dupe(),
-                                        class_stack.clone(),
-                                    ),
-                                );
-                                Hint::decompose(decomp, base_hint)
-                            }
-                            ast::expression::member::Property::PropertyExpression(_) => {
-                                let decomp = HintDecomposition::new(
-                                    HintDecompositionInner::DecompMethodElem,
-                                );
-                                Hint::decompose(decomp, base_hint)
-                            }
-                        }
-                    };
-
-                    let call_arguments_hints: AstHints = match callee.deref() {
-                        // Use the type of the callee directly as hint if the member access is refined
-                        ast::expression::ExpressionInner::Member {
-                            loc: callee_loc,
-                            inner: member,
-                        } if !self.env_info.env_values.contains_key(callee_loc) => {
-                            build_member_hints(member, &self.class_stack)
-                        }
-                        ast::expression::ExpressionInner::OptionalMember {
-                            loc: callee_loc,
-                            inner: opt_member,
-                        } if !self.env_info.env_values.contains_key(callee_loc) => {
-                            build_member_hints(&opt_member.member, &self.class_stack)
-                        }
-                        ast::expression::ExpressionInner::Super { .. } => {
-                            let decomp =
-                                HintDecomposition::new(HintDecompositionInner::DecompCallSuper);
-                            let base_hint: AstHints = vec![Hint::HintT(
-                                HintNode::ValueHint(EnclosingContext::NoContext, callee.clone()),
-                                HintKind::ExpectedTypeHint,
-                            )];
+            }
+            _ => {
+                let build_member_hints = |member: &ast::expression::Member<ALoc, ALoc>,
+                                          class_stack: &ClassStack|
+                 -> AstHints {
+                    let base_hint: AstHints = vec![Hint::HintT(
+                        HintNode::ValueHint(EnclosingContext::NoContext, member.object.clone()),
+                        HintKind::ExpectedTypeHint,
+                    )];
+                    match &member.property {
+                        ast::expression::member::Property::PropertyIdentifier(id) => {
+                            let decomp = HintDecomposition::new(
+                                HintDecompositionInner::DecompMethodName(id.name.dupe()),
+                            );
                             Hint::decompose(decomp, base_hint)
                         }
-                        _ => {
-                            vec![Hint::HintT(
-                                HintNode::ValueHint(EnclosingContext::NoContext, callee.clone()),
-                                HintKind::ExpectedTypeHint,
-                            )]
+                        ast::expression::member::Property::PropertyPrivateName(pn) => {
+                            let decomp = HintDecomposition::new(
+                                HintDecompositionInner::DecompMethodPrivateName(
+                                    pn.name.dupe(),
+                                    class_stack.clone(),
+                                ),
+                            );
+                            Hint::decompose(decomp, base_hint)
                         }
-                    };
-                    let call_reason = mk_expression_reason(&Expression::new(
-                        ast::expression::ExpressionInner::Call {
-                            loc: loc.dupe(),
-                            inner: Arc::new(expr.clone()),
-                        },
-                    ));
-                    self.visit_call_arguments(
-                        &call_reason,
-                        &call_arguments_hints,
-                        hints,
-                        arg_list,
-                        targs,
-                    )?;
-                }
+                        ast::expression::member::Property::PropertyExpression(_) => {
+                            let decomp =
+                                HintDecomposition::new(HintDecompositionInner::DecompMethodElem);
+                            Hint::decompose(decomp, base_hint)
+                        }
+                    }
+                };
+
+                let call_arguments_hints: AstHints = match callee.deref() {
+                    // Use the type of the callee directly as hint if the member access is refined
+                    ast::expression::ExpressionInner::Member {
+                        loc: callee_loc,
+                        inner: member,
+                    } if !self.env_info.env_values.contains_key(callee_loc) => {
+                        build_member_hints(member, &self.class_stack)
+                    }
+                    ast::expression::ExpressionInner::OptionalMember {
+                        loc: callee_loc,
+                        inner: opt_member,
+                    } if !self.env_info.env_values.contains_key(callee_loc) => {
+                        build_member_hints(&opt_member.member, &self.class_stack)
+                    }
+                    ast::expression::ExpressionInner::Super { .. } => {
+                        let decomp =
+                            HintDecomposition::new(HintDecompositionInner::DecompCallSuper);
+                        let base_hint: AstHints = vec![Hint::HintT(
+                            HintNode::ValueHint(EnclosingContext::NoContext, callee.clone()),
+                            HintKind::ExpectedTypeHint,
+                        )];
+                        Hint::decompose(decomp, base_hint)
+                    }
+                    _ => {
+                        vec![Hint::HintT(
+                            HintNode::ValueHint(EnclosingContext::NoContext, callee.clone()),
+                            HintKind::ExpectedTypeHint,
+                        )]
+                    }
+                };
+                let call_reason = mk_expression_reason(&Expression::new(
+                    ast::expression::ExpressionInner::Call {
+                        loc: loc.dupe(),
+                        inner: Arc::new(expr.clone()),
+                    },
+                ));
+                self.visit_call_arguments(
+                    &call_reason,
+                    &call_arguments_hints,
+                    hints,
+                    arg_list,
+                    targs,
+                )?;
             }
         }
         Ok(())
@@ -3877,6 +3919,7 @@ impl<'a> DefFinder<'a> {
                         this.env_info.env_entries.get_ordinary(&loc)
                     {
                         let def = def_of_function(
+                            this.invariant_special_casing_disabled,
                             this.tparams.clone(),
                             hints_clone.clone(),
                             false,
@@ -5599,7 +5642,11 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
             && !obj_inner.properties.is_empty()
         {
             let this_write_locs = obj_this_write_locs(obj_inner.as_ref());
-            match obj_properties_synthesizable(this_write_locs, obj_inner.as_ref()) {
+            match obj_properties_synthesizable(
+                self.invariant_special_casing_disabled,
+                this_write_locs,
+                obj_inner.as_ref(),
+            ) {
                 ObjectSynthKind::Unsynthesizable => Some(mk_value(
                     None,
                     Some(kind),
@@ -7139,11 +7186,18 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, EnvInvariant<ALoc>> for 
 pub fn find_defs(
     autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     react_jsx: bool,
+    invariant_special_casing_disabled: bool,
     env_info: &crate::env_api::EnvInfo<ALoc>,
     toplevel_scope_kind: ScopeKind,
     ast: &ast::Program<ALoc, ALoc>,
 ) -> Result<(EnvEntriesMap, HintMap), EnvInvariant<ALoc>> {
-    let mut finder = DefFinder::new(autocomplete_hooks, react_jsx, env_info, toplevel_scope_kind);
+    let mut finder = DefFinder::new(
+        autocomplete_hooks,
+        react_jsx,
+        invariant_special_casing_disabled,
+        env_info,
+        toplevel_scope_kind,
+    );
     finder.program(ast)?;
     Ok(finder.into_acc())
 }

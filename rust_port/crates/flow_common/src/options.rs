@@ -138,6 +138,7 @@ pub struct Options {
     pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub deprecated_utilities_excludes: Arc<[Regex]>,
     pub dev_only_refinement_info_as_errors: bool,
+    pub disable_invariant_special_casing: bool,
     pub distributed: bool,
     pub enable_const_params: bool,
     pub enable_custom_error: bool,

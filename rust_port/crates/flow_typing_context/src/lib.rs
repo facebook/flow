@@ -179,6 +179,7 @@ pub struct FrozenMetadata {
     pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub deprecated_utilities_excludes: Arc<[Regex]>,
     pub dev_only_refinement_info_as_errors: bool,
+    pub disable_invariant_special_casing: bool,
     pub enable_const_params: bool,
     pub enable_custom_error: bool,
     pub enable_enums: bool,
@@ -242,6 +243,7 @@ impl Default for FrozenMetadata {
             deprecated_utilities: Arc::new(BTreeMap::new()),
             deprecated_utilities_excludes: Arc::from([]),
             dev_only_refinement_info_as_errors: false,
+            disable_invariant_special_casing: false,
             enable_const_params: false,
             enable_custom_error: false,
             enable_enums: true,
@@ -644,6 +646,7 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
                 .collect::<Vec<_>>()
                 .into(),
             dev_only_refinement_info_as_errors: options.dev_only_refinement_info_as_errors,
+            disable_invariant_special_casing: options.disable_invariant_special_casing,
             enable_const_params: options.enable_const_params,
             enable_custom_error: options.enable_custom_error,
             enable_enums: options.enums,
@@ -1466,6 +1469,10 @@ impl<'cx> Context<'cx> {
 
     pub fn assertion_functions_enabled(&self) -> bool {
         self.0.metadata.frozen.assertion_functions
+    }
+
+    pub fn invariant_special_casing_disabled(&self) -> bool {
+        self.0.metadata.frozen.disable_invariant_special_casing
     }
 
     pub fn type_expansion_recursion_limit(&self) -> i32 {
