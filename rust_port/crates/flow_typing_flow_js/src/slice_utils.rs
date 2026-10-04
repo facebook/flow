@@ -14,7 +14,6 @@ use std::sync::Arc;
 use dupe::Dupe;
 use dupe::IterDupedExt;
 use flow_aloc::ALoc;
-use flow_common::error_ref::ErrorReference;
 use flow_common::name_utils;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
@@ -533,15 +532,9 @@ fn spread2<'cx>(
         (Some(d1), _) if !(exact2 || *inline2 || allow_inexact) => Err(Box::new(
             ErrorMessage::EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
                 spread_reason: reason.dupe(),
-                key: ErrorReference::new(
-                    type_util::ref_loc_of_t(&d1.key).dupe(),
-                    type_util::reason_of_t(&d1.key).desc(false).clone(),
-                ),
+                key_loc: type_util::ref_loc_of_t(&d1.key).dupe(),
                 key_desc: flow_js_utils::type_or_type_desc_for_error(&d1.key),
-                value: ErrorReference::new(
-                    type_util::ref_loc_of_t(&d1.value).dupe(),
-                    type_util::reason_of_t(&d1.value).desc(false).clone(),
-                ),
+                value_loc: type_util::ref_loc_of_t(&d1.value).dupe(),
                 value_desc: flow_js_utils::type_or_type_desc_for_error(&d1.value),
                 object2_reason: r2.dupe(),
                 use_op: use_op.dupe(),
