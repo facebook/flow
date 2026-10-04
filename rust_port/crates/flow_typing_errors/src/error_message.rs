@@ -474,8 +474,7 @@ pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub description_name: Option<FlowSmolStr>,
-    pub type_desc: TypeOrTypeDesc<L>,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: NamedReferenceData<L>,
 }
 
 #[derive(
@@ -5524,13 +5523,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumUnknownNotChecked(box EnumUnknownNotCheckedData {
                         loc,
                         description_name,
-                        type_desc,
                         enum_,
                     }) => EnumUnknownNotChecked(Box::new(EnumUnknownNotCheckedData {
                         loc: f(loc),
                         description_name,
-                        type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), type_desc),
-                        enum_: map_error_type_ref_with_reason(enum_),
+                        enum_: NamedReferenceData {
+                            loc: f(enum_.loc),
+                            name: enum_.name,
+                        },
                     })),
                     EnumInvalidCheck(box EnumInvalidCheckData {
                         loc,
@@ -7299,20 +7299,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     member_loc,
                     enum_,
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumUnknownNotChecked(box EnumUnknownNotCheckedData {
-                loc,
-                description_name,
-                type_desc,
-                enum_,
-            })) => EEnumError(EnumErrorKind::EnumUnknownNotChecked(Box::new(
-                EnumUnknownNotCheckedData {
-                    loc,
-                    description_name,
-                    type_desc: f(type_desc),
-                    enum_: map_error_type_ref_with_reason(enum_),
                 },
             ))),
 
@@ -9824,18 +9810,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked(
                 box EnumUnknownNotCheckedData {
                     description_name,
-                    type_desc,
                     enum_,
                     ..
                 },
             )) => Normal(Message::MessageCannotExhaustivelyCheckEnumWithUnknowns(
                 Box::new(MessageCannotExhaustivelyCheckEnumWithUnknownsData {
                     description_name,
-                    description: expect_type_desc(type_desc),
-                    enum_: MessageTypeReferenceData {
-                        loc: enum_.reference_loc,
-                        desc: expect_type_desc(enum_.type_desc),
-                    },
+                    enum_,
                 }),
             )),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(

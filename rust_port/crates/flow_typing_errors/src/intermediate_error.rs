@@ -6014,16 +6014,15 @@ where
             MessageCannotExhaustivelyCheckEnumWithUnknowns(
                 box MessageCannotExhaustivelyCheckEnumWithUnknownsData {
                     description_name,
-                    description,
                     enum_,
                 },
             ) => friendly::Message(vec![
                 text("Missing "),
                 code("default"),
                 text(" case in the check of "),
-                desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
+                code(description_name.as_ref().unwrap_or(&enum_.name)),
                 text(". "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_named_reference(enum_),
                 text(" has unknown members (specified using "),
                 code("..."),
                 text(") so checking it requires the use of a "),

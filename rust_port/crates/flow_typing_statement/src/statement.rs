@@ -20949,7 +20949,7 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                     cases,
                 )?;
             }
-            TypeInner::DefT(enum_reason, def_t)
+            TypeInner::DefT(_, def_t)
                 if let DefTInner::EnumValueT(info) = def_t.deref()
                     && let EnumInfoInner::ConcreteEnum(enum_info) = EnumInfo::deref(info) =>
             {
@@ -20957,7 +20957,6 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                     cx,
                     env,
                     check_reason,
-                    enum_reason,
                     concrete,
                     enum_info,
                     possible_checks,
@@ -21173,7 +21172,6 @@ fn perform_enum_exhaustive_check<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     check_reason: &Reason,
-    enum_reason: &Reason,
     enum_t: &Type,
     enum_info: &EnumConcreteInfo,
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
@@ -21259,11 +21257,10 @@ fn perform_enum_exhaustive_check<'cx>(
                     flow_typing_errors::error_message::EnumUnknownNotCheckedData {
                         loc: check_reason.loc().dupe(),
                         description_name: flow_js_utils::description_name_for_error(check_reason),
-                        type_desc: flow_js_utils::type_or_type_desc_for_error(enum_t),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            enum_t,
-                            enum_reason.dupe(),
-                        ),
+                        enum_: NamedReferenceData {
+                            loc: ref_loc_of_t(enum_t).dupe(),
+                            name: enum_info.enum_name.dupe(),
+                        },
                     },
                 ))),
             )?;
