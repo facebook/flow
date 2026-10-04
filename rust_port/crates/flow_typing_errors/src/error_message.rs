@@ -438,7 +438,7 @@ pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq +
 )]
 pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: NamedReferenceData<L>,
 }
 
 #[derive(
@@ -5500,7 +5500,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }) => {
                         EnumAllMembersAlreadyChecked(Box::new(EnumAllMembersAlreadyCheckedData {
                             loc: f(loc),
-                            enum_: map_error_type_ref_with_reason(enum_),
+                            enum_: NamedReferenceData {
+                                loc: f(enum_.loc),
+                                name: enum_.name,
+                            },
                         }))
                     }
                     EnumNotAllChecked(box EnumNotAllCheckedData {
@@ -7296,15 +7299,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     member_loc,
                     enum_,
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(
-                box EnumAllMembersAlreadyCheckedData { loc, enum_ },
-            )) => EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(Box::new(
-                EnumAllMembersAlreadyCheckedData {
-                    loc,
-                    enum_: map_error_type_ref_with_reason(enum_),
                 },
             ))),
 
@@ -9828,12 +9822,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )),
             ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(
                 box EnumAllMembersAlreadyCheckedData { enum_, .. },
-            )) => Normal(Message::MessageAlreadyExhaustivelyCheckAllEnumMembers {
-                enum_: MessageTypeReferenceData {
-                    loc: enum_.reference_loc,
-                    desc: expect_type_desc(enum_.type_desc),
-                },
-            }),
+            )) => Normal(Message::MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_ }),
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
                 box EnumNotAllCheckedData {
                     description_name,

@@ -5354,7 +5354,7 @@ where
                 friendly::Message(vec![
                     text("Invalid exhaustive check: "),
                     text("default case checks for additional enum members of "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_named_reference(enum_),
                     text(", but all of its members have already been checked."),
                 ])
             }

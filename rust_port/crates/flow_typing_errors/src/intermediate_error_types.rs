@@ -1886,7 +1886,7 @@ pub enum Message<L: Dupe> {
     ),
 
     MessageAlreadyExhaustivelyCheckAllEnumMembers {
-        enum_: MessageTypeReferenceData<L>,
+        enum_: NamedReferenceData<L>,
     },
 
     MessageAmbiguousNumericKeyWithVariance,

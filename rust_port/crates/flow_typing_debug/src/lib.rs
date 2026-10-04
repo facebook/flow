@@ -3755,9 +3755,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 enum_,
             }) => {
                 format!(
-                    "EEnumError (EnumAllMembersAlreadyChecked ({}) ({}))",
+                    "EEnumError (EnumAllMembersAlreadyChecked ({}) ({} {}))",
                     string_of_aloc(None, loc),
-                    dump_error_type_reference(cx, enum_)
+                    string_of_aloc(None, &enum_.loc),
+                    enum_.name
                 )
             }
             EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {

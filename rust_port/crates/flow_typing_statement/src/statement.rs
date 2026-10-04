@@ -21278,10 +21278,10 @@ fn perform_enum_exhaustive_check<'cx>(
                 ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked(Box::new(
                     flow_typing_errors::error_message::EnumAllMembersAlreadyCheckedData {
                         loc: default_case_loc,
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            enum_t,
-                            enum_reason.dupe(),
-                        ),
+                        enum_: NamedReferenceData {
+                            loc: ref_loc_of_t(enum_t).dupe(),
+                            name: enum_info.enum_name.dupe(),
+                        },
                     },
                 ))),
             )?;
