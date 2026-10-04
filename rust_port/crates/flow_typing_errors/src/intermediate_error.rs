@@ -4873,6 +4873,11 @@ where
         None => hardcoded_string_desc_ref("enum", &reference.loc),
     };
 
+    let render_enum_value_reference = |reference: &EnumReferenceData<L>| match &reference.name {
+        Some(name) => hardcoded_string_desc_ref(&format!("`{}`", name), &reference.loc),
+        None => hardcoded_string_desc_ref("enum", &reference.loc),
+    };
+
     fn definition_description(kind: &DefinitionReferenceKind) -> String {
         match kind {
             DefinitionReferenceKind::Name(name) => format!("`{name}`"),
@@ -7745,11 +7750,10 @@ where
             ]),
             MessageInvalidEnumMemberCheck(box MessageInvalidEnumMemberCheckData {
                 enum_,
-                enum_name,
                 example_member,
                 from_match,
             }) => {
-                let suggestion = match enum_name {
+                let suggestion = match &enum_.name {
                     Some(enum_name) => {
                         let example_member =
                             example_member.as_ref().map(|s| s.as_str()).unwrap_or("A");
@@ -7774,7 +7778,7 @@ where
                 let mut features = vec![
                     text(&format!("Invalid enum member check at {}. ", at)),
                     text("The format must be dot-access of a member of "),
-                    ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                    render_enum_value_reference(enum_),
                     text("."),
                 ];
                 features.extend(suggestion);

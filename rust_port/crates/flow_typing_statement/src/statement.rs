@@ -21074,9 +21074,7 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                     cases,
                 )?;
             }
-            TypeInner::DefT(enum_reason, def_t)
-                if let DefTInner::EnumValueT(enum_info) = def_t.deref() =>
-            {
+            TypeInner::DefT(_, def_t) if let DefTInner::EnumValueT(enum_info) = def_t.deref() => {
                 let example_member = match EnumInfo::deref(enum_info) {
                     EnumInfoInner::ConcreteEnum(concrete) => {
                         concrete.members.keys().next().map(|k| k.dupe())
@@ -21090,11 +21088,10 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                         ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(Box::new(
                             flow_typing_errors::error_message::EnumInvalidCheckData {
                                 loc: loc.dupe(),
-                                enum_: flow_js_utils::type_reference_with_reason_for_error(
-                                    concrete,
-                                    enum_reason.dupe(),
-                                ),
-                                enum_name: enum_info.enum_name().map(Dupe::dupe),
+                                enum_: EnumReferenceData {
+                                    loc: ref_loc_of_t(concrete).dupe(),
+                                    name: enum_info.enum_name().map(Dupe::dupe),
+                                },
                                 example_member: example_member.dupe(),
                                 from_match: false,
                             },

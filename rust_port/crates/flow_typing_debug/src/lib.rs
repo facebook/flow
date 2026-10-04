@@ -3809,7 +3809,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!(
                     "EEnumError (EnumInvalidCheck ({}) ({}) ({}) ({}))",
                     string_of_aloc(None, loc),
-                    dump_error_type_reference(cx, enum_),
+                    dump_enum_reference(enum_),
                     member_str,
                     from_match
                 )

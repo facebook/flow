@@ -26,6 +26,7 @@ use flow_parser::loc::Loc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumInvalidCheckData;
+use flow_typing_errors::error_message::EnumReferenceData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::MatchErrorKind;
@@ -373,11 +374,10 @@ pub mod pattern_union_builder {
                                 ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
                                     Box::new(EnumInvalidCheckData {
                                         loc: loc.dupe(),
-                                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                                            t,
-                                            reason_of_t(t).dupe(),
-                                        ),
-                                        enum_name: Some(enum_info.enum_name.dupe()),
+                                        enum_: EnumReferenceData {
+                                            loc: type_util::ref_loc_of_t(t).dupe(),
+                                            name: Some(enum_info.enum_name.dupe()),
+                                        },
                                         example_member,
                                         from_match: true,
                                     }),

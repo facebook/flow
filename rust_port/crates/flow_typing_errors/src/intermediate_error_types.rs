@@ -1664,8 +1664,7 @@ pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageInvalidEnumMemberCheckData<L: Dupe> {
-    pub enum_: MessageTypeReferenceData<L>,
-    pub enum_name: Option<FlowSmolStr>,
+    pub enum_: EnumReferenceData<L>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
 }

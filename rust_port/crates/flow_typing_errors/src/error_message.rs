@@ -490,8 +490,7 @@ pub struct EnumUnknownNotCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq
 )]
 pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
-    pub enum_name: Option<FlowSmolStr>,
+    pub enum_: EnumReferenceData<L>,
     pub example_member: Option<FlowSmolStr>,
     pub from_match: bool,
 }
@@ -5535,13 +5534,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumInvalidCheck(box EnumInvalidCheckData {
                         loc,
                         enum_,
-                        enum_name,
                         example_member,
                         from_match,
                     }) => EnumInvalidCheck(Box::new(EnumInvalidCheckData {
                         loc: f(loc),
-                        enum_: map_error_type_ref_with_reason(enum_),
-                        enum_name,
+                        enum_: map_enum_ref(enum_),
                         example_member,
                         from_match,
                     })),
@@ -7299,22 +7296,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     member_loc,
                     enum_,
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumInvalidCheck(box EnumInvalidCheckData {
-                loc,
-                enum_,
-                enum_name,
-                example_member,
-                from_match,
-            })) => EEnumError(EnumErrorKind::EnumInvalidCheck(Box::new(
-                EnumInvalidCheckData {
-                    loc,
-                    enum_: map_error_type_ref_with_reason(enum_),
-                    enum_name,
-                    example_member,
-                    from_match,
                 },
             ))),
 
@@ -9822,18 +9803,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck(
                 box EnumInvalidCheckData {
                     enum_,
-                    enum_name,
                     example_member,
                     from_match,
                     ..
                 },
             )) => Normal(Message::MessageInvalidEnumMemberCheck(Box::new(
                 MessageInvalidEnumMemberCheckData {
-                    enum_: MessageTypeReferenceData {
-                        loc: enum_.reference_loc,
-                        desc: expect_type_desc(enum_.type_desc),
-                    },
-                    enum_name,
+                    enum_,
                     example_member,
                     from_match,
                 },
