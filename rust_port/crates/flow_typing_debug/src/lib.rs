@@ -3764,7 +3764,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {
                 loc,
                 description_name,
-                type_desc,
                 enum_,
                 left_to_check,
                 default_case_loc,
@@ -3774,9 +3773,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     None => "<None>".to_string(),
                 };
                 format!(
-                    "EEnumError (EnumNotAllChecked ({}) ({}) ({}) ({}))",
-                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
-                    dump_error_type_reference(cx, enum_),
+                    "EEnumError (EnumNotAllChecked ({} {}) ({} {}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    description_name.as_deref().unwrap_or("<None>"),
+                    string_of_aloc(None, &enum_.loc),
+                    enum_.name,
                     left_to_check.join(", "),
                     default_str
                 )

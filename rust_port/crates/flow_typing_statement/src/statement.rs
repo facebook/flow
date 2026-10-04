@@ -21240,11 +21240,10 @@ fn perform_enum_exhaustive_check<'cx>(
                     flow_typing_errors::error_message::EnumNotAllCheckedData {
                         loc: check_reason.loc().dupe(),
                         description_name: flow_js_utils::description_name_for_error(check_reason),
-                        type_desc: flow_js_utils::type_or_type_desc_for_error(enum_t),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            enum_t,
-                            enum_reason.dupe(),
-                        ),
+                        enum_: NamedReferenceData {
+                            loc: ref_loc_of_t(enum_t).dupe(),
+                            name: enum_info.enum_name.dupe(),
+                        },
                         left_to_check: left_over.keys().duped().collect(),
                         default_case_loc,
                     },

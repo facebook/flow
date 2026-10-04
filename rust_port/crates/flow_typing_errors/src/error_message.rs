@@ -455,8 +455,7 @@ pub struct EnumAllMembersAlreadyCheckedData<L: Dupe + PartialOrd + Ord + Partial
 pub struct EnumNotAllCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub description_name: Option<FlowSmolStr>,
-    pub type_desc: TypeOrTypeDesc<L>,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: NamedReferenceData<L>,
     pub left_to_check: Vec<FlowSmolStr>,
     pub default_case_loc: Option<L>,
 }
@@ -5509,15 +5508,16 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumNotAllChecked(box EnumNotAllCheckedData {
                         loc,
                         description_name,
-                        type_desc,
                         enum_,
                         left_to_check,
                         default_case_loc,
                     }) => EnumNotAllChecked(Box::new(EnumNotAllCheckedData {
                         loc: f(loc),
                         description_name,
-                        type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), type_desc),
-                        enum_: map_error_type_ref_with_reason(enum_),
+                        enum_: NamedReferenceData {
+                            loc: f(enum_.loc),
+                            name: enum_.name,
+                        },
                         left_to_check,
                         default_case_loc: default_case_loc.map(&f),
                     })),
@@ -7299,24 +7299,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     member_loc,
                     enum_,
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumNotAllChecked(box EnumNotAllCheckedData {
-                loc,
-                description_name,
-                type_desc,
-                enum_,
-                left_to_check,
-                default_case_loc,
-            })) => EEnumError(EnumErrorKind::EnumNotAllChecked(Box::new(
-                EnumNotAllCheckedData {
-                    loc,
-                    description_name,
-                    type_desc: f(type_desc),
-                    enum_: map_error_type_ref_with_reason(enum_),
-                    left_to_check,
-                    default_case_loc,
                 },
             ))),
 
@@ -9826,7 +9808,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked(
                 box EnumNotAllCheckedData {
                     description_name,
-                    type_desc,
                     enum_,
                     left_to_check,
                     default_case_loc,
@@ -9835,11 +9816,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => Normal(Message::MessageIncompleteExhausiveCheckEnum(Box::new(
                 MessageIncompleteExhausiveCheckEnumData {
                     description_name,
-                    description: expect_type_desc(type_desc),
-                    enum_: MessageTypeReferenceData {
-                        loc: enum_.reference_loc,
-                        desc: expect_type_desc(enum_.type_desc),
-                    },
+                    enum_,
                     left_to_check,
                     default_case_loc,
                 },

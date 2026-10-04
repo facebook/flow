@@ -7592,7 +7592,6 @@ where
             ]),
             MessageIncompleteExhausiveCheckEnum(box MessageIncompleteExhausiveCheckEnumData {
                 description_name,
-                description,
                 enum_,
                 left_to_check,
                 default_case_loc,
@@ -7603,7 +7602,7 @@ where
                             text("the member "),
                             code(left_to_check[0].as_str()),
                             text(" of enum "),
-                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                            render_named_reference(enum_),
                             text(" has"),
                         ]
                     } else {
@@ -7633,7 +7632,7 @@ where
                         features.extend(members_features);
                         features.extend(vec![
                             text(" of enum "),
-                            ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                            render_named_reference(enum_),
                             text(" have"),
                         ]);
                         features
@@ -7658,7 +7657,7 @@ where
                 features.extend(left_to_check_features);
                 features.extend(vec![
                     text(" not been considered in check of "),
-                    desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
+                    code(description_name.as_ref().unwrap_or(&enum_.name)),
                     text("."),
                 ]);
                 features.extend(default_features);

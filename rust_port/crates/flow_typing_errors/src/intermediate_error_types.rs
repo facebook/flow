@@ -1658,8 +1658,7 @@ pub struct MessageIncompatibleDueToInvariantSubtypingData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIncompleteExhausiveCheckEnumData<L: Dupe> {
     pub description_name: Option<FlowSmolStr>,
-    pub description: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_: NamedReferenceData<L>,
     pub left_to_check: Vec<FlowSmolStr>,
     pub default_case_loc: Option<L>,
 }
