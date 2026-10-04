@@ -64,7 +64,6 @@ pub struct SavedStateEnvData {
     pub global_lib_files: SavedGlobalLibFiles,
     pub local_errors: BTreeMap<FileKey, ErrorSet>,
     pub node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    pub symlinks: BTreeMap<FlowSmolStr, FlowSmolStr>,
     pub dependency_info: DependencyInfo,
     pub duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
     pub export_index: Option<ExportIndex>,
@@ -78,7 +77,6 @@ struct SavedStateEnvDataForSerialization {
     global_lib_files: SavedGlobalLibFiles,
     local_errors: BTreeMap<FileKey, ErrorSet>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    symlinks: BTreeMap<FlowSmolStr, FlowSmolStr>,
     duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
     export_index: Option<ExportIndex>,
 }
@@ -99,7 +97,6 @@ struct SavedStateEnvBaseData {
     global_augmentations: Vec<u32>,
     local_errors: Vec<(u32, ErrorSet)>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    symlinks: BTreeMap<FlowSmolStr, FlowSmolStr>,
     duplicate_providers: BTreeMap<FlowSmolStr, (u32, Vec<u32>)>,
     export_index: Option<SerializedExportIndex>,
 }
@@ -137,7 +134,6 @@ struct DeserializedSavedStateEnvBaseData {
     global_lib_files: SavedGlobalLibFiles,
     local_errors: BTreeMap<FileKey, ErrorSet>,
     node_modules_containers: BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    symlinks: BTreeMap<FlowSmolStr, FlowSmolStr>,
     duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec<FileKey>)>,
     export_index: Option<ExportIndex>,
 }
@@ -314,6 +310,11 @@ fn collect_non_flowlib_configured_libs(env: &Env, options: &Options) -> BTreeSet
 }
 
 fn collect_node_modules_containers(root: &Path) -> BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>> {
+    // let collect_node_modules_containers root =
+    //   SMap.fold
+    //     (fun key value acc -> SMap.add (normalize_path root key) value acc)
+    //     !Files.node_modules_containers
+    //     SMap.empty
     let node_modules_containers = files::node_modules_containers.read().unwrap();
     node_modules_containers
         .iter()
@@ -326,24 +327,7 @@ fn collect_node_modules_containers(root: &Path) -> BTreeMap<FlowSmolStr, BTreeSe
         .collect()
 }
 
-fn collect_symlinks(transaction: &Transaction, root: &Path) -> BTreeMap<FlowSmolStr, FlowSmolStr> {
-    transaction
-        .symlinks()
-        .into_iter()
-        .map(|(path, target)| {
-            (
-                FlowSmolStr::new(files::relative_path(root, path.as_str())),
-                FlowSmolStr::new(files::relative_path(root, target.as_str())),
-            )
-        })
-        .collect()
-}
-
-fn collect_saved_state_env_data(
-    transaction: &Transaction,
-    env: &Env,
-    options: &Options,
-) -> SavedStateEnvDataForSerialization {
+fn collect_saved_state_env_data(env: &Env, options: &Options) -> SavedStateEnvDataForSerialization {
     flow_hh_logger::info!("Collecting env data for saved state");
     // let root = Options.root options |> File_path.to_string in
     let root = options.root.as_path();
@@ -381,7 +365,6 @@ fn collect_saved_state_env_data(
         global_lib_files: collect_global_lib_files(env, options),
         local_errors: errors.local_errors.clone(),
         node_modules_containers,
-        symlinks: collect_symlinks(transaction, root),
         duplicate_providers,
         export_index: if options.saved_state_persist_export_index {
             env.exports
@@ -759,7 +742,6 @@ fn serialize_saved_state_env_data(
         global_lib_files,
         local_errors,
         node_modules_containers,
-        symlinks,
         duplicate_providers,
         export_index,
     } = data;
@@ -786,7 +768,6 @@ fn serialize_saved_state_env_data(
                 .map(|(file, errors)| (file_index(&file_to_index, &file), errors))
                 .collect(),
             node_modules_containers,
-            symlinks,
             duplicate_providers: duplicate_providers
                 .into_iter()
                 .map(|(name, (leader, others))| {
@@ -823,7 +804,6 @@ fn deserialize_saved_state_base_data(
         global_augmentations,
         local_errors,
         node_modules_containers,
-        symlinks,
         duplicate_providers,
         export_index,
     } = data;
@@ -848,7 +828,6 @@ fn deserialize_saved_state_base_data(
             .map(|(file, errors)| Ok((file_from_index(files, file)?, errors)))
             .collect::<Result<BTreeMap<_, _>, InvalidReason>>()?,
         node_modules_containers,
-        symlinks,
         duplicate_providers: duplicate_providers
             .into_iter()
             .map(|(name, (leader, others))| {
@@ -882,7 +861,6 @@ fn join_saved_state_env_data(
         global_lib_files,
         local_errors,
         node_modules_containers,
-        symlinks,
         duplicate_providers,
         export_index,
     } = data;
@@ -894,7 +872,6 @@ fn join_saved_state_env_data(
         global_lib_files,
         local_errors,
         node_modules_containers,
-        symlinks,
         dependency_info: DependencyInfo::from_graphs(
             sig_dependency_graph,
             implementation_dependency_graph,
@@ -1078,7 +1055,7 @@ pub fn save(
     let mut file =
         File::create(&tmp_path).map_err(|err| InvalidReason::Failed_to_marshal(err.to_string()))?;
     write_version(&mut file)?;
-    let env_data = collect_saved_state_env_data(transaction, env, options);
+    let env_data = collect_saved_state_env_data(env, options);
     flow_hh_logger::info!("Serializing env metadata");
     let heap_files = transaction.collect_heap_file_table();
     let files = {
@@ -1113,7 +1090,6 @@ fn denormalize_paths(
     options: &Options,
     non_flowlib_configured: &mut BTreeSet<FlowSmolStr>,
     node_modules_containers: &mut BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-    symlinks: &mut BTreeMap<FlowSmolStr, FlowSmolStr>,
 ) {
     // Raw string paths still need the root prepended
     let root = options.root.as_path();
@@ -1125,15 +1101,6 @@ fn denormalize_paths(
     *node_modules_containers = node_modules_containers
         .iter()
         .map(|(key, value)| (FlowSmolStr::new(prepend_root(key.as_str())), value.clone()))
-        .collect();
-    *symlinks = symlinks
-        .iter()
-        .map(|(path, target)| {
-            (
-                FlowSmolStr::new(prepend_root(path.as_str())),
-                FlowSmolStr::new(prepend_root(target.as_str())),
-            )
-        })
         .collect();
 }
 
@@ -1161,7 +1128,6 @@ fn denormalize_direct_data(
         options,
         &mut data.global_lib_files.non_flowlib_configured,
         &mut data.node_modules_containers,
-        &mut data.symlinks,
     );
     Ok(data)
 }
@@ -1257,8 +1223,7 @@ pub fn load(
             .map_err(|err| InvalidReason::Failed_to_load_heap(err.to_string()))?;
         (data, heap)
     };
-    let mut data = denormalize_direct_data(options, data)?;
-    heap.install_symlinks(std::mem::take(&mut data.symlinks));
+    let data = denormalize_direct_data(options, data)?;
     flow_hh_logger::info!("Finished loading saved-state");
     Ok((data, Arc::new(heap)))
 }

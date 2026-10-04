@@ -23,7 +23,6 @@ use dupe::Dupe;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 use flow_parser_utils::package_json::PackageJson;
 use flow_utils_concurrency::lockfree_overlay_map::commit_map_with_capacity;
@@ -257,15 +256,6 @@ impl CommittedHeap {
         Ok(Self::with_data(Transaction::read_heap_with_file_table(
             reader, files,
         )?))
-    }
-
-    /// Fills the symlink table of a heap just built from a dump, before any transaction opens on
-    /// it. It goes into committed data rather than a transaction's overlay because init may
-    /// abandon its first transaction and open another on the same heap.
-    pub fn install_symlinks(&self, symlinks: BTreeMap<FlowSmolStr, FlowSmolStr>) {
-        let state = self.state.load_full();
-        let mut state = state.write();
-        state.data.symlinks.extend(symlinks);
     }
 
     fn should_collect(state: &crate::heap_state::CommittedHeapState, gc_state: &GcState) -> bool {
@@ -896,7 +886,6 @@ impl Transaction {
             data.file_dependents = base.file_dependents.clone();
             data.haste_dependents = base.haste_dependents.clone();
             data.haste_provider_candidates = base.haste_provider_candidates.clone();
-            data.symlinks = base.symlinks.clone();
         }
         heap
     }
@@ -1387,9 +1376,6 @@ impl Transaction {
             file_dependents,
             haste_dependents,
             haste_provider_candidates: provider_candidates,
-            // Dumps don't carry the symlink table: its paths must be stored root-relative, so the
-            // saved state keeps it with the env data. See `CommittedHeap::install_symlinks`.
-            symlinks: Default::default(),
         })
     }
 

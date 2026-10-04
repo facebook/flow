@@ -7,7 +7,6 @@
 
 //! Heap base maps and lock-free transaction overlays.
 
-use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -19,7 +18,6 @@ use dupe::Dupe;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
-use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap_serialization::ReaderCache;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
@@ -87,8 +85,6 @@ pub(crate) struct CommittedHeapData {
     pub(crate) file_dependents: HashMap<FileKey, Arc<Vec<FileKey>>>,
     pub(crate) haste_dependents: HashMap<HasteModuleInfo, Arc<Vec<FileKey>>>,
     pub(crate) haste_provider_candidates: HashMap<HasteModuleInfo, Arc<Vec<FileKey>>>,
-    /// Logical path of each symlink in crawl scope, to its canonical target.
-    pub(crate) symlinks: CommitMap<FlowSmolStr, FlowSmolStr>,
 }
 
 impl CommittedHeapData {
@@ -99,7 +95,6 @@ impl CommittedHeapData {
             file_dependents: HashMap::new(),
             haste_dependents: HashMap::new(),
             haste_provider_candidates: HashMap::new(),
-            symlinks: CommitMap::default(),
         }
     }
 
@@ -109,7 +104,6 @@ impl CommittedHeapData {
             && self.file_dependents.is_empty()
             && self.haste_dependents.is_empty()
             && self.haste_provider_candidates.is_empty()
-            && self.symlinks.is_empty()
     }
 }
 
@@ -152,9 +146,7 @@ impl CommittedHeap {
             file_dependents,
             haste_dependents,
             haste_provider_candidates,
-            symlinks,
         } = &mut state.data;
-        apply_overlay_map(symlinks, &overlay.symlinks);
         join(
             || {
                 join(
@@ -208,7 +200,6 @@ impl CommittedHeap {
             file_dependents,
             haste_dependents,
             haste_provider_candidates,
-            symlinks,
         } = deltas;
         let committed = self.state.load_full();
         let other = other.state.load_full();
@@ -220,7 +211,6 @@ impl CommittedHeap {
             file_dependents: committed_file_dependents,
             haste_dependents: committed_haste_dependents,
             haste_provider_candidates: committed_haste_provider_candidates,
-            symlinks: committed_symlinks,
         } = &mut committed.data;
         let CommittedHeapData {
             files: other_files,
@@ -228,9 +218,7 @@ impl CommittedHeap {
             file_dependents: other_file_dependents,
             haste_dependents: other_haste_dependents,
             haste_provider_candidates: other_haste_provider_candidates,
-            symlinks: other_symlinks,
         } = &mut other.data;
-        apply_overlay_map_to_both_draining(committed_symlinks, other_symlinks, symlinks);
         join(
             move || {
                 join(
@@ -287,7 +275,6 @@ impl CommittedHeap {
             file_dependents,
             haste_dependents,
             haste_provider_candidates,
-            symlinks,
         } = &mut committed.data;
         let CommittedHeapData {
             files: other_files,
@@ -295,9 +282,7 @@ impl CommittedHeap {
             file_dependents: other_file_dependents,
             haste_dependents: other_haste_dependents,
             haste_provider_candidates: other_haste_provider_candidates,
-            symlinks: other_symlinks,
         } = &mut other.data;
-        apply_overlay_map_to_both(symlinks, other_symlinks, &overlay.symlinks);
         join(
             || {
                 join(
@@ -361,7 +346,6 @@ struct HeapOverlayCommitDeltas {
     file_dependents: DrainedSetOverlay<FileKey, FileKey>,
     haste_dependents: DrainedSetOverlay<HasteModuleInfo, FileKey>,
     haste_provider_candidates: DrainedSetOverlay<HasteModuleInfo, FileKey>,
-    symlinks: DrainedOverlayMap<FlowSmolStr, FlowSmolStr>,
 }
 
 pub(crate) type CommittedHeapReadGuard = ArcRwLockReadGuard<RawRwLock, CommittedHeapState>;
@@ -373,7 +357,6 @@ fn apply_commit_deltas_to_data(committed: &mut CommittedHeapData, deltas: HeapOv
         file_dependents,
         haste_dependents,
         haste_provider_candidates,
-        symlinks,
     } = deltas;
     let CommittedHeapData {
         files: committed_files,
@@ -381,9 +364,7 @@ fn apply_commit_deltas_to_data(committed: &mut CommittedHeapData, deltas: HeapOv
         file_dependents: committed_file_dependents,
         haste_dependents: committed_haste_dependents,
         haste_provider_candidates: committed_haste_provider_candidates,
-        symlinks: committed_symlinks,
     } = committed;
-    apply_overlay_map_draining(committed_symlinks, symlinks);
     join(
         move || {
             join(
@@ -721,7 +702,6 @@ pub struct HeapOverlay {
     file_dependents: LockfreeSetOverlay<FileKey, FileKey>,
     haste_dependents: LockfreeSetOverlay<HasteModuleInfo, FileKey>,
     haste_provider_candidates: LockfreeSetOverlay<HasteModuleInfo, FileKey>,
-    symlinks: LockfreeOverlayMap<FlowSmolStr, FlowSmolStr>,
 }
 
 impl HeapOverlay {
@@ -735,7 +715,6 @@ impl HeapOverlay {
             && self.file_dependents.is_empty()
             && self.haste_dependents.is_empty()
             && self.haste_provider_candidates.is_empty()
-            && self.symlinks.is_empty()
     }
 
     pub(crate) fn clear_latest_entries_parallel(&mut self) {
@@ -789,7 +768,6 @@ impl HeapOverlay {
             file_dependents,
             haste_dependents,
             haste_provider_candidates,
-            symlinks: self.symlinks.take_commit_entries(),
         }
     }
 
@@ -1020,40 +998,6 @@ impl<'a> HeapReader<'a> {
             info,
         )
     }
-
-    pub fn symlink_target(&self, path: &str) -> Option<FlowSmolStr> {
-        match self
-            .overlay
-            .as_ref()
-            .and_then(|overlay| overlay.symlinks.get(&FlowSmolStr::new(path)))
-        {
-            Some(OverlayValue::Present(target)) => Some(target),
-            Some(OverlayValue::Deleted) => None,
-            None => self.committed.symlinks.get(path).map(Dupe::dupe),
-        }
-    }
-
-    pub fn symlinks(&self) -> BTreeMap<FlowSmolStr, FlowSmolStr> {
-        let mut symlinks = self
-            .committed
-            .symlinks
-            .iter()
-            .map(|(path, target)| (path.dupe(), target.dupe()))
-            .collect::<BTreeMap<_, _>>();
-        if let Some(overlay) = self.overlay.as_ref() {
-            for (path, target) in overlay.symlinks.iter() {
-                match target {
-                    OverlayValue::Present(target) => {
-                        symlinks.insert(path, target);
-                    }
-                    OverlayValue::Deleted => {
-                        symlinks.remove(&path);
-                    }
-                }
-            }
-        }
-        symlinks
-    }
 }
 
 fn set_with_overlay<K, V>(
@@ -1143,14 +1087,6 @@ impl<'a> HeapWriter<'a> {
 
     pub fn remove_haste_module(&self, info: HasteModuleInfo) {
         self.overlay.haste_modules.remove(info);
-    }
-
-    pub fn set_symlink(&self, path: FlowSmolStr, target: FlowSmolStr) {
-        self.overlay.symlinks.insert(path, target);
-    }
-
-    pub fn remove_symlink(&self, path: FlowSmolStr) {
-        self.overlay.symlinks.remove(path);
     }
 
     pub fn add_file_dependent(&self, owner: FileKey, dependent: FileKey) {
