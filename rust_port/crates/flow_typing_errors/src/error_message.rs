@@ -2492,7 +2492,7 @@ pub struct ECannotSpreadInterfaceData<L: Dupe + PartialOrd + Ord + PartialEq + E
 pub struct ECannotSpreadIndexerOnRightData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub spread_reason: VirtualReason<L>,
     pub object_reason: VirtualReason<L>,
-    pub key: ErrorReference<L>,
+    pub key_loc: L,
     pub key_desc: TypeOrTypeDesc<L>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -2501,7 +2501,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for ECannotSpreadInd
     fn eq(&self, other: &Self) -> bool {
         self.spread_reason == other.spread_reason
             && self.object_reason == other.object_reason
-            && self.key == other.key
+            && self.key_loc == other.key_loc
             && self.use_op == other.use_op
     }
 }
@@ -2514,7 +2514,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.spread_reason.hash(state);
         self.object_reason.hash(state);
-        self.key.hash(state);
+        self.key_loc.hash(state);
         self.use_op.hash(state);
     }
 }
@@ -2532,7 +2532,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for ECannotSpreadIndexerOn
         self.spread_reason
             .cmp(&other.spread_reason)
             .then_with(|| self.object_reason.cmp(&other.object_reason))
-            .then_with(|| self.key.cmp(&other.key))
+            .then_with(|| self.key_loc.cmp(&other.key_loc))
             .then_with(|| self.use_op.cmp(&other.use_op))
     }
 }
@@ -5944,13 +5944,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
                 spread_reason,
                 object_reason,
-                key,
+                key_loc,
                 key_desc,
                 use_op,
             }) => ECannotSpreadIndexerOnRight(Box::new(ECannotSpreadIndexerOnRightData {
                 spread_reason: map_reason(spread_reason),
                 object_reason: map_reason(object_reason),
-                key: map_error_ref(key),
+                key_loc: f(key_loc),
                 key_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), key_desc),
                 use_op: map_use_op(use_op),
             })),
@@ -7619,13 +7619,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
                 spread_reason,
                 object_reason,
-                key,
+                key_loc,
                 key_desc,
                 use_op,
             }) => ECannotSpreadIndexerOnRight(Box::new(ECannotSpreadIndexerOnRightData {
                 spread_reason,
                 object_reason,
-                key,
+                key_loc,
                 key_desc: f(key_desc),
                 use_op,
             })),
@@ -11422,7 +11422,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
                 spread_reason,
                 object_reason,
-                key,
+                key_loc,
                 key_desc,
                 use_op,
             }) => {
@@ -11433,7 +11433,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         spread_reason,
                         object_reason,
                         key: Box::new(MessageTypeReferenceData {
-                            loc: key.loc,
+                            loc: key_loc,
                             desc: expect_type_desc(key_desc),
                         }),
                     },

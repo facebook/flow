@@ -525,10 +525,7 @@ fn spread2<'cx>(
             Box::new(ECannotSpreadIndexerOnRightData {
                 spread_reason: reason.dupe(),
                 object_reason: r2.dupe(),
-                key: ErrorReference::new(
-                    type_util::ref_loc_of_t(&d2.key).dupe(),
-                    type_util::reason_of_t(&d2.key).desc(false).clone(),
-                ),
+                key_loc: type_util::ref_loc_of_t(&d2.key).dupe(),
                 key_desc: flow_js_utils::type_or_type_desc_for_error(&d2.key),
                 use_op: use_op.dupe(),
             }),
