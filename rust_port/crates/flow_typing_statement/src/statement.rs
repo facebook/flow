@@ -21218,10 +21218,10 @@ fn perform_enum_exhaustive_check<'cx>(
                     flow_typing_errors::error_message::EnumMemberAlreadyCheckedData {
                         case_test_loc: case_test_loc.dupe(),
                         prev_check_loc: seen[member_name].dupe(),
-                        enum_: flow_js_utils::type_reference_with_reason_for_error(
-                            enum_t,
-                            enum_reason.dupe(),
-                        ),
+                        enum_: NamedReferenceData {
+                            loc: ref_loc_of_t(enum_t).dupe(),
+                            name: enum_info.enum_name.dupe(),
+                        },
                         member_name: member_name.dupe(),
                     },
                 ))),

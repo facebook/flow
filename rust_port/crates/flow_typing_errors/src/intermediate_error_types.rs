@@ -1287,7 +1287,7 @@ pub enum ObjKind {
 pub struct MessageAlreadyExhaustivelyCheckOneEnumMemberData<L: Dupe> {
     pub member_name: FlowSmolStr,
     pub prev_check_loc: L,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_: NamedReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

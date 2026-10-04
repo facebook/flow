@@ -421,7 +421,7 @@ pub struct EnumNotIterableForInData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
 pub struct EnumMemberAlreadyCheckedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub case_test_loc: L,
     pub prev_check_loc: L,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: NamedReferenceData<L>,
     pub member_name: FlowSmolStr,
 }
 
@@ -5488,7 +5488,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }) => EnumMemberAlreadyChecked(Box::new(EnumMemberAlreadyCheckedData {
                         case_test_loc: f(case_test_loc),
                         prev_check_loc: f(prev_check_loc),
-                        enum_: map_error_type_ref_with_reason(enum_),
+                        enum_: NamedReferenceData {
+                            loc: f(enum_.loc),
+                            name: enum_.name,
+                        },
                         member_name,
                     })),
                     EnumAllMembersAlreadyChecked(box EnumAllMembersAlreadyCheckedData {
@@ -7293,22 +7296,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     member_loc,
                     enum_,
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(
-                box EnumMemberAlreadyCheckedData {
-                    case_test_loc,
-                    prev_check_loc,
-                    enum_,
-                    member_name,
-                },
-            )) => EEnumError(EnumErrorKind::EnumMemberAlreadyChecked(Box::new(
-                EnumMemberAlreadyCheckedData {
-                    case_test_loc,
-                    prev_check_loc,
-                    enum_: map_error_type_ref_with_reason(enum_),
-                    member_name,
                 },
             ))),
 
@@ -9835,10 +9822,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => Normal(Message::MessageAlreadyExhaustivelyCheckOneEnumMember(
                 Box::new(MessageAlreadyExhaustivelyCheckOneEnumMemberData {
                     prev_check_loc,
-                    enum_: MessageTypeReferenceData {
-                        loc: enum_.reference_loc,
-                        desc: expect_type_desc(enum_.type_desc),
-                    },
+                    enum_,
                     member_name,
                 }),
             )),

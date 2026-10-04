@@ -3742,10 +3742,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 member_name,
             }) => {
                 format!(
-                    "EEnumError (EnumMemberAlreadyChecked ({}) ({}) ({}) ({}))",
+                    "EEnumError (EnumMemberAlreadyChecked ({}) ({}) ({} {}) ({}))",
                     string_of_aloc(None, case_test_loc),
                     string_of_aloc(None, prev_check_loc),
-                    dump_error_type_reference(cx, enum_),
+                    string_of_aloc(None, &enum_.loc),
+                    enum_.name,
                     member_name
                 )
             }

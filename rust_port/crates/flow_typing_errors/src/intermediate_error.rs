@@ -5343,7 +5343,7 @@ where
                 text("case checks for enum member "),
                 code(member_name),
                 text(" of "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_named_reference(enum_),
                 text(", but member "),
                 code(member_name),
                 text(" was already checked at "),
