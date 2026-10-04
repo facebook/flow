@@ -4129,14 +4129,6 @@ where
         Err(desc) => friendly::desc_of_reason_desc(&desc.map_locs(&loc_of_aloc)),
     };
 
-    let desc_of_name_or_ty_or_desc =
-        |name: Option<&FlowSmolStr>, ty_or_desc: &Result<ALocElt, VirtualReasonDesc<L>>| {
-            name.map_or_else(
-                || desc_of_ty_or_desc(ty_or_desc),
-                |name| code(name.as_str()),
-            )
-        };
-
     let desc_of_value_as_type_reference =
         |reference: Option<&ValueAsTypeReference>, value: &MessageTypeReferenceData<L>| {
             match reference {
@@ -5994,23 +5986,20 @@ where
             MessageCannotExhaustivelyCheckAbstractEnums(
                 box MessageCannotExhaustivelyCheckAbstractEnumsData {
                     description_name,
-                    description,
-                    enum_,
+                    enum_loc,
                     enum_name,
                 },
             ) => {
-                let enum_reference = enum_name.as_ref().map_or_else(
-                    || ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
-                    |name| {
-                        friendly::hardcoded_string_desc_ref(
-                            &format!("`{name}`"),
-                            loc_of_aloc(&enum_.loc),
-                        )
-                    },
-                );
+                let enum_reference = match enum_name {
+                    Some(name) => hardcoded_string_desc_ref(&format!("`{name}`"), enum_loc),
+                    None => hardcoded_string_desc_ref("enum", enum_loc),
+                };
                 friendly::Message(vec![
                     text("Cannot exhaustively check "),
-                    desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
+                    match description_name.as_ref().or(enum_name.as_ref()) {
+                        Some(name) => code(name),
+                        None => text("enum"),
+                    },
                     text(" because "),
                     enum_reference,
                     text(" is an abstract enum value, so has no members."),

@@ -526,8 +526,7 @@ pub struct EnumMemberUsedAsTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
 pub struct EnumInvalidAbstractUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub description_name: Option<FlowSmolStr>,
-    pub type_desc: TypeOrTypeDesc<L>,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_loc: L,
     pub enum_name: Option<FlowSmolStr>,
 }
 
@@ -5577,14 +5576,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
                         loc,
                         description_name,
-                        type_desc,
-                        enum_,
+                        enum_loc,
                         enum_name,
                     }) => EnumInvalidAbstractUse(Box::new(EnumInvalidAbstractUseData {
                         loc: f(loc),
                         description_name,
-                        type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), type_desc),
-                        enum_: map_error_type_ref_with_reason(enum_),
+                        enum_loc: f(enum_loc),
                         enum_name,
                     })),
                     EnumInvalidMemberName(box EnumInvalidMemberNameData {
@@ -7308,19 +7305,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         enum_,
                     },
                 )),
-                EnumErrorKind::EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
-                    loc,
-                    description_name,
-                    type_desc,
-                    enum_,
-                    enum_name,
-                }) => EnumErrorKind::EnumInvalidAbstractUse(Box::new(EnumInvalidAbstractUseData {
-                    loc,
-                    description_name,
-                    type_desc: f(type_desc),
-                    enum_: map_error_type_ref_with_reason(enum_),
-                    enum_name,
-                })),
                 EnumErrorKind::EnumInvalidMemberName(box EnumInvalidMemberNameData {
                     loc,
                     enum_,
@@ -9017,15 +9001,6 @@ fn expect_type_desc<L: Dupe>(
     }
 }
 
-fn expect_message_type_reference<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
-    type_reference: ErrorTypeReferenceWithLocData<L>,
-) -> MessageTypeReferenceData<L> {
-    MessageTypeReferenceData {
-        loc: type_reference.reference_loc,
-        desc: expect_type_desc(type_reference.type_desc),
-    }
-}
-
 fn expect_error_type_reference<L: Dupe + PartialOrd + Ord + PartialEq + Eq>(
     type_reference: ErrorTypeReferenceData<L>,
 ) -> MessageTypeReferenceData<L> {
@@ -9812,16 +9787,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(
                 box EnumInvalidAbstractUseData {
                     description_name,
-                    type_desc,
-                    enum_,
+                    enum_loc,
                     enum_name,
                     ..
                 },
             )) => Normal(Message::MessageCannotExhaustivelyCheckAbstractEnums(
                 Box::new(MessageCannotExhaustivelyCheckAbstractEnumsData {
                     description_name,
-                    description: expect_type_desc(type_desc),
-                    enum_: expect_message_type_reference(enum_),
+                    enum_loc,
                     enum_name,
                 }),
             )),

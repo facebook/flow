@@ -3850,18 +3850,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumInvalidAbstractUse(box EnumInvalidAbstractUseData {
                 loc,
                 description_name,
-                type_desc,
-                enum_,
+                enum_loc,
                 enum_name,
             }) => {
-                let enum_reference = enum_name.as_ref().map_or_else(
-                    || dump_error_type_reference(cx, enum_),
-                    |name| format!("{} RType({name:?})", string_of_aloc(None, &enum_.loc)),
-                );
                 format!(
-                    "EEnumError (EnumInvalidAbstractUse ({}) ({}))",
-                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
-                    enum_reference
+                    "EEnumError (EnumInvalidAbstractUse ({} {}) ({} {}))",
+                    string_of_aloc(None, loc),
+                    description_name.as_deref().unwrap_or("<None>"),
+                    string_of_aloc(None, enum_loc),
+                    enum_name.as_deref().unwrap_or("<None>")
                 )
             }
             EnumErrorKind::EnumInvalidMemberName(box EnumInvalidMemberNameData {

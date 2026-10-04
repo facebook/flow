@@ -20976,11 +20976,7 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
                             description_name: flow_js_utils::description_name_for_error(
                                 check_reason,
                             ),
-                            type_desc: flow_js_utils::type_or_type_desc_for_error(concrete),
-                            enum_: flow_js_utils::type_reference_with_reason_for_error(
-                                concrete,
-                                enum_reason.dupe(),
-                            ),
+                            enum_loc: ref_loc_of_t(concrete).dupe(),
                             enum_name: flow_js_utils::type_name_for_error(enum_reason),
                         },
                     ))),

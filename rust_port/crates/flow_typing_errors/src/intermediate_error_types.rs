@@ -1326,8 +1326,7 @@ pub struct MessageCannotExportRenamedDefaultData {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotExhaustivelyCheckAbstractEnumsData<L: Dupe> {
     pub description_name: Option<FlowSmolStr>,
-    pub description: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_loc: L,
     pub enum_name: Option<FlowSmolStr>,
 }
 
