@@ -13,7 +13,6 @@ use dupe::Dupe;
 use dupe::IterDupedExt;
 use dupe::OptionDupedExt;
 use flow_aloc::ALoc;
-use flow_common::error_ref::ErrorReference;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
@@ -1538,27 +1537,26 @@ impl PropsToIndexerContext<'_, '_> {
                 {
                     flow_prop_to_indexer(lp, name)?;
                 } else {
+                    // Without object types (`inst_structural_subtype`), the caller only passes
+                    // props whose key already passed this check.
+                    let Some((lower_obj_t, upper_obj_t)) = &self.lower_upper_subtyping_obj_ts
+                    else {
+                        continue;
+                    };
                     flow_js_utils::add_output_with_env(
                         cx,
                         env,
                         ErrorMessage::EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
                             prop_name: name.dupe(),
-                            lower: flow_js_utils::type_reference_with_reason_or_desc_for_error(
-                                self.lower_upper_subtyping_obj_ts
-                                    .as_ref()
-                                    .map(|(_, upper)| upper),
+                            lower: flow_js_utils::type_reference_with_reason_for_error(
+                                upper_obj_t,
                                 ureason.dupe(),
                             ),
-                            upper: flow_js_utils::type_reference_with_reason_or_desc_for_error(
-                                self.lower_upper_subtyping_obj_ts
-                                    .as_ref()
-                                    .map(|(lower, _)| lower),
+                            upper: flow_js_utils::type_reference_with_reason_for_error(
+                                lower_obj_t,
                                 lreason.dupe(),
                             ),
-                            indexer: ErrorReference::new(
-                                type_util::ref_loc_of_t(key).dupe(),
-                                type_util::reason_of_t(key).desc(false).clone(),
-                            ),
+                            indexer_loc: type_util::ref_loc_of_t(key).dupe(),
                             indexer_desc: flow_js_utils::type_or_type_desc_for_error(key),
                             use_op: use_op.dupe(),
                         })),

@@ -1371,7 +1371,7 @@ pub struct EIndexerCheckFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub prop_name: Name,
     pub lower: ErrorTypeReferenceWithLocData<L>,
     pub upper: ErrorTypeReferenceWithLocData<L>,
-    pub indexer: ErrorReference<L>,
+    pub indexer_loc: L,
     pub indexer_desc: TypeOrTypeDesc<L>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -1381,7 +1381,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIndexerCheckFai
         self.prop_name == other.prop_name
             && self.lower == other.lower
             && self.upper == other.upper
-            && self.indexer == other.indexer
+            && self.indexer_loc == other.indexer_loc
             && self.use_op == other.use_op
     }
 }
@@ -1393,7 +1393,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EIndexerCheckF
         self.prop_name.hash(state);
         self.lower.hash(state);
         self.upper.hash(state);
-        self.indexer.hash(state);
+        self.indexer_loc.hash(state);
         self.use_op.hash(state);
     }
 }
@@ -1410,7 +1410,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIndexerCheckFailedDat
             .cmp(&other.prop_name)
             .then_with(|| self.lower.cmp(&other.lower))
             .then_with(|| self.upper.cmp(&other.upper))
-            .then_with(|| self.indexer.cmp(&other.indexer))
+            .then_with(|| self.indexer_loc.cmp(&other.indexer_loc))
             .then_with(|| self.use_op.cmp(&other.use_op))
     }
 }
@@ -4740,14 +4740,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prop_name,
                 lower,
                 upper,
-                indexer,
+                indexer_loc,
                 indexer_desc,
                 use_op,
             }) => EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
                 prop_name,
                 lower: map_error_type_ref_with_reason(lower),
                 upper: map_error_type_ref_with_reason(upper),
-                indexer: map_error_ref(indexer),
+                indexer_loc: f(indexer_loc),
                 indexer_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), indexer_desc),
                 use_op: map_use_op(use_op),
             })),
@@ -7534,14 +7534,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prop_name,
                 lower,
                 upper,
-                indexer,
+                indexer_loc,
                 indexer_desc,
                 use_op,
             }) => EIndexerCheckFailed(Box::new(EIndexerCheckFailedData {
                 prop_name,
                 lower: map_error_type_ref_with_reason(lower),
                 upper: map_error_type_ref_with_reason(upper),
-                indexer,
+                indexer_loc,
                 indexer_desc: f(indexer_desc),
                 use_op,
             })),
@@ -9384,7 +9384,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 prop_name,
                 lower,
                 upper,
-                indexer,
+                indexer_loc,
                 indexer_desc,
                 use_op,
             }) => IndexerCheckFailed(Box::new(IndexerCheckFailedData {
@@ -9398,7 +9398,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     desc: expect_type_desc(upper.type_desc),
                 },
                 indexer: MessageTypeReferenceData {
-                    loc: indexer.loc,
+                    loc: indexer_loc,
                     desc: expect_type_desc(indexer_desc),
                 },
                 use_op,

@@ -1847,20 +1847,6 @@ pub fn type_reference_with_reason_for_error(
     )
 }
 
-pub fn type_reference_with_reason_or_desc_for_error(
-    t: Option<&Type>,
-    reason: Reason,
-) -> ErrorTypeReferenceWithLocData<ALoc> {
-    match t {
-        Some(t) => type_reference_with_reason_for_error(t, reason),
-        None => ErrorTypeReferenceWithLocData::new(
-            reason.dupe(),
-            reason.loc().dupe(),
-            TypeOrTypeDescT::TypeDesc(Err(reason.desc(false).clone())),
-        ),
-    }
-}
-
 /// Builds an `instanceof` RHS error while preserving descriptions that carry
 /// provenance not expressible by the normalized type.
 pub fn instanceof_rhs_error(t: &Type) -> ErrorMessage<ALoc> {
