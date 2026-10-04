@@ -8818,7 +8818,7 @@ pub fn flow_unary_arith<'cx>(
             add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::EBigIntNumCoerce(Box::new(arithmetic_operand_data(l))),
+                ErrorMessage::EBigIntNumCoerce(Box::new(type_reference_for_error(l))),
             )?;
             Ok(any_t::error(reason))
         }

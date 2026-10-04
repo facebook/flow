@@ -3805,7 +3805,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EBigIntRShift3(Box<ErrorTypeReferenceData<L>>),
 
-    EBigIntNumCoerce(Box<EArithmeticOperandData<L>>),
+    EBigIntNumCoerce(Box<ErrorTypeReferenceData<L>>),
 
     EInvalidCatchParameterAnnotation {
         loc: L,
@@ -6265,11 +6265,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EInvalidComponentRestParam(loc) => EInvalidComponentRestParam(f(loc)),
             EBigIntRShift3(box operand) => EBigIntRShift3(Box::new(map_error_type_ref(operand))),
-            EBigIntNumCoerce(box EArithmeticOperandData { loc, operand }) => {
-                EBigIntNumCoerce(Box::new(EArithmeticOperandData {
-                    loc: f(loc),
-                    operand: map_error_type_ref(operand),
-                }))
+            EBigIntNumCoerce(box operand) => {
+                EBigIntNumCoerce(Box::new(map_error_type_ref(operand)))
             }
 
             EInvalidCatchParameterAnnotation {
@@ -7054,11 +7051,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EBigIntRShift3(box operand) => EBigIntRShift3(Box::new(map_error_type_ref(operand))),
 
-            EBigIntNumCoerce(box EArithmeticOperandData { loc, operand }) => {
-                EBigIntNumCoerce(Box::new(EArithmeticOperandData {
-                    loc,
-                    operand: map_error_type_ref(operand),
-                }))
+            EBigIntNumCoerce(box operand) => {
+                EBigIntNumCoerce(Box::new(map_error_type_ref(operand)))
             }
 
             EComparison(box EComparisonData {
@@ -8149,7 +8143,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::EBigIntRShift3(box ErrorTypeReferenceData { loc, .. }) => Some(loc.dupe()),
 
-            Self::EBigIntNumCoerce(box EArithmeticOperandData { loc, .. }) => Some(loc.dupe()),
+            Self::EBigIntNumCoerce(box ErrorTypeReferenceData { loc, .. }) => Some(loc.dupe()),
 
             Self::ERecursiveDefinition(box ERecursiveDefinitionData { definition, .. }) => {
                 Some(definition.loc.dupe())
@@ -9983,7 +9977,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     expect_error_type_reference(operand),
                 )))
             }
-            ErrorMessage::EBigIntNumCoerce(box EArithmeticOperandData { operand, .. }) => {
+            ErrorMessage::EBigIntNumCoerce(box operand) => {
                 Normal(Message::MessageCannotPerformBigIntUnaryPlus(Box::new(
                     expect_error_type_reference(operand),
                 )))

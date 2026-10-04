@@ -4191,7 +4191,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!("EBigIntRShift3 ({})", operand_desc)
         }
         ErrorMessage::EBigIntNumCoerce(operand) => {
-            let operand_desc = match &operand.operand.type_desc {
+            let operand_desc = match &operand.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
