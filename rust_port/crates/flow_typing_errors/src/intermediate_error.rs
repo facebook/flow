@@ -6504,16 +6504,18 @@ where
             MessageCannotUseEnumMemberUsedAsType(
                 box MessageCannotUseEnumMemberUsedAsTypeData {
                     description_name,
-                    description,
                     enum_,
                 },
             ) => friendly::Message(vec![
                 text("Cannot use "),
-                desc_of_name_or_ty_or_desc(description_name.as_ref(), description),
+                match description_name.as_ref().or(enum_.name.as_ref()) {
+                    Some(name) => code(name),
+                    None => text("enum"),
+                },
                 text(" as a type. "),
                 text("Enum members are not separate types. "),
                 text("Only the enum itself, "),
-                ref_of_ty_or_desc(&enum_.loc, &enum_.desc),
+                render_enum_value_reference(enum_),
                 text(", is a type."),
             ]),
             MessageCannotUseExportInNonLegalToplevelContext(name) => friendly::Message(vec![

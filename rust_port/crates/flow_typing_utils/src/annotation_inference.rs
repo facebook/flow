@@ -1348,7 +1348,7 @@ fn elab_t_concrete<'cx>(
                 DefTInner::UniqueSymbolT(_) => reposition(cx, reason.loc().dupe(), t.dupe()),
                 // an enum object value annotation becomes the enum value type
                 DefTInner::EnumObjectT { enum_value_t, .. } => enum_value_t.dupe(),
-                DefTInner::EnumValueT(_) => {
+                DefTInner::EnumValueT(enum_info) => {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         flow_typing_errors::error_message::ErrorMessage::EEnumError(
@@ -1358,11 +1358,10 @@ fn elab_t_concrete<'cx>(
                                     description_name: flow_js_utils::description_name_for_error(
                                         reason,
                                     ),
-                                    type_desc: flow_js_utils::type_or_type_desc_for_error(&t),
-                                    enum_: flow_js_utils::type_reference_with_reason_for_error(
-                                        &t,
-                                        def_reason.dupe(),
-                                    ),
+                                    enum_: EnumReferenceData {
+                                        loc: type_util::ref_loc_of_t(&t).dupe(),
+                                        name: enum_info.enum_name().map(Dupe::dupe),
+                                    },
                                 }),
                             ),
                         ),

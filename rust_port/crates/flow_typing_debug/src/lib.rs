@@ -3817,13 +3817,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
                 loc,
                 description_name,
-                type_desc,
                 enum_,
             }) => {
                 format!(
-                    "EEnumError (EnumMemberUsedAsType ({}) ({}))",
-                    dump_named_type_desc(cx, loc, description_name.as_deref(), type_desc),
-                    dump_error_type_reference(cx, enum_)
+                    "EEnumError (EnumMemberUsedAsType ({} {}) ({}))",
+                    string_of_aloc(None, loc),
+                    description_name.as_deref().unwrap_or("<None>"),
+                    dump_enum_reference(enum_)
                 )
             }
             EnumErrorKind::EnumIncompatible(box EIncompatibleTypesWithUseOpData {

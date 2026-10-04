@@ -1375,8 +1375,7 @@ pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseEnumMemberUsedAsTypeData<L: Dupe> {
     pub description_name: Option<FlowSmolStr>,
-    pub description: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub enum_: MessageTypeReferenceData<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

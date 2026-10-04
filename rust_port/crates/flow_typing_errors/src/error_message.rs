@@ -509,8 +509,7 @@ pub struct EnumInvalidCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub struct EnumMemberUsedAsTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub description_name: Option<FlowSmolStr>,
-    pub type_desc: TypeOrTypeDesc<L>,
-    pub enum_: ErrorTypeReferenceWithLocData<L>,
+    pub enum_: EnumReferenceData<L>,
 }
 
 #[derive(
@@ -5545,13 +5544,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
                         loc,
                         description_name,
-                        type_desc,
                         enum_,
                     }) => EnumMemberUsedAsType(Box::new(EnumMemberUsedAsTypeData {
                         loc: f(loc),
                         description_name,
-                        type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), type_desc),
-                        enum_: map_error_type_ref_with_reason(enum_),
+                        enum_: map_enum_ref(enum_),
                     })),
                     EnumIncompatible(box EIncompatibleTypesWithUseOpData {
                         use_op,
@@ -7296,20 +7293,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                     member_loc,
                     enum_,
-                },
-            ))),
-
-            EEnumError(EnumErrorKind::EnumMemberUsedAsType(box EnumMemberUsedAsTypeData {
-                loc,
-                description_name,
-                type_desc,
-                enum_,
-            })) => EEnumError(EnumErrorKind::EnumMemberUsedAsType(Box::new(
-                EnumMemberUsedAsTypeData {
-                    loc,
-                    description_name,
-                    type_desc: f(type_desc),
-                    enum_: map_error_type_ref_with_reason(enum_),
                 },
             ))),
 
@@ -9817,18 +9800,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType(
                 box EnumMemberUsedAsTypeData {
                     description_name,
-                    type_desc,
                     enum_,
                     ..
                 },
             )) => Normal(Message::MessageCannotUseEnumMemberUsedAsType(Box::new(
                 MessageCannotUseEnumMemberUsedAsTypeData {
                     description_name,
-                    description: expect_type_desc(type_desc),
-                    enum_: MessageTypeReferenceData {
-                        loc: enum_.reference_loc,
-                        desc: expect_type_desc(enum_.type_desc),
-                    },
+                    enum_,
                 },
             ))),
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse(

@@ -3949,6 +3949,7 @@ pub mod value_to_type_reference_transform {
     use flow_typing_context::Context;
     use flow_typing_errors::error_message::EMissingTypeArgsData;
     use flow_typing_errors::error_message::EnumMemberUsedAsTypeData;
+    use flow_typing_errors::error_message::EnumReferenceData;
     use flow_typing_flow_js_env::FlowJsEnv;
     use flow_typing_type::type_::AnyErrorKind;
     use flow_typing_type::type_::DefTInner;
@@ -3959,7 +3960,6 @@ pub mod value_to_type_reference_transform {
     use flow_typing_type::type_::TypeTKind;
     use flow_typing_type::type_::UseOp;
     use flow_typing_type::type_::any_t;
-    use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
     use flow_typing_type::type_util;
     use flow_typing_type::type_util::reason_of_t;
 
@@ -3969,7 +3969,6 @@ pub mod value_to_type_reference_transform {
     use super::fix_this_instance;
     use super::lookup_builtin_type_with_env;
     use super::type_reference_at_loc_for_error;
-    use super::type_reference_with_reason_for_error;
     use super::value_as_type_reference_for_error;
     use crate::type_subst::Purpose;
     use crate::type_subst::subst;
@@ -4163,7 +4162,7 @@ pub mod value_to_type_reference_transform {
                 DefTInner::UniqueSymbolT(_) => Ok(t.dupe()),
                 // an enum object value annotation becomes the enum type
                 DefTInner::EnumObjectT { enum_value_t, .. } => Ok(enum_value_t.dupe()),
-                DefTInner::EnumValueT(_) => {
+                DefTInner::EnumValueT(enum_info) => {
                     add_output_with_env(
                         cx,
                         env,
@@ -4171,8 +4170,10 @@ pub mod value_to_type_reference_transform {
                             EnumMemberUsedAsTypeData {
                                 loc: reason_op.loc().dupe(),
                                 description_name: description_name_for_error(reason_op),
-                                type_desc: TypeOrTypeDescT::Type(t.dupe()),
-                                enum_: type_reference_with_reason_for_error(&t, reason.dupe()),
+                                enum_: EnumReferenceData {
+                                    loc: type_util::ref_loc_of_t(&t).dupe(),
+                                    name: enum_info.enum_name().map(Dupe::dupe),
+                                },
                             },
                         ))),
                     )?;
