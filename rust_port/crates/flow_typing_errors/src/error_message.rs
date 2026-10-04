@@ -3803,7 +3803,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         async_: bool,
     },
 
-    EBigIntRShift3(Box<EArithmeticOperandData<L>>),
+    EBigIntRShift3(Box<ErrorTypeReferenceData<L>>),
 
     EBigIntNumCoerce(Box<EArithmeticOperandData<L>>),
 
@@ -6264,12 +6264,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EInvalidComponentRestParam(loc) => EInvalidComponentRestParam(f(loc)),
-            EBigIntRShift3(box EArithmeticOperandData { loc, operand }) => {
-                EBigIntRShift3(Box::new(EArithmeticOperandData {
-                    loc: f(loc),
-                    operand: map_error_type_ref(operand),
-                }))
-            }
+            EBigIntRShift3(box operand) => EBigIntRShift3(Box::new(map_error_type_ref(operand))),
             EBigIntNumCoerce(box EArithmeticOperandData { loc, operand }) => {
                 EBigIntNumCoerce(Box::new(EArithmeticOperandData {
                     loc: f(loc),
@@ -7057,12 +7052,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 )))
             }
 
-            EBigIntRShift3(box EArithmeticOperandData { loc, operand }) => {
-                EBigIntRShift3(Box::new(EArithmeticOperandData {
-                    loc,
-                    operand: map_error_type_ref(operand),
-                }))
-            }
+            EBigIntRShift3(box operand) => EBigIntRShift3(Box::new(map_error_type_ref(operand))),
 
             EBigIntNumCoerce(box EArithmeticOperandData { loc, operand }) => {
                 EBigIntNumCoerce(Box::new(EArithmeticOperandData {
@@ -8157,7 +8147,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::ETypeGuardParamUnbound(TypeGuardParameterData { loc, .. })
             | Self::ETypeGuardThisParam(loc) => Some(loc.dupe()),
 
-            Self::EBigIntRShift3(box EArithmeticOperandData { loc, .. }) => Some(loc.dupe()),
+            Self::EBigIntRShift3(box ErrorTypeReferenceData { loc, .. }) => Some(loc.dupe()),
 
             Self::EBigIntNumCoerce(box EArithmeticOperandData { loc, .. }) => Some(loc.dupe()),
 
@@ -9988,7 +9978,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 ))
             }
 
-            ErrorMessage::EBigIntRShift3(box EArithmeticOperandData { operand, .. }) => {
+            ErrorMessage::EBigIntRShift3(box operand) => {
                 Normal(Message::MessageCannotPerformBigIntRShift3(Box::new(
                     expect_error_type_reference(operand),
                 )))

@@ -8915,7 +8915,7 @@ pub fn flow_arith<'cx>(
             add_output_with_env(
                 cx,
                 env,
-                ErrorMessage::EBigIntRShift3(Box::new(arithmetic_operand_data(l))),
+                ErrorMessage::EBigIntRShift3(Box::new(type_reference_for_error(l))),
             )?;
             Ok(any_t::error(reason))
         }

@@ -4184,7 +4184,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EReactRefInRender { .. } => "EReactRefInRender _".to_string(),
         ErrorMessage::EBigIntRShift3(operand) => {
-            let operand_desc = match &operand.operand.type_desc {
+            let operand_desc = match &operand.type_desc {
                 TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
