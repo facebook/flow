@@ -16,7 +16,6 @@ use dupe::IterDupedExt;
 use flow_aloc::ALoc;
 use flow_aloc::ALocId;
 use flow_aloc::ALocSet;
-use flow_common::error_ref::ErrorReference;
 use flow_common::reason::Reason;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
@@ -415,10 +414,7 @@ pub mod pattern_union_builder {
                 ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(
                     Box::new(MatchInvalidIdentOrMemberPatternData {
                         loc: loc.dupe(),
-                        type_: ErrorReference::new(
-                            type_util::ref_loc_of_t(t).dupe(),
-                            reason_of_t(t).desc(false).clone(),
-                        ),
+                        type_loc: type_util::ref_loc_of_t(t).dupe(),
                         type_desc: flow_js_utils::type_or_type_desc_for_error(t),
                     }),
                 )),

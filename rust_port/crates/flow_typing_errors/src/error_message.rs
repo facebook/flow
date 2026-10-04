@@ -869,7 +869,7 @@ pub struct MatchNonExplicitEnumCheckData<L: Dupe + PartialOrd + Ord + PartialEq 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MatchInvalidIdentOrMemberPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub type_: ErrorReference<L>,
+    pub type_loc: L,
     pub type_desc: TypeOrTypeDesc<L>,
 }
 
@@ -877,7 +877,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq
     for MatchInvalidIdentOrMemberPatternData<L>
 {
     fn eq(&self, other: &Self) -> bool {
-        self.loc == other.loc && self.type_ == other.type_
+        self.loc == other.loc && self.type_loc == other.type_loc
     }
 }
 
@@ -888,7 +888,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.loc.hash(state);
-        self.type_.hash(state);
+        self.type_loc.hash(state);
     }
 }
 
@@ -904,7 +904,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for MatchInvalidIdentOrMem
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.loc
             .cmp(&other.loc)
-            .then_with(|| self.type_.cmp(&other.type_))
+            .then_with(|| self.type_loc.cmp(&other.type_loc))
     }
 }
 
@@ -6566,13 +6566,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     MatchInvalidIdentOrMemberPattern(
                         box MatchInvalidIdentOrMemberPatternData {
                             loc,
-                            type_,
+                            type_loc,
                             type_desc,
                         },
                     ) => MatchInvalidIdentOrMemberPattern(Box::new(
                         MatchInvalidIdentOrMemberPatternData {
                             loc: f(loc),
-                            type_: map_error_ref(type_),
+                            type_loc: f(type_loc),
                             type_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), type_desc),
                         },
                     )),
@@ -7549,13 +7549,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(
                 box MatchInvalidIdentOrMemberPatternData {
                     loc,
-                    type_,
+                    type_loc,
                     type_desc,
                 },
             )) => EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(Box::new(
                 MatchInvalidIdentOrMemberPatternData {
                     loc,
-                    type_,
+                    type_loc,
                     type_desc: f(type_desc),
                 },
             ))),
@@ -10306,11 +10306,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ))),
             ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern(
                 box MatchInvalidIdentOrMemberPatternData {
-                    type_, type_desc, ..
+                    type_loc,
+                    type_desc,
+                    ..
                 },
             )) => Normal(Message::MessageMatchInvalidIdentOrMemberPattern {
                 type_: Box::new(MessageTypeReferenceData {
-                    loc: type_.loc,
+                    loc: type_loc,
                     desc: expect_type_desc(type_desc),
                 }),
             }),
