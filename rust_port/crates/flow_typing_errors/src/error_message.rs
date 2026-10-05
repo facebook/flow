@@ -10830,17 +10830,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             ) => {
                 let TypeGuardParameterData { name, .. } = type_guard;
-                let (type_guard_desc, param_kind) = if is_this {
-                    (VirtualReasonDesc::RThis, TypeGuardReferenceKind::This)
+                let (type_guard, param_kind) = if is_this {
+                    (TypeGuardReferenceKind::This, TypeGuardReferenceKind::This)
                 } else {
                     (
-                        VirtualReasonDesc::RTypeGuardParam(name.dupe()),
+                        TypeGuardReferenceKind::TypeGuardParameter(name.dupe()),
                         TypeGuardReferenceKind::Parameter(Some(name)),
                     )
                 };
                 Normal(Message::MessageCannotUseTypeGuardWithFunctionParamHavoced(
                     Box::new(MessageCannotUseTypeGuardWithFunctionParamHavocedData {
-                        type_guard_desc,
+                        type_guard,
                         param: TypeGuardReferenceData {
                             loc: param_loc,
                             kind: param_kind,

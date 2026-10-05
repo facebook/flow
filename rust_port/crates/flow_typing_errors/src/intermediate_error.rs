@@ -4836,17 +4836,18 @@ where
         friendly::hardcoded_string_desc_ref(s, loc_of_aloc(loc))
     };
 
+    let type_guard_description = |kind: &TypeGuardReferenceKind| match kind {
+        TypeGuardReferenceKind::TypeGuard => "type guard".to_string(),
+        TypeGuardReferenceKind::Parameter(Some(name)) => format!("`{name}`"),
+        TypeGuardReferenceKind::Parameter(None) => "parameter".to_string(),
+        TypeGuardReferenceKind::TypeGuardParameter(name) => {
+            format!("type guard parameter `{name}`")
+        }
+        TypeGuardReferenceKind::This => "this".to_string(),
+    };
+
     let type_guard_reference = |reference: &TypeGuardReferenceData<L>| {
-        let description = match &reference.kind {
-            TypeGuardReferenceKind::TypeGuard => "type guard".to_string(),
-            TypeGuardReferenceKind::Parameter(Some(name)) => format!("`{name}`"),
-            TypeGuardReferenceKind::Parameter(None) => "parameter".to_string(),
-            TypeGuardReferenceKind::TypeGuardParameter(name) => {
-                format!("type guard parameter `{name}`")
-            }
-            TypeGuardReferenceKind::This => "this".to_string(),
-        };
-        hardcoded_string_desc_ref(&description, &reference.loc)
+        hardcoded_string_desc_ref(&type_guard_description(&reference.kind), &reference.loc)
     };
 
     let type_guard_parameter_reference = |parameter: &TypeGuardParameterData<L>| {
@@ -6646,7 +6647,7 @@ where
             }
             MessageCannotUseTypeGuardWithFunctionParamHavoced(
                 box MessageCannotUseTypeGuardWithFunctionParamHavocedData {
-                    type_guard_desc,
+                    type_guard,
                     param,
                     call_locs,
                 },
@@ -6667,7 +6668,9 @@ where
                 };
                 let mut features = vec![
                     text("Cannot use "),
-                    friendly::desc_of_reason_desc(type_guard_desc),
+                    friendly::MessageFeature::Inline(friendly::message_inlines_of_string(
+                        &type_guard_description(type_guard),
+                    )),
                     text(", because "),
                     type_guard_reference(param),
                     text(" is reassigned "),

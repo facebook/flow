@@ -1387,7 +1387,7 @@ pub struct MessageCannotUseTypeForAnnotationInferenceData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeGuardWithFunctionParamHavocedData<L: Dupe> {
-    pub type_guard_desc: VirtualReasonDesc<L>,
+    pub type_guard: TypeGuardReferenceKind,
     pub param: TypeGuardReferenceData<L>,
     pub call_locs: Vec<L>,
 }
