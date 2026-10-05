@@ -8731,7 +8731,7 @@ pub fn unary_negate_bigint_lit(
 }
 
 fn arithmetic_operand_data(t: &Type) -> EArithmeticOperandData<ALoc> {
-    let operand = arithmetic_type_reference_for_error(t);
+    let operand = type_reference_for_error(t);
     EArithmeticOperandData {
         loc: operand.loc.dupe(),
         operand,

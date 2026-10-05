@@ -9875,7 +9875,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `null` [1] is not a number or bigint. [unsafe-arithmetic]
+
+   not.js:5:5
+   5|     x++; // should error for null, void and boolean (false)
+          ^
+
+References:
+   not.js:3:17
+   3| function foo(x: ?boolean) {
+                      ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- not.js:5:5
+
+Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
 
    not.js:5:5
    5|     x++; // should error for null, void and boolean (false)
@@ -17773,4 +17787,4 @@ References:
 
 
 
-Found 1195 errors
+Found 1196 errors

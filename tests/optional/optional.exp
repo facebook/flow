@@ -60,7 +60,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:17:5
 
-Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `null` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:17:5
    17|     x.y++; // should error
@@ -74,7 +74,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:17:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:17:5
    17|     x.y++; // should error
@@ -88,7 +88,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:23:5
 
-Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `null` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:23:5
    23|     x.y++; // should error
@@ -102,7 +102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:23:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:23:5
    23|     x.y++; // should error
@@ -116,7 +116,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:29:5
 
-Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `null` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:29:5
    29|     x.y++; // should error
@@ -130,7 +130,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:29:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:29:5
    29|     x.y++; // should error
@@ -144,7 +144,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:35:5
 
-Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `null` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:35:5
    35|     x.y++; // should error
@@ -158,7 +158,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- nullable.js:35:5
 
-Cannot perform arithmetic operation because null or undefined [1] is not a number or bigint. [unsafe-arithmetic]
+Cannot perform arithmetic operation because `void` [1] is not a number or bigint. [unsafe-arithmetic]
 
    nullable.js:35:5
    35|     x.y++; // should error
