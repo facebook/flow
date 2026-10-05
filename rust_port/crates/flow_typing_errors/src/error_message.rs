@@ -10888,26 +10888,24 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EBindingError(box (binding_error, _, x, entry_loc)) => {
-                let x_reason = VirtualReason::new(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(x.display_smol_str()),
-                    entry_loc,
-                );
+                let binding = NamedReferenceData {
+                    loc: entry_loc,
+                    name: x.display_smol_str(),
+                };
 
                 let msg = match binding_error {
                     BindingError::ENameAlreadyBound => {
-                        Message::MessageCannotDeclareAlreadyBoundName(x_reason.dupe())
+                        Message::MessageCannotDeclareAlreadyBoundName(binding)
                     }
                     BindingError::ENameAlreadyBoundInCoreJs => {
-                        Message::MessageCannotDeclareAlreadyBoundNameInCoreJs(x_reason.dupe())
+                        Message::MessageCannotDeclareAlreadyBoundNameInCoreJs(binding)
                     }
-                    BindingError::EVarRedeclaration => {
-                        Message::MessageCannotRedeclareVar(x_reason.dupe())
-                    }
+                    BindingError::EVarRedeclaration => Message::MessageCannotRedeclareVar(binding),
                     BindingError::EReferencedBeforeDeclaration => {
-                        Message::MessageCannotUseBeforeDeclaration(x_reason.dupe())
+                        Message::MessageCannotUseBeforeDeclaration(binding)
                     }
                     BindingError::EReferencedThisSuperBeforeSuperCall => {
-                        Message::MessageCannotUseThisSuperBeforeSuperCall(x_reason.dupe())
+                        Message::MessageCannotUseThisSuperBeforeSuperCall(binding)
                     }
                     BindingError::ETypeInValuePosition {
                         imported,
@@ -10917,24 +10915,21 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         let imported_name = if imported { Some(name) } else { None };
                         Message::MessageCannotUseTypeInValuePosition(Box::new(
                             MessageCannotUseTypeInValuePositionData {
-                                reason: x_reason,
+                                binding,
                                 type_only_namespace,
                                 imported_name,
                             },
                         ))
                     }
                     BindingError::EConstReassigned | BindingError::EConstParamReassigned => {
-                        Message::MessageCannotReassignConstant(x_reason)
+                        Message::MessageCannotReassignConstant(binding)
                     }
                     BindingError::EImportReassigned => {
-                        Message::MessageCannotReassignImport(x_reason)
+                        Message::MessageCannotReassignImport(binding)
                     }
-                    BindingError::EEnumReassigned => Message::MessageCannotReassignEnum(x_reason),
+                    BindingError::EEnumReassigned => Message::MessageCannotReassignEnum(binding),
                     BindingError::EReservedKeyword { keyword } => {
-                        Message::MessageCannotDeclareReservedType {
-                            keyword,
-                            reason: x_reason,
-                        }
+                        Message::MessageCannotDeclareReservedType { keyword, binding }
                     }
                 };
                 Normal(msg)

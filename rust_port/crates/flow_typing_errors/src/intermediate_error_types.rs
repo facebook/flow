@@ -1394,7 +1394,7 @@ pub struct MessageCannotUseTypeGuardWithFunctionParamHavocedData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotUseTypeInValuePositionData<L: Dupe> {
-    pub reason: VirtualReason<L>,
+    pub binding: NamedReferenceData<L>,
     pub type_only_namespace: bool,
     pub imported_name: Option<FlowSmolStr>,
 }
@@ -1965,14 +1965,14 @@ pub enum Message<L: Dupe> {
 
     MessageCannotCreateExactType(Box<MessageTypeReferenceData<L>>),
 
-    MessageCannotDeclareAlreadyBoundName(VirtualReason<L>),
-    MessageCannotDeclareAlreadyBoundNameInCoreJs(VirtualReason<L>),
+    MessageCannotDeclareAlreadyBoundName(NamedReferenceData<L>),
+    MessageCannotDeclareAlreadyBoundNameInCoreJs(NamedReferenceData<L>),
 
     MessageCannotDeclareAlreadyBoundNameInNamespace(VirtualReason<L>),
 
     MessageCannotDeclareReservedType {
         keyword: IncorrectType,
-        reason: VirtualReason<L>,
+        binding: NamedReferenceData<L>,
     },
 
     MessageCannotDelete(Box<MessageTypeReferenceData<L>>),
@@ -2022,16 +2022,16 @@ pub enum Message<L: Dupe> {
         right: Box<MessageTypeReferenceData<L>>,
     },
 
-    MessageCannotReassignConstant(VirtualReason<L>),
+    MessageCannotReassignConstant(NamedReferenceData<L>),
 
     MessageCannotReassignConstantLikeBinding {
         definition: NamedReferenceData<L>,
         binding_kind: AssignedConstLikeBindingType,
     },
 
-    MessageCannotReassignEnum(VirtualReason<L>),
-    MessageCannotReassignImport(VirtualReason<L>),
-    MessageCannotRedeclareVar(VirtualReason<L>),
+    MessageCannotReassignEnum(NamedReferenceData<L>),
+    MessageCannotReassignImport(NamedReferenceData<L>),
+    MessageCannotRedeclareVar(NamedReferenceData<L>),
 
     MessageCannotReferenceTypeGuardParameter {
         type_guard: TypeGuardParameterData<L>,
@@ -2070,7 +2070,7 @@ pub enum Message<L: Dupe> {
     MessageCannotUseAsConstructor(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseAsPrototype(Box<MessageTypeReferenceData<L>>),
     MessageCannotUseAsSuperClass(ExpressionReferenceData<L>),
-    MessageCannotUseBeforeDeclaration(VirtualReason<L>),
+    MessageCannotUseBeforeDeclaration(NamedReferenceData<L>),
 
     MessageCannotUseDefaultImportWithDestrucuturing,
     MessageCannotUseDollarExports,
@@ -2096,7 +2096,7 @@ pub enum Message<L: Dupe> {
         kind: PrimitiveKind,
     },
 
-    MessageCannotUseThisSuperBeforeSuperCall(VirtualReason<L>),
+    MessageCannotUseThisSuperBeforeSuperCall(NamedReferenceData<L>),
 
     MessageCannotUseTypeDueToPolarityMismatch {
         type_param: NamedReferenceData<L>,

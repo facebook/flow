@@ -5896,12 +5896,12 @@ where
             ]),
             MessageCannotDeclareAlreadyBoundName(x) => friendly::Message(vec![
                 text("Cannot declare "),
-                ref_(x),
+                render_named_reference(x),
                 text(" because the name is already bound."),
             ]),
             MessageCannotDeclareAlreadyBoundNameInCoreJs(x) => friendly::Message(vec![
                 text("Cannot declare "),
-                ref_(x),
+                render_named_reference(x),
                 text(" because the name is a core builtin type."),
             ]),
             MessageCannotDeclareAlreadyBoundNameInNamespace(x) => friendly::Message(vec![
@@ -5919,9 +5919,9 @@ where
                 ref_(x),
                 text(" because type parameter lists differ."),
             ]),
-            MessageCannotDeclareReservedType { reason, keyword } => friendly::Message(vec![
+            MessageCannotDeclareReservedType { binding, keyword } => friendly::Message(vec![
                 text("Cannot declare "),
-                ref_(reason),
+                render_named_reference(binding),
                 text(", because "),
                 code(keyword.incorrect_of_kind()),
                 text(" is a reserved type name."),
@@ -6237,9 +6237,11 @@ where
                     ref_of_ty_or_desc(&right.loc, &right.desc),
                 ])
             }
-            MessageCannotReassignConstant(x) => {
-                friendly::Message(vec![text("Cannot reassign constant "), ref_(x), text(".")])
-            }
+            MessageCannotReassignConstant(x) => friendly::Message(vec![
+                text("Cannot reassign constant "),
+                render_named_reference(x),
+                text("."),
+            ]),
             MessageCannotReassignConstantLikeBinding {
                 definition,
                 binding_kind,
@@ -6250,15 +6252,19 @@ where
                 render_named_reference(definition),
                 text("."),
             ]),
-            MessageCannotReassignEnum(x) => {
-                friendly::Message(vec![text("Cannot reassign enum "), ref_(x), text(".")])
-            }
-            MessageCannotReassignImport(x) => {
-                friendly::Message(vec![text("Cannot reassign import "), ref_(x), text(".")])
-            }
+            MessageCannotReassignEnum(x) => friendly::Message(vec![
+                text("Cannot reassign enum "),
+                render_named_reference(x),
+                text("."),
+            ]),
+            MessageCannotReassignImport(x) => friendly::Message(vec![
+                text("Cannot reassign import "),
+                render_named_reference(x),
+                text("."),
+            ]),
             MessageCannotRedeclareVar(x) => friendly::Message(vec![
                 text("Cannot declare "),
-                ref_(x),
+                render_named_reference(x),
                 text(" because var redeclaration is not supported."),
             ]),
             MessageCannotReferenceTypeGuardParameter {
@@ -6475,7 +6481,7 @@ where
             ]),
             MessageCannotUseBeforeDeclaration(x) => friendly::Message(vec![
                 text("Cannot use variable "),
-                ref_(x),
+                render_named_reference(x),
                 text(" because the declaration "),
                 text("either comes later or was skipped."),
             ]),
@@ -6680,21 +6686,21 @@ where
                 friendly::Message(features)
             }
             MessageCannotUseTypeInValuePosition(box MessageCannotUseTypeInValuePositionData {
-                reason,
+                binding,
                 type_only_namespace,
                 imported_name,
             }) => {
                 let base = if *type_only_namespace {
                     vec![
                         text("Cannot use type-only namespace "),
-                        ref_(reason),
+                        render_named_reference(binding),
                         text(" as a value. "),
                         text("Type-only namespaces are erased and don't exist at runtime."),
                     ]
                 } else {
                     vec![
                         text("Cannot use type "),
-                        ref_(reason),
+                        render_named_reference(binding),
                         text(" as a value. "),
                         text("Types are erased and don't exist at runtime."),
                     ]
@@ -6770,7 +6776,7 @@ where
                 text("Must call "),
                 code("super"),
                 text(" before accessing "),
-                ref_(x),
+                render_named_reference(x),
                 text(" in a derived constructor."),
             ]),
             MessageComponentMissingReturn(component) => {
