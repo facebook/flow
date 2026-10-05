@@ -23,7 +23,9 @@ use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ChainMData;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
+use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LookupActionMatchPropData;
 use flow_typing_type::type_::LookupPropsForSubtypingData;
 use flow_typing_type::type_::LookupTData;
@@ -1016,6 +1018,137 @@ pub(super) fn handle_generic<'cx>(
     }
 }
 
+/// A tvar of an enclosing implicit instantiation is frozen in a nested one: it
+/// cannot be solved here, but the enclosing solve, where it is active again,
+/// must still see it in what is computed here. So it is rigid like a generic:
+/// a use sees it through its bound, and what a type destructor or the object
+/// kit computes from it is a frozen tvar derived from it.
+pub(super) fn handle_frozen_tvar<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    trace: DepthTrace,
+    l: &Type,
+    tvar: &ImplicitInstantiationTvarData,
+    u: &UseT<Context<'cx>>,
+) -> Result<bool, FlowJsException> {
+    let ImplicitInstantiationTvarData {
+        reason, bound, id, ..
+    } = tvar;
+    let repos_bound = || reposition_reason(cx, env, Some(trace), reason, false, bound);
+    // The derived tvar is owned by the solve owning this one. Here it is bounded
+    // by what the use computes from the bound. In the owning solve it is what
+    // the use computes from this tvar, so that solve infers through it.
+    let derive = |use_reason: &Reason,
+                  mk_use_t: &dyn Fn(Tvar) -> UseT<Context<'cx>>,
+                  use_op: UseOp,
+                  tout: &Type|
+     -> Result<bool, FlowJsException> {
+        let root_id = cx.find_constraints(*id).0;
+        let is_tvar = |frozen_id: i32| cx.find_constraints(frozen_id).0 == root_id;
+        let (Some(owner_env), Some((_, has_default))) = (
+            env.implicit_instantiation_owner(is_tvar),
+            env.frozen_implicit_instantiation_tvar_with_default(is_tvar),
+        ) else {
+            return Ok(false);
+        };
+        let rigid = Tvar::new(
+            use_reason.dupe(),
+            flow_typing_tvar::mk_no_wrap(cx, use_reason) as u32,
+        );
+        rec_flow(cx, env, trace, (&repos_bound()?, &mk_use_t(rigid.dupe())))?;
+        let thawed = Tvar::new(
+            use_reason.dupe(),
+            flow_typing_tvar::mk_no_wrap(cx, use_reason) as u32,
+        );
+        rec_flow(cx, &owner_env, trace, (l, &mk_use_t(thawed.dupe())))?;
+        let derived_id = flow_common::reason::mk_id() as i32;
+        cx.add_inference_node(derived_id);
+        let derived = Type::new(TypeInner::ImplicitInstantiationTvar(Box::new(
+            ImplicitInstantiationTvarData {
+                reason: use_reason.dupe(),
+                name: SubstName::name(
+                    flow_common::reason::string_of_desc(use_reason.desc(true)).into(),
+                ),
+                bound: Type::new(TypeInner::OpenT(rigid)),
+                id: derived_id,
+            },
+        )));
+        rec_unify(
+            cx,
+            &owner_env,
+            trace,
+            unknown_use(),
+            UnifyCause::Uncategorized,
+            None,
+            &derived,
+            &Type::new(TypeInner::OpenT(thawed)),
+        )?;
+        owner_env.add_implicit_instantiation_tvar(derived_id, derived.dupe(), has_default);
+        rec_flow_t(cx, env, trace, use_op, (&derived, tout))?;
+        Ok(true)
+    };
+    match u.deref() {
+        // Whether a conditional holds for the bound says nothing about the tvar.
+        // `run_conditional` decides one over a frozen tvar itself.
+        UseTInner::EvalTypeDestructorT(box EvalTypeDestructorTData {
+            destructor_use_op,
+            reason: use_reason,
+            repos,
+            destructor,
+            tout,
+        }) if !matches!(**destructor, Destructor::ConditionalType(_)) => derive(
+            use_reason,
+            &|tout| {
+                UseT::new(UseTInner::EvalTypeDestructorT(Box::new(
+                    EvalTypeDestructorTData {
+                        destructor_use_op: destructor_use_op.dupe(),
+                        reason: use_reason.dupe(),
+                        repos: repos.clone(),
+                        destructor: destructor.clone(),
+                        tout: Box::new(tout),
+                    },
+                )))
+            },
+            destructor_use_op.dupe(),
+            &Type::new(TypeInner::OpenT((**tout).dupe())),
+        ),
+        UseTInner::ObjKitT(use_op, reason_op, resolve_tool, tool, tout) => derive(
+            reason_op,
+            &|tout| {
+                UseT::new(UseTInner::ObjKitT(
+                    use_op.dupe(),
+                    reason_op.dupe(),
+                    resolve_tool.clone(),
+                    tool.clone(),
+                    Type::new(TypeInner::OpenT(tout)),
+                ))
+            },
+            use_op.dupe(),
+            tout,
+        ),
+        // These would otherwise be caught by wildcard cases in __flow. A generic
+        // is seen through its bound here too, either by `handle_generic` or by
+        // the react kit itself.
+        UseTInner::ReactKitT(..)
+        | UseTInner::ConstructorT(..)
+        | UseTInner::ConcretizeT(box ConcretizeTData {
+            kind:
+                ConcretizationKind::ConcretizeForOperatorsChecking
+                | ConcretizationKind::ConcretizeForComputedObjectKeys
+                | ConcretizationKind::ConcretizeForOptionalChain,
+            ..
+        })
+        | UseTInner::TestPropT(..)
+        | UseTInner::OptionalIndexedAccessT(..) => {
+            let bound = env.frozen_tvar_bound(tvar);
+            let repos_bound = reposition_reason(cx, env, Some(trace), reason, false, &bound)?;
+            rec_flow(cx, env, trace, (&repos_bound, u))?;
+            Ok(true)
+        }
+        _ => Ok(false),
+    }
+}
+
 /// Resolves one member of a union and either finishes the union flow or returns
 /// the next continuation for the `__flow` trampoline.
 ///
@@ -1747,7 +1880,7 @@ pub(super) fn reposition<'cx>(
         t: &Type,
     ) -> Result<Type, FlowJsException> {
         match t.deref() {
-            _ if let Some(node) = constraint_node_id(t) => {
+            _ if let Some(node) = super::constraint_helpers::active_constraint_node(cx, env, t) => {
                 let r = reason_of_t(t);
                 let id = node.id();
                 let t_node = t;

@@ -1728,7 +1728,11 @@ fn dump_tvar_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, id: i32) -> S
     }
     tvars.insert(id);
 
-    let node = cx.find_tvar(id);
+    let node = if cx.is_inference_node(id) {
+        Node::create_root(cx.find_constraints(id).1)
+    } else {
+        cx.find_tvar(id)
+    };
     match node {
         Node::Goto { parent } => {
             format!("{}, Goto {}", id, parent)

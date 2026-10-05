@@ -30,9 +30,11 @@ use std::rc::Rc;
 use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::SpecState;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Type;
+use flow_typing_type::type_::mixed_t;
 
 #[derive(Debug, Clone)]
 pub enum InformationForSynthesisLogging {
@@ -135,6 +137,10 @@ pub struct FlowJsEnv {
     instantiation_stack: Option<Rc<TypeAppFrame>>,
     /// The innermost implicit-instantiation solve.
     implicit_instantiation: Option<Rc<ImplicitInstantiationFrame>>,
+    /// Whether frozen tvars are seen without their bounds, as TypeScript's
+    /// restrictive instantiation sees type parameters when it decides that a
+    /// conditional type definitely holds.
+    restrictive_frozen_tvars: bool,
 }
 
 impl FlowJsEnv {
@@ -202,6 +208,7 @@ impl FlowJsEnv {
             })),
             instantiation_stack: self.instantiation_stack.dupe(),
             implicit_instantiation: self.implicit_instantiation.dupe(),
+            restrictive_frozen_tvars: self.restrictive_frozen_tvars,
         }
     }
 
@@ -218,6 +225,22 @@ impl FlowJsEnv {
                 enclosing: self.implicit_instantiation.dupe(),
             })),
             ..self.dupe()
+        }
+    }
+
+    pub fn with_restrictive_frozen_tvars(&self) -> Self {
+        Self {
+            restrictive_frozen_tvars: true,
+            ..self.dupe()
+        }
+    }
+
+    /// What a use sees a frozen tvar as.
+    pub fn frozen_tvar_bound(&self, tvar: &ImplicitInstantiationTvarData) -> Type {
+        if self.restrictive_frozen_tvars {
+            mixed_t::make(tvar.reason.dupe())
+        } else {
+            tvar.bound.dupe()
         }
     }
 
@@ -260,6 +283,31 @@ impl FlowJsEnv {
         })
     }
 
+    /// The env of the enclosing solve that owns the tvar satisfying
+    /// `predicate`, where that tvar is active.
+    pub fn implicit_instantiation_owner(
+        &self,
+        mut predicate: impl FnMut(i32) -> bool,
+    ) -> Option<Self> {
+        let owner = std::iter::successors(
+            self.implicit_instantiation
+                .as_ref()
+                .and_then(|frame| frame.enclosing.as_ref()),
+            |frame| frame.enclosing.as_ref(),
+        )
+        .find(|frame| {
+            frame
+                .inference_tvars
+                .borrow()
+                .keys()
+                .any(|id| predicate(*id))
+        })?;
+        Some(Self {
+            implicit_instantiation: Some(owner.dupe()),
+            ..self.dupe()
+        })
+    }
+
     // ---- type application expansion ----
 
     /// Detect whether expanding `c<ts>` would loop, given the roots `tss` of
@@ -292,6 +340,7 @@ impl FlowJsEnv {
                 enclosing: self.instantiation_stack.dupe(),
             })),
             implicit_instantiation: self.implicit_instantiation.dupe(),
+            restrictive_frozen_tvars: self.restrictive_frozen_tvars,
         })
     }
 
@@ -302,6 +351,7 @@ impl FlowJsEnv {
             speculation: None,
             instantiation_stack: None,
             implicit_instantiation: self.implicit_instantiation.dupe(),
+            restrictive_frozen_tvars: false,
         }
     }
 }

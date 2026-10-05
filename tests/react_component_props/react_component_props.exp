@@ -1,0 +1,37 @@
+Error ---------------------------------------------------------------------------------------- generic_inference.js:12:1
+
+Cannot cast `viaComponentProps(...).name` to number because `string` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   generic_inference.js:12:1
+   12| viaComponentProps({name: 'a'}).name as number; // error: string ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   generic_inference.js:12:26
+   12| viaComponentProps({name: 'a'}).name as number; // error: string ~> number
+                                ^^^ [1]
+   generic_inference.js:12:40
+   12| viaComponentProps({name: 'a'}).name as number; // error: string ~> number
+                                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- generic_inference.js:26:1
+
+Cannot cast `viaModalProps(...).name` to number because `"a"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   generic_inference.js:26:1
+   26| viaModalProps({name: 'a', onHide: () => {}}).name as number; // error: 'a' ~> number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   generic_inference.js:26:22
+   26| viaModalProps({name: 'a', onHide: () => {}}).name as number; // error: 'a' ~> number
+                            ^^^ [1]
+   generic_inference.js:26:54
+   26| viaModalProps({name: 'a', onHide: () => {}}).name as number; // error: 'a' ~> number
+                                                            ^^^^^^ [2]
+
+
+
+Found 2 errors

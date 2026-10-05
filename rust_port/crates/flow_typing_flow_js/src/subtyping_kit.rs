@@ -2857,9 +2857,6 @@ pub fn rec_sub_t<'cx>(
             let t = FlowJs::reposition_reason(cx, env, Some(trace), r, Some(*use_desc), t)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
         }
-        (TypeInner::ImplicitInstantiationTvar(data), _) => {
-            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &data.bound, u)
-        }
 
         // *******************************
         // * common implicit conversions *
@@ -6836,6 +6833,9 @@ pub fn rec_sub_t<'cx>(
         (TypeInner::GenericT(box GenericTData { reason, bound, .. }), _) => {
             let t = FlowJs::reposition_reason(cx, env, Some(trace), reason, None, bound)?;
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, u)
+        }
+        (TypeInner::ImplicitInstantiationTvar(data), _) => {
+            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &env.frozen_tvar_bound(data), u)
         }
         (_, TypeInner::GenericT(box GenericTData { reason, name, .. })) => {
             let bot = Type::new(TypeInner::DefT(

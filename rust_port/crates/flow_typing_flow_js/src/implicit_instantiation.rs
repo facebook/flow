@@ -67,7 +67,6 @@ use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::ImplicitInstantiationReferenceKind;
 use flow_typing_type::type_::ImplicitInstantiationTvarData;
 use flow_typing_type::type_::LazyHintT;
-use flow_typing_type::type_::MixedFlavor;
 use flow_typing_type::type_::NominalType;
 use flow_typing_type::type_::NominalTypeInner;
 use flow_typing_type::type_::ObjKind;
@@ -2574,6 +2573,7 @@ pub mod instantiation_solver {
         check_t: &Type,
         extends_t: &Type,
         true_t: &Type,
+        restrictive_frozen_tvars: bool,
     ) -> Result<Option<FlowOrdMap<SubstName, Type>>, FlowJsException> {
         let mut subst_map = FlowOrdMap::new();
         let mut inferred_targ_list: Vec<(SubstName, Type, Type)> = Vec::new();
@@ -2592,8 +2592,6 @@ pub mod instantiation_solver {
         // regular param `F` gets its real bound.
         inferred_targ_list.reverse();
 
-        //   if speculative_subtyping_succeeds cx trace ~use_op check_t
-        //        (Type_subst.subst cx ~use_op:unknown_use subst_map extends_t) then
         let extends_subst = type_subst::subst(
             cx,
             Some(unknown_use()),
@@ -2603,7 +2601,19 @@ pub mod instantiation_solver {
             &subst_map,
             extends_t.dupe(),
         );
-        if speculative_subtyping_succeeds(cx, env, trace, use_op.dupe(), check_t, &extends_subst)? {
+        let check_env = if restrictive_frozen_tvars {
+            env.with_restrictive_frozen_tvars()
+        } else {
+            env.dupe()
+        };
+        if speculative_subtyping_succeeds(
+            cx,
+            &check_env,
+            trace,
+            use_op.dupe(),
+            check_t,
+            &extends_subst,
+        )? {
             let (tparams_map, tparams_set) = tparams.iter().fold(
                 (BTreeMap::new(), FlowOrdSet::new()),
                 |(mut map, mut set), tp| {
@@ -2692,7 +2702,6 @@ pub mod kit {
     #[derive(Clone, Copy)]
     struct FrozenTvarInfo {
         has_default: bool,
-        has_unconstrained_bound: bool,
     }
 
     fn frozen_tvar<'cx>(
@@ -2708,18 +2717,7 @@ pub mod kit {
         let TypeInner::ImplicitInstantiationTvar(data) = tvar.deref() else {
             return None;
         };
-        let has_unconstrained_bound = matches!(
-            data.bound.deref(),
-            TypeInner::DefT(_, def_t)
-                if matches!(def_t.deref(), DefTInner::MixedT(MixedFlavor::MixedEverything))
-        );
-        Some((
-            data.id,
-            FrozenTvarInfo {
-                has_default,
-                has_unconstrained_bound,
-            },
-        ))
+        Some((data.id, FrozenTvarInfo { has_default }))
     }
 
     fn frozen_tvar_id<'cx>(env: &FlowJsEnv, cx: &Context<'cx>, t: &Type) -> Option<i32> {
@@ -2993,6 +2991,7 @@ pub mod kit {
                 t,
                 &extends_t,
                 &generic_t,
+                false,
             )
         };
         match result? {
@@ -3062,6 +3061,7 @@ pub mod kit {
                 t,
                 &extends_t,
                 &generic_t,
+                false,
             )
         };
         match result? {
@@ -3198,22 +3198,13 @@ pub mod kit {
             branch_collector.type_(cx, Polarity::Positive, (), false_t);
             let infer_through_frozen_tvar =
                 branch_collector.frozen_tvars.iter().any(|(id, info)| {
-                    info.has_default
-                        && info.has_unconstrained_bound
-                        && !condition_collector.frozen_tvars.contains_key(id)
+                    info.has_default && !condition_collector.frozen_tvars.contains_key(id)
                 });
-            let condition_has_unconstrained_tvar = condition_collector
-                .frozen_tvars
-                .values()
-                .any(|info| info.has_unconstrained_bound);
-            let branch_has_unconstrained_tvar = branch_collector
-                .frozen_tvars
-                .values()
-                .any(|info| info.has_unconstrained_bound);
+            let condition_has_frozen_tvar = !condition_collector.frozen_tvars.is_empty();
+            let branch_has_frozen_tvar = !branch_collector.frozen_tvars.is_empty();
             let can_run_nested_solve = infer_through_frozen_tvar
-                || (!tparams.is_empty()
-                    && (condition_has_unconstrained_tvar || branch_has_unconstrained_tvar))
-                || (condition_collector.frozen_tvars.is_empty() && branch_has_unconstrained_tvar);
+                || (!tparams.is_empty() && (condition_has_frozen_tvar || branch_has_frozen_tvar))
+                || (!condition_has_frozen_tvar && branch_has_frozen_tvar);
             (can_run_nested_solve, infer_through_frozen_tvar)
         } else {
             (false, false)
@@ -3233,6 +3224,7 @@ pub mod kit {
                 check_t,
                 extends_t,
                 true_t,
+                true,
             )?;
             match result {
                 // If the subtyping can succeed even when the GenericTs are still abstract, then it must

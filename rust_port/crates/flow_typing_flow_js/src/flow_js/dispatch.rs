@@ -470,6 +470,11 @@ fn __flow_impl<'cx>(
             id,
             no_infer,
         }) => handle_generic(cx, env, trace, *no_infer, bound, reason, id, name, u)?,
+        TypeInner::ImplicitInstantiationTvar(data)
+            if frozen_implicit_instantiation_tvar(cx, env, l).is_some() =>
+        {
+            handle_frozen_tvar(cx, env, trace, l, data, u)?
+        }
         _ => false,
     } {
         // Either propagate AnyT through the def type, or short-circuit because l <: any trivially
@@ -9331,7 +9336,7 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&repos, u))?;
         }
         (TypeInner::ImplicitInstantiationTvar(data), _) => {
-            rec_flow(cx, env, trace, (&data.bound, u))?;
+            rec_flow(cx, env, trace, (&env.frozen_tvar_bound(data), u))?;
         }
         (
             _,

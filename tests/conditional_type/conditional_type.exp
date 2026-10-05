@@ -959,6 +959,57 @@ References:
                     ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------ nested_instantiation.js:142:3
+
+Cannot cast `r` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   nested_instantiation.js:142:3
+   142|   r as string; // error: number ~> string
+          ^
+
+References:
+   nested_instantiation.js:141:15
+   141|   const r = f(1);
+                      ^ [1]
+   nested_instantiation.js:142:8
+   142|   r as string; // error: number ~> string
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ nested_instantiation.js:149:3
+
+Cannot cast `r` to string because `1` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   nested_instantiation.js:149:3
+   149|   r as string; // error: number ~> string
+          ^
+
+References:
+   nested_instantiation.js:148:15
+   148|   const r = f(1);
+                      ^ [1]
+   nested_instantiation.js:149:8
+   149|   r as string; // error: number ~> string
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ nested_instantiation.js:160:3
+
+Cannot cast `exec(...)` to number because `"utf8"` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   nested_instantiation.js:160:3
+   160|   exec({encoding: 'utf8'}) as number; // error: 'utf8' ~> number
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   nested_instantiation.js:158:6
+   158|   ): Encoding<O>;
+             ^^^^^^^^^^^ [1]
+   nested_instantiation.js:160:31
+   160|   exec({encoding: 'utf8'}) as number; // error: 'utf8' ~> number
+                                      ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- non_distributive.js:23:3
 
 Cannot cast `v` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -1311,4 +1362,4 @@ References:
 
 
 
-Found 85 errors
+Found 88 errors

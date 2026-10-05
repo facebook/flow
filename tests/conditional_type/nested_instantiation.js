@@ -134,3 +134,28 @@
   type ExactFunction = ({foo: string}) => void;
   unwrapModule(true) as ExactFunction;
 }
+
+{
+  type Unwrap<T> = T extends {readonly v: infer V | null} ? V : empty;
+  declare function f<P>(x: Unwrap<{readonly v: P}>): P;
+  const r = f(1);
+  r as string; // error: number ~> string
+}
+
+{
+  type UnwrapMaybe<T> = T extends {readonly v: ?infer V} ? V : empty;
+  declare function f<P>(x: UnwrapMaybe<{readonly v: P}>): P;
+  const r = f(1);
+  r as string; // error: number ~> string
+}
+
+{
+  type Encoding<O> = O extends {readonly encoding: infer E, ...} ? E : number;
+  declare function takesString(s: string): void;
+  declare function exec(): number;
+  declare function exec<O extends {readonly encoding?: string, ...}>(
+    options: O,
+  ): Encoding<O>;
+  takesString(exec({encoding: 'utf8'})); // ok
+  exec({encoding: 'utf8'}) as number; // error: 'utf8' ~> number
+}
