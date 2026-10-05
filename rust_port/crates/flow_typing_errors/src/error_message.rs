@@ -10984,57 +10984,44 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         name,
                         existing_binding_loc,
                         ..
-                    } => {
-                        let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                            existing_binding_loc,
-                        );
-                        Message::MessageBadLibdefModuleOverride(x)
-                    }
+                    } => Message::MessageBadLibdefModuleOverride(NamedReferenceData {
+                        loc: existing_binding_loc,
+                        name,
+                    }),
                     BV::NameOverride {
                         name,
                         existing_binding_loc,
                         ..
-                    } => {
-                        let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                            existing_binding_loc,
-                        );
-                        Message::MessageBadLibdefNameOverride(x)
-                    }
+                    } => Message::MessageBadLibdefNameOverride(NamedReferenceData {
+                        loc: existing_binding_loc,
+                        name,
+                    }),
                     BV::NamespacedNameAlreadyBound {
                         name,
                         existing_binding_loc,
                         ..
-                    } => {
-                        let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                            existing_binding_loc,
-                        );
-                        Message::MessageCannotDeclareAlreadyBoundNameInNamespace(x)
-                    }
+                    } => Message::MessageCannotDeclareAlreadyBoundNameInNamespace(
+                        NamedReferenceData {
+                            loc: existing_binding_loc,
+                            name,
+                        },
+                    ),
                     BV::InterfaceMergePropertyConflict {
                         name,
                         current_binding_loc,
                         ..
-                    } => {
-                        let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                            current_binding_loc,
-                        );
-                        Message::MessageInterfaceMergePropertyConflict(x)
-                    }
+                    } => Message::MessageInterfaceMergePropertyConflict(NamedReferenceData {
+                        loc: current_binding_loc,
+                        name,
+                    }),
                     BV::InterfaceMergeTparamMismatch {
                         name,
                         current_binding_loc,
                         ..
-                    } => {
-                        let x = VirtualReason::new(
-                            flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                            current_binding_loc,
-                        );
-                        Message::MessageInterfaceMergeTparamMismatch(x)
-                    }
+                    } => Message::MessageInterfaceMergeTparamMismatch(NamedReferenceData {
+                        loc: current_binding_loc,
+                        name,
+                    }),
                 };
                 Normal(msg)
             }

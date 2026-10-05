@@ -1891,10 +1891,10 @@ pub enum Message<L: Dupe> {
         reference: Option<ValueAsTypeReference>,
         value: MessageTypeReferenceData<L>,
     },
-    MessageBadLibdefModuleOverride(VirtualReason<L>),
-    MessageBadLibdefNameOverride(VirtualReason<L>),
-    MessageInterfaceMergePropertyConflict(VirtualReason<L>),
-    MessageInterfaceMergeTparamMismatch(VirtualReason<L>),
+    MessageBadLibdefModuleOverride(NamedReferenceData<L>),
+    MessageBadLibdefNameOverride(NamedReferenceData<L>),
+    MessageInterfaceMergePropertyConflict(NamedReferenceData<L>),
+    MessageInterfaceMergeTparamMismatch(NamedReferenceData<L>),
 
     MessageCannotAccessEnumMember(Box<MessageCannotAccessEnumMemberData<L>>),
 
@@ -1968,7 +1968,7 @@ pub enum Message<L: Dupe> {
     MessageCannotDeclareAlreadyBoundName(NamedReferenceData<L>),
     MessageCannotDeclareAlreadyBoundNameInCoreJs(NamedReferenceData<L>),
 
-    MessageCannotDeclareAlreadyBoundNameInNamespace(VirtualReason<L>),
+    MessageCannotDeclareAlreadyBoundNameInNamespace(NamedReferenceData<L>),
 
     MessageCannotDeclareReservedType {
         keyword: IncorrectType,

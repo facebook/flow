@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- libs/react.js:1:14
 
-This name declaration overrides an existing binding `React.Node` [1]. Overriding in library definitions can lead to
+This name declaration overrides an existing binding `React$Node` [1]. Overriding in library definitions can lead to
 surprising behaviors. [libdef-override]
 
    libs/react.js:1:14

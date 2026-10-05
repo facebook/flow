@@ -5389,12 +5389,12 @@ where
             ]),
             MessageBadLibdefModuleOverride(x) => friendly::Message(vec![
                 text("This module declaration overrides an existing module "),
-                ref_(x),
+                render_named_reference(x),
                 text(". Overriding in library definitions can lead to surprising behaviors."),
             ]),
             MessageBadLibdefNameOverride(x) => friendly::Message(vec![
                 text("This name declaration overrides an existing binding "),
-                ref_(x),
+                render_named_reference(x),
                 text(". Overriding in library definitions can lead to surprising behaviors."),
             ]),
             MessageCannotAccessEnumMember(box MessageCannotAccessEnumMemberData {
@@ -5906,17 +5906,17 @@ where
             ]),
             MessageCannotDeclareAlreadyBoundNameInNamespace(x) => friendly::Message(vec![
                 text("Cannot declare the name in the namespace because the name "),
-                ref_(x),
+                render_named_reference(x),
                 text(" is already bound."),
             ]),
             MessageInterfaceMergePropertyConflict(x) => friendly::Message(vec![
                 text("Duplicate property "),
-                ref_(x),
+                render_named_reference(x),
                 text(" in a merged interface declaration."),
             ]),
             MessageInterfaceMergeTparamMismatch(x) => friendly::Message(vec![
                 text("Cannot merge interface "),
-                ref_(x),
+                render_named_reference(x),
                 text(" because type parameter lists differ."),
             ]),
             MessageCannotDeclareReservedType { binding, keyword } => friendly::Message(vec![
