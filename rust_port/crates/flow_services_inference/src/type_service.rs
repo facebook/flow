@@ -3151,8 +3151,7 @@ pub fn init_from_scratch(
         let file_opts = options.file_options.dupe();
         let root_buf = root.to_path_buf();
         // Windows canonical paths need separate handling.
-        let symlink_transaction =
-            (options.fast_symlink_resolution && cfg!(unix)).then(|| transaction.dupe());
+        let symlink_transaction = cfg!(unix).then(|| transaction.dupe());
 
         let (sender, receiver) = channel::unbounded::<Vec<FileKey>>();
         let receiver = Arc::new(receiver);

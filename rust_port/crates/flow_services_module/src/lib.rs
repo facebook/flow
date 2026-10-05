@@ -310,10 +310,7 @@ impl<'a> ModuleResolver<'a> {
             options,
             transaction,
             access: transaction.latest_heap_reader(),
-            symlink_paths: (options.fast_symlink_resolution
-                && cfg!(unix)
-                && symlink_paths.is_complete())
-            .then_some(symlink_paths),
+            symlink_paths: (cfg!(unix) && symlink_paths.is_complete()).then_some(symlink_paths),
         }
     }
 
@@ -323,7 +320,7 @@ impl<'a> ModuleResolver<'a> {
             Some(symlink_paths) => symlink_paths
                 .try_resolve(&normalized_path)
                 .unwrap_or_else(|| Cow::Borrowed(normalized_path.as_ref())),
-            None if self.options.fast_symlink_resolution && cfg!(unix) => {
+            None if cfg!(unix) => {
                 // The map is incomplete, such as after a saved-state init.
                 files::canonicalize_path(&normalized_path)
             }
