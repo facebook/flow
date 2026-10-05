@@ -7934,6 +7934,11 @@ where
                 friendly::desc_of_reason_desc(description),
                 text(". "),
             ]),
+            MessageInvalidTrivialRecursiveTypeParameter(name) => friendly::Message(vec![
+                text("Invalid trivially recursive definition of "),
+                code(name),
+                text(". "),
+            ]),
             MessageInvalidTupleRequiredAfterOptional {
                 tuple_loc,
                 required,

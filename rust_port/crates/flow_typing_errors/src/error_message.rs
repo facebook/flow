@@ -9948,9 +9948,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::ETrivialRecursiveDefinition(reason) => Normal(
                 Message::MessageInvalidTrivialRecursiveDefinition(reason.desc),
             ),
-            ErrorMessage::ETrivialRecursiveTypeParameter(box (_, name)) => Normal(
-                Message::MessageInvalidTrivialRecursiveDefinition(VirtualReasonDesc::RType(name)),
-            ),
+            ErrorMessage::ETrivialRecursiveTypeParameter(box (_, name)) => {
+                Normal(Message::MessageInvalidTrivialRecursiveTypeParameter(name))
+            }
             ErrorMessage::ERecursiveDefinition(box ERecursiveDefinitionData {
                 definition,
                 recursion,
