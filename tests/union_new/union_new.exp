@@ -259,7 +259,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `(new Record()).set` because: [incompatible-type]
  - Either `"42"` [1] is incompatible with `number` [2].
- - Or string literal `foo` [3] is incompatible with string literal `bar` [4].
+ - Or `"foo"` [3] is incompatible with `"bar"` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

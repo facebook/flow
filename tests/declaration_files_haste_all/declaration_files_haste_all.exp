@@ -55,7 +55,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `record.set` because: [incompatible-type]
  - Either `"bad"` [1] is incompatible with `number` [2].
- - Or string literal `count` [3] is incompatible with string literal `label` [4].
+ - Or `"count"` [3] is incompatible with `"label"` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -96,7 +96,7 @@ References:
 Error --------------------------------------------------------------------------------------- record_operations.js:37:12
 
 Cannot call `overridden.set` because: [incompatible-type]
- - Either string literal `label` [1] is incompatible with string literal `note` [2].
+ - Either `"label"` [1] is incompatible with `"note"` [2].
  - Or `null` [3] is incompatible with `string` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

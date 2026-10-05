@@ -1,7 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:11:3
 
-Cannot cast `x` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    main.js:11:3
    11|   x as "abc"; // error string ~> "abc"
@@ -18,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:16:3
 
-Cannot cast `cjs_prim` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `cjs_prim` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    main.js:16:3
@@ -36,7 +35,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:20:3
 
-Cannot cast `cjs_obj.foo` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `cjs_obj.foo` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    main.js:20:3

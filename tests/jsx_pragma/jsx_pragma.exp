@@ -207,7 +207,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:38:4
 
-Cannot create `baz` element because `baz` [1] is incompatible with string literal `bar` [2]. [incompatible-type]
+Cannot create `baz` element because `"baz"` [1] is incompatible with `"bar"` [2]. [incompatible-type]
 
    respect_local_scope.js:38:4
    38|   <baz />; // error 'baz' ~> 'bar'
@@ -255,7 +255,7 @@ Cannot resolve name `Foo`. [cannot-resolve-name]
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:18:3
 
-Cannot create `Bar` element because JSX text [1] is incompatible with string literal `hello` [2]. [incompatible-type]
+Cannot create `Bar` element because `"hi"` [1] is incompatible with `"hello"` [2]. [incompatible-type]
 
    text_trimming.js:18:3
    18|   hi
@@ -269,7 +269,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:20:3
 
-Cannot create `Bar` element because JSX text [1] is incompatible with string literal `bye` [2]. [incompatible-type]
+Cannot create `Bar` element because `"bye there"` [1] is incompatible with `"bye"` [2]. [incompatible-type]
 
    text_trimming.js:20:3
          v--
@@ -285,8 +285,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:39:8
 
-Cannot create `Bar` element because JSX text [1] is incompatible with string literal `should be single space` [2].
-[incompatible-type]
+Cannot create `Bar` element because `" "` [1] is incompatible with `"should be single space"` [2]. [incompatible-type]
 
    text_trimming.js:39:8
    39|   <Bar> {true}
@@ -314,8 +313,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:40:4
 
-Cannot create `Bar` element because empty string [1] is incompatible with string literal `should be empty string` [2].
-[incompatible-type]
+Cannot create `Bar` element because `""` [1] is incompatible with `"should be empty string"` [2]. [incompatible-type]
 
    text_trimming.js:40:4
    40|   {''} </Bar>;
@@ -329,8 +327,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:40:7
 
-Cannot create `Bar` element because JSX text [1] is incompatible with string literal `should be single space` [2].
-[incompatible-type]
+Cannot create `Bar` element because `" "` [1] is incompatible with `"should be single space"` [2]. [incompatible-type]
 
    text_trimming.js:40:7
    40|   {''} </Bar>;
@@ -344,7 +341,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:47:9
 
-Cannot create `Bar` element because JSX text [1] is incompatible with string literal `First Middle Last` [2].
+Cannot create `Bar` element because `"    First$"` [1] is incompatible with `"First Middle Last"` [2].
 [incompatible-type]
 
    text_trimming.js:47:9
@@ -359,7 +356,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- text_trimming.js:62:9
 
-Cannot create `Bar` element because JSX text [1] is incompatible with string literal `First Middle Last` [2].
+Cannot create `Bar` element because `"First    Middle    Last"` [1] is incompatible with `"First Middle Last"` [2].
 [incompatible-type]
 
    text_trimming.js:62:9

@@ -1485,8 +1485,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:6:1
 
-Cannot cast `b.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2]. [incompatible-type]
+Cannot cast `b.FOO` to string literal `BAR` because `"FOO"` [1] is incompatible with `"BAR"` [2]. [incompatible-type]
 
    issue-2674.js:6:1
    6| b.FOO as 'BAR'; // error
@@ -1503,8 +1502,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ issue-2674.js:7:9
 
-Cannot assign `'BAR'` to `b.FOO` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot assign `'BAR'` to `b.FOO` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    issue-2674.js:7:9
    7| b.FOO = 'BAR'; // error
@@ -1549,8 +1547,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ key_mirror.js:9:1
 
-Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2]. [incompatible-type]
+Cannot cast `o.FOO` to string literal `BAR` because `"FOO"` [1] is incompatible with `"BAR"` [2]. [incompatible-type]
 
    key_mirror.js:9:1
    9| o.FOO as 'BAR'; // error, 'FOO' incompatible with 'BAR'
@@ -2221,8 +2218,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
-Cannot instantiate mapped type [1] because in type argument `T`: string literal `bar` [2] is incompatible with string
-literal `foo` [3]. [incompatible-type]
+Cannot instantiate mapped type [1] because in type argument `T`: `"bar"` [2] is incompatible with `"foo"` [3].
+[incompatible-type]
 
    reasons.js:10:26
    10|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR

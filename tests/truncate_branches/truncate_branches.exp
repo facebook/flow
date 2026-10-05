@@ -1,56 +1,56 @@
 Error ---------------------------------------------------------------------------------------------------- file.js:107:1
 
 Cannot cast `x` to `T` because: [incompatible-type]
- - Either string [1] is incompatible with string literal `a1` [2].
- - Or string [1] is incompatible with string literal `a2` [3].
- - Or string [1] is incompatible with string literal `a3` [4].
- - Or string [1] is incompatible with string literal `a4` [5].
- - Or string [1] is incompatible with string literal `a5` [6].
- - Or string [1] is incompatible with string literal `a6` [7].
- - Or string [1] is incompatible with string literal `a7` [8].
- - Or string [1] is incompatible with string literal `a8` [9].
- - Or string [1] is incompatible with string literal `a9` [10].
- - Or string [1] is incompatible with string literal `a10` [11].
- - Or string [1] is incompatible with string literal `a11` [12].
- - Or string [1] is incompatible with string literal `a12` [13].
- - Or string [1] is incompatible with string literal `a13` [14].
- - Or string [1] is incompatible with string literal `a14` [15].
- - Or string [1] is incompatible with string literal `a15` [16].
- - Or string [1] is incompatible with string literal `a16` [17].
- - Or string [1] is incompatible with string literal `a17` [18].
- - Or string [1] is incompatible with string literal `a18` [19].
- - Or string [1] is incompatible with string literal `a19` [20].
- - Or string [1] is incompatible with string literal `a20` [21].
- - Or string [1] is incompatible with string literal `a21` [22].
- - Or string [1] is incompatible with string literal `a22` [23].
- - Or string [1] is incompatible with string literal `a23` [24].
- - Or string [1] is incompatible with string literal `a24` [25].
- - Or string [1] is incompatible with string literal `a25` [26].
- - Or string [1] is incompatible with string literal `a26` [27].
- - Or string [1] is incompatible with string literal `a27` [28].
- - Or string [1] is incompatible with string literal `a28` [29].
- - Or string [1] is incompatible with string literal `a29` [30].
- - Or string [1] is incompatible with string literal `a30` [31].
- - Or string [1] is incompatible with string literal `a31` [32].
- - Or string [1] is incompatible with string literal `a32` [33].
- - Or string [1] is incompatible with string literal `a33` [34].
- - Or string [1] is incompatible with string literal `a34` [35].
- - Or string [1] is incompatible with string literal `a35` [36].
- - Or string [1] is incompatible with string literal `a36` [37].
- - Or string [1] is incompatible with string literal `a37` [38].
- - Or string [1] is incompatible with string literal `a38` [39].
- - Or string [1] is incompatible with string literal `a39` [40].
- - Or string [1] is incompatible with string literal `a40` [41].
- - Or string [1] is incompatible with string literal `a41` [42].
- - Or string [1] is incompatible with string literal `a42` [43].
- - Or string [1] is incompatible with string literal `a43` [44].
- - Or string [1] is incompatible with string literal `a44` [45].
- - Or string [1] is incompatible with string literal `a45` [46].
- - Or string [1] is incompatible with string literal `a46` [47].
- - Or string [1] is incompatible with string literal `a47` [48].
- - Or string [1] is incompatible with string literal `a48` [49].
- - Or string [1] is incompatible with string literal `a49` [50].
- - Or string [1] is incompatible with string literal `a50` [51].
+ - Either `string` [1] is incompatible with `"a1"` [2].
+ - Or `string` [1] is incompatible with `"a2"` [3].
+ - Or `string` [1] is incompatible with `"a3"` [4].
+ - Or `string` [1] is incompatible with `"a4"` [5].
+ - Or `string` [1] is incompatible with `"a5"` [6].
+ - Or `string` [1] is incompatible with `"a6"` [7].
+ - Or `string` [1] is incompatible with `"a7"` [8].
+ - Or `string` [1] is incompatible with `"a8"` [9].
+ - Or `string` [1] is incompatible with `"a9"` [10].
+ - Or `string` [1] is incompatible with `"a10"` [11].
+ - Or `string` [1] is incompatible with `"a11"` [12].
+ - Or `string` [1] is incompatible with `"a12"` [13].
+ - Or `string` [1] is incompatible with `"a13"` [14].
+ - Or `string` [1] is incompatible with `"a14"` [15].
+ - Or `string` [1] is incompatible with `"a15"` [16].
+ - Or `string` [1] is incompatible with `"a16"` [17].
+ - Or `string` [1] is incompatible with `"a17"` [18].
+ - Or `string` [1] is incompatible with `"a18"` [19].
+ - Or `string` [1] is incompatible with `"a19"` [20].
+ - Or `string` [1] is incompatible with `"a20"` [21].
+ - Or `string` [1] is incompatible with `"a21"` [22].
+ - Or `string` [1] is incompatible with `"a22"` [23].
+ - Or `string` [1] is incompatible with `"a23"` [24].
+ - Or `string` [1] is incompatible with `"a24"` [25].
+ - Or `string` [1] is incompatible with `"a25"` [26].
+ - Or `string` [1] is incompatible with `"a26"` [27].
+ - Or `string` [1] is incompatible with `"a27"` [28].
+ - Or `string` [1] is incompatible with `"a28"` [29].
+ - Or `string` [1] is incompatible with `"a29"` [30].
+ - Or `string` [1] is incompatible with `"a30"` [31].
+ - Or `string` [1] is incompatible with `"a31"` [32].
+ - Or `string` [1] is incompatible with `"a32"` [33].
+ - Or `string` [1] is incompatible with `"a33"` [34].
+ - Or `string` [1] is incompatible with `"a34"` [35].
+ - Or `string` [1] is incompatible with `"a35"` [36].
+ - Or `string` [1] is incompatible with `"a36"` [37].
+ - Or `string` [1] is incompatible with `"a37"` [38].
+ - Or `string` [1] is incompatible with `"a38"` [39].
+ - Or `string` [1] is incompatible with `"a39"` [40].
+ - Or `string` [1] is incompatible with `"a40"` [41].
+ - Or `string` [1] is incompatible with `"a41"` [42].
+ - Or `string` [1] is incompatible with `"a42"` [43].
+ - Or `string` [1] is incompatible with `"a43"` [44].
+ - Or `string` [1] is incompatible with `"a44"` [45].
+ - Or `string` [1] is incompatible with `"a45"` [46].
+ - Or `string` [1] is incompatible with `"a46"` [47].
+ - Or `string` [1] is incompatible with `"a47"` [48].
+ - Or `string` [1] is incompatible with `"a48"` [49].
+ - Or `string` [1] is incompatible with `"a49"` [50].
+ - Or `string` [1] is incompatible with `"a50"` [51].
 
 Only showing the first 50 branches. To see all branches, re-run Flow with --show-all-branches.
 
@@ -219,106 +219,106 @@ Found 1 error
 Error ---------------------------------------------------------------------------------------------------- file.js:107:1
 
 Cannot cast `x` to `T` because: [incompatible-type]
- - Either string [1] is incompatible with string literal `a1` [2].
- - Or string [1] is incompatible with string literal `a2` [3].
- - Or string [1] is incompatible with string literal `a3` [4].
- - Or string [1] is incompatible with string literal `a4` [5].
- - Or string [1] is incompatible with string literal `a5` [6].
- - Or string [1] is incompatible with string literal `a6` [7].
- - Or string [1] is incompatible with string literal `a7` [8].
- - Or string [1] is incompatible with string literal `a8` [9].
- - Or string [1] is incompatible with string literal `a9` [10].
- - Or string [1] is incompatible with string literal `a10` [11].
- - Or string [1] is incompatible with string literal `a11` [12].
- - Or string [1] is incompatible with string literal `a12` [13].
- - Or string [1] is incompatible with string literal `a13` [14].
- - Or string [1] is incompatible with string literal `a14` [15].
- - Or string [1] is incompatible with string literal `a15` [16].
- - Or string [1] is incompatible with string literal `a16` [17].
- - Or string [1] is incompatible with string literal `a17` [18].
- - Or string [1] is incompatible with string literal `a18` [19].
- - Or string [1] is incompatible with string literal `a19` [20].
- - Or string [1] is incompatible with string literal `a20` [21].
- - Or string [1] is incompatible with string literal `a21` [22].
- - Or string [1] is incompatible with string literal `a22` [23].
- - Or string [1] is incompatible with string literal `a23` [24].
- - Or string [1] is incompatible with string literal `a24` [25].
- - Or string [1] is incompatible with string literal `a25` [26].
- - Or string [1] is incompatible with string literal `a26` [27].
- - Or string [1] is incompatible with string literal `a27` [28].
- - Or string [1] is incompatible with string literal `a28` [29].
- - Or string [1] is incompatible with string literal `a29` [30].
- - Or string [1] is incompatible with string literal `a30` [31].
- - Or string [1] is incompatible with string literal `a31` [32].
- - Or string [1] is incompatible with string literal `a32` [33].
- - Or string [1] is incompatible with string literal `a33` [34].
- - Or string [1] is incompatible with string literal `a34` [35].
- - Or string [1] is incompatible with string literal `a35` [36].
- - Or string [1] is incompatible with string literal `a36` [37].
- - Or string [1] is incompatible with string literal `a37` [38].
- - Or string [1] is incompatible with string literal `a38` [39].
- - Or string [1] is incompatible with string literal `a39` [40].
- - Or string [1] is incompatible with string literal `a40` [41].
- - Or string [1] is incompatible with string literal `a41` [42].
- - Or string [1] is incompatible with string literal `a42` [43].
- - Or string [1] is incompatible with string literal `a43` [44].
- - Or string [1] is incompatible with string literal `a44` [45].
- - Or string [1] is incompatible with string literal `a45` [46].
- - Or string [1] is incompatible with string literal `a46` [47].
- - Or string [1] is incompatible with string literal `a47` [48].
- - Or string [1] is incompatible with string literal `a48` [49].
- - Or string [1] is incompatible with string literal `a49` [50].
- - Or string [1] is incompatible with string literal `a50` [51].
- - Or string [1] is incompatible with string literal `a51` [52].
- - Or string [1] is incompatible with string literal `a52` [53].
- - Or string [1] is incompatible with string literal `a53` [54].
- - Or string [1] is incompatible with string literal `a54` [55].
- - Or string [1] is incompatible with string literal `a55` [56].
- - Or string [1] is incompatible with string literal `a56` [57].
- - Or string [1] is incompatible with string literal `a57` [58].
- - Or string [1] is incompatible with string literal `a58` [59].
- - Or string [1] is incompatible with string literal `a59` [60].
- - Or string [1] is incompatible with string literal `a60` [61].
- - Or string [1] is incompatible with string literal `a61` [62].
- - Or string [1] is incompatible with string literal `a62` [63].
- - Or string [1] is incompatible with string literal `a63` [64].
- - Or string [1] is incompatible with string literal `a64` [65].
- - Or string [1] is incompatible with string literal `a65` [66].
- - Or string [1] is incompatible with string literal `a66` [67].
- - Or string [1] is incompatible with string literal `a67` [68].
- - Or string [1] is incompatible with string literal `a68` [69].
- - Or string [1] is incompatible with string literal `a69` [70].
- - Or string [1] is incompatible with string literal `a70` [71].
- - Or string [1] is incompatible with string literal `a71` [72].
- - Or string [1] is incompatible with string literal `a72` [73].
- - Or string [1] is incompatible with string literal `a73` [74].
- - Or string [1] is incompatible with string literal `a74` [75].
- - Or string [1] is incompatible with string literal `a75` [76].
- - Or string [1] is incompatible with string literal `a76` [77].
- - Or string [1] is incompatible with string literal `a77` [78].
- - Or string [1] is incompatible with string literal `a78` [79].
- - Or string [1] is incompatible with string literal `a79` [80].
- - Or string [1] is incompatible with string literal `a80` [81].
- - Or string [1] is incompatible with string literal `a81` [82].
- - Or string [1] is incompatible with string literal `a82` [83].
- - Or string [1] is incompatible with string literal `a83` [84].
- - Or string [1] is incompatible with string literal `a84` [85].
- - Or string [1] is incompatible with string literal `a85` [86].
- - Or string [1] is incompatible with string literal `a86` [87].
- - Or string [1] is incompatible with string literal `a87` [88].
- - Or string [1] is incompatible with string literal `a88` [89].
- - Or string [1] is incompatible with string literal `a89` [90].
- - Or string [1] is incompatible with string literal `a90` [91].
- - Or string [1] is incompatible with string literal `a91` [92].
- - Or string [1] is incompatible with string literal `a92` [93].
- - Or string [1] is incompatible with string literal `a93` [94].
- - Or string [1] is incompatible with string literal `a94` [95].
- - Or string [1] is incompatible with string literal `a95` [96].
- - Or string [1] is incompatible with string literal `a96` [97].
- - Or string [1] is incompatible with string literal `a97` [98].
- - Or string [1] is incompatible with string literal `a98` [99].
- - Or string [1] is incompatible with string literal `a99` [100].
- - Or string [1] is incompatible with string literal `a100` [101].
+ - Either `string` [1] is incompatible with `"a1"` [2].
+ - Or `string` [1] is incompatible with `"a2"` [3].
+ - Or `string` [1] is incompatible with `"a3"` [4].
+ - Or `string` [1] is incompatible with `"a4"` [5].
+ - Or `string` [1] is incompatible with `"a5"` [6].
+ - Or `string` [1] is incompatible with `"a6"` [7].
+ - Or `string` [1] is incompatible with `"a7"` [8].
+ - Or `string` [1] is incompatible with `"a8"` [9].
+ - Or `string` [1] is incompatible with `"a9"` [10].
+ - Or `string` [1] is incompatible with `"a10"` [11].
+ - Or `string` [1] is incompatible with `"a11"` [12].
+ - Or `string` [1] is incompatible with `"a12"` [13].
+ - Or `string` [1] is incompatible with `"a13"` [14].
+ - Or `string` [1] is incompatible with `"a14"` [15].
+ - Or `string` [1] is incompatible with `"a15"` [16].
+ - Or `string` [1] is incompatible with `"a16"` [17].
+ - Or `string` [1] is incompatible with `"a17"` [18].
+ - Or `string` [1] is incompatible with `"a18"` [19].
+ - Or `string` [1] is incompatible with `"a19"` [20].
+ - Or `string` [1] is incompatible with `"a20"` [21].
+ - Or `string` [1] is incompatible with `"a21"` [22].
+ - Or `string` [1] is incompatible with `"a22"` [23].
+ - Or `string` [1] is incompatible with `"a23"` [24].
+ - Or `string` [1] is incompatible with `"a24"` [25].
+ - Or `string` [1] is incompatible with `"a25"` [26].
+ - Or `string` [1] is incompatible with `"a26"` [27].
+ - Or `string` [1] is incompatible with `"a27"` [28].
+ - Or `string` [1] is incompatible with `"a28"` [29].
+ - Or `string` [1] is incompatible with `"a29"` [30].
+ - Or `string` [1] is incompatible with `"a30"` [31].
+ - Or `string` [1] is incompatible with `"a31"` [32].
+ - Or `string` [1] is incompatible with `"a32"` [33].
+ - Or `string` [1] is incompatible with `"a33"` [34].
+ - Or `string` [1] is incompatible with `"a34"` [35].
+ - Or `string` [1] is incompatible with `"a35"` [36].
+ - Or `string` [1] is incompatible with `"a36"` [37].
+ - Or `string` [1] is incompatible with `"a37"` [38].
+ - Or `string` [1] is incompatible with `"a38"` [39].
+ - Or `string` [1] is incompatible with `"a39"` [40].
+ - Or `string` [1] is incompatible with `"a40"` [41].
+ - Or `string` [1] is incompatible with `"a41"` [42].
+ - Or `string` [1] is incompatible with `"a42"` [43].
+ - Or `string` [1] is incompatible with `"a43"` [44].
+ - Or `string` [1] is incompatible with `"a44"` [45].
+ - Or `string` [1] is incompatible with `"a45"` [46].
+ - Or `string` [1] is incompatible with `"a46"` [47].
+ - Or `string` [1] is incompatible with `"a47"` [48].
+ - Or `string` [1] is incompatible with `"a48"` [49].
+ - Or `string` [1] is incompatible with `"a49"` [50].
+ - Or `string` [1] is incompatible with `"a50"` [51].
+ - Or `string` [1] is incompatible with `"a51"` [52].
+ - Or `string` [1] is incompatible with `"a52"` [53].
+ - Or `string` [1] is incompatible with `"a53"` [54].
+ - Or `string` [1] is incompatible with `"a54"` [55].
+ - Or `string` [1] is incompatible with `"a55"` [56].
+ - Or `string` [1] is incompatible with `"a56"` [57].
+ - Or `string` [1] is incompatible with `"a57"` [58].
+ - Or `string` [1] is incompatible with `"a58"` [59].
+ - Or `string` [1] is incompatible with `"a59"` [60].
+ - Or `string` [1] is incompatible with `"a60"` [61].
+ - Or `string` [1] is incompatible with `"a61"` [62].
+ - Or `string` [1] is incompatible with `"a62"` [63].
+ - Or `string` [1] is incompatible with `"a63"` [64].
+ - Or `string` [1] is incompatible with `"a64"` [65].
+ - Or `string` [1] is incompatible with `"a65"` [66].
+ - Or `string` [1] is incompatible with `"a66"` [67].
+ - Or `string` [1] is incompatible with `"a67"` [68].
+ - Or `string` [1] is incompatible with `"a68"` [69].
+ - Or `string` [1] is incompatible with `"a69"` [70].
+ - Or `string` [1] is incompatible with `"a70"` [71].
+ - Or `string` [1] is incompatible with `"a71"` [72].
+ - Or `string` [1] is incompatible with `"a72"` [73].
+ - Or `string` [1] is incompatible with `"a73"` [74].
+ - Or `string` [1] is incompatible with `"a74"` [75].
+ - Or `string` [1] is incompatible with `"a75"` [76].
+ - Or `string` [1] is incompatible with `"a76"` [77].
+ - Or `string` [1] is incompatible with `"a77"` [78].
+ - Or `string` [1] is incompatible with `"a78"` [79].
+ - Or `string` [1] is incompatible with `"a79"` [80].
+ - Or `string` [1] is incompatible with `"a80"` [81].
+ - Or `string` [1] is incompatible with `"a81"` [82].
+ - Or `string` [1] is incompatible with `"a82"` [83].
+ - Or `string` [1] is incompatible with `"a83"` [84].
+ - Or `string` [1] is incompatible with `"a84"` [85].
+ - Or `string` [1] is incompatible with `"a85"` [86].
+ - Or `string` [1] is incompatible with `"a86"` [87].
+ - Or `string` [1] is incompatible with `"a87"` [88].
+ - Or `string` [1] is incompatible with `"a88"` [89].
+ - Or `string` [1] is incompatible with `"a89"` [90].
+ - Or `string` [1] is incompatible with `"a90"` [91].
+ - Or `string` [1] is incompatible with `"a91"` [92].
+ - Or `string` [1] is incompatible with `"a92"` [93].
+ - Or `string` [1] is incompatible with `"a93"` [94].
+ - Or `string` [1] is incompatible with `"a94"` [95].
+ - Or `string` [1] is incompatible with `"a95"` [96].
+ - Or `string` [1] is incompatible with `"a96"` [97].
+ - Or `string` [1] is incompatible with `"a97"` [98].
+ - Or `string` [1] is incompatible with `"a98"` [99].
+ - Or `string` [1] is incompatible with `"a99"` [100].
+ - Or `string` [1] is incompatible with `"a100"` [101].
  - Or `string` [1] is incompatible with `() => void` [102].
 
    file.js:107:1

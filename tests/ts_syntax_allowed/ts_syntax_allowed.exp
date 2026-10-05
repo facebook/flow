@@ -132,8 +132,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:15:1
 
-Cannot cast `covariant` to `Covariant` because in type argument `T` [1]: string literal `foo` [2] is incompatible with
-string literal `bar` [3]. [incompatible-type]
+Cannot cast `covariant` to `Covariant` because in type argument `T` [1]: `"foo"` [2] is incompatible with `"bar"` [3].
+[incompatible-type]
 
    polarity.js:15:1
    15| covariant as Covariant<'bar'>; // error
@@ -182,8 +182,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:25:1
 
-Cannot cast `invariant` to `Invariant` because in type argument `T` [1]: string [2] is incompatible with string literal
-`foo` [3]. [incompatible-type]
+Cannot cast `invariant` to `Invariant` because in type argument `T` [1]: `string` [2] is incompatible with `"foo"` [3].
+[incompatible-type]
 
    polarity.js:25:1
    25| invariant as Invariant<string>; // error
@@ -219,8 +219,8 @@ Cannot assign `'hello'` to `ro_obj.b` because property `b` is not writable. [can
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:36:1
 
-Cannot cast `imported_covariant` to `exported.Covariant` because in type argument `T` [1]: string literal `foo` [2] is
-incompatible with string literal `bar` [3]. [incompatible-type]
+Cannot cast `imported_covariant` to `exported.Covariant` because in type argument `T` [1]: `"foo"` [2] is incompatible
+with `"bar"` [3]. [incompatible-type]
 
    polarity.js:36:1
    36| imported_covariant as exported.Covariant<'bar'>; // error
@@ -269,8 +269,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- polarity.js:46:1
 
-Cannot cast `imported_invariant` to `exported.Invariant` because in type argument `T` [1]: string [2] is incompatible
-with string literal `foo` [3]. [incompatible-type]
+Cannot cast `imported_invariant` to `exported.Invariant` because in type argument `T` [1]: `string` [2] is incompatible
+with `"foo"` [3]. [incompatible-type]
 
    polarity.js:46:1
    46| imported_invariant as exported.Invariant<string>; // error

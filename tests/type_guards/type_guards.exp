@@ -1353,8 +1353,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- intersect.js:7:5
 
-Cannot cast `x` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    intersect.js:7:5
    7|     x as 'b'; // error 'a' ~> 'b'
@@ -1371,8 +1370,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- intersect.js:8:5
 
-Cannot cast `x` to string literal `c` because string literal `a` [1] is incompatible with string literal `c` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `c` because `"a"` [1] is incompatible with `"c"` [2]. [incompatible-type]
 
    intersect.js:8:5
    8|     x as 'c'; // error 'a' ~> 'c'
@@ -1389,8 +1387,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intersect.js:19:5
 
-Cannot cast `x` to string literal `b` because string literal `c` [1] is incompatible with string literal `b` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `b` because `"c"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    intersect.js:19:5
    19|     x as 'b'; // error 'c' ~> 'b'
@@ -1407,8 +1404,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intersect.js:43:5
 
-Cannot cast `x` to `KB` because in type argument `X` [1]: string literal `C` [2] is incompatible with string literal
-`B` [3]. [incompatible-type]
+Cannot cast `x` to `KB` because in type argument `X` [1]: `"C"` [2] is incompatible with `"B"` [3]. [incompatible-type]
 
    intersect.js:43:5
    43|     x as KB; // error KC ~> KB
@@ -2049,8 +2045,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:86:7
 
-Cannot cast `x` to `B` because in property `tag`: string literal `A` [1] is incompatible with string literal `B` [2].
-[incompatible-type]
+Cannot cast `x` to `B` because in property `tag`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
 
    refinement.js:86:7
    86|       x as B; // error A ~> B
@@ -2196,8 +2191,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:117:7
 
-Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is incompatible with string literal `B` [2].
-[incompatible-type]
+Cannot cast `x` to `B` because in property `tag1`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
 
    refinement.js:117:7
    117|       x as B; // error A ~> B
@@ -2231,8 +2225,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:122:7
 
-Cannot cast `x` to `A` because in property `tag1`: string literal `B` [1] is incompatible with string literal `A` [2].
-[incompatible-type]
+Cannot cast `x` to `A` because in property `tag1`: `"B"` [1] is incompatible with `"A"` [2]. [incompatible-type]
 
    refinement.js:122:7
    122|       x as A; // error B ~> A
@@ -2266,8 +2259,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:123:7
 
-Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is incompatible with string literal `B` [2].
-[incompatible-type]
+Cannot cast `x` to `B` because in property `tag1`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
 
    refinement.js:123:7
    123|       x as B; // error A ~> B
@@ -2652,8 +2644,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7
 
-Cannot cast `item` to `TypeA` because in property `type`: string literal `TypeB` [1] is incompatible with string literal
-`TypeA` [2]. [incompatible-type]
+Cannot cast `item` to `TypeA` because in property `type`: `"TypeB"` [1] is incompatible with `"TypeA"` [2].
+[incompatible-type]
 
    refinement.js:275:7
    275|       item as TypeA; // error
@@ -2670,8 +2662,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:276:7
 
-Cannot cast `item` to `TypeB` because in property `type`: string literal `TypeA` [1] is incompatible with string literal
-`TypeB` [2]. [incompatible-type]
+Cannot cast `item` to `TypeB` because in property `type`: `"TypeA"` [1] is incompatible with `"TypeB"` [2].
+[incompatible-type]
 
    refinement.js:276:7
    276|       item as TypeB; // error
@@ -2688,8 +2680,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
 
-Cannot cast `item` to `TypeC` because in property `type`: string literal `TypeA` [1] is incompatible with string literal
-`TypeC` [2]. [incompatible-type]
+Cannot cast `item` to `TypeC` because in property `type`: `"TypeA"` [1] is incompatible with `"TypeC"` [2].
+[incompatible-type]
 
    refinement.js:277:7
    277|       item as TypeC; // error
@@ -2706,8 +2698,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
 
-Cannot cast `item` to `TypeC` because in property `type`: string literal `TypeB` [1] is incompatible with string literal
-`TypeC` [2]. [incompatible-type]
+Cannot cast `item` to `TypeC` because in property `type`: `"TypeB"` [1] is incompatible with `"TypeC"` [2].
+[incompatible-type]
 
    refinement.js:277:7
    277|       item as TypeC; // error
@@ -2725,8 +2717,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:280:7
 
 Cannot cast `item` to `SpecialTypes` because: [incompatible-type]
- - Either in property `type`: string literal `TypeC` [1] is incompatible with string literal `TypeA` [2].
- - Or in property `type`: string literal `TypeC` [1] is incompatible with string literal `TypeB` [3].
+ - Either in property `type`: `"TypeC"` [1] is incompatible with `"TypeA"` [2].
+ - Or in property `type`: `"TypeC"` [1] is incompatible with `"TypeB"` [3].
 
    refinement.js:280:7
    280|       item as SpecialTypes; // error TypeC ~> SpecialType
@@ -2746,8 +2738,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:282:7
 
-Cannot cast `item` to `TypeA` because in property `type`: string literal `TypeC` [1] is incompatible with string literal
-`TypeA` [2]. [incompatible-type]
+Cannot cast `item` to `TypeA` because in property `type`: `"TypeC"` [1] is incompatible with `"TypeA"` [2].
+[incompatible-type]
 
    refinement.js:282:7
    282|       item as TypeA; // error
@@ -2764,8 +2756,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:283:7
 
-Cannot cast `item` to `TypeB` because in property `type`: string literal `TypeC` [1] is incompatible with string literal
-`TypeB` [2]. [incompatible-type]
+Cannot cast `item` to `TypeB` because in property `type`: `"TypeC"` [1] is incompatible with `"TypeB"` [2].
+[incompatible-type]
 
    refinement.js:283:7
    283|       item as TypeB; // error
@@ -4869,8 +4861,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
 
-Cannot cast `x` to `B` because in index `0`: string literal `A` [1] is incompatible with string literal `B` [2].
-[incompatible-type]
+Cannot cast `x` to `B` because in index `0`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
 
    tuple_refinement.js:11:7
    11|       x as B; // ERROR: A ~> B
@@ -4904,8 +4895,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
 
-Cannot cast `x` to `ROB` because in index `0`: string literal `A` [1] is incompatible with string literal `B` [2].
-[incompatible-type]
+Cannot cast `x` to `ROB` because in index `0`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
 
    tuple_refinement.js:31:7
    31|       x as ROB; // ERROR: A ~> B
@@ -4939,8 +4929,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
 
-Cannot cast `x` to `MTB` because in index `0`: string literal `A` [1] is incompatible with string literal `B` [2].
-[incompatible-type]
+Cannot cast `x` to `MTB` because in index `0`: `"A"` [1] is incompatible with `"B"` [2]. [incompatible-type]
 
    tuple_refinement.js:51:7
    51|       x as MTB; // ERROR: A ~> B

@@ -610,17 +610,17 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
 
         match error.msg_of_error() {
             FlowErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 use_op,
             }) => {
-                let ((reason_lower_new, reason_upper_new), use_op_new) =
-                    dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
-                reason_lower == &reason_lower_new
+                let ((lower_new, upper_new), use_op_new) =
+                    dedupe_by_flip(lower.clone(), upper.clone(), use_op.clone());
+                lower == &lower_new
                     || is_not_duplicate(FlowErrorMessage::EExpectedStringLit(Box::new(
                         EExpectedStringLitData {
-                            reason_lower: reason_lower_new,
-                            reason_upper: reason_upper_new,
+                            lower: lower_new,
+                            upper: upper_new,
                             use_op: use_op_new,
                         },
                     )))

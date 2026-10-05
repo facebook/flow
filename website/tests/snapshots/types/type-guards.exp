@@ -207,8 +207,8 @@ References:
 
 Error ------------------------------------------------------------------------- -:24:38
 
-Cannot return `response.type === 'success'` because in property `type`: string literal `success` [1] is incompatible
-with string literal `error` [2]. [incompatible-type-guard]
+Cannot return `response.type === 'success'` because in property `type`: `"success"` [1] is incompatible with
+`"error"` [2]. [incompatible-type-guard]
 
 The type of `response` [3] at the return expression `response.type === 'success'` [4] needs to be compatible with the
 guard type `Error` [5]. See 1. in

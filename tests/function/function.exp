@@ -837,8 +837,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- call.js:45:11
 
-Cannot call `f` with object literal bound to `y` because in property `x`: string literal `foo` [1] is incompatible with
-string literal `bar` [2]. [incompatible-type]
+Cannot call `f` with object literal bound to `y` because in property `x`: `"foo"` [1] is incompatible with `"bar"` [2].
+[incompatible-type]
 
    call.js:45:11
    45|     f({x: "foo"}); // error, "foo" !~> "bar"

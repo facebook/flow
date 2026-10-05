@@ -200,8 +200,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:68:1
 
-Cannot cast `lf.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
-[incompatible-type]
+Cannot cast `lf.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    imp.js:68:1
    68| lf.a() as 'p'; // ERROR: 'q' is not 'p'
@@ -218,8 +217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:72:1
 
-Cannot cast `vf.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `vf.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:72:1
    72| vf.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -236,8 +234,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:76:1
 
-Cannot cast `vl.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `vl.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:76:1
    76| vl.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -254,8 +251,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:80:1
 
-Cannot cast `tv.a()` to string literal `q` because string literal `z` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `tv.a()` to string literal `q` because `"z"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:80:1
    80| tv.a() as 'q'; // ERROR: 'z' is not 'q'
@@ -272,8 +268,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:84:1
 
-Cannot cast `al.a` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `al.a` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    imp.js:84:1
    84| al.a as 'q'; // ERROR: 'p' is not 'q'
@@ -290,8 +285,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:88:1
 
-Cannot cast `af.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
-[incompatible-type]
+Cannot cast `af.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    imp.js:88:1
    88| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'
@@ -527,8 +521,7 @@ Optional method signature is not enabled. [unsupported-syntax]
 
 Error -------------------------------------------------------------------------------------------------- within.js:123:1
 
-Cannot cast `lf.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
-[incompatible-type]
+Cannot cast `lf.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    within.js:123:1
    123| lf.a() as 'p'; // ERROR: 'q' is not 'p'
@@ -545,8 +538,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:133:1
 
-Cannot cast `vf.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `vf.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:133:1
    133| vf.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -563,8 +555,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:140:1
 
-Cannot cast `vl.a()` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `vl.a()` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:140:1
    140| vl.a() as 'q'; // ERROR: 'p' is not 'q'
@@ -581,8 +572,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:151:1
 
-Cannot cast `tv.a()` to string literal `q` because string literal `z` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `tv.a()` to string literal `q` because `"z"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:151:1
    151| tv.a() as 'q'; // ERROR: 'z' is not 'q'
@@ -599,8 +589,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:161:1
 
-Cannot cast `al.a` to string literal `q` because string literal `p` [1] is incompatible with string literal `q` [2].
-[incompatible-type]
+Cannot cast `al.a` to string literal `q` because `"p"` [1] is incompatible with `"q"` [2]. [incompatible-type]
 
    within.js:161:1
    161| al.a as 'q'; // ERROR: 'p' is not 'q'
@@ -617,8 +606,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- within.js:168:1
 
-Cannot cast `af.a()` to string literal `p` because string literal `q` [1] is incompatible with string literal `p` [2].
-[incompatible-type]
+Cannot cast `af.a()` to string literal `p` because `"q"` [1] is incompatible with `"p"` [2]. [incompatible-type]
 
    within.js:168:1
    168| af.a() as 'p'; // ERROR: the accessor lost the name, so 'q' is not 'p'

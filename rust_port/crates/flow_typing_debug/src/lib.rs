@@ -2147,14 +2147,19 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EExpectedStringLit(box EExpectedStringLitData {
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             use_op,
         }) => {
+            let dump_type =
+                |type_ref: &ErrorTypeReferenceWithLocData<ALoc>| match &type_ref.type_desc {
+                    TypeOrTypeDescT::Type(t) => dump_t(None, cx, t),
+                    TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
+                };
             format!(
-                "EExpectedStringLit(Box::new(EExpectedStringLitData {{ reason_lower = {}; reason_upper = {}; use_op = {} }}))",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                "EExpectedStringLit(Box::new(EExpectedStringLitData {{ lower = {}; upper = {}; use_op = {} }}))",
+                dump_type(lower),
+                dump_type(upper),
                 string_of_use_op(use_op)
             )
         }

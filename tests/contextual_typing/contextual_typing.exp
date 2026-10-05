@@ -590,9 +590,9 @@ References:
 Error --------------------------------------------------------------------------------------------- intersections.js:8:3
 
 Cannot call `foo` because: [incompatible-type]
- - Either string literal `a` [1] is incompatible with string literal `boolean` [2].
- - Or string literal `a` [1] is incompatible with string literal `str` [3].
- - Or string literal `a` [1] is incompatible with string literal `num` [4].
+ - Either `"a"` [1] is incompatible with `"boolean"` [2].
+ - Or `"a"` [1] is incompatible with `"str"` [3].
+ - Or `"a"` [1] is incompatible with `"num"` [4].
 
    intersections.js:8:3
    8|   foo('a', (x) => { x as number; }); // error

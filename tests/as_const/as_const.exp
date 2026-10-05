@@ -826,8 +826,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:16:3
 
-Cannot cast `s` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
-[incompatible-type]
+Cannot cast `s` to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    import-primitive.js:16:3
    16|   s as "b"; // error a ~> b
@@ -844,8 +843,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- import-primitive.js:19:3
 
-Cannot cast `"b"` to `typeof s` because string literal `b` [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot cast `"b"` to `typeof s` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    import-primitive.js:19:3
    19|   "b" as typeof s; // error b ~> a
@@ -859,7 +857,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- import-primitive.js:20:10
 
-Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-type]
+Cannot cast `"b"` to `typeof s` because `string` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    import-primitive.js:20:10
    20|   "b" as string as typeof s; // error string ~> a
@@ -1436,8 +1434,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:21:3
 
-Cannot cast `s` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
-[incompatible-type]
+Cannot cast `s` to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    primitive.js:21:3
    21|   s as "b"; // error a ~> b
@@ -1454,8 +1451,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ primitive.js:24:3
 
-Cannot cast `"b"` to `typeof s` because string literal `b` [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot cast `"b"` to `typeof s` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    primitive.js:24:3
    24|   "b" as typeof s; // error b ~> a
@@ -1469,7 +1465,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitive.js:25:10
 
-Cannot cast `"b"` to `typeof s` because string [1] is incompatible with string literal `a` [2]. [incompatible-type]
+Cannot cast `"b"` to `typeof s` because `string` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    primitive.js:25:10
    25|   "b" as string as typeof s; // error string ~> a

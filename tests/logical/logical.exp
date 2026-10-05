@@ -868,7 +868,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- logical.js:629:8
 
 Cannot assign `"1"` to `s_` because: [incompatible-type]
- - Either string literal `1` [1] is incompatible with string [2].
+ - Either `"1"` [1] is incompatible with `""` [2].
  - Or `"1"` [1] is incompatible with object literal [3].
 
 All writes to `s_` must be compatible with the type of its initializer [4]. Add an annotation to `s_` [4] if a different

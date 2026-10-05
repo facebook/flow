@@ -137,8 +137,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-prefix.js:6:1
 
-Cannot cast `data` to string literal `data-` because template literal type [1] is incompatible with string literal
-`data-` [2]. [incompatible-type]
+Cannot cast `data` to string literal `data-` because `string` [1] is incompatible with `"data-"` [2].
+[incompatible-type]
 
    import-prefix.js:6:1
     6| data as 'data-'; // ERROR
@@ -219,8 +219,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:20:3
 
-Cannot cast `x` to string literal `data-` because template literal type [1] is incompatible with string literal
-`data-` [2]. [incompatible-type]
+Cannot cast `x` to string literal `data-` because `string` [1] is incompatible with `"data-"` [2]. [incompatible-type]
 
    prefix.js:20:3
    20|   x as 'data-'; // ERROR
@@ -251,8 +250,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:36:3
 
-Cannot cast `x` to key set because template literal type [1] is incompatible with string literal `xxx` [2].
-[incompatible-type]
+Cannot cast `x` to key set because `string` [1] is incompatible with `"xxx"` [2]. [incompatible-type]
 
    prefix.js:36:3
    36|   x as keyof {[key: 'xxx']: unknown}; // ERROR
@@ -443,8 +441,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- prefix.js:116:3
 
-Cannot cast `x` to string literal `3` because string literal `2` [1] is incompatible with string literal `3` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `3` because `"2"` [1] is incompatible with `"3"` [2]. [incompatible-type]
 
    prefix.js:116:3
    116|   x as '3'; // ERROR
@@ -542,8 +539,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:20:3
 
-Cannot cast `x` to string literal `%` because template literal type [1] is incompatible with string literal `%` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `%` because `string` [1] is incompatible with `"%"` [2]. [incompatible-type]
 
    suffix.js:20:3
    20|   x as '%'; // ERROR
@@ -735,8 +731,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- suffix.js:101:3
 
-Cannot cast `x` to string literal `yay!` because string literal `yay` [1] is incompatible with string literal
-`yay!` [2]. [incompatible-type]
+Cannot cast `x` to string literal `yay!` because `"yay"` [1] is incompatible with `"yay!"` [2]. [incompatible-type]
 
    suffix.js:101:3
    101|   x as "yay!"; // ERROR

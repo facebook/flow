@@ -1,7 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ capitalize.js:5:1
 
-Cannot cast `'foo'` to `C1` because string literal `foo` [1] is incompatible with string literal `Foo` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `C1` because `"foo"` [1] is incompatible with `C1` [2]. [incompatible-type]
 
    capitalize.js:5:1
    5| 'foo' as C1; // ERROR
@@ -15,8 +14,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ capitalize.js:6:1
 
-Cannot cast `'FOO'` to `C1` because string literal `FOO` [1] is incompatible with string literal `Foo` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `C1` because `"FOO"` [1] is incompatible with `C1` [2]. [incompatible-type]
 
    capitalize.js:6:1
    6| 'FOO' as C1; // ERROR
@@ -30,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- capitalize.js:22:1
 
-Cannot cast `'A'` to `C4` because string literal `A` [1] is incompatible with empty string [2]. [incompatible-type]
+Cannot cast `'A'` to `C4` because `"A"` [1] is incompatible with `C4` [2]. [incompatible-type]
 
    capitalize.js:22:1
    22| 'A' as C4; // ERROR
@@ -158,8 +156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:13:1
 
-Cannot cast `'foo'` to `IA1` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `IA1` because `"foo"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    concretization.js:13:1
    13| 'foo' as IA1; // ERROR
@@ -173,8 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:14:1
 
-Cannot cast `'BAR'` to `IA1` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'BAR'` to `IA1` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    concretization.js:14:1
    14| 'BAR' as IA1; // ERROR (concretized arg is 'foo', so result is 'FOO')
@@ -188,8 +184,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:20:1
 
-Cannot cast `'BAR'` to `PA1` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'BAR'` to `PA1` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    concretization.js:20:1
    20| 'BAR' as PA1; // ERROR
@@ -217,8 +212,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:33:1
 
-Cannot cast `'FOO'` to `PA2` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `PA2` because `"FOO"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    concretization.js:33:1
    33| 'FOO' as PA2; // ERROR
@@ -232,8 +226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:39:1
 
-Cannot cast `'foo'` to `IA3` because string literal `foo` [1] is incompatible with string literal `Foo` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `IA3` because `"foo"` [1] is incompatible with `"Foo"` [2]. [incompatible-type]
 
    concretization.js:39:1
    39| 'foo' as IA3; // ERROR
@@ -247,8 +240,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:45:1
 
-Cannot cast `'FOO'` to `PA3` because string literal `FOO` [1] is incompatible with string literal `fOO` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `PA3` because `"FOO"` [1] is incompatible with `"fOO"` [2]. [incompatible-type]
 
    concretization.js:45:1
    45| 'FOO' as PA3; // ERROR
@@ -262,8 +254,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:51:1
 
-Cannot cast `'abc'` to `IA4` because string literal `abc` [1] is incompatible with string literal `ABC` [2].
-[incompatible-type]
+Cannot cast `'abc'` to `IA4` because `"abc"` [1] is incompatible with `"ABC"` [2]. [incompatible-type]
 
    concretization.js:51:1
    51| 'abc' as IA4; // ERROR
@@ -277,8 +268,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:65:1
 
-Cannot cast `'foo'` to `AI1` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `AI1` because `"foo"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    concretization.js:65:1
    65| 'foo' as AI1; // ERROR
@@ -292,8 +282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:66:1
 
-Cannot cast `'BAR'` to `AI1` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'BAR'` to `AI1` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    concretization.js:66:1
    66| 'BAR' as AI1; // ERROR
@@ -307,8 +296,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:71:1
 
-Cannot cast `'FOO'` to `AI2` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `AI2` because `"FOO"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    concretization.js:71:1
    71| 'FOO' as AI2; // ERROR
@@ -322,8 +310,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:83:1
 
-Cannot cast `'_world'` to `LE1` because empty string [1] is incompatible with string literal `Hello` [2].
-[incompatible-type]
+Cannot cast `'_world'` to `LE1` because `""` [1] is incompatible with `"Hello"` [2]. [incompatible-type]
 
    concretization.js:83:1
    83| '_world' as LE1;       // ERROR
@@ -337,8 +324,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:87:1
 
-Cannot cast `'_world'` to `LE2` because empty string [1] is incompatible with string literal `Hello` [2].
-[incompatible-type]
+Cannot cast `'_world'` to `LE2` because `""` [1] is incompatible with `"Hello"` [2]. [incompatible-type]
 
    concretization.js:87:1
    87| '_world' as LE2;       // ERROR
@@ -352,8 +338,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:91:1
 
-Cannot cast `'_world'` to `LE3` because empty string [1] is incompatible with string literal `Hello` [2].
-[incompatible-type]
+Cannot cast `'_world'` to `LE3` because `""` [1] is incompatible with `"Hello"` [2]. [incompatible-type]
 
    concretization.js:91:1
    91| '_world' as LE3;       // ERROR
@@ -367,8 +352,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- concretization.js:96:1
 
-Cannot cast `'_WORLD'` to `LE4` because empty string [1] is incompatible with string literal `hELLO` [2].
-[incompatible-type]
+Cannot cast `'_WORLD'` to `LE4` because `""` [1] is incompatible with `"hELLO"` [2]. [incompatible-type]
 
    concretization.js:96:1
    96| '_WORLD' as LE4;       // ERROR
@@ -382,8 +366,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- cross_file_b.js:4:1
 
-Cannot cast `'foo'` to `X` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `X` because `"foo"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    cross_file_b.js:4:1
    4| 'foo' as X; // ERROR
@@ -397,8 +380,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- cross_file_b.js:5:1
 
-Cannot cast `'BAR'` to `X` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'BAR'` to `X` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    cross_file_b.js:5:1
    5| 'BAR' as X; // ERROR
@@ -412,8 +394,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- cross_file_b.js:8:1
 
-Cannot cast `'FOO'` to `Y` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `Y` because `"FOO"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    cross_file_b.js:8:1
    8| 'FOO' as Y; // ERROR
@@ -427,8 +408,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- lowercase.js:5:1
 
-Cannot cast `'FOO'` to `L1` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `L1` because `"FOO"` [1] is incompatible with `L1` [2]. [incompatible-type]
 
    lowercase.js:5:1
    5| 'FOO' as L1; // ERROR
@@ -442,8 +422,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:16:1
 
-Cannot cast `'FooBar'` to `L3` because string literal `FooBar` [1] is incompatible with string literal `foobar` [2].
-[incompatible-type]
+Cannot cast `'FooBar'` to `L3` because `"FooBar"` [1] is incompatible with `L3` [2]. [incompatible-type]
 
    lowercase.js:16:1
    16| 'FooBar' as L3; // ERROR
@@ -515,8 +494,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:63:1
 
-Cannot cast `'FOO'` to `Y` because string literal `FOO` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `Y` because `"FOO"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    lowercase.js:63:1
    63| 'FOO' as Y<'FOO'>; // ERROR
@@ -530,8 +508,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lowercase.js:64:1
 
-Cannot cast `'anything'` to `Y` because string literal `anything` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'anything'` to `Y` because `"anything"` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    lowercase.js:64:1
    64| 'anything' as Y<'FOO'>; // ERROR
@@ -583,8 +560,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- uncapitalize.js:5:1
 
-Cannot cast `'Foo'` to `U1` because string literal `Foo` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'Foo'` to `U1` because `"Foo"` [1] is incompatible with `U1` [2]. [incompatible-type]
 
    uncapitalize.js:5:1
    5| 'Foo' as U1; // ERROR (still capital)
@@ -598,8 +574,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- uncapitalize.js:6:1
 
-Cannot cast `'fOO'` to `U1` because string literal `fOO` [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `'fOO'` to `U1` because `"fOO"` [1] is incompatible with `U1` [2]. [incompatible-type]
 
    uncapitalize.js:6:1
    6| 'fOO' as U1; // ERROR
@@ -613,8 +588,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:12:1
 
-Cannot cast `'foo'` to `U1b` because string literal `foo` [1] is incompatible with string literal `fOO` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `U1b` because `"foo"` [1] is incompatible with `U1b` [2]. [incompatible-type]
 
    uncapitalize.js:12:1
    12| 'foo' as U1b; // ERROR (Uncapitalize does not lower the tail)
@@ -628,8 +602,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- uncapitalize.js:13:1
 
-Cannot cast `'FOO'` to `U1b` because string literal `FOO` [1] is incompatible with string literal `fOO` [2].
-[incompatible-type]
+Cannot cast `'FOO'` to `U1b` because `"FOO"` [1] is incompatible with `U1b` [2]. [incompatible-type]
 
    uncapitalize.js:13:1
    13| 'FOO' as U1b; // ERROR (first char must be lowercased)
@@ -757,8 +730,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- uppercase.js:5:1
 
-Cannot cast `'foo'` to `U1` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `U1` because `"foo"` [1] is incompatible with `U1` [2]. [incompatible-type]
 
    uppercase.js:5:1
    5| 'foo' as U1; // ERROR
@@ -772,8 +744,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:16:1
 
-Cannot cast `'fooBar'` to `U3` because string literal `fooBar` [1] is incompatible with string literal `FOOBAR` [2].
-[incompatible-type]
+Cannot cast `'fooBar'` to `U3` because `"fooBar"` [1] is incompatible with `U3` [2]. [incompatible-type]
 
    uppercase.js:16:1
    16| 'fooBar' as U3; // ERROR
@@ -787,7 +758,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:22:1
 
-Cannot cast `'A'` to `U4` because string literal `A` [1] is incompatible with empty string [2]. [incompatible-type]
+Cannot cast `'A'` to `U4` because `"A"` [1] is incompatible with `U4` [2]. [incompatible-type]
 
    uppercase.js:22:1
    22| 'A' as U4; // ERROR
@@ -873,8 +844,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:59:1
 
-Cannot cast `'foo'` to `X` because string literal `foo` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'foo'` to `X` because `"foo"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    uppercase.js:59:1
    59| 'foo' as X<'foo'>; // ERROR
@@ -888,8 +858,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ uppercase.js:60:1
 
-Cannot cast `'anything'` to `X` because string literal `anything` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot cast `'anything'` to `X` because `"anything"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    uppercase.js:60:1
    60| 'anything' as X<'foo'>; // ERROR

@@ -337,8 +337,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because string literal `ff0000` [1] is
-incompatible with string literal `ffffff` [2]. [incompatible-type]
+Cannot cast `ColorIdToNumber[ColorId.RED]` to string literal `ffffff` because `"ff0000"` [1] is incompatible with
+`"ffffff"` [2]. [incompatible-type]
 
    test.js:19:1
    19| ColorIdToNumber[ColorId.RED] as 'ffffff'; // oops
@@ -388,8 +388,8 @@ simple key in object: [signature-verification-failure]
 
 Error ----------------------------------------------------------------------------------------------------- test2.js:9:1
 
-Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because string literal `00ff00` [1] is
-incompatible with string literal `ffffff` [2]. [incompatible-type]
+Cannot cast `ColorIdToNumber[ColorId.GREEN]` to string literal `ffffff` because `"00ff00"` [1] is incompatible with
+`"ffffff"` [2]. [incompatible-type]
 
    test2.js:9:1
    9| ColorIdToNumber[ColorId.GREEN] as 'ffffff'; // oops

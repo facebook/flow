@@ -147,7 +147,7 @@ No errors!
 Error ------------------------------------------------------------------------------- -:17:1
 
 Cannot call `prettyPrint` because: [incompatible-type]
- - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
+ - Either in index `0`: `"currency"` [1] is incompatible with `"choice"` [2].
  - Or `["currency", 1]` [3] has 2 elements but `["currency", dollars: number, cents: number]` [4] has 3 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -174,7 +174,7 @@ References:
 Error ------------------------------------------------------------------------------- -:18:1
 
 Cannot call `prettyPrint` because: [incompatible-type]
- - Either in index `0`: string literal `currency` [1] is incompatible with string literal `choice` [2].
+ - Either in index `0`: `"currency"` [1] is incompatible with `"choice"` [2].
  - Or `["currency", true]` [3] has 2 elements but `["currency", dollars: number, cents: number]` [4] has 3 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

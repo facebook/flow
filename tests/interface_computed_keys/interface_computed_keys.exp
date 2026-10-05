@@ -446,7 +446,7 @@ Cannot get `accessorSplit.a` because property `a` is not readable. [cannot-read]
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:139:1
 
-Cannot get `dual['a']` because string `a` [1] is incompatible with string literal `b` [2]. [incompatible-type]
+Cannot get `dual['a']` because `"a"` [1] is incompatible with `K` [2]. [incompatible-type]
 
    imp.js:139:1
    139| dual['a']; // ERROR: 'a' is the value, and the type won
@@ -544,7 +544,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_keys.js:14:1
 
-Cannot get `oneAlias['b']` because string `b` [1] is incompatible with string literal `a` [2]. [incompatible-type]
+Cannot get `oneAlias['b']` because `"b"` [1] is incompatible with `AliasA` [2]. [incompatible-type]
 
    type_keys.js:14:1
    14| oneAlias['b']; // ERROR: `b` is not in the 'a' indexer key set
@@ -770,7 +770,7 @@ signature over that type, label the key, as in `[key: K]`. [illegal-key]
 
 Error ----------------------------------------------------------------------------------------------- type_keys.js:115:3
 
-Cannot get `x['other']` because string `other` [1] is incompatible with string literal `merged` [2]. [incompatible-type]
+Cannot get `x['other']` because `"other"` [1] is incompatible with `Key` [2]. [incompatible-type]
 
    type_keys.js:115:3
    115|   x['other']; // ERROR: `other` is not in the 'merged' indexer key set
@@ -1168,7 +1168,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:215:1
 
-Cannot get `dual['a']` because string `a` [1] is incompatible with string literal `b` [2]. [incompatible-type]
+Cannot get `dual['a']` because `"a"` [1] is incompatible with `K` [2]. [incompatible-type]
 
    value_keys.js:215:1
    215| dual['a']; // ERROR: 'a' is the value, and the type won

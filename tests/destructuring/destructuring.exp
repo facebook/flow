@@ -1418,8 +1418,7 @@ Missing an annotation on destructuring. [missing-local-annot]
 
 Error ----------------------------------------------------------------------------------------- literal_defaults.js:9:14
 
-Cannot assign string literal `xxx` to `s` because string literal `xxx` [1] is incompatible with string literal `s` [2].
-[incompatible-type]
+Cannot assign string literal `xxx` to `s` because `"xxx"` [1] is incompatible with `"s"` [2]. [incompatible-type]
 
    literal_defaults.js:9:14
    9|   const {s = 'xxx'} = o; // ERROR

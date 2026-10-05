@@ -571,8 +571,7 @@ No errors!
 === block 38 ===
 Error ---------------------------------------------------------------------------- -:13:1
 
-Cannot cast `newObj.b` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot cast `newObj.b` to string literal `a` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    -:13:1
    13| newObj.b as 'a'; // Error! String 'b' is incompatible with 'a'
@@ -733,8 +732,7 @@ Found 1 error
 === block 45 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
-Cannot cast `'hello'` to `Greeting` because string literal `hello` [1] is incompatible with string literal `HELLO` [2].
-[incompatible-type]
+Cannot cast `'hello'` to `Greeting` because `"hello"` [1] is incompatible with `Greeting` [2]. [incompatible-type]
 
    -:4:1
    4| 'hello' as Greeting; // ERROR
@@ -751,8 +749,7 @@ Found 1 error
 === block 46 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
-Cannot cast `'WARNING'` to `Tag` because string literal `WARNING` [1] is incompatible with string literal `warning` [2].
-[incompatible-type]
+Cannot cast `'WARNING'` to `Tag` because `"WARNING"` [1] is incompatible with `Tag` [2]. [incompatible-type]
 
    -:4:1
    4| 'WARNING' as Tag; // ERROR
@@ -769,8 +766,7 @@ Found 1 error
 === block 47 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
-Cannot cast `'flow'` to `Name` because string literal `flow` [1] is incompatible with string literal `Flow` [2].
-[incompatible-type]
+Cannot cast `'flow'` to `Name` because `"flow"` [1] is incompatible with `Name` [2]. [incompatible-type]
 
    -:4:1
    4| 'flow' as Name; // ERROR
@@ -783,8 +779,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast `'FLOW'` to `Name` because string literal `FLOW` [1] is incompatible with string literal `Flow` [2].
-[incompatible-type]
+Cannot cast `'FLOW'` to `Name` because `"FLOW"` [1] is incompatible with `Name` [2]. [incompatible-type]
 
    -:5:1
    5| 'FLOW' as Name; // ERROR
@@ -801,8 +796,7 @@ Found 2 errors
 === block 48 ===
 Error ----------------------------------------------------------------------------- -:4:1
 
-Cannot cast `'FullName'` to `Field` because string literal `FullName` [1] is incompatible with string literal
-`fullName` [2]. [incompatible-type]
+Cannot cast `'FullName'` to `Field` because `"FullName"` [1] is incompatible with `Field` [2]. [incompatible-type]
 
    -:4:1
    4| 'FullName' as Field; // ERROR
@@ -815,8 +809,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:5:1
 
-Cannot cast `'fullname'` to `Field` because string literal `fullname` [1] is incompatible with string literal
-`fullName` [2]. [incompatible-type]
+Cannot cast `'fullname'` to `Field` because `"fullname"` [1] is incompatible with `Field` [2]. [incompatible-type]
 
    -:5:1
    5| 'fullname' as Field; // ERROR (the tail is left untouched)

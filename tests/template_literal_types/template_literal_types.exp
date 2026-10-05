@@ -89,8 +89,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:52:3
 
-Cannot cast `x` to string literal `hello mars` because string literal `hello world` [1] is incompatible with string
-literal `hello mars` [2]. [incompatible-type]
+Cannot cast `x` to string literal `hello mars` because `"hello world"` [1] is incompatible with `"hello mars"` [2].
+[incompatible-type]
 
    as_const.js:52:3
    52|   x as "hello mars"; // ERROR
@@ -107,8 +107,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:60:3
 
-Cannot cast `x` to string literal `n124` because string literal `n123` [1] is incompatible with string literal
-`n124` [2]. [incompatible-type]
+Cannot cast `x` to string literal `n124` because `"n123"` [1] is incompatible with `"n124"` [2]. [incompatible-type]
 
    as_const.js:60:3
    60|   x as "n124"; // ERROR
@@ -125,8 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:71:3
 
-Cannot cast `x` to string literal `xa` because string literal `xb` [1] is incompatible with string literal `xa` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `xa` because `"xb"` [1] is incompatible with `"xa"` [2]. [incompatible-type]
 
    as_const.js:71:3
    71|   x as "xa"; // ERROR - missing "xb"
@@ -143,8 +141,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- as_const.js:98:3
 
-Cannot cast `x` to string literal `bye` because string literal `hello` [1] is incompatible with string literal
-`bye` [2]. [incompatible-type]
+Cannot cast `x` to string literal `bye` because `"hello"` [1] is incompatible with `"bye"` [2]. [incompatible-type]
 
    as_const.js:98:3
    98|   x as "bye"; // ERROR
@@ -197,8 +194,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- as_const_import.js:9:1
 
-Cannot cast `exported_folded` to string literal `hello mars` because string literal `hello world` [1] is incompatible
-with string literal `hello mars` [2]. [incompatible-type]
+Cannot cast `exported_folded` to string literal `hello mars` because `"hello world"` [1] is incompatible with
+`"hello mars"` [2]. [incompatible-type]
 
    as_const_import.js:9:1
      9| exported_folded as "hello mars"; // ERROR
@@ -215,8 +212,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- basic.js:5:1
 
-Cannot cast `"world"` to `Plain` because string literal `world` [1] is incompatible with string literal `hello` [2].
-[incompatible-type]
+Cannot cast `"world"` to `Plain` because `"world"` [1] is incompatible with `Plain` [2]. [incompatible-type]
 
    basic.js:5:1
    5| "world" as Plain; // ERROR
@@ -230,8 +226,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:11:1
 
-Cannot cast `'def'` to `TS1` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `'def'` to `TS1` because `"def"` [1] is incompatible with `TS1` [2]. [incompatible-type]
 
    basic.js:11:1
    11| 'def' as TS1; // ERROR
@@ -245,8 +240,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:17:1
 
-Cannot cast `'43'` to `TS2` because string literal `43` [1] is incompatible with string literal `42` [2].
-[incompatible-type]
+Cannot cast `'43'` to `TS2` because `"43"` [1] is incompatible with `TS2` [2]. [incompatible-type]
 
    basic.js:17:1
    17| '43' as TS2; // ERROR
@@ -260,8 +254,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:27:1
 
-Cannot cast `'false'` to `TS3` because string literal `false` [1] is incompatible with string literal `true` [2].
-[incompatible-type]
+Cannot cast `'false'` to `TS3` because `"false"` [1] is incompatible with `TS3` [2]. [incompatible-type]
 
    basic.js:27:1
    27| 'false' as TS3; // ERROR
@@ -289,8 +282,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:38:1
 
-Cannot cast `'101'` to `TS4` because string literal `101` [1] is incompatible with string literal `100` [2].
-[incompatible-type]
+Cannot cast `'101'` to `TS4` because `"101"` [1] is incompatible with `TS4` [2]. [incompatible-type]
 
    basic.js:38:1
    38| '101' as TS4; // ERROR
@@ -346,8 +338,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:54:1
 
-Cannot cast `'5'` to `NegNum` because string literal `5` [1] is incompatible with string literal `-5` [2].
-[incompatible-type]
+Cannot cast `'5'` to `NegNum` because `"5"` [1] is incompatible with `NegNum` [2]. [incompatible-type]
 
    basic.js:54:1
    54| '5' as NegNum; // ERROR
@@ -361,8 +352,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:58:1
 
-Cannot cast `'1'` to `DecNum` because string literal `1` [1] is incompatible with string literal `1.5` [2].
-[incompatible-type]
+Cannot cast `'1'` to `DecNum` because `"1"` [1] is incompatible with `DecNum` [2]. [incompatible-type]
 
    basic.js:58:1
    58| '1' as DecNum; // ERROR
@@ -376,8 +366,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:66:1
 
-Cannot cast `'0xff'` to `HexNum` because string literal `0xff` [1] is incompatible with string literal `255` [2].
-[incompatible-type]
+Cannot cast `'0xff'` to `HexNum` because `"0xff"` [1] is incompatible with `HexNum` [2]. [incompatible-type]
 
    basic.js:66:1
    66| '0xff' as HexNum; // ERROR
@@ -391,8 +380,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:70:1
 
-Cannot cast `'1_000'` to `SepNum` because string literal `1_000` [1] is incompatible with string literal `1000` [2].
-[incompatible-type]
+Cannot cast `'1_000'` to `SepNum` because `"1_000"` [1] is incompatible with `SepNum` [2]. [incompatible-type]
 
    basic.js:70:1
    70| '1_000' as SepNum; // ERROR
@@ -520,8 +508,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:137:1
 
-Cannot cast `'abba'` to `D1` because string literal `abba` [1] is incompatible with string literal `abab` [2].
-[incompatible-type]
+Cannot cast `'abba'` to `D1` because `"abba"` [1] is incompatible with `D1` [2]. [incompatible-type]
 
    basic.js:137:1
    137| 'abba' as D1; // ERROR
@@ -925,8 +912,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:279:1
 
-Cannot cast `'pre_other_post'` to `NullInterp` because string literal `pre_other_post` [1] is incompatible with string
-literal `pre_null_post` [2]. [incompatible-type]
+Cannot cast `'pre_other_post'` to `NullInterp` because `"pre_other_post"` [1] is incompatible with `NullInterp` [2].
+[incompatible-type]
 
    basic.js:279:1
    279| 'pre_other_post' as NullInterp; // ERROR
@@ -940,8 +927,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:283:1
 
-Cannot cast `'<null>'` to `UndefInterp` because string literal `<null>` [1] is incompatible with string literal
-`<undefined>` [2]. [incompatible-type]
+Cannot cast `'<null>'` to `UndefInterp` because `"<null>"` [1] is incompatible with `UndefInterp` [2].
+[incompatible-type]
 
    basic.js:283:1
    283| '<null>' as UndefInterp; // ERROR
@@ -1013,8 +1000,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- basic.js:393:1
 
-Cannot cast `'prefix_other'` to `OneOption` because string literal `prefix_other` [1] is incompatible with string
-literal `prefix_only` [2]. [incompatible-type]
+Cannot cast `'prefix_other'` to `OneOption` because `"prefix_other"` [1] is incompatible with `OneOption` [2].
+[incompatible-type]
 
    basic.js:393:1
    393| 'prefix_other' as OneOption; // ERROR
@@ -1029,7 +1016,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:409:1
 
 Cannot cast `'1'` to `Spacing` because: [incompatible-type]
- - Either string literal `1` [1] is incompatible with string literal `0` [2].
+ - Either `"1"` [1] is incompatible with `"0"` [2].
  - Or `"1"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1051,7 +1038,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:410:1
 
 Cannot cast `'px'` to `Spacing` because: [incompatible-type]
- - Either string literal `px` [1] is incompatible with string literal `0` [2].
+ - Either `"px"` [1] is incompatible with `"0"` [2].
  - Or `"px"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1073,7 +1060,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:411:1
 
 Cannot cast `'12em'` to `Spacing` because: [incompatible-type]
- - Either string literal `12em` [1] is incompatible with string literal `0` [2].
+ - Either `"12em"` [1] is incompatible with `"0"` [2].
  - Or `"12em"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1095,7 +1082,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:412:1
 
 Cannot cast `'s0'` to `Spacing` because: [incompatible-type]
- - Either string literal `s0` [1] is incompatible with string literal `0` [2].
+ - Either `"s0"` [1] is incompatible with `"0"` [2].
  - Or `"s0"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1117,7 +1104,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:413:1
 
 Cannot cast `'s21'` to `Spacing` because: [incompatible-type]
- - Either string literal `s21` [1] is incompatible with string literal `0` [2].
+ - Either `"s21"` [1] is incompatible with `"0"` [2].
  - Or `"s21"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1139,7 +1126,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:414:1
 
 Cannot cast `'red'` to `Spacing` because: [incompatible-type]
- - Either string literal `red` [1] is incompatible with string literal `0` [2].
+ - Either `"red"` [1] is incompatible with `"0"` [2].
  - Or `"red"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1184,9 +1171,9 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:426:1
 
 Cannot cast `'0 0 0 0 0'` to `SpacingShorthand` because: [incompatible-type]
- - Either string literal `0 0 0 0` [1] is incompatible with string literal `0` [2].
- - Or string literal `0 0 0` [1] is incompatible with string literal `0` [2].
- - Or string literal `0 0` [1] is incompatible with string literal `0` [2].
+ - Either `"0 0 0 0"` [1] is incompatible with `"0"` [2].
+ - Or `"0 0 0"` [1] is incompatible with `"0"` [2].
+ - Or `"0 0"` [1] is incompatible with `"0"` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1227,7 +1214,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:428:1
 
 Cannot cast `'foo bar'` to `SpacingShorthand` because: [incompatible-type]
- - Either string literal `foo` [1] is incompatible with string literal `0` [2].
+ - Either `"foo"` [1] is incompatible with `"0"` [2].
  - Or `"foo"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1249,7 +1236,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- basic.js:429:1
 
 Cannot cast `'s21 0'` to `SpacingShorthand` because: [incompatible-type]
- - Either string literal `s21` [1] is incompatible with string literal `0` [2].
+ - Either `"s21"` [1] is incompatible with `"0"` [2].
  - Or `"s21"` [1] is incompatible with ``${number}px`` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1412,8 +1399,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inference.js:5:1
 
-Cannot cast `stripPrefix(...)` to string literal `other` because string literal `value` [1] is incompatible with string
-literal `other` [2]. [incompatible-type]
+Cannot cast `stripPrefix(...)` to string literal `other` because `"value"` [1] is incompatible with `"other"` [2].
+[incompatible-type]
 
    inference.js:5:1
    5| stripPrefix('data-value') as 'other'; // ERROR
@@ -1430,8 +1417,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inference.js:9:1
 
-Cannot cast `f(...)` to string literal `x` because string literal `world` [1] is incompatible with string literal
-`x` [2]. [incompatible-type]
+Cannot cast `f(...)` to string literal `x` because `"world"` [1] is incompatible with `"x"` [2]. [incompatible-type]
 
    inference.js:9:1
    9| f('hello world') as 'x'; // ERROR
@@ -1448,8 +1434,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:23:1
 
-Cannot cast `greet(...)` to string literal `Hello, Other!` because string literal `Hello, World!` [1] is incompatible
-with string literal `Hello, Other!` [2]. [incompatible-type]
+Cannot cast `greet(...)` to string literal `Hello, Other!` because `"Hello, World!"` [1] is incompatible with
+`"Hello, Other!"` [2]. [incompatible-type]
 
    inference.js:23:1
    23| greet('World') as 'Hello, Other!'; // ERROR
@@ -1466,8 +1452,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:31:1
 
-Cannot cast `kv.key` to string literal `age` because string literal `name` [1] is incompatible with string literal
-`age` [2]. [incompatible-type]
+Cannot cast `kv.key` to string literal `age` because `"name"` [1] is incompatible with `"age"` [2]. [incompatible-type]
 
    inference.js:31:1
    31| kv.key as 'age'; // ERROR
@@ -1484,8 +1469,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:32:1
 
-Cannot cast `kv.value` to string literal `Bob` because string literal `Alice` [1] is incompatible with string literal
-`Bob` [2]. [incompatible-type]
+Cannot cast `kv.value` to string literal `Bob` because `"Alice"` [1] is incompatible with `"Bob"` [2].
+[incompatible-type]
 
    inference.js:32:1
    32| kv.value as 'Bob'; // ERROR
@@ -1516,8 +1501,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:54:1
 
-Cannot cast `r1[0]` to string literal `admins` because string literal `users` [1] is incompatible with string literal
-`admins` [2]. [incompatible-type]
+Cannot cast `r1[0]` to string literal `admins` because `"users"` [1] is incompatible with `"admins"` [2].
+[incompatible-type]
 
    inference.js:54:1
    54| r1[0] as 'admins'; // ERROR
@@ -1534,8 +1519,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:55:1
 
-Cannot cast `r1[1]` to string literal `456` because string literal `123` [1] is incompatible with string literal
-`456` [2]. [incompatible-type]
+Cannot cast `r1[1]` to string literal `456` because `"123"` [1] is incompatible with `"456"` [2]. [incompatible-type]
 
    inference.js:55:1
    55| r1[1] as '456'; // ERROR
@@ -1552,8 +1536,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:65:1
 
-Cannot cast `t20[0]` to string literal `3` because string literal `1` [1] is incompatible with string literal `3` [2].
-[incompatible-type]
+Cannot cast `t20[0]` to string literal `3` because `"1"` [1] is incompatible with `"3"` [2]. [incompatible-type]
 
    inference.js:65:1
    65| t20[0] as '3'; // ERROR
@@ -1570,8 +1553,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:71:1
 
-Cannot cast `t21[1]` to string literal `baz` because string literal `bar` [1] is incompatible with string literal
-`baz` [2]. [incompatible-type]
+Cannot cast `t21[1]` to string literal `baz` because `"bar"` [1] is incompatible with `"baz"` [2]. [incompatible-type]
 
    inference.js:71:1
    71| t21[1] as 'baz'; // ERROR
@@ -1622,8 +1604,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:86:1
 
-Cannot cast `t24[1]` to string literal `2` because string literal `2,3,4` [1] is incompatible with string literal
-`2` [2]. [incompatible-type]
+Cannot cast `t24[1]` to string literal `2` because `"2,3,4"` [1] is incompatible with `"2"` [2]. [incompatible-type]
 
    inference.js:86:1
    86| t24[1] as '2'; // ERROR (greedy: tail keeps the rest)
@@ -1640,8 +1621,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:98:1
 
-Cannot cast `sf1.head` to string literal `world` because string literal `hello` [1] is incompatible with string literal
-`world` [2]. [incompatible-type]
+Cannot cast `sf1.head` to string literal `world` because `"hello"` [1] is incompatible with `"world"` [2].
+[incompatible-type]
 
    inference.js:98:1
    98| sf1.head as 'world'; // ERROR
@@ -1658,8 +1639,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inference.js:99:1
 
-Cannot cast `sf1.tail` to string literal `foo` because string literal `world:foo` [1] is incompatible with string
-literal `foo` [2]. [incompatible-type]
+Cannot cast `sf1.tail` to string literal `foo` because `"world:foo"` [1] is incompatible with `"foo"` [2].
+[incompatible-type]
 
    inference.js:99:1
    99| sf1.tail as 'foo'; // ERROR
@@ -1676,8 +1657,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:106:1
 
-Cannot cast `sf2.head` to string literal `wrong` because string literal `no-colon` [1] is incompatible with string
-literal `wrong` [2]. [incompatible-type]
+Cannot cast `sf2.head` to string literal `wrong` because `"no-colon"` [1] is incompatible with `"wrong"` [2].
+[incompatible-type]
 
    inference.js:106:1
    106| sf2.head as 'wrong'; // ERROR
@@ -1709,8 +1690,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:118:1
 
-Cannot cast `'other.com'` to `ED1` because string literal `other.com` [1] is incompatible with string literal
-`example.com` [2]. [incompatible-type]
+Cannot cast `'other.com'` to `ED1` because `"other.com"` [1] is incompatible with `"example.com"` [2].
+[incompatible-type]
 
    inference.js:118:1
    118| 'other.com' as ED1; // ERROR
@@ -1724,8 +1705,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:122:1
 
-Cannot cast `'example.com'` to `ED2` because string literal `example.com` [1] is incompatible with string literal
-`test.org` [2]. [incompatible-type]
+Cannot cast `'example.com'` to `ED2` because `"example.com"` [1] is incompatible with `"test.org"` [2].
+[incompatible-type]
 
    inference.js:122:1
    122| 'example.com' as ED2; // ERROR
@@ -1781,8 +1762,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:145:1
 
-Cannot cast `'strange'` to `BB` because string literal `strange` [1] is incompatible with string literal
-`Every thing is ok!` [2]. [incompatible-type]
+Cannot cast `'strange'` to `BB` because `"strange"` [1] is incompatible with `"Every thing is ok!"` [2].
+[incompatible-type]
 
    inference.js:145:1
    145| 'strange' as BB; // ERROR
@@ -1895,8 +1876,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:195:1
 
-Cannot cast `t25[0]` to string literal `xy` because string literal `ab` [1] is incompatible with string literal
-`xy` [2]. [incompatible-type]
+Cannot cast `t25[0]` to string literal `xy` because `"ab"` [1] is incompatible with `"xy"` [2]. [incompatible-type]
 
    inference.js:195:1
    195| t25[0] as 'xy'; // ERROR
@@ -1913,8 +1893,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:201:1
 
-Cannot cast `t26[1]` to string literal `c` because empty string [1] is incompatible with string literal `c` [2].
-[incompatible-type]
+Cannot cast `t26[1]` to string literal `c` because `""` [1] is incompatible with `"c"` [2]. [incompatible-type]
 
    inference.js:201:1
    201| t26[1] as 'c'; // ERROR
@@ -1948,8 +1927,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:225:1
 
-Cannot cast `l1[0]` to string literal `X` because string literal `F` [1] is incompatible with string literal `X` [2].
-[incompatible-type]
+Cannot cast `l1[0]` to string literal `X` because `"F"` [1] is incompatible with `"X"` [2]. [incompatible-type]
 
    inference.js:225:1
    225| l1[0] as 'X'; // ERROR (l1[0] narrows to 'F')
@@ -1998,8 +1976,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:268:1
 
-Cannot cast `'qux'` to `S1_match` because string literal `qux` [1] is incompatible with string literal `baz` [2].
-[incompatible-type]
+Cannot cast `'qux'` to `S1_match` because `"qux"` [1] is incompatible with `"baz"` [2]. [incompatible-type]
 
    inference.js:268:1
    268| 'qux' as S1_match; // ERROR
@@ -2089,8 +2066,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:297:1
 
-Cannot cast `'xyz'` to `TF4` because string literal `xyz` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `'xyz'` to `TF4` because `"xyz"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    inference.js:297:1
    297| 'xyz' as TF4; // ERROR
@@ -2121,8 +2097,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:317:1
 
-Cannot cast `p4_1[0]` to string literal `x` because string literal `a` [1] is incompatible with string literal `x` [2].
-[incompatible-type]
+Cannot cast `p4_1[0]` to string literal `x` because `"a"` [1] is incompatible with `"x"` [2]. [incompatible-type]
 
    inference.js:317:1
    317| p4_1[0] as 'x'; // ERROR
@@ -2139,8 +2114,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:324:1
 
-Cannot cast `p5_1[4]` to string literal `x` because string literal `e` [1] is incompatible with string literal `x` [2].
-[incompatible-type]
+Cannot cast `p5_1[4]` to string literal `x` because `"e"` [1] is incompatible with `"x"` [2]. [incompatible-type]
 
    inference.js:324:1
    324| p5_1[4] as 'x'; // ERROR
@@ -2157,8 +2131,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:338:1
 
-Cannot cast `' hello'` to `TR1` because string literal ` hello` [1] is incompatible with string literal `hello` [2].
-[incompatible-type]
+Cannot cast `' hello'` to `TR1` because `" hello"` [1] is incompatible with `"hello"` [2]. [incompatible-type]
 
    inference.js:338:1
    338| ' hello' as TR1; // ERROR
@@ -2172,8 +2145,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:342:1
 
-Cannot cast `'other'` to `TR2` because string literal `other` [1] is incompatible with string literal `no_spaces` [2].
-[incompatible-type]
+Cannot cast `'other'` to `TR2` because `"other"` [1] is incompatible with `"no_spaces"` [2]. [incompatible-type]
 
    inference.js:342:1
    342| 'other' as TR2; // ERROR
@@ -2187,8 +2159,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:358:1
 
-Cannot cast `sp1[0]` to string literal `x` because string literal `a` [1] is incompatible with string literal `x` [2].
-[incompatible-type]
+Cannot cast `sp1[0]` to string literal `x` because `"a"` [1] is incompatible with `"x"` [2]. [incompatible-type]
 
    inference.js:358:1
    358| sp1[0] as 'x'; // ERROR
@@ -2205,8 +2176,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:366:1
 
-Cannot cast `sp2[0]` to string literal `x` because string literal `h` [1] is incompatible with string literal `x` [2].
-[incompatible-type]
+Cannot cast `sp2[0]` to string literal `x` because `"h"` [1] is incompatible with `"x"` [2]. [incompatible-type]
 
    inference.js:366:1
    366| sp2[0] as 'x'; // ERROR
@@ -2282,8 +2252,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:415:1
 
-Cannot cast `'helloX'` to `RA3` because string literal `helloX` [1] is incompatible with string literal `hello` [2].
-[incompatible-type]
+Cannot cast `'helloX'` to `RA3` because `"helloX"` [1] is incompatible with `"hello"` [2]. [incompatible-type]
 
    inference.js:415:1
    415| 'helloX' as RA3; // ERROR
@@ -2312,8 +2281,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inference.js:429:1
 
-Cannot cast `pick(...)` to string literal `bar` because string literal `foo` [1] is incompatible with string literal
-`bar` [2]. [incompatible-type]
+Cannot cast `pick(...)` to string literal `bar` because `"foo"` [1] is incompatible with `"bar"` [2].
+[incompatible-type]
 
    inference.js:429:1
    429| pick('getfoo') as 'bar'; // ERROR
@@ -2331,10 +2300,10 @@ References:
 Error ----------------------------------------------------------------------------------------------- path_test.js:44:13
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
- - Either string literal `invalid` [1] is incompatible with string literal `age` [2].
- - Or string literal `invalid` [1] is incompatible with string literal `firstName` [2].
- - Or string literal `invalid` [1] is incompatible with string literal `lastName` [2].
- - Or string literal `invalid` [1] is incompatible with string literal `address` [2].
+ - Either `"invalid"` [1] is incompatible with `"age"` [2].
+ - Or `"invalid"` [1] is incompatible with `"firstName"` [2].
+ - Or `"invalid"` [1] is incompatible with `"lastName"` [2].
+ - Or `"invalid"` [1] is incompatible with `"address"` [2].
  - Or property `invalid` is missing in `Obj` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2356,12 +2325,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- path_test.js:45:13
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
- - Either string literal `address.invalid` [1] is incompatible with string literal `age` [2].
- - Or string literal `address.invalid` [1] is incompatible with string literal `firstName` [2].
- - Or string literal `address.invalid` [1] is incompatible with string literal `lastName` [2].
- - Or string literal `address.invalid` [1] is incompatible with string literal `address` [2].
- - Or string literal `invalid` [1] is incompatible with string literal `city` [3].
- - Or string literal `invalid` [1] is incompatible with string literal `state` [3].
+ - Either `"address.invalid"` [1] is incompatible with `"age"` [2].
+ - Or `"address.invalid"` [1] is incompatible with `"firstName"` [2].
+ - Or `"address.invalid"` [1] is incompatible with `"lastName"` [2].
+ - Or `"address.invalid"` [1] is incompatible with `"address"` [2].
+ - Or `"invalid"` [1] is incompatible with `"city"` [3].
+ - Or `"invalid"` [1] is incompatible with `"state"` [3].
  - Or property `address.invalid` is missing in `Obj` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

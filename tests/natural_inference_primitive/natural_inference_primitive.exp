@@ -14,8 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:43
 
-Cannot create `Foo` element because in property `foo`: string literal `b` [1] is incompatible with string literal
-`a` [2]. [incompatible-type]
+Cannot create `Foo` element because in property `foo`: `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    custom-jsx.js:16:43
    16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
@@ -43,8 +42,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:42:3
 
-Cannot cast `abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:42:3
    42|   abc as "def" // error "abc" ~> "def"
@@ -61,8 +59,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:44:8
 
-Cannot cast `_` to `typeof abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:44:8
    44|   _ as "def" as typeof abc; // error "def" ~> "abc"
@@ -231,8 +228,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:78:3
 
-Cannot cast `abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:78:3
    78|   abcRef as "def" // error "abc" ~> "def"
@@ -249,8 +245,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- imported.js:80:8
 
-Cannot cast `_` to `typeof abcRef` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:80:8
    80|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
@@ -357,8 +352,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:105:3
 
-Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `obj.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:105:3
    105|   obj.abc as "abc"; // error string ~> "abc"
@@ -427,7 +421,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:112:3
 
-Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `spread.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    imported.js:112:3
@@ -498,7 +492,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:119:3
 
-Cannot cast `objRefs.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `objRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    imported.js:119:3
@@ -516,7 +510,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:120:3
 
-Cannot cast `objRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `objRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    imported.js:120:3
@@ -534,8 +528,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:121:3
 
-Cannot cast `spreadObjRefs.abc` to string literal `abc` because string [1] is incompatible with string literal
-`abc` [2]. [incompatible-type]
+Cannot cast `spreadObjRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
+[incompatible-type]
 
    imported.js:121:3
    121|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
@@ -552,8 +546,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:122:3
 
-Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal
-`abc` [2]. [incompatible-type]
+Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
+[incompatible-type]
 
    imported.js:122:3
    122|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
@@ -570,8 +564,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:128:3
 
-Cannot cast `asConst.abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `asConst.abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
+[incompatible-type]
 
    imported.js:128:3
    128|   asConst.abc as "def"; // error "abc" ~> "def"
@@ -588,8 +582,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:129:3
 
-Cannot cast `asConst.abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string
-literal `def` [2]. [incompatible-type]
+Cannot cast `asConst.abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
+[incompatible-type]
 
    imported.js:129:3
    129|   asConst.abcRef as "def"; // error "abc" ~> "def"
@@ -606,8 +600,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:130:8
 
-Cannot cast `_` to `typeof asConst.abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof asConst.abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:130:8
    130|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
@@ -621,8 +614,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:131:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because string literal `def` [1] is incompatible with string literal
-`abc` [2]. [incompatible-type]
+Cannot cast `_` to `typeof asConst.abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:131:8
    131|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
@@ -636,8 +628,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:132:8
 
-Cannot cast `_` to `typeof asConst.abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof asConst.abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:132:8
    132|   _ as string as typeof asConst.abc; // error string ~> "abc"
@@ -651,8 +642,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:133:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof asConst.abcRef` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:133:8
    133|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
@@ -666,8 +656,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:144:3
 
-Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:144:3
    144|   x.abc as "abc"; // error string ~> "abc"
@@ -684,7 +673,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:145:3
 
-Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    imported.js:145:3
@@ -702,8 +691,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:149:3
 
-Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:149:3
    149|   x.abc as "abc"; // error string ~> "abc"
@@ -720,7 +708,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:150:3
 
-Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    imported.js:150:3
@@ -1036,8 +1024,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:341:3
 
-Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:341:3
    341|   foo(() => abc) as 'def'; // error "abc" ~> "def"
@@ -1054,8 +1041,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:347:3
 
-Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:347:3
    347|   foo([abc]) as 'def'; // error "abc" ~> "def"
@@ -1072,8 +1058,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:357:3
 
-Cannot cast `m` to string literal `abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `m` to string literal `abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    imported.js:357:3
    357|   m as 'abc'; // error 'def' ~> 'abc'
@@ -1090,8 +1075,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:358:3
 
-Cannot cast `m` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
-[incompatible-type]
+Cannot cast `m` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:358:3
    358|   m as 'def'; // error 'abc' ~> 'def'
@@ -1108,8 +1092,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:364:3
 
-Cannot cast `x` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    imported.js:364:3
    364|   x as 'def'; // error 'abc' ~> 'def'
@@ -1183,8 +1166,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_pragma.js:12:27
 
-Cannot create `C` element because in property `foo` > array element > property `bar`: string literal `BAK` [1] is
-incompatible with string literal `BAZ` [2]. [incompatible-type]
+Cannot create `C` element because in property `foo` > array element > property `bar`: `"BAK"` [1] is incompatible with
+`"BAZ"` [2]. [incompatible-type]
 
    jsx_pragma.js:12:27
    12| const c2 = <C foo={[{bar: 'BAK'}]} />; // error 'BAZ' != 'BAK'
@@ -1198,8 +1181,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:37:3
 
-Cannot cast `abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:37:3
    37|   abc as "def" // error "abc" ~> "def"
@@ -1216,8 +1198,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:39:8
 
-Cannot cast `_` to `typeof abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:39:8
    39|   _ as "def" as typeof abc; // error "def" ~> "abc"
@@ -1386,8 +1367,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:73:3
 
-Cannot cast `abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:73:3
    73|   abcRef as "def" // error "abc" ~> "def"
@@ -1404,8 +1384,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- local.js:75:8
 
-Cannot cast `_` to `typeof abcRef` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:75:8
    75|   _ as "def" as typeof abcRef; // error "def" ~> "abc"
@@ -1512,8 +1491,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:100:3
 
-Cannot cast `obj.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `obj.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:100:3
    100|   obj.abc as "abc"; // error string ~> "abc"
@@ -1582,7 +1560,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:107:3
 
-Cannot cast `spread.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `spread.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    local.js:107:3
@@ -1653,7 +1631,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:114:3
 
-Cannot cast `objRefs.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `objRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    local.js:114:3
@@ -1671,7 +1649,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:115:3
 
-Cannot cast `objRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `objRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    local.js:115:3
@@ -1689,8 +1667,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:116:3
 
-Cannot cast `spreadObjRefs.abc` to string literal `abc` because string [1] is incompatible with string literal
-`abc` [2]. [incompatible-type]
+Cannot cast `spreadObjRefs.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
+[incompatible-type]
 
    local.js:116:3
    116|   spreadObjRefs.abc as "abc"; // error string ~> "abc"
@@ -1707,8 +1685,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:117:3
 
-Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because string [1] is incompatible with string literal
-`abc` [2]. [incompatible-type]
+Cannot cast `spreadObjRefs.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
+[incompatible-type]
 
    local.js:117:3
    117|   spreadObjRefs.abcRef as "abc"; // error string ~> "abc"
@@ -1725,8 +1703,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:123:3
 
-Cannot cast `asConst.abc` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `asConst.abc` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
+[incompatible-type]
 
    local.js:123:3
    123|   asConst.abc as "def"; // error "abc" ~> "def"
@@ -1743,8 +1721,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:124:3
 
-Cannot cast `asConst.abcRef` to string literal `def` because string literal `abc` [1] is incompatible with string
-literal `def` [2]. [incompatible-type]
+Cannot cast `asConst.abcRef` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2].
+[incompatible-type]
 
    local.js:124:3
    124|   asConst.abcRef as "def"; // error "abc" ~> "def"
@@ -1761,8 +1739,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:125:8
 
-Cannot cast `_` to `typeof asConst.abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof asConst.abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:125:8
    125|   _ as "def" as typeof asConst.abc; // error "def" ~> "abc"
@@ -1776,8 +1753,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:126:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because string literal `def` [1] is incompatible with string literal
-`abc` [2]. [incompatible-type]
+Cannot cast `_` to `typeof asConst.abcRef` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:126:8
    126|   _ as "def" as typeof asConst.abcRef; // error "def" ~> "abc"
@@ -1791,8 +1767,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:127:8
 
-Cannot cast `_` to `typeof asConst.abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof asConst.abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:127:8
    127|   _ as string as typeof asConst.abc; // error string ~> "abc"
@@ -1806,8 +1781,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:128:8
 
-Cannot cast `_` to `typeof asConst.abcRef` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `_` to `typeof asConst.abcRef` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:128:8
    128|   _ as string as typeof asConst.abcRef; // error string ~> "abc"
@@ -1821,8 +1795,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:139:3
 
-Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:139:3
    139|   x.abc as "abc"; // error string ~> "abc"
@@ -1839,7 +1812,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:140:3
 
-Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    local.js:140:3
@@ -1857,8 +1830,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:144:3
 
-Cannot cast `x.abc` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `x.abc` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:144:3
    144|   x.abc as "abc"; // error string ~> "abc"
@@ -1875,7 +1847,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:145:3
 
-Cannot cast `x.abcRef` to string literal `abc` because string [1] is incompatible with string literal `abc` [2].
+Cannot cast `x.abcRef` to string literal `abc` because `string` [1] is incompatible with `"abc"` [2].
 [incompatible-type]
 
    local.js:145:3
@@ -2090,7 +2062,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- local.js:200:3
 
 Cannot cast `o3.f` to union type because: [incompatible-type]
- - Either in property `a`: string [1] is incompatible with string literal `a` [2].
+ - Either in property `a`: `string` [1] is incompatible with `"a"` [2].
  - Or object literal [3] is incompatible with `"foo"` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -2294,8 +2266,7 @@ This condition is truthy. [constant-condition]
 
 Error --------------------------------------------------------------------------------------------------- local.js:399:3
 
-Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:399:3
    399|   foo(() => abc) as 'def'; // error "abc" ~> "def"
@@ -2312,8 +2283,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:405:3
 
-Cannot cast `foo(...)` to string literal `def` because string literal `abc` [1] is incompatible with string literal
-`def` [2]. [incompatible-type]
+Cannot cast `foo(...)` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:405:3
    405|   foo([abc]) as 'def'; // error "abc" ~> "def"
@@ -2330,8 +2300,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:415:3
 
-Cannot cast `m1` to string literal `a` because string literal `b` [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot cast `m1` to string literal `a` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    local.js:415:3
    415|   m1 as 'a'; // error 'b' ~> 'a'
@@ -2348,8 +2317,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:416:3
 
-Cannot cast `m1` to string literal `b` because string literal `a` [1] is incompatible with string literal `b` [2].
-[incompatible-type]
+Cannot cast `m1` to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    local.js:416:3
    416|   m1 as 'b'; // error 'a' ~> 'b'
@@ -2366,8 +2334,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:423:3
 
-Cannot cast `m2` to string literal `abc` because string literal `def` [1] is incompatible with string literal `abc` [2].
-[incompatible-type]
+Cannot cast `m2` to string literal `abc` because `"def"` [1] is incompatible with `"abc"` [2]. [incompatible-type]
 
    local.js:423:3
    423|   m2 as 'abc'; // error 'def' ~> 'abc'
@@ -2384,8 +2351,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:424:3
 
-Cannot cast `m2` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
-[incompatible-type]
+Cannot cast `m2` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:424:3
    424|   m2 as 'def'; // error 'abc' ~> 'def'
@@ -2402,8 +2368,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:430:3
 
-Cannot cast `x` to string literal `def` because string literal `abc` [1] is incompatible with string literal `def` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `def` because `"abc"` [1] is incompatible with `"def"` [2]. [incompatible-type]
 
    local.js:430:3
    430|   x as 'def'; // error 'abc' ~> 'def'
@@ -2449,8 +2414,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:448:9
 
-Cannot call `c.set` because in type argument `K`: string [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot call `c.set` because in type argument `K`: `string` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    local.js:448:9
    448|   c.set('b'); // error "b" ~> "a"
@@ -2543,8 +2507,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:484:16
 
-Cannot cast object literal to `Readonly` because in property `a`: string literal `a` [1] is incompatible with string
-literal `b` [2]. [incompatible-type]
+Cannot cast object literal to `Readonly` because in property `a`: `"a"` [1] is incompatible with `"b"` [2].
+[incompatible-type]
 
    local.js:484:16
    484|   ({[KeyName]: KeyName} as Readonly<{[Name]: 'b'}>); // error 'a' ~> 'b'
@@ -2677,8 +2641,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:612:3
 
-Cannot cast template string to string literal `b` because string literal `a` [1] is incompatible with string literal
-`b` [2]. [incompatible-type]
+Cannot cast template string to string literal `b` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    local.js:612:3
    612|   `a` as 'b'; // error
@@ -2760,8 +2723,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:15:24
 
-Cannot call `f` with `'a'` bound to `literalValue` because string literal `a` [1] is incompatible with string literal
-`b` [2]. [incompatible-type]
+Cannot call `f` with `'a'` bound to `literalValue` because `"a"` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    nested_generic_calls.js:15:24
    15|   const y0: C<'b'> = f('a'); // error 'a' ~> 'b'
@@ -2775,8 +2737,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:16:25
 
-Cannot assign `g(...)` to `y1` because in type argument `T` [1] > type argument `T` [1]: string [2] is incompatible with
-string literal `b` [3]. [incompatible-type]
+Cannot assign `g(...)` to `y1` because in type argument `T` [1] > type argument `T` [1]: `string` [2] is incompatible
+with `"b"` [3]. [incompatible-type]
 
    nested_generic_calls.js:16:25
    16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'

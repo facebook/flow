@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- errors.js:9:1
 
-Cannot cast `k` to string literal `c` because at least one member of key set [1], e.g. string literal `a` [2], is
-incompatible with string literal `c` [3]. [incompatible-type]
+Cannot cast `k` to string literal `c` because in at least one member of key set [1]: `"a"` [2] is incompatible with
+`"c"` [3]. [incompatible-type]
 
    errors.js:9:1
    9| k as 'c';
@@ -144,8 +144,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:43:3
 
-Cannot cast `str` to key set because some string with unknown value [1] is incompatible with string literal `hi` [2].
-[incompatible-type]
+Cannot cast `str` to key set because `string` [1] is incompatible with `"hi"` [2]. [incompatible-type]
 
    keys.js:43:3
    43|   str as keyof StrLitDict; // Error: Not all strings are allowed
@@ -159,8 +158,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:45:5
 
-Cannot cast `str` to key set because some string with unknown value [1] is incompatible with string literal `hi` [2].
-[incompatible-type]
+Cannot cast `str` to key set because `string` [1] is incompatible with `"hi"` [2]. [incompatible-type]
 
    keys.js:45:5
    45|     str as keyof StrLitDict; // Error: Not all truthy strings are allowed
@@ -174,8 +172,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:48:3
 
-Cannot cast `'bye'` to key set because property `bye` [1] is incompatible with string literal `hi` [2].
-[incompatible-type]
+Cannot cast `'bye'` to key set because `"bye"` [1] is incompatible with `"hi"` [2]. [incompatible-type]
 
    keys.js:48:3
    48|   'bye' as keyof StrLitDict; // Error: The wrong string literal is not allowed

@@ -60,7 +60,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- both_bounds.js:17:41
 
-string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+`string` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    both_bounds.js:17:41
    17| declare opaque type InvalidNoRepr super string extends 'foo'; // error: string ~> 'foo'
@@ -74,7 +74,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- both_bounds.js:18:31
 
-string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+`string` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    both_bounds.js:18:31
    18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
@@ -88,7 +88,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- both_bounds.js:18:31
 
-string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+`string` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    both_bounds.js:18:31
    18| opaque type InvalidRepr super string extends 'foo' = 'foo'; // error: string ~> 'foo'
@@ -102,8 +102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:22:1
 
-Cannot cast `'b'` to `BothBounds` because string literal `b` [1] is incompatible with `BothBounds` [2].
-[incompatible-type]
+Cannot cast `'b'` to `BothBounds` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    both_bounds.js:22:1
    22| 'b' as BothBounds; // error

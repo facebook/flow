@@ -31,8 +31,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- consume.ts:52:16
 
-Cannot call `needsBox` with object literal bound to `arg` because in property `tag`: string literal `nope` [1] is
-incompatible with string literal `box` [2]. [incompatible-type]
+Cannot call `needsBox` with object literal bound to `arg` because in property `tag`: `"nope"` [1] is incompatible with
+`"box"` [2]. [incompatible-type]
 
    consume.ts:52:16
    52| needsBox({tag: "nope"}); // ERROR -- wrong tag and missing `size`; before the fix the param degraded to `any` and this was wrongly accepted

@@ -87,8 +87,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:9:25
 
-Cannot assign `'world'` to `str2` because string literal `world` [1] is incompatible with string literal `hello` [2].
-[incompatible-type]
+Cannot assign `'world'` to `str2` because `"world"` [1] is incompatible with `"hello"` [2]. [incompatible-type]
 
    -:9:25
    9| let str2: typeof str1 = 'world'; // Error!

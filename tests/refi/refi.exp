@@ -102,8 +102,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- filter_primitives.js:8:5
 
-Cannot cast `'b'` to `typeof maybeStr` because string literal `b` [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot cast `'b'` to `typeof maybeStr` because `"b"` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    filter_primitives.js:8:5
    8|     'b' as typeof maybeStr; // error 'b' ~> 'a'
@@ -496,8 +495,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:188:5
 
-Cannot cast `x` to string literal `b` because string [1] is incompatible with string literal `b` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `b` because `string` [1] is incompatible with `"b"` [2]. [incompatible-type]
 
    heap.js:188:5
    188|     x as 'b'; // error (but only once, string !~> 'b'; 'a' is irrelevant)

@@ -166,8 +166,7 @@ No errors!
 === block 21 ===
 Error ----------------------------------------------------------------------------- -:7:18
 
-Cannot assign `identity(...)` to `bar` because string [1] is incompatible with string literal `bar` [2].
-[incompatible-type]
+Cannot assign `identity(...)` to `bar` because `string` [1] is incompatible with `"bar"` [2]. [incompatible-type]
 
    -:7:18
    7| let bar: 'bar' = identity('bar'); // Error!
@@ -190,7 +189,7 @@ No errors!
 === block 23 ===
 Error ----------------------------------------------------------------------------- -:4:21
 
-Cannot assign `val` to `bar` because string [1] is incompatible with string literal `bar` [2]. [incompatible-type]
+Cannot assign `val` to `bar` because `string` [1] is incompatible with `"bar"` [2]. [incompatible-type]
 
    -:4:21
    4|   let bar: 'bar'  = val; // Error!

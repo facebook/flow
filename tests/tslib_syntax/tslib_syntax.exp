@@ -414,8 +414,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:24:1
 
-Cannot cast `s` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
-[incompatible-type]
+Cannot cast `s` to string literal `bar` because `"foo"` [1] is incompatible with `"bar"` [2]. [incompatible-type]
 
    declare_var_extras.js:24:1
    24| s as 'bar'; // ERROR - 'foo' !== 'bar'
@@ -1546,8 +1545,8 @@ References:
 
 Error ------------------------------------------------------------------------------- property_value_initializer.js:16:1
 
-Cannot cast `c.code` to string literal `wrong` because string literal `NEXT_STATIC_GEN_BAILOUT` [1] is incompatible with
-string literal `wrong` [2]. [incompatible-type]
+Cannot cast `c.code` to string literal `wrong` because `"NEXT_STATIC_GEN_BAILOUT"` [1] is incompatible with
+`"wrong"` [2]. [incompatible-type]
 
    property_value_initializer.js:16:1
    16| c.code as "wrong"; // ERROR - incompatible literal types
@@ -1679,8 +1678,8 @@ Initializer in a `declare` class property must be a literal (string, number, big
 
 Error ------------------------------------------------------------------------- property_value_initializer_import.js:5:1
 
-Cannot cast `e.code` to string literal `wrong` because string literal `EXPORTED_VALUE` [1] is incompatible with string
-literal `wrong` [2]. [incompatible-type]
+Cannot cast `e.code` to string literal `wrong` because `"EXPORTED_VALUE"` [1] is incompatible with `"wrong"` [2].
+[incompatible-type]
 
    property_value_initializer_import.js:5:1
    5| e.code as "wrong"; // ERROR - incompatible literal types

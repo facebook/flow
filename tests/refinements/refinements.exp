@@ -2698,8 +2698,7 @@ References:
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:68:1
 
-Cannot cast `key5` to string literal `a` because string [1] is incompatible with string literal `a` [2].
-[incompatible-type]
+Cannot cast `key5` to string literal `a` because `string` [1] is incompatible with `"a"` [2]. [incompatible-type]
 
    inclusion_check_widening.js:68:1
    68| key5 as 'a'; // error string ~> 'a'
@@ -7984,8 +7983,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:7:13
 
 Cannot yield object literal because: [incompatible-type]
- - Either in property `type`: string [1] is incompatible with string literal `PENDING` [2].
- - Or in property `type`: string [1] is incompatible with string literal `DONE` [3].
+ - Either in property `type`: `string` [1] is incompatible with `"PENDING"` [2].
+ - Or in property `type`: `string` [1] is incompatible with `"DONE"` [3].
 
    issue-7105.js:7:13
    7|       yield { type: "PENDING" }; // TODO(T225770374)
@@ -8006,7 +8005,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:15
 
 Cannot yield object literal because: [incompatible-type]
- - Either in property `type`: string [1] is incompatible with string literal `DONE` [2].
+ - Either in property `type`: `string` [1] is incompatible with `"DONE"` [2].
  - Or property `value` is extra in object literal [3] but missing in `{readonly type: "PENDING"}` [4]. Exact objects do
    not accept extra props.
 
@@ -12482,8 +12481,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:8:5
 
-Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `foo` because `string` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    string.js:8:5
    8|     x as 'foo'; // error
@@ -12500,8 +12498,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:13:7
 
-Cannot cast `x` to string literal `foo` because string [1] is incompatible with string literal `foo` [2].
-[incompatible-type]
+Cannot cast `x` to string literal `foo` because `string` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    string.js:13:7
    13|       x as 'foo'; // error
@@ -12781,7 +12778,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:61:12
 
-Cannot return `x.foo` because string [1] is incompatible with string literal `foo` [2]. [incompatible-type]
+Cannot return `x.foo` because `string` [1] is incompatible with `"foo"` [2]. [incompatible-type]
 
    string.js:61:12
    61|     return x.foo; // error
@@ -12936,7 +12933,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:115:14
 
-Cannot return `x` because string [1] is incompatible with empty string [2]. [incompatible-type]
+Cannot return `x` because `string` [1] is incompatible with `""` [2]. [incompatible-type]
 
    string.js:115:14
    115|       return x; // error
@@ -13312,8 +13309,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:34:29
 
-Cannot cast `x.taste` to string literal `Good` because at least one member of `x.taste` [1], e.g. string literal
-`Bad` [2], is incompatible with string literal `Good` [3]. [incompatible-type]
+Cannot cast `x.taste` to string literal `Good` because in at least one member of `x.taste` [1]: `"Bad"` [2] is
+incompatible with `"Good"` [3]. [incompatible-type]
 
    tagged_union.js:34:29
    34|   if (x.kind === 'Fruit') { x.taste as 'Good'; } // error, Apple.taste = Bad
@@ -13344,8 +13341,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:35:8
 
-Cannot cast `x.raw` to string literal `No` because at least one member of `x.raw` [1], e.g. string literal `Maybe` [2],
-is incompatible with string literal `No` [3]. [incompatible-type]
+Cannot cast `x.raw` to string literal `No` because in at least one member of `x.raw` [1]: `"Maybe"` [2] is incompatible
+with `"No"` [3]. [incompatible-type]
 
    tagged_union.js:35:8
    35|   else x.raw as 'No'; // error, Carrot.raw = Maybe
@@ -13952,8 +13949,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:147:7
 
-Cannot cast `x.str` to string literal `not str` because string literal `str` [1] is incompatible with string literal
-`not str` [2]. [incompatible-type]
+Cannot cast `x.str` to string literal `not str` because `"str"` [1] is incompatible with `"not str"` [2].
+[incompatible-type]
 
    tagged_union.js:147:7
    147|       x.str as 'not str'; // error: 'str' !~> 'not str'
@@ -15522,7 +15519,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:44:1
 
 Cannot call `calc` because: [incompatible-type]
- - Either in index `0`: string literal `abs` [1] is incompatible with string literal `add` [2].
+ - Either in index `0`: `"abs"` [1] is incompatible with `"add"` [2].
  - Or `["abs", -2, 1]` [3] has 3 elements but `["abs", number]` [4] has 2 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -15550,7 +15547,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:47:1
 
 Cannot call `calc` because: [incompatible-type]
- - Either in index `0`: string literal `add` [1] is incompatible with string literal `abs` [2].
+ - Either in index `0`: `"add"` [1] is incompatible with `"abs"` [2].
  - Or `["add", 999]` [3] has 2 elements but `["add", number, number]` [4] has 3 elements.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

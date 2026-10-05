@@ -1,8 +1,7 @@
 Error ------------------------------------------------------------------------------------------- subdir/sublevel.js:3:1
 
-Cannot cast `name` to string literal `node_modules/testproj2` because string literal
-`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
-[incompatible-type]
+Cannot cast `name` to string literal `node_modules/testproj2` because `"subdir/custom_resolve_dir/testproj2"` [1] is
+incompatible with `"node_modules/testproj2"` [2]. [incompatible-type]
 
    subdir/sublevel.js:3:1
    3| name as "node_modules/testproj2"; // Error: Resolve from sibling 'custom_resolve_dir' first!
@@ -19,8 +18,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- toplevel.js:4:1
 
-Cannot cast `name` to string literal `custom_resolve_dir/testproj` because string literal `node_modules/testproj` [1] is
-incompatible with string literal `custom_resolve_dir/testproj` [2]. [incompatible-type]
+Cannot cast `name` to string literal `custom_resolve_dir/testproj` because `"node_modules/testproj"` [1] is incompatible
+with `"custom_resolve_dir/testproj"` [2]. [incompatible-type]
 
    toplevel.js:4:1
    4| name as "custom_resolve_dir/testproj"; // Error: Resolve from node_modules first!

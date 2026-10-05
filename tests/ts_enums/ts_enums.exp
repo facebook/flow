@@ -263,7 +263,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reverse.ts:14:1
 
-Cannot cast `Color[1]` to string literal `Red` because string [1] is incompatible with string literal `Red` [2].
+Cannot cast `Color[1]` to string literal `Red` because `string` [1] is incompatible with `"Red"` [2].
 [incompatible-type]
 
    reverse.ts:14:1

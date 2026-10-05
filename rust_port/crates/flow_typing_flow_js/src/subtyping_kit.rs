@@ -3449,8 +3449,8 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
-                        reason_lower: rl.dupe(),
-                        reason_upper: ru.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, rl.dupe()),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, ru.dupe()),
                         use_op,
                     })),
                 )?;
@@ -3506,8 +3506,8 @@ pub fn rec_sub_t<'cx>(
                 flow_js_utils::add_output_with_env(
                     cx,env,
                     ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
-                        reason_lower: rl,
-                        reason_upper: ru,
+                        lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                         use_op,
                     })),
                 )?;
@@ -3523,8 +3523,8 @@ pub fn rec_sub_t<'cx>(
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EExpectedStringLit(Box::new(EExpectedStringLitData {
-                    reason_lower: rl,
-                    reason_upper: ru,
+                    lower: flow_js_utils::type_reference_with_reason_for_error(l, rl),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(u, ru),
                     use_op,
                 })),
             )?;

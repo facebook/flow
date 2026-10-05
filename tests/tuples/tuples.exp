@@ -848,8 +848,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:25:1
 
-Cannot cast `issue2674[0]` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
-`BAR` [2]. [incompatible-type]
+Cannot cast `issue2674[0]` to string literal `BAR` because `"FOO"` [1] is incompatible with `"BAR"` [2].
+[incompatible-type]
 
    mapped_type_on_tuple.js:25:1
    25| issue2674[0] as 'BAR'; // error
@@ -866,8 +866,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ mapped_type_on_tuple.js:26:16
 
-Cannot assign `'BAR'` to `issue2674[0]` because string literal `BAR` [1] is incompatible with string literal `FOO` [2].
-[incompatible-type]
+Cannot assign `'BAR'` to `issue2674[0]` because `"BAR"` [1] is incompatible with `"FOO"` [2]. [incompatible-type]
 
    mapped_type_on_tuple.js:26:16
    26| issue2674[0] = 'BAR'; // error
