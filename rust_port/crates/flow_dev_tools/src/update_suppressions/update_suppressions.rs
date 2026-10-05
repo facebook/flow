@@ -145,13 +145,15 @@ fn get_errors_for_all_roots(
     let mut errors_by_file: BTreeMap<String, BTreeMap<i64, ErrorsForLine>> = BTreeMap::new();
     for root in roots {
         for (file, errors_in_file) in collate_errors(root.errors.clone()) {
+            let mut relevant_errors = filter_errors(&errors_in_file)
+                .into_iter()
+                .filter(|error| error.level != "warning" || is_unused_suppression(error))
+                .peekable();
+            if relevant_errors.peek().is_none() {
+                continue;
+            }
             let errors_by_line = errors_by_file.entry(file).or_default();
-            let errors_in_file_with_main_source_locs = filter_errors(&errors_in_file);
-            for error in errors_in_file_with_main_source_locs {
-                if error.level == "warning" && !is_unused_suppression(&error) {
-                    // Skip regular warnings
-                    continue;
-                }
+            for error in relevant_errors {
                 // Only errors with locations can be in here
                 let Some(loc) = error
                     .message
