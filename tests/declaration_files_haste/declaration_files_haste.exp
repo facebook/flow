@@ -17,7 +17,7 @@ expression. [signature-verification-failure]
 
 Error ------------------------------------------------------------------------------------------- GenericRecord.js:13:32
 
-`GenericRecordBase` [1] is not a polymorphic type. [incompatible-use]
+`Class<any>` [1] is not a polymorphic type. [incompatible-use]
 
    13| class GenericRecord<T> extends GenericRecordBase<T> {} // ERROR
                                       ^^^^^^^^^^^^^^^^^ [1]
@@ -189,6 +189,50 @@ References:
                                 ^^^^^^ [4]
 
 
+Error ------------------------------------------------------------------------------------ non_polymorphic_super.js:2:20
+
+class `C` [1] is not a polymorphic type. [incompatible-use]
+
+   2| class D<T> extends C<T> {} // ERROR
+                         ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ non_polymorphic_super.js:2:20
+
+class `C` [1] is not a polymorphic type. [incompatible-use]
+
+   non_polymorphic_super.js:2:20
+   2| class D<T> extends C<T> {} // ERROR
+                         ^^^^
+
+References:
+   non_polymorphic_super.js:2:20
+   2| class D<T> extends C<T> {} // ERROR
+                         ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ non_polymorphic_super.js:6:20
+
+`Class<Foo>` [1] is not a polymorphic type. [incompatible-use]
+
+   6| class E<T> extends B<T> {} // ERROR
+                         ^ [1]
+
+
+Error ------------------------------------------------------------------------------------ non_polymorphic_super.js:6:20
+
+`Class<Foo>` [1] is not a polymorphic type. [incompatible-use]
+
+   non_polymorphic_super.js:6:20
+   6| class E<T> extends B<T> {} // ERROR
+                         ^^^^
+
+References:
+   non_polymorphic_super.js:6:20
+   6| class E<T> extends B<T> {} // ERROR
+                         ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
 Cannot cast `Implicit.fun()` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -241,4 +285,4 @@ References:
 
 
 
-Found 14 errors
+Found 18 errors

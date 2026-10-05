@@ -1934,21 +1934,12 @@ pub fn incompatible_type_error_with_lower_kind(
 ) -> ErrorMessage<ALoc> {
     use flow_typing_type::type_util;
 
-    let lower_desc = if matches!(
-        upper.kind,
-        flow_typing_errors::error_message::UpperKind::IncompatibleVarianceCheckT
-    ) && matches!(lower.deref(), TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::ClassT(_)))
-    {
-        TypeOrTypeDescT::TypeDesc(Err(type_util::reason_of_t(lower).desc(true).clone()))
-    } else {
-        type_or_type_desc_for_error(lower)
-    };
     ErrorMessage::EIncompatibleType(Box::new(EIncompatibleTypeData {
         lower_reason: type_util::reason_of_t(lower).dupe(),
         lower_kind,
         lower_loc: type_util::loc_of_t(lower).dupe(),
         lower_def_loc: type_util::def_loc_of_t(lower).dupe(),
-        lower_desc,
+        lower_desc: type_or_type_desc_for_error(lower),
         upper,
         use_op,
     }))
