@@ -4228,9 +4228,6 @@ where
                     providers,
                 } = data.as_ref();
 
-                use flow_common::reason::VirtualReasonDesc::RIdentifier;
-                use flow_common::reason::mk_reason;
-
                 let assignments = if providers.is_empty() {
                     vec![text("one of its initial assignments")]
                 } else if providers.len() == 1 && providers[0] == *declaration {
@@ -4260,8 +4257,6 @@ where
                     features
                 };
 
-                let name_reason = mk_reason(RIdentifier(name.clone()), declaration.dupe());
-
                 let mut features = vec![
                     text("All writes to "),
                     code(name),
@@ -4269,7 +4264,10 @@ where
                 ];
                 features.extend(assignments);
                 features.push(text(". Add an annotation to "));
-                features.push(friendly::ref_map(&loc_of_aloc, &name_reason));
+                features.push(friendly::hardcoded_string_desc_ref(
+                    &format!("`{name}`"),
+                    loc_of_aloc(declaration),
+                ));
                 features.push(text(" if a different type is desired"));
                 friendly::Message(features)
             }
