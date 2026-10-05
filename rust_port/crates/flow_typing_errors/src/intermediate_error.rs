@@ -31,6 +31,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::name_def_types::DefinitionReferenceKind;
 use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
+use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ClassOwnProtoCheckData;
@@ -4861,6 +4862,16 @@ where
         hardcoded_string_desc_ref(&format!("`{}`", reference.name), &reference.loc)
     };
 
+    let null_literal_reference = |loc: &L| {
+        let null = vec![friendly::MessageInline::Code("null".to_string())];
+        let loc = loc_of_aloc(loc);
+        if loc == LOC_NONE {
+            friendly::MessageFeature::Inline(null)
+        } else {
+            friendly::MessageFeature::Reference(null, loc)
+        }
+    };
+
     let render_enum_reference = |reference: &EnumReferenceData<L>| match &reference.name {
         Some(name) => hardcoded_string_desc_ref(&format!("enum `{}`", name), &reference.loc),
         None => hardcoded_string_desc_ref("enum", &reference.loc),
@@ -8600,10 +8611,7 @@ where
                 let null_ref = if *initialized {
                     code("null")
                 } else {
-                    ref_(&mk_reason(
-                        VirtualReasonDesc::RCode("null".into()),
-                        null_loc.dupe(),
-                    ))
+                    null_literal_reference(null_loc)
                 };
                 let mut features = vec![
                     text("Variable "),
@@ -9359,10 +9367,7 @@ where
                 null_loc,
             }) => {
                 let null_ref = match null_loc {
-                    Some(loc) => ref_(&mk_reason(
-                        VirtualReasonDesc::RCode("null".into()),
-                        loc.dupe(),
-                    )),
+                    Some(loc) => null_literal_reference(loc),
                     None => code("null"),
                 };
                 friendly::Message(vec![
