@@ -208,6 +208,60 @@ References:
             ^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- printed_construct_sig.js:4:1
+
+Cannot cast `plain` to number because `interface {new(): number; foo: number}` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   printed_construct_sig.js:4:1
+   4| plain as number; // ERROR: `interface {new(): number; foo: number}`
+      ^^^^^
+
+References:
+   printed_construct_sig.js:3:22
+   3| declare const plain: interface { new(): number; foo: number };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   printed_construct_sig.js:4:10
+   4| plain as number; // ERROR: `interface {new(): number; foo: number}`
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- printed_construct_sig.js:7:1
+
+Cannot cast `generic` to number because `interface {new<T>(x: T): T}` [1] is incompatible with `number` [2].
+[incompatible-type]
+
+   printed_construct_sig.js:7:1
+   7| generic as number; // ERROR: `interface {new<T>(x: T): T}`
+      ^^^^^^^
+
+References:
+   printed_construct_sig.js:6:24
+   6| declare const generic: interface { new<T>(x: T): T };
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   printed_construct_sig.js:7:12
+   7| generic as number; // ERROR: `interface {new<T>(x: T): T}`
+                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ printed_construct_sig.js:10:1
+
+Cannot cast `overloaded` to number because `interface {new(): number; new(x: string): string}` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   printed_construct_sig.js:10:1
+   10| overloaded as number; // ERROR: `interface {new(): number; new(x: string): string}`
+       ^^^^^^^^^^
+
+References:
+   printed_construct_sig.js:9:27
+    9| declare const overloaded: interface { new(): number; new(x: string): string };
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   printed_construct_sig.js:10:15
+   10| overloaded as number; // ERROR: `interface {new(): number; new(x: string): string}`
+                     ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- utilities.js:10:28
 
 Cannot assign array literal to `fp2` because in index `1`: `2` [1] is incompatible with `string` [2].
@@ -644,4 +698,4 @@ References:
 
 
 
-Found 40 errors
+Found 43 errors

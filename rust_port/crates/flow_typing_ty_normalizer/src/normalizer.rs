@@ -2228,7 +2228,10 @@ mod type_converter {
                 None => Ok(Vec::new()),
                 Some(construct_id) => {
                     let ts: Vec<Type> = {
-                        let ft = env.genv.cx.find_call(construct_id);
+                        let ft = flow_typing_flow_common::flow_js_utils::read_construct_t(
+                            env.genv.cx,
+                            construct_id,
+                        );
                         match ft.deref() {
                             TypeInner::IntersectionT(_, rep) => {
                                 rep.members_iter().map(|t| t.dupe()).collect()
