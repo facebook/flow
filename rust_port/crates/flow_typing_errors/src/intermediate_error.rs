@@ -6597,7 +6597,7 @@ where
                 ])
             }
             MessageCannotUseTypeDueToPolarityMismatch {
-                reason_targ,
+                type_param,
                 expected_polarity,
                 actual_polarity,
             } => {
@@ -6610,10 +6610,10 @@ where
                 let actual = polarity_string(actual_polarity);
                 friendly::Message(vec![
                     text("Cannot use "),
-                    ref_(reason_targ),
+                    render_named_reference(type_param),
                     text(&format!(" in an {} ", actual)),
                     text("position because "),
-                    ref_(reason_targ),
+                    render_named_reference(type_param),
                     text(" is expected to occur only in "),
                     text(&format!("{} positions.", expected)),
                 ])

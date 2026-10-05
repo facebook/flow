@@ -2099,7 +2099,7 @@ pub enum Message<L: Dupe> {
     MessageCannotUseThisSuperBeforeSuperCall(VirtualReason<L>),
 
     MessageCannotUseTypeDueToPolarityMismatch {
-        reason_targ: VirtualReason<L>,
+        type_param: NamedReferenceData<L>,
         expected_polarity: Polarity,
         actual_polarity: Polarity,
     },

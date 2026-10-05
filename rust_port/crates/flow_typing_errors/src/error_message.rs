@@ -10350,17 +10350,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 expected_polarity,
                 actual_polarity,
                 ..
-            }) => {
-                let reason_targ = VirtualReason::new(
-                    flow_common::reason::VirtualReasonDesc::RIdentifier(name),
-                    type_param_loc,
-                );
-                Normal(Message::MessageCannotUseTypeDueToPolarityMismatch {
-                    reason_targ,
-                    expected_polarity,
-                    actual_polarity,
-                })
-            }
+            }) => Normal(Message::MessageCannotUseTypeDueToPolarityMismatch {
+                type_param: NamedReferenceData {
+                    loc: type_param_loc,
+                    name,
+                },
+                expected_polarity,
+                actual_polarity,
+            }),
 
             ErrorMessage::EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData {
                 name,
