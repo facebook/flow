@@ -8676,7 +8676,7 @@ where
                     text(value_str),
                     text(". Perhaps you meant to "),
                     text("check for "),
-                    ref_(&mk_reason(VirtualReasonDesc::RNullOrVoid, null_loc.dupe())),
+                    hardcoded_string_desc_ref("null or undefined", null_loc),
                     text("?"),
                 ])
             }
