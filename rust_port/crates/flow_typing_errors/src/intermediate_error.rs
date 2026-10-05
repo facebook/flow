@@ -1451,11 +1451,11 @@ where
                 Vec<ErrorFrame<L>>,
                 Vec<Explanation<L>>,
             ) {
-                let root = |loc: Loc,
-                            frames: (Vec<ErrorFrame<L>>, Vec<Explanation<L>>),
-                            root_reason: &VirtualReason<L>,
-                            root_message: RootMessage<L>,
-                            custom_error_message: Option<Message<L>>|
+                let root_at_loc = |loc: Loc,
+                                   frames: (Vec<ErrorFrame<L>>, Vec<Explanation<L>>),
+                                   root_loc: Loc,
+                                   root_message: RootMessage<L>,
+                                   custom_error_message: Option<Message<L>>|
                  -> (
                     Option<(Loc, RootMessage<L>)>,
                     Option<Message<L>>,
@@ -1463,7 +1463,6 @@ where
                     Vec<ErrorFrame<L>>,
                     Vec<Explanation<L>>,
                 ) {
-                    let root_loc = loc_of_aloc(&root_reason.loc);
                     let specific_loc = root_loc.dupe();
 
                     let final_loc = if root_loc.contains(&loc) && root_loc != loc {
@@ -1479,6 +1478,19 @@ where
                         final_loc,
                         all_frames,
                         explanations,
+                    )
+                };
+                let root = |loc: Loc,
+                            frames: (Vec<ErrorFrame<L>>, Vec<Explanation<L>>),
+                            root_reason: &VirtualReason<L>,
+                            root_message: RootMessage<L>,
+                            custom_error_message: Option<Message<L>>| {
+                    root_at_loc(
+                        loc,
+                        frames,
+                        loc_of_aloc(&root_reason.loc),
+                        root_message,
+                        custom_error_message,
                     )
                 };
 
@@ -1623,66 +1635,36 @@ where
                                 prop,
                                 own_loc,
                                 proto_loc,
-                            }) => {
-                                use flow_common::reason::VirtualReasonDesc::RProperty;
-                                match (own_loc, proto_loc) {
-                                    (None, None) => {
-                                        let (all_frames, explanations) = frames;
-                                        (None, custom_error_message, loc, all_frames, explanations)
-                                    }
-                                    (Some(loc_val), None) => {
-                                        let def = mk_reason(
-                                            RProperty(Some(flow_common::reason::Name::new(
-                                                prop.display_smol_str(),
-                                            ))),
-                                            loc_val.dupe(),
-                                        );
-                                        root(
-                                            loc_of_aloc(loc_val),
-                                            frames,
-                                            &def,
-                                            RootMessage::RootCannotShadowProtoProperty,
-                                            custom_error_message,
-                                        )
-                                    }
-                                    (None, Some(loc_val)) => {
-                                        let def = mk_reason(
-                                            RProperty(Some(flow_common::reason::Name::new(
-                                                prop.display_smol_str(),
-                                            ))),
-                                            loc_val.dupe(),
-                                        );
-                                        root(
-                                            loc_of_aloc(loc_val),
-                                            frames,
-                                            &def,
-                                            RootMessage::RootCannotDefineShadowedProtoProperty,
-                                            custom_error_message,
-                                        )
-                                    }
-                                    (Some(own_loc_val), Some(proto_loc_val)) => {
-                                        let def = mk_reason(
-                                            RProperty(Some(flow_common::reason::Name::new(
-                                                prop.display_smol_str(),
-                                            ))),
-                                            own_loc_val.dupe(),
-                                        );
-                                        let proto = mk_reason(
-                                            RProperty(Some(flow_common::reason::Name::new(
-                                                prop.display_smol_str(),
-                                            ))),
-                                            proto_loc_val.dupe(),
-                                        );
-                                        root(
-                                            loc,
-                                            frames,
-                                            &def,
-                                            RootMessage::RootCannotShadowProto(proto),
-                                            custom_error_message,
-                                        )
-                                    }
+                            }) => match (own_loc, proto_loc) {
+                                (None, None) => {
+                                    let (all_frames, explanations) = frames;
+                                    (None, custom_error_message, loc, all_frames, explanations)
                                 }
-                            }
+                                (Some(loc_val), None) => root_at_loc(
+                                    loc_of_aloc(loc_val),
+                                    frames,
+                                    loc_of_aloc(loc_val),
+                                    RootMessage::RootCannotShadowProtoProperty,
+                                    custom_error_message,
+                                ),
+                                (None, Some(loc_val)) => root_at_loc(
+                                    loc_of_aloc(loc_val),
+                                    frames,
+                                    loc_of_aloc(loc_val),
+                                    RootMessage::RootCannotDefineShadowedProtoProperty,
+                                    custom_error_message,
+                                ),
+                                (Some(own_loc_val), Some(proto_loc_val)) => root_at_loc(
+                                    loc,
+                                    frames,
+                                    loc_of_aloc(own_loc_val),
+                                    RootMessage::RootCannotShadowProto(NamedReferenceData {
+                                        loc: proto_loc_val.dupe(),
+                                        name: prop.display_smol_str(),
+                                    }),
+                                    custom_error_message,
+                                ),
+                            },
 
                             VirtualRootUseOp::Coercion { from, target } => root(
                                 loc,
@@ -5283,7 +5265,13 @@ where
                 ),
                 RootMessage::RootCannotShadowProto(proto) => (
                     RootKind::OperationRoot,
-                    friendly::Message(vec![text("Cannot shadow proto "), ref_(proto)]),
+                    friendly::Message(vec![
+                        text("Cannot shadow proto "),
+                        hardcoded_string_desc_ref(
+                            &format!("property `{}`", proto.name),
+                            &proto.loc,
+                        ),
+                    ]),
                 ),
                 RootMessage::RootCannotShadowProtoProperty => (
                     RootKind::OperationRoot,

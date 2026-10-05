@@ -1214,7 +1214,7 @@ pub enum RootMessage<L: Dupe> {
     RootCannotInstantiateRenderType,
     RootCannotInstantiateTypeApp(VirtualReasonDesc<L>),
     RootCannotReturn(VirtualReasonDesc<L>),
-    RootCannotShadowProto(VirtualReason<L>),
+    RootCannotShadowProto(NamedReferenceData<L>),
     RootCannotShadowProtoProperty,
     RootCannotSpread(VirtualReasonDesc<L>),
     RootCannotUpdate(VirtualReasonDesc<L>),
