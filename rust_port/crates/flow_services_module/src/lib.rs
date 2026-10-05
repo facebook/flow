@@ -310,7 +310,7 @@ impl<'a> ModuleResolver<'a> {
             options,
             transaction,
             access: transaction.latest_heap_reader(),
-            symlink_paths: (cfg!(unix) && symlink_paths.is_complete()).then_some(symlink_paths),
+            symlink_paths: symlink_paths.is_complete().then_some(symlink_paths),
         }
     }
 
@@ -320,10 +320,6 @@ impl<'a> ModuleResolver<'a> {
             Some(symlink_paths) => symlink_paths
                 .try_resolve(&normalized_path)
                 .unwrap_or_else(|| Cow::Borrowed(normalized_path.as_ref())),
-            None if cfg!(unix) => {
-                // The map is incomplete, such as after a saved-state init.
-                files::canonicalize_path(&normalized_path)
-            }
             None => {
                 let crawl_covers_path = files::initial_crawl_covers_path(
                     &self.options.file_options,

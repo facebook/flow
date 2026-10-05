@@ -3150,8 +3150,7 @@ pub fn init_from_scratch(
         let ordered_libs = files::ordered_and_unordered_lib_paths(&options.file_options);
         let file_opts = options.file_options.dupe();
         let root_buf = root.to_path_buf();
-        // Windows canonical paths need separate handling.
-        let symlink_transaction = cfg!(unix).then(|| transaction.dupe());
+        let symlink_transaction = transaction.dupe();
 
         let (sender, receiver) = channel::unbounded::<Vec<FileKey>>();
         let receiver = Arc::new(receiver);
@@ -3161,16 +3160,12 @@ pub fn init_from_scratch(
                 &root_buf,
                 file_opts,
                 true,
-                symlink_transaction
-                    .as_ref()
-                    .map(|transaction| transaction.symlink_paths()),
+                Some(symlink_transaction.symlink_paths()),
                 |files| {
                     sender.send(files).unwrap();
                 },
             );
-            if let Some(transaction) = symlink_transaction {
-                transaction.symlink_paths().mark_complete();
-            }
+            symlink_transaction.symlink_paths().mark_complete();
             drop(sender);
         });
         flow_hh_logger::info!("Parsing");
