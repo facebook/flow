@@ -8522,13 +8522,12 @@ where
             }) => {
                 let ((first_loc, name, second_loc), rest) = duplicates.clone().split_off_first();
                 if rest.is_empty() {
-                    let first = mk_reason(
-                        VirtualReasonDesc::RIdentifier(name.display_smol_str()),
-                        first_loc.dupe(),
-                    );
                     friendly::Message(vec![
                         text("Component property "),
-                        ref_(&first),
+                        hardcoded_string_desc_ref(
+                            &format!("`{}`", name.display_smol_str()),
+                            &first_loc,
+                        ),
                         text(" is "),
                         friendly::hardcoded_string_desc_ref(
                             "re-declared",
@@ -8550,13 +8549,12 @@ where
                         text(".\n"),
                     ];
                     for (first_loc, name, second_loc) in all_dupes {
-                        let first = mk_reason(
-                            VirtualReasonDesc::RIdentifier(name.display_smol_str()),
-                            first_loc,
-                        );
                         features.extend(vec![
                             text(" - "),
-                            ref_(&first),
+                            hardcoded_string_desc_ref(
+                                &format!("`{}`", name.display_smol_str()),
+                                &first_loc,
+                            ),
                             text(" is re-declared "),
                             friendly::hardcoded_string_desc_ref("here", loc_of_aloc(&second_loc)),
                             text("\n"),
