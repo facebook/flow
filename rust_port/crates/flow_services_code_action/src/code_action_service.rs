@@ -69,6 +69,7 @@ use flow_typing_errors::error_message::EnumInvalidMemberAccessData;
 use flow_typing_errors::error_message::EnumInvalidMemberNameData;
 use flow_typing_errors::error_message::EnumMemberAccess;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::ErrorTypeReferenceWithLocData;
 use flow_typing_errors::error_message::FriendlyMessageRecipe;
 use flow_typing_errors::error_message::IncompatibleTypeUseData;
 use flow_typing_errors::error_message::MatchErrorKind;
@@ -2298,16 +2299,24 @@ pub fn ast_transforms_of_error(
         }
         ErrorMessage::EPropsNotFoundInInvariantSubtyping(
             box EPropsNotFoundInInvariantSubtypingData {
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc:
-                    TypeOrTypeDescT::TypeDesc(Err(
-                        VirtualReasonDesc::RObjectLit
-                        | VirtualReasonDesc::RObjectLitUnsound
-                        | VirtualReasonDesc::RArrayLit
-                        | VirtualReasonDesc::RArrayLitUnsound,
-                    )),
-                upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                lower:
+                    ErrorTypeReferenceWithLocData {
+                        definition_loc: lower_obj_loc,
+                        type_desc:
+                            TypeOrTypeDescT::TypeDesc(Err(
+                                VirtualReasonDesc::RObjectLit
+                                | VirtualReasonDesc::RObjectLitUnsound
+                                | VirtualReasonDesc::RArrayLit
+                                | VirtualReasonDesc::RArrayLitUnsound,
+                            )),
+                        ..
+                    },
+                upper:
+                    ErrorTypeReferenceWithLocData {
+                        definition_loc: upper_obj_loc,
+                        type_desc: TypeOrTypeDescT::TypeDesc(Ok(Elt::Type(upper_ty))),
+                        ..
+                    },
                 ..
             },
         ) => invariant_subtyping_actions(

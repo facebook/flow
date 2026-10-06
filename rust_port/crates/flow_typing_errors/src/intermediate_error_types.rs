@@ -1069,7 +1069,7 @@ pub struct ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L: Dupe> {
     pub upper_obj_loc: L,
     pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_object_reason: VirtualReason<L>,
+    pub upper_object_loc: L,
 }
 
 #[derive(
@@ -1837,6 +1837,13 @@ pub struct MessagePropsMissingData<L: Dupe> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct MessagePropsMissingWithPrintedTypeData<L: Dupe> {
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
+    pub props: Vec1<FlowSmolStr>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageIndexerCheckFailedData<L: Dupe> {
     pub prop: FlowSmolStr,
     pub lower: MessageTypeReferenceData<L>,
@@ -2529,6 +2536,8 @@ pub enum Message<L: Dupe> {
     MessageConstructSignatureMissing(Box<MessageConstructSignatureMissingData<L>>),
 
     MessagePropsMissing(Box<MessagePropsMissingData<L>>),
+
+    MessagePropsMissingWithPrintedType(Box<MessagePropsMissingWithPrintedTypeData<L>>),
 
     MessageIndexerCheckFailed(Box<MessageIndexerCheckFailedData<L>>),
 

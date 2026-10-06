@@ -2421,20 +2421,20 @@ fn flow_obj_to_obj<'cx>(
                 ureason.dupe(),
                 DefT::new(DefTInner::ObjT(u_obj.dupe())),
             ));
-            let lower_obj_loc = lreason.def_loc().dupe();
-            let upper_obj_loc = ureason.def_loc().dupe();
             flow_js_utils::add_output_with_env(
                 cx,
                 env,
                 ErrorMessage::EPropsNotFoundInInvariantSubtyping(Box::new(
                     EPropsNotFoundInInvariantSubtypingData {
                         prop_names: props,
-                        reason_lower: lreason.dupe(),
-                        reason_upper: ureason.dupe(),
-                        lower_obj_loc,
-                        upper_obj_loc,
-                        lower_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t1),
-                        upper_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t2),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                            &t1,
+                            lreason.dupe(),
+                        ),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                            &t2,
+                            ureason.dupe(),
+                        ),
                         use_op: use_op.dupe(),
                     },
                 )),

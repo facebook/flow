@@ -28,12 +28,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:60
 
-Cannot assign `{...}` to `o3` because property `y` is missing in object type [1] but exists in object type [2].
-[incompatible-type]
+Cannot assign `{...}` to `o3` because property `y` is missing in `{x: number, ...}` [1] but exists in
+`{x: number, y?: string, ...}` [2]. [incompatible-type]
 
-This optional property of object type [2] is invariantly typed. To fix,
+This optional property of `{x: number, y?: string, ...}` [2] is invariantly typed. To fix,
 - Either make `{x: number, ...}` [1] and `{x: number, y?: string, ...}` [2] exactly the same
-- Or make object type [2] readonly. See
+- Or make `{x: number, y?: string, ...}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:7:60

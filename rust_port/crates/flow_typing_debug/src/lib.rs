@@ -2292,12 +2292,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EPropsNotFoundInInvariantSubtyping(
             box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
-                reason_lower,
-                reason_upper,
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc: _,
-                upper_obj_desc: _,
+                lower,
+                upper,
                 use_op,
             },
         ) => {
@@ -2305,10 +2301,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EPropsNotFoundInSubtyping ([{}], {}, {}, {}, {}, {})",
                 names.join(","),
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
-                string_of_aloc(None, lower_obj_loc),
-                string_of_aloc(None, upper_obj_loc),
+                dump_error_type_reference(cx, lower),
+                dump_error_type_reference(cx, upper),
+                string_of_aloc(None, &lower.definition_loc),
+                string_of_aloc(None, &upper.definition_loc),
                 string_of_use_op(use_op)
             )
         }

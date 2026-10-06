@@ -550,11 +550,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:1:50
 
-Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2]. [incompatible-type]
+Cannot return `x` because property `p` is missing in `{}` [1] but exists in `{p?: number, ...}` [2]. [incompatible-type]
 
-This optional property of object type [2] is invariantly typed. To fix,
+This optional property of `{p?: number, ...}` [2] is invariantly typed. To fix,
 - Either make `{}` [1] and `{p?: number, ...}` [2] exactly the same
-- Or make object type [2] readonly. See
+- Or make `{p?: number, ...}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    optional.js:1:50

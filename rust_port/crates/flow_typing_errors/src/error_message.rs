@@ -189,12 +189,8 @@ pub struct EIncompatibleSpeculationData<L: Dupe + PartialOrd + Ord + PartialEq +
 )]
 pub struct EPropsNotFoundInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_names: Vec1<Name>,
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
-    pub lower_obj_loc: L,
-    pub upper_obj_loc: L,
-    pub lower_obj_desc: TypeOrTypeDesc<L>,
-    pub upper_obj_desc: TypeOrTypeDesc<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -4397,7 +4393,7 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                 upper_obj_loc,
                 lower_obj_desc,
                 upper_obj_desc,
-                upper_object_reason,
+                upper_object_loc,
             } = *data;
             Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty(Box::new(
                 ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
@@ -4406,7 +4402,7 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                     upper_obj_loc: f(&upper_obj_loc),
                     lower_obj_desc: lower_obj_desc.map_err(map_desc),
                     upper_obj_desc: upper_obj_desc.map_err(map_desc),
-                    upper_object_reason: map_reason(upper_object_reason),
+                    upper_object_loc: f(&upper_object_loc),
                 },
             ))
         }
@@ -4701,22 +4697,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
-                reason_lower,
-                reason_upper,
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc,
-                upper_obj_desc,
+                lower,
+                upper,
                 use_op,
             }) => EPropsNotFoundInInvariantSubtyping(Box::new(
                 EPropsNotFoundInInvariantSubtypingData {
                     prop_names,
-                    reason_lower: map_reason(reason_lower),
-                    reason_upper: map_reason(reason_upper),
-                    lower_obj_loc: f(lower_obj_loc),
-                    upper_obj_loc: f(upper_obj_loc),
-                    lower_obj_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), lower_obj_desc),
-                    upper_obj_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), upper_obj_desc),
+                    lower: map_error_type_ref_with_reason(lower),
+                    upper: map_error_type_ref_with_reason(upper),
                     use_op: map_use_op(use_op),
                 },
             )),
@@ -7773,22 +7761,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
-                reason_lower,
-                reason_upper,
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc,
-                upper_obj_desc,
+                lower,
+                upper,
                 use_op,
             }) => EPropsNotFoundInInvariantSubtyping(Box::new(
                 EPropsNotFoundInInvariantSubtypingData {
                     prop_names,
-                    reason_lower,
-                    reason_upper,
-                    lower_obj_loc,
-                    upper_obj_loc,
-                    lower_obj_desc: f(lower_obj_desc),
-                    upper_obj_desc: f(upper_obj_desc),
+                    lower: map_error_type_ref_with_reason(lower),
+                    upper: map_error_type_ref_with_reason(upper),
                     use_op: map_use_op(&f, use_op),
                 },
             )),
@@ -8922,12 +8902,11 @@ pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + 
 )]
 pub struct PropsMissingInInvariantSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
+    pub loc: L,
     pub lower_obj_loc: L,
     pub upper_obj_loc: L,
-    pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -11734,12 +11713,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EPropsNotFoundInInvariantSubtyping(
                 box EPropsNotFoundInInvariantSubtypingData {
                     prop_names,
-                    reason_lower,
-                    reason_upper,
-                    lower_obj_loc,
-                    upper_obj_loc,
-                    lower_obj_desc,
-                    upper_obj_desc,
+                    lower,
+                    upper,
                     use_op,
                 },
             ) => PropsMissingInInvariantSubtyping(Box::new(PropsMissingInInvariantSubtypingData {
@@ -11747,12 +11722,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     prop_names.iter().map(|n| n.display_smol_str()).collect(),
                 )
                 .expect("prop_names is Vec1"),
-                reason_lower,
-                reason_upper,
-                lower_obj_loc,
-                upper_obj_loc,
-                lower_obj_desc: expect_type_desc(lower_obj_desc),
-                upper_obj_desc: expect_type_desc(upper_obj_desc),
+                loc: lower.loc,
+                lower_obj_loc: lower.definition_loc,
+                upper_obj_loc: upper.definition_loc,
+                lower: MessageTypeReferenceData {
+                    loc: lower.reference_loc,
+                    desc: expect_type_desc(lower.type_desc),
+                },
+                upper: MessageTypeReferenceData {
+                    loc: upper.reference_loc,
+                    desc: expect_type_desc(upper.type_desc),
+                },
                 use_op,
             })),
 

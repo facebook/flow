@@ -137,6 +137,7 @@ use super::intermediate_error_types::MessagePropExtraAgainstExactObjectData;
 use super::intermediate_error_types::MessagePropMissingData;
 use super::intermediate_error_types::MessagePropPolarityMismatchData;
 use super::intermediate_error_types::MessagePropsMissingData;
+use super::intermediate_error_types::MessagePropsMissingWithPrintedTypeData;
 use super::intermediate_error_types::MessageReactIntrinsicOverlapData;
 use super::intermediate_error_types::MessageRedeclareComponentPropData;
 use super::intermediate_error_types::MessageShouldAnnotateVariableUsedInGenericContextData;
@@ -3182,41 +3183,40 @@ where
             )
         };
 
-    let mk_props_missing_in_invariant_subtyping_error =
-        |props: Vec1<FlowSmolStr>,
-         reason_lower: VirtualReason<L>,
-         reason_upper: VirtualReason<L>,
-         lower_obj_loc: L,
-         upper_obj_loc: L,
-         lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-         upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-         use_op: VirtualUseOp<L>|
-         -> IntermediateError<L> {
-            let reason_lower = mod_lower_reason_according_to_use_ops(reason_lower.dupe(), &use_op);
-            let props_plural = props.len() > 1;
-            let explanation = Some(
-                Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty(Box::new(
-                    ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
-                        props_plural,
-                        lower_obj_loc,
-                        upper_obj_loc,
-                        lower_obj_desc,
-                        upper_obj_desc,
-                        upper_object_reason: reason_upper.dupe(),
-                    },
-                )),
-            );
-            mk_use_op_error(
-                loc_of_aloc(&reason_lower.loc),
-                use_op,
-                explanation,
-                Message::MessagePropsMissing(Box::new(MessagePropsMissingData {
-                    lower: reason_lower,
-                    upper: reason_upper,
+    let mk_props_missing_in_invariant_subtyping_error = |props: Vec1<FlowSmolStr>,
+                                                         loc: L,
+                                                         lower_obj_loc: L,
+                                                         upper_obj_loc: L,
+                                                         lower: MessageTypeReferenceData<L>,
+                                                         upper: MessageTypeReferenceData<L>,
+                                                         use_op: VirtualUseOp<L>|
+     -> IntermediateError<L> {
+        let props_plural = props.len() > 1;
+        let explanation = Some(
+            Explanation::ExplanationPropertyMissingDueToNeutralOptionalProperty(Box::new(
+                ExplanationPropertyMissingDueToNeutralOptionalPropertyData {
+                    props_plural,
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    lower_obj_desc: lower.desc.clone(),
+                    upper_obj_desc: upper.desc.clone(),
+                    upper_object_loc: upper.loc.dupe(),
+                },
+            )),
+        );
+        mk_use_op_error(
+            loc_of_aloc(&loc),
+            use_op,
+            explanation,
+            Message::MessagePropsMissingWithPrintedType(Box::new(
+                MessagePropsMissingWithPrintedTypeData {
+                    lower,
+                    upper,
                     props,
-                })),
-            )
-        };
+                },
+            )),
+        )
+    };
 
     let mk_use_op_speculation_error = |loc: L,
                                        use_op: VirtualUseOp<L>,
@@ -3804,23 +3804,21 @@ where
             FriendlyMessageRecipe::PropsMissingInInvariantSubtyping(
                 box PropsMissingInInvariantSubtypingData {
                     props,
-                    reason_lower,
-                    reason_upper,
+                    loc,
                     lower_obj_loc,
                     upper_obj_loc,
-                    lower_obj_desc,
-                    upper_obj_desc,
+                    lower,
+                    upper,
                     use_op,
                 },
             ),
         ) => mk_props_missing_in_invariant_subtyping_error(
             Vec1::try_from_vec(props.to_vec()).unwrap(),
-            reason_lower,
-            reason_upper,
+            loc,
             lower_obj_loc,
             upper_obj_loc,
-            lower_obj_desc,
-            upper_obj_desc,
+            lower,
+            upper,
             use_op,
         ),
 
@@ -4368,20 +4366,20 @@ where
                     upper_obj_loc,
                     lower_obj_desc,
                     upper_obj_desc,
-                    upper_object_reason,
+                    upper_object_loc,
                 } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
 
                 let prefix = if *props_plural {
                     vec![
                         text("These optional properties of "),
-                        ref_(upper_object_reason),
+                        ref_of_ty_or_desc(upper_object_loc, upper_obj_desc),
                         text(" are"),
                     ]
                 } else {
                     vec![
                         text("This optional property of "),
-                        ref_(upper_object_reason),
+                        ref_of_ty_or_desc(upper_object_loc, upper_obj_desc),
                         text(" is"),
                     ]
                 };
@@ -4435,7 +4433,7 @@ where
                 features.push(text(" invariantly typed. To fix,\n- Either "));
                 features.extend(fix_suggestion);
                 features.push(text("\n- Or make "));
-                features.push(ref_(upper_object_reason));
+                features.push(ref_of_ty_or_desc(upper_object_loc, upper_obj_desc));
                 features.push(text(" readonly. See "));
                 features.push(text(
                     "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number",
@@ -8411,6 +8409,52 @@ where
                         ref_(lower),
                         text(" but exist in "),
                         ref_(upper),
+                    ]);
+                    friendly::Message(features)
+                }
+            }
+            MessagePropsMissingWithPrintedType(box MessagePropsMissingWithPrintedTypeData {
+                lower,
+                upper,
+                props,
+            }) => {
+                let lower = ref_of_ty_or_desc(&lower.loc, &lower.desc);
+                let upper = ref_of_ty_or_desc(&upper.loc, &upper.desc);
+                let (first_prop, rest_props) = props.clone().split_off_first();
+                if rest_props.is_empty() {
+                    friendly::Message(vec![
+                        text("property "),
+                        code(&first_prop),
+                        text(" is missing in "),
+                        lower,
+                        text(" but exists in "),
+                        upper,
+                    ])
+                } else {
+                    let all_props: Vec<_> = std::iter::once(first_prop).chain(rest_props).collect();
+                    let max_props = 10;
+                    let num_props = all_props.len();
+                    let (displayed, truncated_count) = if num_props > max_props {
+                        (&all_props[..max_props], num_props - max_props)
+                    } else {
+                        (&all_props[..], 0)
+                    };
+                    let mut features = vec![text("properties ")];
+                    let prop_msgs: Vec<_> = displayed
+                        .iter()
+                        .map(|p| friendly::Message(vec![code(p.as_str())]))
+                        .collect();
+                    let friendly::Message(concat_result) =
+                        friendly::conjunction_concat(prop_msgs, "and", None);
+                    features.extend(concat_result);
+                    if truncated_count > 0 {
+                        features.push(text(&format!(", ... ({} more)", truncated_count)));
+                    }
+                    features.extend(vec![
+                        text(" are missing in "),
+                        lower,
+                        text(" but exist in "),
+                        upper,
                     ]);
                     friendly::Message(features)
                 }

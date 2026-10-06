@@ -175,11 +175,11 @@ References:
 Error ------------------------------------------------------------------------------------- omit_alias_return_fn.js:19:3
 
 Cannot call `mergeWithDefaults` because in type argument `TDefaults`: property `b` is missing in object literal [1] but
-exists in object type [2]. [incompatible-type]
+exists in `{a?: number, b?: string}` [2]. [incompatible-type]
 
-This optional property of object type [2] is invariantly typed. To fix,
+This optional property of `{a?: number, b?: string}` [2] is invariantly typed. To fix,
 - Either annotate object literal [1] with `{a?: number, b?: string}` [2]
-- Or make object type [2] readonly. See
+- Or make `{a?: number, b?: string}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    omit_alias_return_fn.js:19:3

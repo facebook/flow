@@ -70,8 +70,8 @@ References:
 
 Error ------------------------------------------------------------------------ -:19:31
 
-Cannot assign `baseInexact` to `widened` because property `timestamp` is missing in object type [1] but exists in
-`WithUnixTime` [2]. [incompatible-type]
+Cannot assign `baseInexact` to `widened` because property `timestamp` is missing in `{id: string, ...}` [1] but exists
+in `WithUnixTime` [2]. [incompatible-type]
 
 This optional property of `WithUnixTime` [2] is invariantly typed. To fix,
 - Either make `{id: string, ...}` [1] and `WithUnixTime` [3] exactly the same
