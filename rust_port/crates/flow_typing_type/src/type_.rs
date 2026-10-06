@@ -4090,7 +4090,7 @@ pub struct ChainMData<CX = ()> {
 pub enum MethodAction<CX = ()> {
     CallM(Box<CallMData<CX>>),
     ChainM(Box<ChainMData<CX>>),
-    NoMethodAction(Type),
+    NoMethodAction(type_collector::TypeCollector),
 }
 
 impl<CX> Clone for MethodAction<CX> {
@@ -4327,7 +4327,7 @@ pub struct OptChainMData<CX = ()> {
 pub enum OptMethodAction<CX = ()> {
     OptCallM(Box<OptCallMData<CX>>),
     OptChainM(Box<OptChainMData<CX>>),
-    OptNoMethodAction(Type),
+    OptNoMethodAction(type_collector::TypeCollector),
 }
 
 impl<CX> Clone for OptMethodAction<CX> {

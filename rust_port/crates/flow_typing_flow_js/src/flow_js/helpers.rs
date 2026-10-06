@@ -1431,7 +1431,8 @@ pub(super) fn apply_method_action<'cx>(
             voided_out_collector,
         ),
         MethodAction::NoMethodAction(prop_t) => {
-            rec_flow_t(cx, env, trace, unknown_use(), (l, prop_t))
+            prop_t.add(l.dupe());
+            Ok(())
         }
     }
 }
@@ -2883,9 +2884,7 @@ pub(super) fn singleton_concrete_type_for_type_cast<'cx>(
 }
 
 pub(super) fn add_specialized_callee_method_action<'cx>(
-    cx: &Context<'cx>,
     env: &FlowJsEnv,
-    trace: DepthTrace,
     l: &Type,
     action: &MethodAction<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
@@ -2905,7 +2904,8 @@ pub(super) fn add_specialized_callee_method_action<'cx>(
             Ok(())
         }
         MethodAction::NoMethodAction(prop_t) => {
-            rec_flow_t(cx, env, trace, unknown_use(), (l, prop_t))
+            prop_t.add(l.dupe());
+            Ok(())
         }
     }
 }

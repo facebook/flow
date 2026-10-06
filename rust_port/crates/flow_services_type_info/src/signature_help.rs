@@ -625,50 +625,45 @@ pub mod callee_finder {
                         move || -> Result<Type, flow_utils_concurrency::job_error::JobError> {
                             let desc = type_util::desc_of_t(&class_t).clone();
                             let ctor_reason = reason::mk_reason(desc, callee_loc_owned);
-                            flow_typing_tvar::mk_where::<flow_utils_concurrency::job_error::JobError>(
+                            let instance = flow_typing_tvar::mk_where::<
+                                flow_utils_concurrency::job_error::JobError,
+                            >(
                                 cx,
                                 ctor_reason.dupe(),
-                                |_cx, t_out| {
-                                    let instance = flow_typing_tvar::mk_where::<
-                                        flow_utils_concurrency::job_error::JobError,
-                                    >(
-                                        cx,
+                                |_cx, instance| {
+                                    let class_def = Type::new(TypeInner::DefT(
                                         ctor_reason.dupe(),
-                                        |_cx, instance| {
-                                            let class_def = Type::new(TypeInner::DefT(
-                                                ctor_reason.dupe(),
-                                                flow_typing_type::type_::DefT::new(
-                                                    DefTInner::ClassT(instance.dupe()),
-                                                ),
-                                            ));
-                                            flow_js::flow_t_non_speculating(
-                                                cx,
-                                                (&class_t, &class_def),
-                                            )?;
-                                            Ok(())
-                                        },
-                                    )?;
-                                    let propref = type_util::mk_named_prop(
-                                        ctor_reason.dupe(),
-                                        false,
-                                        Name::new("constructor"),
-                                    );
-                                    let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-                                            use_op: unknown_use(),
-                                            reason: ctor_reason.dupe(),
-                                            prop_reason: ctor_reason.dupe(),
-                                            propref: Box::new(propref),
-                                            method_action: Box::new(
-                                                flow_typing_type::type_::MethodAction::NoMethodAction(
-                                                    t_out.dupe(),
-                                                ),
-                                            ),
-                                        })),
-                                    );
-                                    flow_js::flow_non_speculating(cx, (&instance, &use_t))?;
+                                        flow_typing_type::type_::DefT::new(DefTInner::ClassT(
+                                            instance.dupe(),
+                                        )),
+                                    ));
+                                    flow_js::flow_t_non_speculating(cx, (&class_t, &class_def))?;
                                     Ok(())
                                 },
-                            )
+                            )?;
+                            let propref = type_util::mk_named_prop(
+                                ctor_reason.dupe(),
+                                false,
+                                Name::new("constructor"),
+                            );
+                            let collector = TypeCollector::create();
+                            let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+                                use_op: unknown_use(),
+                                reason: ctor_reason.dupe(),
+                                prop_reason: ctor_reason.dupe(),
+                                propref: Box::new(propref),
+                                method_action: Box::new(
+                                    flow_typing_type::type_::MethodAction::NoMethodAction(
+                                        collector.dupe(),
+                                    ),
+                                ),
+                            })));
+                            flow_js::flow_non_speculating(cx, (&instance, &use_t))?;
+                            Ok(type_util::union_of_ts(
+                                ctor_reason,
+                                collector.collect_to_vec(),
+                                Some(UnionKind::ResolvedKind),
+                            ))
                         };
                     self.find(
                         |this| ast_visitor::new_default(this, loc, expr),

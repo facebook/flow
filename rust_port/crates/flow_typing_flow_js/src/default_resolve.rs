@@ -133,7 +133,10 @@ pub fn default_resolve_touts<'cx>(
                     resolve_specialized_callee(specialized_callee);
                     Ok(())
                 }
-                MethodAction::NoMethodAction(tout) => resolve(tout.dupe()),
+                MethodAction::NoMethodAction(tout) => {
+                    tout.add(any.dupe());
+                    Ok(())
+                }
             }
         };
     let resolve_lookup_action = |action: &LookupAction| -> Result<(), FlowJsException> {

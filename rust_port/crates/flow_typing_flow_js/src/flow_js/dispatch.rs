@@ -5847,14 +5847,14 @@ fn __flow_impl<'cx>(
         ) => {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, type_util::reason_of_propref(propref).dupe());
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, prop_t))?;
+            prop_t.add(any);
         }
         (TypeInner::AnyT(_, src), UseTInner::PrivateMethodT(box pm_data))
             if let MethodAction::NoMethodAction(prop_t) = pm_data.method_action.as_ref() =>
         {
             let src = flow_js_utils::any_mod_src_keep_placeholder(AnySource::Untyped, src);
             let any = any_t::why(src, pm_data.prop_reason.dupe());
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, prop_t))?;
+            prop_t.add(any);
         }
         (
             TypeInner::AnyT(_, src),
@@ -7007,13 +7007,7 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::ObjT(_))
             && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
-            add_specialized_callee_method_action(
-                cx,
-                env,
-                trace,
-                &any_t::untyped(reason_call.dupe()),
-                action,
-            )?;
+            add_specialized_callee_method_action(env, &any_t::untyped(reason_call.dupe()), action)?;
         }
         (
             TypeInner::DefT(reason_obj, def_t),
@@ -7541,13 +7535,7 @@ fn __flow_impl<'cx>(
         ) if matches!(def_t.deref(), DefTInner::ArrT(_))
             && matches!(&**propref, PropRef::Named { name, .. } if name.matches_str("constructor")) =>
         {
-            add_specialized_callee_method_action(
-                cx,
-                env,
-                trace,
-                &any_t::untyped(reason_call.dupe()),
-                action,
-            )?;
+            add_specialized_callee_method_action(env, &any_t::untyped(reason_call.dupe()), action)?;
         }
         // **************************************************
         // * array pattern can consume the rest of an array *

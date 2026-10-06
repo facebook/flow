@@ -11,6 +11,7 @@ use flow_common::reason::Reason;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js::flow_js::FlowJs;
+use flow_typing_flow_js::tvar_resolver;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::MethodAction;
@@ -19,6 +20,7 @@ use flow_typing_type::type_::PropRef;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::unknown_use;
 
 pub fn try_custom<'cx, 'a>(
@@ -188,18 +190,18 @@ pub fn get_method_type_unsafe<'cx>(
     reason: Reason,
     propref: PropRef,
 ) -> Result<Type, FlowJsException> {
-    let t = t.dupe();
-    let reason2 = reason.dupe();
-    flow_typing_tvar::mk_where(cx, reason, move |cx, prop_t| {
-        let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
-            use_op: unknown_use(),
-            reason: reason2.dupe(),
-            prop_reason: reason2.dupe(),
-            propref: Box::new(propref),
-            method_action: Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
-        })));
-        resolved_lower_flow_unsafe(cx, env, &reason2, (&t, &use_t))
-    })
+    let collector = TypeCollector::create();
+    let use_t = UseT::new(UseTInner::MethodT(Box::new(MethodTData {
+        use_op: unknown_use(),
+        reason: reason.dupe(),
+        prop_reason: reason.dupe(),
+        propref: Box::new(propref),
+        method_action: Box::new(MethodAction::NoMethodAction(collector.dupe())),
+    })));
+    resolved_lower_flow_unsafe(cx, env, &reason, (t, &use_t))?;
+    Ok(collector
+        .union_opt(reason.dupe())
+        .unwrap_or_else(|| tvar_resolver::default_no_lowers(&reason)))
 }
 
 pub fn get_method_type_opt<'cx>(

@@ -1400,32 +1400,24 @@ fn type_of_hint_decomposition<'cx>(
                     std::mem::replace(&mut env.class_stack, class_stack.dupe())
                 };
                 let class_entries = type_env::get_class_entries(cx);
-                let t2 = t.dupe();
-                let reason2 = reason.dupe();
-                let name2 = name.dupe();
-                let env = env.dupe();
-                let result = flow_typing_tvar::mk_where(cx, reason.dupe(), move |cx, prop_t| {
-                    let use_t =
-                        UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
-                            use_op: unknown_use(),
-                            reason: reason2.dupe(),
-                            prop_reason: reason2.dupe(),
-                            name: name2,
-                            class_bindings: class_entries.into(),
-                            static_: false,
-                            method_action: Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
-                        })));
-                    speculation_flow::resolved_lower_flow_unsafe(
-                        cx,
-                        &env,
-                        &reason2,
-                        (&t2, &use_t),
-                    )?;
-                    Ok::<(), FlowJsException>(())
-                });
+                let collector = TypeCollector::create();
+                let use_t = UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
+                    use_op: unknown_use(),
+                    reason: reason.dupe(),
+                    prop_reason: reason.dupe(),
+                    name: name.dupe(),
+                    class_bindings: class_entries.into(),
+                    static_: false,
+                    method_action: Box::new(MethodAction::NoMethodAction(collector.dupe())),
+                })));
+                let result =
+                    speculation_flow::resolved_lower_flow_unsafe(cx, env, reason, (&t, &use_t));
                 let mut env = cx.environment_mut();
                 env.class_stack = old_stack;
-                Ok(result?)
+                result?;
+                Ok(collector
+                    .union_opt(reason.dupe())
+                    .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
             }
             ConcrHintDecompositionInner::DecompObjProp(name) => {
                 let t = t.dupe();
