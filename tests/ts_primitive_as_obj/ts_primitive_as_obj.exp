@@ -73,7 +73,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- primitive_to_object.ts:28:1
 
-Cannot cast `s` to object type because property `foo` is missing in `String` [1] but exists in object type [2].
+Cannot cast `s` to object type because property `foo` is missing in `String` [1] but exists in `{foo: number}` [2].
 [incompatible-type]
 
    primitive_to_object.ts:28:1
@@ -91,7 +91,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- primitive_to_object.ts:29:1
 
-Cannot cast `bi` to object type because property `foo` is missing in `BigInt` [1] but exists in object type [2].
+Cannot cast `bi` to object type because property `foo` is missing in `BigInt` [1] but exists in `{foo: number}` [2].
 [incompatible-type]
 
    primitive_to_object.ts:29:1
@@ -109,7 +109,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- primitive_to_object.ts:30:1
 
-Cannot cast `sym` to object type because property `foo` is missing in `Symbol` [1] but exists in object type [2].
+Cannot cast `sym` to object type because property `foo` is missing in `Symbol` [1] but exists in `{foo: number}` [2].
 [incompatible-type]
 
    primitive_to_object.ts:30:1

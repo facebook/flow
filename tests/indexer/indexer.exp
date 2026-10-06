@@ -87,7 +87,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ call.js:2:1
 
 Cannot cast `y` to object type because a call signature declaring the expected parameter / return type is missing in
-object type [1] but exists in object type [2]. [incompatible-type]
+`{[string]: boolean}` [1] but exists in `{(number): string, ...}` [2]. [incompatible-type]
 
    call.js:2:1
    2| y as {(number): string, ...};
@@ -177,7 +177,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:6
 
 Cannot extend `C` [1] with `D` because in property `x`: an index signature declaring the expected key / value type is
-missing in object type [2] but exists in object type [3]. [incompatible-type]
+missing in `{foo: number, qux: boolean, ...}` [2] but exists in
+`{[key: keyof {bar: string, foo: number, ...}]: any}` [3]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.

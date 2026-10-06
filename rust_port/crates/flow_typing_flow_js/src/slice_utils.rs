@@ -204,6 +204,36 @@ pub fn mk_object_type<'cx>(
     }
 }
 
+/// The object type a resolved slice stands for, so errors can print it.
+fn object_type_of_slice<'cx>(cx: &Context<'cx>, slice: &object::Slice) -> Type {
+    let object::Slice {
+        reason,
+        strictness_kind,
+        props,
+        flags,
+        frozen: _,
+        generics,
+        interface,
+        reachable_targs,
+    } = slice;
+    let id = cx.generate_property_map(props.clone());
+    mk_object_type(
+        cx,
+        reason,
+        false,
+        false,
+        interface.clone(),
+        reachable_targs,
+        flow_common::subst_name::OpKind::Spread,
+        flags,
+        None,
+        id,
+        Type::new(TypeInner::ObjProtoT(reason.dupe())),
+        generics.clone(),
+        *strictness_kind,
+    )
+}
+
 pub fn type_optionality_and_missing_property(prop: &Property) -> (Type, bool, bool) {
     let prop_t = property::type_(prop);
     match prop_t.deref() {
@@ -1304,7 +1334,7 @@ pub fn object_rest_with_env<'cx, A>(
     let rest = |cx,
                 use_op: &UseOp,
                 merge_mode: &object::rest::MergeMode,
-                object::Slice {
+                slice1 @ object::Slice {
                     reason: r1,
                     strictness_kind,
                     props: props1,
@@ -1314,7 +1344,7 @@ pub fn object_rest_with_env<'cx, A>(
                     interface,
                     reachable_targs,
                 }: &object::Slice,
-                object::Slice {
+                slice2 @ object::Slice {
                     reason: r2,
                     strictness_kind: _,
                     props: props2,
@@ -1421,8 +1451,14 @@ pub fn object_rest_with_env<'cx, A>(
                         let err = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
                                 prop_name: Some(k.dupe()),
-                                reason_lower: r2.dupe(),
-                                reason_upper: r1.dupe(),
+                                lower: flow_js_utils::type_reference_with_reason_for_error(
+                                    &object_type_of_slice(cx, slice2),
+                                    r2.dupe(),
+                                ),
+                                upper: flow_js_utils::type_reference_with_reason_for_error(
+                                    &object_type_of_slice(cx, slice1),
+                                    r1.dupe(),
+                                ),
                                 use_op: unknown_use(),
                                 suggestion: None,
                             },

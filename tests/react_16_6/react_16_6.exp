@@ -108,7 +108,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
 
 Cannot call `React.lazy` with function bound to `component` because in the return value > type argument `R` [1]:
-property `default` is missing in statics of `ClassComponent` [2] but exists in object type [3]. [incompatible-type]
+property `default` is missing in `{name: string, ...}` [2] but exists in
+`{readonly default: component(...any) renders any, ...}` [3]. [incompatible-type]
 
    lazy.js:12:34
     12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing

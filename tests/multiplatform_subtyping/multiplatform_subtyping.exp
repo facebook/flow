@@ -125,8 +125,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- classes.ios.js:3:22
 
-Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `foo` is missing in `ImplHasExtra` [1] but
-exists in `ImplHasExtra` [2]. [incompatible-type]
+Cannot implement `ImplHasExtra` [1] with `ImplHasExtra` because property `foo` is missing in
+`{constructor(): void, ...}` [1] but exists in `{constructor(): void, foo(this: ImplHasExtra): string, ...}` [2].
+[incompatible-type]
 
    classes.ios.js:3:22
    3| declare export class ImplHasExtra { // error: extra members are not in the common interface

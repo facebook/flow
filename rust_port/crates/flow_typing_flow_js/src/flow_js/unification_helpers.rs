@@ -424,8 +424,14 @@ fn __unify_inner<'cx>(
                                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                                     EPropNotFoundInSubtypingData {
                                         prop_name: None,
-                                        reason_lower: ureason.dupe(),
-                                        reason_upper: lreason.dupe(),
+                                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                                            t2,
+                                            ureason.dupe(),
+                                        ),
+                                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                                            t1,
+                                            lreason.dupe(),
+                                        ),
                                         use_op: use_op.dupe(),
                                         suggestion: None,
                                     },
@@ -440,8 +446,14 @@ fn __unify_inner<'cx>(
                                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                                     EPropNotFoundInSubtypingData {
                                         prop_name: None,
-                                        reason_lower: lreason.dupe(),
-                                        reason_upper: ureason.dupe(),
+                                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                                            t1,
+                                            lreason.dupe(),
+                                        ),
+                                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                                            t2,
+                                            ureason.dupe(),
+                                        ),
                                         use_op: flipped_use_op,
                                         suggestion: None,
                                     },
@@ -494,8 +506,8 @@ fn __unify_inner<'cx>(
                                             use_op.dupe(),
                                             &x,
                                             p1,
-                                            lreason,
-                                            ureason,
+                                            t1,
+                                            t2,
                                             udict,
                                             l_obj.strictness_kind.join(u_obj.strictness_kind),
                                         )?;
@@ -508,8 +520,8 @@ fn __unify_inner<'cx>(
                                             use_op.dupe(),
                                             &x,
                                             p2,
-                                            ureason,
-                                            lreason,
+                                            t2,
+                                            t1,
                                             ldict,
                                             l_obj.strictness_kind.join(u_obj.strictness_kind),
                                         )?;
@@ -771,14 +783,16 @@ pub(super) fn unify_prop_with_dict<'cx>(
     use_op: UseOp,
     x: &Name,
     p: &Property,
-    prop_obj_reason: &Reason,
-    dict_reason: &Reason,
+    prop_obj: &Type,
+    dict_obj: &Type,
     dict: Option<&DictType>,
     strictness_kind: TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
-    // prop_obj_reason: reason of the object containing the prop
-    // dict_reason: reason of the object potentially containing a dictionary
+    // prop_obj: the object containing the prop
+    // dict_obj: the object potentially containing a dictionary
     // prop_reason: reason of the prop itself
+    let prop_obj_reason = reason_of_t(prop_obj);
+    let dict_reason = reason_of_t(dict_obj);
     let prop_reason = prop_obj_reason
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
@@ -830,8 +844,14 @@ pub(super) fn unify_prop_with_dict<'cx>(
             env,
             ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
                 prop_name: Some(x.dupe()),
-                reason_lower: dict_reason.dupe(),
-                reason_upper: prop_obj_reason.dupe(),
+                lower: flow_js_utils::type_reference_with_reason_for_error(
+                    dict_obj,
+                    dict_reason.dupe(),
+                ),
+                upper: flow_js_utils::type_reference_with_reason_for_error(
+                    prop_obj,
+                    prop_obj_reason.dupe(),
+                ),
                 use_op,
                 suggestion: None,
             })),

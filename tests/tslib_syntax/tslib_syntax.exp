@@ -1231,8 +1231,8 @@ References:
 
 Error ------------------------------------------------------------------------------ object_construct_sig_usage.js:65:17
 
-Cannot call `createViaObject` with `Plain` bound to `C` because property `new` is missing in interface type [1] but
-exists in object type [2]. [incompatible-type]
+Cannot call `createViaObject` with `Plain` bound to `C` because property `new` is missing in
+`interface {new(): Bar}` [1] but exists in `{new(): any}` [2]. [incompatible-type]
 
    object_construct_sig_usage.js:65:17
    65| createViaObject(Plain); // ERROR — `{new(): T}` in a Flow file is not a construct signature

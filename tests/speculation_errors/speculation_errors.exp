@@ -2896,7 +2896,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `e` because: [incompatible-type]
  - Either `Z` [1] is incompatible with `X` [2].
- - Or property `p` is missing in `Z` [1] but exists in interface type [3].
+ - Or property `p` is missing in `Z` [1] but exists in `interface {p: string}` [3].
 
    intersection-function.js:45:1
    45| e(new Z());
@@ -3052,7 +3052,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:55:1
 
 Cannot call `f` because: [incompatible-type]
- - Either property `p` is missing in `Z` [1] but exists in interface type [2].
+ - Either property `p` is missing in `Z` [1] but exists in `interface {p: string}` [2].
  - Or `Z` [1] is incompatible with `$ReadOnlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3078,7 +3078,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number]` [3] but exists in `interface {p: string}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3131,7 +3131,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number, number, number]` [3] but exists in `interface {p: string}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -3905,7 +3905,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `new Z()` to `E` because: [incompatible-type]
  - Either `Z` [1] is incompatible with `X` [2].
- - Or property `p` is missing in `Z` [1] but exists in interface type [3].
+ - Or property `p` is missing in `Z` [1] but exists in `interface {p: string}` [3].
 
    union.js:37:1
    37| new Z() as E;
@@ -4043,7 +4043,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:45:1
 
 Cannot cast `new Z()` to `F` because: [incompatible-type]
- - Either property `p` is missing in `Z` [1] but exists in interface type [2].
+ - Either property `p` is missing in `Z` [1] but exists in `interface {p: string}` [2].
  - Or `Z` [1] is incompatible with `$ReadOnlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -4066,7 +4066,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number]` [3] but exists in `interface {p: string}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4116,7 +4116,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number, number, number]` [3] but exists in `interface {p: string}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

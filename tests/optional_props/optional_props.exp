@@ -65,6 +65,60 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- opaque_bound.js:21:35
+
+Cannot assign `single` to `s` because property `b` is missing in `{a: number}` [1] but exists in
+`{a: number, b: string}` [2]. [incompatible-type]
+
+   opaque_bound.js:21:35
+   21| const s: {a: number, b: string} = single; // ERROR
+                                         ^^^^^^
+
+References:
+   opaque_bound.js:20:23
+   20| declare const single: Single;
+                             ^^^^^^ [1]
+   opaque_bound.js:21:10
+   21| const s: {a: number, b: string} = single; // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- opaque_bound.js:24:35
+
+Cannot assign `single_callable` to `sc` because `{a: number}` [1] is incompatible with function prototype [2].
+[incompatible-type]
+
+   opaque_bound.js:24:35
+   24| const sc: {(): void, a: number} = single_callable; // ERROR
+                                         ^^^^^^^^^^^^^^^
+
+References:
+   opaque_bound.js:23:32
+   23| declare const single_callable: SingleCallable;
+                                      ^^^^^^^^^^^^^^ [1]
+   opaque_bound.js:24:11
+   24| const sc: {(): void, a: number} = single_callable; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- opaque_bound.js:24:35
+
+Cannot assign `single_callable` to `sc` because a call signature declaring the expected parameter / return type is
+missing in `{a: number}` [1] but exists in `{(): void, a: number}` [2]. [incompatible-type]
+
+   opaque_bound.js:24:35
+   24| const sc: {(): void, a: number} = single_callable; // ERROR
+                                         ^^^^^^^^^^^^^^^
+
+References:
+   opaque_bound.js:23:32
+   23| declare const single_callable: SingleCallable;
+                                      ^^^^^^^^^^^^^^ [1]
+   opaque_bound.js:24:11
+   24| const sc: {(): void, a: number} = single_callable; // ERROR
+                 ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:2:32
 
 Cannot assign `x` to `y` because property `foo` is missing in `{...}` [1] but exists in `{foo?: string, ...}` [2].
@@ -226,4 +280,4 @@ References:
 
 
 
-Found 13 errors
+Found 16 errors

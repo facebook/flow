@@ -269,7 +269,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `e` because: [incompatible-type]
  - Either `Z` [1] is incompatible with `X` [2].
- - Or property `p` is missing in `Z` [1] but exists in interface type [3].
+ - Or property `p` is missing in `Z` [1] but exists in `interface {p: string}` [3].
 
    intersection-function.js:45:1
    45| e(new Z());
@@ -426,7 +426,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:55:1
 
 Cannot call `f` because: [incompatible-type]
- - Either property `p` is missing in `Z` [1] but exists in interface type [2].
+ - Either property `p` is missing in `Z` [1] but exists in `interface {p: string}` [2].
  - Or `Z` [1] is incompatible with `$ReadOnlyArray<string>` [3].
  - Or `Z` [1] is incompatible with `[string, string]` [4].
 
@@ -453,7 +453,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number]` [3] but exists in `interface {p: string}` [4].
  - Or `[number]` [3] has 1 element but `[string, string]` [5] has 2 elements.
 
    intersection-function.js:56:1
@@ -483,7 +483,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-type]
  - Either in index `0`: `number` [1] is incompatible with `string` [2].
  - Or in array element: `number` [1] is incompatible with `string` [3].
- - Or property `p` is missing in tuple type [4] but exists in interface type [5].
+ - Or property `p` is missing in `[number, number]` [4] but exists in `interface {p: string}` [5].
 
    intersection-function.js:57:1
    57| f([1, 2] as [number, number]);
@@ -511,7 +511,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number, number, number]` [3] but exists in `interface {p: string}` [4].
  - Or `[number, number, number]` [3] has 3 elements but `[string, string]` [5] has 2 elements.
 
    intersection-function.js:58:1
@@ -541,7 +541,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or in property `p`: `number` [3] is incompatible with `string` [4].
- - Or property `p` is missing in array type [5] but exists in interface type [6].
+ - Or property `p` is missing in `Array<number>` [5] but exists in `interface {p: string}` [6].
  - Or `Array<number>` [5] has an unknown number of elements, so is incompatible with `[string, string]` [7].
  - Or `{p: number}` [8] is incompatible with `ReadonlyArray<string>` [9].
  - Or `{p: number}` [8] is incompatible with `[string, string]` [7].
@@ -1016,7 +1016,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `new Z()` to `E` because: [incompatible-type]
  - Either `Z` [1] is incompatible with `X` [2].
- - Or property `p` is missing in `Z` [1] but exists in interface type [3].
+ - Or property `p` is missing in `Z` [1] but exists in `interface {p: string}` [3].
 
    union.js:37:1
    37| new Z() as E;
@@ -1155,7 +1155,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:45:1
 
 Cannot cast `new Z()` to `F` because: [incompatible-type]
- - Either property `p` is missing in `Z` [1] but exists in interface type [2].
+ - Either property `p` is missing in `Z` [1] but exists in `interface {p: string}` [2].
  - Or `Z` [1] is incompatible with `$ReadOnlyArray<string>` [3].
  - Or `Z` [1] is incompatible with `[string, string]` [4].
 
@@ -1179,7 +1179,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number]` [3] but exists in `interface {p: string}` [4].
  - Or `[number]` [3] has 1 element but `[string, string]` [5] has 2 elements.
 
    union.js:46:8
@@ -1206,7 +1206,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in index `0`: `number` [1] is incompatible with `string` [2].
  - Or in array element: `number` [1] is incompatible with `string` [3].
- - Or property `p` is missing in tuple type [4] but exists in interface type [5].
+ - Or property `p` is missing in `[number, number]` [4] but exists in `interface {p: string}` [5].
 
    union.js:47:11
    47| [1, 2] as [number, number] as F;
@@ -1231,7 +1231,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
- - Or property `p` is missing in tuple type [3] but exists in interface type [4].
+ - Or property `p` is missing in `[number, number, number]` [3] but exists in `interface {p: string}` [4].
  - Or `[number, number, number]` [3] has 3 elements but `[string, string]` [5] has 2 elements.
 
    union.js:48:14
@@ -1258,7 +1258,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `null` to `F` because: [incompatible-type]
  - Either in array element: `number` [1] is incompatible with `string` [2].
  - Or in property `p`: `number` [3] is incompatible with `string` [4].
- - Or property `p` is missing in array type [5] but exists in interface type [6].
+ - Or property `p` is missing in `Array<number>` [5] but exists in `interface {p: string}` [6].
  - Or `Array<number>` [5] has an unknown number of elements, so is incompatible with `[string, string]` [7].
  - Or `{p: number}` [8] is incompatible with `ReadonlyArray<string>` [9].
  - Or `{p: number}` [8] is incompatible with `[string, string]` [7].

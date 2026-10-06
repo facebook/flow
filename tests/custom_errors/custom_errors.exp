@@ -1012,5 +1012,22 @@ References:
                               ^^^^^^^^^^^^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- simple_test.js:263:31
 
-Found 58 errors
+Cannot assign object literal to `missingCall` because object literal [1] is incompatible with `Callable` [2].
+[incompatible-type]
+
+Description of `Callable`: custom desc.
+
+   simple_test.js:263:31
+   263| const missingCall: Callable = {a: 1}; // ERROR: missing call signature
+                                      ^^^^^^ [1]
+
+References:
+   simple_test.js:263:20
+   263| const missingCall: Callable = {a: 1}; // ERROR: missing call signature
+                           ^^^^^^^^ [2]
+
+
+
+Found 59 errors

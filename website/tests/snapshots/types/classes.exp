@@ -58,8 +58,8 @@ No errors!
 === block 6 ===
 Error ------------------------------------------------------------------------------- -:3:3
 
-Cannot define method `method` [1] on `MyClass` because property `x` is missing in `MyClass` [2] but exists in interface
-type [3]. [incompatible-type]
+Cannot define method `method` [1] on `MyClass` because property `x` is missing in `MyClass` [2] but exists in
+`interface {x: string}` [3]. [incompatible-type]
 
    -:3:3
    3|   method(this: interface {x: string}) { /* ... */ } // Error!

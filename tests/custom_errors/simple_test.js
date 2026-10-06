@@ -253,3 +253,11 @@ type NormalBox<T> = {
 const normalBoxTest1: NormalBox<number> = { value: 42 }; // OK
 const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
 const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
+
+/**
+ * @flowCustomError
+ * @description custom desc
+ */
+type Callable = {(): void, a: number};
+
+const missingCall: Callable = {a: 1}; // ERROR: missing call signature

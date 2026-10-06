@@ -3068,7 +3068,6 @@ where
             None,
             Message::MessagePropMissing(Box::new(MessagePropMissingData {
                 lower,
-                upper: None,
                 prop,
                 suggestion,
             })),
@@ -3077,22 +3076,21 @@ where
 
     let mk_prop_missing_in_subtyping_error = |prop: Option<FlowSmolStr>,
                                               suggestion: Option<FlowSmolStr>,
-                                              lower: VirtualReason<L>,
-                                              upper: VirtualReason<L>,
+                                              loc: L,
+                                              lower: MessageTypeReferenceData<L>,
+                                              upper: MessageTypeReferenceData<L>,
                                               use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
-        let loc = loc_of_aloc(&lower.loc);
-        let lower = mod_lower_reason_according_to_use_ops(lower.dupe(), &use_op);
         mk_use_op_error(
-            loc,
+            loc_of_aloc(&loc),
             use_op,
             None,
-            Message::MessagePropMissing(Box::new(MessagePropMissingData {
-                lower,
-                upper: Some(upper),
+            Message::MessagePropMissingWithPrintedType {
+                lower: Box::new(lower),
+                upper: Some(Box::new(upper)),
                 prop,
                 suggestion,
-            })),
+            },
         )
     };
 
@@ -3446,7 +3444,9 @@ where
             }
             prop => Message::MessagePropMissingWithPrintedType {
                 lower: Box::new(lower_type_ref.clone()),
+                upper: None,
                 prop,
+                suggestion: None,
             },
         };
 
@@ -3770,16 +3770,18 @@ where
             None,
             FriendlyMessageRecipe::PropMissingInSubtyping(box PropMissingInSubtypingData {
                 prop,
-                reason_lower,
-                reason_upper,
                 suggestion,
+                loc,
+                lower,
+                upper,
                 use_op,
             }),
         ) => mk_prop_missing_in_subtyping_error(
             prop.dupe(),
             suggestion.dupe(),
-            reason_lower,
-            reason_upper,
+            loc,
+            lower,
+            upper,
             use_op,
         ),
 
@@ -8289,46 +8291,45 @@ where
             }
             MessagePropMissing(box MessagePropMissingData {
                 lower,
-                upper,
                 prop,
                 suggestion,
             }) => {
                 use super::error_message::mk_prop_message;
-                // If we were subtyping that add to the error message so our user knows what
-                // object required the missing property.
                 let prop_message = mk_prop_message(prop.as_deref());
                 let suggestion: Vec<friendly::MessageFeature<Loc>> = match suggestion {
                     Some(s) => vec![text(" (did you mean "), code(s), text("?)")],
                     None => vec![],
                 };
-                match upper {
-                    Some(upper) => {
-                        let mut features = prop_message;
-                        features.extend(suggestion);
-                        features.extend(vec![text(" is missing in "), ref_(lower)]);
-                        features.extend(vec![text(" but exists in ")]);
-                        features.push(ref_(upper));
-                        friendly::Message(features)
-                    }
-                    None => {
-                        if prop.is_none() && is_nullish_reason(lower) {
-                            friendly::Message(vec![ref_(lower), text(" does not have properties")])
-                        } else {
-                            let mut features = prop_message;
-                            features.extend(suggestion);
-                            features.extend(vec![text(" is missing in "), ref_(lower)]);
-                            friendly::Message(features)
-                        }
-                    }
+                if prop.is_none() && is_nullish_reason(lower) {
+                    friendly::Message(vec![ref_(lower), text(" does not have properties")])
+                } else {
+                    let mut features = prop_message;
+                    features.extend(suggestion);
+                    features.extend(vec![text(" is missing in "), ref_(lower)]);
+                    friendly::Message(features)
                 }
             }
-            MessagePropMissingWithPrintedType { lower, prop } => {
+            MessagePropMissingWithPrintedType {
+                lower,
+                upper,
+                prop,
+                suggestion,
+            } => {
                 use super::error_message::mk_prop_message;
                 let mut features = mk_prop_message(prop.as_deref());
+                if let Some(s) = suggestion {
+                    features.extend(vec![text(" (did you mean "), code(s), text("?)")]);
+                }
                 features.extend(vec![
                     text(" is missing in "),
                     ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 ]);
+                if let Some(upper) = upper {
+                    features.extend(vec![
+                        text(" but exists in "),
+                        ref_of_ty_or_desc(&upper.loc, &upper.desc),
+                    ]);
+                }
                 friendly::Message(features)
             }
             MessagePrivatePropMissing { object, prop } => {

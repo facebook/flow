@@ -253,7 +253,7 @@ References:
 Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:31:1
 
 Cannot cast `new DStaticIterable()` to `Iterable` because property `@@iterator` is missing in `DStaticIterable` [1] but
-exists in `Iterable` [2]. [incompatible-type]
+exists in `Iterable<number, void, void>` [2]. [incompatible-type]
 
    type_well_known_symbol.js:31:1
    31| new DStaticIterable() as Iterable<number>; // ERROR: no instance @@iterator

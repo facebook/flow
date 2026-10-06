@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Cannot call `f.apply` because in type argument `A`: property `length` is missing in `Iterable` [1] but exists in
-`ArrayLike` [2]. [incompatible-type]
+Cannot call `f.apply` because in type argument `A`: property `length` is missing in `Iterable<number, void, void>` [1]
+but exists in `ArrayLike<unknown>` [2]. [incompatible-type]
 
    apply.js:11:15
     11| f.apply(null, it); // Error

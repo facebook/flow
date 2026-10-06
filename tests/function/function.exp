@@ -151,8 +151,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
 
-Cannot call `test.apply` because in type argument `A`: property `length` is missing in `Generator` [1] but exists in
-`ArrayLike` [2]. [incompatible-type]
+Cannot call `test.apply` because in type argument `A`: property `length` is missing in
+`Generator<string, void, void>` [1] but exists in `ArrayLike<unknown>` [2]. [incompatible-type]
 
    apply-array-like.js:21:16
     21| test.apply([], gen()); // error: iterable ~> array-like
@@ -169,8 +169,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- apply-array-like.js:21:16
 
-Cannot call `test.apply` because in type argument `A`: property `length` is missing in `Generator` [1] but exists in
-`ArrayLike` [2]. [incompatible-type]
+Cannot call `test.apply` because in type argument `A`: property `length` is missing in
+`Generator<string, void, void>` [1] but exists in `ArrayLike<unknown>` [2]. [incompatible-type]
 
    apply-array-like.js:21:16
     21| test.apply([], gen()); // error: iterable ~> array-like

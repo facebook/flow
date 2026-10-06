@@ -338,7 +338,7 @@ References:
 Error -------------------------------------------------------------------------------------------- internal_slot.js:13:2
 
 Cannot cast object literal to `I` because a call signature declaring the expected parameter / return type is missing in
-object literal [1] but exists in `I` [2]. [incompatible-type]
+object literal [1] but exists in `{(): void, ...}` [2]. [incompatible-type]
 
    internal_slot.js:13:2
    13| ({}) as I; // err: no callable property

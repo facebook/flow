@@ -1375,8 +1375,14 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
                 cx,
                 env,
                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
-                    reason_lower: type_util::reason_of_t(&data.lower).dupe(),
-                    reason_upper: type_util::reason_of_t(&data.upper).dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                        &data.lower,
+                        type_util::reason_of_t(&data.lower).dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        &data.upper,
+                        type_util::reason_of_t(&data.upper).dupe(),
+                    ),
                     prop_name,
                     use_op: data.use_op.dupe(),
                     suggestion,
@@ -1834,8 +1840,14 @@ fn flow_obj_to_obj<'cx>(
                     ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                         EPropNotFoundInSubtypingData {
                             prop_name: prop,
-                            reason_lower: ureason.dupe(),
-                            reason_upper: lreason.dupe(),
+                            lower: flow_js_utils::type_reference_with_reason_for_error(
+                                u,
+                                ureason.dupe(),
+                            ),
+                            upper: flow_js_utils::type_reference_with_reason_for_error(
+                                l,
+                                lreason.dupe(),
+                            ),
                             use_op: use_op.dupe(),
                             suggestion: None,
                         },
@@ -1864,8 +1876,14 @@ fn flow_obj_to_obj<'cx>(
                         env,
                         ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
-                                reason_lower: lreason.dupe(),
-                                reason_upper: ureason.dupe(),
+                                lower: flow_js_utils::type_reference_with_reason_for_error(
+                                    l,
+                                    lreason.dupe(),
+                                ),
+                                upper: flow_js_utils::type_reference_with_reason_for_error(
+                                    u,
+                                    ureason.dupe(),
+                                ),
                                 prop_name,
                                 use_op: use_op.dupe(),
                                 suggestion: None,
@@ -5347,8 +5365,14 @@ pub fn rec_sub_t<'cx>(
                     None => {
                         let error_message = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
-                                reason_lower: lreason.dupe(),
-                                reason_upper: ureason.dupe(),
+                                lower: flow_js_utils::type_reference_with_reason_for_error(
+                                    l,
+                                    lreason.dupe(),
+                                ),
+                                upper: flow_js_utils::type_reference_with_reason_for_error(
+                                    u,
+                                    ureason.dupe(),
+                                ),
                                 prop_name,
                                 use_op: use_op.dupe(),
                                 suggestion: None,

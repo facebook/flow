@@ -1818,7 +1818,6 @@ pub struct MessagePropExtraAgainstExactObjectData<L: Dupe> {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropMissingData<L: Dupe> {
     pub lower: VirtualReason<L>,
-    pub upper: Option<VirtualReason<L>>,
     pub prop: Option<FlowSmolStr>,
     pub suggestion: Option<FlowSmolStr>,
 }
@@ -2518,7 +2517,9 @@ pub enum Message<L: Dupe> {
 
     MessagePropMissingWithPrintedType {
         lower: Box<MessageTypeReferenceData<L>>,
+        upper: Option<Box<MessageTypeReferenceData<L>>>,
         prop: Option<FlowSmolStr>,
+        suggestion: Option<FlowSmolStr>,
     },
 
     MessagePrivatePropMissing {

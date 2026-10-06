@@ -4359,7 +4359,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:348:14
 
-Cannot return `true` because property `zzz` is missing in `A` [1] but exists in object type [2]. [incompatible-type]
+Cannot return `true` because property `zzz` is missing in `A` [1] but exists in `{zzz: string, ...}` [2].
+[incompatible-type]
 
 The type of this [3] at the return expression `true` [4] needs to be compatible with the guard type object type [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.

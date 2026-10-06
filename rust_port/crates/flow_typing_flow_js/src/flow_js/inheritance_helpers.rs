@@ -506,8 +506,14 @@ pub(super) fn inst_structural_subtype<'cx>(
                     None => {
                         let error_message = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                             EPropNotFoundInSubtypingData {
-                                reason_lower: lreason.dupe(),
-                                reason_upper: reason_struct.dupe(),
+                                lower: flow_js_utils::type_reference_with_reason_for_error(
+                                    lower,
+                                    lreason.dupe(),
+                                ),
+                                upper: flow_js_utils::type_reference_with_reason_for_error(
+                                    upper,
+                                    reason_struct.dupe(),
+                                ),
                                 prop_name,
                                 use_op: use_op.dupe(),
                                 suggestion: None,
@@ -520,8 +526,14 @@ pub(super) fn inst_structural_subtype<'cx>(
             _ => {
                 let error_message = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                     EPropNotFoundInSubtypingData {
-                        reason_lower: lreason.dupe(),
-                        reason_upper: reason_struct.dupe(),
+                        lower: flow_js_utils::type_reference_with_reason_for_error(
+                            lower,
+                            lreason.dupe(),
+                        ),
+                        upper: flow_js_utils::type_reference_with_reason_for_error(
+                            upper,
+                            reason_struct.dupe(),
+                        ),
                         prop_name,
                         use_op: use_op.dupe(),
                         suggestion: None,

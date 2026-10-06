@@ -73,7 +73,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instance.ts:43:52
 
 Cannot assign `withSuggestion` to `suggested` because property `frist` (did you mean `first`?) is missing in
-`WithSuggestion` [1] but exists in object type [2]. [incompatible-type]
+`WithSuggestion` [1] but exists in `{frist: string, second: number}` [2]. [incompatible-type]
 
    instance.ts:43:52
    43| const suggested: {frist: string; second: number} = withSuggestion; // ERROR: preserve suggestion for `frist`
@@ -91,7 +91,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instance.ts:43:52
 
 Cannot assign `withSuggestion` to `suggested` because property `second` is missing in `WithSuggestion` [1] but exists in
-object type [2]. [incompatible-type]
+`{frist: string, second: number}` [2]. [incompatible-type]
 
    instance.ts:43:52
    43| const suggested: {frist: string; second: number} = withSuggestion; // ERROR: preserve suggestion for `frist`

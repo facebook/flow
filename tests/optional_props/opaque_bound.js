@@ -13,3 +13,12 @@ import type {Missing} from './opaque_export';
 
 declare const missing: Missing;
 const m: {a: number, b: string, c: string} = missing; // ERROR
+
+// A single missing property checked through an opaque type's upper bound
+import type {Single, SingleCallable} from './opaque_export';
+
+declare const single: Single;
+const s: {a: number, b: string} = single; // ERROR
+
+declare const single_callable: SingleCallable;
+const sc: {(): void, a: number} = single_callable; // ERROR

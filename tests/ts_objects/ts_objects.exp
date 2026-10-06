@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------- class_implements_object.ts:43:7
 
-Cannot implement `Omit` [1] with `Bad` because property `age` is missing in `Bad` [2] but exists in `Omit` [1].
-[incompatible-type]
+Cannot implement `Omit` [1] with `Bad` because property `age` is missing in `Bad` [2] but exists in
+`{age: number, name: string}` [1]. [incompatible-type]
 
    class_implements_object.ts:43:7
    43| class Bad implements Omit<Animal, "sound"> {
@@ -41,8 +41,8 @@ Cannot implement object type [1] because it is not an interface. [cannot-impleme
 
 Error ------------------------------------------------------------------------------------------ class_to_object.ts:18:1
 
-Cannot cast `a` to object type because property `missing` is missing in `Animal` [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast `a` to object type because property `missing` is missing in `Animal` [1] but exists in
+`{missing: boolean, name: string}` [2]. [incompatible-type]
 
    class_to_object.ts:18:1
    18| a satisfies {name: string; missing: boolean}; // ERROR: `missing` not in Animal
@@ -77,8 +77,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- exact_constraint.ts:28:27
 
-Cannot instantiate `Constrained` because in type argument `T`: property `a` is missing in `NoA` [1] but exists in object
-type [2]. [incompatible-type]
+Cannot instantiate `Constrained` because in type argument `T`: property `a` is missing in `NoA` [1] but exists in
+`{a: number}` [2]. [incompatible-type]
 
    exact_constraint.ts:28:27
    28| noA satisfies Constrained<NoA>; // ERROR: `a` missing in NoA

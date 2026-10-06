@@ -2647,8 +2647,8 @@ pub fn quick_error_fun_as_obj<'cx>(
                     let err = ErrorMessage::EPropNotFoundInSubtyping(Box::new(
                         EPropNotFoundInSubtypingData {
                             prop_name: Some(x.dupe()),
-                            reason_lower: reason.dupe(),
-                            reason_upper: reason_o.dupe(),
+                            lower: type_reference_with_reason_for_error(lower, reason.dupe()),
+                            upper: type_reference_with_reason_for_error(upper, reason_o.dupe()),
                             use_op: use_op.dupe(),
                             suggestion: None,
                         },

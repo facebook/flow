@@ -2240,8 +2240,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {
             prop_name,
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             use_op,
             suggestion,
         }) => {
@@ -2256,8 +2256,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             format!(
                 "EPropNotFoundInSubtyping ({}, {}, {}, {}, {})",
                 prop_str,
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                dump_error_type_reference(cx, lower),
+                dump_error_type_reference(cx, upper),
                 string_of_use_op(use_op),
                 suggestion_str
             )
