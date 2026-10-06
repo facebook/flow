@@ -89,7 +89,7 @@ async function main() {
   );
   if (
     JSON.stringify(typeAtIdentifier) !==
-    JSON.stringify([{type: 'flow', value: 'symbol'}])
+    JSON.stringify([{type: 'flow', value: 'const x: symbol'}])
   ) {
     throw (
       'Type-at-pos should return the identifier type. Got: ' +

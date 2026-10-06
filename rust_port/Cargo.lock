@@ -908,6 +908,7 @@ dependencies = [
  "flow_aloc",
  "flow_common",
  "flow_common_errors",
+ "flow_common_ty",
  "flow_lint_settings",
  "flow_parser",
  "flow_parser_utils",

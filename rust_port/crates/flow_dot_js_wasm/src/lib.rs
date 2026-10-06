@@ -1107,6 +1107,7 @@ fn signature_help(params: &Value) -> Result<Value, String> {
 }
 
 fn type_at_pos(params: &Value) -> Result<Value, String> {
+    use flow_common_ty::ty_printer;
     use flow_services_type_info::type_info_service;
 
     let filename = string_arg(params, "filename")?;
@@ -1120,7 +1121,8 @@ fn type_at_pos(params: &Value) -> Result<Value, String> {
         config,
         STATE.with(|state| state.borrow().master_cx.dupe()),
     )?;
-    let ((_loc, _ty, _refining, _invalidated), json_data) = type_info_service::type_at_pos(
+    let loc_of_aloc = |aloc: &ALoc| aloc.to_loc_exn().dupe();
+    let ((_loc, tys, _refining, _invalidated), json_data) = type_info_service::type_at_pos(
         &checked.prepared.cx,
         checked.prepared.parsed.file_sig.dupe(),
         &checked.typed_ast,
@@ -1130,12 +1132,31 @@ fn type_at_pos(params: &Value) -> Result<Value, String> {
         false,
         None,
         None,
-        Some(&|aloc: &ALoc| aloc.to_loc_exn().dupe()),
+        Some(&loc_of_aloc),
         checked.prepared.parsed.file_key.dupe(),
         line,
         col,
     )
     .map_err(|_| "type-at-pos failed".to_string())?;
+    // Print like the LSP hover path (`infer_type_to_response`): frame the type
+    // as the declaration it resolves to (`const x: number`, `function f(): T`).
+    if let Some(result) = tys {
+        let printer_opts = ty_printer::PrinterOptions {
+            size: 100,
+            ..Default::default()
+        };
+        let (type_str, _refs) = ty_printer::string_of_type_at_pos_result(
+            ty_printer::TypeAtPosPrint {
+                ty: &result.ty,
+                refs: result.refs.as_ref(),
+                binder: result.binder.as_ref(),
+                alias: result.alias.as_ref(),
+            },
+            &loc_of_aloc,
+            &printer_opts,
+        );
+        return Ok(json!([{ "type": "flow", "value": type_str }]));
+    }
     let data = Value::Object(json_data.into_iter().collect());
     match data.get("type").and_then(Value::as_str) {
         Some(type_) => Ok(json!([{ "type": "flow", "value": type_ }])),
@@ -1325,6 +1346,41 @@ mod tests {
                 .contains("ambiguous-object-type"),
             "warning lint should be reported as a warning: {value}"
         );
+    }
+
+    fn type_at_pos_value(content: &str, line: i32, col: i32) -> Value {
+        ensure_roots();
+        type_at_pos(&json!({
+            "filename": "test.js",
+            "content": content,
+            "line": line,
+            "col": col,
+            "config": {},
+        }))
+        .expect("typeAtPos should succeed")
+    }
+
+    fn hover_flow_value(value: &Value) -> &str {
+        value
+            .as_array()
+            .expect("typeAtPos should return hover blocks")[0]
+            .get("value")
+            .and_then(Value::as_str)
+            .expect("hover block should have a string value")
+    }
+
+    #[test]
+    fn type_at_pos_frames_value_binding_as_declaration() {
+        let value = type_at_pos_value("const foo: number = 42;\nfoo;\n", 2, 1);
+
+        assert_eq!(hover_flow_value(&value), "const foo: number");
+    }
+
+    #[test]
+    fn type_at_pos_frames_function_as_signature() {
+        let value = type_at_pos_value("function fred(): number { return 1; }\nfred;\n", 2, 1);
+
+        assert_eq!(hover_flow_value(&value), "function fred(): number");
     }
 
     #[test]
