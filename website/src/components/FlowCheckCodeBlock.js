@@ -53,8 +53,14 @@ type FlowErrorMessage = {
   description: string,
 };
 
+type FlowReferenceLocation = {
+  line: number,
+  column: number,
+};
+
 type FlowError = {
   messages: Array<FlowErrorMessage>,
+  referenceLocations: {[string]: FlowReferenceLocation},
   fullDescription: string,
   errorCode: string | null,
 };
@@ -67,6 +73,7 @@ type HighlightRange = {
 function formatErrorMessage(
   text: string,
   errorCode: string | null,
+  referenceLocations: {[string]: FlowReferenceLocation},
 ): React.MixedElement {
   // Extract and strip URLs from the message
   const cleanText = text
@@ -95,8 +102,15 @@ function formatErrorMessage(
             );
           }
           if (/^\[\d+\]$/.test(part)) {
+            const referenceLocation = referenceLocations[part.slice(1, -1)];
+            const title =
+              referenceLocation == null
+                ? undefined
+                : referenceLocation.column === 0
+                  ? `Line ${referenceLocation.line}`
+                  : `Line ${referenceLocation.line}, column ${referenceLocation.column}`;
             return (
-              <sup key={i} className={styles.errorRefMarker}>
+              <sup key={i} className={styles.errorRefMarker} title={title}>
                 {part}
               </sup>
             );
@@ -304,6 +318,7 @@ export default component FlowCheckCodeBlock(
                                     {formatErrorMessage(
                                       primaryMessage,
                                       error.errorCode,
+                                      error.referenceLocations,
                                     )}
                                   </span>
                                 </span>
@@ -335,7 +350,11 @@ export default component FlowCheckCodeBlock(
                       return (
                         <div key={errorIdx} className={styles.footerError}>
                           <span className={styles.footerErrorBody}>
-                            {formatErrorMessage(primaryMessage, null)}
+                            {formatErrorMessage(
+                              primaryMessage,
+                              null,
+                              error.referenceLocations,
+                            )}
                           </span>
                         </div>
                       );

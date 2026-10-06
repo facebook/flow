@@ -10,17 +10,37 @@
 import {spawn} from 'child_process';
 
 /*::
+type CheckContentsLocation = {
+  start: {line: number, column: number},
+  end: {line: number, column: number},
+};
+
+type CheckContentsMessage = {
+  descr: string,
+  loc: CheckContentsLocation,
+};
+
+type CheckContentsExtraMessage = {
+  descr: string,
+  loc?: CheckContentsLocation,
+};
+
+type CheckContentsInfoTree = {
+  message: Array<CheckContentsExtraMessage>,
+  children?: Array<CheckContentsInfoTree>,
+};
+
 type CheckContentsResult = {
   errors: Array<{
-    message: Array<{
-      descr: string,
-      loc: {
-        start: {line: number, column: number},
-        end: {line: number, column: number},
-      },
-    }>,
+    message: Array<CheckContentsMessage>,
+    extra?: Array<CheckContentsInfoTree>,
     error_codes: ?Array<string>,
   }>,
+};
+
+type ReferenceLocation = {
+  line: number,
+  column: number,
 };
 */
 
@@ -74,6 +94,33 @@ async function rateLimitedCheckContents(
   );
 }
 
+function getReferenceLocations(
+  extra /*: ?Array<CheckContentsInfoTree> */,
+) /*: {[string]: ReferenceLocation} */ {
+  const referenceLocations /*: {[string]: ReferenceLocation} */ = {};
+
+  const visitInfoTree = (infoTree /*: CheckContentsInfoTree */) => {
+    for (const {descr, loc} of infoTree.message) {
+      const match = /^\[(\d+)\]$/.exec(descr);
+      if (match != null && loc != null) {
+        referenceLocations[match[1]] = {
+          line: loc.start.line,
+          column: loc.start.column,
+        };
+      }
+    }
+    for (const child of infoTree.children ?? []) {
+      visitInfoTree(child);
+    }
+  };
+
+  for (const infoTree of extra ?? []) {
+    visitInfoTree(infoTree);
+  }
+
+  return referenceLocations;
+}
+
 export default async function getFlowMeta(
   code /*: string */,
   options /*: {[string]: boolean} */ = {},
@@ -82,7 +129,7 @@ export default async function getFlowMeta(
     return JSON.stringify({errors: [], options});
   }
   const errors = (await rateLimitedCheckContents(code)).errors.map(
-    ({message, error_codes}) => {
+    ({message, extra, error_codes}) => {
       const errorCode = (error_codes && error_codes[0]) || null;
       let fullDescription = message.map(({descr}) => descr).join(' ');
 
@@ -103,6 +150,7 @@ export default async function getFlowMeta(
           endColumn: loc.end.column,
           description: descr,
         })),
+        referenceLocations: getReferenceLocations(extra),
         fullDescription,
         errorCode,
       };
