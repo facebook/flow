@@ -2706,15 +2706,11 @@ fn statement_<'a>(
         }
         StatementInner::Switch { inner, .. } => {
             let discriminant_ast = expression(None, None, None, cx, &inner.discriminant)?;
-            let exhaustive_check_incomplete_out = flow_typing_tvar::mk(
-                cx,
-                mk_reason(
-                    VirtualReasonDesc::RCustom(
-                        "exhaustive check incomplete out".into(),
-                    ),
-                    loc.dupe(),
-                ),
+            let exhaustive_check_incomplete_out_reason = mk_reason(
+                VirtualReasonDesc::RCustom("exhaustive check incomplete out".into()),
+                loc.dupe(),
             );
+            let exhaustive_check_incomplete_out = TypeCollector::create();
             if cx.enable_pattern_matching()
                 && crate::switch_to_match::convert_switch(&ALoc::none(), loc.dupe(), inner)
                     .is_some()
@@ -2823,14 +2819,11 @@ fn statement_<'a>(
                     ))?;
                 }
             };
-            // We need to fully resolve all types attached to AST,
-            // because the post inference pass might inspect them.
-            tvar_resolver::resolve(
-                cx,
-                tvar_resolver::default_no_lowers,
-                true,
-                &exhaustive_check_incomplete_out,
-            );
+            let exhaustive_check_incomplete_out = exhaustive_check_incomplete_out
+                .union_opt(exhaustive_check_incomplete_out_reason.dupe())
+                .unwrap_or_else(|| {
+                    tvar_resolver::default_no_lowers(&exhaustive_check_incomplete_out_reason)
+                });
             statement::Statement::new(StatementInner::Switch {
                 loc,
                 inner: statement::Switch {
@@ -20845,25 +20838,14 @@ fn is_valid_enum_member_name(name: &str) -> bool {
     !name.is_empty() && !name.as_bytes()[0].is_ascii_lowercase()
 }
 
-fn flow_enum_exhaustive_check_incomplete<'cx>(
-    cx: &Context<'cx>,
-    env: &FlowJsEnv,
+fn flow_enum_exhaustive_check_incomplete(
     check_reason: &Reason,
     trigger: Option<&Type>,
-    exhaustive_check_incomplete_out: &Type,
-) -> Result<(), FlowJsException> {
+    exhaustive_check_incomplete_out: &TypeCollector,
+) {
     let default_trigger = void::why(check_reason.dupe());
     let trigger = trigger.unwrap_or(&default_trigger);
-    FlowJs::flow_with_env(
-        cx,
-        env,
-        trigger,
-        &UseT::new(UseTInner::UseT(
-            unknown_use(),
-            exhaustive_check_incomplete_out.dupe(),
-        )),
-    )?;
-    Ok(())
+    exhaustive_check_incomplete_out.add(trigger.dupe());
 }
 
 fn check_possible_enum_exhaustive_check<'cx>(
@@ -20872,7 +20854,7 @@ fn check_possible_enum_exhaustive_check<'cx>(
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
     checks: &Rc<[EnumCheck]>,
     default_case_loc: Option<ALoc>,
-    incomplete_out: &Type,
+    incomplete_out: &TypeCollector,
     discriminant_after_check: Option<&Type>,
     discriminant_t: &Type,
 ) -> Result<(), FlowJsException> {
@@ -20896,7 +20878,7 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
     checks: &Rc<[EnumCheck]>,
     default_case_loc: Option<ALoc>,
-    incomplete_out: &Type,
+    incomplete_out: &TypeCollector,
     discriminant_after_check: Option<&Type>,
     discriminant_t: &Type,
 ) -> Result<(), FlowJsException> {
@@ -20985,12 +20967,10 @@ fn check_possible_enum_exhaustive_check_with_env<'cx>(
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {}
             _ => {
                 flow_enum_exhaustive_check_incomplete(
-                    cx,
-                    env,
                     check_reason,
                     discriminant_after_check,
                     incomplete_out,
-                )?;
+                );
             }
         }
     }
@@ -21001,7 +20981,7 @@ fn check_invalid_enum_exhaustive_check<'cx>(
     cx: &Context<'cx>,
     check_reason: &Reason,
     reasons: &Rc<[ALoc]>,
-    incomplete_out: &Type,
+    incomplete_out: &TypeCollector,
     discriminant_after_check: Option<&Type>,
     discriminant_t: &Type,
 ) -> Result<(), FlowJsException> {
@@ -21021,7 +21001,7 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
     env: &FlowJsEnv,
     check_reason: &Reason,
     reasons: &Rc<[ALoc]>,
-    incomplete_out: &Type,
+    incomplete_out: &TypeCollector,
     discriminant_after_check: Option<&Type>,
     discriminant_t: &Type,
 ) -> Result<(), FlowJsException> {
@@ -21094,17 +21074,15 @@ fn check_invalid_enum_exhaustive_check_with_env<'cx>(
                         ))),
                     )?;
                 }
-                flow_enum_exhaustive_check_incomplete(cx, env, check_reason, None, incomplete_out)?;
+                flow_enum_exhaustive_check_incomplete(check_reason, None, incomplete_out);
             }
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => {}
             _ => {
                 flow_enum_exhaustive_check_incomplete(
-                    cx,
-                    env,
                     check_reason,
                     discriminant_after_check,
                     incomplete_out,
-                )?;
+                );
             }
         }
     }
@@ -21170,7 +21148,7 @@ fn perform_enum_exhaustive_check<'cx>(
     possible_checks: &std::collections::VecDeque<(Type, EnumCheck)>,
     checks: &[EnumCheck],
     default_case_loc: Option<ALoc>,
-    incomplete_out: &Type,
+    incomplete_out: &TypeCollector,
 ) -> Result<(), FlowJsException> {
     let mut resolved_checks: Vec<EnumCheck> = possible_checks
         .iter()
@@ -21240,7 +21218,7 @@ fn perform_enum_exhaustive_check<'cx>(
                     },
                 ))),
             )?;
-            flow_enum_exhaustive_check_incomplete(cx, env, check_reason, None, incomplete_out)?;
+            flow_enum_exhaustive_check_incomplete(check_reason, None, incomplete_out);
         }
         (true, None, true) => {
             flow_js_utils::add_output_with_env(
@@ -21257,7 +21235,7 @@ fn perform_enum_exhaustive_check<'cx>(
                     },
                 ))),
             )?;
-            flow_enum_exhaustive_check_incomplete(cx, env, check_reason, None, incomplete_out)?;
+            flow_enum_exhaustive_check_incomplete(check_reason, None, incomplete_out);
         }
         (true, Some(_), true) => {}
         (true, Some(default_case_loc), false) => {
