@@ -1452,12 +1452,12 @@ pub fn object_rest_with_env<'cx, A>(
                             EPropNotFoundInSubtypingData {
                                 prop_name: Some(k.dupe()),
                                 lower: flow_js_utils::type_reference_with_reason_for_error(
-                                    &object_type_of_slice(cx, slice2),
-                                    r2.dupe(),
-                                ),
-                                upper: flow_js_utils::type_reference_with_reason_for_error(
                                     &object_type_of_slice(cx, slice1),
                                     r1.dupe(),
+                                ),
+                                upper: flow_js_utils::type_reference_with_reason_for_error(
+                                    &object_type_of_slice(cx, slice2),
+                                    r2.dupe(),
                                 ),
                                 use_op: unknown_use(),
                                 suggestion: None,

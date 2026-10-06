@@ -129,18 +129,53 @@ References:
              ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- default_props_not_in_props.js:8:24
+Error ------------------------------------------------------------------------------- default_props_not_in_props.js:9:35
 
-Property `p` is missing in `{p: number}` [1] but exists in `{ref?: React.RefSetter<K>}` [2]. [incompatible-type]
+Property `p` is missing in `{ref?: React.RefSetter<K>}` [1] but exists in `{p: number}` [2]. [incompatible-type]
 
-   default_props_not_in_props.js:8:24
-    8|   static defaultProps: {p: number} = {p: 1};
-                              ^^^^^^^^^^^ [1]
+   default_props_not_in_props.js:9:35
+   9| const config: React.ElementConfig<typeof K> = {}; // ERROR: `p` is missing in the props
+                                        ^^^^^^^^ [1]
 
 References:
-   default_props_not_in_props.js:11:35
-   11| const config: React.ElementConfig<typeof K> = {}; // ERROR
-                                         ^^^^^^^^ [2]
+   default_props_not_in_props.js:6:24
+   6|   static defaultProps: {p: number} = {p: 1};
+                             ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- default_props_not_in_props.js:10:2
+
+Cannot create `K` element because property `p` is extra in `{p: number}` [1] but missing in
+`{readonly ref?: React.RefSetter<K>}` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   default_props_not_in_props.js:10:2
+   10| <K />; // ERROR: also reported at the element
+        ^
+
+References:
+   default_props_not_in_props.js:10:1
+   10| <K />; // ERROR: also reported at the element
+       ^^^^^ [1]
+   default_props_not_in_props.js:5:7
+    5| class K extends React.Component<{}> {
+             ^ [2]
+
+
+Error ------------------------------------------------------------------------------- default_props_not_in_props.js:10:2
+
+Property `p` is missing in `{ref?: React.RefSetter<K>}` [1] but exists in `{p: number}` [2]. [incompatible-type]
+
+   default_props_not_in_props.js:10:2
+   10| <K />; // ERROR: also reported at the element
+        ^
+
+References:
+   default_props_not_in_props.js:5:7
+    5| class K extends React.Component<{}> {
+             ^ [1]
+   default_props_not_in_props.js:6:24
+    6|   static defaultProps: {p: number} = {p: 1};
+                              ^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------- default_props_undefined.js:8:10
@@ -2523,4 +2558,4 @@ References:
 
 
 
-Found 141 errors
+Found 143 errors

@@ -1,6 +1,4 @@
-// A default prop that the exact props type does not declare. The error reports
-// `p` as missing in the defaults and present in the props, the reverse of the
-// actual situation; the order comes from the object kit's config merge.
+// A default prop that the exact props type does not declare
 
 import * as React from 'react';
 
@@ -8,4 +6,5 @@ class K extends React.Component<{}> {
   static defaultProps: {p: number} = {p: 1};
 }
 
-const config: React.ElementConfig<typeof K> = {}; // ERROR
+const config: React.ElementConfig<typeof K> = {}; // ERROR: `p` is missing in the props
+<K />; // ERROR: also reported at the element
