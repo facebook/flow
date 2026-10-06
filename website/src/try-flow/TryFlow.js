@@ -548,7 +548,7 @@ export default component TryFlow(
 
     // Window resizes, including the responsive desktop<->stacked switch.
     // Coalesced to one relayout per frame.
-    let resizeFrame: ?AnimationFrameID = null;
+    let resizeFrame: ?number = null;
     window.addEventListener('resize', () => {
       if (resizeFrame != null) cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(relayout);

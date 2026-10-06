@@ -27,28 +27,31 @@ type ModifierKey =
   | 'Symbol'
   | 'SymbolLock';
 
-declare class SyntheticEvent<+T: EventTarget = EventTarget, +E: Event = Event> {
+declare class SyntheticEvent<
+  out T: EventTarget = EventTarget,
+  out E: Event = Event,
+> {
   bubbles: boolean;
   cancelable: boolean;
-  +currentTarget: T;
+  readonly currentTarget: T;
   defaultPrevented: boolean;
   eventPhase: number;
   isDefaultPrevented(): boolean;
   isPropagationStopped(): boolean;
   isTrusted: boolean;
-  +nativeEvent: E;
+  readonly nativeEvent: E;
   persist(): void;
   preventDefault(): void;
   stopPropagation(): void;
   // This should not be `T`. Use `currentTarget` instead. See:
   // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/11508#issuecomment-256045682
-  +target: EventTarget;
+  readonly target: EventTarget;
   timeStamp: number;
   type: string;
 }
 
 declare class SyntheticAnimationEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticEvent<T> {
   animationName: string;
   elapsedTime: number;
@@ -56,40 +59,40 @@ declare class SyntheticAnimationEvent<
 }
 
 declare class SyntheticClipboardEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticEvent<T> {
   clipboardData: any;
 }
 
 declare class SyntheticCompositionEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticEvent<T> {
   data: any;
 }
 
 declare class SyntheticInputEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticEvent<T> {
   data: any;
-  +target: HTMLInputElement;
+  readonly target: HTMLInputElement;
 }
 
 declare class SyntheticUIEvent<
-  +T: EventTarget = EventTarget,
-  +E: Event = Event,
+  out T: EventTarget = EventTarget,
+  out E: Event = Event,
 > extends SyntheticEvent<T, E> {
   detail: number;
   view: any;
 }
 
 declare class SyntheticFocusEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticUIEvent<T> {
   relatedTarget: EventTarget;
 }
 
 declare class SyntheticKeyboardEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticUIEvent<T, KeyboardEvent> {
   altKey: boolean;
   charCode: number;
@@ -106,8 +109,8 @@ declare class SyntheticKeyboardEvent<
 }
 
 declare class SyntheticMouseEvent<
-  +T: EventTarget = EventTarget,
-  +E: Event = MouseEvent,
+  out T: EventTarget = EventTarget,
+  out E: Event = MouseEvent,
 > extends SyntheticUIEvent<T, E> {
   altKey: boolean;
   button: number;
@@ -126,13 +129,13 @@ declare class SyntheticMouseEvent<
 }
 
 declare class SyntheticDragEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticMouseEvent<T, DragEvent> {
   dataTransfer: any;
 }
 
 declare class SyntheticWheelEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticMouseEvent<T, WheelEvent> {
   deltaMode: number;
   deltaX: number;
@@ -141,7 +144,7 @@ declare class SyntheticWheelEvent<
 }
 
 declare class SyntheticPointerEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticMouseEvent<T, PointerEvent> {
   height: number;
   isPrimary: boolean;
@@ -156,7 +159,7 @@ declare class SyntheticPointerEvent<
 }
 
 declare class SyntheticTouchEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticUIEvent<T, TouchEvent> {
   altKey: boolean;
   changedTouches: TouchList;
@@ -169,7 +172,7 @@ declare class SyntheticTouchEvent<
 }
 
 declare class SyntheticTransitionEvent<
-  +T: EventTarget = EventTarget,
+  out T: EventTarget = EventTarget,
 > extends SyntheticEvent<T> {
   elapsedTime: number;
   propertyName: string;
@@ -361,8 +364,8 @@ declare type $JSXIntrinsics = {
 type ReactDOM$HTMLElementJSXIntrinsic = {
   instance: HTMLElement,
   props: {
-    +[key: string]: any,
-    +children?: React$Node,
+    readonly [key: string]: any,
+    readonly children?: React$Node,
     ...
   },
   ...
@@ -371,8 +374,8 @@ type ReactDOM$HTMLElementJSXIntrinsic = {
 type ReactDOM$SVGElementJSXIntrinsic = {
   instance: Element,
   props: {
-    +[key: string]: any,
-    +children?: React$Node,
+    readonly [key: string]: any,
+    readonly children?: React$Node,
     ...
   },
   ...
@@ -398,7 +401,7 @@ type ReactDOM$DataPropValues = ?(string | boolean | number);
 type ReactDOM$UserVisibleString = string;
 
 // Override this if you want to add custom events to all HTML elements
-type ReactDOM$CustomEvents<-E> = $ReadOnly<{||}>;
+type ReactDOM$CustomEvents<in E> = $ReadOnly<{||}>;
 
 type ReactDOM$BooleanishString = boolean | 'true' | 'false';
 
@@ -641,7 +644,7 @@ type ReactDOM$AriaAttributes = {|
   'aria-valuetext'?: ?ReactDOM$UserVisibleString,
 |};
 
-type ReactDOM$EventHandlers<-E> = $ReadOnly<{|
+type ReactDOM$EventHandlers<in E> = $ReadOnly<{|
   // Animation Events
   onAnimationEnd?: ?(SyntheticAnimationEvent<E>) => mixed,
   onAnimationEndCapture?: ?(SyntheticAnimationEvent<E>) => mixed,

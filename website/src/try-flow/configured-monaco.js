@@ -59,7 +59,7 @@ function setTypeAtPosFunction(flowService: ?FlowJsServices): void {
       value,
       position.lineNumber,
       position.column - 1,
-    );
+    ) ?? null;
 }
 
 let signatureHelpFunctionForMonaco = (value: string, position: Position): any =>
