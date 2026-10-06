@@ -177,7 +177,6 @@ pub struct FrozenMetadata {
     pub async_component_syntax_includes: Arc<[Regex]>,
     pub declare_global_support: bool,
     pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
-    pub deprecated_utilities_excludes: Arc<[Regex]>,
     pub dev_only_refinement_info_as_errors: bool,
     pub disable_invariant_special_casing: bool,
     pub enable_const_params: bool,
@@ -217,7 +216,6 @@ pub struct FrozenMetadata {
     pub stylex_shorthand_prop: Option<String>,
     pub export_star_excludes_default: bool,
     pub ts_syntax: bool,
-    pub deprecated_colon_extends_excludes: Arc<[Regex]>,
     pub ts_utility_syntax: bool,
     pub tslib_syntax: bool,
     pub typescript_library_definition_support: bool,
@@ -242,7 +240,6 @@ impl Default for FrozenMetadata {
             async_component_syntax_includes: Arc::from([]),
             declare_global_support: false,
             deprecated_utilities: Arc::new(BTreeMap::new()),
-            deprecated_utilities_excludes: Arc::from([]),
             dev_only_refinement_info_as_errors: false,
             disable_invariant_special_casing: false,
             enable_const_params: false,
@@ -282,7 +279,6 @@ impl Default for FrozenMetadata {
             stylex_shorthand_prop: None,
             export_star_excludes_default: false,
             ts_syntax: false,
-            deprecated_colon_extends_excludes: Arc::from([]),
             ts_utility_syntax: false,
             tslib_syntax: false,
             typescript_library_definition_support: false,
@@ -637,7 +633,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             async_component_syntax: options.async_component_syntax,
             async_component_syntax_includes: options.async_component_syntax_includes.dupe(),
             declare_global_support: options.declare_global_support,
-            deprecated_utilities_excludes: options.deprecated_utilities_excludes.dupe(),
             hook_compatibility_excludes: options.hook_compatibility_excludes.dupe(),
             hook_compatibility_includes: options.hook_compatibility_includes.dupe(),
             hook_compatibility: options.hook_compatibility,
@@ -685,7 +680,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             stylex_shorthand_prop: options.stylex_shorthand_prop.clone(),
             export_star_excludes_default: options.export_star_excludes_default,
             ts_syntax: options.ts_syntax,
-            deprecated_colon_extends_excludes: options.deprecated_colon_extends_excludes.dupe(),
             ts_utility_syntax: options.ts_utility_syntax,
             tslib_syntax: options.tslib_syntax,
             typescript_library_definition_support: options.typescript_library_definition_support,
@@ -1170,17 +1164,8 @@ impl<'cx> Context<'cx> {
                 let filename = self.0.file.to_absolute();
                 let normalized_filename =
                     flow_common::sys_utils::normalize_filename_dir_sep(&filename);
-                let is_excluded = self
-                    .0
-                    .metadata
-                    .frozen
-                    .deprecated_utilities_excludes
-                    .iter()
-                    .any(|r| r.is_match(&normalized_filename));
-                !is_excluded
-                    && dirs
-                        .iter()
-                        .any(|prefix| normalized_filename.starts_with(prefix))
+                dirs.iter()
+                    .any(|prefix| normalized_filename.starts_with(prefix))
             }
         }
     }
@@ -1438,15 +1423,7 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn is_colon_extends_deprecated(&self) -> bool {
-        if self.is_global_lib_context() {
-            return false;
-        }
-        let filename = self.0.file.to_absolute();
-        let normalized_filename = flow_common::sys_utils::normalize_filename_dir_sep(&filename);
-        let excluded_dirs = &self.0.metadata.frozen.deprecated_colon_extends_excludes;
-        !excluded_dirs
-            .iter()
-            .any(|r: &Regex| r.is_match(&normalized_filename))
+        !self.is_global_lib_context()
     }
 
     pub fn ts_utility_syntax(&self) -> bool {

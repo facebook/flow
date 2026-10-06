@@ -253,8 +253,6 @@ pub mod opts {
         pub tslib_syntax: Option<bool>,
         pub typescript_library_definition_support: bool,
         pub deprecated_utilities: BTreeMap<String, Vec<String>>,
-        pub deprecated_utilities_excludes: Vec<String>,
-        pub deprecated_colon_extends_excludes: Vec<String>,
         pub enable_custom_error: bool,
         pub assert_operator: AssertOperator,
         pub assertion_functions: Option<bool>,
@@ -427,8 +425,6 @@ pub mod opts {
             tslib_syntax: None,
             typescript_library_definition_support: false,
             deprecated_utilities: default_deprecated_utilities(),
-            deprecated_utilities_excludes: Vec::new(),
-            deprecated_colon_extends_excludes: Vec::new(),
             enable_custom_error: false,
             assert_operator: AssertOperator::Disabled,
             assertion_functions: None,
@@ -2210,21 +2206,6 @@ pub mod opts {
                     config,
                 )
             }),
-            (
-                "experimental.deprecated_utilities.excludes",
-                |values, config| {
-                    parse_string(
-                        |opts, v| {
-                            opts.deprecated_utilities_excludes.push(v);
-                            Ok(())
-                        },
-                        Some(|opts| opts.deprecated_utilities_excludes = Vec::new()),
-                        true,
-                        values,
-                        config,
-                    )
-                },
-            ),
             ("experimental.enable_custom_error", |values, config| {
                 parse_boolean(
                     |opts, v| {
@@ -2389,21 +2370,6 @@ pub mod opts {
                     config,
                 )
             }),
-            (
-                "experimental.deprecated_colon_extends.excludes",
-                |values, config| {
-                    parse_string(
-                        |opts, v| {
-                            opts.deprecated_colon_extends_excludes.push(v);
-                            Ok(())
-                        },
-                        Some(|opts| opts.deprecated_colon_extends_excludes = Vec::new()),
-                        true,
-                        values,
-                        config,
-                    )
-                },
-            ),
             ("experimental.tslib_syntax", |values, config| {
                 parse_boolean(
                     |opts, v| {

@@ -2248,8 +2248,6 @@ pub fn make_options(
                 tslib_syntax,
                 typescript_library_definition_support,
                 deprecated_utilities,
-                deprecated_utilities_excludes,
-                deprecated_colon_extends_excludes,
                 enable_custom_error,
                 assert_operator,
                 assertion_functions,
@@ -2437,15 +2435,6 @@ pub fn make_options(
             .collect(),
     );
 
-    let deprecated_utilities_excludes: Arc<[Regex]> = deprecated_utilities_excludes
-        .iter()
-        .map(|s| {
-            let expanded = flow_common::files::expand_project_root_token(&root, s);
-            Regex::new(&expanded).unwrap()
-        })
-        .collect::<Vec<_>>()
-        .into();
-
     let enabled_rollouts: Arc<BTreeMap<String, String>> = Arc::new(
         rollouts
             .into_iter()
@@ -2529,14 +2518,6 @@ pub fn make_options(
         ))
     };
 
-    let deprecated_colon_extends_excludes: Arc<[Regex]> = deprecated_colon_extends_excludes
-        .iter()
-        .map(|s| {
-            let expanded = flow_common::files::expand_project_root_token(&root, s);
-            Regex::new(&expanded).unwrap()
-        })
-        .collect::<Vec<_>>()
-        .into();
     let saved_state_persist_export_index =
         match std::env::var("FLOW_SAVED_STATE_PERSIST_EXPORT_INDEX")
             .ok()
@@ -2564,8 +2545,6 @@ pub fn make_options(
         debug: debug_override,
         declare_global_support,
         deprecated_utilities,
-        deprecated_utilities_excludes,
-        deprecated_colon_extends_excludes,
         dev_only_refinement_info_as_errors,
         disable_invariant_special_casing,
         distributed: distributed_override,

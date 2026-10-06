@@ -4,7 +4,3 @@ unused_ts_shim.js
 [options]
 all=true
 builtin_lib=flowlib
-
-experimental.deprecated_utilities.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
-
-experimental.deprecated_colon_extends.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
