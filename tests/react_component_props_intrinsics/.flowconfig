@@ -1,0 +1,6 @@
+[libs]
+flow-typed
+
+[options]
+all=true
+builtin_lib=flowlib

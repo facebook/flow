@@ -172,7 +172,7 @@ Flags: --pretty
     },
     {
       "name":"ComponentProps",
-      "type":"type ComponentProps<T extends React$ElementType> = T extends component(...infer Props extends {...}) ? Props : T extends string ? $JSXIntrinsics[T][\"props\"] : empty"
+      "type":"type ComponentProps<T extends React$ElementType> = T extends component(...infer Props extends {...}) ? Props : T extends string ? {...$JSXIntrinsics[T][\"props\"], ref?: RefSetter<$JSXIntrinsics[T][\"instance\"]>} : empty"
     },
     {
       "name":"ComponentPropsWithRef",
