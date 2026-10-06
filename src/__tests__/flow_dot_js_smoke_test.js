@@ -50,6 +50,22 @@ async function main() {
     throw 'Incorrect parse result';
   }
 
+  const uniqueSymbolAst = flow.parse('declare const x: unique symbol;', {
+    sourceFilename: 'test.js',
+  });
+  if (
+    uniqueSymbolAst.type !== 'Program' ||
+    uniqueSymbolAst.loc?.source !== 'test.js' ||
+    uniqueSymbolAst.loc?.start?.line !== 1 ||
+    uniqueSymbolAst.body?.[0]?.declarations?.[0]?.id?.typeAnnotation
+      ?.typeAnnotation?.type !== 'TypeOperator'
+  ) {
+    throw (
+      'Parse did not return an ESTree program. Got: ' +
+      JSON.stringify(uniqueSymbolAst, undefined, 2)
+    );
+  }
+
   if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
     throw 'There should be no errors if the library is correctly registered.';
   }

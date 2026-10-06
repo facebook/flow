@@ -37,11 +37,14 @@ use flow_parser::LexMode;
 use flow_parser::PERMISSIVE_PARSE_OPTIONS;
 use flow_parser::TokenSinkResult;
 use flow_parser::ast;
+use flow_parser::comment_utils;
+use flow_parser::estree_translator;
 use flow_parser::file_key;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::offset_utils::OffsetKind;
+use flow_parser::offset_utils::OffsetTable;
 use flow_parser::token::TokenKind;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::FileSigOptions;
@@ -672,44 +675,64 @@ fn token_json(content: &str, token: &TokenSinkResult) -> Value {
 
 fn parse(params: &Value) -> Result<Value, String> {
     let content = string_arg(params, "content")?;
-    let filename = params
+    let source_filename = params
         .get("options")
         .and_then(|options| options.get("sourceFilename"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
+        .and_then(Value::as_str);
     let options = params.get("options").unwrap_or(&Value::Null);
     let include_tokens = bool_config(options, "tokens", false);
-    let file_key = FileKey::new(FileKeyInner::SourceFile(filename.to_string()));
     let mut tokens: Vec<TokenSinkResult> = Vec::new();
     let mut sink = |token: TokenSinkResult| {
         if !matches!(token.token_kind, TokenKind::TEof) {
             tokens.push(token);
         }
     };
-    let (ast, parse_errors) = flow_parser::parse_program_file::<()>(
-        false,
-        include_tokens.then_some(&mut sink),
-        Some(PERMISSIVE_PARSE_OPTIONS),
-        file_key.dupe(),
-        Ok(content),
+    let (mut ast, parse_errors) = match source_filename {
+        Some(filename) => flow_parser::parse_program_file::<()>(
+            false,
+            include_tokens.then_some(&mut sink),
+            Some(PERMISSIVE_PARSE_OPTIONS),
+            FileKey::new(FileKeyInner::SourceFile(filename.to_string())),
+            Ok(content),
+        ),
+        None => flow_parser::parse_program_without_file(
+            false,
+            include_tokens.then_some(&mut sink),
+            Some(PERMISSIVE_PARSE_OPTIONS),
+            Ok(content),
+        ),
+    };
+    comment_utils::strip_inlined_comments(&mut ast);
+
+    let offset_table = OffsetTable::make(content);
+    let mut result = estree_translator::program(
+        &offset_table,
+        &estree_translator::Config {
+            include_locs: true,
+            include_filename: true,
+            offset_style: estree_translator::OffsetStyle::JsIndices,
+        },
+        &ast,
     );
-    let mut result = serde_json::Map::new();
-    result.insert("type".to_string(), Value::String("Program".to_string()));
-    result.insert(
-        "ast".to_string(),
-        serde_json::to_value(&ast).map_err(|e| e.to_string())?,
-    );
-    result.insert(
+    let Value::Object(result_object) = &mut result else {
+        return Err("ESTree program serialization did not produce an object".to_string());
+    };
+    result_object.insert(
         "errors".to_string(),
-        serde_json::to_value(parse_errors).map_err(|e| e.to_string())?,
+        estree_translator::errors(
+            &offset_table,
+            true,
+            estree_translator::OffsetStyle::JsIndices,
+            &parse_errors,
+        ),
     );
     if include_tokens {
-        result.insert(
+        result_object.insert(
             "tokens".to_string(),
             Value::Array(tokens.iter().map(|t| token_json(content, t)).collect()),
         );
     }
-    Ok(Value::Object(result))
+    Ok(result)
 }
 
 fn loc_value(loc: &Loc) -> Value {

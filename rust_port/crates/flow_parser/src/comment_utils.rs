@@ -45,7 +45,9 @@ impl<'ast> AstVisitor<'ast, Loc> for InlineCommentsStripper {
     }
 }
 
-pub(super) fn strip_inlined_comments(program: &mut ast::Program<Loc, Loc>) {
+/// Removes comments attached to individual AST nodes while preserving the
+/// program's complete comment list.
+pub fn strip_inlined_comments(program: &mut ast::Program<Loc, Loc>) {
     *program = InlineCommentsStripper.map_program(program);
 }
 
