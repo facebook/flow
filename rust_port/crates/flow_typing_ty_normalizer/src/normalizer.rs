@@ -45,6 +45,7 @@ use flow_lazy::Lazy;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser_utils::file_sig::FileSig;
 use flow_typing_context::Context;
+use flow_typing_flow_common::type_subst;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::DefTInner;
@@ -5013,6 +5014,55 @@ mod expand_members {
         }
     }
 
+    // A class extending a value with a construct signature (`extends Map<K, V>`)
+    // inherits what the signature returns, the way [ThisSpecializeT] works it
+    // out, rather than the members of the value itself.
+    fn constructed_instance<'cx>(
+        cx: &Context<'cx>,
+        c: &Type,
+        targs: Option<&[Type]>,
+    ) -> Option<Type> {
+        let c = cx.find_resolved(c)?;
+        let TypeInner::DefT(_, def_t) = c.deref() else {
+            return None;
+        };
+        let DefTInner::InstanceT(instance) = def_t.deref() else {
+            return None;
+        };
+        let construct_t = cx.find_resolved(&cx.find_call(instance.inst.inst_construct_t?))?;
+        let construct_t = match construct_t.deref() {
+            TypeInner::IntersectionT(_, rep) => cx.find_resolved(rep.members_iter().next()?)?,
+            _ => construct_t,
+        };
+        let fun_t = match construct_t.deref() {
+            TypeInner::DefT(_, def_t)
+                if let DefTInner::PolyT(box PolyTData { tparams, t_out, .. }) = def_t.deref() =>
+            {
+                let map = tparams
+                    .iter()
+                    .zip(targs.unwrap_or_default())
+                    .map(|(tparam, targ)| (tparam.name.dupe(), targ.dupe()))
+                    .collect();
+                cx.find_resolved(&type_subst::subst(
+                    cx,
+                    None,
+                    true,
+                    false,
+                    type_subst::Purpose::Normal,
+                    &map,
+                    t_out.dupe(),
+                ))?
+            }
+            _ => construct_t,
+        };
+        match fun_t.deref() {
+            TypeInner::DefT(_, def_t) if let DefTInner::FunT(_, fun_type) = def_t.deref() => {
+                Some(fun_type.return_t.dupe())
+            }
+            _ => None,
+        }
+    }
+
     fn type__<'cx, I: NormalizerInput>(
         env: &mut Env<'_, 'cx>,
         state: &mut State,
@@ -5074,17 +5124,22 @@ mod expand_members {
                 allowed_prop_names,
                 inner_t,
             ),
-            TypeInner::ThisTypeAppT(box ThisTypeAppTData { type_: c, .. }) => type__::<I>(
-                env,
-                state,
-                None,
-                inherited,
-                source,
-                imode,
-                force_instance,
-                allowed_prop_names,
-                c,
-            ),
+            TypeInner::ThisTypeAppT(box ThisTypeAppTData {
+                type_: c, targs, ..
+            }) => {
+                let inherited_t = constructed_instance(env.genv.cx, c, targs.as_deref());
+                type__::<I>(
+                    env,
+                    state,
+                    None,
+                    inherited,
+                    source,
+                    imode,
+                    force_instance,
+                    allowed_prop_names,
+                    inherited_t.as_ref().unwrap_or(c),
+                )
+            }
             TypeInner::DefT(r, def_t) => match def_t.deref() {
                 DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. } => {
                     primitive::<I>(env, state, force_instance, allowed_prop_names, r, "Number")

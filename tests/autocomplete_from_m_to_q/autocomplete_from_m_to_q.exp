@@ -1,3 +1,44 @@
+member_class_extends_constructor.js:4:9
+Flags: --pretty
+{
+  "result":[
+    {
+      "name":"[Symbol.iterator]",
+      "type":"(this: Map<string, number>) => MapIterator<[string, number]>"
+    },
+    {"name":"clear","type":"(this: Map<string, number>) => void"},
+    {"name":"delete","type":"(this: Map<string, number>, key: string) => boolean"},
+    {
+      "name":"entries",
+      "type":"(this: Map<string, number>) => MapIterator<[string, number]>"
+    },
+    {
+      "name":"forEach",
+      "type":"<This>(this: Map<string, number>, callbackfn: (this: This, value: number, index: string, map: Map<string, number>) => unknown, thisArg: This) => void"
+    },
+    {
+      "name":"get",
+      "type":"(this: Map<string, number>, key: string) => number | void"
+    },
+    {
+      "name":"getOrInsert",
+      "type":"(this: Map<string, number>, key: string, value: number) => number"
+    },
+    {
+      "name":"getOrInsertComputed",
+      "type":"(this: Map<string, number>, key: string, callbackfn: (key: string) => number) => number"
+    },
+    {"name":"has","type":"(this: Map<string, number>, key: string) => boolean"},
+    {"name":"keys","type":"(this: Map<string, number>) => MapIterator<string>"},
+    {
+      "name":"set",
+      "type":"(this: Map<string, number>, key: string, value: number) => Map<string, number>"
+    },
+    {"name":"size","type":"number"},
+    {"name":"values","type":"(this: Map<string, number>) => MapIterator<number>"}
+  ]
+}
+
 member_class_property.js:10:5
 Flags: --lsp
 {
