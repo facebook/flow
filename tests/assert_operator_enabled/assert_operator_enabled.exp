@@ -522,8 +522,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:80:7
 
-Cannot get `x.f.d` because property `d` is missing in `void` (due to access of non-existent property `f`) [1].
-[incompatible-use]
+Cannot get `x.f.d` because property `d` is missing in `void` [1]. [incompatible-use]
 
    test.js:80:7
    80|   x.f.d += 42; // error addition
@@ -537,8 +536,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:80:7
 
-Cannot update `x.f.d` because property `d` is missing in `void` (due to access of non-existent property `f`) [1].
-[incompatible-use]
+Cannot update `x.f.d` because property `d` is missing in `void` [1]. [incompatible-use]
 
    test.js:80:7
    80|   x.f.d += 42; // error addition

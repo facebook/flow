@@ -35,7 +35,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- proper_blaming.js:9:3
 
-Cannot get `x.nope` because property `nope` is missing in null [1]. [incompatible-use]
+Cannot get `x.nope` because property `nope` is missing in `null` [1]. [incompatible-use]
 
    proper_blaming.js:9:3
    9| x.nope; // error here

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- positining.js:40:3
 
-Cannot call `a.push` because property `push` is missing in undefined [1]. [incompatible-use]
+Cannot call `a.push` because property `push` is missing in `void` [1]. [incompatible-use]
 
    positining.js:40:3
    40| a.push('');

@@ -3418,20 +3418,36 @@ where
     // Unlike mk_incompatible_error, this handles specific use type incompatibilities.
     let mk_incompatible_use_error = |use_loc: Loc,
                                      use_kind: super::error_message::UpperKind<L>,
-                                     lower: VirtualReason<L>,
+                                     lower_loc: L,
+                                     lower_kind: Option<super::error_message::LowerKind>,
                                      lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
                                      use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
+        use super::error_message::LowerKind;
         use super::error_message::UpperKind;
 
-        let lower = mod_lower_reason_according_to_use_ops(lower, &use_op);
         let lower_type_ref = MessageTypeReferenceData {
-            loc: lower.annot_loc().unwrap_or_else(|| lower.def_loc()).dupe(),
+            loc: lower_loc,
             desc: lower_desc,
         };
         let lower_is_not = |requirement| Message::MessageLowerIsNotWithPrintedType {
             lower: Box::new(lower_type_ref.clone()),
             requirement,
+        };
+        let prop_missing = |prop: Option<FlowSmolStr>| match prop {
+            None if matches!(
+                lower_kind,
+                Some(LowerKind::PossiblyNull | LowerKind::PossiblyVoid)
+            ) =>
+            {
+                Message::MessageLowerDoesNotHavePropertiesWithPrintedType(Box::new(
+                    lower_type_ref.clone(),
+                ))
+            }
+            prop => Message::MessagePropMissingWithPrintedType {
+                lower: Box::new(lower_type_ref.clone()),
+                prop,
+            },
         };
 
         match use_kind {
@@ -3514,18 +3530,17 @@ where
             UpperKind::IncompatibleGetPropT(prop_loc, prop)
             | UpperKind::IncompatibleSetPropT(prop_loc, prop)
             | UpperKind::IncompatibleHasOwnPropT(prop_loc, prop)
-            | UpperKind::IncompatibleMethodT(prop_loc, prop) => mk_prop_missing_in_lookup_error(
+            | UpperKind::IncompatibleMethodT(prop_loc, prop) => mk_use_op_error(
                 loc_of_aloc(&prop_loc),
-                prop.map(|p| p.display_smol_str()),
-                lower,
                 use_op,
                 None,
+                prop_missing(prop.map(|p| p.display_smol_str())),
             ),
 
             UpperKind::IncompatibleGetElemT(prop_loc)
             | UpperKind::IncompatibleSetElemT(prop_loc)
             | UpperKind::IncompatibleCallElemT(prop_loc) => {
-                mk_prop_missing_in_lookup_error(loc_of_aloc(&prop_loc), None, lower, use_op, None)
+                mk_use_op_error(loc_of_aloc(&prop_loc), use_op, None, prop_missing(None))
             }
 
             UpperKind::IncompatibleGetStaticsT => mk_use_op_error(
@@ -3864,14 +3879,16 @@ where
             FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
                 loc,
                 upper_kind,
-                reason_lower,
+                lower_loc,
+                lower_kind,
                 lower_desc,
                 use_op,
             }),
         ) => mk_incompatible_use_error(
             loc_of_aloc(&loc),
             upper_kind,
-            reason_lower,
+            lower_loc,
+            lower_kind,
             lower_desc,
             use_op,
         ),
@@ -8172,6 +8189,10 @@ where
                     text(ctor),
                 ])
             }
+            MessageLowerDoesNotHavePropertiesWithPrintedType(lower) => friendly::Message(vec![
+                ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                text(" does not have properties"),
+            ]),
             MessageNoDefaultExport(box MessageNoDefaultExportData {
                 module_name,
                 suggestion,
@@ -8300,6 +8321,15 @@ where
                         }
                     }
                 }
+            }
+            MessagePropMissingWithPrintedType { lower, prop } => {
+                use super::error_message::mk_prop_message;
+                let mut features = mk_prop_message(prop.as_deref());
+                features.extend(vec![
+                    text(" is missing in "),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
+                ]);
+                friendly::Message(features)
             }
             MessagePrivatePropMissing { object, prop } => {
                 use super::error_message::mk_prop_message;

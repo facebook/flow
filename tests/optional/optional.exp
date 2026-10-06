@@ -46,7 +46,21 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- maybe.js:6:5
 
-Cannot get `x['bar']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `x['bar']` because `null` [1] does not have properties. [incompatible-use]
+
+   maybe.js:6:5
+   6|   x['bar']; // Error
+          ^^^^^
+
+References:
+   maybe.js:5:17
+   5| function bar(x: ?{bar: number}) {
+                      ^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- maybe.js:6:5
+
+Cannot get `x['bar']` because `void` [1] does not have properties. [incompatible-use]
 
    maybe.js:6:5
    6|   x['bar']; // Error
@@ -291,7 +305,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- undefined2.js:8:14
 
-Cannot get `x.duck` because property `duck` is missing in undefined [1]. [incompatible-use]
+Cannot get `x.duck` because property `duck` is missing in `void` [1]. [incompatible-use]
 
    undefined2.js:8:14
    8|     return x.duck;
@@ -304,4 +318,4 @@ References:
 
 
 
-Found 21 errors
+Found 22 errors

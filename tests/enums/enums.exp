@@ -303,7 +303,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:36:5
 
-Cannot get `e.A` because property `A` is missing in `EnumValue` [1]. [incompatible-use]
+Cannot get `e.A` because property `A` is missing in enum [1]. [incompatible-use]
 
    abstract-enum.js:36:5
    36|   e.A; // ERROR

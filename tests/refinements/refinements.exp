@@ -62,7 +62,21 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- assignment.js:22:16
 
-Cannot get `x.parent` because property `parent` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `x.parent` because property `parent` is missing in `null` [1]. [incompatible-use]
+
+   assignment.js:22:16
+   22|   while (x = x.parent) { // x.parent might be null
+                      ^^^^^^
+
+References:
+   assignment.js:21:19
+   21| function bar1(x : ?Bar) {
+                         ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- assignment.js:22:16
+
+Cannot get `x.parent` because property `parent` is missing in `void` [1]. [incompatible-use]
 
    assignment.js:22:16
    22|   while (x = x.parent) { // x.parent might be null
@@ -319,7 +333,21 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
 
-Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `x[0]` because `null` [1] does not have properties. [incompatible-use]
+
+   bool.js:12:5
+   12|   x[0]; // error on null and undefined
+           ^
+
+References:
+   bool.js:3:17
+    3| function foo(x: ?boolean) {
+                       ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- bool.js:12:5
+
+Cannot get `x[0]` because `void` [1] does not have properties. [incompatible-use]
 
    bool.js:12:5
    12|   x[0]; // error on null and undefined
@@ -364,7 +392,21 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:18:9
 
-Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `x[0]` because `null` [1] does not have properties. [incompatible-use]
+
+   bool.js:18:9
+   18|       x[0]; // error on null and undefined
+               ^
+
+References:
+   bool.js:15:17
+   15| function bar(x: ?boolean) {
+                       ^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- bool.js:18:9
+
+Cannot get `x[0]` because `void` [1] does not have properties. [incompatible-use]
 
    bool.js:18:9
    18|       x[0]; // error on null and undefined
@@ -954,7 +996,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:52:11
 
-Cannot get `o.p` because property `p` is missing in null [1]. [incompatible-use]
+Cannot get `o.p` because property `p` is missing in `null` [1]. [incompatible-use]
 
    cond_prop.js:52:11
    52|     if (o.p) {
@@ -2883,7 +2925,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:44:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:44:51
    44|   if (1)                                      a.b.c;   // error
@@ -2925,7 +2967,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:46:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:46:51
    46|   if (a.b) { f();                             a.b.c; } // error
@@ -2953,7 +2995,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:53:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:53:51
    53|   if (a.b) { true && f();                     a.b.c; } // error
@@ -2981,7 +3023,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:54:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:54:51
    54|   if (a.b) { f() && true;                     a.b.c; } // error
@@ -3009,7 +3051,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:55:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:55:51
    55|   if (a.b) { false || f();                    a.b.c; } // error
@@ -3037,7 +3079,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:56:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:56:51
    56|   if (a.b) { f() || false;                    a.b.c; } // error
@@ -3073,7 +3115,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:57:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:57:51
    57|   if (a.b) { null ?? f();                     a.b.c; } // error
@@ -3101,7 +3143,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:58:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:58:51
    58|   if (a.b) { f() ?? true;                     a.b.c; } // error
@@ -3129,7 +3171,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:60:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:60:51
    60|   if (a.b) { p ? f() : 0;                     a.b.c; } // error
@@ -3157,7 +3199,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:61:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:61:51
    61|   if (a.b) { p ? 1 : f();                     a.b.c; } // error
@@ -3185,7 +3227,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:62:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:62:51
    62|   if (a.b) { f() ? 1 : 0;                     a.b.c; } // error
@@ -3213,7 +3255,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:64:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:64:51
    64|   if (a.b) { if (p) f();                      a.b.c; } // error
@@ -3241,7 +3283,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:65:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:65:51
    65|   if (a.b) { if (p); else f();                a.b.c; } // error
@@ -3269,7 +3311,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:66:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:66:51
    66|   if (a.b) { if (f());                        a.b.c; } // error
@@ -3297,7 +3339,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:69:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:69:56
    69|   if (a.b) { switch (p) { case true: f(); }        a.b.c; } // error
@@ -3325,7 +3367,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:70:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:70:56
    70|   if (a.b) { switch (p) { case true: f(); break; } a.b.c; } // error
@@ -3353,7 +3395,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:71:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:71:56
    71|   if (a.b) { switch (p) { default: f(); }          a.b.c; } // error
@@ -3381,7 +3423,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:72:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:72:56
    72|   if (a.b) { switch (p) { default: f(); break; }   a.b.c; } // error
@@ -3409,7 +3451,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:73:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:73:56
    73|   if (a.b) { switch (f()) {}                       a.b.c; } // error
@@ -3437,7 +3479,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:74:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:74:56
    74|   if (a.b) { switch (f()) { case true: }           a.b.c; } // error
@@ -3465,7 +3507,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:75:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:75:56
    75|   if (a.b) { switch (f()) { case true: break; }    a.b.c; } // error
@@ -3493,7 +3535,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:76:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:76:56
    76|   if (a.b) { switch (f()) { default: }             a.b.c; } // error
@@ -3521,7 +3563,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:77:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:77:56
    77|   if (a.b) { switch (f()) { default: break; }      a.b.c; } // error
@@ -3549,7 +3591,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:81:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:81:51
    81|   if (a.b) { while (p) f();                   a.b.c; } // error
@@ -3577,7 +3619,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:82:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:82:51
    82|   if (a.b) { while (f());                     a.b.c; } // error
@@ -3605,7 +3647,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:83:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:83:51
    83|   if (a.b) { do f(); while (p);               a.b.c; } // error
@@ -3633,7 +3675,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:84:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:84:51
    84|   if (a.b) { do; while (f());                 a.b.c; } // error
@@ -3661,7 +3703,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:85:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:85:51
    85|   if (a.b) { for (; p;) f();                  a.b.c; } // error
@@ -3689,7 +3731,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:86:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:86:51
    86|   if (a.b) { for (; p; f());                  a.b.c; } // error
@@ -3717,7 +3759,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:87:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:87:51
    87|   if (a.b) { for (; f(););                    a.b.c; } // error
@@ -3745,7 +3787,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:88:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:88:51
    88|   if (a.b) { for (f(); p;);                   a.b.c; } // error
@@ -3773,7 +3815,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:89:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:89:51
    89|   if (a.b) { for (i1 in y) f();               a.b.c; } // error
@@ -3801,7 +3843,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:90:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:90:51
    90|   if (a.b) { for (i2 in ff());                a.b.c; } // error
@@ -3829,7 +3871,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:91:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:91:51
    91|   if (a.b) { for (i3 of y) f();               a.b.c; } // error
@@ -3857,7 +3899,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:92:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:92:51
    92|   if (a.b) { for (i4 of ff());                a.b.c; } // error
@@ -3916,7 +3958,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:96:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:96:58
    96|   if (a.b) { while (p) { f(); if (p) continue; }     a.b.c; } // error
@@ -3975,7 +4017,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:97:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:97:58
    97|   if (a.b) { while (p) { f(); if (p) break;    }     a.b.c; } // error
@@ -4034,7 +4076,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:98:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:98:58
    98|   if (a.b) { while (p) { f(); if (p) return;   }     a.b.c; } // ideally ok, error acceptable
@@ -4062,7 +4104,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:99:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:99:58
    99|   if (a.b) { while (f()) { if (p) continue; }        a.b.c; } // error
@@ -4090,7 +4132,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:100:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:100:58
    100|   if (a.b) { while (f()) { if (p) break;    }        a.b.c; } // error
@@ -4118,7 +4160,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:101:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:101:58
    101|   if (a.b) { while (f()) { if (p) return;   }        a.b.c; } // error
@@ -4160,7 +4202,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:103:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:103:58
    103|   if (a.b) { do { f(); if (p) continue; } while (p); a.b.c; } // error
@@ -4219,7 +4261,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:104:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:104:58
    104|   if (a.b) { do { f(); if (p) break;    } while (p); a.b.c; } // error
@@ -4278,7 +4320,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:105:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:105:58
    105|   if (a.b) { do { f(); if (p) return;   } while (p); a.b.c; } // error[unreachable-code]
@@ -4306,7 +4348,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:106:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:106:58
    106|   if (a.b) { do { if (p) continue; } while (f());    a.b.c; } // error
@@ -4365,7 +4407,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:107:65
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:107:65
    107|   if (a.b) { do { if (p) if (p) break;    } while (f());    a.b.c; } // ideally ok, error acceptable
@@ -4446,7 +4488,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:110:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:110:58
    110|   if (a.b) { for (; p;) { f(); if (p) continue; }    a.b.c; } // error
@@ -4519,7 +4561,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:111:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:111:58
    111|   if (a.b) { for (; p;) { f(); if (p) break;    }    a.b.c; } // error
@@ -4578,7 +4620,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:112:58
    112|   if (a.b) { for (; p;) { f(); if (p) return;   }    a.b.c; } // ideally ok, error acceptable
@@ -4637,7 +4679,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:113:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:113:58
    113|   if (a.b) { for (; p; f()) if (p) continue;         a.b.c; } // error
@@ -4696,7 +4738,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:114:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:114:58
    114|   if (a.b) { for (; p; f()) if (p) break;            a.b.c; } // ideally ok, error acceptable
@@ -4755,7 +4797,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:115:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:115:58
    115|   if (a.b) { for (; p; f()) if (p) return;           a.b.c; } // ideally ok, error acceptable
@@ -4783,7 +4825,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:116:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:116:58
    116|   if (a.b) { for (; f();) if (p) continue;           a.b.c; } // error
@@ -4811,7 +4853,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:117:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:117:58
    117|   if (a.b) { for (; f();) if (p) break;              a.b.c; } // error
@@ -4839,7 +4881,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:118:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:118:58
    118|   if (a.b) { for (; f();) if (p) return;             a.b.c; } // error
@@ -4898,7 +4940,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:119:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:119:58
    119|   if (a.b) { for (f(); p;) if (p) continue;          a.b.c; } // error
@@ -4957,7 +4999,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:120:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:120:58
    120|   if (a.b) { for (f(); p;) if (p) break;             a.b.c; } // error
@@ -5016,7 +5058,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:121:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:121:58
    121|   if (a.b) { for (f(); p;) if (p) return;            a.b.c; } // error
@@ -5044,7 +5086,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:123:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:123:59
    123|   if (a.b) { for (i5 in y) { f(); if (p) continue; }  a.b.c; } // error
@@ -5072,7 +5114,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:124:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:124:59
    124|   if (a.b) { for (i6 in y) { f(); if (p) break;    }  a.b.c; } // error
@@ -5100,7 +5142,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:125:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:125:59
    125|   if (a.b) { for (i7 in y) { f(); if (p) return;   }  a.b.c; } // ideally ok, error acceptable
@@ -5128,7 +5170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:126:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:126:59
    126|   if (a.b) { for (i8 in ff()) if (p) continue;        a.b.c; } // error
@@ -5156,7 +5198,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:127:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:127:59
    127|   if (a.b) { for (i9 in ff()) if (p) break;           a.b.c; } // error
@@ -5184,7 +5226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:128:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:128:59
    128|   if (a.b) { for (i10 in ff()) if (p) return;         a.b.c; } // error
@@ -5212,7 +5254,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:130:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:130:59
    130|   if (a.b) { for (i11 of y) { f(); if (p) continue; } a.b.c; } // error
@@ -5240,7 +5282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:131:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:131:59
    131|   if (a.b) { for (i12 of y) { f(); if (p) break;    } a.b.c; } // error
@@ -5268,7 +5310,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:132:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:132:59
    132|   if (a.b) { for (i13 of y) { f(); if (p) return;   } a.b.c; } // ideally ok, error acceptable
@@ -5296,7 +5338,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:133:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:133:59
    133|   if (a.b) { for (i14 of ff()) if (p) continue;       a.b.c; } // error
@@ -5324,7 +5366,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:134:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:134:59
    134|   if (a.b) { for (i15 of ff()) if (p) break;          a.b.c; } // error
@@ -5352,7 +5394,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:135:59
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:135:59
    135|   if (a.b) { for (i16 of ff()) if (p) return;         a.b.c; } // error
@@ -5380,7 +5422,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:139:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:139:51
    139|   if (a.b) { while (p) { f(); continue; }     a.b.c; } // error
@@ -5394,7 +5436,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:140:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:140:51
    140|   if (a.b) { while (p) { f(); break;    }     a.b.c; } // error
@@ -5408,7 +5450,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:141:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:141:51
    141|   if (a.b) { while (p) { f(); return;   }     a.b.c; } // ideally ok, error acceptable
@@ -5436,7 +5478,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:142:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:142:51
    142|   if (a.b) { while (f()) { continue; }        a.b.c; } // error
@@ -5450,7 +5492,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:143:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:143:51
    143|   if (a.b) { while (f()) { break;    }        a.b.c; } // error
@@ -5464,7 +5506,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:144:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:144:51
    144|   if (a.b) { while (f()) { return;   }        a.b.c; } // error
@@ -5492,7 +5534,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:146:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:146:51
    146|   if (a.b) { do { f(); continue; } while (p); a.b.c; } // error
@@ -5506,7 +5548,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:147:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:147:51
    147|   if (a.b) { do { f(); break;    } while (p); a.b.c; } // error
@@ -5556,7 +5598,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:149:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:149:51
    149|   if (a.b) { do { continue; } while (f());    a.b.c; } // error
@@ -5584,7 +5626,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:150:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:150:51
    150|   if (a.b) { do { break;    } while (f());    a.b.c; } // ideally ok, error acceptable
@@ -5634,7 +5676,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:153:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:153:51
    153|   if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // error
@@ -5662,7 +5704,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:154:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:154:51
    154|   if (a.b) { for (; p;) { f(); break;    }    a.b.c; } // error
@@ -5676,7 +5718,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:155:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:155:51
    155|   if (a.b) { for (; p;) { f(); return;   }    a.b.c; } // ideally ok, error acceptable
@@ -5704,7 +5746,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:156:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:156:51
    156|   if (a.b) { for (; p; f()) continue;         a.b.c; } // error
@@ -5718,7 +5760,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:157:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:157:51
    157|   if (a.b) { for (; p; f()) break;            a.b.c; } // ideally ok, error acceptable
@@ -5732,7 +5774,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:158:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:158:51
    158|   if (a.b) { for (; p; f()) return;           a.b.c; } // ideally ok, error acceptable
@@ -5760,7 +5802,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:159:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:159:51
    159|   if (a.b) { for (; f();) continue;           a.b.c; } // error
@@ -5774,7 +5816,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:160:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:160:51
    160|   if (a.b) { for (; f();) break;              a.b.c; } // error
@@ -5788,7 +5830,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:161:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:161:51
    161|   if (a.b) { for (; f();) return;             a.b.c; } // error
@@ -5816,7 +5858,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:162:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:162:51
    162|   if (a.b) { for (f(); p;) continue;          a.b.c; } // error
@@ -5830,7 +5872,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:163:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:163:51
    163|   if (a.b) { for (f(); p;) break;             a.b.c; } // error
@@ -5844,7 +5886,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:164:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:164:51
    164|   if (a.b) { for (f(); p;) return;            a.b.c; } // error
@@ -5872,7 +5914,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:166:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:166:52
    166|   if (a.b) { for (i5 in y) { f(); continue; }  a.b.c; } // error
@@ -5886,7 +5928,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:167:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:167:52
    167|   if (a.b) { for (i6 in y) { f(); break;    }  a.b.c; } // error
@@ -5900,7 +5942,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:168:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:168:52
    168|   if (a.b) { for (i7 in y) { f(); return;   }  a.b.c; } // ideally ok, error acceptable
@@ -5928,7 +5970,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:169:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:169:52
    169|   if (a.b) { for (i8 in ff()) continue;        a.b.c; } // error
@@ -5942,7 +5984,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:170:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:170:52
    170|   if (a.b) { for (i9 in ff()) break;           a.b.c; } // error
@@ -5956,7 +5998,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:171:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:171:52
    171|   if (a.b) { for (i10 in ff()) return;         a.b.c; } // error
@@ -5984,7 +6026,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:173:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:173:52
    173|   if (a.b) { for (i11 of y) { f(); continue; } a.b.c; } // error
@@ -5998,7 +6040,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:174:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:174:52
    174|   if (a.b) { for (i12 of y) { f(); break;    } a.b.c; } // error
@@ -6012,7 +6054,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:175:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:175:52
    175|   if (a.b) { for (i13 of y) { f(); return;   } a.b.c; } // ideally ok, error acceptable
@@ -6040,7 +6082,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:176:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:176:52
    176|   if (a.b) { for (i14 of ff()) continue;       a.b.c; } // error
@@ -6054,7 +6096,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:177:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:177:52
    177|   if (a.b) { for (i15 of ff()) break;          a.b.c; } // error
@@ -6068,7 +6110,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:178:52
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:178:52
    178|   if (a.b) { for (i16 of ff()) return;         a.b.c; } // error
@@ -6096,7 +6138,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:188:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:188:56
    188|   if (a.b) { l: { f(); }                           a.b.c; } // error
@@ -6124,7 +6166,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:189:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:189:56
    189|   if (a.b) { l: { f(); break l; }                  a.b.c; } // error
@@ -6152,7 +6194,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:190:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:190:56
    190|   if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // error
@@ -6230,7 +6272,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:195:61
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:195:61
    195|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
@@ -6258,7 +6300,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:196:61
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:196:61
    196|   if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // error
@@ -6286,7 +6328,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:197:61
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:197:61
    197|   if (a.b) { l: switch (f()) { case true: break l; }    a.b.c; } // error
@@ -6314,7 +6356,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:198:61
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:198:61
    198|   if (a.b) { l: switch (f()) { default: break l; }      a.b.c; } // error
@@ -6342,7 +6384,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:202:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:202:56
    202|   if (a.b) { l: while (p) { f(); continue l; }     a.b.c; } // error
@@ -6356,7 +6398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:203:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:203:56
    203|   if (a.b) { l: while (p) { f(); break l;    }     a.b.c; } // error
@@ -6384,7 +6426,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:204:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:204:56
    204|   if (a.b) { l: while (f()) { continue l; }        a.b.c; } // error
@@ -6398,7 +6440,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:205:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:205:56
    205|   if (a.b) { l: while (f()) { break l;    }        a.b.c; } // error
@@ -6426,7 +6468,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:207:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:207:56
    207|   if (a.b) { l: do { f(); continue l; } while (p); a.b.c; } // error
@@ -6440,7 +6482,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:208:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:208:56
    208|   if (a.b) { l: do { f(); break l;    } while (p); a.b.c; } // error
@@ -6468,7 +6510,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:209:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:209:56
    209|   if (a.b) { l: do { continue l; } while (f());    a.b.c; } // error
@@ -6482,7 +6524,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:210:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:210:56
    210|   if (a.b) { l: do { break l;    } while (f());    a.b.c; } // ideally ok, error acceptable
@@ -6510,7 +6552,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:212:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:212:56
    212|   if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // error
@@ -6524,7 +6566,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:213:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:213:56
    213|   if (a.b) { l: for (; p;) { f(); break l;    }    a.b.c; } // error
@@ -6552,7 +6594,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:214:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:214:56
    214|   if (a.b) { l: for (; p; f()) continue l;         a.b.c; } // error
@@ -6566,7 +6608,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:215:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:215:56
    215|   if (a.b) { l: for (; p; f()) break l;            a.b.c; } // ideally ok, error acceptable
@@ -6594,7 +6636,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:216:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:216:56
    216|   if (a.b) { l: for (; f();) continue l;           a.b.c; } // error
@@ -6608,7 +6650,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:217:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:217:56
    217|   if (a.b) { l: for (; f();) break l;              a.b.c; } // error
@@ -6636,7 +6678,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:218:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:218:56
    218|   if (a.b) { l: for (f(); p;) continue l;          a.b.c; } // error
@@ -6650,7 +6692,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:219:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:219:56
    219|   if (a.b) { l: for (f(); p;) break l;             a.b.c; } // error
@@ -6678,7 +6720,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:221:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:221:56
    221|   if (a.b) { l: for (i1 in y) { f(); continue l; } a.b.c; } // error
@@ -6692,7 +6734,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:222:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:222:56
    222|   if (a.b) { l: for (i2 in y) { f(); break l;    } a.b.c; } // error
@@ -6720,7 +6762,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:223:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:223:56
    223|   if (a.b) { l: for (i3 in ff()) continue l;       a.b.c; } // error
@@ -6734,7 +6776,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:224:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:224:56
    224|   if (a.b) { l: for (i4 in ff()) break l;          a.b.c; } // error
@@ -6762,7 +6804,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:226:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:226:56
    226|   if (a.b) { l: for (i5 of y) { f(); continue l; } a.b.c; } // error
@@ -6776,7 +6818,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:227:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:227:56
    227|   if (a.b) { l: for (i6 of y) { f(); break l;    } a.b.c; } // error
@@ -6804,7 +6846,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:228:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:228:56
    228|   if (a.b) { l: for (i7 of ff()) continue l;       a.b.c; } // error
@@ -6818,7 +6860,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:229:56
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:229:56
    229|   if (a.b) { l: for (i8 of ff()) break l;          a.b.c; } // error
@@ -6860,7 +6902,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:239:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:239:51
    239|   if (a.b) { delete x.b;                      a.b.c; } // error
@@ -6888,7 +6930,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:240:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:240:51
    240|   if (a.b) { x.b = y;                         a.b.c; } // error
@@ -6916,7 +6958,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:247:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:247:51
    247|   if (a.b) { true && delete x.b;              a.b.c; } // error
@@ -6944,7 +6986,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:248:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:248:51
    248|   if (a.b) { delete x.b && true;              a.b.c; } // error
@@ -6972,7 +7014,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:249:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:249:51
    249|   if (a.b) { true && (x.b = y);               a.b.c; } // error
@@ -7000,7 +7042,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:250:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:250:51
    250|   if (a.b) { (x.b = y) && true;               a.b.c; } // error
@@ -7028,7 +7070,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:252:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:252:51
    252|   if (a.b) { false || (x.b = y);              a.b.c; } // error
@@ -7056,7 +7098,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:253:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:253:51
    253|   if (a.b) { (x.b = y) || false;              a.b.c; } // error
@@ -7092,7 +7134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:254:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:254:51
    254|   if (a.b) { null ?? (x.b = y);               a.b.c; } // error
@@ -7120,7 +7162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:255:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:255:51
    255|   if (a.b) { (x.b = y) ?? true;               a.b.c; } // error
@@ -7148,7 +7190,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:257:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:257:51
    257|   if (a.b) { p ? (x.b = y) : 0;               a.b.c; } // error
@@ -7176,7 +7218,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:258:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:258:51
    258|   if (a.b) { p ? 1 : (x.b = y);               a.b.c; } // error
@@ -7204,7 +7246,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:259:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:259:51
    259|   if (a.b) { (x.b = y) ? 1 : 0;               a.b.c; } // error
@@ -7232,7 +7274,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:261:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:261:51
    261|   if (a.b) { if (p) x.b = y;                  a.b.c; } // error
@@ -7260,7 +7302,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:262:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:262:51
    262|   if (a.b) { if (p); else x.b = y;            a.b.c; } // error
@@ -7288,7 +7330,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:263:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:263:51
    263|   if (a.b) { if (x.b = y);                    a.b.c; } // error
@@ -7316,7 +7358,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:266:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:266:60
    266|   if (a.b) { switch (p) { case true: x.b = y; }        a.b.c; } // error
@@ -7344,7 +7386,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:267:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:267:60
    267|   if (a.b) { switch (p) { case true: x.b = y; break; } a.b.c; } // error
@@ -7372,7 +7414,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:268:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:268:60
    268|   if (a.b) { switch (p) { default: x.b = y; }          a.b.c; } // error
@@ -7400,7 +7442,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:269:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:269:60
    269|   if (a.b) { switch (p) { default: x.b = y; break; }   a.b.c; } // error
@@ -7428,7 +7470,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:270:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:270:60
    270|   if (a.b) { switch (x.b = y) {}                       a.b.c; } // error
@@ -7456,7 +7498,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:271:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:271:58
    271|   if (a.b) { switch (x.b = y) { case {}: }           a.b.c; } // error
@@ -7484,7 +7526,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:272:58
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:272:58
    272|   if (a.b) { switch (x.b = y) { case {}: break; }    a.b.c; } // error
@@ -7512,7 +7554,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:273:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:273:60
    273|   if (a.b) { switch (x.b = y) { default: }             a.b.c; } // error
@@ -7540,7 +7582,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:274:60
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:274:60
    274|   if (a.b) { switch (x.b = y) { default: break; }      a.b.c; } // error
@@ -7568,7 +7610,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:278:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:278:51
    278|   if (a.b) { while (p) x.b = y;               a.b.c; } // error
@@ -7596,7 +7638,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:279:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:279:51
    279|   if (a.b) { while (x.b = y);                 a.b.c; } // error
@@ -7624,7 +7666,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:280:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:280:51
    280|   if (a.b) { do x.b = y; while (p);           a.b.c; } // error
@@ -7652,7 +7694,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:281:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:281:51
    281|   if (a.b) { do; while (x.b = y);             a.b.c; } // error
@@ -7680,7 +7722,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:282:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:282:51
    282|   if (a.b) { for (; p;) x.b = y;              a.b.c; } // error
@@ -7708,7 +7750,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:283:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:283:51
    283|   if (a.b) { for (; p; x.b = y);              a.b.c; } // error
@@ -7736,7 +7778,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:284:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:284:51
    284|   if (a.b) { for (; x.b = y;);                a.b.c; } // error
@@ -7764,7 +7806,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:285:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:285:51
    285|   if (a.b) { for (x.b = y; p;);               a.b.c; } // error
@@ -7792,7 +7834,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:286:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:286:51
    286|   if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // error
@@ -7820,7 +7862,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:287:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:287:51
    287|   if (a.b) { for (i2 in x.b = y);             a.b.c; } // error
@@ -7848,7 +7890,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:288:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:288:51
    288|   if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
@@ -7876,7 +7918,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:289:51
 
-Cannot get `a.b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:289:51
    289|   if (a.b) { for (i4 of x.b = y);             a.b.c; } // error
@@ -7890,7 +7932,21 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:306:9
 
-Cannot get `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `foo.bar` because property `bar` is missing in `null` [1]. [incompatible-use]
+
+   invalidation.js:306:9
+   306|     foo.bar != null && // error
+                ^^^
+
+References:
+   invalidation.js:303:22
+   303|   declare const foo: ?{bar: string, ...};
+                             ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:306:9
+
+Cannot get `foo.bar` because property `bar` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:306:9
    306|     foo.bar != null && // error
@@ -7904,7 +7960,21 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:308:9
 
-Cannot get `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `foo.bar` because property `bar` is missing in `null` [1]. [incompatible-use]
+
+   invalidation.js:308:9
+   308|     foo.bar // error
+                ^^^
+
+References:
+   invalidation.js:303:22
+   303|   declare const foo: ?{bar: string, ...};
+                             ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- invalidation.js:308:9
+
+Cannot get `foo.bar` because property `bar` is missing in `void` [1]. [incompatible-use]
 
    invalidation.js:308:9
    308|     foo.bar // error
@@ -8537,7 +8607,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:9:10
 
-Cannot get `o.p2.x` because property `x` is missing in property `p2` of unknown type [1]. [incompatible-use]
+Cannot get `o.p2.x` because property `x` is missing in `unknown` [1]. [incompatible-use]
 
    missing-property-cond.js:9:10
    9|     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
@@ -8607,8 +8677,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:21:10
 
-Cannot get `o.p4.x` because property `x` is missing in `void` (due to access of non-existent property `p4`) [1].
-[incompatible-use]
+Cannot get `o.p4.x` because property `x` is missing in `void` [1]. [incompatible-use]
 
    missing-property-cond.js:21:10
    21|     o.p4.x; // error
@@ -8768,7 +8837,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:46:12
 
-Cannot get `null.q` because property `q` is missing in null [1]. [incompatible-use]
+Cannot get `null.q` because property `q` is missing in `null` [1]. [incompatible-use]
 
    missing-property-cond.js:46:12
    46|   if (null.q) {} // error: property `q` on null
@@ -9944,7 +10013,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:11:7
 
-Cannot get `x[0]` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `x[0]` because `null` [1] does not have properties. [incompatible-use]
+
+   not.js:11:7
+   11|     x[0]; // should error for null, void and number (0)
+             ^
+
+References:
+   not.js:9:17
+    9| function bar(x: ?number) {
+                       ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ not.js:11:7
+
+Cannot get `x[0]` because `void` [1] does not have properties. [incompatible-use]
 
    not.js:11:7
    11|     x[0]; // should error for null, void and number (0)
@@ -13281,7 +13364,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:20:20
 
-Cannot call `x.prop1.charAt` because property `charAt` is missing in undefined [1]. [incompatible-use]
+Cannot call `x.prop1.charAt` because property `charAt` is missing in `void` [1]. [incompatible-use]
 
    tagged_union.js:20:20
    20|     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
@@ -13553,7 +13636,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:101:27
 
-Cannot call `null.toString` because property `toString` is missing in null [1]. [incompatible-use]
+Cannot call `null.toString` because property `toString` is missing in `null` [1]. [incompatible-use]
 
    tagged_union.js:101:27
    101|     if (x.kind === (null).toString()) {} // error, method on null
@@ -13567,7 +13650,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:102:35
 
-Cannot call `null.toString` because property `toString` is missing in null [1]. [incompatible-use]
+Cannot call `null.toString` because property `toString` is missing in `null` [1]. [incompatible-use]
 
    tagged_union.js:102:35
    102|     if ({kind: 1}.kind === (null).toString()) {} // error, method on null
@@ -15841,7 +15924,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:22:7
 
-Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
+Cannot call `BAZ.stuff` because property `stuff` is missing in `void` [1]. [incompatible-use]
 
    typeof.js:22:7
    22|   BAZ.stuff(123); // error, refinement is gone
@@ -15855,7 +15938,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:25:7
 
-Cannot get `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
+Cannot get `BAZ.stuff` because property `stuff` is missing in `void` [1]. [incompatible-use]
 
    typeof.js:25:7
    25|   BAZ.stuff; // error, could be undefined
@@ -15925,7 +16008,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:28:9
 
-Cannot call `BAZ.stuff` because property `stuff` is missing in undefined [1]. [incompatible-use]
+Cannot call `BAZ.stuff` because property `stuff` is missing in `void` [1]. [incompatible-use]
 
    typeof.js:28:9
    28|     BAZ.stuff(123); // error, refinement is gone
@@ -17784,4 +17867,4 @@ References:
 
 
 
-Found 1196 errors
+Found 1202 errors

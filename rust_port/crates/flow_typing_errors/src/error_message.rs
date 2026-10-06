@@ -1101,7 +1101,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EAnnotationInferenceDa
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EIncompatibleTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lower_reason: VirtualReason<L>,
     pub lower_kind: Option<LowerKind>,
     pub lower_loc: L,
     pub lower_def_loc: L,
@@ -1113,7 +1112,8 @@ pub struct EIncompatibleTypeData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 // The normalized type is presentation-only, so it does not affect error identity.
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EIncompatibleTypeData<L> {
     fn eq(&self, other: &Self) -> bool {
-        self.lower_reason == other.lower_reason
+        self.lower_loc == other.lower_loc
+            && self.lower_def_loc == other.lower_def_loc
             && self.lower_kind == other.lower_kind
             && self.upper == other.upper
             && self.use_op == other.use_op
@@ -1124,7 +1124,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Eq for EIncompatibleTypeData<L
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash for EIncompatibleTypeData<L> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.lower_reason.hash(state);
+        self.lower_loc.hash(state);
+        self.lower_def_loc.hash(state);
         self.lower_kind.hash(state);
         self.upper.hash(state);
         self.use_op.hash(state);
@@ -1139,8 +1140,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd for EIncompatibleTy
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EIncompatibleTypeData<L> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.lower_reason
-            .cmp(&other.lower_reason)
+        self.lower_loc
+            .cmp(&other.lower_loc)
+            .then_with(|| self.lower_def_loc.cmp(&other.lower_def_loc))
             .then_with(|| self.lower_kind.cmp(&other.lower_kind))
             .then_with(|| self.upper.cmp(&other.upper))
             .then_with(|| self.use_op.cmp(&other.use_op))
@@ -4557,7 +4559,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
         match msg {
             EIncompatibleType(box EIncompatibleTypeData {
-                lower_reason,
                 lower_kind,
                 lower_loc,
                 lower_def_loc,
@@ -4569,7 +4570,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                 use_op,
             }) => EIncompatibleType(Box::new(EIncompatibleTypeData {
-                lower_reason: map_reason(lower_reason),
                 lower_kind,
                 lower_loc: f(lower_loc),
                 lower_def_loc: f(lower_def_loc),
@@ -7710,7 +7710,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )),
 
             EIncompatibleType(box EIncompatibleTypeData {
-                lower_reason,
                 lower_kind,
                 lower_loc,
                 lower_def_loc,
@@ -7718,7 +7717,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper,
                 use_op,
             }) => EIncompatibleType(Box::new(EIncompatibleTypeData {
-                lower_reason,
                 lower_kind,
                 lower_loc,
                 lower_def_loc,
@@ -8795,7 +8793,8 @@ pub fn type_casting_examples() -> (&'static str, &'static str) {
 pub struct IncompatibleTypeUseData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
     pub upper_kind: UpperKind<L>,
-    pub reason_lower: VirtualReason<L>,
+    pub lower_loc: L,
+    pub lower_kind: Option<LowerKind>,
     pub lower_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -9038,7 +9037,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
         match self {
             ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
-                lower_reason,
+                lower_kind,
+                lower_def_loc,
                 lower_desc,
                 upper:
                     IncompatibleUpperData {
@@ -9050,7 +9050,8 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }) => IncompatibleTypeUse(Box::new(IncompatibleTypeUseData {
                 loc,
                 upper_kind,
-                reason_lower: lower_reason,
+                lower_loc: lower_def_loc,
+                lower_kind,
                 lower_desc: expect_type_desc(lower_desc),
                 use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
             })),

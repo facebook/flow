@@ -7,7 +7,7 @@ No errors!
 === block 3 ===
 Error --------------------------------------------------------------------------------- -:9:22
 
-Cannot call `inputRef.current.focus` because property `focus` is missing in null [1]. [incompatible-use]
+Cannot call `inputRef.current.focus` because property `focus` is missing in `null` [1]. [incompatible-use]
 
    -:9:22
    9|     inputRef.current.focus(); // ERROR: `current` may be null

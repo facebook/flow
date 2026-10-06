@@ -687,7 +687,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:49:7
 
-Cannot assign function to `123.toString` because property `toString` is missing in number [1]. [incompatible-use]
+Cannot assign function to `123.toString` because property `toString` is missing in `number` [1]. [incompatible-use]
 
    object_prototype.js:49:7
    49| (123).toString = function() {}; // error

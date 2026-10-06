@@ -95,7 +95,7 @@ No errors!
 === block 16 ===
 Error -------------------------------------------------------------------------- -:13:16
 
-Cannot call `value.prop.charAt` because property `charAt` is missing in undefined [1]. [incompatible-use]
+Cannot call `value.prop.charAt` because property `charAt` is missing in `void` [1]. [incompatible-use]
 
    -:13:16
    13|     value.prop.charAt(0); // Error!

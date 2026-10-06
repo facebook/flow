@@ -42,7 +42,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:19:1
 
-Cannot call `fn1` because property `p` is missing in null [1]. [incompatible-use]
+Cannot call `fn1` because property `p` is missing in `null` [1]. [incompatible-use]
 
    errors.js:19:1
    19| fn1(null); // We should get an error on this line.
@@ -70,7 +70,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:22:1
 
-Cannot call `fn2` because property `p` is missing in null [1]. [incompatible-use]
+Cannot call `fn2` because property `p` is missing in `null` [1]. [incompatible-use]
 
    errors.js:22:1
    22| fn2(null)(); // We should get an error on this line.
@@ -98,7 +98,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:25:1
 
-Cannot call `fn3` because property `p` is missing in null [1]. [incompatible-use]
+Cannot call `fn3` because property `p` is missing in `null` [1]. [incompatible-use]
 
    errors.js:25:1
    25| fn3(null); // We should get an error on this line.
@@ -126,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:28:1
 
-Cannot call `fn4` because property `p` is missing in null [1]. [incompatible-use]
+Cannot call `fn4` because property `p` is missing in `null` [1]. [incompatible-use]
 
    errors.js:28:1
    28| fn4(null)(); // We should get an error on this line.

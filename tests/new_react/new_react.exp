@@ -295,7 +295,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- state5.js:5:23
 
-Cannot get `this.state.x` because property `x` is missing in undefined [1]. [incompatible-use]
+Cannot get `this.state.x` because property `x` is missing in `void` [1]. [incompatible-use]
 
    state5.js:5:23
      5|     return this.state.x; // error: need to declare type of state

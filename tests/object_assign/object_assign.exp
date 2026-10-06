@@ -223,7 +223,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
 
-Incorrect arguments passed to `Object.assign` because property `a` is missing in string [1]. [incompatible-use]
+Incorrect arguments passed to `Object.assign` because property `a` is missing in `string` [1]. [incompatible-use]
 
    non_objects.js:3:1
    3| Object.assign("123", {a: "foo"});
@@ -237,7 +237,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:4:1
 
-Incorrect arguments passed to `Object.assign` because property `a` is missing in number [1]. [incompatible-use]
+Incorrect arguments passed to `Object.assign` because property `a` is missing in `number` [1]. [incompatible-use]
 
    non_objects.js:4:1
    4| Object.assign(123, {a: "foo"});

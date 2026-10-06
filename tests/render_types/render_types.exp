@@ -1338,7 +1338,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:120:15
 
-Cannot get `rendersNode.props` because property `props` is missing in null [1]. [incompatible-use]
+Cannot get `rendersNode.props` because property `props` is missing in `null` [1]. [incompatible-use]
 
    renders_to_renders.js:120:15
    120|   rendersNode.props; // ERROR
@@ -1352,7 +1352,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:120:15
 
-Cannot get `rendersNode.props` because property `props` is missing in undefined [1]. [incompatible-use]
+Cannot get `rendersNode.props` because property `props` is missing in `void` [1]. [incompatible-use]
 
    renders_to_renders.js:120:15
    120|   rendersNode.props; // ERROR

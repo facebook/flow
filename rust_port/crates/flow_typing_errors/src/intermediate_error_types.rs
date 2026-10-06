@@ -2489,6 +2489,8 @@ pub enum Message<L: Dupe> {
         ctor: FlowSmolStr,
     },
 
+    MessageLowerDoesNotHavePropertiesWithPrintedType(Box<MessageTypeReferenceData<L>>),
+
     MessageMissingAnnotation(VirtualReasonDesc<L>),
     MessageMissingAnnotationDueToContextualTypingFailure(VirtualReasonDesc<L>),
     MessageMissingAnnotationForGenericFunction(VirtualReasonDesc<L>),
@@ -2513,6 +2515,11 @@ pub enum Message<L: Dupe> {
     MessagePropExtraAgainstExactObject(Box<MessagePropExtraAgainstExactObjectData<L>>),
 
     MessagePropMissing(Box<MessagePropMissingData<L>>),
+
+    MessagePropMissingWithPrintedType {
+        lower: Box<MessageTypeReferenceData<L>>,
+        prop: Option<FlowSmolStr>,
+    },
 
     MessagePrivatePropMissing {
         object: MessageTypeReferenceData<L>,

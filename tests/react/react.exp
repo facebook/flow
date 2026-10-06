@@ -1178,7 +1178,7 @@ References:
 
 Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:12:7
 
-Cannot get `ref.props` because property `props` is missing in null [1]. [incompatible-use]
+Cannot get `ref.props` because property `props` is missing in `null` [1]. [incompatible-use]
 
    react_util_types_monomorphization.js:12:7
    12|   ref.props.foo as string; // error: mixed ~> string

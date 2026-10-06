@@ -290,7 +290,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- callback_this.js:6:25
 
-Cannot get `this.y` because property `y` is missing in undefined [1]. [incompatible-use]
+Cannot get `this.y` because property `y` is missing in `void` [1]. [incompatible-use]
 
    callback_this.js:6:25
    6|             return this.y; // error, function has wrong this

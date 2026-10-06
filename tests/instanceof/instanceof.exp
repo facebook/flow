@@ -227,7 +227,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- instanceof.js:100:7
 
 Cannot assign `123` to `x[0]` because an index signature declaring the expected key / value type is missing in
-number [1]. [incompatible-use]
+`number` [1]. [incompatible-use]
 
    instanceof.js:100:7
    100|     x[0] = 123; // error

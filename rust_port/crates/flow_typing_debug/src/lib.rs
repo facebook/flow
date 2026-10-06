@@ -2018,7 +2018,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
 
     match err {
         ErrorMessage::EIncompatibleType(box EIncompatibleTypeData {
-            lower_reason,
+            lower_loc,
             lower_desc,
             upper,
             use_op,
@@ -2029,8 +2029,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 TypeOrTypeDescT::TypeDesc(desc) => format!("{desc:?}"),
             };
             format!(
-                "EIncompatibleType {{ lower_reason = {}; lower = {}; upper = ({}, {}); use_op = {} }}",
-                dump_reason(cx, lower_reason),
+                "EIncompatibleType {{ lower_loc = {}; lower = {}; upper = ({}, {}); use_op = {} }}",
+                string_of_aloc(None, lower_loc),
                 lower_desc,
                 format_args!("loc {:?}", upper.loc),
                 dump_upper_kind(&upper.kind),

@@ -537,7 +537,27 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:170:9
 
-Cannot call `acc.set` because property `set` is missing in null or undefined [1]. [incompatible-use]
+Cannot call `acc.set` because property `set` is missing in `null` [1]. [incompatible-use]
+
+   implicit_instantiation.js:170:9
+   170|     acc.set("", ""); // error
+                ^^^
+
+References:
+   implicit_instantiation.js:167:36
+                                           v------------------------
+   167|   const map: Map<string, string> = [""].reduce((acc, v) => {
+   168|     // TODO: This is an unfortunate error when we wrap the hint on logical expression with MaybeT
+   169|     //       for LHS. It makes acc to have type `?Map<string, string>`
+   170|     acc.set("", ""); // error
+   171|     return acc;
+   172|   }, new Map()) ?? new Map();
+          ------------^ [1]
+
+
+Error ---------------------------------------------------------------------------------- implicit_instantiation.js:170:9
+
+Cannot call `acc.set` because property `set` is missing in `void` [1]. [incompatible-use]
 
    implicit_instantiation.js:170:9
    170|     acc.set("", ""); // error
@@ -1261,4 +1281,4 @@ References:
 
 
 
-Found 89 errors
+Found 90 errors

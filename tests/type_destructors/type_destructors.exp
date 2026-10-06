@@ -30,7 +30,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- element_type.js:24:8
 
-Cannot access string literal `c` on `Z` because property `c` is missing in null or undefined [1]. [incompatible-use]
+Cannot access string literal `c` on `Z` because property `c` is missing in `null` [1]. [incompatible-use]
+
+   element_type.js:24:8
+   24| 1 as Z['c']; // Error - access 'c' on `void`/`null`
+              ^^^
+
+References:
+   element_type.js:24:6
+   24| 1 as Z['c']; // Error - access 'c' on `void`/`null`
+            ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- element_type.js:24:8
+
+Cannot access string literal `c` on `Z` because property `c` is missing in `void` [1]. [incompatible-use]
 
    element_type.js:24:8
    24| 1 as Z['c']; // Error - access 'c' on `void`/`null`
@@ -586,4 +600,4 @@ References:
 
 
 
-Found 37 errors
+Found 38 errors

@@ -1935,10 +1935,9 @@ pub fn incompatible_type_error_with_lower_kind(
     use flow_typing_type::type_util;
 
     ErrorMessage::EIncompatibleType(Box::new(EIncompatibleTypeData {
-        lower_reason: type_util::reason_of_t(lower).dupe(),
         lower_kind,
         lower_loc: type_util::loc_of_t(lower).dupe(),
-        lower_def_loc: type_util::def_loc_of_t(lower).dupe(),
+        lower_def_loc: type_util::ref_loc_of_t(lower).dupe(),
         lower_desc: type_or_type_desc_for_error(lower),
         upper,
         use_op,

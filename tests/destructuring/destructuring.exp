@@ -568,7 +568,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:59:24
 
-Property `x` is missing in null [1]. [incompatible-use]
+Property `x` is missing in `null` [1]. [incompatible-use]
 
    defaults.js:59:24
    59| function obj_prop_err({x: {y}}: null = null) {} // error: property `x` cannot be accessed on null
@@ -596,7 +596,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:61:24
 
-null [1] does not have properties. [incompatible-use]
+`null` [1] does not have properties. [incompatible-use]
 
    defaults.js:61:24
    61| function arr_elem_err([x]: null = null) {} // error: element 0 cannot be accessed on null
@@ -1251,7 +1251,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:14:6
 
-Property `baz` is missing in null [1]. [incompatible-use]
+Property `baz` is missing in `null` [1]. [incompatible-use]
 
    destructuring_missing_props.js:14:6
    14| var {baz = 15150} = null; // Error, baz is missing in null (you can't destructure null)
@@ -1348,7 +1348,7 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 Error ----------------------------------------------------------------------------------------------------- eager.js:2:3
 
-Property `x` is missing in null [1]. [incompatible-use]
+Property `x` is missing in `null` [1]. [incompatible-use]
 
    eager.js:2:3
    2| ({x} = null); // error, property `x` can not be accessed on `null`

@@ -64,7 +64,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ null.js:1:6
 
-Cannot get `null['foo']` because null [1] does not have properties. [incompatible-use]
+Cannot get `null['foo']` because `null` [1] does not have properties. [incompatible-use]
 
    null.js:1:6
    1| null['foo']; // Error

@@ -362,7 +362,21 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:22:13
 
-Cannot get `y1?.['baz']['foo']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y1?.['baz']['foo']` because `null` [1] does not have properties. [incompatible-use]
+
+   computed_properties.js:22:13
+   22| y1?.['baz']['foo'] as empty;
+                   ^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- computed_properties.js:22:13
+
+Cannot get `y1?.['baz']['foo']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:22:13
    22| y1?.['baz']['foo'] as empty;
@@ -408,7 +422,21 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:23:13
 
-Cannot get `y2?.['baz']['foo']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y2?.['baz']['foo']` because `null` [1] does not have properties. [incompatible-use]
+
+   computed_properties.js:23:13
+   23| y2?.['baz']['foo'] as empty;
+                   ^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- computed_properties.js:23:13
+
+Cannot get `y2?.['baz']['foo']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:23:13
    23| y2?.['baz']['foo'] as empty;
@@ -422,7 +450,21 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:25:4
 
-Cannot get `y1['bar']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y1['bar']` because `null` [1] does not have properties. [incompatible-use]
+
+   computed_properties.js:25:4
+   25| y1['bar']?.['foo'] as empty;
+          ^^^^^
+
+References:
+   computed_properties.js:9:19
+    9| declare const y1: ?Y;
+                         ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:25:4
+
+Cannot get `y1['bar']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:25:4
    25| y1['bar']?.['foo'] as empty;
@@ -500,7 +542,21 @@ References:
 
 Error -------------------------------------------------------------------------------------- computed_properties.js:27:4
 
-Cannot get `y1['baz']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y1['baz']` because `null` [1] does not have properties. [incompatible-use]
+
+   computed_properties.js:27:4
+   27| y1['baz']?.['foo'] as empty;
+          ^^^^^
+
+References:
+   computed_properties.js:9:19
+    9| declare const y1: ?Y;
+                         ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- computed_properties.js:27:4
+
+Cannot get `y1['baz']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:27:4
    27| y1['baz']?.['foo'] as empty;
@@ -599,7 +655,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:30:15
 
-Cannot get `y1?.['bar']['foo']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y1?.['bar']['foo']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:30:15
    30| (y1?.['bar'])['foo'] as empty;
@@ -662,7 +718,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:32:15
 
-Cannot get `y1?.['baz']['foo']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y1?.['baz']['foo']` because `null` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:32:15
    32| (y1?.['baz'])['foo'] as empty;
@@ -676,7 +732,21 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:32:15
 
-Cannot get `y1?.['baz']['foo']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y1?.['baz']['foo']` because `void` [1] does not have properties. [incompatible-use]
+
+   computed_properties.js:32:15
+   32| (y1?.['baz'])['foo'] as empty;
+                     ^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- computed_properties.js:32:15
+
+Cannot get `y1?.['baz']['foo']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:32:15
    32| (y1?.['baz'])['foo'] as empty;
@@ -707,7 +777,21 @@ References:
 
 Error ------------------------------------------------------------------------------------- computed_properties.js:33:15
 
-Cannot get `y2?.['baz']['foo']` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `y2?.['baz']['foo']` because `null` [1] does not have properties. [incompatible-use]
+
+   computed_properties.js:33:15
+   33| (y2?.['baz'])['foo'] as empty;
+                     ^^^^^
+
+References:
+   computed_properties.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- computed_properties.js:33:15
+
+Cannot get `y2?.['baz']['foo']` because `void` [1] does not have properties. [incompatible-use]
 
    computed_properties.js:33:15
    33| (y2?.['baz'])['foo'] as empty;
@@ -898,7 +982,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:20:3
 
-Cannot get `a.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `a.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   deletion.js:20:3
+   20| a.a as empty; // don't refine a.a to definitely exist
+         ^
+
+References:
+   deletion.js:18:18
+   18| declare const a: ?{a: ?number, ...};
+                        ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- deletion.js:20:3
+
+Cannot get `a.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    deletion.js:20:3
    20| a.a as empty; // don't refine a.a to definitely exist
@@ -912,7 +1010,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- deletion.js:23:8
 
-Cannot assign `42` to `w?.g.e` because property `e` is missing in null or undefined [1]. [incompatible-use]
+Cannot assign `42` to `w?.g.e` because property `e` is missing in `void` [1]. [incompatible-use]
 
    deletion.js:23:8
    23| (w?.g).e = 42; // should fail
@@ -926,7 +1024,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ deletion.js:24:15
 
-Cannot delete `w?.g.e` because property `e` is missing in null or undefined [1]. [incompatible-use]
+Cannot delete `w?.g.e` because property `e` is missing in `void` [1]. [incompatible-use]
 
    deletion.js:24:15
    24| delete (w?.g).e; // should fail
@@ -1035,7 +1133,31 @@ References:
 
 Error ------------------------------------------------------------------------------------- in_line_refinements.js:24:14
 
-Cannot get `x.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `x.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   in_line_refinements.js:24:14
+   24| x?.f2(x.a)(x.a); // havoc refinements
+                    ^
+
+References:
+   in_line_refinements.js:3:16
+                      v-
+    3| declare let x: ?{
+    4|   a: number,
+    5|   f: number => string,
+    6|   i: Array<number>,
+    7|   of?: number => string,
+    8|   oi?: Array<number>,
+    9|   i2: Array<Array<number>>,
+   10|   i3: Array<{a: ?number, ...}>,
+   11|   f2: number => number => string,
+   12|  ...};
+        ---^ [1]
+
+
+Error ------------------------------------------------------------------------------------- in_line_refinements.js:24:14
+
+Cannot get `x.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    in_line_refinements.js:24:14
    24| x?.f2(x.a)(x.a); // havoc refinements
@@ -1139,7 +1261,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- method_calls.js:10:5
 
-Cannot call `foo.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
+Cannot call `foo.bar` because property `bar` is missing in `null` [1]. [incompatible-use]
+
+   method_calls.js:10:5
+   10| foo.bar?.() as empty;
+           ^^^
+
+References:
+   method_calls.js:7:20
+    7| declare const foo: ?X;
+                          ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- method_calls.js:10:5
+
+Cannot call `foo.bar` because property `bar` is missing in `void` [1]. [incompatible-use]
 
    method_calls.js:10:5
    10| foo.bar?.() as empty;
@@ -1742,7 +1878,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:17:9
 
-Cannot get `a.b.c.d` because property `d` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c.d` because property `d` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:17:9
    17|   a.b.c.d; // bad
@@ -1999,7 +2135,21 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:61:5
 
-Cannot get `x.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `x.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements.js:61:5
+   61|   x.a as empty; // should fail
+           ^
+
+References:
+   refinements.js:54:30
+   54| function f<T extends any>(x: ?T) {
+                                    ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- refinements.js:61:5
+
+Cannot get `x.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:61:5
    61|   x.a as empty; // should fail
@@ -2013,7 +2163,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:68:9
 
-Cannot get `a.b.c.d` because property `d` is missing in undefined [1]. [incompatible-use]
+Cannot get `a.b.c.d` because property `d` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:68:9
    68|   a.b.c.d; // bad
@@ -2269,7 +2419,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:110:5
 
-Cannot get `b.x` because property `x` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `b.x` because property `x` is missing in `null` [1]. [incompatible-use]
+
+   refinements.js:110:5
+   110|   b.x as false; // nope
+            ^
+
+References:
+   refinements.js:105:18
+   105| declare const b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:110:5
+
+Cannot get `b.x` because property `x` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:110:5
    110|   b.x as false; // nope
@@ -2283,7 +2447,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:113:10
 
-Cannot get `b?.w.u` because property `u` is missing in undefined [1]. [incompatible-use]
+Cannot get `b?.w.u` because property `u` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:113:10
    113| if (b?.w.u) {
@@ -2297,7 +2461,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:119:14
 
-Cannot get `b.w.u` because property `u` is missing in undefined [1]. [incompatible-use]
+Cannot get `b.w.u` because property `u` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:119:14
    119| if (b && b.w.u) {
@@ -2311,7 +2475,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:127:5
 
-Cannot get `b.z` because property `z` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `b.z` because property `z` is missing in `null` [1]. [incompatible-use]
+
+   refinements.js:127:5
+   127|   b.z.value as string; // error
+            ^
+
+References:
+   refinements.js:105:18
+   105| declare const b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:127:5
+
+Cannot get `b.z` because property `z` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:127:5
    127|   b.z.value as string; // error
@@ -2391,7 +2569,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:134:5
 
-Cannot get `b.y` because property `y` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `b.y` because property `y` is missing in `null` [1]. [incompatible-use]
+
+   refinements.js:134:5
+   134|   b.y as false; // nope
+            ^
+
+References:
+   refinements.js:105:18
+   105| declare const b: ?{x: boolean, y?: boolean, z: Z, w?: {u: () => number, ...}, ...};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:134:5
+
+Cannot get `b.y` because property `y` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:134:5
    134|   b.y as false; // nope
@@ -2405,7 +2597,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:141:8
 
-Cannot get `c[1][0]` because null or undefined [1] does not have properties. [incompatible-use]
+Cannot get `c[1][0]` because `null` [1] does not have properties. [incompatible-use]
+
+   refinements.js:141:8
+   141|   c[1][0] as {...}; // no
+               ^
+
+References:
+   refinements.js:137:24
+   137| declare const c: Array<?Array<{a: number, b: {c: {d: string, ...}, ...}, ...}>>;
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:141:8
+
+Cannot get `c[1][0]` because `void` [1] does not have properties. [incompatible-use]
 
    refinements.js:141:8
    141|   c[1][0] as {...}; // no
@@ -2433,7 +2639,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:147:5
 
-Cannot call `d.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot call `d.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements.js:147:5
+   147|   d.a().b.c as number; // nope, never was a refinement in the first place
+            ^
+
+References:
+   refinements.js:145:16
+   145| declare let d: ?{a?: () => {b?: {c: number, ...}, ...}, d: number, ...};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements.js:147:5
+
+Cannot call `d.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:147:5
    147|   d.a().b.c as number; // nope, never was a refinement in the first place
@@ -2447,7 +2667,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:147:11
 
-Cannot get `d.a().b.c` because property `c` is missing in undefined [1]. [incompatible-use]
+Cannot get `d.a().b.c` because property `c` is missing in `void` [1]. [incompatible-use]
 
    refinements.js:147:11
    147|   d.a().b.c as number; // nope, never was a refinement in the first place
@@ -2582,7 +2802,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:10:5
 
-Cannot get `t.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `t.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:10:5
+   10|   t.a as number; // no for two reasons
+           ^
+
+References:
+   refinements2.js:4:18
+    4| declare const t: ?T;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:10:5
+
+Cannot get `t.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:10:5
    10|   t.a as number; // no for two reasons
@@ -2631,7 +2865,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:14:5
 
-Cannot get `t.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `t.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:14:5
+   14|   t.a as number; // no for two reasons
+           ^
+
+References:
+   refinements2.js:4:18
+    4| declare const t: ?T;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:14:5
+
+Cannot get `t.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:14:5
    14|   t.a as number; // no for two reasons
@@ -2696,7 +2944,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:24:5
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `s.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:24:5
+   24|   s.a as null | void; // no for two reasons
+           ^
+
+References:
+   refinements2.js:21:18
+   21| declare const s: ?S;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:24:5
+
+Cannot get `s.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:24:5
    24|   s.a as null | void; // no for two reasons
@@ -2761,7 +3023,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:34:5
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `s.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:34:5
+   34|   s.a as null | void; // no for two reasons
+           ^
+
+References:
+   refinements2.js:21:18
+   21| declare const s: ?S;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:34:5
+
+Cannot get `s.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:34:5
    34|   s.a as null | void; // no for two reasons
@@ -2826,7 +3102,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:38:5
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `s.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:38:5
+   38|   s.a as null | void; // no for two reasons
+           ^
+
+References:
+   refinements2.js:21:18
+   21| declare const s: ?S;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:38:5
+
+Cannot get `s.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:38:5
    38|   s.a as null | void; // no for two reasons
@@ -2908,7 +3198,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:46:5
 
-Cannot get `s.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `s.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:46:5
+   46|   s.a as null | void; // no for two reasons
+           ^
+
+References:
+   refinements2.js:21:18
+   21| declare const s: ?S;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:46:5
+
+Cannot get `s.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:46:5
    46|   s.a as null | void; // no for two reasons
@@ -2956,7 +3260,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:60:5
 
-Cannot get `w.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `w.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:60:5
+   60|   w.a; // no
+           ^
+
+References:
+   refinements2.js:53:18
+   53| declare const w: ?W;
+                        ^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:60:5
+
+Cannot get `w.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:60:5
    60|   w.a; // no
@@ -2970,7 +3288,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:68:5
 
-Cannot get `a.b` because property `b` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `a.b` because property `b` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:68:5
+   68|   a.b; // nope
+           ^
+
+References:
+   refinements2.js:63:18
+   63| declare const a: ?{b: number | string, ...};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:68:5
+
+Cannot get `a.b` because property `b` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:68:5
    68|   a.b; // nope
@@ -3002,7 +3334,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:74:5
 
-Cannot get `b.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `b.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:74:5
+   74|   b.a; //nope
+           ^
+
+References:
+   refinements2.js:72:18
+   72| declare const b: ?{a?: number, ...};
+                        ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:74:5
+
+Cannot get `b.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:74:5
    74|   b.a; //nope
@@ -3034,7 +3380,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:85:5
 
-Cannot get `b.a` because property `a` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `b.a` because property `a` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:85:5
+   85|   b.a; // nope
+           ^
+
+References:
+   refinements2.js:72:18
+   72| declare const b: ?{a?: number, ...};
+                        ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:85:5
+
+Cannot get `b.a` because property `a` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:85:5
    85|   b.a; // nope
@@ -3066,7 +3426,21 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements2.js:94:5
 
-Cannot get `c.d` because property `d` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `c.d` because property `d` is missing in `null` [1]. [incompatible-use]
+
+   refinements2.js:94:5
+   94|   c.d; //nope
+           ^
+
+References:
+   refinements2.js:89:18
+   89| declare const c: ?{d?: Array<number>, ...};
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinements2.js:94:5
+
+Cannot get `c.d` because property `d` is missing in `void` [1]. [incompatible-use]
 
    refinements2.js:94:5
    94|   c.d; //nope
@@ -3477,7 +3851,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:22:9
 
-Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y1?.baz.foo` because property `foo` is missing in `null` [1]. [incompatible-use]
+
+   static_members.js:22:9
+   22| y1?.baz.foo as empty;
+               ^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:22:9
+
+Cannot get `y1?.baz.foo` because property `foo` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:22:9
    22| y1?.baz.foo as empty;
@@ -3523,7 +3911,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:23:9
 
-Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y2?.baz.foo` because property `foo` is missing in `null` [1]. [incompatible-use]
+
+   static_members.js:23:9
+   23| y2?.baz.foo as empty;
+               ^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:23:9
+
+Cannot get `y2?.baz.foo` because property `foo` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:23:9
    23| y2?.baz.foo as empty;
@@ -3537,7 +3939,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:25:4
 
-Cannot get `y1.bar` because property `bar` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y1.bar` because property `bar` is missing in `null` [1]. [incompatible-use]
+
+   static_members.js:25:4
+   25| y1.bar?.foo as empty;
+          ^^^
+
+References:
+   static_members.js:9:19
+    9| declare const y1: ?Y;
+                         ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:25:4
+
+Cannot get `y1.bar` because property `bar` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:25:4
    25| y1.bar?.foo as empty;
@@ -3615,7 +4031,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------- static_members.js:27:4
 
-Cannot get `y1.baz` because property `baz` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y1.baz` because property `baz` is missing in `null` [1]. [incompatible-use]
+
+   static_members.js:27:4
+   27| y1.baz?.foo as empty;
+          ^^^
+
+References:
+   static_members.js:9:19
+    9| declare const y1: ?Y;
+                         ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- static_members.js:27:4
+
+Cannot get `y1.baz` because property `baz` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:27:4
    27| y1.baz?.foo as empty;
@@ -3714,7 +4144,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:30:11
 
-Cannot get `y1?.bar.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y1?.bar.foo` because property `foo` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:30:11
    30| (y1?.bar).foo as empty;
@@ -3777,7 +4207,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:32:11
 
-Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y1?.baz.foo` because property `foo` is missing in `null` [1]. [incompatible-use]
 
    static_members.js:32:11
    32| (y1?.baz).foo as empty;
@@ -3791,7 +4221,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:32:11
 
-Cannot get `y1?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y1?.baz.foo` because property `foo` is missing in `void` [1]. [incompatible-use]
+
+   static_members.js:32:11
+   32| (y1?.baz).foo as empty;
+                 ^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ static_members.js:32:11
+
+Cannot get `y1?.baz.foo` because property `foo` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:32:11
    32| (y1?.baz).foo as empty;
@@ -3822,7 +4266,21 @@ References:
 
 Error ------------------------------------------------------------------------------------------ static_members.js:33:11
 
-Cannot get `y2?.baz.foo` because property `foo` is missing in null or undefined [1]. [incompatible-use]
+Cannot get `y2?.baz.foo` because property `foo` is missing in `null` [1]. [incompatible-use]
+
+   static_members.js:33:11
+   33| (y2?.baz).foo as empty;
+                 ^^^
+
+References:
+   static_members.js:4:24
+    4| type Y = {bar: X, baz: ?X, ...};
+                              ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ static_members.js:33:11
+
+Cannot get `y2?.baz.foo` because property `foo` is missing in `void` [1]. [incompatible-use]
 
    static_members.js:33:11
    33| (y2?.baz).foo as empty;
@@ -3918,7 +4376,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:23
 
-Cannot access number literal `0` on `typeof y` because undefined [1] does not have properties. [incompatible-use]
+Cannot access number literal `0` on `typeof y` because `void` [1] does not have properties. [incompatible-use]
 
    typeof.js:6:23
    6|   type T = (typeof y)[0]; // error: undefined does not have properties
@@ -3931,4 +4389,4 @@ References:
 
 
 
-Found 245 errors
+Found 277 errors

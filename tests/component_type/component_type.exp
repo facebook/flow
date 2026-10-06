@@ -737,7 +737,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
-Cannot call `x.displayName.toString` because property `toString` is missing in null or undefined [1]. [incompatible-use]
+Cannot call `x.displayName.toString` because property `toString` is missing in `null` [1]. [incompatible-use]
 
    get_set_props.js:8:17
     8|   x.displayName.toString(); // Error maybe null or undefined
@@ -751,7 +751,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
-Cannot call `x.displayName.toString` because property `toString` is missing in undefined [1]. [incompatible-use]
+Cannot call `x.displayName.toString` because property `toString` is missing in `void` [1]. [incompatible-use]
 
    get_set_props.js:8:17
     8|   x.displayName.toString(); // Error maybe null or undefined
@@ -765,7 +765,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- get_set_props.js:8:17
 
-Cannot call `x.displayName.toString` because property `toString` is missing in null [1]. [incompatible-use]
+Cannot call `x.displayName.toString` because property `toString` is missing in `null` [1]. [incompatible-use]
 
    get_set_props.js:8:17
    8|   x.displayName.toString(); // Error maybe null or undefined
