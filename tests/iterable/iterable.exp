@@ -86,8 +86,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- iterator_result.js:25:16
 
-Cannot return object literal because property `value` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot return object literal because property `value` is missing in object literal [1] but exists in
+`{done: false, readonly value: string, ...}` [2]. [incompatible-type]
 
    iterator_result.js:25:16
    25|         return { done }; // Error void ~> string, LTI: prop-missing of value

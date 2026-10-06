@@ -17,7 +17,7 @@ Cannot use type without exactly 1 type argument. [nonpolymorphic-type-app]
 Error ------------------------------------------------------------------------------------------------- consume.ts:52:10
 
 Cannot call `needsBox` with object literal bound to `arg` because property `size` is missing in object literal [1] but
-exists in object type [2]. [incompatible-type]
+exists in `{size: number, tag: "box"}` [2]. [incompatible-type]
 
    consume.ts:52:10
    52| needsBox({tag: "nope"}); // ERROR -- wrong tag and missing `size`; before the fix the param degraded to `any` and this was wrongly accepted

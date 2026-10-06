@@ -1405,7 +1405,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test4.js:2:2
 
-Cannot cast function to `I` because property `foo` is missing in function [1] but exists in `I` [2]. [incompatible-type]
+Cannot cast function to `I` because property `foo` is missing in `{...}` [1] but exists in
+`{foo(this: I, x: number): void, ...}` [2]. [incompatible-type]
 
    test4.js:2:2
    2| (function foo(x: number) { } as I); // error, property `foo` not found function
@@ -1421,7 +1422,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `(new C()).bar` because: [incompatible-type]
  - Either in the first parameter: `string` [1] is incompatible with `number` [2].
- - Or property `foo` is missing in function [3] but exists in `I` [4].
+ - Or property `foo` is missing in `{...}` [3] but exists in `{foo(this: I, x: number): void, ...}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.

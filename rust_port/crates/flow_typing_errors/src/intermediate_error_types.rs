@@ -1830,13 +1830,6 @@ pub struct MessageConstructSignatureMissingData<L: Dupe> {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MessagePropsMissingData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
-    pub props: Vec1<FlowSmolStr>,
-}
-
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropsMissingWithPrintedTypeData<L: Dupe> {
     pub lower: MessageTypeReferenceData<L>,
     pub upper: MessageTypeReferenceData<L>,
@@ -2534,8 +2527,6 @@ pub enum Message<L: Dupe> {
     },
 
     MessageConstructSignatureMissing(Box<MessageConstructSignatureMissingData<L>>),
-
-    MessagePropsMissing(Box<MessagePropsMissingData<L>>),
 
     MessagePropsMissingWithPrintedType(Box<MessagePropsMissingWithPrintedTypeData<L>>),
 

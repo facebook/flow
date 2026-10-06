@@ -54,7 +54,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexact_config.js:23:13
 
-Cannot create `Component4` element because property `foo` is missing in props [1] but exists in object type [2].
+Cannot create `Component4` element because property `foo` is missing in `{}` [1] but exists in `{foo: number}` [2].
 [incompatible-type]
 
    inexact_config.js:23:13

@@ -85,8 +85,8 @@ Found 1 error
 === block 7 ===
 Error ------------------------------------------------------------------------------ -:3:18
 
-Cannot cast `fooObj` to object type because property `bar` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `fooObj` to object type because property `bar` is missing in object literal [1] but exists in
+`{bar: string, foo: number}` [2]. [incompatible-type]
 
    -:3:18
    3| const otherObj = fooObj as {foo: number, bar: string};  // ERROR

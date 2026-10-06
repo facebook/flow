@@ -1,7 +1,7 @@
 Error -------------------------------------------------------------------------------------------- lint_settings.js:12:1
 
-Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    lint_settings.js:12:1
    12| o.m.call(other, 1); // error: lint disabled, `this` incompatibility still reported
@@ -18,8 +18,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- lint_settings.js:15:1
 
-Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    lint_settings.js:15:1
    15| o.m.call(other, 1); // error: lint re-enabled
@@ -52,7 +52,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- lint_settings.js:18:10
 
-Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+[incompatible-type]
 
    lint_settings.js:18:10
    18| o.m.bind(other); // error: lint disabled, `this` incompatibility still reported
@@ -69,7 +70,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- lint_settings.js:20:10
 
-Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+[incompatible-type]
 
    lint_settings.js:20:10
    20| o.m.bind(other); // error
@@ -150,8 +152,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- rejected.js:8:1
 
-Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `o.m.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    rejected.js:8:1
    8| o.m.call(other, 1); // error: receiver mismatch
@@ -184,8 +186,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- rejected.js:9:1
 
-Cannot call `o.m.apply` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `o.m.apply` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    rejected.js:9:1
    9| o.m.apply(other, [1]); // error: receiver mismatch
@@ -218,7 +220,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ rejected.js:10:10
 
-Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+Cannot call `o.m.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+[incompatible-type]
 
    rejected.js:10:10
    10| o.m.bind(other); // error: receiver mismatch
@@ -400,8 +403,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:23:1
 
-Cannot call `f.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object type [2].
-[incompatible-type]
+Cannot call `f.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    rejected.js:23:1
    23| f.call(o, 1); // error: `f` is not a member access
@@ -434,8 +437,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:24:1
 
-Cannot call `f.apply` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object type [2].
-[incompatible-type]
+Cannot call `f.apply` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    rejected.js:24:1
    24| f.apply(o, [1]); // error: `f` is not a member access
@@ -468,7 +471,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:25:8
 
-Cannot call `f.bind` because property `x` is missing in `O` [1] but exists in object type [2]. [incompatible-type]
+Cannot call `f.bind` because property `x` is missing in `O` [1] but exists in `{x: number, ...}` [2].
+[incompatible-type]
 
    rejected.js:25:8
    25| f.bind(o); // error: `f` is not a member access
@@ -537,8 +541,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- rejected.js:29:1
 
-Cannot call `holder.fn.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `holder.fn.call` because in the `this` parameter: property `x` is missing in `O` [1] but exists in
+`{x: number, ...}` [2]. [incompatible-type]
 
    rejected.js:29:1
    29| holder.fn.call(o, 1); // error: receiver mismatch, must be `holder`

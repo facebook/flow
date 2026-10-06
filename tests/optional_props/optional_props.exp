@@ -47,6 +47,24 @@ References:
                                  ^^^^^^^^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------------- opaque_bound.js:15:46
+
+Cannot assign `missing` to `m` because properties `b` and `c` are missing in `{a: number}` [1] but exist in
+`{a: number, b: string, c: string}` [2]. [incompatible-type]
+
+   opaque_bound.js:15:46
+   15| const m: {a: number, b: string, c: string} = missing; // ERROR
+                                                    ^^^^^^^
+
+References:
+   opaque_bound.js:14:24
+   14| declare const missing: Missing;
+                              ^^^^^^^ [1]
+   opaque_bound.js:15:10
+   15| const m: {a: number, b: string, c: string} = missing; // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:2:32
 
 Cannot assign `x` to `y` because property `foo` is missing in `{...}` [1] but exists in `{foo?: string, ...}` [2].
@@ -208,4 +226,4 @@ References:
 
 
 
-Found 12 errors
+Found 13 errors

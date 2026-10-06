@@ -18,7 +18,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:12
 
-Cannot create `Component` element because property `foo` is missing in props [1] but exists in `Props` [2].
+Cannot create `Component` element because property `foo` is missing in `{bar: 3}` [1] but exists in `Props` [2].
 [incompatible-type]
 
    test.js:8:12
@@ -36,8 +36,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:22
 
-Cannot create `Component2` element because property `bar` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Component2` element because property `bar` is missing in `{foo: 3}` [1] but exists in
+`{bar: number}` [2]. [incompatible-type]
 
    test.js:13:22
    13| const fragment4 = <><Component2 foo={3}/></>; // Error requires bar not foo

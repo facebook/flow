@@ -344,7 +344,7 @@ References:
 Error --------------------------------------------------------------------------------------------- declaration.js:467:9
 
 Cannot call `R` with `oB` bound to the first parameter because property `a` is missing in object literal [1] but exists
-in record `R` [2]. [incompatible-type]
+in `{readonly a: number, readonly b: string}` [2]. [incompatible-type]
 
    declaration.js:467:9
    467|   new R(oB); // ERROR: missing `a`
@@ -362,7 +362,7 @@ References:
 Error --------------------------------------------------------------------------------------------- declaration.js:468:9
 
 Cannot call `R` with `oEmpty` bound to the first parameter because properties `a` and `b` are missing in object
-literal [1] but exist in record `R` [2]. [incompatible-type]
+literal [1] but exist in `{readonly a: number, readonly b: string}` [2]. [incompatible-type]
 
    declaration.js:468:9
    468|   new R(oEmpty); // ERROR: missing `a` and `b`
@@ -497,8 +497,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:43:5
 
-Cannot create record `R` because property `b` is missing in record properties [1] but exists in record `R` [2].
-[incompatible-type]
+Cannot create record `R` because property `b` is missing in `{a: 1}` [1] but exists in
+`{readonly a: number, readonly b: string}` [2]. [incompatible-type]
 
    expression.js:43:5
    43|   R {a: 1}; // ERROR: missing `b`
@@ -512,8 +512,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:44:5
 
-Cannot create record `R` because property `a` is missing in record properties [1] but exists in record `R` [2].
-[incompatible-type]
+Cannot create record `R` because property `a` is missing in `{b: "s"}` [1] but exists in
+`{readonly a: number, readonly b: string}` [2]. [incompatible-type]
 
    expression.js:44:5
    44|   R {b: 's'}; // ERROR: missing `a`
@@ -527,8 +527,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:45:5
 
-Cannot create record `R` because properties `a` and `b` are missing in record properties [1] but exist in record
-`R` [2]. [incompatible-type]
+Cannot create record `R` because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: string}` [2]. [incompatible-type]
 
    expression.js:45:5
    45|   R {}; // ERROR: missing `a` and `b`
@@ -616,8 +616,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:16:10
 
-Cannot create record `RNamed` because property `a` is missing in record properties [1] but exists in record
-`RNamed` [2]. [incompatible-type]
+Cannot create record `RNamed` because property `a` is missing in `{}` [1] but exists in
+`{readonly a: number, readonly b?: string}` [2]. [incompatible-type]
 
    imported.js:16:10
    16|   RNamed {}; // ERROR
@@ -678,8 +678,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:28:12
 
-Cannot create record `RDefault` because property `a` is missing in record properties [1] but exists in record
-`RDefault` [2]. [incompatible-type]
+Cannot create record `RDefault` because property `a` is missing in `{}` [1] but exists in
+`{readonly a: number, readonly b?: string}` [2]. [incompatible-type]
 
    imported.js:28:12
    28|   RDefault {}; // ERROR

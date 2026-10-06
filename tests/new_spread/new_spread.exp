@@ -30,8 +30,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:14:2
 
-Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast object literal to `O1` because property `p` is missing in object literal [1] but exists in
+`{p: T, ...}` [2]. [incompatible-type]
 
    type.js:14:2
    14| ({} as O1); // error
@@ -126,7 +126,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:37:8
 
-Cannot cast `{...}` to `O4` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `{...}` to `O4` because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type.js:37:8
@@ -158,8 +158,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:47:1
 
-Cannot cast `nil` to `O5` because property `p` is missing in object type [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast `nil` to `O5` because property `p` is missing in `{}` [1] but exists in `{p: T}` [2]. [incompatible-type]
 
    type.js:47:1
    47| nil as O5; // error: property `p` not found
@@ -208,7 +207,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:56:8
 
-Cannot cast `{...}` to `O6` because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `{...}` to `O6` because property `p` is missing in `{...}` [1] but exists in `{p: U, ...}` [2].
 [incompatible-type]
 
    type.js:56:8
@@ -303,8 +302,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:106:2
 
-Cannot cast object literal to `O14` because property `p` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast object literal to `O14` because property `p` is missing in object literal [1] but exists in
+`{p: T, ...}` [2]. [incompatible-type]
 
    type.js:106:2
    106| ({} as O14); // error
@@ -781,7 +780,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:11:1
 
-Cannot cast `o1` to object type because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `o1` to object type because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:11:1
@@ -799,7 +798,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:19:1
 
-Cannot cast `o2` to object type because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `o2` to object type because property `p` is missing in `{}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:19:1
@@ -850,7 +849,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:27:1
 
-Cannot cast `o3` to object type because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `o3` to object type because property `p` is missing in `{...}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:27:1
@@ -868,7 +867,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:35:1
 
-Cannot cast `o4` to object type because property `p` is missing in object type [1] but exists in object type [2].
+Cannot cast `o4` to object type because property `p` is missing in `{}` [1] but exists in `{p: T, ...}` [2].
 [incompatible-type]
 
    type_void.js:35:1
@@ -901,8 +900,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:43:2
 
-Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast object literal to `O5` because property `p` is missing in object literal [1] but exists in
+`{p: T, ...}` [2]. [incompatible-type]
 
    type_void.js:43:2
    43| ({} as O5); // error
@@ -962,8 +961,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:52:2
 
-Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in
+`{p: T, ...}` [2]. [incompatible-type]
 
    type_void.js:52:2
    52| ({} as O6); // error

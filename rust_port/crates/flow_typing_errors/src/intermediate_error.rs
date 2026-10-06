@@ -136,7 +136,6 @@ use super::intermediate_error_types::MessageOnlyDefaultExportData;
 use super::intermediate_error_types::MessagePropExtraAgainstExactObjectData;
 use super::intermediate_error_types::MessagePropMissingData;
 use super::intermediate_error_types::MessagePropPolarityMismatchData;
-use super::intermediate_error_types::MessagePropsMissingData;
 use super::intermediate_error_types::MessagePropsMissingWithPrintedTypeData;
 use super::intermediate_error_types::MessageReactIntrinsicOverlapData;
 use super::intermediate_error_types::MessageRedeclareComponentPropData;
@@ -3098,21 +3097,22 @@ where
     };
 
     let mk_props_missing_in_subtyping_error = |props: Vec1<FlowSmolStr>,
-                                               lower: VirtualReason<L>,
-                                               upper: VirtualReason<L>,
+                                               loc: L,
+                                               lower: MessageTypeReferenceData<L>,
+                                               upper: MessageTypeReferenceData<L>,
                                                use_op: VirtualUseOp<L>|
      -> IntermediateError<L> {
-        let loc = loc_of_aloc(&lower.loc);
-        let lower = mod_lower_reason_according_to_use_ops(lower.dupe(), &use_op);
         mk_use_op_error(
-            loc,
+            loc_of_aloc(&loc),
             use_op,
             None,
-            Message::MessagePropsMissing(Box::new(MessagePropsMissingData {
-                lower,
-                upper,
-                props,
-            })),
+            Message::MessagePropsMissingWithPrintedType(Box::new(
+                MessagePropsMissingWithPrintedTypeData {
+                    lower,
+                    upper,
+                    props,
+                },
+            )),
         )
     };
 
@@ -3787,15 +3787,17 @@ where
             None,
             FriendlyMessageRecipe::PropsMissingInSubtyping(box PropsMissingInSubtypingData {
                 props,
-                reason_lower,
-                reason_upper,
+                loc,
+                lower,
+                upper,
                 use_op,
             }),
         ) => mk_props_missing_in_subtyping_error(
             Vec1::try_from_vec(props.iter().map(|s| FlowSmolStr::new(s.as_str())).collect())
                 .unwrap(),
-            reason_lower,
-            reason_upper,
+            loc,
+            lower,
+            upper,
             use_op,
         ),
 
@@ -8369,50 +8371,6 @@ where
                 text(" but exists in "),
                 ref_of_ty_or_desc(&upper.loc, &upper.desc),
             ]),
-            MessagePropsMissing(box MessagePropsMissingData {
-                lower,
-                upper,
-                props,
-            }) => {
-                let (first_prop, rest_props) = props.clone().split_off_first();
-                if rest_props.is_empty() {
-                    friendly::Message(vec![
-                        text("property "),
-                        code(&first_prop),
-                        text(" is missing in "),
-                        ref_(lower),
-                        text(" but exists in "),
-                        ref_(upper),
-                    ])
-                } else {
-                    let all_props: Vec<_> = std::iter::once(first_prop).chain(rest_props).collect();
-                    let max_props = 10;
-                    let num_props = all_props.len();
-                    let (displayed, truncated_count) = if num_props > max_props {
-                        (&all_props[..max_props], num_props - max_props)
-                    } else {
-                        (&all_props[..], 0)
-                    };
-                    let mut features = vec![text("properties ")];
-                    let prop_msgs: Vec<_> = displayed
-                        .iter()
-                        .map(|p| friendly::Message(vec![code(p.as_str())]))
-                        .collect();
-                    let friendly::Message(concat_result) =
-                        friendly::conjunction_concat(prop_msgs, "and", None);
-                    features.extend(concat_result);
-                    if truncated_count > 0 {
-                        features.push(text(&format!(", ... ({} more)", truncated_count)));
-                    }
-                    features.extend(vec![
-                        text(" are missing in "),
-                        ref_(lower),
-                        text(" but exist in "),
-                        ref_(upper),
-                    ]);
-                    friendly::Message(features)
-                }
-            }
             MessagePropsMissingWithPrintedType(box MessagePropsMissingWithPrintedTypeData {
                 lower,
                 upper,

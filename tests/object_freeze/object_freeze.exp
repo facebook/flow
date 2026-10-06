@@ -44,8 +44,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:17:1
 
-Cannot cast `frozenObject` to object type because property `baz` is missing in frozen object literal [1] but exists in
-object type [2]. [incompatible-type]
+Cannot cast `frozenObject` to object type because property `baz` is missing in `{readonly bar: "12345"}` [1] but exists
+in `{readonly bar: "12345", baz: "12345"}` [2]. [incompatible-type]
 
    downstream.js:17:1
    17| frozenObject as {readonly bar: '12345', baz: '12345'}; // error baz is missing in frozenObject
@@ -292,8 +292,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:23:1
 
-Cannot cast `frozenObject` to object type because property `baz` is missing in frozen object literal [1] but exists in
-object type [2]. [incompatible-type]
+Cannot cast `frozenObject` to object type because property `baz` is missing in `{readonly bar: "12345"}` [1] but exists
+in `{readonly bar: "12345", baz: "12345"}` [2]. [incompatible-type]
 
    object_freeze.js:23:1
    23| frozenObject as {readonly bar: '12345', baz: '12345'}; // error baz is missing in frozenObject

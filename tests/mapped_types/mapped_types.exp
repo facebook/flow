@@ -388,8 +388,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:22:8
 
-Cannot cast `{...}` to `Foo` because properties `a` and `b` are missing in object type [1] but exist in
-`IdentityMap` [2]. [incompatible-type]
+Cannot cast `{...}` to `Foo` because properties `a` and `b` are missing in `{}` [1] but exist in mapped type [2].
+[incompatible-type]
 
    identity.js:22:8
    22| ({} as {} as Foo); // Error: `a` and `b` are not defined.
@@ -403,7 +403,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:24:8
 
-Cannot cast `any` to `Foo` because properties `a` and `b` are missing in object type [1] but exist in `IdentityMap` [2].
+Cannot cast `any` to `Foo` because properties `a` and `b` are missing in `{}` [1] but exist in mapped type [2].
 [incompatible-type]
 
    identity.js:24:8
@@ -1638,7 +1638,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- minus_optional.js:20:2
 
-Cannot cast object literal to `X` because property `b` is missing in object literal [1] but exists in `MyRequired` [2].
+Cannot cast object literal to `X` because property `b` is missing in object literal [1] but exists in mapped type [2].
 [incompatible-type]
 
    minus_optional.js:20:2
@@ -1957,8 +1957,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:3
 
-Cannot cast `noContext` to object type because property `baz` is missing in mapped type [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `noContext` to object type because property `baz` is missing in mapped type [1] but exists in
+`{bar: empty, baz: number, foo: empty}` [2]. [incompatible-type]
 
    non_homomorphic.js:48:3
    48|   noContext as {foo: empty, bar: empty, baz: number}; // ERROR 3x
@@ -2142,7 +2142,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:49:47
 
 Cannot call `omitInput` with object literal bound to `x` because property `bar` is missing in object literal [1] but
-exists in `Omit` [2]. [incompatible-type]
+exists in mapped type [2]. [incompatible-type]
 
    pick_and_omit.js:49:47
    49|   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
@@ -2201,7 +2201,7 @@ References:
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:83:47
 
 Cannot call `pickInput` with object literal bound to `x` because property `foo` is missing in object literal [1] but
-exists in `Pick` [2]. [incompatible-type]
+exists in mapped type [2]. [incompatible-type]
 
    pick_and_omit.js:83:47
    83|   const badCall = pickInput({foo: 3, bar: 3}, {bar: 3}, 'foo'); // ERROR 2x
@@ -2407,8 +2407,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot cast `badKey` to `Mapped` because property `foo` is missing in object type [1] but exists in `Mapped` [2].
-[incompatible-type]
+Cannot cast `badKey` to `Mapped` because property `foo` is missing in `{bar: {contents: number}}` [1] but exists in
+mapped type [2]. [incompatible-type]
 
    test.js:42:3
    42|   badKey as Mapped<O>; // ERROR

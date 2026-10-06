@@ -1318,8 +1318,8 @@ pub struct EPropNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq +
 )]
 pub struct EPropsNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_names: Vec1<Name>,
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -4685,13 +4685,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 use_op,
             }) => EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names,
-                reason_lower: map_reason(reason_lower),
-                reason_upper: map_reason(reason_upper),
+                lower: map_error_type_ref_with_reason(lower),
+                upper: map_error_type_ref_with_reason(upper),
                 use_op: map_use_op(use_op),
             })),
 
@@ -7759,6 +7759,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 explanation: map_explanation(explanation),
             })),
 
+            EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
+                prop_names,
+                lower,
+                upper,
+                use_op,
+            }) => EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
+                prop_names,
+                lower: map_error_type_ref_with_reason(lower),
+                upper: map_error_type_ref_with_reason(upper),
+                use_op: map_use_op(&f, use_op),
+            })),
+
             EPropsNotFoundInInvariantSubtyping(box EPropsNotFoundInInvariantSubtypingData {
                 prop_names,
                 lower,
@@ -8884,8 +8896,9 @@ pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + E
 )]
 pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
+    pub loc: L,
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -9243,16 +9256,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
-                reason_lower,
-                reason_upper,
+                lower,
+                upper,
                 use_op,
             }) => PropsMissingInSubtyping(Box::new(PropsMissingInSubtypingData {
                 props: Vec1::try_from_vec(
                     prop_names.iter().map(|n| n.display_smol_str()).collect(),
                 )
                 .expect("prop_names is non-empty Vec1"),
-                reason_lower,
-                reason_upper,
+                loc: lower.loc,
+                lower: MessageTypeReferenceData {
+                    loc: lower.reference_loc,
+                    desc: expect_type_desc(lower.type_desc),
+                },
+                upper: MessageTypeReferenceData {
+                    loc: upper.reference_loc,
+                    desc: expect_type_desc(upper.type_desc),
+                },
                 use_op,
             })),
 

@@ -87,8 +87,9 @@ Error --------------------------------------------------------------------------
 
 Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
 
-Cannot conform to common interface module because property `a` is missing in self [1] but exists in common
-interface [2]. [incompatible-type]
+Cannot conform to common interface module because property `a` is missing in
+`{readonly default: number, readonly foo: (() => boolean) & (() => number)}` [1] but exists in
+`{readonly a: string, readonly foo: (() => string) & (() => number), ...}` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -182,8 +183,8 @@ https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
-Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. [incompatible-type]
+Cannot conform to common interface module because property `myValue` is missing in `{readonly default: {}}` [1] but
+exists in `{readonly myValue: string, ...}` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -198,8 +199,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- shadowing.ios.js:1:1
 
-Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. [incompatible-type]
+Cannot conform to common interface module because property `myValue` is missing in `{readonly default: {}}` [1] but
+exists in `{readonly myValue: string, ...}` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -214,8 +215,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ shadowing_cjs.android.cjs:1:1
 
-Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. [incompatible-type]
+Cannot conform to common interface module because property `myValue` is missing in `{readonly default: {}}` [1] but
+exists in `{readonly myValue: string, ...}` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -230,8 +231,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- shadowing_cjs.ios.cjs:1:1
 
-Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. [incompatible-type]
+Cannot conform to common interface module because property `myValue` is missing in `{readonly default: {}}` [1] but
+exists in `{readonly myValue: string, ...}` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 

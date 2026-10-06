@@ -274,8 +274,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:27:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: boolean, ...}` [2]. [incompatible-type]
 
    class_method.js:27:10
    27| let _3 = {method : (new A()).method }.method(); // error: prop is missing
@@ -315,8 +315,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:34:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: boolean, ...}` [2]. [incompatible-type]
 
    class_method.js:34:10
    34| let _6 = {method : A.staticMethod }.method(); // error prop missing
@@ -356,8 +356,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:41:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: boolean, ...}` [2]. [incompatible-type]
 
    class_method.js:41:10
    41| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
@@ -397,8 +397,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:48:11
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: boolean, ...}` [2]. [incompatible-type]
 
    class_method.js:48:11
    48| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
@@ -741,8 +741,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:19:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: number, ...}` [2]. [incompatible-type]
 
    declare_class_method.js:19:10
    19| let _3 = {method : (new A()).method }.method(); // error: prop is missing
@@ -782,8 +782,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:26:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: number, ...}` [2]. [incompatible-type]
 
    declare_class_method.js:26:10
    26| let _6 = {method : A.staticMethod }.method(); // error prop missing
@@ -823,8 +823,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:33:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: number, ...}` [2]. [incompatible-type]
 
    declare_class_method.js:33:10
    33| let _9 = {method : (new A()).propUnboundNonMethod }.method(); // Error prop missing
@@ -864,8 +864,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:40:11
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: number, ...}` [2]. [incompatible-type]
 
    declare_class_method.js:40:11
    40| let _12 = {method : A.staticPropUnboundNonMethod }.method(); // error prop missing
@@ -1812,8 +1812,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- interface.js:18:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: number, ...}` [2]. [incompatible-type]
 
    interface.js:18:10
    18| let _3 = {method : AImpl.method }.method(); // error: prop is missing
@@ -1853,8 +1853,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- interface.js:25:10
 
-Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in interface type [2].
-[incompatible-type]
+Cannot call `{...}.method` because property `prop` is missing in object literal [1] but exists in
+`{prop: number, ...}` [2]. [incompatible-type]
 
    interface.js:25:10
    25| let _6 = {method : AImpl.propUnboundNonMethod }.method(); // Error prop missing
@@ -2386,7 +2386,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:17:10
 
-Cannot call `bar.bind` because property `f` is missing in object type [1] but exists in object type [2].
+Cannot call `bar.bind` because property `f` is missing in `{y: string, ...}` [1] but exists in `{f: number, ...}` [2].
 [incompatible-type]
 
    test.js:17:10
@@ -2420,7 +2420,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:25:1
 
-Cannot call `o.foo` because property `y` is missing in object literal [1] but exists in object type [2].
+Cannot call `o.foo` because property `y` is missing in object literal [1] but exists in `{y: number, ...}` [2].
 [incompatible-type]
 
    test.js:25:1

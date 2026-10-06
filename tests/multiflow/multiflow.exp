@@ -227,7 +227,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:34:2
 
 Cannot create `ExpectsProps` element because: [incompatible-use]
- - Either in the first parameter: property `name` is missing in object type [1] but exists in object type [2].
+ - Either in the first parameter: property `name` is missing in `{...}` [1] but exists in `{name: string, ...}` [2].
  - Or `null` [3] is incompatible with `{name: string, ...}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

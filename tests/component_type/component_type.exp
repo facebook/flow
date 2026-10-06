@@ -111,8 +111,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:1
 
-Cannot cast `ComponentNarrower` to component because properties `bar` and `foo` are missing in object type [1] but exist
-in props of class `ComponentNarrower` [2]. [incompatible-type]
+Cannot cast `ComponentNarrower` to component because properties `bar` and `foo` are missing in
+`{readonly ref: React.RefSetter<any>, ...}` [1] but exist in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<ComponentNarrower>, ......` [2].
+[incompatible-type]
 
    classes_lower.js:17:1
    17| ComponentNarrower as component(ref: React.RefSetter<any>, ...{...}); // Error missing foo and bar in config
@@ -129,8 +131,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:18:1
 
-Cannot cast `ComponentNarrower` to component because property `bar` is missing in props of component [1] but exists in
-props of class `ComponentNarrower` [2]. [incompatible-type]
+Cannot cast `ComponentNarrower` to component because property `bar` is missing in
+`{readonly foo?: number, readonly ref: React.RefSetter<any>}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<ComponentNarrower>, ......` [2].
+[incompatible-type]
 
    classes_lower.js:18:1
    18| ComponentNarrower as component(ref: React.RefSetter<any>, foo?: number); // Error missing bar in config
@@ -147,8 +151,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
 
-Cannot cast `ComponentNarrower` to component because properties `bar` and `foo` are missing in object type [1] but exist
-in props of class `ComponentNarrower` [2]. [incompatible-type]
+Cannot cast `ComponentNarrower` to component because properties `bar` and `foo` are missing in
+`{readonly ref: React.RefSetter<Component>, ...}` [1] but exist in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<ComponentNarrower>, ......` [2].
+[incompatible-type]
 
    classes_lower.js:19:1
    19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
@@ -215,8 +221,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_to_component.js:22:10
 
-Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
-[incompatible-type]
+Cannot return `x` because property `foo` is missing in `{readonly ref: React.RefSetter<Component>, ...}` [1] but exists
+in `{readonly foo: number, readonly ref: React.RefSetter<Component>, ...}` [2]. [incompatible-type]
 
    component_to_component.js:22:10
    22|   return x;
@@ -272,8 +278,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- config_HOC.js:27:13
 
-Cannot create `WrappedComponent` element because property `bar` is missing in props [1] but exists in props of class
-`Component` [2]. [incompatible-type]
+Cannot create `WrappedComponent` element because property `bar` is missing in `{foo: 3}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<Component>, ...}` [2]. [incompatible-type]
 
    config_HOC.js:27:13
    27| const _c = <WrappedComponent foo={3} />; // Error missing bar
@@ -290,7 +296,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:15:13
 
-Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+Cannot create `C` element because property `bar` is missing in `{baz: 4}` [1] but exists in
+`{readonly bar: number | string, readonly baz: number, readonly foo?: number, readonly ref?: React.Re...` [2].
 [incompatible-type]
 
    create_element.js:15:13
@@ -308,7 +315,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ create_element.js:16:13
 
-Cannot create `C` element because property `baz` is missing in props [1] but exists in object type [2].
+Cannot create `C` element because property `baz` is missing in `{bar: 3}` [1] but exists in
+`{readonly bar: number | string, readonly baz: number, readonly foo?: number, readonly ref?: React.Re...` [2].
 [incompatible-type]
 
    create_element.js:16:13
@@ -370,8 +378,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:9:13
 
-Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `C` element because property `bar` is missing in `{baz: 3}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<void>, ...}` [2]. [incompatible-type]
 
    destructors.js:9:13
    9| const _b = <C baz={3} />; // Error, bar missing
@@ -403,7 +411,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
 
 Cannot cast object literal to `React.ElementConfig` because property `bar` is missing in object literal [1] but exists
-in object type [2]. [incompatible-type]
+in `{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<void>, ...}` [2]. [incompatible-type]
 
    destructors.js:21:2
    21| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
@@ -436,8 +444,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:13
 
-Cannot create `WrappedBoth` element because property `foo` is missing in props [1] but exists in props of class
-`MyComponent` [2]. [incompatible-type]
+Cannot create `WrappedBoth` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly foo: number, readonly ref?: React.RefSetter<MyComponent>}` [2]. [incompatible-type]
 
    double_wrapped.js:24:13
    24| const _b = <WrappedBoth />; // Error, missing prop foo
@@ -513,7 +521,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_lower.js:9:1
 
-Cannot cast `Component` to component because property `foo` is missing in props [1] but exists in `Props` [2].
+Cannot cast `Component` to component because property `foo` is missing in `{...}` [1] but exists in `Props` [2].
 [incompatible-type]
 
    function_lower.js:9:1

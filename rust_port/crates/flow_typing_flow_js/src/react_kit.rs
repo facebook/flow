@@ -1164,7 +1164,7 @@ pub(super) fn run_with_env<'cx>(
                     flow_typing_type::type_::FieldData {
                         preferred_def_locs: None,
                         key_loc: None,
-                        type_: key_t,
+                        type_: key_t.dupe(),
                         polarity: Polarity::Positive,
                     },
                 )),
@@ -1174,8 +1174,8 @@ pub(super) fn run_with_env<'cx>(
                     use_op: use_op.dupe(),
                     props: Rc::from([(propref.clone(), key_prop)]),
                     strictness_kind: TypeStrictnessKind::Flow,
-                    reason_lower: type_util::reason_of_t(&normalized_jsx_props).dupe(),
-                    reason_upper: reason_key.dupe(),
+                    lower: normalized_jsx_props.dupe(),
+                    upper: key_t,
                 }));
             FlowJs::rec_flow_with_env(
                 cx,

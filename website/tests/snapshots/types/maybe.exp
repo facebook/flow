@@ -48,7 +48,7 @@ Found 1 error
 Error -------------------------------------------------------------------------------- -:7:18
 
 Cannot call `acceptsMaybeProp` with object literal bound to the first parameter because property `value` is missing in
-object literal [1] but exists in object type [2]. [incompatible-type]
+object literal [1] but exists in `{value: ?number}` [2]. [incompatible-type]
 
    -:7:18
    7| acceptsMaybeProp({});                 // Error!

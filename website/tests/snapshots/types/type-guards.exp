@@ -158,8 +158,9 @@ References:
 
 Error ------------------------------------------------------------------------- -:24:38
 
-Cannot return `response.type === 'success'` because property `error` is missing in object type [1] but exists in object
-type [2]. [incompatible-type]
+Cannot return `response.type === 'success'` because property `error` is missing in
+`{readonly type: "success", readonly value: 23}` [1] but exists in
+`{readonly error: string, readonly type: "error"}` [2]. [incompatible-type]
 
 The type of `response` [3] at the return expression `response.type === 'success'` [4] needs to be compatible with the
 guard type `Error` [2]. See 1. in
@@ -535,8 +536,8 @@ References:
 
 Error -------------------------------------------------------------------------- -:7:10
 
-Cannot return `x.tag === 'known'` because property `value` is missing in `Dynamic` [1] but exists in `Known` [2].
-[incompatible-type]
+Cannot return `x.tag === 'known'` because property `value` is missing in `{data: number, tag: T}` [1] but exists in
+`Known` [2]. [incompatible-type]
 
 The type of `x` [3] at the return expression `x.tag === 'known'` [4] needs to be compatible with the guard type
 `Known` [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.

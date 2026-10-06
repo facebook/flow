@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ instance.ts:11:50
 
 Cannot assign `empty` to `missing` because properties `first` and `second` are missing in `Empty` [1] but exist in
-object type [2]. [incompatible-type]
+`{first: string, second: number}` [2]. [incompatible-type]
 
    instance.ts:11:50
    11| const missing: {first: string; second: number} = empty; // ERROR: both properties are missing
@@ -19,7 +19,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instance.ts:23:59
 
 Cannot assign `derived` to `inheritedMissing` because properties `first` and `second` are missing in `Derived` [1] but
-exist in object type [2]. [incompatible-type]
+exist in `{first: string, second: number}` [2]. [incompatible-type]
 
    instance.ts:23:59
    23| const inheritedMissing: {first: string; second: number} = derived; // ERROR: both properties are missing
@@ -37,7 +37,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instance.ts:24:80
 
 Cannot assign `derived` to `partiallyInherited` because properties `first` and `second` are missing in `Derived` [1] but
-exist in object type [2]. [incompatible-type]
+exist in `{first: string, inherited: number, second: number}` [2]. [incompatible-type]
 
    instance.ts:24:80
    24| const partiallyInherited: {inherited: number; first: string; second: number} = derived; // ERROR: only first and second are missing
@@ -55,7 +55,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instance.ts:36:91
 
 Cannot assign `both` to `intersectionMissing` because properties `first` and `second` are missing in `Both` [1] but
-exist in object type [2]. [incompatible-type]
+exist in `{first: string, left: string, right: number, second: number}` [2]. [incompatible-type]
 
    instance.ts:36:91
    36| const intersectionMissing: {left: string; right: number; first: string; second: number} = both; // ERROR: only first and second are missing

@@ -15,8 +15,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ profiler.js:17:13
 
-Cannot create `React.Profiler` element because properties `id` and `onRender` are missing in props [1] but exist in
-props of component [2]. [incompatible-type]
+Cannot create `React.Profiler` element because properties `id` and `onRender` are missing in `{}` [1] but exist in
+`{readonly children?: React.Node, readonly id: string, readonly onRender: ProfilerOnRenderFnType}` [2].
+[incompatible-type]
 
    profiler.js:17:13
      17| const _b = <React.Profiler />; // Error, id and onRender are required

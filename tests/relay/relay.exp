@@ -100,8 +100,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:15:2
 
-Cannot create `Profile` element because property `foo` is missing in props [1] but exists in `GetPropFragmentRef` [2].
-[incompatible-type]
+Cannot create `Profile` element because property `foo` is missing in `{user: Profile_userRef}` [1] but exists in object
+type [2]. [incompatible-type]
 
    main.js:15:2
    15| <Profile user={userRef} />; // Error: Missing foo
@@ -118,7 +118,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:16:2
 
-Cannot create `Profile` element because property `user` is missing in props [1] but exists in `GetPropFragmentRef` [2].
+Cannot create `Profile` element because property `user` is missing in `{foo: 42}` [1] but exists in object type [2].
 [incompatible-type]
 
    main.js:16:2
@@ -151,8 +151,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:18:2
 
-Cannot create `Profile` element because properties `foo` and `user` are missing in props [1] but exist in
-`GetPropFragmentRef` [2]. [incompatible-type]
+Cannot create `Profile` element because properties `foo` and `user` are missing in `{}` [1] but exist in object
+type [2]. [incompatible-type]
 
    main.js:18:2
    18| <Profile />; // Error: Missing user and foo
@@ -267,8 +267,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:114:2
 
-Cannot create `SingularTest` element because property `user` is missing in props [1] but exists in `MapRelayProps` [2].
-[incompatible-type]
+Cannot create `SingularTest` element because property `user` is missing in
+`{nullableUser: null, onClick: () => void, string: "x"}` [1] but exists in mapped type [2]. [incompatible-type]
 
    more.js:114:2
    114| <SingularTest onClick={cb} string="x" nullableUser={null} />;
@@ -372,8 +372,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- more.js:167:2
 
-Cannot create `PluralTest` element because property `users` is missing in props [1] but exists in `MapRelayProps` [2].
-[incompatible-type]
+Cannot create `PluralTest` element because property `users` is missing in `{nullableUsers: null}` [1] but exists in
+mapped type [2]. [incompatible-type]
 
    more.js:167:2
    167| <PluralTest nullableUsers={null} />;

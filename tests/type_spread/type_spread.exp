@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ all_cases.js:8:12
 
-Cannot assign object literal to `b` because property `bar` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot assign object literal to `b` because property `bar` is missing in object literal [1] but exists in
+`{bar: number, foo: number, ...}` [2]. [incompatible-type]
 
    all_cases.js:8:12
    8| var b: B = {foo: 3}; // Error: bar is missing

@@ -43,7 +43,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
 Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: property `y_` is
-missing in object type [2] but exists in object type [3]. [incompatible-type]
+missing in `{readonly y?: number, ...}` [2] but exists in `{y_: string, ...}` [3]. [incompatible-type]
 
    classes.js:23:3
    23|   setState(o: { y_: string, ... }): void { }
@@ -165,8 +165,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:32
 
-Cannot create `Foo` element because property `x` is missing in props [1] but exists in props of class `Foo` [2].
-[incompatible-type]
+Cannot create `Foo` element because property `x` is missing in `{...}` [1] but exists in
+`{readonly ref?: React.RefSetter<Foo>, readonly x: number, ...}` [2]. [incompatible-type]
 
    classes.js:39:32
    39| var foo: React.MixedElement = <Foo/>;
@@ -198,8 +198,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_component.js:13:13
 
-Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Component` element because property `bar` is missing in `{}` [1] but exists in
+`{bar: number, foo?: number}` [2]. [incompatible-type]
 
    object_component.js:13:13
    13| const _a = <Component />; // Error, missing bar
@@ -277,8 +277,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props4.js:14:2
 
-Cannot create `Example` element because property `bar` is missing in props [1] but exists in props of class
-`Example` [2]. [incompatible-type]
+Cannot create `Example` element because property `bar` is missing in `{foo: "foo"}` [1] but exists in
+`{readonly bar: string, readonly ref?: React.RefSetter<Example>, ...}` [2]. [incompatible-type]
 
    props4.js:14:2
    14| <Example foo="foo" />;

@@ -472,7 +472,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:119:1
 
 Cannot cast `any` to object type because: [incompatible-type]
- - Either property `bar` is missing in object type [1] but exists in object type [2].
+ - Either property `bar` is missing in `{}` [1] but exists in `{bar: string}` [2].
  - Or `number` [3] is incompatible with `{bar: string}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -505,7 +505,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 Error ---------------------------------------------------------------------------------------------------- test.js:122:1
 
 Cannot cast `any` to object type because: [incompatible-type]
- - Either property `bar` is missing in object type [1] but exists in object type [2].
+ - Either property `bar` is missing in `{}` [1] but exists in `{bar: string}` [2].
  - Or `number` [3] is incompatible with `{bar: string}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -530,7 +530,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:131:1
 
 Cannot cast `any` to object type because: [incompatible-type]
- - Either property `bar` is missing in object type [1] but exists in object type [2].
+ - Either property `bar` is missing in `{}` [1] but exists in `{bar: string}` [2].
  - Or `number` [3] is incompatible with `{bar: string}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

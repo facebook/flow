@@ -165,16 +165,16 @@ pub(super) fn perform_lookup_action<'cx>(
             use_op,
             props: _,
             strictness_kind,
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
         }) => {
             if let Some(up) = up {
                 let use_op = UseOp::Frame(
                     Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
                         PropertyCompatibilityData {
                             prop: name_of_propref(propref),
-                            lower: reason_lower.dupe(),
-                            upper: reason_upper.dupe(),
+                            lower: reason_of_t(lower).dupe(),
+                            upper: reason_of_t(upper).dupe(),
                         },
                     ))),
                     Arc::new(use_op.dupe()),

@@ -28,7 +28,7 @@ No errors!
 === block 10 ===
 Error --------------------------------------------------------------------------------- -:7:2
 
-Cannot create `Comp` element because property `foo` is missing in props [1] but exists in object type [2].
+Cannot create `Comp` element because property `foo` is missing in `{}` [1] but exists in `{readonly foo: number}` [2].
 [incompatible-type]
 
    -:7:2

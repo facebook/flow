@@ -149,7 +149,7 @@ Found 1 error
 Error --------------------------------------------------------------------------- -:10:19
 
 Cannot assign object literal to `b` because property `name` is missing in object literal [1] but exists in
-`PartialPerson` [2]. [incompatible-type]
+`{age: number, name: string}` [2]. [incompatible-type]
 
    -:10:19
    10| const b: Person = {age: 123}; // ERROR: missing `name` property
@@ -249,7 +249,7 @@ Found 1 error
 Error ---------------------------------------------------------------------------- -:6:27
 
 Cannot assign object literal to `rec` because properties `bar` and `foo` are missing in object literal [1] but exist in
-`Record` [2]. [incompatible-type]
+object type [2]. [incompatible-type]
 
    -:6:27
    6| const rec: NumberRecord = {}; // error

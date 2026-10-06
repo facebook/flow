@@ -58,8 +58,9 @@ References:
 
 Error ---------------------------------------------------------------------------- -:32:13
 
-Cannot assign function to `Component` because in the first parameter: property `extra_prop` is missing in object
-type [1] but exists in object type [2]. [incompatible-type]
+Cannot assign function to `Component` because in the first parameter: property `extra_prop` is missing in
+`{readonly prop: string}` [1] but exists in `{readonly extra_prop: number, readonly prop: string}` [2].
+[incompatible-type]
 
 All writes to `Component` must be compatible with the type of its initializer [3]. Add an annotation to `Component` [3]
 if a different type is desired.

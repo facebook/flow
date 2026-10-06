@@ -4,8 +4,8 @@ No errors!
 Run flow on commit B
 Error ----------------------------------------------------------------------------------------------------- test.js:5:14
 
-Cannot assign object literal to `x` because property `bar` is missing in object literal [1] but exists in `X` [2].
-[incompatible-type]
+Cannot assign object literal to `x` because property `bar` is missing in object literal [1] but exists in
+`{bar: number}` [2]. [incompatible-type]
 
    test.js:5:14
    5| const x: X = {foo: 3};

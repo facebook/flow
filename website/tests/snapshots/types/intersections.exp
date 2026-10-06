@@ -2,7 +2,7 @@
 Error ------------------------------------------------------------------------ -:21:6
 
 Cannot call `func` with object literal bound to `value` because property `serialize` is missing in object literal [1]
-but exists in `Serializable` [2]. [incompatible-type]
+but exists in `{serialize(this: Serializable): string, ...}` [2]. [incompatible-type]
 
    -:21:6
    21| func({length: 3}); // Error! Doesn't implement both interfaces
@@ -124,7 +124,7 @@ References:
 Error ------------------------------------------------------------------------- -:4:6
 
 Cannot call `func` with object literal bound to `obj` because property `b` is missing in object literal [1] but exists
-in object type [2]. [incompatible-type]
+in `{b: string}` [2]. [incompatible-type]
 
    -:4:6
    4| func({a: 1}); // Error!
@@ -138,7 +138,7 @@ References:
 Error ------------------------------------------------------------------------- -:5:6
 
 Cannot call `func` with object literal bound to `obj` because property `a` is missing in object literal [1] but exists
-in object type [2]. [incompatible-type]
+in `{a: number}` [2]. [incompatible-type]
 
    -:5:6
    5| func({b: 'hi'}); // Error!

@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
 
-Cannot cast `obj` to object type because property `other` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `obj` to object type because property `other` is missing in object literal [1] but exists in
+`{other: string}` [2]. [incompatible-type]
 
    defs.js:13:1
    13| obj as {['other']: string}; // error: 'other' missing, 'special' extra

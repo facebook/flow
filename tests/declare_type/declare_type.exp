@@ -91,7 +91,7 @@ References:
 Error -------------------------------------------------------------------------------------- import_declare_type.js:37:2
 
 Cannot cast object literal to `DeclareExportInterface` because property `baz` is missing in object literal [1] but
-exists in `DeclareExportInterface` [2]. [incompatible-type]
+exists in `{baz: string, ...}` [2]. [incompatible-type]
 
    import_declare_type.js:37:2
    37| ({}) as DeclareExportInterface; // error: prop-missing

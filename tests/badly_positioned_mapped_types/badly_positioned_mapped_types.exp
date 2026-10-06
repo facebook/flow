@@ -22,7 +22,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- still_badly_positioned.js:11:17
 
-Cannot assign `_a` to `_b` because property `q` is missing in object type [1] but exists in `PickKeysFromObject` [2].
+Cannot assign `_a` to `_b` because property `q` is missing in `{x: number}` [1] but exists in mapped type [2].
 [incompatible-type]
 
    still_badly_positioned.js:11:17

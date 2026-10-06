@@ -4,7 +4,8 @@ Cannot create `Suspense` element because in property `fallback`: [incompatible-t
  - Either `() => React.MixedElement` [1] is incompatible with
    `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or `() => React.MixedElement` [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in function [1] but exists in `Iterable` [4].
+ - Or property `@@iterator` is missing in `{...}` [1] but exists in
+   `{"@@iterator"(this: Iterable<?React.Node, void, void>): Iterator<?React.Node, void, void>, ...}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -131,8 +132,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13
 
-Cannot create `LazyFunctionComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[incompatible-type]
+Cannot create `LazyFunctionComponent` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly foo: number}` [2]. [incompatible-type]
 
    lazy.js:19:13
    19| const _b = <LazyFunctionComponent />; // Error missing foo
@@ -182,8 +183,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:28:13
 
-Cannot create `LazyClassComponent` element because property `foo` is missing in props [1] but exists in props of class
-`ClassComponent` [2]. [incompatible-type]
+Cannot create `LazyClassComponent` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly foo: number, readonly ref?: React.RefSetter<ClassComponent>}` [2]. [incompatible-type]
 
    lazy.js:28:13
    28| const _f = <LazyClassComponent />; // Error missing foo
@@ -248,8 +249,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:12:13
 
-Cannot create `MemoComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[incompatible-type]
+Cannot create `MemoComponent` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly foo: number}` [2]. [incompatible-type]
 
    memo.js:12:13
    12| const _b = <MemoComponent />; // Error missing foo
@@ -299,8 +300,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:19:13
 
-Cannot create `MemoComponentWithEqual` element because property `foo` is missing in props [1] but exists in `Props` [2].
-[incompatible-type]
+Cannot create `MemoComponentWithEqual` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly foo: number}` [2]. [incompatible-type]
 
    memo.js:19:13
    19| const _f = <MemoComponentWithEqual />; // Error missing foo

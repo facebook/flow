@@ -93,7 +93,7 @@ References:
 Error ---------------------------------------------------------------------------------------- extra_props_usage.js:16:6
 
 Cannot call `take` with object literal bound to `x` because property `a` is missing in object literal [1] but exists in
-object type [2]. [incompatible-type]
+`{a: number}` [2]. [incompatible-type]
 
    extra_props_usage.js:16:6
    16| take({}); // ERROR: missing `a`
@@ -382,7 +382,7 @@ References:
 Error ------------------------------------------------------------------------------------------ object_to_class.ts:16:2
 
 Cannot cast object literal to `Point` because object literal [1] is incompatible with `Point` [2]. For example, property
-`y` is missing in object literal [1] but exists in `Point` [2]. [incompatible-type]
+`y` is missing in object literal [1] but exists in `{x: number, y: number, ...}` [2]. [incompatible-type]
 
    object_to_class.ts:16:2
    16| ({x: 1}) satisfies Point; // ERROR: missing `y`
@@ -418,7 +418,8 @@ References:
 Error ------------------------------------------------------------------------------------------ object_to_class.ts:36:2
 
 Cannot cast object literal to `Greeter` because object literal [1] is incompatible with `Greeter` [2]. For example,
-property `greet` is missing in object literal [1] but exists in `Greeter` [2]. [incompatible-type]
+property `greet` is missing in object literal [1] but exists in `{greet(this: Greeter): string, name: string, ...}` [2].
+[incompatible-type]
 
    object_to_class.ts:36:2
    36| ({name: "x"}) satisfies Greeter; // ERROR: missing `greet`
@@ -433,7 +434,7 @@ References:
 Error ------------------------------------------------------------------------------------------ object_to_class.ts:45:2
 
 Cannot cast object literal to `IPoint` because object literal [1] is incompatible with `IPoint` [2]. For example,
-property `y` is missing in object literal [1] but exists in `IPoint` [2]. [incompatible-type]
+property `y` is missing in object literal [1] but exists in `{x: number, y: number, ...}` [2]. [incompatible-type]
 
    object_to_class.ts:45:2
    45| ({x: 1}) satisfies IPoint; // ERROR: missing `y`

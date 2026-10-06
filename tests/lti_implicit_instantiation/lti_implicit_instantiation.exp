@@ -239,8 +239,8 @@ An annotation on rest parameter `args` is required because Flow cannot infer its
 
 Error ---------------------------------------------------------------------------------------- typeapp_expansion.js:54:3
 
-Cannot cast `Spreaded` to `Opaque` because in type argument `T` [1]: property `foo` is missing in object type [2] but
-exists in object type [3]. [incompatible-type]
+Cannot cast `Spreaded` to `Opaque` because in type argument `T` [1]: property `foo` is missing in `{...}` [2] but exists
+in `{foo: string, ...}` [3]. [incompatible-type]
 
    typeapp_expansion.js:54:3
    54|   Spreaded as Opaque<{...}>; // error: {} ~> Foo

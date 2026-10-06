@@ -127,8 +127,8 @@ No errors!
 === block 18 ===
 Error ------------------------------------------------------------------------------ -:8:8
 
-Cannot call `logFoo` because in type argument `T`: property `foo` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `logFoo` because in type argument `T`: property `foo` is missing in object literal [1] but exists in
+`{foo: string, ...}` [2]. [incompatible-type]
 
    -:8:8
    8| logFoo({ bar: 'bar' }); // Error!

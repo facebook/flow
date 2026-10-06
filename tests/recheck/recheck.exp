@@ -137,7 +137,7 @@ Test c:
 Error -------------------------------------------------------------------------------------------------------- c2.js:6:7
 
 Cannot call `foo` with object literal bound to `props` because property `x` is missing in object literal [1] but exists
-in object type [2]. [incompatible-type]
+in `{x: number, ...}` [2]. [incompatible-type]
 
    c2.js:6:7
    6|   foo({ y: 0 });
@@ -152,7 +152,7 @@ References:
 Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
-in object type [2]. [incompatible-type]
+in `{y: number, ...}` [2]. [incompatible-type]
 
    c3.js:5:5
    5| bar({ x: 0 });
@@ -169,7 +169,7 @@ Found 2 errors
 Error -------------------------------------------------------------------------------------------------------- c3.js:5:5
 
 Cannot call `bar` with object literal bound to `props` because property `y` is missing in object literal [1] but exists
-in object type [2]. [incompatible-type]
+in `{y: number, ...}` [2]. [incompatible-type]
 
    c3.js:5:5
    5| bar({ x: 0 });

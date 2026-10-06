@@ -1376,8 +1376,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:10:3
 
-Cannot cast `rest` to object type because property `x` is missing in rest of object pattern [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast `rest` to object type because property `x` is missing in `{...}` [1] but exists in `{x: number, ...}` [2].
+[incompatible-type]
 
    rest.js:10:3
    10|   rest as {...X, ...Y, ...}; //no, because x is missing

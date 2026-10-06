@@ -35,8 +35,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:51
 
-Cannot assign object literal to `obj` because property `j` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot assign object literal to `obj` because property `j` is missing in object literal [1] but exists in
+`{i: number, j: boolean, str: string, ...}` [2]. [incompatible-type]
 
    annot.js:8:51
    8| var obj: {str:string; i:number; j:boolean, ...} = {str: "...", i: "...", k: false};
@@ -125,7 +125,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- annot.js:46:14
 
 Cannot call `batchRequests.map` with function bound to `callbackfn` because in the return value: property `path` is
-missing in object literal [1] but exists in object type [2]. [incompatible-type]
+missing in object literal [1] but exists in `{method: string, params: any, path: string, ...}` [2]. [incompatible-type]
 
    annot.js:46:14
                     v

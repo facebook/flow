@@ -56,7 +56,8 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error ----------------------------------------------------------------------------------------------------- call.js:12:8
 
-Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
+Property `@@iterator` is missing in `{...}` [1] but exists in
+`{"@@iterator"(this: Iterable<any, any, any>): Iterator<any, any, any>, ...}` [2]. [incompatible-type]
 
    call.js:12:8
    12| }, ...((x) => 3));
@@ -617,7 +618,8 @@ Missing an annotation on `y`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------------------------------- for_of.js:7:18
 
-Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
+Property `@@iterator` is missing in `{...}` [1] but exists in
+`{"@@iterator"(this: Iterable<any, unknown, empty>): Iterator<any, unknown, empty>, ...}` [2]. [incompatible-type]
 
    for_of.js:7:18
     7|   for (let x of ((x) => 3)) { // Only the body is covered, missing annot! Also a type error

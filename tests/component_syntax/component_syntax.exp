@@ -164,7 +164,7 @@ Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
 Error ----------------------------------------------------------------------------------------------- annotation.js:59:2
 
-Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component [2].
+Cannot create `Export` element because property `x` is missing in `{}` [1] but exists in `{readonly x: number}` [2].
 [incompatible-type]
 
    annotation.js:59:2
@@ -1061,7 +1061,7 @@ Cannot use `number` [1] as the type argument of renders type. [invalid-render]
 
 Error ------------------------------------------------------------------------------------------------- declared.js:60:2
 
-Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component Export [2].
+Cannot create `Export` element because property `x` is missing in `{}` [1] but exists in `{readonly x: number}` [2].
 [incompatible-type]
 
    declared.js:60:2
@@ -1339,8 +1339,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:8:2
 
-Cannot create `D` element because property `z` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `D` element because property `z` is missing in `{y: "a"}` [1] but exists in
+`{readonly y: number, readonly z: string}` [2]. [incompatible-type]
 
    export_syntax.js:8:2
    8| <D y={"a"} /> // 2 errors
@@ -1500,8 +1500,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:28
 
-Cannot create `RenamedParams` element because property `non-ident` is missing in props [1] but exists in props of
-component RenamedParams [2]. [incompatible-type]
+Cannot create `RenamedParams` element because property `non-ident` is missing in `{bar: 3, baz: "str", foo: "str"}` [1]
+but exists in `{readonly bar: string, readonly foo: number, readonly "non-ident": string}` [2]. [incompatible-type]
 
    import.js:17:28
    17| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz
@@ -1641,8 +1641,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:28:2
 
-Cannot create `D` element because property `z` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `D` element because property `z` is missing in `{y: "a"}` [1] but exists in
+`{readonly y: number, readonly z: string}` [2]. [incompatible-type]
 
    import.js:28:2
    28| <D y={"a"} /> // 2 errors
@@ -1673,7 +1673,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:33:2
 
-Cannot create `Export` element because property `x` is missing in props [1] but exists in props of component Export [2].
+Cannot create `Export` element because property `x` is missing in `{}` [1] but exists in `{readonly x: number}` [2].
 [incompatible-type]
 
    import.js:33:2
@@ -1706,7 +1706,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:37:2
 
-Cannot create `NoRef` element because property `ref` is missing in props [1] but exists in props of component NoRef [2].
+Cannot create `NoRef` element because property `ref` is missing in `{}` [1] but exists in `{readonly ref: string}` [2].
 [incompatible-type]
 
    import.js:37:2
@@ -1724,7 +1724,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:42:2
 
-Cannot create `ExportType` element because property `x` is missing in props [1] but exists in props of component [2].
+Cannot create `ExportType` element because property `x` is missing in `{}` [1] but exists in `{readonly x: number}` [2].
 [incompatible-type]
 
    import.js:42:2
@@ -2000,7 +2000,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- names.js:23:2
 
-Cannot create `NoRef` element because property `ref` is missing in props [1] but exists in props of component NoRef [2].
+Cannot create `NoRef` element because property `ref` is missing in `{}` [1] but exists in `{readonly ref: string}` [2].
 [incompatible-type]
 
    names.js:23:2
@@ -2018,8 +2018,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- names.js:26:2
 
-Cannot create `NoRefInSpread` element because property `ref` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `NoRefInSpread` element because property `ref` is missing in `{}` [1] but exists in
+`{readonly ref: string}` [2]. [incompatible-type]
 
    names.js:26:2
    26| <NoRefInSpread />
@@ -2264,7 +2264,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:39
 
-Cannot assign `Foo` to `a` because property `x` is missing in object type [1] but exists in props of component Foo [2].
+Cannot assign `Foo` to `a` because property `x` is missing in `{...}` [1] but exists in `{readonly x: number}` [2].
 [incompatible-type]
 
    props_reason.js:6:39
@@ -3144,8 +3144,8 @@ optional. [incompatible-type]
 
 Error ----------------------------------------------------------------------------------------- rest_constraints.js:22:2
 
-Cannot create `DestructuredArr` element because properties `bar` and `foo` are missing in props [1] but exist in object
-type [2]. [incompatible-type]
+Cannot create `DestructuredArr` element because properties `bar` and `foo` are missing in `{}` [1] but exist in
+`{readonly bar: number, readonly foo: number}` [2]. [incompatible-type]
 
    rest_constraints.js:22:2
    22| <DestructuredArr />; // ERROR because annot still provides a valid config type
@@ -3291,8 +3291,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:41:28
 
-Cannot create `RenamedParams` element because property `non-ident` is missing in props [1] but exists in props of
-component RenamedParams [2]. [incompatible-type]
+Cannot create `RenamedParams` element because property `non-ident` is missing in `{bar: 3, baz: "str", foo: "str"}` [1]
+but exists in `{readonly bar: string, readonly foo: number, readonly "non-ident": string}` [2]. [incompatible-type]
 
    signature.js:41:28
    41| const renamedWrongProps = <RenamedParams bar={3} foo="str" baz="str" />; // ERROR 4x, bad foo type, bad bar type, no non-ident, extra baz

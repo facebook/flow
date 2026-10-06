@@ -113,7 +113,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- imp.js:43:23
 
 Cannot assign object literal to `emptyOne` because property `a` is missing in object literal [1] but exists in
-`One` [2]. [incompatible-type]
+`{a: number, ...}` [2]. [incompatible-type]
 
    imp.js:43:23
    43| const emptyOne: One = {}; // ERROR: a named property is required
@@ -590,7 +590,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- type_keys.js:41:42
 
 Cannot assign object literal to `emptyParam` because property `a` is missing in object literal [1] but exists in
-`ValueParam` [2]. [incompatible-type]
+`{a: number, ...}` [2]. [incompatible-type]
 
    type_keys.js:41:42
    41|   const emptyParam: ValueParam<number> = {}; // ERROR: `a` is required
@@ -1239,7 +1239,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- within.js:13:23
 
 Cannot assign object literal to `emptyOne` because property `a` is missing in object literal [1] but exists in
-`One` [2]. [incompatible-type]
+`{a: number, ...}` [2]. [incompatible-type]
 
    within.js:13:23
    13| const emptyOne: One = {}; // ERROR: a named property is required

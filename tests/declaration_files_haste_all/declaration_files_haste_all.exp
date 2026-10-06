@@ -30,7 +30,7 @@ expression. [signature-verification-failure]
 Error --------------------------------------------------------------------------------------- record_operations.js:14:17
 
 Cannot call `RecordModel` with object literal bound to `value` because property `tags` is missing in object literal [1]
-but exists in object type [2]. [incompatible-type]
+but exists in `{readonly count: number, readonly label: string, readonly tags: List<string>}` [2]. [incompatible-type]
 
    record_operations.js:14:17
                        v

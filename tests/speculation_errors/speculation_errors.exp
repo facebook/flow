@@ -2999,7 +2999,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:53:1
 
 Cannot call `f` because: [incompatible-type]
- - Either property `p` is missing in object literal [1] but exists in interface type [2].
+ - Either property `p` is missing in object literal [1] but exists in `{p: string, ...}` [2].
  - Or object literal [1] is incompatible with `ReadonlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3461,7 +3461,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- nullish.js:10:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either property `p` is missing in object literal [1] but exists in object type [2].
+ - Either property `p` is missing in object literal [1] but exists in `{p: empty}` [2].
  - Or object literal [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -3996,7 +3996,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:43:2
 
 Cannot cast object literal to `F` because: [incompatible-type]
- - Either property `p` is missing in object literal [1] but exists in interface type [2].
+ - Either property `p` is missing in object literal [1] but exists in `{p: string, ...}` [2].
  - Or object literal [1] is incompatible with `ReadonlyArray<string>` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are

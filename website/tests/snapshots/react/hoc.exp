@@ -4,8 +4,8 @@ No errors!
 === block 2 ===
 Error ---------------------------------------------------------------------------------- -:29:2
 
-Cannot create `MyEnhancedComponent` element because property `b` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `MyEnhancedComponent` element because property `b` is missing in `{a: 1}` [1] but exists in
+`{readonly a: number, readonly b: number, ...}` [2]. [incompatible-type]
 
    -:29:2
    29| <MyEnhancedComponent a={1} />; // ERROR

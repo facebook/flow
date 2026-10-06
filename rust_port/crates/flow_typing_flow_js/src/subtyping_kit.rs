@@ -1375,8 +1375,8 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
                 cx,
                 env,
                 ErrorMessage::EPropNotFoundInSubtyping(Box::new(EPropNotFoundInSubtypingData {
-                    reason_lower: data.reason_lower.dupe(),
-                    reason_upper: data.reason_upper.dupe(),
+                    reason_lower: type_util::reason_of_t(&data.lower).dupe(),
+                    reason_upper: type_util::reason_of_t(&data.upper).dupe(),
                     prop_name,
                     use_op: data.use_op.dupe(),
                     suggestion,
@@ -1406,8 +1406,14 @@ pub(crate) fn add_output_missing_props_from_lookup<'cx>(
             env,
             ErrorMessage::EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names,
-                reason_lower: data.reason_lower.dupe(),
-                reason_upper: data.reason_upper.dupe(),
+                lower: flow_js_utils::type_reference_with_reason_for_error(
+                    &data.lower,
+                    type_util::reason_of_t(&data.lower).dupe(),
+                ),
+                upper: flow_js_utils::type_reference_with_reason_for_error(
+                    &data.upper,
+                    type_util::reason_of_t(&data.upper).dupe(),
+                ),
                 use_op: data.use_op.dupe(),
             })),
         ),
@@ -1603,6 +1609,7 @@ fn flow_obj_to_obj<'cx>(
     env: &FlowJsEnv,
     trace: DepthTrace,
     use_op: UseOp,
+    (l, u): (&Type, &Type),
     lreason: &Reason,
     l_obj: &Rc<ObjType>,
     ureason: &Reason,
@@ -2191,8 +2198,8 @@ fn flow_obj_to_obj<'cx>(
                                             use_op: use_op.dupe(),
                                             props: Rc::from([(propref, up.dupe())]),
                                             strictness_kind,
-                                            reason_lower: lreason.dupe(),
-                                            reason_upper: ureason.dupe(),
+                                            lower: l.dupe(),
+                                            upper: u.dupe(),
                                         }),
                                     )),
                                     method_accessible: true,
@@ -2230,8 +2237,8 @@ fn flow_obj_to_obj<'cx>(
                                                     use_op: use_op.dupe(),
                                                     props: Rc::from([(propref, up.dupe())]),
                                                     strictness_kind,
-                                                    reason_lower: lreason.dupe(),
-                                                    reason_upper: ureason.dupe(),
+                                                    lower: l.dupe(),
+                                                    upper: u.dupe(),
                                                 },
                                             )),
                                         ),
@@ -2405,8 +2412,8 @@ fn flow_obj_to_obj<'cx>(
             env,
             ErrorMessage::EPropsNotFoundInSubtyping(Box::new(EPropsNotFoundInSubtypingData {
                 prop_names: props,
-                reason_lower: lreason.dupe(),
-                reason_upper: ureason.dupe(),
+                lower: flow_js_utils::type_reference_with_reason_for_error(l, lreason.dupe()),
+                upper: flow_js_utils::type_reference_with_reason_for_error(u, ureason.dupe()),
                 use_op: use_op.dupe(),
             })),
         )?;
@@ -5239,7 +5246,7 @@ pub fn rec_sub_t<'cx>(
                 if print_fast_path {
                     eprintln!("ObjT ~> ObjT fast path: no");
                 }
-                flow_obj_to_obj(cx, env, trace, use_op, lreason, l_obj, ureason, u_obj)?;
+                flow_obj_to_obj(cx, env, trace, use_op, (l, u), lreason, l_obj, ureason, u_obj)?;
             }
             Ok(())
         }
@@ -5447,8 +5454,8 @@ pub fn rec_sub_t<'cx>(
                                                             up.dupe(),
                                                         )]),
                                                         strictness_kind,
-                                                        reason_lower: lreason.dupe(),
-                                                        reason_upper: ureason.dupe(),
+                                                        lower: l.dupe(),
+                                                        upper: u.dupe(),
                                                     },
                                                 )),
                                             ),
@@ -5486,8 +5493,8 @@ pub fn rec_sub_t<'cx>(
                                     use_op: use_op.dupe(),
                                     props: missing_props.into(),
                                     strictness_kind,
-                                    reason_lower: lreason.dupe(),
-                                    reason_upper: ureason.dupe(),
+                                    lower: l.dupe(),
+                                    upper: u.dupe(),
                                 }),
                             )),
                             method_accessible: false,

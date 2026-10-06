@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:6:2
 
-Cannot create `F` element because property `foo` is missing in props [1] but exists in object type [2].
+Cannot create `F` element because property `foo` is missing in `{}` [1] but exists in `{foo: string}` [2].
 [incompatible-type]
 
    test.js:6:2

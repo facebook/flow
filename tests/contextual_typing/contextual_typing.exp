@@ -332,7 +332,8 @@ An annotation on `item` is required because Flow cannot infer its type from loca
 
 Error -------------------------------------------------------------------------- encountered_placeholder_failure.js:27:8
 
-Property `@@iterator` is missing in function [1] but exists in `Iterable` [2]. [incompatible-type]
+Property `@@iterator` is missing in `{...}` [1] but exists in
+`{"@@iterator"(this: Iterable<any, any, any>): Iterator<any, any, any>, ...}` [2]. [incompatible-type]
 
    encountered_placeholder_failure.js:27:8
    27| id([...(item) => 1]); // error
@@ -1164,8 +1165,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- unions.js:7:42
 
-Cannot assign object literal to `x` because property `A` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot assign object literal to `x` because property `A` is missing in object literal [1] but exists in
+`{A: (number) => number}` [2]. [incompatible-type]
 
    unions.js:7:42
    7|   const x: {['A']: (number) => number} = {[42]: v => v}; // ERROR

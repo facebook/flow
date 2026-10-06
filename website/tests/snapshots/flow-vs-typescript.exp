@@ -690,8 +690,8 @@ No errors!
 === block 32 ===
 Error ------------------------------------------------------------------------- -:5:11
 
-Cannot cast object literal to object type because property `name` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast object literal to object type because property `name` is missing in object literal [1] but exists in
+`{id: number, name: string}` [2]. [incompatible-type]
 
    -:5:11
    5| const u = {id: 1} as {id: number, name: string}; // ERROR - unsafe downcast

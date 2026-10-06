@@ -113,8 +113,8 @@ Cannot resolve name `createContext`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------ createElementRequiredProp_string.js:16:14
 
-Cannot create `Cmp` element because property `test` is missing in props [1] but exists in props of class `Bar` [2].
-[incompatible-type]
+Cannot create `Cmp` element because property `test` is missing in `{}` [1] but exists in
+`{readonly ref?: React.RefSetter<Bar>, readonly test: number, ...}` [2]. [incompatible-type]
 
    createElementRequiredProp_string.js:16:14
    16|     return (<Cmp/>);
@@ -233,8 +233,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:58:9
 
-Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in object type [1] but exist
-in props of class `C` [2]. [incompatible-type]
+Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in `{...}` [1] but exist in
+`{p: ?number, readonly ref?: React.RefSetter<C>, ...}` [2]. [incompatible-type]
 
    element_config.js:58:9
    58| ({}) as {...} as React.ElementConfig<typeof C>; // Error: missing property `p`
@@ -263,8 +263,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:62:9
 
-Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in object type [1] but exist
-in props of class `D` [2]. [incompatible-type]
+Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in `{...}` [1] but exist in
+`{p: ?number, readonly ref?: React.RefSetter<D>, ...}` [2]. [incompatible-type]
 
    element_config.js:62:9
    62| ({}) as {...} as React.ElementConfig<typeof D>; // Error: missing property `p`
@@ -435,8 +435,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8
 
-Cannot create `Component` element because properties `bar` and `foo` are missing in props [1] but exist in props of
-component [2]. [incompatible-type]
+Cannot create `Component` element because properties `bar` and `foo` are missing in `{}` [1] but exist in
+`{readonly bar: number, readonly foo: number, readonly ref?: React.RefSetter<unknown>}` [2]. [incompatible-type]
 
    hoc.js:9:8
    9|       <Component />; // Error: `foo` is required.
@@ -453,8 +453,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:10:8
 
-Cannot create `Component` element because property `bar` is missing in props [1] but exists in props of component [2].
-[incompatible-type]
+Cannot create `Component` element because property `bar` is missing in `{foo: 42}` [1] but exists in
+`{readonly bar: number, readonly foo: number, readonly ref?: React.RefSetter<unknown>}` [2]. [incompatible-type]
 
    hoc.js:10:8
    10|       <Component foo={42} />; // Error: `bar` is required.
@@ -507,8 +507,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:39:2
 
-Cannot create `Wrapped` element because property `foo` is missing in props [1] but exists in props of component [2].
-[incompatible-type]
+Cannot create `Wrapped` element because property `foo` is missing in `{nonsense: "what"}` [1] but exists in
+`{readonly foo: number, readonly ref?: React.RefSetter<unknown>}` [2]. [incompatible-type]
 
    hoc.js:39:2
    39| <Wrapped nonsense="what" />; // Error: `foo` is required.
@@ -544,8 +544,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:41:2
 
-Cannot create `WrappedFun` element because property `foo` is missing in props [1] but exists in props of component [2].
-[incompatible-type]
+Cannot create `WrappedFun` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly foo: number, readonly ref?: React.RefSetter<unknown>}` [2]. [incompatible-type]
 
    hoc.js:41:2
    41| <WrappedFun />; // Error: `foo` is required.
@@ -562,8 +562,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc2.js:24:2
 
-Cannot create `MyEnhancedComponent` element because properties `a` and `b` are missing in props [1] but exist in props
-of class `MyComponent` [2]. [incompatible-type]
+Cannot create `MyEnhancedComponent` element because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: number, readonly ref?: React.RefSetter<MyComponent>}` [2]. [incompatible-type]
 
    hoc2.js:24:2
    24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -595,8 +595,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc2.js:28:2
 
-Cannot create `MyEnhancedFunctionComponent` element because properties `a` and `b` are missing in props [1] but exist in
-object type [2]. [incompatible-type]
+Cannot create `MyEnhancedFunctionComponent` element because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: number}` [2]. [incompatible-type]
 
    hoc2.js:28:2
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -633,8 +633,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:24:2
 
-Cannot create `MyEnhancedComponent` element because properties `a` and `b` are missing in props [1] but exist in props
-of class `MyComponent` [2]. [incompatible-type]
+Cannot create `MyEnhancedComponent` element because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: number, readonly ref?: React.RefSetter<MyComponent>, ...}` [2]. [incompatible-type]
 
    hoc3.js:24:2
    24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -666,8 +666,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:28:2
 
-Cannot create `MyEnhancedFunctionComponent` element because properties `a` and `b` are missing in props [1] but exist in
-object type [2]. [incompatible-type]
+Cannot create `MyEnhancedFunctionComponent` element because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: number, ...}` [2]. [incompatible-type]
 
    hoc3.js:28:2
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -699,8 +699,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:24:2
 
-Cannot create `MyEnhancedComponent` element because properties `a` and `b` are missing in props [1] but exist in
-`Omit` [2]. [incompatible-type]
+Cannot create `MyEnhancedComponent` element because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: number, readonly ref?: React.RefSetter<MyComponent>}` [2]. [incompatible-type]
 
    hoc4.js:24:2
    24| <MyEnhancedComponent />; // Error: Needs `a` and `b`.
@@ -732,8 +732,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc4.js:28:2
 
-Cannot create `MyEnhancedFunctionComponent` element because properties `a` and `b` are missing in props [1] but exist in
-`Omit` [2]. [incompatible-type]
+Cannot create `MyEnhancedFunctionComponent` element because properties `a` and `b` are missing in `{}` [1] but exist in
+`{readonly a: number, readonly b: number}` [2]. [incompatible-type]
 
    hoc4.js:28:2
    28| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
@@ -765,8 +765,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:21:2
 
-Cannot create `MyComponent1` element because property `bar` is missing in props [1] but exists in props of class
-`MyComponent1` [2]. [incompatible-type]
+Cannot create `MyComponent1` element because property `bar` is missing in `{foo: string, ...}` [1] but exists in
+`{readonly bar: number, readonly foo?: string, readonly ref?: React.RefSetter<MyComponent1>, ...}` [2].
+[incompatible-type]
 
    hoc5.js:21:2
    21| <MyComponent1 />; // Error
@@ -813,8 +814,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:30:2
 
-Cannot create `MyEnhancedComponent1` element because property `bar` is missing in props [1] but exists in props of class
-`MyComponent1` [2]. [incompatible-type]
+Cannot create `MyEnhancedComponent1` element because property `bar` is missing in `{}` [1] but exists in
+`{readonly bar: number, readonly foo?: string, readonly ref?: React.RefSetter<MyComponent1>, ...}` [2].
+[incompatible-type]
 
    hoc5.js:30:2
    30| <MyEnhancedComponent1 />; // Error
@@ -905,7 +907,7 @@ References:
 Error ----------------------------------------------------------------------------- intersection_component_error.js:13:2
 
 Cannot create `MyComponent` element because: [incompatible-use]
- - Either property `foo` is missing in props [1] but exists in object type [2].
+ - Either property `foo` is missing in `{}` [1] but exists in `{readonly foo: number, ...}` [2].
  - Or `{someStatic: boolean, ...}` [3] is not a React component.
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
@@ -1059,8 +1061,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- profiler.js:35:4
 
-Cannot create `Profiler` element because properties `id` and `onRender` are missing in props [1] but exist in props of
-component [2]. [incompatible-type]
+Cannot create `Profiler` element because properties `id` and `onRender` are missing in `{}` [1] but exist in
+`{readonly children?: React.Node, readonly id: string, readonly onRender: ProfilerOnRenderFnType}` [2].
+[incompatible-type]
 
    profiler.js:35:4
      35|   <Profiler />; // Error: no "id" or "onRender" prop
@@ -1082,8 +1085,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- profiler.js:36:4
 
-Cannot create `Profiler` element because property `onRender` is missing in props [1] but exists in props of
-component [2]. [incompatible-type]
+Cannot create `Profiler` element because property `onRender` is missing in `{id: "fake"}` [1] but exists in
+`{readonly children?: React.Node, readonly id: string, readonly onRender: ProfilerOnRenderFnType}` [2].
+[incompatible-type]
 
    profiler.js:36:4
      36|   <Profiler id="fake" />; // Error: no "onRender" prop
@@ -1105,7 +1109,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- profiler.js:37:4
 
-Cannot create `Profiler` element because property `id` is missing in props [1] but exists in props of component [2].
+Cannot create `Profiler` element because property `id` is missing in
+`{onRender: (id: string, phase: "mount" | "update", actualDuration: number, baseDuration: number, sta...` [1] but exists
+in `{readonly children?: React.Node, readonly id: string, readonly onRender: ProfilerOnRenderFnType}` [2].
 [incompatible-type]
 
    profiler.js:37:4
@@ -2485,7 +2491,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- use_hook.js:27:7
 
 Cannot call `use` with object literal bound to `usable` because: [incompatible-type]
- - Either property `then` is missing in object literal [1] but exists in `Thenable` [2].
+ - Either property `then` is missing in object literal [1] but exists in
+   `{then(this: Thenable<any>, onFulfill: (value: any) => any, onReject: (error: unknown) => unknown): u...` [2].
  - Or object literal [1] is incompatible with `React.Context<any>` [3].
 
    use_hook.js:27:7

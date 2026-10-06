@@ -245,8 +245,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test6.js:10:1
 
-Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast `p` to object type because property `abc` is missing in object literal [1] but exists in
+`{abc: string, foo: string, ...}` [2]. [incompatible-type]
 
    test6.js:10:1
    10| p as {foo: string; abc: string, ...}; // error, p doesn't have `abc` yet

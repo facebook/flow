@@ -2276,16 +2276,16 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ),
         ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
             prop_names,
-            reason_lower,
-            reason_upper,
+            lower,
+            upper,
             use_op,
         }) => {
             let names: Vec<String> = prop_names.iter().map(|n| n.to_string()).collect();
             format!(
                 "EPropsNotFoundInSubtyping ([{}], {}, {}, {})",
                 names.join(","),
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
+                dump_error_type_reference(cx, lower),
+                dump_error_type_reference(cx, upper),
                 string_of_use_op(use_op)
             )
         }

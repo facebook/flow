@@ -221,7 +221,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- respect_local_scope.js:44:4
 
-Cannot create `Bar` element because property `x` is missing in props [1] but exists in object type [2].
+Cannot create `Bar` element because property `x` is missing in `{y: "hi"}` [1] but exists in `{x: string, ...}` [2].
 [incompatible-type]
 
    respect_local_scope.js:44:4

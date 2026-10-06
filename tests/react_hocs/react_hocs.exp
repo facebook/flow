@@ -17,8 +17,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ Bad.js:18:3
 
-Cannot call `compose(...)` with `Bad` bound to the first parameter because property `foo` is missing in props [1] but
-exists in `Props` [2]. [incompatible-type]
+Cannot call `compose(...)` with `Bad` bound to the first parameter because property `foo` is missing in
+`{bar: string, buz: string}` [1] but exists in `Props` [2]. [incompatible-type]
 
    Bad.js:18:3
    18| )(Bad) as React.ComponentType<any>);
@@ -57,8 +57,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:5:2
 
-Cannot create `Good` element because property `qux` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Good` element because property `qux` is missing in `{buz: 2, foo: 1}` [1] but exists in
+`{readonly buz: number, readonly foo: number, readonly qux: number}` [2]. [incompatible-type]
 
    Good_use.js:5:2
     5| <Good foo={1} buz={2} />; // Error: Missing qux
@@ -75,8 +75,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:6:2
 
-Cannot create `Good` element because property `buz` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Good` element because property `buz` is missing in `{foo: 1, qux: 3}` [1] but exists in
+`{readonly buz: number, readonly foo: number, readonly qux: number}` [2]. [incompatible-type]
 
    Good_use.js:6:2
     6| <Good foo={1} qux={3} />; // Error: Missing buz
@@ -93,8 +93,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- Good_use.js:7:2
 
-Cannot create `Good` element because property `foo` is missing in props [1] but exists in object type [2].
-[incompatible-type]
+Cannot create `Good` element because property `foo` is missing in `{buz: 2, qux: 3}` [1] but exists in
+`{readonly buz: number, readonly foo: number, readonly qux: number}` [2]. [incompatible-type]
 
    Good_use.js:7:2
     7| <Good buz={2} qux={3} />; // Error: Missing foo

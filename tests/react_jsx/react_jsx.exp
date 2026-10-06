@@ -55,7 +55,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:72:2
 
 Cannot create `Class_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and `string2`
-are missing in props [1] but exist in props of class `Class_ManyProps` [2]. [incompatible-type]
+are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:72:2
    72| <Class_ManyProps />; // Error: There are no props.
@@ -147,8 +149,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:109:2
 
-Cannot create `Class_ManyProps` element because property `number` is missing in props [1] but exists in props of class
-`Class_ManyProps` [2]. [incompatible-type]
+Cannot create `Class_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:109:2
    109| <Class_ManyProps // Error: Missing `number`.
@@ -200,7 +204,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:134:2
 
 Cannot create `ClassExact_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in props of class `ClassExact_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:134:2
    134| <ClassExact_ManyProps />; // Error: There are no props.
@@ -322,8 +328,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:171:2
 
-Cannot create `ClassExact_ManyProps` element because property `number` is missing in props [1] but exists in props of
-class `ClassExact_ManyProps` [2]. [incompatible-type]
+Cannot create `ClassExact_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:171:2
    171| <ClassExact_ManyProps // Error: Missing `number`.
@@ -402,7 +410,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:196:2
 
 Cannot create `ClassPure_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in props of class `ClassPure_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:196:2
    196| <ClassPure_ManyProps />; // Error: There are no props.
@@ -494,8 +504,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:233:2
 
-Cannot create `ClassPure_ManyProps` element because property `number` is missing in props [1] but exists in props of
-class `ClassPure_ManyProps` [2]. [incompatible-type]
+Cannot create `ClassPure_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:233:2
    233| <ClassPure_ManyProps // Error: Missing `number`.
@@ -547,7 +559,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:258:2
 
 Cannot create `Function_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and `string2`
-are missing in props [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
+are missing in `{}` [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
 
    test.js:258:2
    258| <Function_ManyProps />; // Error: There are no props.
@@ -639,8 +651,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:295:2
 
-Cannot create `Function_ManyProps` element because property `number` is missing in props [1] but exists in
-`Props_ManyProps` [2]. [incompatible-type]
+Cannot create `Function_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in `Props_ManyProps` [2].
+[incompatible-type]
 
    test.js:295:2
    295| <Function_ManyProps // Error: Missing `number`.
@@ -692,7 +705,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:320:2
 
 Cannot create `FunctionExact_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{boolean1: boolean, boolean2: boolean, number: number, string1: string, string2: string}` [2]. [incompatible-type]
 
    test.js:320:2
    320| <FunctionExact_ManyProps />; // Error: There are no props.
@@ -814,8 +828,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:357:2
 
-Cannot create `FunctionExact_ManyProps` element because property `number` is missing in props [1] but exists in
-`Props_ManyProps` [2]. [incompatible-type]
+Cannot create `FunctionExact_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{boolean1: boolean, boolean2: boolean, number: number, string1: string, string2: string}` [2]. [incompatible-type]
 
    test.js:357:2
    357| <FunctionExact_ManyProps // Error: Missing `number`.
@@ -894,7 +909,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:382:2
 
 Cannot create `Abstract_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and `string2`
-are missing in props [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
+are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2].
+[incompatible-type]
 
    test.js:382:2
    382| <Abstract_ManyProps />; // Error: There are no props.
@@ -986,8 +1003,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:419:2
 
-Cannot create `Abstract_ManyProps` element because property `number` is missing in props [1] but exists in
-`Props_ManyProps` [2]. [incompatible-type]
+Cannot create `Abstract_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2].
+[incompatible-type]
 
    test.js:419:2
    419| <Abstract_ManyProps // Error: Missing `number`.
@@ -1039,7 +1058,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:445:2
 
 Cannot create `AbstractExact_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2].
+[incompatible-type]
 
    test.js:445:2
    445| <AbstractExact_ManyProps />; // Error: There are no props.
@@ -1161,8 +1182,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:482:2
 
-Cannot create `AbstractExact_ManyProps` element because property `number` is missing in props [1] but exists in
-`Props_ManyProps` [2]. [incompatible-type]
+Cannot create `AbstractExact_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2].
+[incompatible-type]
 
    test.js:482:2
    482| <AbstractExact_ManyProps // Error: Missing `number`.
@@ -1241,7 +1264,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:507:2
 
 Cannot create `Member_ManyProps.prop` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in props of class `Class_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:507:2
    507| <Member_ManyProps.prop />; // Error: There are no props.
@@ -1333,8 +1358,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:544:2
 
-Cannot create `Member_ManyProps.prop` element because property `number` is missing in props [1] but exists in props of
-class `Class_ManyProps` [2]. [incompatible-type]
+Cannot create `Member_ManyProps.prop` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:544:2
    544| <Member_ManyProps.prop // Error: Missing `number`.
@@ -1386,7 +1413,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:569:2
 
 Cannot create `EnhancedClass_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in props of class `Class_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:569:2
    569| <EnhancedClass_ManyProps />; // Error: There are no props.
@@ -1478,8 +1507,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:606:2
 
-Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in props [1] but exists in props of
-class `Class_ManyProps` [2]. [incompatible-type]
+Cannot create `EnhancedClass_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly ref?: Rea...` [2].
+[incompatible-type]
 
    test.js:606:2
    606| <EnhancedClass_ManyProps // Error: Missing `number`.
@@ -1531,7 +1562,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:631:2
 
 Cannot create `EnhancedFunction_ManyProps` element because properties `boolean1`, `boolean2`, `number`, `string1`, and
-`string2` are missing in props [1] but exist in `Props_ManyProps` [2]. [incompatible-type]
+`string2` are missing in `{}` [1] but exist in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2].
+[incompatible-type]
 
    test.js:631:2
    631| <EnhancedFunction_ManyProps />; // Error: There are no props.
@@ -1623,8 +1656,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:668:2
 
-Cannot create `EnhancedFunction_ManyProps` element because property `number` is missing in props [1] but exists in
-`Props_ManyProps` [2]. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because property `number` is missing in
+`{boolean1: true, boolean2: false, string1: "foo", string2: "bar"}` [1] but exists in
+`{readonly boolean1: boolean, readonly boolean2: boolean, readonly number: number, readonly string1: ...` [2].
+[incompatible-type]
 
    test.js:668:2
    668| <EnhancedFunction_ManyProps // Error: Missing `number`.
@@ -1675,8 +1710,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:699:2
 
-Cannot create `Class_OptionalProps` element because property `foo` is missing in props [1] but exists in props of class
-`Class_OptionalProps` [2]. [incompatible-type]
+Cannot create `Class_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, readonly ref?: React.RefSetter<Class_OptionalProps>, ...` [2].
+[incompatible-type]
 
    test.js:699:2
    699| <Class_OptionalProps />; // Error: `foo` is required.
@@ -1723,8 +1759,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:717:2
 
-Cannot create `ClassExact_OptionalProps` element because property `foo` is missing in props [1] but exists in props of
-class `ClassExact_OptionalProps` [2]. [incompatible-type]
+Cannot create `ClassExact_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, readonly ref?: React.RefSetter<ClassExact_OptionalPro...` [2].
+[incompatible-type]
 
    test.js:717:2
    717| <ClassExact_OptionalProps />; // Error: `foo` is required.
@@ -1771,8 +1808,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:735:2
 
-Cannot create `ClassPure_OptionalProps` element because property `foo` is missing in props [1] but exists in props of
-class `ClassPure_OptionalProps` [2]. [incompatible-type]
+Cannot create `ClassPure_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, readonly ref?: React.RefSetter<ClassPure_OptionalProp...` [2].
+[incompatible-type]
 
    test.js:735:2
    735| <ClassPure_OptionalProps />; // Error: `foo` is required.
@@ -1819,7 +1857,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:752:2
 
-Cannot create `Function_OptionalProps` element because property `foo` is missing in props [1] but exists in
+Cannot create `Function_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
 `Props_OptionalProps` [2]. [incompatible-type]
 
    test.js:752:2
@@ -1867,8 +1905,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:769:2
 
-Cannot create `FunctionExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
-`Props_OptionalProps` [2]. [incompatible-type]
+Cannot create `FunctionExact_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{bar?: number, foo: ?number}` [2]. [incompatible-type]
 
    test.js:769:2
    769| <FunctionExact_OptionalProps />; // Error: `foo` is required.
@@ -1915,8 +1953,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:786:2
 
-Cannot create `Abstract_OptionalProps` element because property `foo` is missing in props [1] but exists in
-`Props_OptionalProps` [2]. [incompatible-type]
+Cannot create `Abstract_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, ...}` [2]. [incompatible-type]
 
    test.js:786:2
    786| <Abstract_OptionalProps />; // Error: `foo` is required.
@@ -1963,8 +2001,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:804:2
 
-Cannot create `AbstractExact_OptionalProps` element because property `foo` is missing in props [1] but exists in
-`Props_OptionalProps` [2]. [incompatible-type]
+Cannot create `AbstractExact_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number}` [2]. [incompatible-type]
 
    test.js:804:2
    804| <AbstractExact_OptionalProps />; // Error: `foo` is required.
@@ -2011,8 +2049,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:821:2
 
-Cannot create `Member_OptionalProps.prop` element because property `foo` is missing in props [1] but exists in props of
-class `Class_OptionalProps` [2]. [incompatible-type]
+Cannot create `Member_OptionalProps.prop` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, readonly ref?: React.RefSetter<Class_OptionalProps>, ...` [2].
+[incompatible-type]
 
    test.js:821:2
    821| <Member_OptionalProps.prop />; // Error: `foo` is required.
@@ -2059,8 +2098,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:838:2
 
-Cannot create `EnhancedClass_OptionalProps` element because property `foo` is missing in props [1] but exists in props
-of class `Class_OptionalProps` [2]. [incompatible-type]
+Cannot create `EnhancedClass_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, readonly ref?: React.RefSetter<Class_OptionalProps>, ...` [2].
+[incompatible-type]
 
    test.js:838:2
    838| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
@@ -2107,8 +2147,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:855:2
 
-Cannot create `EnhancedFunction_OptionalProps` element because property `foo` is missing in props [1] but exists in
-`Props_OptionalProps` [2]. [incompatible-type]
+Cannot create `EnhancedFunction_OptionalProps` element because property `foo` is missing in `{}` [1] but exists in
+`{readonly bar?: number, readonly foo: ?number, ...}` [2]. [incompatible-type]
 
    test.js:855:2
    855| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
@@ -2155,8 +2195,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:892:2
 
-Cannot create `Class_DefaultProps` element because property `bar` is missing in props [1] but exists in props of class
-`Class_DefaultProps` [2]. [incompatible-type]
+Cannot create `Class_DefaultProps` element because property `bar` is missing in `{foo: 1, ...}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<Class_DefaultProps>, .....` [2].
+[incompatible-type]
 
    test.js:892:2
    892| <Class_DefaultProps // Error: It is missing a required non-default prop.
@@ -2176,8 +2217,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:909:2
 
-Cannot create `ClassExact_DefaultProps` element because property `bar` is missing in props [1] but exists in props of
-class `ClassExact_DefaultProps` [2]. [incompatible-type]
+Cannot create `ClassExact_DefaultProps` element because property `bar` is missing in `{foo: 1}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<ClassExact_DefaultProps...` [2].
+[incompatible-type]
 
    test.js:909:2
    909| <ClassExact_DefaultProps // Error: It is missing a required non-default prop.
@@ -2197,8 +2239,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:925:2
 
-Cannot create `ClassPure_DefaultProps` element because property `bar` is missing in props [1] but exists in props of
-class `ClassPure_DefaultProps` [2]. [incompatible-type]
+Cannot create `ClassPure_DefaultProps` element because property `bar` is missing in `{foo: 1, ...}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<ClassPure_DefaultProps>...` [2].
+[incompatible-type]
 
    test.js:925:2
    925| <ClassPure_DefaultProps // Error: It is missing a required non-default prop.
@@ -2218,8 +2261,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:937:2
 
-Cannot create `Member_DefaultProps.prop` element because property `bar` is missing in props [1] but exists in props of
-class `Class_DefaultProps` [2]. [incompatible-type]
+Cannot create `Member_DefaultProps.prop` element because property `bar` is missing in `{foo: 1, ...}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<Class_DefaultProps>, .....` [2].
+[incompatible-type]
 
    test.js:937:2
    937| <Member_DefaultProps.prop // Error: It is missing a required non-default prop.
@@ -2239,8 +2283,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:949:2
 
-Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in props [1] but exists in props of
-class `Class_DefaultProps` [2]. [incompatible-type]
+Cannot create `EnhancedClass_DefaultProps` element because property `bar` is missing in `{foo: 1}` [1] but exists in
+`{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<Class_DefaultProps>, .....` [2].
+[incompatible-type]
 
    test.js:949:2
    949| <EnhancedClass_DefaultProps // Error: It is missing a required non-default prop.

@@ -17,8 +17,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:21:26
 
-Cannot cast object literal to object type because property `foo` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast object literal to object type because property `foo` is missing in object literal [1] but exists in
+`{foo: () => string}` [2]. [incompatible-type]
 
    A.js:21:26
    21| var Good = Object.assign({} as {foo: () => string}, MyEventEmitter.prototype, {

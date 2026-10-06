@@ -64,8 +64,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:10:2
 
-Cannot cast object literal to `O` because property `q` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast object literal to `O` because property `q` is missing in object literal [1] but exists in
+`{q: string, ...}` [2]. [incompatible-type]
 
    annot.js:10:2
    10| ({p: 0} as O); // error, property `q` not found

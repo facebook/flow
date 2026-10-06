@@ -5255,8 +5255,8 @@ pub struct LookupPropsForSubtypingData {
     /// ones that are never found are reported as a single error.
     pub props: Rc<[(PropRef, Property)]>,
     pub strictness_kind: TypeStrictnessKind,
-    pub reason_lower: Reason,
-    pub reason_upper: Reason,
+    pub lower: Type,
+    pub upper: Type,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

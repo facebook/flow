@@ -879,8 +879,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:23:41
 
-Cannot assign `z` to `o` because property `x` is missing in rest of object pattern [1] but exists in object type [2].
-[incompatible-type]
+Cannot assign `z` to `o` because property `x` is missing in `{y: number}` [1] but exists in
+`{x: string, y: number, ...}` [2]. [incompatible-type]
 
    destructuring.js:23:41
    23|     var o:{x: string; y: number; ...} = z;
@@ -897,8 +897,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:28:53
 
-Cannot assign object literal to `extend` because property `z` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot assign object literal to `extend` because property `z` is missing in object literal [1] but exists in
+`{x: number, y: string, z: boolean, ...}` [2]. [incompatible-type]
 
    destructuring.js:28:53
    28| var extend: {x:number; y:string; z: boolean, ...} = {x:0, ...spread};

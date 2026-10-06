@@ -324,7 +324,8 @@ Error --------------------------------------------------------------------------
 Cannot create `builtin` element because in property `children`: [incompatible-type]
  - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in object literal [1] but exists in `Iterable` [4].
+ - Or property `@@iterator` is missing in object literal [1] but exists in
+   `{"@@iterator"(this: Iterable<?React.Node, void, void>): Iterator<?React.Node, void, void>, ...}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -347,8 +348,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ component.js:15:2
 
-Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in props of class
-`MyComponent` [2]. [incompatible-type]
+Cannot create `MyComponent` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Node, readonly ref?: React.RefSetter<MyComponent>, ...}` [2]. [incompatible-type]
 
    component.js:15:2
    15| <MyComponent />; // Error: `children` is required.
@@ -365,8 +366,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ component.js:16:2
 
-Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in props of class
-`MyComponent` [2]. [incompatible-type]
+Cannot create `MyComponent` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Node, readonly ref?: React.RefSetter<MyComponent>, ...}` [2]. [incompatible-type]
 
    component.js:16:2
    16| <MyComponent></MyComponent>; // Error: `children` is required.
@@ -383,8 +384,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ component.js:18:2
 
-Cannot create `MyComponent` element because property `children` is missing in props [1] but exists in props of class
-`MyComponent` [2]. [incompatible-type]
+Cannot create `MyComponent` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Node, readonly ref?: React.RefSetter<MyComponent>, ...}` [2]. [incompatible-type]
 
    component.js:18:2
    18| <MyComponent>{}</MyComponent>; // Error: `children` is required.
@@ -404,7 +405,8 @@ Error --------------------------------------------------------------------------
 Cannot create `MyComponent` element because in property `children`: [incompatible-type]
  - Either object literal [1] is incompatible with `ExactReactElement_DEPRECATED<any, React.ElementConfig<any>>` [2].
  - Or object literal [1] is incompatible with `React.Portal` [3].
- - Or property `@@iterator` is missing in object literal [1] but exists in `Iterable` [4].
+ - Or property `@@iterator` is missing in object literal [1] but exists in
+   `{"@@iterator"(this: Iterable<?React.Node, void, void>): Iterator<?React.Node, void, void>, ...}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -427,8 +429,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:23:2
 
-Cannot create `Fun` element because property `children` is missing in props [1] but exists in props of class `Fun` [2].
-[incompatible-type]
+Cannot create `Fun` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Fn, readonly ref?: React.RefSetter<Fun>, ...}` [2]. [incompatible-type]
 
    fun.js:23:2
    23| <Fun />; // Error: `children` is required.
@@ -540,8 +542,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:47:2
 
-Cannot create `Fun` element because property `children` is missing in props [1] but exists in props of class `Fun` [2].
-[incompatible-type]
+Cannot create `Fun` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Fn, readonly ref?: React.RefSetter<Fun>, ...}` [2]. [incompatible-type]
 
    fun.js:47:2
    47| <Fun>{}</Fun>; // Error: `void` is not allowed.
@@ -558,8 +560,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:48:2
 
-Cannot create `Fun` element because property `children` is missing in props [1] but exists in props of class `Fun` [2].
-[incompatible-type]
+Cannot create `Fun` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Fn, readonly ref?: React.RefSetter<Fun>, ...}` [2]. [incompatible-type]
 
    fun.js:48:2
    48| <Fun>{/* Hello, world! */}</Fun>; // Error: comments are not allowed.
@@ -679,8 +681,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:59:2
 
-Cannot create `Obj` element because property `children` is missing in props [1] but exists in props of class `Obj` [2].
-[incompatible-type]
+Cannot create `Obj` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Data, readonly ref?: React.RefSetter<Obj>, ...}` [2]. [incompatible-type]
 
    fun.js:59:2
    59| <Obj />; // Error: `children` is required.
@@ -909,8 +911,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:140:2
 
-Cannot create `FunArray` element because property `children` is missing in props [1] but exists in props of class
-`FunArray` [2]. [incompatible-type]
+Cannot create `FunArray` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Fn | Array<Fn>, readonly ref?: React.RefSetter<FunArray>, ...}` [2]. [incompatible-type]
 
    fun.js:140:2
    140| <FunArray>{}</FunArray>; // Error: `void` is not allowed.
@@ -927,8 +929,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:141:2
 
-Cannot create `FunArray` element because property `children` is missing in props [1] but exists in props of class
-`FunArray` [2]. [incompatible-type]
+Cannot create `FunArray` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: Fn | Array<Fn>, readonly ref?: React.RefSetter<FunArray>, ...}` [2]. [incompatible-type]
 
    fun.js:141:2
    141| <FunArray>{/* Hello, world! */}</FunArray>; // Error: comments are not allowed.
@@ -1089,8 +1091,8 @@ A spread argument is unsupported here. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------------------------ text.js:9:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
-`Text` [2]. [incompatible-type]
+Cannot create `Text` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: string, readonly ref?: React.RefSetter<Text>, ...}` [2]. [incompatible-type]
 
    text.js:9:2
    9| <Text />; // Error: `children` is required.
@@ -1107,8 +1109,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:11:2
 
-Cannot create `TextLiteral` element because property `children` is missing in props [1] but exists in props of class
-`TextLiteral` [2]. [incompatible-type]
+Cannot create `TextLiteral` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: "foo" | "bar", readonly ref?: React.RefSetter<TextLiteral>, ...}` [2]. [incompatible-type]
 
    text.js:11:2
    11| <TextLiteral />; // Error: `children` is required.
@@ -1125,8 +1127,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:15:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
-`Text` [2]. [incompatible-type]
+Cannot create `Text` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: string, readonly ref?: React.RefSetter<Text>, ...}` [2]. [incompatible-type]
 
    text.js:15:2
    15| <Text></Text>; // Error: `children` does not exist.
@@ -1143,8 +1145,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:18:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
-`Text` [2]. [incompatible-type]
+Cannot create `Text` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: string, readonly ref?: React.RefSetter<Text>, ...}` [2]. [incompatible-type]
 
    text.js:18:2
    18| <Text>{}</Text>; // Error: `children` is required.
@@ -1161,8 +1163,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:19:2
 
-Cannot create `Text` element because property `children` is missing in props [1] but exists in props of class
-`Text` [2]. [incompatible-type]
+Cannot create `Text` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: string, readonly ref?: React.RefSetter<Text>, ...}` [2]. [incompatible-type]
 
    text.js:19:2
    19| <Text>{/* Hello, world! */}</Text>; // Error: `children` is required.
@@ -1434,8 +1436,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:9:2
 
-Cannot create `Tuple` element because property `children` is missing in props [1] but exists in props of class
-`Tuple` [2]. [incompatible-type]
+Cannot create `Tuple` element because property `children` is missing in `{}` [1] but exists in
+`{readonly children: [boolean, string, number], readonly ref?: React.RefSetter<Tuple>, ...}` [2]. [incompatible-type]
 
    tuple.js:9:2
    9| <Tuple />; // Error: `children` is required.

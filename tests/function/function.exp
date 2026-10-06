@@ -942,8 +942,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- call_error_generic2.js:4:8
 
-Cannot call `bar1` because in type argument `TKey`: property `$data` is missing in object type [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `bar1` because in type argument `TKey`: property `$data` is missing in `{...}` [1] but exists in
+`{readonly $data?: unknown, ...}` [2]. [incompatible-type]
 
    call_error_generic2.js:4:8
    4|   bar1(fragmentRef);

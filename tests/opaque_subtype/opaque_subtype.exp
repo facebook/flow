@@ -31,8 +31,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- both_bounds.js:12:2
 
-Cannot cast object literal to `Obj` because property `foo` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot cast object literal to `Obj` because property `foo` is missing in object literal [1] but exists in
+`{foo: string}` [2]. [incompatible-type]
 
    both_bounds.js:12:2
    12| ({}) as Obj; // error

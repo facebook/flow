@@ -526,8 +526,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:93:1
 
-Cannot cast `y19` to object type because property `a` is missing in object literal [1] but exists in object type [2].
-[incompatible-type]
+Cannot cast `y19` to object type because property `a` is missing in object literal [1] but exists in
+`{a: number, ...}` [2]. [incompatible-type]
 
    main.js:93:1
    93| y19 as {a: number, ...}; // error undefined ~> number
