@@ -1487,6 +1487,13 @@ pub fn function_(t: Type) -> FilterResult {
                 DefT::new(DefTInner::MixedT(MixedFlavor::MixedFunction)),
             ))),
             DefTInner::FunT(_, _) | DefTInner::ClassT(_) => unchanged_result(t),
+            // A value with a call or construct signature (`declare var Map: MapConstructor`)
+            // is a function at runtime.
+            DefTInner::InstanceT(inst)
+                if inst.inst.inst_call_t.is_some() || inst.inst.inst_construct_t.is_some() =>
+            {
+                unchanged_result(t)
+            }
             _ => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         },
         TypeInner::AnyT(_, _) => unchanged_result(t),
@@ -1500,6 +1507,11 @@ pub fn not_function(t: Type) -> FilterResult {
         TypeInner::AnyT(_, _) => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::FunT(_, _) | DefTInner::ClassT(_) => {
+                changed_result(empty_t::why(reason_of_t(&t).dupe()))
+            }
+            DefTInner::InstanceT(inst)
+                if inst.inst.inst_call_t.is_some() || inst.inst.inst_construct_t.is_some() =>
+            {
                 changed_result(empty_t::why(reason_of_t(&t).dupe()))
             }
             _ => unchanged_result(t),
