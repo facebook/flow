@@ -1326,8 +1326,35 @@ pub(super) fn run_with_env<'cx>(
         }
     };
 
+    // Resolution returns directly (e.g. for an `any` input) without running the tool, so the
+    // result must reach `tout` in the same direction the tool's own return would use.
     let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| -> Result<(), FlowJsException> {
-        FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
+        match tool {
+            object::Tool::Rest(box (
+                object::rest::MergeMode::ReactConfigMerge(Polarity::Neutral),
+                _,
+            )) => {
+                FlowJs::rec_unify_with_env(
+                    cx,
+                    env,
+                    trace,
+                    use_op,
+                    UnifyCause::Uncategorized,
+                    None,
+                    &t,
+                    tout,
+                )?;
+            }
+            object::Tool::Rest(box (
+                object::rest::MergeMode::ReactConfigMerge(Polarity::Negative),
+                _,
+            )) => {
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, tout, &t)?;
+            }
+            _ => {
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t, tout)?;
+            }
+        }
         Ok(())
     };
     let recurse = |cx: &Context<'cx>,
