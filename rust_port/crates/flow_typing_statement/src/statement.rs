@@ -14807,7 +14807,6 @@ fn static_method_call_object<'a>(
                 cx,
                 (&spec, &UseT::new(UseTInner::UseT(use_op.dupe(), propdesc))),
             )?;
-            let prop_t = flow_typing_tvar::mk(cx, prop_reason.dupe());
             flow_js::flow_non_speculating(
                 cx,
                 (
@@ -14819,7 +14818,7 @@ fn static_method_call_object<'a>(
                         SetMode::Assign,
                         WriteCtx::Normal,
                         ty,
-                        Some(prop_t),
+                        None,
                     )),
                 ),
             )?;
