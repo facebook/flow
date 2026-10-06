@@ -2162,6 +2162,7 @@ pub fn make_options(
                 facebook_fbs,
                 facebook_fbt,
                 facebook_module_interop,
+                function_and_object_type_is_no_longer_any,
                 file_watcher: _file_watcher,
                 file_watcher_edenfs_throttle_time_ms: _file_watcher_edenfs_throttle_time_ms,
                 file_watcher_edenfs_timeout: _file_watcher_edenfs_timeout,
@@ -2284,6 +2285,8 @@ pub fn make_options(
             Some("0" | "false") => false,
             _ => disable_invariant_special_casing.unwrap_or(false),
         };
+    let function_and_object_type_is_no_longer_any =
+        function_and_object_type_is_no_longer_any.unwrap_or(false);
     let autoimports = !no_autoimports_override && autoimports.unwrap_or(true);
     let autoimports_min_characters = autoimports_min_characters.unwrap_or(0) as i32;
     let autoimports_ranked_by_usage_boost_exact_match_min_length =
@@ -2579,6 +2582,7 @@ pub fn make_options(
         facebook_fbs: facebook_fbs.map(FlowSmolStr::new),
         facebook_fbt: facebook_fbt.map(FlowSmolStr::new),
         facebook_module_interop,
+        function_and_object_type_is_no_longer_any,
         file_options,
         flowconfig_hash: FlowSmolStr::new(flowconfig_hash),
         flowconfig_name: FlowSmolStr::new(flowconfig_name),

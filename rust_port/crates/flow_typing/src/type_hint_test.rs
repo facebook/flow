@@ -310,6 +310,7 @@ mod tests {
                 hook_compatibility: true,
                 enable_records: true,
                 for_builtins: true,
+                function_and_object_type_is_no_longer_any: false,
                 locs_to_dirtify: vec![],
                 is_ts_file: false,
                 is_dts_file: false,

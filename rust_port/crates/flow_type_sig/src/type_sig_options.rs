@@ -30,6 +30,7 @@ pub struct TypeSigOptions {
     pub enable_relay_integration: bool,
     pub relay_integration_module_prefix: Option<String>,
     pub for_builtins: bool,
+    pub function_and_object_type_is_no_longer_any: bool,
     pub locs_to_dirtify: Vec<Loc>,
     pub is_ts_file: bool,
     // True for ambient TS files (.d.ts), where uninitialized enum members are
@@ -85,6 +86,8 @@ impl TypeSigOptions {
                 || flow_common::files::has_ts_ext(file),
             enable_records: options.enable_records,
             for_builtins: false,
+            function_and_object_type_is_no_longer_any: options
+                .function_and_object_type_is_no_longer_any,
             is_ts_file: flow_common::files::has_ts_ext(file),
             is_dts_file: has_dts_ext(file.as_str()),
             tslib_syntax: options.tslib_syntax,
@@ -113,6 +116,8 @@ impl TypeSigOptions {
             hook_compatibility: options.hook_compatibility,
             enable_records: options.enable_records,
             for_builtins: true,
+            function_and_object_type_is_no_longer_any: options
+                .function_and_object_type_is_no_longer_any,
             locs_to_dirtify: Vec::new(),
             is_ts_file: false,
             is_dts_file: false,

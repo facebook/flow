@@ -153,6 +153,7 @@ pub struct Options {
     pub facebook_fbs: Option<FlowSmolStr>,
     pub facebook_fbt: Option<FlowSmolStr>,
     pub facebook_module_interop: bool,
+    pub function_and_object_type_is_no_longer_any: bool,
     pub file_options: Arc<FileOptions>,
     pub flowconfig_hash: FlowSmolStr,
     pub flowconfig_name: FlowSmolStr,

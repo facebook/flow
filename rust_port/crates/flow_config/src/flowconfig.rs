@@ -163,6 +163,7 @@ pub mod opts {
         pub facebook_fbs: Option<String>,
         pub facebook_fbt: Option<String>,
         pub facebook_module_interop: bool,
+        pub function_and_object_type_is_no_longer_any: Option<bool>,
         pub file_watcher: Option<FileWatcher>,
         pub file_watcher_edenfs_throttle_time_ms: u32,
         pub file_watcher_edenfs_timeout: u32,
@@ -322,6 +323,7 @@ pub mod opts {
             facebook_fbs: None,
             facebook_fbt: None,
             facebook_module_interop: false,
+            function_and_object_type_is_no_longer_any: None,
             file_watcher: None,
             file_watcher_edenfs_throttle_time_ms: 50,
             file_watcher_edenfs_timeout: 60,
@@ -2239,6 +2241,19 @@ pub mod opts {
             ("experimental.fast_symlink_resolution", |values, config| {
                 enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config)
             }),
+            (
+                "experimental.function_and_object_type_is_no_longer_any",
+                |values, config| {
+                    parse_boolean(
+                        |opts, v| {
+                            opts.function_and_object_type_is_no_longer_any = Some(v);
+                            Ok(())
+                        },
+                        values,
+                        config,
+                    )
+                },
+            ),
             (
                 "experimental.importable_global_libdefs",
                 |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),

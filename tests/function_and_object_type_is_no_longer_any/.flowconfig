@@ -1,0 +1,10 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+all=true
+builtin_lib=flowlib
+experimental.function_and_object_type_is_no_longer_any=true

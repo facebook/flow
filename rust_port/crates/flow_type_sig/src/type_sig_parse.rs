@@ -9069,7 +9069,11 @@ fn maybe_special_unqualified_generic<'arena, 'ast>(
             }
             _ => Parsed::Err(loc, Errno::CheckError),
         },
-        "Function" | "function" | "Object" => match targs {
+        "function" => match targs {
+            None => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
+            Some(_) => Parsed::Err(loc, Errno::CheckError),
+        },
+        "Function" | "Object" if !opts.function_and_object_type_is_no_longer_any => match targs {
             None => Parsed::Annot(Box::new(ParsedAnnot::Any(Box::new(loc)))),
             Some(_) => Parsed::Err(loc, Errno::CheckError),
         },
