@@ -10436,7 +10436,7 @@ pub fn optional_chain<'a>(
                         },
                     ))));
                     let call_voided_out_collector = TypeCollector::create();
-                    let prop_t = flow_typing_tvar::mk(cx, reason_lookup.dupe());
+                    let prop_t = tvar_resolver::default_no_lowers(&reason_lookup);
                     let lhs_expression = flow_js_utils::expression_reference_for_error(callee);
                     let get_opt_use: Rc<
                         dyn Fn(
