@@ -50,7 +50,7 @@ function setGetDefFunction(flowService: ?FlowJsServices): void {
 let typeAsPosFunctionForMonaco = (
   value: string,
   position: Position,
-): ?string | Array<{type: 'flow' | 'markdown', value: string}> => null;
+): null | string | Array<{type: 'flow' | 'markdown', value: string}> => null;
 
 function setTypeAtPosFunction(flowService: ?FlowJsServices): void {
   typeAsPosFunctionForMonaco = (value, position) =>

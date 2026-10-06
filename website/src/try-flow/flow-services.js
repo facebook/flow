@@ -103,7 +103,7 @@ export default class FlowJsServices {
     body: string,
     line: number,
     col: number,
-  ): string | Array<{type: 'flow' | 'markdown', value: string}> {
+  ): null | string | Array<{type: 'flow' | 'markdown', value: string}> {
     return this._flow.typeAtPos(filename, body, line, col, this.config);
   }
 

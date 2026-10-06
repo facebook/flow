@@ -66,6 +66,37 @@ async function main() {
     );
   }
 
+  const uniqueSymbolCode = 'declare const x: unique symbol;';
+  const noTypeAtDeclaration = flow.typeAtPos(
+    'test.js',
+    uniqueSymbolCode,
+    1,
+    0,
+    config,
+  );
+  if (noTypeAtDeclaration !== null) {
+    throw (
+      'Type-at-pos should return null when no type is available. Got: ' +
+      JSON.stringify(noTypeAtDeclaration)
+    );
+  }
+  const typeAtIdentifier = flow.typeAtPos(
+    'test.js',
+    uniqueSymbolCode,
+    1,
+    14,
+    config,
+  );
+  if (
+    JSON.stringify(typeAtIdentifier) !==
+    JSON.stringify([{type: 'flow', value: 'symbol'}])
+  ) {
+    throw (
+      'Type-at-pos should return the identifier type. Got: ' +
+      JSON.stringify(typeAtIdentifier)
+    );
+  }
+
   if (flow.checkContent('test.js', 'MyGlobal;', config).length > 0) {
     throw 'There should be no errors if the library is correctly registered.';
   }

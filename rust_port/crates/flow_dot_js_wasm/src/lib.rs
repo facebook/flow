@@ -1139,7 +1139,7 @@ fn type_at_pos(params: &Value) -> Result<Value, String> {
     let data = Value::Object(json_data.into_iter().collect());
     match data.get("type").and_then(Value::as_str) {
         Some(type_) => Ok(json!([{ "type": "flow", "value": type_ }])),
-        None => Err("No responses".to_string()),
+        None => Ok(Value::Null),
     }
 }
 
