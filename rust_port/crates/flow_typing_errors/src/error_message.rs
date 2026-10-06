@@ -111,6 +111,7 @@ use crate::intermediate_error_types::MessageCannotUseEnumMemberUsedAsTypeData;
 use crate::intermediate_error_types::MessageCannotUseTypeForAnnotationInferenceData;
 use crate::intermediate_error_types::MessageCannotUseTypeGuardWithFunctionParamHavocedData;
 use crate::intermediate_error_types::MessageCannotUseTypeInValuePositionData;
+use crate::intermediate_error_types::MessageConstructSignatureMissingData;
 use crate::intermediate_error_types::MessageDefinitionInvalidRecursiveData;
 use crate::intermediate_error_types::MessageDuplicateModuleProviderData;
 use crate::intermediate_error_types::MessageEnumDuplicateMemberNameData;
@@ -1337,8 +1338,8 @@ pub struct EPropsNotFoundInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq 
     serde::Deserialize
 )]
 pub struct EConstructSignatureMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
+    pub lower: ErrorTypeReferenceWithLocData<L>,
+    pub upper: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
@@ -4671,14 +4672,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EConstructSignatureMissingInSubtyping(
                 box EConstructSignatureMissingInSubtypingData {
-                    reason_lower,
-                    reason_upper,
+                    lower,
+                    upper,
                     use_op,
                 },
             ) => EConstructSignatureMissingInSubtyping(Box::new(
                 EConstructSignatureMissingInSubtypingData {
-                    reason_lower: map_reason(reason_lower),
-                    reason_upper: map_reason(reason_upper),
+                    lower: map_error_type_ref_with_reason(lower),
+                    upper: map_error_type_ref_with_reason(upper),
                     use_op: map_use_op(use_op),
                 },
             )),
@@ -6927,6 +6928,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper: map_error_type_ref_with_reason(upper),
             })),
 
+            EConstructSignatureMissingInSubtyping(
+                box EConstructSignatureMissingInSubtypingData {
+                    lower,
+                    upper,
+                    use_op,
+                },
+            ) => EConstructSignatureMissingInSubtyping(Box::new(
+                EConstructSignatureMissingInSubtypingData {
+                    lower: map_error_type_ref_with_reason(lower),
+                    upper: map_error_type_ref_with_reason(upper),
+                    use_op: map_use_op(&f, use_op),
+                },
+            )),
+
             EPrivateLookupFailed(box EPrivateLookupFailedData {
                 loc,
                 object,
@@ -8861,23 +8876,6 @@ pub struct PropMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + E
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct ConstructSignatureMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
-    pub use_op: VirtualUseOp<L>,
-}
-
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
 pub struct PropsMissingInSubtypingData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub props: Vec1<FlowSmolStr>,
     pub reason_lower: VirtualReason<L>,
@@ -8973,7 +8971,6 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     PropMissingInLookup(Box<PropMissingInLookupData<L>>),
     PrivatePropMissingInLookup(Box<PrivatePropMissingInLookupData<L>>),
     PropMissingInSubtyping(Box<PropMissingInSubtypingData<L>>),
-    ConstructSignatureMissingInSubtyping(Box<ConstructSignatureMissingInSubtypingData<L>>),
     PropsMissingInSubtyping(Box<PropsMissingInSubtypingData<L>>),
     PropsMissingInInvariantSubtyping(Box<PropsMissingInInvariantSubtypingData<L>>),
     PropsExtraAgainstExactObject(Box<PropsExtraAgainstExactObjectData<L>>),
@@ -9215,17 +9212,27 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EConstructSignatureMissingInSubtyping(
                 box EConstructSignatureMissingInSubtypingData {
-                    reason_lower,
-                    reason_upper,
+                    lower,
+                    upper,
                     use_op,
                 },
-            ) => ConstructSignatureMissingInSubtyping(Box::new(
-                ConstructSignatureMissingInSubtypingData {
-                    reason_lower,
-                    reason_upper,
-                    use_op,
-                },
-            )),
+            ) => UseOp(Box::new(UseOpData {
+                loc: lower.loc.dupe(),
+                message: Message::MessageConstructSignatureMissing(Box::new(
+                    MessageConstructSignatureMissingData {
+                        lower: MessageTypeReferenceData {
+                            loc: lower.reference_loc,
+                            desc: expect_type_desc(lower.type_desc),
+                        },
+                        upper: MessageTypeReferenceData {
+                            loc: upper.reference_loc,
+                            desc: expect_type_desc(upper.type_desc),
+                        },
+                    },
+                )),
+                use_op,
+                explanation: None,
+            })),
 
             ErrorMessage::EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,

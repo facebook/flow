@@ -59,7 +59,7 @@ References:
 Error ------------------------------------------------------------------------------------------- class_position.js:64:1
 
 Cannot cast `plain` to statics of `Bar` because a construct signature declaring the expected parameter / return type is
-missing in `Plain` [1] but exists in statics of `Bar` [2]. [incompatible-type]
+missing in `Plain` [1] but exists in `Class<Bar>` [2]. [incompatible-type]
 
    class_position.js:64:1
    64| plain as Class<Bar>; // ERROR

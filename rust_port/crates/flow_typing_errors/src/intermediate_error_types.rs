@@ -1736,8 +1736,8 @@ pub struct MessagePropMissingData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageConstructSignatureMissingData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
+    pub lower: MessageTypeReferenceData<L>,
+    pub upper: MessageTypeReferenceData<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

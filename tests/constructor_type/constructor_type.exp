@@ -175,7 +175,7 @@ References:
 Error ------------------------------------------------------------------------------------- object_construct_sig.js:32:1
 
 Cannot cast `c` to `ICtor` because a construct signature declaring the expected parameter / return type is missing in
-object type [1] but exists in `ICtor` [2]. [incompatible-type]
+`{new(): {x: number}}` [1] but exists in `ICtor` [2]. [incompatible-type]
 
    object_construct_sig.js:32:1
    32| c as ICtor;     // ERROR — object type is not a construct signature here
@@ -193,7 +193,7 @@ References:
 Error ------------------------------------------------------------------------------------- object_construct_sig.js:33:1
 
 Cannot cast `c` to `ArrowCtor` because a construct signature declaring the expected parameter / return type is missing
-in object type [1] but exists in `ArrowCtor` [2]. [incompatible-type]
+in `{new(): {x: number}}` [1] but exists in `ArrowCtor` [2]. [incompatible-type]
 
    object_construct_sig.js:33:1
    33| c as ArrowCtor; // ERROR — likewise
@@ -311,7 +311,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- utilities.js:29:26
 
 Cannot instantiate `InstanceType` because in type argument `T`: a construct signature declaring the expected parameter /
-return type is missing in statics of function type [1] but exists in interface type [2]. [incompatible-type]
+return type is missing in `{...}` [1] but exists in `interface {new(...args: ReadonlyArray<empty>): unknown}` [2].
+[incompatible-type]
 
    utilities.js:29:26
      29| type Bad2 = InstanceType<() => void>; // ERROR: function is not a constructor
@@ -595,7 +596,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- utilities.js:232:2
 
 Cannot cast object literal to interface type because a construct signature declaring the expected parameter / return
-type is missing in object literal [1] but exists in interface type [2]. [incompatible-type]
+type is missing in object literal [1] but exists in `interface {new(): number; foo: number}` [2]. [incompatible-type]
 
    utilities.js:232:2
    232| ({foo: 1}) as interface { new(): number; foo: number }; // ERROR: missing construct sig (no extra "Cannot use new on" noise)

@@ -8179,7 +8179,7 @@ fn __flow_impl<'cx>(
                 upper_inst_abstract,
                 strictness_kind,
                 t,
-                reason_inst,
+                l,
                 (
                     inst.own_props.dupe(),
                     inst.proto_props.dupe(),
@@ -8202,7 +8202,7 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::DefT(reason_obj, def_t), UseTInner::ImplementsT(use_op, implementor))
+        (TypeInner::DefT(_, def_t), UseTInner::ImplementsT(use_op, implementor))
             if let DefTInner::ObjT(obj) = def_t.deref()
                 && obj.strictness_kind.is_typescript_loose()
                 && obj_type::get_dict_opt(&obj.flags.obj_kind).is_none() =>
@@ -8231,7 +8231,7 @@ fn __flow_impl<'cx>(
                 false,
                 obj.strictness_kind,
                 implementor,
-                reason_obj,
+                l,
                 (props_tmap.dupe(), proto_props, *call_t, None, &None),
             )?;
         }
@@ -9960,7 +9960,7 @@ fn __flow_impl<'cx>(
             }),
         ) if is_extends_use_t_root(root)
             && try_ts.is_empty()
-            && let TypeInner::DefT(reason_inst, inner_def) = ext_u.deref()
+            && let TypeInner::DefT(_, inner_def) = ext_u.deref()
             && let DefTInner::InstanceT(inst_t) = inner_def.deref()
             && {
                 match &inst_t.inst.inst_kind {
@@ -10023,7 +10023,7 @@ fn __flow_impl<'cx>(
                     upper_inst_abstract,
                     strictness_kind,
                     ext_l,
-                    reason_inst,
+                    ext_u,
                     (
                         own_props,
                         proto_props,

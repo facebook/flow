@@ -6036,8 +6036,14 @@ pub fn rec_sub_t<'cx>(
                     cx,env,
                     ErrorMessage::EConstructSignatureMissingInSubtyping(Box::new(
                         EConstructSignatureMissingInSubtypingData {
-                            reason_lower: reason_l.dupe(),
-                            reason_upper: reason_u.dupe(),
+                            lower: flow_js_utils::type_reference_with_reason_for_error(
+                                l,
+                                reason_l.dupe(),
+                            ),
+                            upper: flow_js_utils::type_reference_with_reason_for_error(
+                                u,
+                                reason_u.dupe(),
+                            ),
                             use_op,
                         },
                     )),

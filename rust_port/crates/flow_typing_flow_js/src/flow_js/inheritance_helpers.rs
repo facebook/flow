@@ -147,7 +147,7 @@ pub(super) fn structural_subtype<'cx>(
     upper_inst_abstract: bool,
     strictness_kind: TypeStrictnessKind,
     lower: &Type,
-    reason_struct: &Reason,
+    upper: &Type,
     (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
         properties::Id,
         properties::Id,
@@ -170,7 +170,7 @@ pub(super) fn structural_subtype<'cx>(
             let lreachable_targs = &l_obj.reachable_targs;
             let o = inst_type_to_obj_type(
                 cx,
-                reason_struct.dupe(),
+                reason_of_t(upper).dupe(),
                 own_props_id,
                 proto_props_id,
                 call_id,
@@ -202,7 +202,7 @@ pub(super) fn structural_subtype<'cx>(
                 upper_inst_abstract,
                 strictness_kind,
                 lower,
-                reason_struct,
+                upper,
                 (
                     own_props_id,
                     proto_props_id,
@@ -224,7 +224,7 @@ pub(super) fn inst_structural_subtype<'cx>(
     upper_inst_abstract: bool,
     strictness_kind: TypeStrictnessKind,
     lower: &Type,
-    reason_struct: &Reason,
+    upper: &Type,
     (own_props_id, proto_props_id, call_id, construct_id, inst_dict): (
         properties::Id,
         properties::Id,
@@ -234,6 +234,7 @@ pub(super) fn inst_structural_subtype<'cx>(
     ),
 ) -> Result<(), FlowJsException> {
     let lreason = reason_of_t(lower);
+    let reason_struct = reason_of_t(upper);
     let lit = is_literal_object_reason(lreason);
     let own_props = cx.find_props(own_props_id);
     let proto_props = cx.find_props(proto_props_id);
@@ -541,8 +542,14 @@ pub(super) fn inst_structural_subtype<'cx>(
         let not_a_constructor = |cx: &Context<'cx>| -> Result<(), FlowJsException> {
             let error_message = ErrorMessage::EConstructSignatureMissingInSubtyping(Box::new(
                 EConstructSignatureMissingInSubtypingData {
-                    reason_lower: lreason.dupe(),
-                    reason_upper: reason_struct.dupe(),
+                    lower: flow_js_utils::type_reference_with_reason_for_error(
+                        lower,
+                        lreason.dupe(),
+                    ),
+                    upper: flow_js_utils::type_reference_with_reason_for_error(
+                        upper,
+                        reason_struct.dupe(),
+                    ),
                     use_op: use_op.dupe(),
                 },
             ));
