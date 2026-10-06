@@ -6063,6 +6063,7 @@ pub enum ConcretizationKind {
     ConcretizeForOptionalChain,
     ConcretizeForImportsExports,
     ConcretizeForInspection,
+    ConcretizeForClassExtends(Type),
     ConcretizeForEnumExhaustiveCheck,
     ConcretizeForPredicate(PredicateConcretetizerVariant),
     ConcretizeForOperatorsChecking,
@@ -10021,6 +10022,11 @@ pub mod aconstraint {
             reason: Reason,
             collector: type_collector::TypeCollector,
         },
+        AnnotConcretizeForClassExtends {
+            reason: Reason,
+            collector: type_collector::TypeCollector,
+            this_t: Type,
+        },
         AnnotImportTypeofT {
             reason: Reason,
             name: FlowSmolStr,
@@ -10177,6 +10183,7 @@ pub mod aconstraint {
                 OpInner::AnnotConcretizeForImportsExports(reason, _)
                 | OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(reason)
                 | OpInner::AnnotConcretizeForInspection { reason, .. }
+                | OpInner::AnnotConcretizeForClassExtends { reason, .. }
                 | OpInner::AnnotImportTypeofT { reason, .. }
                 | OpInner::AnnotAssertExportIsTypeT { reason, .. }
                 | OpInner::AnnotThisSpecializeT { reason, .. }
@@ -10259,6 +10266,7 @@ pub mod aconstraint {
                     "Annot_ConcretizeForCJSExtractNamedExportsAndTypeExports"
                 }
                 OpInner::AnnotConcretizeForInspection { .. } => "Annot_ConcretizeForInspection",
+                OpInner::AnnotConcretizeForClassExtends { .. } => "Annot_ConcretizeForClassExtends",
                 OpInner::AnnotImportTypeofT { .. } => "Annot_ImportTypeofT",
                 OpInner::AnnotAssertExportIsTypeT { .. } => "Annot_AssertExportIsTypeT",
                 OpInner::AnnotGetTypeFromNamespaceT(_) => "Annot_GetTypeFromNamespaceT",
@@ -10293,6 +10301,9 @@ pub mod aconstraint {
                 }
                 OpInner::AnnotConcretizeForInspection { .. } => {
                     AnnotationInferenceOperation::Inspection
+                }
+                OpInner::AnnotConcretizeForClassExtends { .. } => {
+                    AnnotationInferenceOperation::ThisSpecialization
                 }
                 OpInner::AnnotImportTypeofT { name, .. } => {
                     AnnotationInferenceOperation::ImportTypeof(name.dupe())
@@ -11538,6 +11549,9 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
             }
             ConcretizationKind::ConcretizeForInspection => {
                 "ConcretizeT ConcretizeForInspection".to_string()
+            }
+            ConcretizationKind::ConcretizeForClassExtends(_) => {
+                "ConcretizeT ConcretizeForClassExtends".to_string()
             }
             ConcretizationKind::ConcretizeForEnumExhaustiveCheck => {
                 "ConcretizeT ConcretizeForEnumExhaustiveCheck".to_string()

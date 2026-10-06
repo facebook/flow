@@ -97,6 +97,7 @@ fn object_like_op<'cx>(op: &OpInner<'cx>) -> bool {
         | OpInner::AnnotConcretizeForImportsExports(_, _)
         | OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(_)
         | OpInner::AnnotConcretizeForInspection { .. }
+        | OpInner::AnnotConcretizeForClassExtends { .. }
         | OpInner::AnnotImportTypeofT { .. }
         | OpInner::AnnotAssertExportIsTypeT { .. }
         | OpInner::AnnotElemT { .. }
@@ -1059,7 +1060,11 @@ pub fn elab_t<'cx>(
                 _ => error_unsupported(cx, dst_cx, &t, &op),
             }
         }
-        (TypeInner::OpenT(tvar), OpInner::AnnotConcretizeForInspection { .. }) => {
+        (
+            TypeInner::OpenT(tvar),
+            OpInner::AnnotConcretizeForInspection { .. }
+            | OpInner::AnnotConcretizeForClassExtends { .. },
+        ) => {
             let t = elab_open(
                 cx,
                 env,
@@ -1465,6 +1470,29 @@ fn elab_t_concrete<'cx>(
         //  Type applications
         // *******************
         (
+            TypeInner::TypeAppT(box TypeAppTData {
+                reason,
+                type_,
+                targs,
+                ..
+            }),
+            OpInner::AnnotConcretizeForClassExtends { this_t, .. },
+        ) => {
+            let reason_tapp = reason.dupe();
+            let reason_op = op.reason();
+            let tc = specialize_class(
+                cx,
+                env,
+                type_.dupe(),
+                reason_op,
+                reason_tapp.dupe(),
+                Some(targs.dupe()),
+                op.error_operation(),
+            );
+            let t = this_specialize(cx, env, reason_tapp, this_t.dupe(), tc);
+            elab_t(cx, env, dst_cx, Some(seen), t, op)
+        }
+        (
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
                 reason,
                 type_,
@@ -1682,11 +1710,23 @@ fn elab_t_concrete<'cx>(
             data.tool.clone(),
             t,
         ),
+        (
+            TypeInner::IntersectionT(_, _),
+            OpInner::AnnotConcretizeForInspection { collector, .. }
+            | OpInner::AnnotConcretizeForClassExtends { collector, .. },
+        ) => {
+            collector.add(t.dupe());
+            t
+        }
         (TypeInner::IntersectionT(_, _), _) => error_unsupported(cx, dst_cx, &t, &op),
         // *************************
         //  ConcretizeForInspection
         // *************************
-        (_, OpInner::AnnotConcretizeForInspection { collector, .. }) => {
+        (
+            _,
+            OpInner::AnnotConcretizeForInspection { collector, .. }
+            | OpInner::AnnotConcretizeForClassExtends { collector, .. },
+        ) => {
             collector.add(t.dupe());
             t
         }
@@ -1999,25 +2039,38 @@ fn elab_t_concrete<'cx>(
         // signature: the instance the derived class inherits from is what the
         // first signature returns, carrying the constructor object's statics
         // and construct signature.
-        (TypeInner::DefT(_, def_t), OpInner::AnnotThisSpecializeT { reason, .. })
-            if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
-        {
-            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                let collector = TypeCollector::create();
-                elab_t(
-                    cx,
-                    env,
-                    dst_cx,
-                    Some(seen.dupe()),
-                    t.dupe(),
-                    Op::new(OpInner::AnnotConcretizeForInspection {
-                        reason: type_util::reason_of_t(t).dupe(),
-                        collector: collector.clone(),
-                    }),
-                );
-                Ok(collector.collect_to_vec())
-            };
-            let base = flow_js_utils::construct_base_instance(&concretize, cx, &t)
+        (
+            TypeInner::DefT(_, def_t),
+            OpInner::AnnotThisSpecializeT {
+                reason,
+                type_: this,
+            },
+        ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
+            let concretize =
+                |t: &Type, this_t: Option<&Type>| -> Result<Vec<Type>, FlowJsException> {
+                    let collector = TypeCollector::create();
+                    let concretize_op = match this_t {
+                        Some(this_t) => OpInner::AnnotConcretizeForClassExtends {
+                            reason: type_util::reason_of_t(t).dupe(),
+                            collector: collector.clone(),
+                            this_t: this_t.dupe(),
+                        },
+                        None => OpInner::AnnotConcretizeForInspection {
+                            reason: type_util::reason_of_t(t).dupe(),
+                            collector: collector.clone(),
+                        },
+                    };
+                    elab_t(
+                        cx,
+                        env,
+                        dst_cx,
+                        Some(seen.dupe()),
+                        t.dupe(),
+                        Op::new(concretize_op),
+                    );
+                    Ok(collector.collect_to_vec())
+                };
+            let base = flow_js_utils::construct_base_instance(&concretize, cx, &t, this)
                 .expect("annotation_inference concretize closure is infallible");
             match base {
                 Some(base) => reposition(cx, reason.loc().dupe(), base),

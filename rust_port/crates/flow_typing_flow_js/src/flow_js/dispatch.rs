@@ -1907,6 +1907,31 @@ fn __flow_impl<'cx>(
         // * type applications *
         // *********************
         (
+            TypeInner::TypeAppT(box TypeAppTData {
+                reason: reason_tapp,
+                type_: c,
+                targs: ts,
+                ..
+            }),
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForClassExtends(this_t),
+                ..
+            }),
+        ) => {
+            let reason_op = upper_operation_reason_or(u, reason_tapp);
+            FlowJs::instantiate_this_class_with_env(
+                cx,
+                env,
+                trace,
+                &reason_op,
+                reason_tapp,
+                c,
+                Some(ts.dupe()),
+                this_t,
+                &Cont::Upper(Box::new(u.dupe())),
+            )?;
+        }
+        (
             TypeInner::ThisTypeAppT(box ThisTypeAppTData {
                 reason: reason_tapp,
                 this_t: this,
@@ -2297,7 +2322,9 @@ fn __flow_impl<'cx>(
         (
             TypeInner::NamespaceT(ns),
             UseTInner::ConcretizeT(box ConcretizeTData {
-                kind: ConcretizationKind::ConcretizeForInspection,
+                kind:
+                    ConcretizationKind::ConcretizeForInspection
+                    | ConcretizationKind::ConcretizeForClassExtends(_),
                 collector,
                 ..
             }),
@@ -2590,7 +2617,9 @@ fn __flow_impl<'cx>(
         (
             _,
             UseTInner::ConcretizeT(box ConcretizeTData {
-                kind: ConcretizationKind::ConcretizeForInspection,
+                kind:
+                    ConcretizationKind::ConcretizeForInspection
+                    | ConcretizationKind::ConcretizeForClassExtends(_),
                 collector,
                 ..
             }),
@@ -4487,13 +4516,20 @@ fn __flow_impl<'cx>(
         // TypeScript's [resolveBaseTypesOfClass] does the same, and takes the
         // first signature — `prototype` is deliberately not consulted here,
         // unlike `instanceof` narrowing.
-        (TypeInner::DefT(reason_l, def_t), UseTInner::ThisSpecializeT(r, _this, k))
+        (TypeInner::DefT(reason_l, def_t), UseTInner::ThisSpecializeT(r, this, k))
             if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
         {
-            let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
+            let concretize = |t: &Type, this_t: Option<&Type>| match this_t {
+                Some(this_t) => helpers::possible_concrete_types_for_class_extends(
+                    cx,
+                    env,
+                    reason_of_t(t),
+                    t,
+                    this_t,
+                ),
+                None => helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t),
             };
-            match flow_js_utils::construct_base_instance(&concretize, cx, l)? {
+            match flow_js_utils::construct_base_instance(&concretize, cx, l, this)? {
                 Some(base) => continue_repos(cx, env, trace, r, false, &base, k)?,
                 // No signature after all. The eager specialization of the
                 // extends clause has already reported that; carry on with

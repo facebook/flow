@@ -411,9 +411,10 @@ fn void_returning(construct: &Type) -> Type {
 // Uint8Array` needs both: `Buffer.from` resolves through `static_`, and
 // `new Buffer()` through [inst_construct_t].
 pub fn construct_base_instance<'cx>(
-    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    concretize: &dyn Fn(&Type, Option<&Type>) -> Result<Vec<Type>, FlowJsException>,
     cx: &Context<'cx>,
     t: &Type,
+    this: &Type,
 ) -> Result<Option<Type>, FlowJsException> {
     use flow_typing_type::type_::DefT;
     use flow_typing_type::type_::InstTypeInner;
@@ -421,9 +422,10 @@ pub fn construct_base_instance<'cx>(
     use flow_typing_type::type_::Property;
     use flow_typing_type::type_::PropertyInner;
 
-    let construct_ts = collect_construct_ts(concretize, cx, t)?
+    let concretize_fully = |t: &Type| concretize(t, None);
+    let construct_ts = collect_construct_ts(&concretize_fully, cx, t)?
         .iter()
-        .map(concretize)
+        .map(&concretize_fully)
         .collect::<Result<Vec<_>, _>>()?
         .concat();
     let Some(base) = construct_return_ts(&construct_ts).into_iter().next() else {
@@ -433,7 +435,13 @@ pub fn construct_base_instance<'cx>(
     // an [AnnotT] over the interface, typically — and only the instance
     // underneath has the slots to re-point. A return that concretizes to
     // anything else, or to more than one thing, stands as it is.
-    let concrete = concretize(&base)?;
+    //
+    // A `this`-typed member of that instance (`subarray(): this` on a typed
+    // array) has to refer to the derived class, as it does when extending a
+    // class. Concretize the return with the derived `this` so that any type
+    // application reached through annotations, tvars, or evaluations is
+    // this-specialized before it fixes its own `this`.
+    let concrete = concretize(&base, Some(this))?;
     let [concrete] = concrete.as_slice() else {
         return Ok(Some(base.dupe()));
     };

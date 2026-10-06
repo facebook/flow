@@ -2776,6 +2776,22 @@ pub(super) fn possible_concrete_types_for_inspection<'cx>(
     )
 }
 
+pub(super) fn possible_concrete_types_for_class_extends<'cx>(
+    cx: &Context<'cx>,
+    env: &FlowJsEnv,
+    reason: &Reason,
+    t: &Type,
+    this_t: &Type,
+) -> Result<Vec<Type>, FlowJsException> {
+    possible_concrete_types(
+        ConcretizationKind::ConcretizeForClassExtends(this_t.dupe()),
+        cx,
+        env,
+        reason,
+        t,
+    )
+}
+
 pub(super) fn possible_concrete_types_for_enum_exhaustive_check<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,

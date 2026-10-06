@@ -2451,9 +2451,9 @@ pub enum ElabOpenMemoTag {
         type_: Type,
         indexer_fallback: Option<Box<IndexerFallbackData>>,
     },
-    // `AnnotThisSpecializeT.type_` is never read during elaboration (all
-    // arms match `{ reason, .. }`), so the tag needs no fields.
-    ThisSpecialize,
+    ThisSpecialize {
+        this: Type,
+    },
     // `AnnotSpecializeT.types` selects the specialization: same avar
     // specialized with different type args must not share an indirection.
     // `use_op`/`reason`/`reason2` are error text only.
@@ -2528,8 +2528,8 @@ pub struct ElabOpenMemoKey {
 /// the semantic demand. `seen` is deliberately excluded: it is checked before
 /// lookup, and memoized thunks start with a canonical set containing only their
 /// own id. `use_op` and `reason` are error text only and are excluded. `None`
-/// keeps old behavior for the two concretize ops: one applies an opaque closure
-/// (unkeyable), the other writes to its collector (memoizing would skip
+/// keeps old behavior for concretize ops: one applies an opaque closure
+/// (unkeyable), while the others write to collectors (memoizing would skip
 /// collection on re-demands). The match is exhaustive so new op kinds fail to
 /// compile until classified.
 pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey> {
@@ -2542,7 +2542,9 @@ pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey>
             type_: data.type_.dupe(),
             indexer_fallback: data.indexer_fallback.clone(),
         },
-        OpInner::AnnotThisSpecializeT { .. } => ElabOpenMemoTag::ThisSpecialize,
+        OpInner::AnnotThisSpecializeT { type_: this, .. } => {
+            ElabOpenMemoTag::ThisSpecialize { this: this.dupe() }
+        }
         OpInner::AnnotSpecializeT(data) => ElabOpenMemoTag::Specialize {
             types: data.types.clone(),
             operation: data.operation.dupe(),
@@ -2583,10 +2585,11 @@ pub fn elab_open_memo_key<'cx>(op: &Op<'cx>, id: i32) -> Option<ElabOpenMemoKey>
         },
         OpInner::AnnotObjRestT { keys, .. } => ElabOpenMemoTag::ObjRest { keys: keys.clone() },
         // `ConcretizeForImportsExports` applies an opaque closure: unkeyable.
-        // `ConcretizeForInspection` writes to its collector: memoizing
-        // would skip collection on re-demands. Both keep old behavior.
+        // The other concretize ops write to collectors: memoizing would skip
+        // collection on re-demands. All keep old behavior.
         OpInner::AnnotConcretizeForImportsExports(..)
-        | OpInner::AnnotConcretizeForInspection { .. } => return None,
+        | OpInner::AnnotConcretizeForInspection { .. }
+        | OpInner::AnnotConcretizeForClassExtends { .. } => return None,
         OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(..) => {
             ElabOpenMemoTag::ConcretizeForCJS
         }
