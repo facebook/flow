@@ -12349,12 +12349,20 @@ fn array_literal<'arena: 'ast, 'ast>(
     }
 }
 
+#[derive(Clone, Copy)]
+enum GenericIdRootLookup {
+    Value,
+    Type,
+}
+
 fn member_expr_of_generic_id<'arena, 'ast>(
     scope: ScopeId,
     tbls: &mut Tables<'arena, 'ast>,
-    mut chain: Vec<(LocNode<'arena>, FlowSmolStr)>,
-    mut id: &ast::types::generic::Identifier<Loc, Loc>,
+    lookup: GenericIdRootLookup,
+    id: &ast::types::generic::Identifier<Loc, Loc>,
 ) -> Parsed<'arena, 'ast> {
+    let mut chain = Vec::new();
+    let mut id = id;
     loop {
         match id {
             ast::types::generic::Identifier::Qualified(inner) => {
@@ -12366,7 +12374,8 @@ fn member_expr_of_generic_id<'arena, 'ast>(
             ast::types::generic::Identifier::Unqualified(id) => {
                 let ref_loc = tbls.push_loc(id.loc.dupe());
                 let name = id.name.dupe();
-                let mut t = val_ref(true, scope, ref_loc, name);
+                let type_only = matches!(lookup, GenericIdRootLookup::Type);
+                let mut t = val_ref(type_only, scope, ref_loc, name);
                 for (loc, name) in chain.into_iter().rev() {
                     t = Parsed::Eval(
                         loc.dupe(),
@@ -12431,7 +12440,7 @@ fn declare_class_def<'arena, 'ast>(
         }
         Some((loc, ast::statement::DeclareClassExtends::ExtendsIdent(generic))) => {
             let loc = tbls.push_loc(loc.dupe());
-            let t = member_expr_of_generic_id(scope, tbls, Vec::new(), &generic.id);
+            let t = member_expr_of_generic_id(scope, tbls, GenericIdRootLookup::Value, &generic.id);
             match &generic.targs {
                 None => ClassExtends::ClassExplicitExtends(Box::new((loc, t))),
                 Some(type_args) => {
@@ -12452,7 +12461,7 @@ fn declare_class_def<'arena, 'ast>(
     let mut parsed_mixins = Vec::new();
     for (loc, mixin) in mixins.iter() {
         let loc = tbls.push_loc(loc.dupe());
-        let t = member_expr_of_generic_id(scope, tbls, Vec::new(), &mixin.id);
+        let t = member_expr_of_generic_id(scope, tbls, GenericIdRootLookup::Type, &mixin.id);
         let mixin_val = match &mixin.targs {
             None => ClassMixins::ClassMixin(Box::new((loc, t))),
             Some(type_args) => {
