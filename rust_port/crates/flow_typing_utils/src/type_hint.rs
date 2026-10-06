@@ -1143,10 +1143,25 @@ fn type_of_hint_decomposition<'cx>(
                 )?)
             }
             ConcrHintDecompositionInner::DecompCallNew => {
+                let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
+                    FlowJs::possible_concrete_types_for_inspection_with_env(
+                        cx,
+                        env,
+                        type_util::reason_of_t(t),
+                        t,
+                    )
+                };
+                // A binding annotated `typeof Promise`, where `Promise` is a
+                // `declare var` of a constructor interface, sits behind more
+                // tvars than [get_t] unwraps.
+                let callee = match concretize(&t)?.as_slice() {
+                    [callee] => callee.dupe(),
+                    _ => get_t(cx, t.dupe()),
+                };
                 // For interfaces with a construct signature (own or inherited via
                 // [extends]), extract it via the same helper subtyping uses, so the
                 // hint matches what would actually flow.
-                match get_t(cx, t.dupe()).deref() {
+                match callee.deref() {
                     TypeInner::DefT(_, def_t)
                         if let DefTInner::InstanceT(_inst_t) = def_t.deref() =>
                     {
@@ -1155,14 +1170,6 @@ fn type_of_hint_decomposition<'cx>(
                         // error-any so downstream hint consumers treat it as "no hint"
                         // rather than misrouting into the class-unwrap branch below
                         // (which would silently produce nothing).
-                        let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
-                            FlowJs::possible_concrete_types_for_inspection_with_env(
-                                cx,
-                                env,
-                                type_util::reason_of_t(t),
-                                t,
-                            )
-                        };
                         match flow_js_utils::combine_construct_ts(
                             flow_js_utils::collect_construct_ts(&concretize, cx, &t)?,
                         ) {
