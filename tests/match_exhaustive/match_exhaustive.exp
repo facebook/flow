@@ -1655,6 +1655,81 @@ References:
            ^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- object-pattern-rest.js:8:5
+
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+`string` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   object-pattern-rest.js:8:5
+   8|     {foo: _} => {} // ERROR
+          ^^^^^^^^
+
+References:
+   object-pattern-rest.js:5:22
+   5|   declare const x: {[string]: number};
+                           ^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- object-pattern-rest.js:18:5
+
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+`Array<number>` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   object-pattern-rest.js:18:5
+   18|     {length: _} => {} // ERROR
+           ^^^^^^^^^^^
+
+References:
+   object-pattern-rest.js:15:20
+   15|   declare const x: Array<number>;
+                          ^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- object-pattern-rest.js:27:5
+
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+`unknown` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   object-pattern-rest.js:27:5
+   27|     {type: 'a'} => {} // ERROR
+           ^^^^^^^^^^^
+
+References:
+   object-pattern-rest.js:24:20
+   24|   declare const x: unknown;
+                          ^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- object-pattern-rest.js:37:5
+
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+`any (explicit)` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   object-pattern-rest.js:37:5
+   37|     {type: 'a'} => {} // ERROR
+           ^^^^^^^^^^^
+
+References:
+   object-pattern-rest.js:34:20
+   34|   declare const x: any;
+                          ^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------- object-pattern-rest.js:48:5
+
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+`{a?: 1}` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   object-pattern-rest.js:48:5
+   48|     {} => {} // ERROR
+           ^^
+
+References:
+   object-pattern-rest.js:44:20
+   44|   declare const x: {a?: 1};
+                          ^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- objects.js:12:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: true, foo: false}`
@@ -1778,8 +1853,8 @@ other properties. [match-not-exhaustive]
 Error ------------------------------------------------------------------------------------------------- objects.js:188:5
 
 This object pattern hasn't considered all possible properties of the input. The properties `a`, `b`, and `c` are missing
-from the pattern, and there could be additional properties due to object type [1]. To fix, add `...` to the end of the
-pattern to match all other properties. [match-not-exhaustive]
+from the pattern, and there could be additional properties due to `{a: boolean, b: string, c: number, ...}` [1]. To fix,
+add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
 
    objects.js:188:5
    188|     {} => {} // ERROR
@@ -1794,7 +1869,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- objects.js:192:5
 
 This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
-object type [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+`{a: boolean, b: string, c: number, ...}` [1]. To fix, add `...` to the end of the pattern to match all other
+properties. [match-not-exhaustive]
 
    objects.js:192:5
    192|     {a: _, b: _, c: _} => {} // ERROR
@@ -2631,4 +2707,4 @@ References:
 
 
 
-Found 191 errors
+Found 196 errors

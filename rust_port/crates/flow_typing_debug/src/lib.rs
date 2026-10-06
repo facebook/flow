@@ -4373,7 +4373,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 box MatchNonExhaustiveObjectPatternData { loc, rest, .. },
             ) => {
                 let rest_str = match rest {
-                    Some(r) => dump_reason(cx, r),
+                    Some(r) => dump_loc_type_desc(cx, &r.loc, &r.type_desc),
                     None => "".to_string(),
                 };
                 format!(

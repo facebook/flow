@@ -885,7 +885,8 @@ pub mod value_object {
         pub t: Type,
         pub props: properties::Properties<'cx, CX>,
         pub class_info: Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>)>,
-        pub rest: Option<Reason>,
+        /// The type that allows properties beyond `props`, if any.
+        pub rest: Option<Type>,
         pub sentinel_props: FlowOrdSet<FlowSmolStr>,
     }
 
@@ -922,7 +923,7 @@ pub mod value_object {
                         FlowOrdMap::default();
                     let mut wildcard_props: FlowOrdMap<FlowSmolStr, pattern_object::Property> =
                         FlowOrdMap::default();
-                    let mut result_rest = rest.dupe();
+                    let mut result_rest = rest.as_ref().map(|_| reason.dupe());
 
                     for (key, prop_opt) in props.iter() {
                         if let Some(prop) = prop_opt {
@@ -1011,7 +1012,11 @@ pub mod value_object {
                     let keys_order: Vec<FlowSmolStr> =
                         (0..*length).map(|i| i.to_string().into()).collect();
 
-                    (result_props, keys_order, rest.dupe())
+                    (
+                        result_props,
+                        keys_order,
+                        rest.as_ref().map(|_| reason.dupe()),
+                    )
                 }
             };
 

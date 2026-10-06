@@ -9879,10 +9879,10 @@ where
                     vec![]
                 };
                 let suffix = match rest {
-                    Some(reason) => {
+                    Some(rest) => {
                         let base_msg = vec![
                             text("could be additional properties due to "),
-                            ref_(reason),
+                            ref_of_ty_or_desc(&rest.loc, &rest.desc),
                             text(". To fix, add "),
                         ];
                         if has_missing_props {

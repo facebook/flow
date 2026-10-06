@@ -1916,7 +1916,7 @@ pub struct MessageVariableOnlyAssignedByNullData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageMatchNonExhaustiveObjectPatternData<L: Dupe> {
-    pub rest: Option<VirtualReason<L>>,
+    pub rest: Option<MessageTypeReferenceData<L>>,
     pub missing_props: Vec<FlowSmolStr>,
     pub pattern_kind: MatchObjPatternKind,
 }

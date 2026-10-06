@@ -842,7 +842,7 @@ pub struct MatchUnusedPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub struct MatchNonExhaustiveObjectPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub rest: Option<VirtualReason<L>>,
+    pub rest: Option<ErrorTypeReferenceData<L>>,
     pub missing_props: Vec<FlowSmolStr>,
     pub pattern_kind: MatchObjPatternKind,
 }
@@ -6547,7 +6547,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     }) => MatchNonExhaustiveObjectPattern(Box::new(
                         MatchNonExhaustiveObjectPatternData {
                             loc: f(loc),
-                            rest: rest.map(map_reason),
+                            rest: rest.map(map_error_type_ref),
                             missing_props,
                             pattern_kind,
                         },
@@ -7473,6 +7473,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     loc,
                     type_loc,
                     type_desc: f(type_desc),
+                },
+            ))),
+
+            EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(
+                box MatchNonExhaustiveObjectPatternData {
+                    loc,
+                    rest,
+                    missing_props,
+                    pattern_kind,
+                },
+            )) => EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(Box::new(
+                MatchNonExhaustiveObjectPatternData {
+                    loc,
+                    rest: rest.map(map_error_type_ref),
+                    missing_props,
+                    pattern_kind,
                 },
             ))),
 
@@ -10166,7 +10182,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 },
             )) => Normal(Message::MessageMatchNonExhaustiveObjectPattern(Box::new(
                 MessageMatchNonExhaustiveObjectPatternData {
-                    rest,
+                    rest: rest.map(expect_error_type_reference),
                     missing_props: missing_props.to_vec(),
                     pattern_kind,
                 },

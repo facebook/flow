@@ -1099,7 +1099,7 @@ mod value_union_builder {
                             ..
                         }) => {
                             let reason = enum_reason;
-                            let rest = if *inexact { Some(reason.dupe()) } else { None };
+                            let rest = if *inexact { Some(t.dupe()) } else { None };
                             let props_list: Vec<_> = elements
                                 .iter()
                                 .map(|elem| {
@@ -1170,7 +1170,7 @@ mod value_union_builder {
                                     t: t.dupe(),
                                     props: FlowOrdMap::default(),
                                     class_info: None,
-                                    rest: Some(reason.dupe()),
+                                    rest: Some(t.dupe()),
                                     sentinel_props: FlowOrdSet::default(),
                                 }),
                             );
@@ -1185,8 +1185,8 @@ mod value_union_builder {
                             let props_tmap = obj.props_tmap.dupe();
                             let rest = match obj_kind {
                                 TypeObjKind::Exact => None,
-                                TypeObjKind::Inexact => Some(reason.dupe()),
-                                TypeObjKind::Indexed(dict) => Some(reason_of_t(&dict.key).dupe()),
+                                TypeObjKind::Inexact => Some(t.dupe()),
+                                TypeObjKind::Indexed(dict) => Some(dict.key.dupe()),
                             };
                             let props_map = cx.find_props(props_tmap);
                             let mut obj_props: FlowOrdMap<
@@ -1236,7 +1236,7 @@ mod value_union_builder {
                         let rest = match inst_kind {
                             InstanceKind::RecordKind { .. } => None,
                             InstanceKind::ClassKind | InstanceKind::InterfaceKind { .. } => {
-                                Some(reason.dupe())
+                                Some(t.dupe())
                             }
                         };
                         let class_info = Some((
@@ -1444,14 +1444,14 @@ fn is_leaf_subtype_of_inexhaustible<'cx>(
     Ok(false)
 }
 
-fn is_object_subtype_of_inexhaustible(inexhaustible: &FlowVector<Type>) -> Option<Reason> {
+fn is_object_subtype_of_inexhaustible(inexhaustible: &FlowVector<Type>) -> Option<Type> {
     inexhaustible.iter().find_map(|t| match t.deref() {
         TypeInner::DefT(_, d) => match d.deref() {
             DefTInner::MixedT(flow_typing_type::type_::MixedFlavor::MixedFunction) => None,
-            DefTInner::MixedT(_) => Some(reason_of_t(t).dupe()),
+            DefTInner::MixedT(_) => Some(t.dupe()),
             _ => None,
         },
-        TypeInner::AnyT(r, _) => Some(r.dupe()),
+        TypeInner::AnyT(_, _) => Some(t.dupe()),
         _ => None,
     })
 }
@@ -1640,7 +1640,7 @@ fn filter_values_by_patterns<'cx>(
     // Mixed/any
     let mixed_used_pattern_locs = match is_object_subtype_of_inexhaustible(inexhaustible) {
         None => ALocSet::new(),
-        Some(reason) => visit_mixed(cx, raise_errors, &reason, pattern_union)?,
+        Some(t) => visit_mixed(cx, raise_errors, &t, pattern_union)?,
     };
     used_pattern_locs.extend(mixed_used_pattern_locs);
     // Wildcard
@@ -2022,12 +2022,7 @@ fn filter_object_by_pattern<'cx>(
                 let rest = if value_rest.is_some() {
                     value_rest.dupe()
                 } else {
-                    Some(flow_common::reason::mk_reason(
-                        flow_common::reason::VirtualReasonDesc::RUnknownUnspecifiedProperty(
-                            Arc::new(reason_value.desc(true).clone()),
-                        ),
-                        loc_value.dupe(),
-                    ))
+                    Some(t.dupe())
                 };
                 (None, rest)
             } else {
@@ -2086,7 +2081,7 @@ fn filter_object_by_pattern<'cx>(
                             cx,
                             ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(Box::new(MatchNonExhaustiveObjectPatternData {
                                 loc: reason_pattern.loc().dupe(),
-                                rest: value_rest.as_ref().map(|r| r.dupe()),
+                                rest: value_rest.as_ref().map(flow_js_utils::type_reference_for_error),
                                 missing_props,
                                 pattern_kind: match pattern_class_info {
                                     Some(_) => flow_typing_errors::intermediate_error_types::MatchObjPatternKind::Instance,
@@ -2141,9 +2136,10 @@ fn filter_object_by_pattern<'cx>(
 fn visit_mixed<'cx>(
     cx: &Context<'cx>,
     raise_errors: bool,
-    reason: &Reason,
+    t: &Type,
     pattern_union: &pattern_union::PatternUnion,
 ) -> Result<ALocSet, JobError> {
+    let reason = reason_of_t(t);
     let pattern_tuples_exact = &pattern_union.tuples_exact;
     let pattern_tuples_inexact = &pattern_union.tuples_inexact;
     let pattern_objects = &pattern_union.objects;
@@ -2172,7 +2168,7 @@ fn visit_mixed<'cx>(
                 t: arr_t,
                 class_info: None,
                 props: FlowOrdMap::default(),
-                rest: Some(reason.dupe()),
+                rest: Some(t.dupe()),
                 sentinel_props: FlowOrdSet::default(),
             }),
         );
@@ -2218,7 +2214,7 @@ fn visit_mixed<'cx>(
                 t: obj_t,
                 props: FlowOrdMap::default(),
                 class_info: None,
-                rest: Some(reason.dupe()),
+                rest: Some(t.dupe()),
                 sentinel_props: FlowOrdSet::default(),
             }),
         );
