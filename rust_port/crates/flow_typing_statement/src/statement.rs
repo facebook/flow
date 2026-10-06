@@ -10184,7 +10184,7 @@ pub fn optional_chain<'a>(
                             local: true,
                         },
                     ))));
-                    let prop_t = flow_typing_tvar::mk(cx, reason_prop.dupe());
+                    let prop_collector = TypeCollector::create();
                     let call_voided_out_collector = TypeCollector::create();
                     let get_opt_use: Rc<
                         dyn Fn(&Context<'a>, &Vec<CallArg>, Reason) -> type_::OptUseT<Context<'a>>,
@@ -10224,14 +10224,14 @@ pub fn optional_chain<'a>(
                         let lhs_expression = lhs_expression.dupe();
                         let reason_call = reason_call.dupe();
                         let targts = targts.clone();
-                        let prop_t = prop_t.dupe();
+                        let prop_collector = prop_collector.dupe();
                         let use_op = use_op.dupe();
                         let loc = loc.dupe();
                         let opt_state = opt_state.clone();
                         move |cx: &Context<'a>, argts: &Vec<CallArg>, obj_t: &Type, f: Type| {
                             let reason_call = reason_call.dupe();
                             let targts = targts.clone();
-                            let prop_t = prop_t.dupe();
+                            let prop_collector = prop_collector.dupe();
                             let use_op = use_op.dupe();
                             let loc = loc.dupe();
                             let opt_state = opt_state.clone();
@@ -10250,7 +10250,7 @@ pub fn optional_chain<'a>(
                                         true,
                                         tvar.dupe(),
                                     );
-                                    flow_js::unify_non_speculating(cx, None, &f, &prop_t)?;
+                                    prop_collector.add(f.dupe());
                                     let call_use =
                                         UseT::new(UseTInner::CallT(Box::new(CallTData {
                                             use_op: use_op.dupe(),
@@ -10373,6 +10373,9 @@ pub fn optional_chain<'a>(
                         object_ast,
                         argument_asts,
                     ) = handle_chaining(cx, conf, member_opt, _object, lookup_loc.dupe())?;
+                    let prop_t = prop_collector
+                        .union_opt(reason_prop.dupe())
+                        .unwrap_or_else(|| tvar_resolver::default_no_lowers(&reason_prop));
                     if !private_ {
                         type_operation_utils::type_assertions::check_function_proto_this_arg(
                             cx,
