@@ -9808,20 +9808,24 @@ where
                 friendly::Message(msg)
             }
             MessageMatchUnnecessaryPattern {
-                reason,
+                pattern,
                 already_seen,
             } => {
                 let detail = match already_seen {
                     Some(already_seen) => vec![
                         text("The values it matches were already covered by a previous "),
-                        ref_(already_seen),
+                        hardcoded_string_desc_ref(already_seen.kind.to_string(), &already_seen.loc),
                         text(". "),
                     ],
                     None => vec![text(
                         "The values it matches are either already covered by previous patterns, or are not part of the input type. ",
                     )],
                 };
-                let mut msg = vec![text("This "), ref_(reason), text(" is unused. ")];
+                let mut msg = vec![
+                    text("This "),
+                    hardcoded_string_desc_ref(pattern.kind.to_string(), &pattern.loc),
+                    text(" is unused. "),
+                ];
                 msg.extend(detail);
                 msg.push(text(
                     "To fix, either remove this pattern or restructure previous patterns.",

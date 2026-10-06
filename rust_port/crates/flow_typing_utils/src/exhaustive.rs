@@ -36,6 +36,8 @@ use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
 use flow_typing_errors::error_message::MatchNonExplicitEnumCheckData;
 use flow_typing_errors::error_message::MatchNotExhaustiveData;
 use flow_typing_errors::error_message::MatchUnusedPatternData;
+use flow_typing_errors::intermediate_error_types::MatchPatternReferenceData;
+use flow_typing_errors::intermediate_error_types::MatchPatternReferenceKind;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -190,6 +192,7 @@ pub mod pattern_union_builder {
         raise_errors: bool,
         pattern_union: &pattern_union::PatternUnion,
         reason: &Reason,
+        kind: MatchPatternReferenceKind,
     ) -> bool {
         match &pattern_union.wildcard {
             Some(already_seen) => {
@@ -198,8 +201,14 @@ pub mod pattern_union_builder {
                         cx,
                         ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
                             MatchUnusedPatternData {
-                                reason: reason.dupe(),
-                                already_seen: Some(already_seen.dupe()),
+                                pattern: MatchPatternReferenceData {
+                                    loc: reason.loc().dupe(),
+                                    kind,
+                                },
+                                already_seen: Some(MatchPatternReferenceData {
+                                    loc: already_seen.loc().dupe(),
+                                    kind: MatchPatternReferenceKind::Wildcard,
+                                }),
                             },
                         ))),
                     );
@@ -218,20 +227,32 @@ pub mod pattern_union_builder {
         leaf_val: leaf::Leaf,
     ) -> pattern_union::PatternUnion {
         let reason = &leaf_val.0;
-        if not_seen_wildcard(cx, raise_errors, &pattern_union, reason) {
+        if not_seen_wildcard(
+            cx,
+            raise_errors,
+            &pattern_union,
+            reason,
+            MatchPatternReferenceKind::Pattern,
+        ) {
             if let Some(existing) = pattern_union
                 .leafs
                 .get_prev(&leaf_val)
                 .filter(|e| *e == &leaf_val)
             {
-                let already_seen = existing.0.dupe();
+                let already_seen = existing.0.loc().dupe();
                 if raise_errors {
                     flow_js::add_output_non_speculating(
                         cx,
                         ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
                             MatchUnusedPatternData {
-                                reason: reason.dupe(),
-                                already_seen: Some(already_seen),
+                                pattern: MatchPatternReferenceData {
+                                    loc: reason.loc().dupe(),
+                                    kind: MatchPatternReferenceKind::Pattern,
+                                },
+                                already_seen: Some(MatchPatternReferenceData {
+                                    loc: already_seen,
+                                    kind: MatchPatternReferenceKind::Pattern,
+                                }),
                             },
                         ))),
                     );
@@ -257,7 +278,13 @@ pub mod pattern_union_builder {
         mut pattern_union: pattern_union::PatternUnion,
         reason: Reason,
     ) -> pattern_union::PatternUnion {
-        if not_seen_wildcard(cx, raise_errors, &pattern_union, &reason) {
+        if not_seen_wildcard(
+            cx,
+            raise_errors,
+            &pattern_union,
+            &reason,
+            MatchPatternReferenceKind::Wildcard,
+        ) {
             if guarded {
                 if last {
                     let loc = reason.loc();
@@ -294,7 +321,13 @@ pub mod pattern_union_builder {
         let inner = po.1.as_ref();
         let kind = &inner.kind;
         let rest = &inner.rest;
-        if not_seen_wildcard(cx, raise_errors, &pattern_union, reason) {
+        if not_seen_wildcard(
+            cx,
+            raise_errors,
+            &pattern_union,
+            reason,
+            MatchPatternReferenceKind::Pattern,
+        ) {
             if rest.is_some() || *kind == ObjKind::Obj {
                 pattern_union
                     .tuples_inexact
@@ -322,7 +355,13 @@ pub mod pattern_union_builder {
     ) -> pattern_union::PatternUnion {
         let (_, ref po) = obj;
         let reason = &po.0;
-        if not_seen_wildcard(cx, raise_errors, &pattern_union, reason) {
+        if not_seen_wildcard(
+            cx,
+            raise_errors,
+            &pattern_union,
+            reason,
+            MatchPatternReferenceKind::Pattern,
+        ) {
             // Accumulate backwards, reverse at end of pattern_union creation.
             pattern_union.objects.push(obj);
             pattern_union
@@ -2228,12 +2267,15 @@ fn check_for_unused_patterns<'cx>(
         let loc = reason.loc();
         used_pattern_locs.contains(loc)
     };
-    let error = |reason: Reason| {
+    let error = |reason: &Reason, kind: MatchPatternReferenceKind| {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(Box::new(
                 MatchUnusedPatternData {
-                    reason,
+                    pattern: MatchPatternReferenceData {
+                        loc: reason.loc().dupe(),
+                        kind,
+                    },
                     already_seen: None,
                 },
             ))),
@@ -2242,13 +2284,13 @@ fn check_for_unused_patterns<'cx>(
     for leaf_val in &pattern_union.leafs {
         let reason = &leaf_val.0;
         if !check(reason) {
-            error(reason.dupe());
+            error(reason, MatchPatternReferenceKind::Pattern);
         }
     }
     for leaf_val in &pattern_union.guarded_leafs {
         let reason = &leaf_val.0;
         if !check(reason) {
-            error(reason.dupe());
+            error(reason, MatchPatternReferenceKind::Pattern);
         }
     }
     for (_, po) in pattern_union.all_tuples_and_objects() {
@@ -2261,13 +2303,17 @@ fn check_for_unused_patterns<'cx>(
             continue;
         }
         if !check(reason) {
-            error(reason.dupe());
+            error(reason, MatchPatternReferenceKind::Pattern);
         } else {
             for (_, prop) in props.iter() {
                 check_for_unused_patterns(cx, &prop.value, used_pattern_locs);
                 if let Some(rest_reason) = rest {
                     if !check(rest_reason) {
-                        error(rest_reason.dupe());
+                        let kind = match inner.kind {
+                            ObjKind::Tuple { .. } => MatchPatternReferenceKind::ArrayRest,
+                            ObjKind::Obj => MatchPatternReferenceKind::ObjectRest,
+                        };
+                        error(rest_reason, kind);
                     }
                 }
             }
@@ -2275,7 +2321,7 @@ fn check_for_unused_patterns<'cx>(
     }
     if let Some(ref wildcard) = pattern_union.wildcard {
         if !check(wildcard) {
-            error(wildcard.dupe());
+            error(wildcard, MatchPatternReferenceKind::Wildcard);
         }
     }
 }

@@ -2131,11 +2131,11 @@ pub fn ast_transforms_of_error(
         }
         ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(
             box MatchUnusedPatternData {
-                reason,
+                pattern,
                 already_seen: _,
             },
         )) => {
-            let error_loc = reason.loc().dupe();
+            let error_loc = pattern.loc.dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 vec![AstTransformOfError {
                     title: "Remove".to_string(),

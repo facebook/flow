@@ -627,6 +627,54 @@ impl MatchObjPatternKind {
     }
 }
 
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum MatchPatternReferenceKind {
+    Pattern,
+    Wildcard,
+    ArrayRest,
+    ObjectRest,
+}
+
+impl MatchPatternReferenceKind {
+    pub fn to_string(self) -> &'static str {
+        match self {
+            Self::Pattern => "match pattern",
+            Self::Wildcard => "match wildcard",
+            Self::ArrayRest => "rest of array pattern",
+            Self::ObjectRest => "rest of object pattern",
+        }
+    }
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub struct MatchPatternReferenceData<L: Dupe> {
+    pub loc: L,
+    pub kind: MatchPatternReferenceKind,
+}
+
 /// The object type operation applied to a record, named after the object kit tool.
 #[derive(
     Debug,
@@ -2632,8 +2680,8 @@ pub enum Message<L: Dupe> {
     },
 
     MessageMatchUnnecessaryPattern {
-        reason: VirtualReason<L>,
-        already_seen: Option<VirtualReason<L>>,
+        pattern: MatchPatternReferenceData<L>,
+        already_seen: Option<MatchPatternReferenceData<L>>,
     },
 
     MessageMatchNonExhaustiveObjectPattern(Box<MessageMatchNonExhaustiveObjectPatternData<L>>),

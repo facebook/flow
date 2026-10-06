@@ -93,6 +93,7 @@ use crate::intermediate_error_types::InvalidRenderTypeKind;
 use crate::intermediate_error_types::LowerRequirement;
 use crate::intermediate_error_types::MatchInvalidCaseSyntax;
 use crate::intermediate_error_types::MatchObjPatternKind;
+use crate::intermediate_error_types::MatchPatternReferenceData;
 use crate::intermediate_error_types::Message;
 use crate::intermediate_error_types::MessageAlreadyExhaustivelyCheckOneEnumMemberData;
 use crate::intermediate_error_types::MessageCannotAccessEnumMemberData;
@@ -824,8 +825,8 @@ pub enum MatchExampleReference<L: Dupe, T> {
     serde::Deserialize
 )]
 pub struct MatchUnusedPatternData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
-    pub already_seen: Option<VirtualReason<L>>,
+    pub pattern: MatchPatternReferenceData<L>,
+    pub already_seen: Option<MatchPatternReferenceData<L>>,
 }
 
 #[derive(
@@ -6526,11 +6527,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         missing_pattern_asts,
                     })),
                     MatchUnusedPattern(box MatchUnusedPatternData {
-                        reason,
+                        pattern,
                         already_seen,
                     }) => MatchUnusedPattern(Box::new(MatchUnusedPatternData {
-                        reason: map_reason(reason),
-                        already_seen: already_seen.map(map_reason),
+                        pattern: MatchPatternReferenceData {
+                            loc: f(pattern.loc),
+                            kind: pattern.kind,
+                        },
+                        already_seen: already_seen.map(|already_seen| MatchPatternReferenceData {
+                            loc: f(already_seen.loc),
+                            kind: already_seen.kind,
+                        }),
                     })),
                     MatchNonExhaustiveObjectPattern(box MatchNonExhaustiveObjectPatternData {
                         loc,
@@ -8461,8 +8468,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 | MatchErrorKind::MatchInvalidInstancePattern(loc)
                 | MatchErrorKind::MatchInvalidGuardedWildcard(loc) => Some(loc.dupe()),
                 MatchErrorKind::MatchUnusedPattern(box MatchUnusedPatternData {
-                    reason, ..
-                }) => Some(reason.loc.dupe()),
+                    pattern, ..
+                }) => Some(pattern.loc.dupe()),
             },
 
             Self::ERecordError(e) => match e {
@@ -10143,11 +10150,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }),
             ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern(
                 box MatchUnusedPatternData {
-                    reason,
+                    pattern,
                     already_seen,
                 },
             )) => Normal(Message::MessageMatchUnnecessaryPattern {
-                reason,
+                pattern,
                 already_seen,
             }),
             ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern(

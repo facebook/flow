@@ -4351,16 +4351,21 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 format!("EMatchNotExhaustive ({})", string_of_aloc(None, loc))
             }
             MatchErrorKind::MatchUnusedPattern(box MatchUnusedPatternData {
-                reason,
+                pattern,
                 already_seen,
             }) => {
                 let already_str = match already_seen {
-                    Some(r) => dump_reason(cx, r),
+                    Some(already_seen) => format!(
+                        "{} {:?}",
+                        string_of_aloc(None, &already_seen.loc),
+                        already_seen.kind
+                    ),
                     None => "".to_string(),
                 };
                 format!(
-                    "EMatchUnusedPattern ({}) ({})",
-                    dump_reason(cx, reason),
+                    "EMatchUnusedPattern ({} {:?}) ({})",
+                    string_of_aloc(None, &pattern.loc),
+                    pattern.kind,
                     already_str
                 )
             }
