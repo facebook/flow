@@ -10133,12 +10133,9 @@ where
                 "Invalid match instance pattern constructor. It must reference a single class.",
             )]),
             // MessageRecord* variants
-            MessageRecordBannedTypeUtil {
-                reason_op,
-                record,
-            } => friendly::Message(vec![
+            MessageRecordBannedTypeUtil { op_loc, op, record } => friendly::Message(vec![
                 text("Operation "),
-                ref_(reason_op),
+                hardcoded_string_desc_ref(op.to_string(), op_loc),
                 text(" is not allowed on record "),
                 ref_of_ty_or_desc(&record.loc, &record.desc),
                 text(". "),

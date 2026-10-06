@@ -145,6 +145,7 @@ use crate::intermediate_error_types::NamedReferenceData;
 use crate::intermediate_error_types::ObjKind;
 use crate::intermediate_error_types::OverrideErrorKind;
 use crate::intermediate_error_types::PrimitiveKind;
+use crate::intermediate_error_types::RecordBannedTypeUtilOp;
 use crate::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use crate::intermediate_error_types::StrictComparisonInfo;
 use crate::intermediate_error_types::SubComponentOfInvariantSubtypingError;
@@ -1033,7 +1034,8 @@ pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 )]
 pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     RecordBannedTypeUtil {
-        reason_op: VirtualReason<L>,
+        op_loc: L,
+        op: RecordBannedTypeUtilOp,
         record: ErrorTypeReferenceWithLocData<L>,
     },
     RecordInvalidName {
@@ -6651,9 +6653,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ERecordError(record_error) => ERecordError(match record_error {
-                RecordErrorKind::RecordBannedTypeUtil { reason_op, record } => {
+                RecordErrorKind::RecordBannedTypeUtil { op_loc, op, record } => {
                     RecordErrorKind::RecordBannedTypeUtil {
-                        reason_op: map_reason(reason_op),
+                        op_loc: f(op_loc),
+                        op,
                         record: map_error_type_ref_with_reason(record),
                     }
                 }
@@ -7866,9 +7869,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }))
             }
 
-            ERecordError(RecordErrorKind::RecordBannedTypeUtil { reason_op, record }) => {
+            ERecordError(RecordErrorKind::RecordBannedTypeUtil { op_loc, op, record }) => {
                 ERecordError(RecordErrorKind::RecordBannedTypeUtil {
-                    reason_op,
+                    op_loc,
+                    op,
                     record: map_error_type_ref_with_reason(record),
                 })
             }
@@ -10216,9 +10220,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             )) => Normal(Message::MessageMatchInvalidCaseSyntax(kind)),
 
             ErrorMessage::ERecordError(record_error) => match record_error {
-                RecordErrorKind::RecordBannedTypeUtil { reason_op, record } => {
+                RecordErrorKind::RecordBannedTypeUtil { op_loc, op, record } => {
                     Normal(Message::MessageRecordBannedTypeUtil {
-                        reason_op,
+                        op_loc,
+                        op,
                         record: MessageTypeReferenceData {
                             loc: record.reference_loc,
                             desc: expect_type_desc(record.type_desc),

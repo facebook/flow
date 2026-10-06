@@ -627,6 +627,47 @@ impl MatchObjPatternKind {
     }
 }
 
+/// The object type operation applied to a record, named after the object kit tool.
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum RecordBannedTypeUtilOp {
+    Exact,
+    ReadOnly,
+    Partial,
+    Required,
+    Omit,
+    MappedType,
+    Rest,
+    ReactConfig,
+    Object,
+}
+
+impl RecordBannedTypeUtilOp {
+    pub fn to_string(self) -> &'static str {
+        match self {
+            Self::Exact => "`$Exact`",
+            Self::ReadOnly => "`Readonly`",
+            Self::Partial => "`Partial`",
+            Self::Required => "`Required`",
+            Self::Omit => "`Omit`",
+            Self::MappedType => "mapped type",
+            Self::Rest => "rest",
+            Self::ReactConfig => "React config",
+            Self::Object => "object",
+        }
+    }
+}
+
 #[derive(
     Debug,
     Clone,
@@ -2640,7 +2681,8 @@ pub enum Message<L: Dupe> {
     MessageMatchInvalidInstancePattern,
 
     MessageRecordBannedTypeUtil {
-        reason_op: VirtualReason<L>,
+        op_loc: L,
+        op: RecordBannedTypeUtilOp,
         record: MessageTypeReferenceData<L>,
     },
 

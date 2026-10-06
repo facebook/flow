@@ -247,7 +247,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- declaration.js:412:27
 
-Operation partial `R` [1] is not allowed on record `R` [1]. To fix, turn the record type into an object type first using
+Operation `Partial` [1] is not allowed on record `R` [1]. To fix, turn the record type into an object type first using
 `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
 
    412|   type PartialR = Partial<R>; // ERROR
@@ -256,8 +256,8 @@ Operation partial `R` [1] is not allowed on record `R` [1]. To fix, turn the rec
 
 Error -------------------------------------------------------------------------------------------- declaration.js:413:29
 
-Operation required of `R` [1] is not allowed on record `R` [1]. To fix, turn the record type into an object type first
-using `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+Operation `Required` [1] is not allowed on record `R` [1]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
 
    413|   type RequiredR = Required<R>; // ERROR
                                     ^ [1]
@@ -265,7 +265,7 @@ using `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-ty
 
 Error -------------------------------------------------------------------------------------------- declaration.js:414:21
 
-Operation `Pick` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+Operation mapped type [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
 `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
 
    declaration.js:414:21

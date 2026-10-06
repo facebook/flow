@@ -4488,10 +4488,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }
         },
         ErrorMessage::ERecordError(e) => match e {
-            RecordErrorKind::RecordBannedTypeUtil { reason_op, record } => {
+            RecordErrorKind::RecordBannedTypeUtil { op_loc, op, record } => {
                 format!(
-                    "ERecordBannedTypeUtil ({}) ({})",
-                    dump_reason(cx, reason_op),
+                    "ERecordBannedTypeUtil ({} {:?}) ({})",
+                    string_of_aloc(None, op_loc),
+                    op,
                     dump_error_type_reference(cx, record)
                 )
             }

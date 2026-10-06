@@ -32,6 +32,7 @@ use flow_typing_errors::error_message::EUnsupportedExactData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::intermediate_error_types;
+use flow_typing_errors::intermediate_error_types::RecordBannedTypeUtilOp;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::SpeculativeError;
@@ -346,6 +347,30 @@ fn object_tool_dict_polarity_override(tool: &object::Tool) -> Option<Polarity> {
         ))
         | object::Tool::ReactConfig(_)
         | object::Tool::ReactCheckComponentConfig { .. } => Some(Polarity::Neutral),
+    }
+}
+
+/// Spreading a record is allowed; every other object type operation on a record is banned.
+fn record_banned_type_util_op(tool: &object::Tool) -> Option<RecordBannedTypeUtilOp> {
+    match tool {
+        object::Tool::Spread(_) => None,
+        object::Tool::MakeExact => Some(RecordBannedTypeUtilOp::Exact),
+        object::Tool::ReadOnly => Some(RecordBannedTypeUtilOp::ReadOnly),
+        object::Tool::Partial => Some(RecordBannedTypeUtilOp::Partial),
+        object::Tool::Required => Some(RecordBannedTypeUtilOp::Required),
+        object::Tool::Rest(box (object::rest::MergeMode::Omit, _)) => {
+            Some(RecordBannedTypeUtilOp::Omit)
+        }
+        object::Tool::Rest(box (object::rest::MergeMode::SpreadReversal, _)) => {
+            Some(RecordBannedTypeUtilOp::Rest)
+        }
+        object::Tool::Rest(box (object::rest::MergeMode::ReactConfigMerge(_), _))
+        | object::Tool::ReactConfig(_)
+        | object::Tool::ReactCheckComponentConfig { .. } => {
+            Some(RecordBannedTypeUtilOp::ReactConfig)
+        }
+        object::Tool::ObjectRep => Some(RecordBannedTypeUtilOp::Object),
+        object::Tool::ObjectMap(_) => Some(RecordBannedTypeUtilOp::MappedType),
     }
 }
 
@@ -2259,18 +2284,18 @@ fn resolve_with_env<'cx, A>(
                         tool,
                         super_t.dupe(),
                     ),
-                    (_, InstanceKind::RecordKind { .. }) => {
-                        let reason_op = match tool {
-                            object::Tool::MakeExact => reason
-                                .dupe()
-                                .replace_desc(VirtualReasonDesc::RType("$Exact".into())),
-                            _ => reason.dupe(),
-                        };
+                    (_, InstanceKind::RecordKind { .. })
+                        if let Some(op) = record_banned_type_util_op(tool) =>
+                    {
                         add_output(
                             cx,
                             env,
                             ErrorMessage::ERecordError(RecordErrorKind::RecordBannedTypeUtil {
-                                reason_op,
+                                op_loc: reason
+                                    .annot_loc()
+                                    .unwrap_or_else(|| reason.def_loc())
+                                    .dupe(),
+                                op,
                                 record: flow_js_utils::type_reference_with_reason_for_error(
                                     &t,
                                     r.dupe(),
