@@ -32,3 +32,16 @@ declare const PolyFnComponent: <T>(props: {foo: T, fn: (T) => void, ...}) => Rea
 
 <PolyObjectComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
 <PolyFnComponent foo={3} fn={(v) => {v as string; /* should error on cast */ }} />;
+
+declare opaque type DataSource<T>;
+declare function makeDataSource<T>(items: ReadonlyArray<T>): DataSource<T>;
+component Table<T>(dataSource: DataSource<T>, render: (T) => void) {
+  return null;
+}
+
+type Row = {id: string};
+declare const rows: ?ReadonlyArray<Row>;
+<Table
+  dataSource={makeDataSource(rows?.map(row => ({id: row.id})) ?? [])}
+  render={(item: Row) => { item.id; }}
+/>; // okay

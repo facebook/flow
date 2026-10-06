@@ -24,6 +24,7 @@ use flow_common::subst_name::SubstName;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_typing_context::Context;
+use flow_typing_context::TypingMode;
 use flow_typing_errors::error_message::EImplicitInstantiationUnderconstrainedErrorData;
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
@@ -386,6 +387,7 @@ impl ImplicitInstantiationVisitor<'_, '_> {
 
 enum UseTResult<'cx> {
     UpperEmpty,
+    UpperPlaceholder(Type),
     UpperNonT(UseT<Context<'cx>>),
     UpperT(Type),
 }
@@ -423,6 +425,7 @@ fn t_of_use_t<'cx>(
     ) -> Result<UseTResult<'a>, FlowJsException> {
         match result {
             UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
+            UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
             UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
             UseTResult::UpperT(t) => f(t),
         }
@@ -740,6 +743,7 @@ fn t_of_use_t<'cx>(
                 let solution = merge_upper_bounds(cx, env, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
+                    UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
                         let pmap = properties::PropertiesMap::from_btree_map(BTreeMap::from([(
@@ -766,6 +770,7 @@ fn t_of_use_t<'cx>(
                 let solution = merge_upper_bounds(cx, env, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
+                    UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
                         let reversed = reverse_component_check_config(cx, env, r, pmap, &t)?;
@@ -786,6 +791,7 @@ fn t_of_use_t<'cx>(
                 let solution = merge_upper_bounds(cx, env, seen, tout)?;
                 match solution {
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
+                    UseTResult::UpperPlaceholder(t) => Ok(UseTResult::UpperPlaceholder(t)),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
                         let reversed =
@@ -1213,7 +1219,18 @@ fn merge_upper_bounds<'cx>(
                 constraint::Constraints::FullyResolved(s) => {
                     Ok(filter_placeholder(cx.force_fully_resolved_tvar(&s)))
                 }
-                constraint::Constraints::Resolved(t) => Ok(filter_placeholder(t)),
+                constraint::Constraints::Resolved(t) => {
+                    if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
+                        Ok(match *cx.typing_mode() {
+                            TypingMode::CheckingMode => UseTResult::UpperEmpty,
+                            TypingMode::SynthesisMode { .. } | TypingMode::HintEvaluationMode => {
+                                UseTResult::UpperPlaceholder(t)
+                            }
+                        })
+                    } else {
+                        Ok(UseTResult::UpperT(t))
+                    }
+                }
                 constraint::Constraints::Unresolved(bounds) => {
                     let uppers: Vec<_> = bounds
                         .borrow()
@@ -1230,8 +1247,22 @@ fn merge_upper_bounds<'cx>(
                         acc = match (acc, result) {
                             (UseTResult::UpperNonT(u), _) => UseTResult::UpperNonT(u),
                             (_, UseTResult::UpperNonT(u)) => UseTResult::UpperNonT(u),
+                            (UseTResult::UpperEmpty, UseTResult::UpperPlaceholder(t)) => {
+                                UseTResult::UpperPlaceholder(t)
+                            }
                             (UseTResult::UpperEmpty, UseTResult::UpperT(t)) => {
                                 filter_placeholder(t)
+                            }
+                            (UseTResult::UpperPlaceholder(old_t), UseTResult::UpperT(t))
+                                if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) =>
+                            {
+                                UseTResult::UpperPlaceholder(old_t)
+                            }
+                            (UseTResult::UpperPlaceholder(_), UseTResult::UpperT(t)) => {
+                                UseTResult::UpperT(t)
+                            }
+                            (UseTResult::UpperT(t), UseTResult::UpperPlaceholder(_)) => {
+                                UseTResult::UpperT(t)
                             }
                             (UseTResult::UpperT(old_t), UseTResult::UpperT(t))
                                 if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) =>
@@ -1256,6 +1287,10 @@ fn merge_upper_bounds<'cx>(
                                 }
                             }
                             (acc @ UseTResult::UpperT(_), UseTResult::UpperEmpty) => acc,
+                            (
+                                acc @ UseTResult::UpperPlaceholder(_),
+                                UseTResult::UpperEmpty | UseTResult::UpperPlaceholder(_),
+                            ) => acc,
                             (UseTResult::UpperEmpty, UseTResult::UpperEmpty) => {
                                 UseTResult::UpperEmpty
                             }
@@ -1392,6 +1427,13 @@ fn use_upper_bounds<'cx, Obs: Observer>(
                 instantiation_reason,
             ),
         },
+        UseTResult::UpperPlaceholder(inferred) => {
+            cx.set_synthesis_produced_uncacheable_result();
+            Ok(InferredTarg {
+                tparam: tparam.dupe(),
+                inferred,
+            })
+        }
         UseTResult::UpperNonT(u) => Obs::on_upper_non_t(
             cx,
             env,
