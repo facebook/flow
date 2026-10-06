@@ -1981,8 +1981,6 @@ fn check_react_fun<'cx, Obs: Observer>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     tparams: &[TypeParam],
-    tparams_map: &BTreeMap<SubstName, TypeParam>,
-    props: Option<&Type>,
     check: &ImplicitInstantiationCheck,
 ) -> Result<
     (
@@ -1992,21 +1990,10 @@ fn check_react_fun<'cx, Obs: Observer>(
     ),
     FlowJsException,
 > {
-    match props {
-        None => {
-            let marked_tparams = Marked::new();
-            check_instantiation::<Obs>(cx, env, tparams, marked_tparams, check)
-        }
-        // The return of a React component when it is createElement-ed isn't actually the return type denoted on the
-        // component. Instead, it is a ExactReactElement_DEPRECATED<typeof Component>. In order to get the
-        // polarities for the type parameters in the return, it is sufficient to look at the Props
-        // type and use the polarities there.
-        //
-        // In practice, the props accessible via the element are read-only, so a possible future improvement
-        // here would only look at the properties on the Props type with a covariant polarity instead of the
-        // Neutral default that will be common due to syntactic conveniences.
-        Some(props) => check_fun::<Obs>(cx, env, tparams, tparams_map, props, check),
-    }
+    // A JSX element is typed by its component's render type, which does not expose the props, so
+    // no type parameter is observable in the result and an unconstrained one can take its bound.
+    let marked_tparams = Marked::new();
+    check_instantiation::<Obs>(cx, env, tparams, marked_tparams, check)
 }
 
 // let check_instance cx ~tparams ~implicit_instantiation =
@@ -2070,16 +2057,13 @@ fn implicitly_instantiate<'cx, Obs: Observer>(
         return Ok((Vec::new(), Marked::new(), tparams_map, None));
     };
     let (inferred_targ_list, marked_tparams, tout) = match (def_t.deref(), op) {
-        (DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData { config, .. }), _) => {
-            check_react_fun::<Obs>(cx, env, &tparams_list, &tparams_map, Some(config), check)?
+        (DefTInner::ReactAbstractComponentT(_), _) => {
+            check_react_fun::<Obs>(cx, env, &tparams_list, check)?
         }
         (
-            DefTInner::FunT(_, funtype),
+            DefTInner::FunT(..),
             flow_typing_implicit_instantiation_check::Operation::ReactJSX { .. },
-        ) => {
-            let props = funtype.params.first().map(|p| &p.1);
-            check_react_fun::<Obs>(cx, env, &tparams_list, &tparams_map, props, check)?
-        }
+        ) => check_react_fun::<Obs>(cx, env, &tparams_list, check)?,
         (DefTInner::FunT(_, funtype), _) => check_fun::<Obs>(
             cx,
             env,

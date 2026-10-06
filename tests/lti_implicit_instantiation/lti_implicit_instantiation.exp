@@ -31,24 +31,6 @@ References:
               ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- contextual_jsx.js:6:10
-
-Cannot create `Component` element because `T` [1] is underconstrained by `Component` element [2]. Either add explicit
-type arguments or cast the expression to your expected type. [underconstrained-implicit-instantiation]
-
-   contextual_jsx.js:6:10
-   6| let x = <Component />; // Error
-               ^^^^^^^^^
-
-References:
-   contextual_jsx.js:4:20
-   4| function Component<T>(props: {foo?: T, ...}): React.Node { return null; }
-                         ^ [1]
-   contextual_jsx.js:6:9
-   6| let x = <Component />; // Error
-              ^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------ contextual_jsx.js:18:29
 
 Cannot create `ComponentWithBound` element because in type argument `T`: `true` [1] is incompatible with `number` [2].
@@ -400,25 +382,6 @@ References:
    underconstrained_react.js:7:1
    7| <PolyReactClass />;
       ^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------- underconstrained_react.js:11:2
-
-Cannot create `PolyFunctionComponent` element because `T` [1] is underconstrained by `PolyFunctionComponent`
-element [2]. Either add explicit type arguments or cast the expression to your expected type.
-[underconstrained-implicit-instantiation]
-
-   underconstrained_react.js:11:2
-   11| <PolyFunctionComponent foo={() => {}}/>;
-        ^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   underconstrained_react.js:9:32
-    9| function PolyFunctionComponent<T>(props: {foo: ({x: T, ...} => unknown), ...}): React.Node { return null }
-                                      ^ [1]
-   underconstrained_react.js:11:1
-   11| <PolyFunctionComponent foo={() => {}}/>;
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:11:1
@@ -955,4 +918,4 @@ References:
 
 
 
-Found 61 errors
+Found 59 errors

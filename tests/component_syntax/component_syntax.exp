@@ -2945,8 +2945,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:105:23
 
 Cannot create `GenericRef1` element because in property `ref`: [incompatible-type]
- - Either `1` [1] is incompatible with `{writeonly current: any | null, ...}` [2].
- - Or `1` [1] is incompatible with `(any | null) => void | (() => void)` [3].
+ - Either `1` [1] is incompatible with `{writeonly current: unknown, ...}` [2].
+ - Or `1` [1] is incompatible with `(unknown) => void | (() => void)` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2967,8 +2967,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
 
 Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
- - Either in the first parameter: `Array<Array<Array<any>>>` [1] is incompatible with `string` [2].
- - Or in the first parameter: `Array<Array<Array<any>>>` [1] is incompatible with `null` [3].
+ - Either in the first parameter: `Array<Array<Array<unknown>>>` [1] is incompatible with `string` [2].
+ - Or in the first parameter: `Array<Array<Array<unknown>>>` [1] is incompatible with `null` [3].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
