@@ -8,8 +8,8 @@ Cannot assign `'23456'` to `frozenObject.bar` because property `bar` is not writ
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:15:1
 
-Cannot cast `frozenObject` to object type because property `bar` is read-only in frozen object literal [1] but writable
-in object type [2]. [incompatible-variance]
+Cannot cast `frozenObject` to object type because property `bar` is read-only in `{readonly bar: "12345"}` [1] but
+writable in `{bar: "12345"}` [2]. [incompatible-variance]
 
    downstream.js:15:1
    15| frozenObject as {bar: '12345'}; // error bar is readonly
@@ -124,9 +124,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:27:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in frozen object literal [1] but
-writable in object type [2] and property `baz` is read-only in frozen object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in
+`{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2] and property `baz`
+is read-only in `{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2].
+[incompatible-variance]
 
    downstream.js:27:1
    27| frozenObjectWithSpread as {bar: '12345', baz: number}; // error bar and baz are readonly
@@ -256,8 +257,8 @@ Cannot assign `'23456'` to `frozenObject.bar` because property `bar` is not writ
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:21:1
 
-Cannot cast `frozenObject` to object type because property `bar` is read-only in frozen object literal [1] but writable
-in object type [2]. [incompatible-variance]
+Cannot cast `frozenObject` to object type because property `bar` is read-only in `{readonly bar: "12345"}` [1] but
+writable in `{bar: "12345"}` [2]. [incompatible-variance]
 
    object_freeze.js:21:1
    21| frozenObject as {bar: '12345'}; // error bar is readonly
@@ -382,9 +383,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:33:1
 
-Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in frozen object literal [1] but
-writable in object type [2] and property `baz` is read-only in frozen object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `frozenObjectWithSpread` to object type because property `bar` is read-only in
+`{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2] and property `baz`
+is read-only in `{readonly bar: "12345", readonly baz: number}` [1] but writable in `{bar: "12345", baz: number}` [2].
+[incompatible-variance]
 
    object_freeze.js:33:1
    33| frozenObjectWithSpread as {bar: '12345', baz: number}; // error bar and baz are readonly

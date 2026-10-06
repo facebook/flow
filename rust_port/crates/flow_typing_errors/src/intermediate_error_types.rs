@@ -1575,6 +1575,26 @@ pub struct NamedReferenceData<L: Dupe> {
     pub name: FlowSmolStr,
 }
 
+/// A side of a property polarity mismatch.
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
+pub enum PropPolarityMismatchObject<T, L: Dupe> {
+    Type(T),
+    /// A named class or interface whose signature is checked: its own against its proto
+    /// members, or its members against its super class.
+    Class(NamedReferenceData<L>),
+}
+
 #[derive(
     Debug,
     Clone,
@@ -1845,8 +1865,8 @@ pub struct MessageIndexerCheckFailedData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessagePropPolarityMismatchData<L: Dupe> {
-    pub lower: VirtualReason<L>,
-    pub upper: VirtualReason<L>,
+    pub lower: PropPolarityMismatchObject<MessageTypeReferenceData<L>, L>,
+    pub upper: PropPolarityMismatchObject<MessageTypeReferenceData<L>, L>,
     pub props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
 }
 

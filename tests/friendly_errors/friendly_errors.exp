@@ -1219,8 +1219,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:12:8
 
-Cannot cast `any` to object type because property `p` is read-only in object type [1] but writable in object type [2].
-[incompatible-variance]
+Cannot cast `any` to object type because property `p` is read-only in `{readonly p: T, ...}` [1] but writable in
+`{p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:12:8
    12| any as {readonly p: T, ...} as {p: T, ...}; // Error: read-only ~> writable
@@ -1234,8 +1234,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:14:8
 
-Cannot cast `any` to object type because property `p` is read-only in object type [1] but write-only in object type [2].
-[incompatible-variance]
+Cannot cast `any` to object type because property `p` is read-only in `{readonly p: T, ...}` [1] but write-only in
+`{writeonly p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:14:8
    14| any as {readonly p: T, ...} as {writeonly p: T, ...}; // Error: read-only ~> write-only
@@ -1249,8 +1249,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:15:8
 
-Cannot cast `any` to object type because property `p` is write-only in object type [1] but readable in object type [2].
-[incompatible-variance]
+Cannot cast `any` to object type because property `p` is write-only in `{writeonly p: T, ...}` [1] but readable in
+`{p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:15:8
    15| any as {writeonly p: T, ...} as {p: T, ...}; // Error: write-only ~> readable
@@ -1264,8 +1264,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- prop-variance.js:16:8
 
-Cannot cast `any` to object type because property `p` is write-only in object type [1] but read-only in object type [2].
-[incompatible-variance]
+Cannot cast `any` to object type because property `p` is write-only in `{writeonly p: T, ...}` [1] but read-only in
+`{readonly p: T, ...}` [2]. [incompatible-variance]
 
    prop-variance.js:16:8
    16| any as {writeonly p: T, ...} as {readonly p: T, ...}; // Error: write-only ~> read-only

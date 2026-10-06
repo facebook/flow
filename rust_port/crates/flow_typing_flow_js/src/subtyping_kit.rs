@@ -47,6 +47,7 @@ use flow_typing_errors::error_message::TypeGuardFuncReference;
 use flow_typing_errors::error_message::TypeGuardParameterData;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::NamedReferenceData;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_errors::intermediate_error_types::TypeGuardReferenceData;
 use flow_typing_errors::intermediate_error_types::TypeGuardReferenceKind;
 use flow_typing_flow_common::flow_js_utils;
@@ -166,20 +167,29 @@ fn add_output_prop_polarity_mismatch<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
-    lreason: &Reason,
-    ureason: &Reason,
+    lower: PropPolarityMismatchObject<&Type, ALoc>,
+    upper: PropPolarityMismatchObject<&Type, ALoc>,
     props: Vec<(Option<Name>, (Polarity, Polarity))>,
     strictness_kind: flow_typing_type::type_::TypeStrictnessKind,
 ) -> Result<(), FlowJsException> {
     if strictness_kind.is_typescript_loose() {
         Ok(())
     } else if let Ok(props) = Vec1::try_from_vec(props) {
+        let error_object = |object| match object {
+            PropPolarityMismatchObject::Type(t) => PropPolarityMismatchObject::Type(
+                flow_js_utils::type_reference_with_reason_for_error(
+                    t,
+                    type_util::reason_of_t(t).dupe(),
+                ),
+            ),
+            PropPolarityMismatchObject::Class(class) => PropPolarityMismatchObject::Class(class),
+        };
         flow_js_utils::add_output_with_env(
             cx,
             env,
             ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
-                lreason: lreason.dupe(),
-                ureason: ureason.dupe(),
+                lower: error_object(lower),
+                upper: error_object(upper),
                 props,
                 use_op,
             })),
@@ -253,7 +263,6 @@ fn rec_flow_p_inner<'cx>(
     lower_upper_property: Option<(&Property, &Property)>,
     lower_upper_subtyping_obj_ts: Option<(&Type, &Type)>,
     strictness_kind: TypeStrictnessKind,
-    upper_object_reason: &Reason,
     report_polarity: bool,
     propref: &PropRef,
     lp: &PropertyType,
@@ -323,7 +332,7 @@ fn rec_flow_p_inner<'cx>(
                     UnifyCause::MutableProperty {
                         lower_obj_t: lower_obj_t.dupe(),
                         upper_obj_t: upper_obj_t.dupe(),
-                        upper_object_reason: upper_object_reason.dupe(),
+                        upper_object_reason: type_util::reason_of_t(upper_obj_t).dupe(),
                         property_name,
                     }
                 }
@@ -1431,8 +1440,8 @@ pub(super) struct PropsToIndexerContext<'a, 'cx> {
     pub(super) env: &'a FlowJsEnv,
     pub(super) trace: DepthTrace,
     pub(super) use_op: UseOp,
-    pub(super) lreason: Reason,
-    pub(super) ureason: Reason,
+    pub(super) lower: Type,
+    pub(super) upper: Type,
     pub(super) strictness_kind: TypeStrictnessKind,
     pub(super) lit: bool,
     pub(super) lower_upper_subtyping_obj_ts: Option<(Type, Type)>,
@@ -1449,8 +1458,8 @@ impl PropsToIndexerContext<'_, '_> {
         let env = self.env;
         let trace = self.trace;
         let use_op = &self.use_op;
-        let lreason = &self.lreason;
-        let ureason = &self.ureason;
+        let lreason = type_util::reason_of_t(&self.lower);
+        let ureason = type_util::reason_of_t(&self.upper);
         let strictness_kind = self.strictness_kind;
         let lit = self.lit;
         let DictType {
@@ -1521,7 +1530,6 @@ impl PropsToIndexerContext<'_, '_> {
                     None,
                     lower_upper_subtyping_obj_ts,
                     strictness_kind,
-                    ureason,
                     true,
                     &propref,
                     &lp_type,
@@ -1531,8 +1539,8 @@ impl PropsToIndexerContext<'_, '_> {
                     cx,
                     env,
                     use_op,
-                    lreason,
-                    ureason,
+                    PropPolarityMismatchObject::Type(&self.lower),
+                    PropPolarityMismatchObject::Type(&self.upper),
                     errs,
                     strictness_kind,
                 )?;
@@ -1689,7 +1697,6 @@ fn flow_obj_to_obj<'cx>(
                     None,
                     Some((&l_t, &u_t)),
                     strictness_kind,
-                    ureason,
                     false,
                     &PropRef::Computed(uk.dupe()),
                     &PropertyType::OrdinaryField {
@@ -1705,8 +1712,8 @@ fn flow_obj_to_obj<'cx>(
                     cx,
                     env,
                     use_op_k,
-                    lreason,
-                    ureason,
+                    PropPolarityMismatchObject::Type(l),
+                    PropPolarityMismatchObject::Type(u),
                     errs,
                     strictness_kind,
                 )?;
@@ -1740,7 +1747,6 @@ fn flow_obj_to_obj<'cx>(
                     None,
                     Some((&l_t, &u_t)),
                     strictness_kind,
-                    ureason,
                     true,
                     &PropRef::Computed(uv.dupe()),
                     &PropertyType::OrdinaryField {
@@ -1756,8 +1762,8 @@ fn flow_obj_to_obj<'cx>(
                     cx,
                     env,
                     use_op_v,
-                    lreason,
-                    ureason,
+                    PropPolarityMismatchObject::Type(l),
+                    PropPolarityMismatchObject::Type(u),
                     errs,
                     strictness_kind,
                 )?;
@@ -2053,7 +2059,6 @@ fn flow_obj_to_obj<'cx>(
                                         None,
                                         Some((&l_t, &u_t)),
                                         strictness_kind,
-                                        ureason,
                                         true,
                                         &mk_propref(),
                                         &lp_type,
@@ -2121,7 +2126,6 @@ fn flow_obj_to_obj<'cx>(
                                 None,
                                 Some((&l_t, &u_t)),
                                 strictness_kind,
-                                ureason,
                                 true,
                                 &mk_propref(),
                                 &lp_for_idx,
@@ -2479,8 +2483,8 @@ fn flow_obj_to_obj<'cx>(
         cx,
         env,
         use_op.dupe(),
-        lreason,
-        ureason,
+        PropPolarityMismatchObject::Type(l),
+        PropPolarityMismatchObject::Type(u),
         polarity_mismatch_errs,
         strictness_kind,
     )?;
@@ -2502,8 +2506,8 @@ fn flow_obj_to_obj<'cx>(
                 env,
                 trace,
                 use_op: use_op.dupe(),
-                lreason: lreason.dupe(),
-                ureason: ureason.dupe(),
+                lower: l.dupe(),
+                upper: u.dupe(),
                 strictness_kind,
                 lit,
                 lower_upper_subtyping_obj_ts: Some((lower, upper)),
@@ -2601,7 +2605,6 @@ fn flow_obj_to_obj<'cx>(
                             None,
                             Some((&l_t, &u_t)),
                             strictness_kind,
-                            ureason,
                             true,
                             &propref,
                             &lp_type,
@@ -2611,8 +2614,8 @@ fn flow_obj_to_obj<'cx>(
                             cx,
                             env,
                             use_op,
-                            lreason,
-                            ureason,
+                            PropPolarityMismatchObject::Type(l),
+                            PropPolarityMismatchObject::Type(u),
                             errs,
                             l_obj.strictness_kind.join(u_obj.strictness_kind),
                         )?;
@@ -5429,7 +5432,6 @@ pub fn rec_sub_t<'cx>(
                                     None,
                                     Some((l, u)),
                                     strictness_kind,
-                                    ureason,
                                     true,
                                     &propref,
                                     &lower_prop_type,
@@ -5531,8 +5533,8 @@ pub fn rec_sub_t<'cx>(
             add_output_prop_polarity_mismatch(
                 cx, env,
                 use_op.dupe(),
-                lreason,
-                ureason,
+                PropPolarityMismatchObject::Type(l),
+                PropPolarityMismatchObject::Type(u),
                 errs,
                 strictness_kind,
             )?;
@@ -6982,8 +6984,8 @@ pub fn rec_flow_p<'cx>(
     trace: Option<DepthTrace>,
     use_op: UseOp,
     report_polarity: bool,
-    lreason: &Reason,
-    ureason: &Reason,
+    lower: PropPolarityMismatchObject<&Type, ALoc>,
+    upper: PropPolarityMismatchObject<&Type, ALoc>,
     propref: &PropRef,
     lp: &PropertyType,
     up: &PropertyType,
@@ -6996,8 +6998,8 @@ pub fn rec_flow_p<'cx>(
         None,
         TypeStrictnessKind::Flow,
         report_polarity,
-        lreason,
-        ureason,
+        lower,
+        upper,
         propref,
         lp,
         up,
@@ -7012,8 +7014,8 @@ pub fn rec_flow_p_with_lower_upper_property<'cx>(
     lower_upper_property: Option<(&Property, &Property)>,
     strictness_kind: TypeStrictnessKind,
     report_polarity: bool,
-    lreason: &Reason,
-    ureason: &Reason,
+    lower: PropPolarityMismatchObject<&Type, ALoc>,
+    upper: PropPolarityMismatchObject<&Type, ALoc>,
     propref: &PropRef,
     lp: &PropertyType,
     up: &PropertyType,
@@ -7026,12 +7028,11 @@ pub fn rec_flow_p_with_lower_upper_property<'cx>(
         lower_upper_property,
         None,
         strictness_kind,
-        ureason,
         report_polarity,
         propref,
         lp,
         up,
     )?;
-    add_output_prop_polarity_mismatch(cx, env, use_op, lreason, ureason, errs, strictness_kind)?;
+    add_output_prop_polarity_mismatch(cx, env, use_op, lower, upper, errs, strictness_kind)?;
     Ok(())
 }

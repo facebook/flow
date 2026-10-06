@@ -1608,7 +1608,7 @@ pub fn use_op_of_lookup_action(action: &flow_typing_type::type_::LookupAction) -
         | LookupAction::LookupPropsForSubtyping(box LookupPropsForSubtypingData {
             use_op, ..
         })
-        | LookupAction::SuperProp(box (use_op, _, _))
+        | LookupAction::SuperProp(box (use_op, _, _, _))
         | LookupAction::MatchProp(box LookupActionMatchPropData { use_op, .. }) => use_op.dupe(),
         LookupAction::LookupPropForTvarPopulation { .. } => unknown_use(),
     }
@@ -7390,7 +7390,7 @@ pub mod get_prop_t_kit {
         propref: &PropRef,
         reason_op: &Reason,
         indexer_fallback_mode: IndexerFallbackMode,
-        reason_obj: &Reason,
+        obj: &Type,
     ) -> Result<
         (
             Option<(Property, PropertySource)>,
@@ -7486,7 +7486,7 @@ pub mod get_prop_t_kit {
             None,
             Some(Box::new(IndexerFallbackData {
                 property,
-                reason_obj: reason_obj.dupe(),
+                obj: obj.dupe(),
                 // The access is TS-related when either side is: the interface was declared
                 // under TS semantics, or the access itself is written in a TS file.
                 suppress_missing_error: inst
@@ -7523,7 +7523,7 @@ pub mod get_prop_t_kit {
             propref,
             reason_op,
             IndexerFallbackMode::PropertyAndIndexedAccess,
-            reason_of_t(instance_t),
+            instance_t,
         )?;
         if let Some(id) = id
             && (property.is_some() || indexer_fallback.is_some())

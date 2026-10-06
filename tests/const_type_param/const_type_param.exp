@@ -14,8 +14,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:12:3
 
-Cannot cast `x3` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `x3` to object type because property `f` is read-only in `{readonly f: 1}` [1] but writable in `{f: 1}` [2].
+[incompatible-variance]
 
    file.js:12:3
    12|   x3 as {f: 1}; // error -f ~> f, x3 should not have a lit reason
@@ -32,8 +32,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:44:3
 
-Cannot cast `x1` to object type because property `h` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `x1` to object type because property `h` is read-only in `{readonly h: 1}` [1] but writable in `{h: 1}` [2].
+[incompatible-variance]
 
    file.js:44:3
    44|   x1 as {h: 1}; // error +h ~> h
@@ -50,8 +50,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:49:3
 
-Cannot cast `x2` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `x2` to object type because property `f` is read-only in `{readonly f: 1}` [1] but writable in `{f: 1}` [2].
+[incompatible-variance]
 
    file.js:49:3
    49|   x2 as {f: 1}; // error +f ~> f

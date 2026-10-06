@@ -192,6 +192,24 @@ References:
                                               ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------- default_props_write_only.js:7:2
+
+Property `defaultProps` is write-only in `{set defaultProps({p: number}): void, name: string, ...}` [1] but read-only in
+`K` element [2]. [incompatible-variance]
+
+   default_props_write_only.js:7:2
+   7| <K />; // ERROR: `defaultProps` is write-only in the statics of `K`
+       ^
+
+References:
+   default_props_write_only.js:3:7
+   3| class K extends React.Component<{p: number}> {
+            ^ [1]
+   default_props_write_only.js:7:1
+   7| <K />; // ERROR: `defaultProps` is write-only in the statics of `K`
+      ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ element_config.js:15:48
 
 Cannot initialize property `defaultProps` with object literal because in property `p`: `"foo"` [1] is incompatible with
@@ -2558,4 +2576,4 @@ References:
 
 
 
-Found 143 errors
+Found 144 errors

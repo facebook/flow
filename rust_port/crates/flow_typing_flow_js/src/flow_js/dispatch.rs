@@ -162,7 +162,7 @@ fn strict_lookup_failed<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
-    lreason: &Reason,
+    l: &Type,
     reason_op: &Reason,
     strict_reason: &Reason,
     propref: &PropRef,
@@ -207,7 +207,7 @@ fn strict_lookup_failed<'cx>(
             &property::property_type(&fallback.property),
             Some(&fallback.property),
             PropertySource::IndexerProperty,
-            &fallback.reason_obj,
+            &fallback.obj,
             reason_op,
             action,
             None,
@@ -226,7 +226,7 @@ fn strict_lookup_failed<'cx>(
             &p,
             None,
             PropertySource::DynamicProperty,
-            lreason,
+            l,
             reason_op,
             action,
             up,
@@ -242,7 +242,7 @@ fn strict_computed_lookup_failed<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
-    lreason: &Reason,
+    l: &Type,
     reason_op: &Reason,
     strict_reason: &Reason,
     propref: &PropRef,
@@ -286,7 +286,7 @@ fn strict_computed_lookup_failed<'cx>(
                     &p,
                     None,
                     PropertySource::DynamicProperty,
-                    lreason,
+                    l,
                     reason_op,
                     action,
                     up,
@@ -6089,7 +6089,7 @@ fn __flow_impl<'cx>(
         // * instances of classes may have their fields looked up *
         // ********************************************************
         (
-            TypeInner::DefT(lreason, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: kind,
@@ -6124,7 +6124,7 @@ fn __flow_impl<'cx>(
                         propref,
                         reason_op,
                         indexer_fallback_mode,
-                        lreason,
+                        l,
                     )?;
                 // A candidate found closer to the access wins: it is the one an
                 // inherited declared property would have to beat.
@@ -6155,7 +6155,7 @@ fn __flow_impl<'cx>(
                             &property_type,
                             Some(&p),
                             target_kind,
-                            lreason,
+                            l,
                             reason_op,
                             action,
                             up,
@@ -6354,7 +6354,7 @@ fn __flow_impl<'cx>(
                             &property::property_type(p),
                             Some(p),
                             PropertySource::PropertyMapProperty,
-                            reason_c,
+                            l,
                             &spp_data.reason,
                             &action,
                             None,
@@ -6717,7 +6717,7 @@ fn __flow_impl<'cx>(
         // * objects may have their fields looked up *
         // *******************************************
         (
-            TypeInner::DefT(reason_obj, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind,
@@ -6759,7 +6759,7 @@ fn __flow_impl<'cx>(
                             &p,
                             None,
                             target_kind.clone(),
-                            reason_obj,
+                            l,
                             reason_op,
                             action,
                             up,
@@ -6796,7 +6796,7 @@ fn __flow_impl<'cx>(
             }
         }
         (
-            TypeInner::AnyT(reason, src),
+            TypeInner::AnyT(_, src),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind,
@@ -6806,7 +6806,9 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             match action {
-                box LookupAction::SuperProp(box (_, lp, _)) if property::write_t(lp).is_none() => {
+                box LookupAction::SuperProp(box (_, lp, _, _))
+                    if property::write_t(lp).is_none() =>
+                {
                     // Without this exception, we will call rec_flow_p where
                     // `write_t lp = None` and `write_t up = Some`, which is a polarity
                     // mismatch error. Instead of this, we could "read" `mixed` from
@@ -6834,7 +6836,7 @@ fn __flow_impl<'cx>(
                             &p,
                             None,
                             PropertySource::DynamicProperty,
-                            reason,
+                            l,
                             reason_op,
                             action,
                             up,
@@ -8296,6 +8298,7 @@ fn __flow_impl<'cx>(
                 proto,
                 static_: static_props,
                 strictness_kind,
+                reference,
             } = derived;
             for (x, p) in own.iter() {
                 check_super(
@@ -8305,6 +8308,7 @@ fn __flow_impl<'cx>(
                     use_op.dupe(),
                     reason,
                     ureason,
+                    reference,
                     l,
                     x,
                     p,
@@ -8320,6 +8324,7 @@ fn __flow_impl<'cx>(
                         use_op.dupe(),
                         reason,
                         ureason,
+                        reference,
                         l,
                         x,
                         p,
@@ -8340,6 +8345,7 @@ fn __flow_impl<'cx>(
                         use_op.dupe(),
                         reason,
                         ureason,
+                        reference,
                         st,
                         x,
                         p,
@@ -8370,6 +8376,7 @@ fn __flow_impl<'cx>(
                 proto,
                 static_: _,
                 strictness_kind,
+                reference,
             } = derived;
             for (x, p) in own.iter() {
                 check_super(
@@ -8379,6 +8386,7 @@ fn __flow_impl<'cx>(
                     use_op.dupe(),
                     reason,
                     ureason,
+                    reference,
                     l,
                     x,
                     p,
@@ -8394,6 +8402,7 @@ fn __flow_impl<'cx>(
                         use_op.dupe(),
                         reason,
                         ureason,
+                        reference,
                         l,
                         x,
                         p,
@@ -9683,7 +9692,7 @@ fn __flow_impl<'cx>(
             rec_flow(cx, env, trace, (&fun, u))?;
         }
         (
-            TypeInner::DefT(reason, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
@@ -9703,7 +9712,7 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 trace,
-                reason,
+                l,
                 reason_op,
                 strict_reason,
                 propref,
@@ -9714,7 +9723,7 @@ fn __flow_impl<'cx>(
         }
 
         (
-            TypeInner::ObjProtoT(reason) | TypeInner::FunProtoT(reason),
+            TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
@@ -9731,7 +9740,7 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 trace,
-                reason,
+                l,
                 reason_op,
                 strict_reason,
                 propref,
@@ -9743,7 +9752,7 @@ fn __flow_impl<'cx>(
         // A computed lookup never carries an `indexer_fallback`: an indexer answers a
         // computed access on the spot, so there is nothing to hold back.
         (
-            TypeInner::DefT(reason, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
@@ -9763,7 +9772,7 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 trace,
-                reason,
+                l,
                 reason_op,
                 strict_reason,
                 propref,
@@ -9772,7 +9781,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            TypeInner::ObjProtoT(reason) | TypeInner::FunProtoT(reason),
+            TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
                 lookup_kind: box LookupKind::Strict(strict_reason),
@@ -9791,7 +9800,7 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 trace,
-                reason,
+                l,
                 reason_op,
                 strict_reason,
                 propref,
@@ -9829,7 +9838,7 @@ fn __flow_impl<'cx>(
                     &property::property_type(&fallback.property),
                     Some(&fallback.property),
                     PropertySource::IndexerProperty,
-                    &fallback.reason_obj,
+                    &fallback.obj,
                     reason_op,
                     action,
                     None,

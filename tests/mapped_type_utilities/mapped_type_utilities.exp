@@ -136,8 +136,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:54:3
 
-Cannot cast `x` to object type because property `foo` is read-only in `Omit` [1] but writable in object type [2].
-[incompatible-variance]
+Cannot cast `x` to object type because property `foo` is read-only in `{readonly foo: 1}` [1] but writable in
+`{foo: 1}` [2]. [incompatible-variance]
 
    omit.js:54:3
    54|   x as {foo: 1}; // ERROR

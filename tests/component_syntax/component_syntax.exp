@@ -777,8 +777,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- config.js:4:1
 
-Cannot cast `config` to object type because property `n` is read-only in props of component Foo [1] but writable in
-object type [2]. [incompatible-variance]
+Cannot cast `config` to object type because property `n` is read-only in `{readonly n: number}` [1] but writable in
+`{n: number | string}` [2]. [incompatible-variance]
 
    config.js:4:1
    4| config as {n: number | string}; // error: n is not read-only in {n: number | string}
@@ -795,8 +795,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- config_imported.js:3:1
 
-Cannot cast `config` to object type because property `n` is read-only in props of component Foo [1] but writable in
-object type [2]. [incompatible-variance]
+Cannot cast `config` to object type because property `n` is read-only in `{readonly n: number}` [1] but writable in
+`{n: number | string}` [2]. [incompatible-variance]
 
    config_imported.js:3:1
    3| config as {n: number | string}; // error: n is not read-only in {n: number | string}
@@ -2659,8 +2659,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in object type [1] but
-readable in object type [2]. [incompatible-variance]
+Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in
+`{writeonly current: string | null, ...}` [1] but readable in `{current: typeof Reffed}` [2]. [incompatible-variance]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2774,8 +2774,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in object type [1] but
-readable in object type [2]. [incompatible-variance]
+Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in
+`{writeonly current: typeof Reffed | null, ...}` [1] but readable in `{current: typeof Reffed}` [2].
+[incompatible-variance]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err

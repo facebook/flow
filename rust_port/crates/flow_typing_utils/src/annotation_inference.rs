@@ -2201,9 +2201,7 @@ fn elab_t_concrete<'cx>(
             use flow_typing_type::type_::property;
 
             match t.deref() {
-                TypeInner::DefT(_lreason, def_t)
-                    if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
-                {
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
                     match propref {
                         type_::PropRef::Named { .. } => {
                             let react_dro = match objt.deref() {
@@ -2225,7 +2223,7 @@ fn elab_t_concrete<'cx>(
                                     propref,
                                     reason_op,
                                     IndexerFallbackMode::PropertyAndIndexedAccess,
-                                    _lreason,
+                                    &t,
                                 )
                                 // Annotation inference is never speculative
                                 .unwrap();

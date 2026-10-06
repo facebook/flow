@@ -43,6 +43,7 @@ use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_errors::intermediate_error_types::ExpectedModulePurpose;
 use flow_typing_errors::intermediate_error_types::ExplanationWithLazyParts;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_common::flow_cache;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -246,13 +247,13 @@ impl FlowJs {
         cx: &Context<'cx>,
         env: &FlowJsEnv,
         use_op: UseOp,
-        reason1: &Reason,
-        reason2: &Reason,
+        lower: PropPolarityMismatchObject<&Type, ALoc>,
+        upper: PropPolarityMismatchObject<&Type, ALoc>,
         propref: &PropRef,
         prop1: &PropertyType,
         prop2: &PropertyType,
     ) -> Result<(), FlowJsException> {
-        helpers::flow_p(cx, env, use_op, reason1, reason2, propref, (prop1, prop2))
+        helpers::flow_p(cx, env, use_op, lower, upper, propref, (prop1, prop2))
     }
 
     pub fn flow_t_with_env<'cx>(
@@ -1004,8 +1005,8 @@ impl FlowJs {
     pub fn flow_p<'cx>(
         cx: &Context<'cx>,
         use_op: UseOp,
-        reason1: &Reason,
-        reason2: &Reason,
+        lower: PropPolarityMismatchObject<&Type, ALoc>,
+        upper: PropPolarityMismatchObject<&Type, ALoc>,
         propref: &PropRef,
         prop1: &PropertyType,
         prop2: &PropertyType,
@@ -1014,8 +1015,8 @@ impl FlowJs {
             cx,
             &FlowJsEnv::entry(),
             use_op,
-            reason1,
-            reason2,
+            lower,
+            upper,
             propref,
             prop1,
             prop2,

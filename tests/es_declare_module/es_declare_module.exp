@@ -34,9 +34,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------- es_declare_module.js:7:1
 
-Cannot cast `CJS_Named` to object type because property `num1` is read-only in module `CJS_Named` [1] but writable in
-object type [2] and property `str1` is read-only in module `CJS_Named` [1] but writable in object type [2].
-[incompatible-variance]
+Cannot cast `CJS_Named` to object type because property `num1` is read-only in
+`{readonly num1: number, readonly str1: string}` [1] but writable in `{num1: number, str1: string}` [2] and property
+`str1` is read-only in `{readonly num1: number, readonly str1: string}` [1] but writable in
+`{num1: number, str1: string}` [2]. [incompatible-variance]
 
    es_declare_module.js:7:1
    7| CJS_Named as {num1: number, str1: string};

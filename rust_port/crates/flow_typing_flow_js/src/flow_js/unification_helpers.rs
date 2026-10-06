@@ -12,6 +12,7 @@ use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
 use flow_typing_errors::error_message::EPropPolarityMismatchData;
 use flow_typing_errors::error_message::ETupleArityMismatchData;
 use flow_typing_errors::error_message::ETupleElementPolarityMismatchData;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::PropertyCompatibilityData;
 use flow_typing_type::type_::TypeAppTData;
@@ -491,8 +492,8 @@ fn __unify_inner<'cx>(
                                             trace,
                                             use_op.dupe(),
                                             &x,
-                                            lreason,
-                                            ureason,
+                                            t1,
+                                            t2,
                                             p1,
                                             p2,
                                             l_obj.strictness_kind.join(u_obj.strictness_kind),
@@ -689,8 +690,8 @@ pub(super) fn unify_props<'cx>(
     trace: DepthTrace,
     use_op: UseOp,
     x: &Name,
-    r1: &Reason,
-    r2: &Reason,
+    t1: &Type,
+    t2: &Type,
     p1: &Property,
     p2: &Property,
     strictness_kind: TypeStrictnessKind,
@@ -699,8 +700,8 @@ pub(super) fn unify_props<'cx>(
         Arc::new(VirtualFrameUseOp::PropertyCompatibility(Box::new(
             PropertyCompatibilityData {
                 prop: Some(x.dupe()),
-                lower: r1.dupe(),
-                upper: r2.dupe(),
+                lower: reason_of_t(t1).dupe(),
+                upper: reason_of_t(t2).dupe(),
             },
         ))),
         Arc::new(use_op),
@@ -762,8 +763,18 @@ pub(super) fn unify_props<'cx>(
                     cx,
                     env,
                     ErrorMessage::EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
-                        lreason: r1.dupe(),
-                        ureason: r2.dupe(),
+                        lower: PropPolarityMismatchObject::Type(
+                            flow_js_utils::type_reference_with_reason_for_error(
+                                t1,
+                                reason_of_t(t1).dupe(),
+                            ),
+                        ),
+                        upper: PropPolarityMismatchObject::Type(
+                            flow_js_utils::type_reference_with_reason_for_error(
+                                t2,
+                                reason_of_t(t2).dupe(),
+                            ),
+                        ),
                         props: Vec1::new((Some(x.dupe()), (polarity1, polarity2))),
                         use_op,
                     })),
@@ -832,8 +843,8 @@ pub(super) fn unify_prop_with_dict<'cx>(
                 trace,
                 use_op,
                 x,
-                prop_obj_reason,
-                dict_reason,
+                prop_obj,
+                dict_obj,
                 p,
                 &p2,
                 strictness_kind,

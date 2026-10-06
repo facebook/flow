@@ -31,7 +31,9 @@ use flow_typing_errors::error_message::EAbstractClassData;
 use flow_typing_errors::error_message::EOverrideData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types::AbstractErrorKind;
+use flow_typing_errors::intermediate_error_types::NamedReferenceData;
 use flow_typing_errors::intermediate_error_types::OverrideErrorKind;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::obj_type;
@@ -1498,11 +1500,8 @@ fn check_methods<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
+    self_: &Type,
 ) {
-    let self_ = match &x.super_ {
-        class_types::Super::Interface(_) => thistype(cx, x),
-        class_types::Super::Class(class_super) => class_super.this_t.dupe(),
-    };
     let skip_in_ts = files::has_ts_ext(cx.file());
     let check_method =
         |msig: &func_class_sig_types::func::Func<C>, static_: bool, name: &str, id_loc: ALoc| {
@@ -1665,6 +1664,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
     cx: &Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
+    self_: &Type,
 ) {
     let reason = x.instance.reason.dupe();
     // NOTE: SuperT ignores the constructor anyway, so we don't pass it here.
@@ -1690,6 +1690,20 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
         }
         merged
     };
+    let reference = match &x.class_name {
+        Some(name) => DerivedReference::Named(name.dupe()),
+        None => DerivedReference::Unnamed(match &x.super_ {
+            class_types::Super::Class(class_super) => class_super.this_tparam.bound.dupe(),
+            class_types::Super::Interface(_) => self_.dupe(),
+        }),
+    };
+    let polarity_object = match &reference {
+        DerivedReference::Named(name) => PropPolarityMismatchObject::Class(NamedReferenceData {
+            loc: reason.loc().dupe(),
+            name: name.dupe(),
+        }),
+        DerivedReference::Unnamed(t) => PropPolarityMismatchObject::Type(t),
+    };
     for (x_name, p1) in &own {
         if let Some(p2) = proto.get(x_name) {
             let prop = x_name.dupe();
@@ -1703,8 +1717,16 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
             let propref = type_util::mk_named_prop(reason.dupe(), false, prop);
             let pt1 = property::property_type(p1);
             let pt2 = property::property_type(p2);
-            flow_js::FlowJs::flow_p(cx, use_op, &reason, &reason, &propref, &pt1, &pt2)
-                .expect("flow_p should not fail outside speculation");
+            flow_js::FlowJs::flow_p(
+                cx,
+                use_op,
+                polarity_object.dupe(),
+                polarity_object.dupe(),
+                &propref,
+                &pt1,
+                &pt2,
+            )
+            .expect("flow_p should not fail outside speculation");
         }
     }
     let (super_, _) = supertype(cx, x);
@@ -1734,6 +1756,7 @@ fn check_super<'a, C: crate::func_params_intf::Config>(
                 proto: proto_name_map,
                 static_: static_name_map,
                 strictness_kind: cx.type_strictness_kind(),
+                reference,
             },
         }))),
     );
@@ -2432,9 +2455,13 @@ pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
-    check_super(cx, def_reason.dupe(), x);
+    let self_ = match &x.super_ {
+        class_types::Super::Interface(_) => thistype(cx, x),
+        class_types::Super::Class(class_super) => class_super.this_t.dupe(),
+    };
+    check_super(cx, def_reason.dupe(), x, &self_);
     check_implements(cx, def_reason.dupe(), x);
-    check_methods(cx, def_reason.dupe(), x);
+    check_methods(cx, def_reason.dupe(), x, &self_);
     check_abstract_obligations(cx, def_reason.dupe(), x);
     check_override_obligations(cx, def_reason, x);
 }

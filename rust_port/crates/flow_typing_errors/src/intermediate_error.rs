@@ -148,6 +148,7 @@ use super::intermediate_error_types::MessageTupleNonIntegerIndexData;
 use super::intermediate_error_types::MessageTypeReferenceData;
 use super::intermediate_error_types::MessageVariableOnlyAssignedByNullData;
 use super::intermediate_error_types::NamedReferenceData;
+use super::intermediate_error_types::PropPolarityMismatchObject;
 use super::intermediate_error_types::RootMessage;
 use super::intermediate_error_types::StrictComparisonInfo;
 use super::intermediate_error_types::SubComponentOfInvariantSubtypingError;
@@ -3115,8 +3116,9 @@ where
     };
 
     let mk_prop_polarity_mismatch_error =
-        |lower: VirtualReason<L>,
-         upper: VirtualReason<L>,
+        |loc: L,
+         lower: PropPolarityMismatchObject<MessageTypeReferenceData<L>, L>,
+         upper: PropPolarityMismatchObject<MessageTypeReferenceData<L>, L>,
          props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
          use_op: VirtualUseOp<L>|
          -> IntermediateError<L> {
@@ -3144,13 +3146,13 @@ where
                 _ => use_op,
             };
 
-            mk_use_op_error_reason(
-                &lower,
+            mk_use_op_error(
+                loc_of_aloc(&loc),
                 use_op,
                 None,
                 Message::MessagePropPolarityMismatch(Box::new(MessagePropPolarityMismatchData {
-                    lower: lower.dupe(),
-                    upper: upper.dupe(),
+                    lower,
+                    upper,
                     props,
                 })),
             )
@@ -3858,14 +3860,16 @@ where
         (
             None,
             FriendlyMessageRecipe::PropPolarityMismatch(box PropPolarityMismatchData {
-                reason_lower,
-                reason_upper,
+                loc,
+                lower,
+                upper,
                 props,
                 use_op,
             }),
         ) => mk_prop_polarity_mismatch_error(
-            reason_lower,
-            reason_upper,
+            loc,
+            lower,
+            upper,
             Vec1::try_from_vec(
                 props
                     .iter()
@@ -8425,6 +8429,15 @@ where
             }) => {
                 use super::error_message::mk_prop_message;
                 use super::error_message::polarity_explanation;
+                let reference = |object: &PropPolarityMismatchObject<
+                    MessageTypeReferenceData<L>,
+                    L,
+                >| match object {
+                    PropPolarityMismatchObject::Type(reference) => {
+                        ref_of_ty_or_desc(&reference.loc, &reference.desc)
+                    }
+                    PropPolarityMismatchObject::Class(class) => render_named_reference(class),
+                };
                 let (first_prop, rest_props) = props.clone().split_off_first();
                 let all_props: Vec<_> = std::iter::once(first_prop).chain(rest_props).collect();
                 let mut sorted_props = all_props.clone();
@@ -8443,11 +8456,11 @@ where
                                 text(" is "),
                                 text(expected),
                                 text(" in "),
-                                ref_(lower),
+                                reference(lower),
                                 text(" but "),
                                 text(actual),
                                 text(" in "),
-                                ref_(upper),
+                                reference(upper),
                             ]);
                             friendly::Message(f)
                         })
@@ -8468,11 +8481,11 @@ where
                                 text(" is "),
                                 text(expected),
                                 text(" in "),
-                                ref_(lower),
+                                reference(lower),
                                 text(" but "),
                                 text(actual),
                                 text(" in "),
-                                ref_(upper),
+                                reference(upper),
                             ]);
                             friendly::Message(f)
                         })

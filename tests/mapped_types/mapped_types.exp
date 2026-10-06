@@ -1274,8 +1274,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:78:3
 
-Cannot cast `semi` to object type because property `foo` is read-only in `SemiHomomorphic` [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `semi` to object type because property `foo` is read-only in object type [1] but writable in
+`{foo: number}` [2]. [incompatible-variance]
 
    import.js:78:3
    78|   semi as {foo: number}; // ERROR
@@ -1294,7 +1294,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `semi` to union type because: [incompatible-type]
  - Either in property `foo`: `number` [1] is incompatible with `string` [2].
- - Or property `foo` is read-only in object type [3] but writable in object type [4].
+ - Or property `foo` is read-only in object type [3] but writable in `{foo: number}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1322,7 +1322,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `semi` to union type because: [incompatible-type]
  - Either in property `foo`: `string` [1] is incompatible with `number` [2].
- - Or property `foo` is read-only in object type [3] but writable in object type [4].
+ - Or property `foo` is read-only in object type [3] but writable in `{foo: string}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -1351,7 +1351,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `homomorphic` to union type because: [incompatible-type]
  - Either property `bar` is extra in object type [1] but missing in `{foo: number}` [2]. Exact objects do not accept
    extra props.
- - Or property `bar` is read-only in object type [1] but writable in object type [3].
+ - Or property `bar` is read-only in object type [1] but writable in `{bar: number}` [3].
 
    import.js:89:3
    89|   homomorphic as {foo: number} | {bar: number}; // ERROR 2x
@@ -1372,7 +1372,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:89:3
 
 Cannot cast `homomorphic` to union type because: [incompatible-type]
- - Either property `foo` is read-only in object type [1] but writable in object type [2].
+ - Either property `foo` is read-only in object type [1] but writable in `{foo: number}` [2].
  - Or property `foo` is extra in object type [1] but missing in `{bar: number}` [3]. Exact objects do not accept extra
    props.
 
@@ -1394,8 +1394,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- instancet.js:9:3
 
-Cannot cast `i` to interface type because property `foo` is read-only in object type [1] but writable in interface
-type [2]. [incompatible-variance]
+Cannot cast `i` to interface type because property `foo` is read-only in object type [1] but writable in
+`interface {foo: number}` [2]. [incompatible-variance]
 
    instancet.js:9:3
    9|   i as interface {foo: number}; // ERROR
@@ -1432,7 +1432,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ instancet.js:21:3
 
 Cannot cast `i` to interface type because an index signature declaring the expected key / value type is read-only in
-object type [1] but writable in interface type [2]. [incompatible-variance]
+object type [1] but writable in `interface {readonly foo: number; [string]: boolean}` [2]. [incompatible-variance]
 
    instancet.js:21:3
    21|   i as interface {readonly foo: number, [string]: boolean}; // ERROR
@@ -1449,8 +1449,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:33:3
 
-Cannot cast `inst` to interface type because property `foo` is read-only in object type [1] but writable in interface
-type [2]. [incompatible-variance]
+Cannot cast `inst` to interface type because property `foo` is read-only in object type [1] but writable in
+`interface {foo: number}` [2]. [incompatible-variance]
 
    instancet.js:33:3
    33|   inst as interface {foo: number}; // ERROR
@@ -1481,8 +1481,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ instancet.js:41:3
 
-Cannot cast `c` to interface type because property `bar` is read-only in mapped type [1] but writable in interface
-type [2]. [incompatible-variance]
+Cannot cast `c` to interface type because property `bar` is read-only in mapped type [1] but writable in
+`{bar: number, ...}` [2]. [incompatible-variance]
 
    instancet.js:41:3
    41|   c as interface {bar: number}; // ERROR

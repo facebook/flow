@@ -185,6 +185,7 @@ use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceKind;
 use flow_typing_errors::intermediate_error_types::FunctionReferenceKind;
 use flow_typing_errors::intermediate_error_types::ObjKind as IntermediateObjKind;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_errors::intermediate_error_types::ValueAsTypeReference;
 use flow_typing_type::type_;
 use flow_typing_type::type_::AnySource;
@@ -992,7 +993,7 @@ fn dump_use_t_<CX>(
                     props
                 )
             }
-            type_::LookupAction::SuperProp(box (_, p, _)) => {
+            type_::LookupAction::SuperProp(box (_, p, _, _)) => {
                 format!("Super {}", dump_prop_(depth - 1, tvars, cx, p))
             }
             type_::LookupAction::MatchProp(box type_::LookupActionMatchPropData {
@@ -2388,11 +2389,17 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData {
-            lreason,
-            ureason,
+            lower,
+            upper,
             props,
             use_op: _,
         }) => {
+            let dump_object = |object: &PropPolarityMismatchObject<_, _>| match object {
+                PropPolarityMismatchObject::Type(t) => dump_error_type_reference(cx, t),
+                PropPolarityMismatchObject::Class(class) => {
+                    format!("{} `{}`", string_of_aloc(None, &class.loc), class.name)
+                }
+            };
             let props_str: Vec<String> = props
                 .iter()
                 .map(|(x, _)| match x {
@@ -2402,8 +2409,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 .collect();
             format!(
                 "EPropPolarityMismatch (({}, {}), {}, _, _)",
-                dump_reason(cx, lreason),
-                dump_reason(cx, ureason),
+                dump_object(lower),
+                dump_object(upper),
                 props_str.join(", ")
             )
         }

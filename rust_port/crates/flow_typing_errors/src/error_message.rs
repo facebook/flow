@@ -146,6 +146,7 @@ use crate::intermediate_error_types::NamedReferenceData;
 use crate::intermediate_error_types::ObjKind;
 use crate::intermediate_error_types::OverrideErrorKind;
 use crate::intermediate_error_types::PrimitiveKind;
+use crate::intermediate_error_types::PropPolarityMismatchObject;
 use crate::intermediate_error_types::RecordBannedTypeUtilOp;
 use crate::intermediate_error_types::RecordDeclarationInvalidSyntax;
 use crate::intermediate_error_types::StrictComparisonInfo;
@@ -1476,8 +1477,8 @@ pub struct EPrivateLookupFailedData<L: Dupe + PartialOrd + Ord + PartialEq + Eq>
     serde::Deserialize
 )]
 pub struct EPropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub lreason: VirtualReason<L>,
-    pub ureason: VirtualReason<L>,
+    pub lower: PropPolarityMismatchObject<ErrorTypeReferenceWithLocData<L>, L>,
+    pub upper: PropPolarityMismatchObject<ErrorTypeReferenceWithLocData<L>, L>,
     pub props: Vec1<(Option<Name>, (Polarity, Polarity))>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -4760,16 +4761,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EPropPolarityMismatch(box EPropPolarityMismatchData {
-                lreason,
-                ureason,
+                lower,
+                upper,
                 props,
                 use_op,
-            }) => EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
-                lreason: map_reason(lreason),
-                ureason: map_reason(ureason),
-                props,
-                use_op: map_use_op(use_op),
-            })),
+            }) => {
+                let map_object = |object| match object {
+                    PropPolarityMismatchObject::Type(t) => {
+                        PropPolarityMismatchObject::Type(map_error_type_ref_with_reason(t))
+                    }
+                    PropPolarityMismatchObject::Class(NamedReferenceData { loc, name }) => {
+                        PropPolarityMismatchObject::Class(NamedReferenceData { loc: f(loc), name })
+                    }
+                };
+                EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
+                    lower: map_object(lower),
+                    upper: map_object(upper),
+                    props,
+                    use_op: map_use_op(use_op),
+                }))
+            }
 
             EBuiltinNameLookupFailed(box EBuiltinNameLookupFailedData { loc, name }) => {
                 EBuiltinNameLookupFailed(Box::new(EBuiltinNameLookupFailedData {
@@ -7773,6 +7784,26 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 suggestion,
             })),
 
+            EPropPolarityMismatch(box EPropPolarityMismatchData {
+                lower,
+                upper,
+                props,
+                use_op,
+            }) => {
+                let map_object = |object| match object {
+                    PropPolarityMismatchObject::Type(t) => {
+                        PropPolarityMismatchObject::Type(map_error_type_ref_with_reason(t))
+                    }
+                    object @ PropPolarityMismatchObject::Class(_) => object,
+                };
+                EPropPolarityMismatch(Box::new(EPropPolarityMismatchData {
+                    lower: map_object(lower),
+                    upper: map_object(upper),
+                    props,
+                    use_op: map_use_op(&f, use_op),
+                }))
+            }
+
             EPropsNotFoundInSubtyping(box EPropsNotFoundInSubtypingData {
                 prop_names,
                 lower,
@@ -8989,8 +9020,9 @@ pub struct IncompatibleTypesWithExampleData<L: Dupe + PartialOrd + Ord + Partial
     serde::Deserialize
 )]
 pub struct PropPolarityMismatchData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason_lower: VirtualReason<L>,
-    pub reason_upper: VirtualReason<L>,
+    pub loc: L,
+    pub lower: PropPolarityMismatchObject<MessageTypeReferenceData<L>, L>,
+    pub upper: PropPolarityMismatchObject<MessageTypeReferenceData<L>, L>,
     pub props: Vec1<(Option<FlowSmolStr>, Polarity, Polarity)>,
     pub use_op: VirtualUseOp<L>,
 }
@@ -9374,23 +9406,44 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             ErrorMessage::EPropPolarityMismatch(box EPropPolarityMismatchData {
-                lreason,
-                ureason,
+                lower,
+                upper,
                 props,
                 use_op,
-            }) => PropPolarityMismatch(Box::new(PropPolarityMismatchData {
-                reason_lower: lreason,
-                reason_upper: ureason,
-                props: props
-                    .iter()
-                    .map(|(name, (lower, upper))| {
-                        (name.as_ref().map(|n| n.display_smol_str()), *lower, *upper)
-                    })
-                    .collect::<Vec<_>>()
-                    .try_into()
-                    .expect("props is non-empty Vec1"),
-                use_op,
-            })),
+            }) => {
+                let loc = match &lower {
+                    PropPolarityMismatchObject::Type(t) => t.loc.dupe(),
+                    PropPolarityMismatchObject::Class(class) => class.loc.dupe(),
+                };
+                let message_object = |object: PropPolarityMismatchObject<
+                    ErrorTypeReferenceWithLocData<L>,
+                    L,
+                >| match object {
+                    PropPolarityMismatchObject::Type(t) => {
+                        PropPolarityMismatchObject::Type(MessageTypeReferenceData {
+                            loc: t.reference_loc,
+                            desc: expect_type_desc(t.type_desc),
+                        })
+                    }
+                    PropPolarityMismatchObject::Class(class) => {
+                        PropPolarityMismatchObject::Class(class)
+                    }
+                };
+                PropPolarityMismatch(Box::new(PropPolarityMismatchData {
+                    loc,
+                    lower: message_object(lower),
+                    upper: message_object(upper),
+                    props: props
+                        .iter()
+                        .map(|(name, (lower, upper))| {
+                            (name.as_ref().map(|n| n.display_smol_str()), *lower, *upper)
+                        })
+                        .collect::<Vec<_>>()
+                        .try_into()
+                        .expect("props is non-empty Vec1"),
+                    use_op,
+                }))
+            }
 
             ErrorMessage::EUnionSpeculationFailed(box EUnionSpeculationFailedData {
                 use_op,

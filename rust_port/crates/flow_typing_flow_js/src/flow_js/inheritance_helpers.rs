@@ -12,8 +12,10 @@ use std::sync::Arc;
 
 use flow_typing_errors::error_message::EConstructSignatureMissingInSubtypingData;
 use flow_typing_errors::error_message::EPropNotFoundInSubtypingData;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_type::type_::DerivedReference;
 use flow_typing_type::type_::LookupTData;
 use flow_typing_type::type_::NonstrictReturningData;
 use flow_typing_type::type_::PropertyCompatibilityData;
@@ -261,12 +263,14 @@ pub(super) fn inst_structural_subtype<'cx>(
             env,
             trace,
             use_op: use_op.dupe(),
-            lreason: lreason.dupe(),
-            ureason: reason_struct.dupe(),
+            lower: lower.dupe(),
+            upper: upper.dupe(),
             strictness_kind,
             lit: false,
             lower_upper_subtyping_obj_ts: None,
         };
+        let polarity_lower = PropPolarityMismatchObject::Type(lower);
+        let polarity_upper = PropPolarityMismatchObject::Type(upper);
         let mut lowers = vec![lower.dupe()];
         let mut seen = BTreeSet::new();
         let mut lower_indexer_checked = false;
@@ -300,8 +304,8 @@ pub(super) fn inst_structural_subtype<'cx>(
                                 Arc::new(use_op.dupe()),
                             ),
                             false,
-                            lreason,
-                            reason_struct,
+                            polarity_lower.dupe(),
+                            polarity_upper.dupe(),
                             &PropRef::Computed(ukey.dupe()),
                             &PropertyType::OrdinaryField {
                                 type_: lkey.dupe(),
@@ -327,8 +331,8 @@ pub(super) fn inst_structural_subtype<'cx>(
                                 Arc::new(use_op.dupe()),
                             ),
                             true,
-                            lreason,
-                            reason_struct,
+                            polarity_lower.dupe(),
+                            polarity_upper.dupe(),
                             &PropRef::Computed(uvalue.dupe()),
                             &PropertyType::OrdinaryField {
                                 type_: lvalue.dupe(),
@@ -640,6 +644,7 @@ pub(super) fn check_super<'cx>(
     use_op: UseOp,
     lreason: &Reason,
     ureason: &Reason,
+    reference: &DerivedReference,
     t: &Type,
     x: &Name,
     p: &Property,
@@ -658,7 +663,12 @@ pub(super) fn check_super<'cx>(
     let reason_prop = lreason
         .dupe()
         .replace_desc(VirtualReasonDesc::RProperty(Some(x.dupe())));
-    let action = LookupAction::SuperProp(Box::new((use_op.dupe(), p.dupe(), strictness_kind)));
+    let action = LookupAction::SuperProp(Box::new((
+        use_op.dupe(),
+        p.dupe(),
+        strictness_kind,
+        reference.dupe(),
+    )));
     let t = if flow_js_utils::is_munged_prop_name(cx, x) {
         // munge names beginning with single _
         Type::new(TypeInner::ObjProtoT(reason_of_t(t).dupe()))

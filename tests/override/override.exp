@@ -176,6 +176,95 @@ Member `foo` can't have an `override` modifier because its containing class `Lon
                  ^^^
 
 
+Error ----------------------------------------------------------------------------------------- polarity_mismatch.js:7:7
+
+Cannot extend `A` [1] with `Named` because property `p` is read-only in `Named` [2] but writable in `A` [1].
+[incompatible-variance]
+
+   polarity_mismatch.js:7:7
+   7| class Named extends A {
+            ^^^^^ [2]
+
+References:
+   polarity_mismatch.js:7:21
+   7| class Named extends A {
+                          ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- polarity_mismatch.js:11:19
+
+Cannot extend `A` [1] with `<<anonymous class>>` because property `p` is read-only in `<<anonymous class>>` [2] but
+writable in `A` [1]. [incompatible-variance]
+
+   polarity_mismatch.js:11:19
+                         v----------------
+   11| const Anonymous = class extends A {
+   12|   readonly p: string = ''; // ERROR: read-only in `<<anonymous class>>`
+   13| };
+       ^ [2]
+
+References:
+   polarity_mismatch.js:11:33
+   11| const Anonymous = class extends A {
+                                       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------- polarity_mismatch.js:15:15
+
+Cannot extend `A` [1] with interface type because property `p` is read-only in
+`interface extends A {readonly p: string}` [2] but writable in `A` [1]. [incompatible-variance]
+
+   polarity_mismatch.js:15:15
+   15| type Inline = interface extends A { readonly p: string }; // ERROR: read-only in the inline interface's type
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   polarity_mismatch.js:15:33
+   15| type Inline = interface extends A { readonly p: string }; // ERROR: read-only in the inline interface's type
+                                       ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- polarity_mismatch.js:21:7
+
+Cannot extend `Generic` [1] with `FromGeneric` because property `p` is read-only in `FromGeneric` [2] but writable in
+`Generic<T>` [1]. [incompatible-variance]
+
+   polarity_mismatch.js:21:7
+   21| class FromGeneric<T> extends Generic<T> {
+             ^^^^^^^^^^^ [2]
+
+References:
+   polarity_mismatch.js:21:30
+   21| class FromGeneric<T> extends Generic<T> {
+                                    ^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- polarity_mismatch.js:26:12
+
+Cannot shadow proto property `q` [1] because property `q` is read-only in `OwnProto` [2] but write-only in
+`OwnProto` [2]. [incompatible-variance]
+
+   polarity_mismatch.js:26:12
+   26|   readonly q: string = ''; // ERROR: read-only in `OwnProto` but write-only in `OwnProto`
+                  ^
+
+References:
+   polarity_mismatch.js:27:7
+   27|   set q(x: string) {} // ERROR: duplicate member
+             ^ [1]
+   polarity_mismatch.js:25:7
+   25| class OwnProto {
+             ^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- polarity_mismatch.js:27:7
+
+`q` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
+
+   27|   set q(x: string) {} // ERROR: duplicate member
+             ^
+
+
 Error --------------------------------------------------------------------------------------- private_collision.js:11:12
 
 Member `#foo` can't have an `override` modifier because it isn't declared in the base class `Base`. [invalid-override]
@@ -287,4 +376,4 @@ Member `i` can't have an `override` modifier because it isn't declared in the ba
 
 
 
-Found 28 errors
+Found 34 errors

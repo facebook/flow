@@ -252,8 +252,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:66:3
 
-Cannot cast `arr6` to tuple type because in index `0`: property `f` is read-only in const object literal [1] but
-writable in object type [2]. [incompatible-variance]
+Cannot cast `arr6` to tuple type because in index `0`: property `f` is read-only in `{readonly f: 1}` [1] but writable
+in `{f: 1}` [2]. [incompatible-variance]
 
    array.js:66:3
    66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
@@ -427,8 +427,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:27:3
 
-Cannot cast `arr6` to `Readonly` because in index `0`: property `f` is read-only in const object literal [1] but
-writable in object type [2]. [incompatible-variance]
+Cannot cast `arr6` to `Readonly` because in index `0`: property `f` is read-only in `{readonly f: 1}` [1] but writable
+in `{f: 1}` [2]. [incompatible-variance]
 
    import-array.js:27:3
    27|   arr6 as readonly [{f: 1}]; // error cast to non-readonly prop
@@ -505,8 +505,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:10:3
 
-Cannot cast `obj1` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj1` to object type because property `f` is read-only in `{readonly f: 1}` [1] but writable in
+`{f: 1}` [2]. [incompatible-variance]
 
    import-object.js:10:3
    10|   obj1 as {f: 1}; // error cast to non-readonly
@@ -552,8 +552,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:31:3
 
-Cannot cast `obj3` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj3` to object type because property `f` is read-only in `{readonly f: 1}` [1] but writable in
+`{f: 1}` [2]. [incompatible-variance]
 
    import-object.js:31:3
    31|   obj3 as {f: 1}; // error cast to non-readonly
@@ -599,8 +599,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:43:3
 
-Cannot cast `obj4` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj4` to object type because property `f` is read-only in `{readonly f: number}` [1] but writable in
+`{f: number}` [2]. [incompatible-variance]
 
    import-object.js:43:3
    43|   obj4 as {f: number}; // error cast to non-readonly
@@ -632,8 +632,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:55:3
 
-Cannot cast `obj5` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj5` to object type because property `f` is read-only in `{readonly f: number}` [1] but writable in
+`{f: number}` [2]. [incompatible-variance]
 
    import-object.js:55:3
    55|   obj5 as {f: number}; // error cast to non-readonly
@@ -684,7 +684,7 @@ References:
 Error -------------------------------------------------------------------------------------------- import-object.js:65:3
 
 Cannot cast `obj6` to object type because an index signature declaring the expected key / value type is read-only in
-const object literal [1] but writable in object type [2]. [incompatible-variance]
+`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    import-object.js:65:3
    65|   obj6 as {[string]: number}; // error readonly ~> non-readonly
@@ -701,8 +701,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:74:3
 
-Cannot cast `obj7` to object type because property `m` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj7` to object type because property `m` is read-only in `{m(): void}` [1] but writable in
+`{m: () => void}` [2]. [incompatible-variance]
 
    import-object.js:74:3
    74|   obj7 as {m: () => void}; // error m is readonly in obj7
@@ -719,8 +719,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:83:3
 
-Cannot cast `obj8` to object type because in property `f`: property `g` is read-only in const object literal [1] but
-writable in object type [2]. [incompatible-variance]
+Cannot cast `obj8` to object type because in property `f`: property `g` is read-only in `{readonly g: 1}` [1] but
+writable in `{g: 1}` [2]. [incompatible-variance]
 
    import-object.js:83:3
    83|   obj8 as {readonly f: {g: 1}}; // error cast to non-readonly g
@@ -1113,8 +1113,8 @@ initialized with primitive literals. [unsupported-syntax]
 
 Error --------------------------------------------------------------------------------------------------- object.js:23:3
 
-Cannot cast `obj1` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj1` to object type because property `f` is read-only in `{readonly f: 1}` [1] but writable in
+`{f: 1}` [2]. [incompatible-variance]
 
    object.js:23:3
    23|   obj1 as {f: 1}; // error cast to non-readonly
@@ -1160,8 +1160,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:44:3
 
-Cannot cast `obj3` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj3` to object type because property `f` is read-only in `{readonly f: 1}` [1] but writable in
+`{f: 1}` [2]. [incompatible-variance]
 
    object.js:44:3
    44|   obj3 as {f: 1}; // error cast to non-readonly
@@ -1207,8 +1207,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:56:3
 
-Cannot cast `obj4` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj4` to object type because property `f` is read-only in `{readonly f: number}` [1] but writable in
+`{f: number}` [2]. [incompatible-variance]
 
    object.js:56:3
    56|   obj4 as {f: number}; // error cast to non-readonly
@@ -1240,8 +1240,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:68:3
 
-Cannot cast `obj5` to object type because property `f` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj5` to object type because property `f` is read-only in `{readonly f: number}` [1] but writable in
+`{f: number}` [2]. [incompatible-variance]
 
    object.js:68:3
    68|   obj5 as {f: number}; // error cast to non-readonly
@@ -1292,7 +1292,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- object.js:78:3
 
 Cannot cast `obj6` to object type because an index signature declaring the expected key / value type is read-only in
-const object literal [1] but writable in object type [2]. [incompatible-variance]
+`{readonly [string]: number}` [1] but writable in `{[string]: number}` [2]. [incompatible-variance]
 
    object.js:78:3
    78|   obj6 as {[string]: number}; // error readonly ~> non-readonly
@@ -1309,8 +1309,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:87:3
 
-Cannot cast `obj7` to object type because property `m` is read-only in const object literal [1] but writable in object
-type [2]. [incompatible-variance]
+Cannot cast `obj7` to object type because property `m` is read-only in `{m(): void}` [1] but writable in
+`{m: () => void}` [2]. [incompatible-variance]
 
    object.js:87:3
    87|   obj7 as {m: () => void}; // error m is readonly in obj7
@@ -1327,8 +1327,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:96:3
 
-Cannot cast `obj8` to object type because in property `f`: property `g` is read-only in const object literal [1] but
-writable in object type [2]. [incompatible-variance]
+Cannot cast `obj8` to object type because in property `f`: property `g` is read-only in `{readonly g: 1}` [1] but
+writable in `{g: 1}` [2]. [incompatible-variance]
 
    object.js:96:3
    96|   obj8 as {readonly f: {g: 1}}; // error cast to non-readonly g

@@ -5180,6 +5180,15 @@ pub struct DerivedType {
     pub proto: FlowOrdMap<Name, Property>,
     pub static_: FlowOrdMap<Name, Property>,
     pub strictness_kind: TypeStrictnessKind,
+    pub reference: DerivedReference,
+}
+
+/// How errors refer to the class or interface whose members are checked.
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DerivedReference {
+    Named(FlowSmolStr),
+    /// An anonymous class or an inline interface, by its instance type.
+    Unnamed(Type),
 }
 
 /// LookupT is a general-purpose tool for traversing prototype chains in search
@@ -5219,8 +5228,8 @@ pub enum LookupKind {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IndexerFallbackData {
     pub property: Property,
-    /// The instance the indexer was declared on, reported as the property's owner.
-    pub reason_obj: Reason,
+    /// The instance the indexer was declared on.
+    pub obj: Type,
     /// TypeScript resolves named access through a string indexer silently, so a
     /// declared property is genuinely not required whenever either end of the access is
     /// TypeScript. Pure Flow code still reports the property as missing and only reuses
@@ -5272,7 +5281,7 @@ pub enum LookupAction {
     WriteProp(Box<WritePropData>),
     LookupPropForTvarPopulation { polarity: Polarity, tout: Type },
     LookupPropsForSubtyping(Box<LookupPropsForSubtypingData>),
-    SuperProp(Box<(UseOp, Property, TypeStrictnessKind)>),
+    SuperProp(Box<(UseOp, Property, TypeStrictnessKind, DerivedReference)>),
     MatchProp(Box<LookupActionMatchPropData>),
 }
 

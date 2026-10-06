@@ -93,8 +93,8 @@ Found 2 errors
 === block 5 ===
 Error ------------------------------------------------------------------------------ -:5:9
 
-Cannot call `setKind` with `e` bound to `o` because property `kind` is read-only in const object literal [1] but
-writable in object type [2]. [incompatible-variance]
+Cannot call `setKind` with `e` bound to `o` because property `kind` is read-only in `{readonly kind: "click"}` [1] but
+writable in `{kind: "click"}` [2]. [incompatible-variance]
 
    -:5:9
    5| setKind(e); // Error — `kind` is read-only on `e` but writable on the parameter

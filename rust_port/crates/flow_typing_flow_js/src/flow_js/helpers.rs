@@ -16,6 +16,8 @@ use flow_typing_errors::error_message::EPropNotReadableData;
 use flow_typing_errors::error_message::EPropNotWritableData;
 use flow_typing_errors::error_message::ETooFewTypeArgsData;
 use flow_typing_errors::error_message::ETooManyTypeArgsData;
+use flow_typing_errors::intermediate_error_types::NamedReferenceData;
+use flow_typing_errors::intermediate_error_types::PropPolarityMismatchObject;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_type::type_::CallMData;
@@ -23,6 +25,7 @@ use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ChainMData;
 use flow_typing_type::type_::ClassImplementsCheckData;
 use flow_typing_type::type_::ConcretizeTData;
+use flow_typing_type::type_::DerivedReference;
 use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::ImplicitInstantiationTvarData;
@@ -138,7 +141,7 @@ pub(super) fn perform_lookup_action<'cx>(
     p: &PropertyType,
     prop: Option<&Property>,
     target_kind: PropertySource,
-    lreason: &Reason,
+    l: &Type,
     ureason: &Reason,
     action: &LookupAction,
     up: Option<&Property>,
@@ -151,8 +154,8 @@ pub(super) fn perform_lookup_action<'cx>(
                 Some(trace),
                 unknown_use(),
                 true,
-                lreason,
-                ureason,
+                PropPolarityMismatchObject::Type(l),
+                PropPolarityMismatchObject::Type(tout),
                 propref,
                 p,
                 &PropertyType::OrdinaryField {
@@ -188,16 +191,25 @@ pub(super) fn perform_lookup_action<'cx>(
                     prop.map(|lp| (lp, up)),
                     *strictness_kind,
                     true,
-                    lreason,
-                    ureason,
+                    PropPolarityMismatchObject::Type(l),
+                    PropPolarityMismatchObject::Type(upper),
                     propref,
                     p,
                     &up_type,
                 )?;
             }
         }
-        LookupAction::SuperProp(box (use_op, lp, strictness_kind)) => {
+        LookupAction::SuperProp(box (use_op, lp, strictness_kind, derived)) => {
             let lp_type = property::property_type(lp);
+            let derived = match derived {
+                DerivedReference::Named(name) => {
+                    PropPolarityMismatchObject::Class(NamedReferenceData {
+                        loc: ureason.loc().dupe(),
+                        name: name.dupe(),
+                    })
+                }
+                DerivedReference::Unnamed(t) => PropPolarityMismatchObject::Type(t),
+            };
             subtyping_kit::rec_flow_p_with_lower_upper_property(
                 cx,
                 env,
@@ -206,8 +218,8 @@ pub(super) fn perform_lookup_action<'cx>(
                 prop.map(|up| (lp, up)),
                 *strictness_kind,
                 true,
-                ureason,
-                lreason,
+                derived,
+                PropPolarityMismatchObject::Type(l),
                 propref,
                 &lp_type,
                 p,
@@ -2413,13 +2425,13 @@ pub(super) fn flow_p<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     use_op: UseOp,
-    lreason: &Reason,
-    ureason: &Reason,
+    lower: PropPolarityMismatchObject<&Type, ALoc>,
+    upper: PropPolarityMismatchObject<&Type, ALoc>,
     propref: &PropRef,
     (prop1, prop2): (&PropertyType, &PropertyType),
 ) -> Result<(), FlowJsException> {
     subtyping_kit::rec_flow_p(
-        cx, env, None, use_op, true, lreason, ureason, propref, prop1, prop2,
+        cx, env, None, use_op, true, lower, upper, propref, prop1, prop2,
     )
 }
 
