@@ -9910,7 +9910,7 @@ where
                 friendly::Message(msg)
             }
             MessageMatchNonExplicitEnumCheck(box MessageMatchNonExplicitEnumCheckData {
-                wildcard_reason,
+                wildcard_loc,
                 unchecked_members,
             }) => {
                 let member_msgs: Vec<friendly::Message<Loc>> = unchecked_members
@@ -9926,7 +9926,7 @@ where
                 };
                 let mut msg = vec![
                     text("The "),
-                    ref_(wildcard_reason),
+                    hardcoded_string_desc_ref("match wildcard", wildcard_loc),
                     text(" does not check for missing enum "),
                     text(member_word),
                 ];

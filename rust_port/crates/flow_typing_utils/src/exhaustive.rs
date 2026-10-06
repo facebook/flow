@@ -2318,7 +2318,7 @@ pub fn analyze<'cx>(
                         ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
                             Box::new(MatchNonExplicitEnumCheckData {
                                 loc: match_loc.dupe(),
-                                wildcard_reason: wildcard_reason.dupe(),
+                                wildcard_loc: wildcard_reason.loc().dupe(),
                                 unchecked_members,
                             }),
                         )),

@@ -1875,7 +1875,7 @@ pub struct MessageMatchNonExhaustiveObjectPatternData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageMatchNonExplicitEnumCheckData<L: Dupe> {
-    pub wildcard_reason: VirtualReason<L>,
+    pub wildcard_loc: L,
     pub unchecked_members: Vec<FlowSmolStr>,
 }
 

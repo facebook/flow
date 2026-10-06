@@ -859,7 +859,7 @@ pub struct MatchNonExhaustiveObjectPatternData<L: Dupe + PartialOrd + Ord + Part
 )]
 pub struct MatchNonExplicitEnumCheckData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
-    pub wildcard_reason: VirtualReason<L>,
+    pub wildcard_loc: L,
     pub unchecked_members: Vec<FlowSmolStr>,
 }
 
@@ -6547,11 +6547,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     )),
                     MatchNonExplicitEnumCheck(box MatchNonExplicitEnumCheckData {
                         loc,
-                        wildcard_reason,
+                        wildcard_loc,
                         unchecked_members,
                     }) => MatchNonExplicitEnumCheck(Box::new(MatchNonExplicitEnumCheckData {
                         loc: f(loc),
-                        wildcard_reason: map_reason(wildcard_reason),
+                        wildcard_loc: f(wildcard_loc),
                         unchecked_members,
                     })),
                     MatchInvalidGuardedWildcard(loc) => MatchInvalidGuardedWildcard(f(loc)),
@@ -10166,13 +10166,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ))),
             ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck(
                 box MatchNonExplicitEnumCheckData {
-                    wildcard_reason,
+                    wildcard_loc,
                     unchecked_members,
                     ..
                 },
             )) => Normal(Message::MessageMatchNonExplicitEnumCheck(Box::new(
                 MessageMatchNonExplicitEnumCheckData {
-                    wildcard_reason,
+                    wildcard_loc,
                     unchecked_members: unchecked_members.to_vec(),
                 },
             ))),

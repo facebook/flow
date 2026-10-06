@@ -4379,13 +4379,13 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             }
             MatchErrorKind::MatchNonExplicitEnumCheck(box MatchNonExplicitEnumCheckData {
                 loc,
-                wildcard_reason,
+                wildcard_loc,
                 ..
             }) => {
                 format!(
                     "EMatchNonExplicitEnumCheck ({}) ({})",
                     string_of_aloc(None, loc),
-                    dump_reason(cx, wildcard_reason)
+                    string_of_aloc(None, wildcard_loc)
                 )
             }
             MatchErrorKind::MatchInvalidGuardedWildcard(loc) => {
