@@ -12790,7 +12790,7 @@ fn jsx_fragment<'a>(
             }
         }
     };
-    let (t, _) = react_jsx_desugar(
+    let (t, _, _) = react_jsx_desugar(
         cx,
         FlowSmolStr::new("React.Fragment"),
         expr_loc.dupe(),
@@ -12834,6 +12834,7 @@ fn jsx_title<'a>(
         targs,
         attributes,
         self_closing,
+        props: props_loc,
     } = opening_element;
     let loc = loc.dupe();
     let targs = targs.as_ref();
@@ -12851,11 +12852,12 @@ fn jsx_title<'a>(
     let facebook_fbt = cx.facebook_fbt();
     let jsx_mode = cx.jsx();
 
-    let (t, typed_name, typed_attributes, typed_children): (
+    let (t, typed_name, typed_attributes, typed_children, inferred_props): (
         Type,
         ast::jsx::Name<ALoc, (ALoc, Type)>,
         Vec<ast::jsx::OpeningAttribute<ALoc, (ALoc, Type)>>,
         (ALoc, Vec<ast::jsx::Child<ALoc, (ALoc, Type)>>),
+        Option<Type>,
     ) = match (name, &jsx_mode, (&facebook_fbs, &facebook_fbt)) {
         (ast::jsx::Name::Identifier(id), _, _)
             if (id.name == "fbs" && facebook_fbs.is_some())
@@ -12889,7 +12891,7 @@ fn jsx_title<'a>(
                 name: id_inner.name,
                 comments: id_inner.comments,
             });
-            (t, typed_name, typed_attrs, typed_children)
+            (t, typed_name, typed_attrs, typed_children, None)
         }
         (ast::jsx::Name::Identifier(id), _, _) => {
             let id_loc = id.loc.dupe();
@@ -12917,7 +12919,7 @@ fn jsx_title<'a>(
                     })
                     .collect();
                 let (_, typed_children) = collapse_children(cx, children)?;
-                (t, typed_name, typed_attrs, typed_children)
+                (t, typed_name, typed_attrs, typed_children, None)
             } else {
                 let reason = match jsx_mode {
                     flow_common::options::JsxMode::JsxReact => mk_reason(
@@ -12983,7 +12985,7 @@ fn jsx_title<'a>(
                     attributes,
                     children,
                 )?;
-                let (t, c_opt) = match cx.jsx() {
+                let (t, c_opt, inferred_props) = match cx.jsx() {
                     flow_common::options::JsxMode::JsxReact => react_jsx_desugar(
                         cx,
                         id_name.dupe(),
@@ -13015,7 +13017,7 @@ fn jsx_title<'a>(
                     name: id_name,
                     comments: id_comments,
                 });
-                (t, typed_name, typed_attrs, typed_children)
+                (t, typed_name, typed_attrs, typed_children, inferred_props)
             }
         }
         (ast::jsx::Name::MemberExpression(member), flow_common::options::JsxMode::JsxReact, _) => {
@@ -13052,7 +13054,7 @@ fn jsx_title<'a>(
                 attributes,
                 children,
             )?;
-            let (t, _) = react_jsx_desugar(
+            let (t, _, inferred_props) = react_jsx_desugar(
                 cx,
                 FlowSmolStr::new(el_name),
                 loc_element.dupe(),
@@ -13077,6 +13079,7 @@ fn jsx_title<'a>(
                 ast::jsx::Name::MemberExpression(typed_member),
                 typed_attrs,
                 typed_children,
+                inferred_props,
             )
         }
         (
@@ -13104,7 +13107,7 @@ fn jsx_title<'a>(
                 attributes,
                 children,
             )?;
-            (t, typed_name, typed_attrs, typed_children)
+            (t, typed_name, typed_attrs, typed_children, None)
         }
         // TODO? covers namespaced names as element names
         (ast::jsx::Name::NamespacedName(namespace), _, _) => {
@@ -13128,12 +13131,32 @@ fn jsx_title<'a>(
                 attributes,
                 children,
             )?;
-            (t, typed_name, typed_attrs, typed_children)
+            (t, typed_name, typed_attrs, typed_children, None)
         }
     };
     let typed_closing = closing_element.map(|closing| ast::jsx::Closing {
         loc: closing.loc.dupe(),
         name: jsx_match_closing_element(&typed_name, &closing.name),
+    });
+    // No props are inferred when React's createElement does not check the element (JSX pragmas,
+    // custom JSX typing, fbt, namespaced names, inference hooks), when the component is not yet
+    // resolved here, or when no branch of an intersection component matches. These elements fall
+    // back to the component's React config.
+    let props = inferred_props.unwrap_or_else(|| {
+        let component_t = match &typed_name {
+            ast::jsx::Name::Identifier(id) => &id.loc.1,
+            ast::jsx::Name::NamespacedName(ns) => &ns.name.loc.1,
+            ast::jsx::Name::MemberExpression(member) => &member.property.loc.1,
+        };
+        Type::new(TypeInner::EvalT {
+            type_: component_t.dupe(),
+            defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+                type_::unknown_use(),
+                mk_reason(VirtualReasonDesc::RReactProps, props_loc.dupe()),
+                Rc::new(Destructor::ReactElementConfigType),
+            )),
+            id: eval::Id::generate_id(),
+        })
     });
     let typed_opening = ast::jsx::Opening {
         loc: loc.dupe(),
@@ -13141,6 +13164,7 @@ fn jsx_title<'a>(
         targs: targs_tast_opt,
         self_closing: *self_closing,
         attributes: typed_attributes.into(),
+        props: (props_loc.dupe(), props),
     };
     Ok((t, typed_opening, typed_children, typed_closing))
 }
@@ -13652,7 +13676,7 @@ fn react_jsx_desugar<'a>(
     targs_opt: Option<Vec<Targ>>,
     props: Type,
     children: Vec<type_::UnresolvedParam>,
-) -> Result<(Type, Option<Type>), JobError> {
+) -> Result<(Type, Option<Type>, Option<Type>), JobError> {
     let return_hint = type_env::get_hint(cx, loc_element.dupe());
     let reason = mk_reason(
         VirtualReasonDesc::RReactElement {
@@ -13684,7 +13708,7 @@ fn react_jsx_desugar<'a>(
             ),
         }),
     )));
-    let (tout, instantiated_component, use_op) = if cx.react_custom_jsx_typing() {
+    let (tout, instantiated_component, inferred_props, use_op) = if cx.react_custom_jsx_typing() {
         let tout_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
         let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
         let tout = Type::new(TypeInner::OpenT(tout_tvar.dupe()));
@@ -13720,12 +13744,13 @@ fn react_jsx_desugar<'a>(
                 }))),
             ),
         )?;
-        (tout, None, use_op)
+        (tout, None, None, use_op)
     } else {
         let tout_id = flow_typing_tvar::mk_no_wrap(cx, &reason);
         let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
         let tout = Type::new(TypeInner::OpenT(tout_tvar.dupe()));
         let specialized_component = cx.new_specialized_callee();
+        let specialized_props = cx.new_specialized_callee();
         flow_js::flow_non_speculating(
             cx,
             (
@@ -13742,6 +13767,7 @@ fn react_jsx_desugar<'a>(
                             return_hint: return_hint.clone(),
                             inferred_targs: None,
                             specialized_component: Some(specialized_component.clone()),
+                            specialized_props: Some(specialized_props.clone()),
                         },
                     ))),
                 }))),
@@ -13749,7 +13775,11 @@ fn react_jsx_desugar<'a>(
         )?;
         let specialized_component_t =
             flow_js_utils::callee_recorder::type_for_tast_opt(reason_c, &specialized_component);
-        (tout, specialized_component_t, use_op)
+        let inferred_props = flow_js_utils::callee_recorder::type_for_tast_opt(
+            reason_of_t(&props).dupe(),
+            &specialized_props,
+        );
+        (tout, specialized_component_t, inferred_props, use_op)
     };
     match cx.react_runtime() {
         flow_common::options::ReactRuntime::Automatic => {
@@ -13814,7 +13844,7 @@ fn react_jsx_desugar<'a>(
             }
         }
     }
-    Ok((tout, instantiated_component))
+    Ok((tout, instantiated_component, inferred_props))
 }
 
 fn non_react_jsx_desugar<'a>(
@@ -13828,7 +13858,7 @@ fn non_react_jsx_desugar<'a>(
     props: Type,
     attributes: &[ast::jsx::OpeningAttribute<ALoc, ALoc>],
     children: Vec<type_::UnresolvedParam>,
-) -> Result<(Type, Option<Type>), CheckExprError> {
+) -> Result<(Type, Option<Type>, Option<Type>), CheckExprError> {
     let reason = mk_reason(
         VirtualReasonDesc::RJSXFunctionCall(FlowSmolStr::from(raw_jsx_expr)),
         loc_element.dupe(),
@@ -13886,7 +13916,7 @@ fn non_react_jsx_desugar<'a>(
             )?
         }
     };
-    Ok((t, None))
+    Ok((t, None, None))
 }
 
 // The @jsx pragma specifies a left hand side expression EXPR such that

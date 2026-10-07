@@ -5333,6 +5333,9 @@ pub mod jsx {
         pub targs: Option<super::expression::CallTypeArgs<M, T>>,
         pub self_closing: bool,
         pub attributes: Arc<[OpeningAttribute<M, T>]>,
+        /// The typed AST records the props inferred for the element here. The
+        /// parser stores the element's loc.
+        pub props: T,
     }
 
     #[derive(

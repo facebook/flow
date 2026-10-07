@@ -15,6 +15,13 @@ use crate::ast;
 pub trait LocMapper<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E = !> {
     fn on_loc_annot(&mut self, loc: &M) -> Result<N, E>;
     fn on_type_annot(&mut self, annot: &T) -> Result<U, E>;
+
+    /// Maps the inferred props of a JSX opening element. The props share the opening
+    /// element's loc, which is the element's own loc when it is self-closing, so mappers
+    /// that collect the type at each loc should skip them.
+    fn on_jsx_props_annot(&mut self, props: &T) -> Result<U, E> {
+        self.on_type_annot(props)
+    }
 }
 
 fn try_map_vec<T, U, E>(items: &[T], mut f: impl FnMut(&T) -> Result<U, E>) -> Result<Vec<U>, E> {
@@ -1213,6 +1220,7 @@ pub fn jsx_opening_element<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         targs,
         self_closing,
         attributes,
+        props,
     } = elem;
     let name_ = jsx_element_name(mapper, name)?;
     let targs_ = targs
@@ -1220,12 +1228,14 @@ pub fn jsx_opening_element<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         .map(|t| call_type_args(mapper, t))
         .transpose()?;
     let attributes_ = try_map_vec(attributes, |a| jsx_opening_attribute(mapper, a))?;
+    let props_ = mapper.on_jsx_props_annot(props)?;
     Ok(ast::jsx::Opening {
         loc: mapper.on_loc_annot(loc)?,
         name: name_,
         targs: targs_,
         self_closing: *self_closing,
         attributes: attributes_.into(),
+        props: props_,
     })
 }
 

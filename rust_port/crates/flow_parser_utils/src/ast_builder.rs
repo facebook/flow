@@ -1016,6 +1016,7 @@ pub mod jsxs {
                 targs,
                 self_closing,
                 attributes: attributes.into(),
+                props: Loc::none(),
             },
             closing_element: if self_closing {
                 None

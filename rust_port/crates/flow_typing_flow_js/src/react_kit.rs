@@ -805,7 +805,8 @@ pub(super) fn run_with_env<'cx>(
     // component's props is inferred (such as when a stateless functional
     // component has an unannotated props argument) we want to create a constraint
     // *from* the props input *to* tin which should then be propagated to the
-    // inferred props type.
+    // inferred props type. Returns the props type, which is any when the component
+    // is any or invalid.
     fn tin_to_props<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -814,7 +815,7 @@ pub(super) fn run_with_env<'cx>(
         reason_op: &Reason,
         l: &Type,
         tin: &Type,
-    ) -> Result<(), FlowJsException> {
+    ) -> Result<Type, FlowJsException> {
         let component = l;
         let dropped = drop_generic(component.dupe());
         match dropped.deref() {
@@ -832,7 +833,7 @@ pub(super) fn run_with_env<'cx>(
                         id: eval::Id::generate_id(),
                     });
                     FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
-                    Ok(())
+                    Ok(props)
                 }
                 // Stateless functional components.
                 DefTInner::FunT(_, fun_t) => {
@@ -867,20 +868,15 @@ pub(super) fn run_with_env<'cx>(
                                     )?,
                                 )?;
                             }
+                            Ok(t)
                         }
                         _ => {
                             err_incompatible(cx, env, unknown_use(), component, r)?;
-                            FlowJs::rec_flow_t_with_env(
-                                cx,
-                                env,
-                                trace,
-                                unknown_use(),
-                                &any_t::error(reason_op.dupe()),
-                                tin,
-                            )?;
+                            let any = any_t::error(reason_op.dupe());
+                            FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &any, tin)?;
+                            Ok(any)
                         }
                     }
-                    Ok(())
                 }
                 // Functional components, again. This time for callable `ObjT`s.
                 DefTInner::ObjT(obj_t) if obj_t.call_t.is_some() => {
@@ -899,27 +895,15 @@ pub(super) fn run_with_env<'cx>(
                         return tin_to_props(cx, env, trace, use_op, reason_op, &modified, tin);
                     }
                     err_incompatible(cx, env, unknown_use(), component, r)?;
-                    FlowJs::rec_flow_t_with_env(
-                        cx,
-                        env,
-                        trace,
-                        unknown_use(),
-                        &any_t::error(reason_op.dupe()),
-                        tin,
-                    )?;
-                    Ok(())
+                    let any = any_t::error(reason_op.dupe());
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), &any, tin)?;
+                    Ok(any)
                 }
                 // Abstract components.
                 DefTInner::ReactAbstractComponentT(_) => {
-                    FlowJs::rec_flow_t_with_env(
-                        cx,
-                        env,
-                        trace,
-                        unknown_use(),
-                        tin,
-                        &mixed_t::why(r.dupe()),
-                    )?;
-                    Ok(())
+                    let mixed = mixed_t::why(r.dupe());
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &mixed)?;
+                    Ok(mixed)
                 }
                 // Intrinsic components.
                 DefTInner::SingletonStrT { .. } => {
@@ -934,7 +918,7 @@ pub(super) fn run_with_env<'cx>(
                         id: eval::Id::generate_id(),
                     });
                     FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
-                    Ok(())
+                    Ok(props)
                 }
                 DefTInner::StrGeneralT(_) => {
                     let c = &dropped;
@@ -948,47 +932,29 @@ pub(super) fn run_with_env<'cx>(
                         id: eval::Id::generate_id(),
                     });
                     FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
-                    Ok(())
+                    Ok(props)
                 }
                 // ...otherwise, error.
                 _ => {
                     let reason = type_util::reason_of_t(component);
                     err_incompatible(cx, env, use_op.dupe(), component, reason)?;
-                    FlowJs::rec_flow_t_with_env(
-                        cx,
-                        env,
-                        trace,
-                        unknown_use(),
-                        tin,
-                        &any_t::error(reason.dupe()),
-                    )?;
-                    Ok(())
+                    let any = any_t::error(reason.dupe());
+                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &any)?;
+                    Ok(any)
                 }
             },
             TypeInner::AnyT(reason, source) => {
-                FlowJs::rec_flow_t_with_env(
-                    cx,
-                    env,
-                    trace,
-                    unknown_use(),
-                    tin,
-                    &any_t::why(source.clone(), reason.dupe()),
-                )?;
-                Ok(())
+                let any = any_t::why(source.clone(), reason.dupe());
+                FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &any)?;
+                Ok(any)
             }
             // ...otherwise, error.
             _ => {
                 let reason = type_util::reason_of_t(component);
                 err_incompatible(cx, env, use_op.dupe(), component, reason)?;
-                FlowJs::rec_flow_t_with_env(
-                    cx,
-                    env,
-                    trace,
-                    unknown_use(),
-                    tin,
-                    &any_t::error(reason.dupe()),
-                )?;
-                Ok(())
+                let any = any_t::error(reason.dupe());
+                FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &any)?;
+                Ok(any)
             }
         }
     }
@@ -1001,27 +967,25 @@ pub(super) fn run_with_env<'cx>(
         reason_op: &Reason,
         l: &Type,
         jsx_props: &Type,
-    ) -> Result<(), FlowJsException> {
+    ) -> Result<Type, FlowJsException> {
         // Create a type variable for our props.
         let dropped = drop_generic(l.dupe());
-        let (component_props, component_default_props) = if let TypeInner::DefT(_, def_t) =
-            dropped.deref()
-            && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
-                config,
-                ..
-            }) = def_t.deref()
-        {
-            (config.dupe(), None)
-        } else {
-            let use_op_clone = use_op.dupe();
-            let props = flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tout_t| {
-                tin_to_props(cx, env, trace, &use_op_clone, reason_op, l, tout_t)
-            })?;
-            // For class components and function components we want to lookup the
-            // static default props property so that we may add it to our config input.
-            let defaults = get_defaults(cx, env, trace, l, reason_op)?;
-            (props, defaults)
-        };
+        let (component_props, component_default_props, component_config) =
+            if let TypeInner::DefT(_, def_t) = dropped.deref()
+                && let DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
+                    config,
+                    ..
+                }) = def_t.deref()
+            {
+                (config.dupe(), None, config.dupe())
+            } else {
+                let props = flow_typing_tvar::mk(cx, reason_op.dupe());
+                let config = tin_to_props(cx, env, trace, &use_op, reason_op, l, &props)?;
+                // For class components and function components we want to lookup the
+                // static default props property so that we may add it to our config input.
+                let defaults = get_defaults(cx, env, trace, l, reason_op)?;
+                (props, defaults, config)
+            };
         let ref_manipulation = object::react_config::RefManipulation::KeepRef;
 
         // Use object spread to add children to config (if we have children)
@@ -1065,7 +1029,7 @@ pub(super) fn run_with_env<'cx>(
                 component_props,
             )),
         )?;
-        Ok(())
+        Ok(component_config)
     }
 
     fn create_element<'cx>(
@@ -1079,6 +1043,7 @@ pub(super) fn run_with_env<'cx>(
         jsx_props: &Type,
         inferred_targs: &Option<Rc<[(Type, flow_common::subst_name::SubstName)]>>,
         specialized_component: &Option<SpecializedCallee>,
+        specialized_props: &Option<SpecializedCallee>,
         tout: &Tvar,
     ) -> Result<(), FlowJsException> {
         // Why do we try to remove the OpaqueTypeUpperBound frame here?
@@ -1100,7 +1065,14 @@ pub(super) fn run_with_env<'cx>(
             }
         }
         let use_op = unwrap(original_use_op);
-        config_check(cx, env, trace, use_op.dupe(), reason_op, l, jsx_props)?;
+        let component_config =
+            config_check(cx, env, trace, use_op.dupe(), reason_op, l, jsx_props)?;
+        callee_recorder::add_callee(
+            env,
+            callee_recorder::Kind::Tast,
+            component_config,
+            specialized_props.as_ref(),
+        );
 
         // If our jsx props is void or null then we want to replace it with an
         // empty object.
@@ -1354,6 +1326,7 @@ pub(super) fn run_with_env<'cx>(
             return_hint: _,
             inferred_targs,
             specialized_component,
+            specialized_props,
         }) => create_element(
             cx,
             env,
@@ -1365,10 +1338,12 @@ pub(super) fn run_with_env<'cx>(
             jsx_props,
             inferred_targs,
             specialized_component,
+            specialized_props,
             tout,
         ),
         react::Tool::ConfigCheck { props: jsx_props } => {
-            config_check(cx, env, trace, use_op, reason_op, l, jsx_props)
+            config_check(cx, env, trace, use_op, reason_op, l, jsx_props)?;
+            Ok(())
         }
         react::Tool::GetConfig { tout } => get_config(
             cx,

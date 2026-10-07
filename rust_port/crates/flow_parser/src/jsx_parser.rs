@@ -378,6 +378,7 @@ impl OpeningElementResult {
                 *loc = new_loc;
             }
             OpeningElementResult::Element(opening) => {
+                opening.props = new_loc.dupe();
                 opening.loc = new_loc;
             }
         }
@@ -431,6 +432,7 @@ fn opening_element_after_less_than(
                 targs,
                 self_closing,
                 attributes: attributes.into(),
+                props: LOC_NONE,
             });
             if eat::maybe(env, TokenKind::TGreaterThan)? {
                 Ok(Ok(element))

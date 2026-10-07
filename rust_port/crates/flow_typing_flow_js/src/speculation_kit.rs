@@ -46,6 +46,7 @@ use flow_typing_type::type_::MethodAction;
 use flow_typing_type::type_::MethodTData;
 use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::SpecState;
+use flow_typing_type::type_::SpecializedCallee;
 use flow_typing_type::type_::SpeculationHintSetData;
 use flow_typing_type::type_::SpeculationHintState;
 use flow_typing_type::type_::Type;
@@ -149,6 +150,19 @@ fn log_synthesis_result(
 }
 
 fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation_id: i32) {
+    let finalize = |c: &SpecializedCallee| {
+        let spec_id = SpecState {
+            speculation_id,
+            case_id: case.case_id,
+        };
+        let candidates = c.speculative_candidates.borrow();
+        if let Some((l, _)) = candidates
+            .iter()
+            .find(|(_, spec_id_prime)| spec_id == *spec_id_prime)
+        {
+            c.finalized.borrow_mut().push_front(l.dupe());
+        }
+    };
     match use_t.deref() {
         UseTInner::CallT(box CallTData {
             call_action:
@@ -169,27 +183,19 @@ fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation
                     ..
                 }),
             ..
-        })
-        | UseTInner::ReactKitT(box ReactKitTData {
+        }) => finalize(c),
+        UseTInner::ReactKitT(box ReactKitTData {
             tool:
                 box react::Tool::CreateElement(box react::CreateElementData {
-                    specialized_component: Some(c),
+                    specialized_component,
+                    specialized_props,
                     ..
                 }),
             ..
-        }) => {
-            let spec_id = SpecState {
-                speculation_id,
-                case_id: case.case_id,
-            };
-            let candidates = c.speculative_candidates.borrow();
-            if let Some((l, _)) = candidates
-                .iter()
-                .find(|(_, spec_id_prime)| spec_id == *spec_id_prime)
-            {
-                c.finalized.borrow_mut().push_front(l.dupe());
-            }
-        }
+        }) => specialized_component
+            .iter()
+            .chain(specialized_props)
+            .for_each(finalize),
         _ => {}
     }
 }

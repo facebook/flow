@@ -14271,6 +14271,7 @@ pub fn jsx_opening_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         targs,
         self_closing: _,
         attributes,
+        props: _,
     } = elem;
     visitor.jsx_element_name(name)?;
     if let Some(targs) = targs {
@@ -14292,6 +14293,7 @@ pub fn map_jsx_opening_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         targs,
         self_closing,
         attributes,
+        props,
     } = elem;
 
     let name_ = visitor.map_jsx_element_name(name);
@@ -14307,6 +14309,7 @@ pub fn map_jsx_opening_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         targs: targs_,
         self_closing: *self_closing,
         attributes: attributes_,
+        props: props.dupe(),
     }
 }
 

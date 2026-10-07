@@ -1695,6 +1695,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                         return_hint: hint_unavailable(),
                         inferred_targs: None,
                         specialized_component: None,
+                        specialized_props: None,
                     },
                 ))),
             })));

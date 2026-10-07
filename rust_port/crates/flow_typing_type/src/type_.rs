@@ -8831,6 +8831,7 @@ pub mod react {
         pub return_hint: LazyHintT<CX>,
         pub inferred_targs: Option<Rc<[(Type, SubstName)]>>,
         pub specialized_component: Option<SpecializedCallee>,
+        pub specialized_props: Option<SpecializedCallee>,
     }
 
     pub enum Tool<CX = ()> {
@@ -8850,6 +8851,7 @@ pub mod react {
                     return_hint,
                     inferred_targs,
                     specialized_component,
+                    specialized_props,
                 }) => Tool::CreateElement(Box::new(CreateElementData {
                     component: component.clone(),
                     jsx_props: jsx_props.clone(),
@@ -8858,6 +8860,7 @@ pub mod react {
                     return_hint: return_hint.clone(),
                     inferred_targs: inferred_targs.clone(),
                     specialized_component: specialized_component.clone(),
+                    specialized_props: specialized_props.clone(),
                 })),
                 Tool::ConfigCheck { props } => Tool::ConfigCheck {
                     props: props.clone(),
@@ -8879,6 +8882,7 @@ pub mod react {
                         return_hint: e1,
                         inferred_targs: f1,
                         specialized_component: g1,
+                        specialized_props: h1,
                     }),
                     Tool::CreateElement(box CreateElementData {
                         component: a2,
@@ -8888,9 +8892,17 @@ pub mod react {
                         return_hint: e2,
                         inferred_targs: f2,
                         specialized_component: g2,
+                        specialized_props: h2,
                     }),
                 ) => {
-                    a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2 && g1 == g2
+                    a1 == a2
+                        && b1 == b2
+                        && c1 == c2
+                        && d1 == d2
+                        && e1 == e2
+                        && f1 == f2
+                        && g1 == g2
+                        && h1 == h2
                 }
                 (Tool::ConfigCheck { props: a1 }, Tool::ConfigCheck { props: a2 }) => a1 == a2,
                 (Tool::GetConfig { tout: a1 }, Tool::GetConfig { tout: a2 }) => a1 == a2,
@@ -8913,6 +8925,7 @@ pub mod react {
                     return_hint,
                     inferred_targs,
                     specialized_component,
+                    specialized_props,
                 }) => {
                     component.hash(state);
                     jsx_props.hash(state);
@@ -8921,6 +8934,7 @@ pub mod react {
                     return_hint.hash(state);
                     inferred_targs.hash(state);
                     specialized_component.hash(state);
+                    specialized_props.hash(state);
                 }
                 Tool::ConfigCheck { props } => {
                     props.hash(state);
@@ -8961,6 +8975,7 @@ pub mod react {
                         return_hint: e1,
                         inferred_targs: f1,
                         specialized_component: g1,
+                        specialized_props: h1,
                     }),
                     Tool::CreateElement(box CreateElementData {
                         component: a2,
@@ -8970,6 +8985,7 @@ pub mod react {
                         return_hint: e2,
                         inferred_targs: f2,
                         specialized_component: g2,
+                        specialized_props: h2,
                     }),
                 ) => a1
                     .cmp(a2)
@@ -8978,7 +8994,8 @@ pub mod react {
                     .then_with(|| d1.cmp(d2))
                     .then_with(|| e1.cmp(e2))
                     .then_with(|| f1.cmp(f2))
-                    .then_with(|| g1.cmp(g2)),
+                    .then_with(|| g1.cmp(g2))
+                    .then_with(|| h1.cmp(h2)),
                 (Tool::ConfigCheck { props: a1 }, Tool::ConfigCheck { props: a2 }) => a1.cmp(a2),
                 (Tool::GetConfig { tout: a1 }, Tool::GetConfig { tout: a2 }) => a1.cmp(a2),
                 _ => std::cmp::Ordering::Equal,
@@ -8997,6 +9014,7 @@ pub mod react {
                     return_hint,
                     inferred_targs,
                     specialized_component,
+                    specialized_props,
                 }) => f
                     .debug_struct("CreateElement")
                     .field("component", component)
@@ -9006,6 +9024,7 @@ pub mod react {
                     .field("return_hint", return_hint)
                     .field("inferred_targs", inferred_targs)
                     .field("specialized_component", specialized_component)
+                    .field("specialized_props", specialized_props)
                     .finish(),
                 Tool::ConfigCheck { props } => {
                     f.debug_struct("ConfigCheck").field("props", props).finish()

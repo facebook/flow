@@ -4843,6 +4843,7 @@ fn __flow_impl<'cx>(
                 targs,
                 tout,
                 specialized_component,
+                specialized_props,
                 ..
             }) = &**tool =>
         {
@@ -4894,6 +4895,7 @@ fn __flow_impl<'cx>(
                         tout: tout.dupe(),
                         inferred_targs: Some(inferred_targs.into()),
                         specialized_component: specialized_component.clone(),
+                        specialized_props: specialized_props.clone(),
                     },
                 ))),
             })));

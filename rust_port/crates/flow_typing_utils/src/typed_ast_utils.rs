@@ -87,6 +87,10 @@ impl<M: Ord + Dupe, T: Dupe> LocMapper<M, (M, T), M, (M, T)> for TypeAtALocMapFo
         self.map.insert(loc.dupe(), t.dupe());
         Ok((loc.dupe(), t.dupe()))
     }
+
+    fn on_jsx_props_annot(&mut self, x: &(M, T)) -> Result<(M, T), !> {
+        Ok(x.dupe())
+    }
 }
 
 struct TypeAtALocListFolder<M, T> {
@@ -111,6 +115,10 @@ impl<M: Dupe, T: Dupe> LocMapper<M, (M, T), M, (M, T)> for TypeAtALocListFolder<
     fn on_type_annot(&mut self, x: &(M, T)) -> Result<(M, T), !> {
         let (loc, t) = x;
         self.list.push((loc.clone(), t.clone()));
+        Ok(x.clone())
+    }
+
+    fn on_jsx_props_annot(&mut self, x: &(M, T)) -> Result<(M, T), !> {
         Ok(x.clone())
     }
 }
