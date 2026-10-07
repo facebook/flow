@@ -374,6 +374,15 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for Collector<'_, L> {
         }
         ast_visitor::match_expression_default(self, loc, expression)
     }
+
+    fn return_(&mut self, loc: &'ast L, ret: &'ast ast::statement::Return<L, L>) -> Result<(), !> {
+        // A direct assertion call in return position never produces a value,
+        // so it is statement-like for abnormal control flow.
+        if let Some(argument) = ret.argument.as_ref() {
+            self.collect_assertion_flow_calls(argument);
+        }
+        ast_visitor::return_default(self, loc, ret)
+    }
 }
 
 /// Collects statically named callees that can be resolved from annotations alone.

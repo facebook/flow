@@ -1,70 +1,53 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:21:10
-
-Cannot return `myAssert(...)` because `void` [1] is incompatible with `empty` [2]. [incompatible-type]
-
-   test.js:21:10
-   21|   return myAssert(false);
-                ^^^^^^^^^^^^^^^
-
-References:
-   test.js:1:48
-    1| declare function myAssert(condition: boolean): asserts condition;
-                                                      ^^^^^^^^^^^^^^^^^ [1]
-   test.js:20:39
-   20| function reproNeverReturnsInReturn(): empty {
-                                             ^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:27:10
+Error ---------------------------------------------------------------------------------------------------- test.js:34:10
 
 Cannot return `s` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   test.js:27:10
-   27|   return s;
+   test.js:34:10
+   34|   return s;
                 ^
 
 References:
    test.js:1:48
     1| declare function myAssert(condition: boolean): asserts condition;
                                                       ^^^^^^^^^^^^^^^^^ [1]
-   test.js:24:59
-   24| function reproNeverReturnsInNestedTernary(level: string): string {
+   test.js:31:59
+   31| function reproNeverReturnsInNestedTernary(level: string): string {
                                                                  ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:46:5
+Error ----------------------------------------------------------------------------------------------------- test.js:53:5
 
 Cannot cast `object.property` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   test.js:46:5
-   46|     object.property as string; // error: expression-position calls are ordinary calls
+   test.js:53:5
+   53|     object.property as string; // error: expression-position calls are ordinary calls
            ^^^^^^^^^^^^^^^
 
 References:
-   test.js:42:65
-   42| function expressionPositionHavocsRefinements(object: {property: ?string}) {
+   test.js:49:65
+   49| function expressionPositionHavocsRefinements(object: {property: ?string}) {
                                                                        ^^^^^^^ [1]
-   test.js:46:24
-   46|     object.property as string; // error: expression-position calls are ordinary calls
+   test.js:53:24
+   53|     object.property as string; // error: expression-position calls are ordinary calls
                               ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:46:5
+Error ----------------------------------------------------------------------------------------------------- test.js:53:5
 
 Cannot cast `object.property` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
 
-   test.js:46:5
-   46|     object.property as string; // error: expression-position calls are ordinary calls
+   test.js:53:5
+   53|     object.property as string; // error: expression-position calls are ordinary calls
            ^^^^^^^^^^^^^^^
 
 References:
-   test.js:42:65
-   42| function expressionPositionHavocsRefinements(object: {property: ?string}) {
+   test.js:49:65
+   49| function expressionPositionHavocsRefinements(object: {property: ?string}) {
                                                                        ^^^^^^^ [1]
-   test.js:46:24
-   46|     object.property as string; // error: expression-position calls are ordinary calls
+   test.js:53:24
+   53|     object.property as string; // error: expression-position calls are ordinary calls
                               ^^^^^^ [2]
 
 
 
-Found 4 errors
+Found 3 errors

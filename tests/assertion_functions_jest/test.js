@@ -7,8 +7,9 @@ function commonJSRequire(value: unknown) {
   value as string;
 }
 
-// Assertion functions only affect control flow when called as expression
-// statements. In expression position these calls return `void`.
+// Assertion functions affect control flow when called as expression
+// statements and in return position. In other expression positions these
+// calls return `void`.
 function reproNeverReturnsInMatch(type: string): string {
   return match (type) {
     'A' => 'a',
@@ -19,6 +20,12 @@ function reproNeverReturnsInMatch(type: string): string {
 
 function reproNeverReturnsInReturn(): empty {
   return myAssert(false);
+}
+
+declare function myAssertWithMessage(condition: boolean, message: string): asserts condition;
+
+function reproNeverReturnsInReturnWithMessage(): string {
+  return myAssertWithMessage(false, 'Invalid load state');
 }
 
 function reproNeverReturnsInNestedTernary(level: string): string {
