@@ -19,8 +19,6 @@ flow_parser_utils_output = { path = "../flow_parser_utils_output" }
 flow_server_env = { path = "../flow_server_env" }
 flow_services_get_def = { path = "../flow_services_get_def" }
 flow_typing_context = { path = "../flow_typing_context" }
-flow_typing_flow_js = { path = "../flow_typing_flow_js" }
-flow_typing_tvar = { path = "../flow_typing_tvar" }
 flow_typing_type = { path = "../flow_typing_type" }
 flow_typing_utils = { path = "../flow_typing_utils" }
 flow_utils_concurrency = { path = "../flow_utils_concurrency" }

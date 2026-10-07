@@ -1798,8 +1798,6 @@ dependencies = [
  "flow_server_env",
  "flow_services_get_def",
  "flow_typing_context",
- "flow_typing_flow_js",
- "flow_typing_tvar",
  "flow_typing_type",
  "flow_typing_utils",
  "flow_utils_concurrency",

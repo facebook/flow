@@ -1,0 +1,31 @@
+{
+  "method": "textDocument/references",
+  "result": [
+    {
+      "range": {
+        "end": {
+          "character": 51,
+          "line": 2
+        },
+        "start": {
+          "character": 50,
+          "line": 2
+        }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/jsx-intersection.js"
+    },
+    {
+      "range": {
+        "end": {
+          "character": 4,
+          "line": 3
+        },
+        "start": {
+          "character": 3,
+          "line": 3
+        }
+      },
+      "uri": "<PLACEHOLDER_PROJECT_URL>/__fixtures__/jsx-intersection.js"
+    }
+  ]
+}

@@ -8,7 +8,6 @@
 use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
@@ -67,14 +66,6 @@ mod literal_to_prop_loc {
     }
 }
 
-fn annot_of_jsx_name(name: &ast::jsx::Name<ALoc, (ALoc, Type)>) -> &(ALoc, Type) {
-    match name {
-        ast::jsx::Name::Identifier(ident) => &ident.loc,
-        ast::jsx::Name::NamespacedName(nn) => &nn.name.loc,
-        ast::jsx::Name::MemberExpression(me) => &me.property.loc,
-    }
-}
-
 mod potential_ordinary_refs_search {
     use super::*;
 
@@ -84,7 +75,6 @@ mod potential_ordinary_refs_search {
     #[derive(Debug)]
     enum SearcherError {
         Found(FoundImport),
-        Job(flow_utils_concurrency::job_error::JobError),
     }
 
     impl From<FoundImport> for SearcherError {
@@ -93,21 +83,12 @@ mod potential_ordinary_refs_search {
         }
     }
 
-    impl From<flow_utils_concurrency::job_error::JobError> for SearcherError {
-        fn from(e: flow_utils_concurrency::job_error::JobError) -> Self {
-            SearcherError::Job(e)
-        }
-    }
-
-    struct Searcher<'ctx, 'cx, 'refs> {
-        cx: &'ctx Context<'cx>,
+    struct Searcher<'refs> {
         target_name: String,
         potential_refs: &'refs mut ALocMap<Type>,
     }
 
-    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, SearcherError>
-        for Searcher<'_, '_, '_>
-    {
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, SearcherError> for Searcher<'_> {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
         }
@@ -128,7 +109,6 @@ mod potential_ordinary_refs_search {
                     self.potential_refs.insert(name_loc, module_t.dupe());
                     Ok(())
                 }
-                Err(e @ SearcherError::Job(_)) => Err(e),
             }
         }
 
@@ -170,7 +150,7 @@ mod potential_ordinary_refs_search {
             &mut self,
             elt: &'ast ast::jsx::Opening<ALoc, (ALoc, Type)>,
         ) -> Result<(), SearcherError> {
-            let component_name = &elt.name;
+            let (_, props) = &elt.props;
             let attributes = &elt.attributes;
             for attr in attributes.iter() {
                 match attr {
@@ -183,29 +163,7 @@ mod potential_ordinary_refs_search {
                     {
                         if let ast::jsx::attribute::Name::Identifier(id) = &jsx_attr.name {
                             let (attr_loc, _) = &id.loc;
-                            let (_, component_t) = annot_of_jsx_name(component_name);
-                            let reason = flow_common::reason::mk_reason(
-                                flow_common::reason::VirtualReasonDesc::RReactProps,
-                                attr_loc.dupe(),
-                            );
-                            use flow_typing_type::type_::*;
-                            let props_object =
-                                flow_typing_tvar::mk_where(self.cx, reason.dupe(), |_cx, tvar| {
-                                    let use_op = UseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse));
-                                    let use_t =
-                                        UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
-                                            use_op,
-                                            reason: reason.dupe(),
-                                            tool: Box::new(react::Tool::GetConfig {
-                                                tout: tvar.dupe(),
-                                            }),
-                                        })));
-                                    flow_typing_flow_js::flow_js::flow_non_speculating(
-                                        self.cx,
-                                        (component_t, &use_t),
-                                    )
-                                })?;
-                            self.potential_refs.insert(attr_loc.dupe(), props_object);
+                            self.potential_refs.insert(attr_loc.dupe(), props.dupe());
                         }
                     }
                     _ => {}
@@ -260,21 +218,17 @@ mod potential_ordinary_refs_search {
         }
     }
 
-    pub fn search<'cx>(
-        cx: &Context<'cx>,
+    pub fn search(
         target_name: &str,
         potential_refs: &mut ALocMap<Type>,
         ast: &ast::Program<ALoc, (ALoc, Type)>,
-    ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
+    ) {
         let mut s = Searcher {
-            cx,
             target_name: target_name.to_string(),
             potential_refs,
         };
         match s.program(ast) {
-            Ok(()) => Ok(()),
-            Err(SearcherError::Found(_)) => Ok(()),
-            Err(SearcherError::Job(e)) => Err(e),
+            Ok(()) | Err(SearcherError::Found(_)) => {}
         }
     }
 }
@@ -400,7 +354,7 @@ fn ordinary_property_find_refs_in_file<'cx>(
             .filter(|loc| loc.source.as_ref() == Some(file_key))
             .collect(),
     );
-    potential_ordinary_refs_search::search(cx, name, &mut potential_refs, typed_ast)?;
+    potential_ordinary_refs_search::search(name, &mut potential_refs, typed_ast);
     let prop_loc_map = LazyCell::new(|| literal_to_prop_loc::make(ast, name));
     let literal_prop_refs_result: Vec<SingleRef> = add_ref_kind(
         RefKind::PropertyDefinition,

@@ -76,6 +76,12 @@ module.exports = suite(
         lspStartAndConnect(),
         snapshot('locals.js', 29, 16, 'jsx_props.json'),
       ]),
+      test('JSX Props of an intersection component', [
+        addFiles(...fixtures),
+        lspStartAndConnect(),
+        snapshot('jsx-intersection.js', 3, 3, 'jsx_props_intersection.json'),
+        snapshot('jsx-intersection.js', 2, 50, 'jsx_props_intersection.json'),
+      ]).flowConfig('_flowconfig_component_syntax'),
       test('Private Names', [
         addFiles(...fixtures),
         lspStartAndConnect(),
