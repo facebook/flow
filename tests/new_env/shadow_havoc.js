@@ -1,6 +1,6 @@
 //@flow
 
-declare const invariant: any;
+declare function invariant(condition?: unknown, message?: string): asserts condition;
 
 let aa: string | number = 42;
 let havoc = function () {

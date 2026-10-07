@@ -27,7 +27,7 @@ declare const x: 1 | 2;
   out as empty; // ERROR
 }
 
-declare function invariant(x: boolean): empty;
+declare function invariant(condition?: unknown, message?: string): asserts condition;
 
 {
   const out = match (x) {
@@ -44,16 +44,6 @@ function f1() {
     2 => invariant(false),
   };
   out; // ERROR: unreachable
-}
-
-// Throws in guards
-function f2() {
-  const out = match (x) {
-    1 if (invariant(false)) => true,
-    _ => 's',
-  };
-  out as string; // OK
-  out as empty; // ERROR
 }
 
 // Nested matches

@@ -252,22 +252,6 @@ Missing an annotation on return. [missing-local-annot]
                   
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:46:23
-
-Missing an annotation on return. [missing-local-annot]
-
-   46|   throwingInvariant1() { invariant() } // error: throws
-                             
-
-
-Error --------------------------------------------------------------------------------------------------- class.js:47:23
-
-Missing an annotation on return. [missing-local-annot]
-
-   47|   throwingInvariant2() { invariant(false) } // error: throws
-                             
-
-
 Error --------------------------------------------------------------------------------------------------- class.js:51:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Missing type
@@ -1088,4 +1072,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 125 errors
+Found 123 errors

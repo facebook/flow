@@ -48,12 +48,100 @@ References:
                                     ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ implicit_void.js:173:17
+
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   173| function f18(): number { // Error: inline invariant calls do not make the function abnormal
+                        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- implicit_void.js:174:9
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   implicit_void.js:174:9
+   174|   while(invariant()) { // Error: invariant must be a top-level statement call
+                ^^^^^^^^^^^
+
+References:
+   implicit_void.js:1:68
+     1| declare function invariant(condition?: unknown, message?: string): asserts condition;
+                                                                           ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:179:17
+
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   179| function f19(): number { // Error: inline invariant calls do not make the function abnormal
+                        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:184:17
+
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   184| function f20(): number { // Error: inline invariant calls do not make the function abnormal
+                        ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ implicit_void.js:185:19
 
 Cannot use `invariant()` [1] as a superclass. Only variables and member expressions may be extended [invalid-extends]
 
    185|   class C extends invariant() {
                           ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:190:17
+
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   190| function f21(): number { // Error: inline invariant calls do not make the function abnormal
+                        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- implicit_void.js:191:7
+
+This condition is likely falsy.
+[WARNING]: Flow's type inference may be incorrect that it could be null at runtime (due to `any` annotations,
+out-of-bounds array accesses, etc.). If the check is valid, you might want to make [1] nullable (`T` -> `?T`).
+[constant-condition]
+
+   implicit_void.js:191:7
+   191|   if (invariant()) { // Error: invariant must be a top-level statement call
+              ^^^^^^^^^^^
+
+References:
+   implicit_void.js:1:68
+     1| declare function invariant(condition?: unknown, message?: string): asserts condition;
+                                                                           ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:196:17
+
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   196| function f22(): number { // Error: inline invariant calls do not make the function abnormal
+                        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ implicit_void.js:202:17
+
+Cannot expect number as the return type of function because `number` [1] is incompatible with `void` [1].
+[incompatible-type]
+
+   202| function f23(): number { // Error: inline invariant calls do not make the function abnormal
+                        ^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ implicit_void.js:234:16
@@ -272,4 +360,4 @@ References:
 
 
 
-Found 28 errors
+Found 36 errors

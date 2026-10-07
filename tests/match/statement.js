@@ -24,9 +24,9 @@ function f1() {
 
 // Throws in guards
 function f2() {
-  declare function invariant(x: boolean): empty;
+  declare function invariant(condition?: unknown, message?: string): asserts condition;
 
-  match (x) {
+  match (x) { // ERROR: invariant must be a top-level statement call
     1 => {}
     2 if (invariant(false)) => {}
   };

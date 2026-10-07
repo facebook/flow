@@ -1,4 +1,4 @@
-declare function invariant(a: boolean, b: ?string): empty;
+declare function invariant(condition?: unknown, message?: string): asserts condition;
 declare const b: boolean;
 declare const n: number;
 
@@ -170,36 +170,36 @@ function f17(): number {
 }
 f17();
 
-function f18(): number {
-  while(invariant()) {
+function f18(): number { // Error: inline invariant calls do not make the function abnormal
+  while(invariant()) { // Error: invariant must be a top-level statement call
   }
 }
 f18();
 
-function f19(): number {
+function f19(): number { // Error: inline invariant calls do not make the function abnormal
   const x = invariant();
 }
 f19();
 
-function f20(): number {
+function f20(): number { // Error: inline invariant calls do not make the function abnormal
   class C extends invariant() {
   }
 }
 f20();
 
-function f21(): number {
-  if (invariant()) {
+function f21(): number { // Error: inline invariant calls do not make the function abnormal
+  if (invariant()) { // Error: invariant must be a top-level statement call
   }
 }
 f21();
 
-function f22(): number {
+function f22(): number { // Error: inline invariant calls do not make the function abnormal
   switch (invariant()) {
   }
 }
 f22();
 
-function f23(): number {
+function f23(): number { // Error: inline invariant calls do not make the function abnormal
   switch (n) {
     case invariant():
   }

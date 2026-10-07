@@ -5,7 +5,7 @@ type AOrString = A | string;
 declare const C: Class<string>;
 class B extends C {}
 
-function invariant(x: unknown) {}
+declare function invariant(condition: unknown): asserts condition;
 
 function foo(value: AOrString) {
   invariant(value instanceof B);

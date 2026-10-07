@@ -1,6 +1,6 @@
 /* @flow */
 
-declare function invariant(): empty; // raises
+declare function invariant(condition?: unknown, message?: string): asserts condition; // raises
 
 function foo1(c: boolean): string {
   const y = c ? 5 : invariant();
@@ -16,7 +16,7 @@ function foo2(c: boolean): string {
 
 function foo3(c: boolean): string {
   const y = c ? invariant() : invariant(false);
-  return "default string"; // Error: unreachable
+  return "default string"; // OK: reachable (invariant in ternary arm does not throw)
 }
 
 
@@ -28,7 +28,7 @@ function foo4(c: boolean): string {
 
 function foo5(c: boolean): string {
   invariant()
-  return "default string"; // Error: unreachable
+  return "default string"; // OK: reachable (no-arg invariant() can return)
 }
 
 
@@ -43,20 +43,20 @@ function foo7(c: boolean): string {
 }
 
 function foo8(c: boolean): string {
-  return c ? 'a' : invariant();
+  return c ? 'a' : invariant(); // Error: invariant must be a top-level statement call
 }
 
 function foo9(c: boolean): string {
-  return c ? 1 : invariant(); // Error: number is incompatible with string
+  return c ? 1 : invariant(); // Error: invariant must be a top-level statement call
 }
 
 
 function foo10(c: boolean): string {
-  return c ? invariant() : invariant();
+  return c ? invariant() : invariant(); // Error: invariant must be a top-level statement call
 }
 
 function foo11(): string {
-  return invariant() ? 1 : 2;
+  return invariant() ? 1 : 2; // Error: invariant must be a top-level statement call
 }
 
 // `||`
@@ -71,16 +71,16 @@ function foo13(c: boolean): string {
 }
 
 function foo14(c: boolean): string {
-  invariant() || c;
-  return "default string"; // Error: unreachable
+  invariant() || c; // Error: invariant must be a top-level statement call
+  return "default string"; // OK: reachable (invariant in || operand does not throw)
 }
 
 function foo15(c: boolean): string {
-  return c || invariant(); // Error: return incompatible with string
+  return c || invariant(); // Error: invariant must be a top-level statement call
 }
 
 function foo16(c: boolean): string {
-  return invariant() || invariant();
+  return invariant() || invariant(); // Error: invariant must be a top-level statement call
 }
 
 // `&&`
@@ -95,16 +95,16 @@ function foo18(c: boolean): string {
 }
 
 function foo19(c: boolean): string {
-  invariant() && c;
-  return "default string"; // Error: unreachable
+  invariant() && c; // Error: invariant must be a top-level statement call
+  return "default string"; // OK: reachable (invariant in && operand does not throw)
 }
 
 function foo20(c: boolean): string {
-  return c && invariant(); // Error: return incompatible with string
+  return c && invariant(); // Error: invariant must be a top-level statement call
 }
 
 function foo21(c: boolean): string {
-  return invariant() && invariant();
+  return invariant() && invariant(); // Error: invariant must be a top-level statement call
 }
 
 // `??`
@@ -119,18 +119,18 @@ function foo23(c: boolean): string {
 }
 
 function foo24(c: boolean): string {
-  invariant() ?? c;
-  return "default string"; // Error: unreachable
+  invariant() ?? c; // Error: invariant must be a top-level statement call
+  return "default string"; // OK: reachable (invariant in ?? operand does not throw)
 }
 
 function foo25(c: ?boolean): string {
-  return c ?? invariant(); // Error: return incompatible with string
+  return c ?? invariant(); // Error: invariant must be a top-level statement call
 }
 
 function foo26(c: ?string): string {
-  return c ?? invariant(); // OK - either `c` is `string` or we throw
+  return c ?? invariant(); // Error: invariant must be a top-level statement call
 }
 
 function foo27(c: boolean): string {
-  return invariant() && invariant();
+  return invariant() && invariant(); // Error: invariant must be a top-level statement call
 }

@@ -91,64 +91,47 @@ Unreachable code. [unreachable-code]
          ^^^^
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:56:3
-
-Cannot cast `out` to empty because `"s"` [1] is incompatible with `empty` [2]. [incompatible-type]
-
-   expression.js:56:3
-   56|   out as empty; // ERROR
-         ^^^
-
-References:
-   expression.js:53:10
-   53|     _ => 's',
-                ^^^ [1]
-   expression.js:56:10
-   56|   out as empty; // ERROR
-                ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- expression.js:97:3
+Error ----------------------------------------------------------------------------------------------- expression.js:87:3
 
 Cannot resolve name `a`. [cannot-resolve-name]
 
-   97|   a; // ERROR
+   87|   a; // ERROR
          ^
 
 
-Error ---------------------------------------------------------------------------------------------- expression.js:108:3
+Error ----------------------------------------------------------------------------------------------- expression.js:98:3
 
 Cannot resolve name `a`. [cannot-resolve-name]
 
-   108|   a; // ERROR
-          ^
+   98|   a; // ERROR
+         ^
 
 
-Error --------------------------------------------------------------------------------------------- expression.js:144:10
+Error --------------------------------------------------------------------------------------------- expression.js:134:10
 
 Cannot assign `match` to `out` because `"xxx"` [1] is incompatible with `"a" | "b"` [2]. [incompatible-type]
 
-   expression.js:144:10
-   144|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
+   expression.js:134:10
+   134|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
                  ^^^^^ [1]
 
 References:
-   expression.js:142:14
-   142|   const out: 'a' | 'b' = match (x) {
+   expression.js:132:14
+   132|   const out: 'a' | 'b' = match (x) {
                      ^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- expression.js:151:10
+Error --------------------------------------------------------------------------------------------- expression.js:141:10
 
 Cannot get `dict[match]` because property `xxx` is missing in object type [1]. [prop-missing]
 
-   expression.js:151:10
-   151|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
+   expression.js:141:10
+   141|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'
                  ^^^^^
 
 References:
-   expression.js:148:23
-   148|   declare const dict: {['a' | 'b']: number};
+   expression.js:138:23
+   138|   declare const dict: {['a' | 'b']: number};
                               ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1847,6 +1830,21 @@ Unreachable code. [unreachable-code]
 
    22|   x; // ERROR: unreachable
          ^^
+
+
+Error ------------------------------------------------------------------------------------------------ statement.js:29:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `2` to match `2` [1].
+[match-not-exhaustive]
+
+   statement.js:29:3
+   29|   match (x) { // ERROR: invariant must be a top-level statement call
+         ^^^^^
+
+References:
+   statement.js:6:22
+    6| declare const x: 1 | 2;
+                            ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ statement.js:70:3

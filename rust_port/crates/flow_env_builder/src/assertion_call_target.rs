@@ -336,6 +336,19 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for Collector<'_, L> {
         self.collect_assertion_flow_calls(&statement.expression);
         ast_visitor::expression_statement_default(self, loc, statement)
     }
+
+    fn match_expression(
+        &mut self,
+        loc: &'ast L,
+        expression: &'ast ast::expression::MatchExpression<L, L>,
+    ) -> Result<(), !> {
+        // Each case body is the result position of its branch, so a direct
+        // assertion call is statement-like for abnormal control flow.
+        for case in expression.cases.iter() {
+            self.collect_assertion_flow_calls(&case.body);
+        }
+        ast_visitor::match_expression_default(self, loc, expression)
+    }
 }
 
 /// Collects statically named callees that can be resolved from annotations alone.

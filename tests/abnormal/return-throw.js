@@ -1,4 +1,4 @@
-declare function invariant(x: boolean): void;
+declare function invariant(condition?: unknown, message?: string): asserts condition;
 
 function f1(b: boolean): number {
   if (b) {

@@ -43,8 +43,8 @@ class C{
   #pmeth2() { return 42 } // err return
   ["computed"]() { } // ok: literal computed key resolves to `computed`, no missing annot
 
-  throwingInvariant1() { invariant() } // error: throws
-  throwingInvariant2() { invariant(false) } // error: throws
+  throwingInvariant1() { invariant() } // ok: no-arg call can return normally
+  throwingInvariant2() { invariant(false) } // ok: assertion calls don't trigger missing-annot
   nonthrowingInvariant() { invariant(this.prop1) } // ok
 }
 
@@ -57,4 +57,4 @@ function sanity_check_that_we_dont_error_on_non_method_functions() {
   return 42;
 }
 
-declare function invariant(...x: ReadonlyArray<unknown>): void;
+declare function invariant(condition?: unknown, message?: string): asserts condition;
