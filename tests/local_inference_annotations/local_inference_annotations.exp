@@ -353,42 +353,6 @@ References:
                                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- conditional.js:30:22
-
-Cannot call `foo` with function bound to `f` because in array element: `string` [1] is incompatible with `"x"` [1].
-[incompatible-type]
-
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-
-   conditional.js:30:22
-   30|   foo(() => (false ? [] : ['x'])); // TODO(T225768659) okay, [] is contextually typed
-                            ^^
-
-References:
-   conditional.js:30:28
-   30|   foo(() => (false ? [] : ['x'])); // TODO(T225768659) okay, [] is contextually typed
-                                  ^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------------- conditional.js:31:30
-
-Cannot call `foo` with function bound to `f` because in array element: `string` [1] is incompatible with `"x"` [1].
-[incompatible-type]
-
-Arrays are invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-
-   conditional.js:31:30
-   31|   foo(() => (false ? ['x'] : [])); // TODO(T225768659) okay, [] is contextually typed
-                                    ^^
-
-References:
-   conditional.js:31:23
-   31|   foo(() => (false ? ['x'] : [])); // TODO(T225768659) okay, [] is contextually typed
-                             ^^^ [1]
-
-
 Error ---------------------------------------------------------------------------------------------- conditional.js:39:5
 
 This condition is likely falsy.
@@ -1072,4 +1036,4 @@ Missing an annotation on `y`. [missing-local-annot]
 
 
 
-Found 123 errors
+Found 121 errors

@@ -14,6 +14,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use dupe::IterDupedExt;
+use flow_common::alpha_rename;
 use flow_common::enclosing_context::EnclosingContext;
 use flow_common::polarity::Polarity;
 use flow_common::reason::Reason;
@@ -39,11 +40,14 @@ use flow_typing_flow_common::obj_type;
 use flow_typing_flow_common::type_subst;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
+use flow_typing_implicit_instantiation_check::Operation;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrRestTData;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::CallArg;
+use flow_typing_type::type_::CallArgInner;
 use flow_typing_type::type_::CallTData;
 use flow_typing_type::type_::ComponentKind;
 use flow_typing_type::type_::ConstructorTData;
@@ -59,6 +63,7 @@ use flow_typing_type::type_::EvalTypeDestructorTData;
 use flow_typing_type::type_::FieldData;
 use flow_typing_type::type_::FunParam;
 use flow_typing_type::type_::FunRestParam;
+use flow_typing_type::type_::FunType;
 use flow_typing_type::type_::FuncallType;
 use flow_typing_type::type_::GenericTData;
 use flow_typing_type::type_::GetElemTData;
@@ -2821,6 +2826,228 @@ pub mod kit {
         }
     }
 
+    // Where in the polytype body a tparam occurrence sits, for per-occurrence routing of
+    // inferred vs generalized targs. In `mymap<T, U>(xs: Array<T>, cb: (x: T) => U): Array<U>`
+    // called as `mymap(strs, x => ['x'])`, when the call is checked against the instantiated
+    // signature:
+    // - `xs: Array<T>` is CallbackSupplied; `x: T` and the outer `Array<U>` are Plain. All
+    //   three keep the generalized targ: the caller's array is checked against
+    //   `Array<string>` and the caller receives `Array<string>`, never narrowed to the
+    //   call-site literal `'x'`.
+    // - The callback return `U` is UserCallbackReturn, so it takes the inferred targ and the
+    //   body `['x']` checks against `Array<'x'>` instead of tripping invariance against
+    //   `Array<string>`.
+    // Only callback returns take the inferred targ; all other occurrences share one
+    // generalized targ.
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Zone {
+        // A position inside an outermost-FunT param: any FunT here is a user-supplied callback.
+        CallbackSupplied,
+        // Inside the return of a user-supplied callback: uses the inferred targ.
+        UserCallbackReturn,
+        // Caller-facing: uses the generalized targ.
+        Plain,
+    }
+
+    // (zone, tparams bound by enclosing PolyT/ThisInstanceT, is outermost FunT)
+    type InwardSplitCx = (Zone, BTreeSet<SubstName>, bool);
+
+    // Renames occurrences of `targets` in `UserCallbackReturn` zones to fresh names, so that a
+    // single substitution can map them to inferred targs and the rest to generalized ones.
+    struct InwardSplitter<'a> {
+        targets: &'a BTreeMap<SubstName, GeneralizedTarg>,
+        renames: BTreeMap<SubstName, SubstName>,
+        used: FlowOrdSet<SubstName>,
+    }
+
+    impl<'cx> TypeMapper<'cx, InwardSplitCx> for InwardSplitter<'_> {
+        fn tvar(
+            &mut self,
+            _cx: &Context<'cx>,
+            _map_cx: &InwardSplitCx,
+            _r: &Reason,
+            id: u32,
+        ) -> u32 {
+            id
+        }
+
+        fn exports(
+            &mut self,
+            cx: &Context<'cx>,
+            map_cx: &InwardSplitCx,
+            id: exports::Id,
+        ) -> exports::Id {
+            type_subst::exports(self, cx, map_cx, id)
+        }
+
+        fn call_prop(&mut self, cx: &Context<'cx>, map_cx: &InwardSplitCx, id: i32) -> i32 {
+            type_subst::call_prop(self, cx, map_cx, id)
+        }
+
+        fn props(
+            &mut self,
+            cx: &Context<'cx>,
+            map_cx: &InwardSplitCx,
+            id: properties::Id,
+        ) -> properties::Id {
+            type_subst::props(self, cx, map_cx, id)
+        }
+
+        fn eval_id(
+            &mut self,
+            _cx: &Context<'cx>,
+            _map_cx: &InwardSplitCx,
+            id: eval::Id,
+        ) -> eval::Id {
+            id
+        }
+
+        fn type_(&mut self, cx: &Context<'cx>, map_cx: &InwardSplitCx, t: Type) -> Type {
+            let (zone, bound, is_outermost_funt) = map_cx;
+            match t.deref() {
+                TypeInner::GenericT(generic)
+                    if *zone == Zone::UserCallbackReturn
+                        && self.targets.contains_key(&generic.name)
+                        && !bound.contains(&generic.name) =>
+                {
+                    let name = self
+                        .renames
+                        .entry(generic.name.dupe())
+                        .or_insert_with(|| {
+                            // Minted against every free name in the polytype body, so a
+                            // rename can never alias an unrelated generic.
+                            let fresh = alpha_rename::subst_name(&generic.name, &self.used);
+                            self.used.insert(fresh.dupe());
+                            fresh
+                        })
+                        .dupe();
+                    Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                        name,
+                        ..(**generic).clone()
+                    })))
+                }
+                TypeInner::DefT(r, def_t) if let DefTInner::FunT(statics, ft) = def_t.deref() => {
+                    // The outermost FunT's params are what the user supplies, and its return faces
+                    // the caller. A FunT nested in a user-supplied position is itself a callback:
+                    // its return is the callback body's output, its params are values it receives.
+                    let (params_zone, return_zone) = if *is_outermost_funt {
+                        (Zone::CallbackSupplied, Zone::Plain)
+                    } else if *zone != Zone::Plain {
+                        (Zone::Plain, Zone::UserCallbackReturn)
+                    } else {
+                        (Zone::Plain, Zone::Plain)
+                    };
+                    let params_cx = (params_zone, bound.clone(), false);
+                    let return_cx = (return_zone, bound.clone(), false);
+                    let this_t = self.type_(cx, &params_cx, ft.this_t.0.dupe());
+                    let params: Rc<[FunParam]> = ft
+                        .params
+                        .iter()
+                        .map(|FunParam(name, t)| {
+                            FunParam(name.dupe(), self.type_(cx, &params_cx, t.dupe()))
+                        })
+                        .collect();
+                    let rest_param = ft.rest_param.as_ref().map(|FunRestParam(name, loc, t)| {
+                        FunRestParam(
+                            name.dupe(),
+                            loc.dupe(),
+                            self.type_(cx, &params_cx, t.dupe()),
+                        )
+                    });
+                    let return_t = self.type_(cx, &return_cx, ft.return_t.dupe());
+                    let type_guard = ft
+                        .type_guard
+                        .as_ref()
+                        .map(|tg| self.func_type_guard(cx, &return_cx, tg));
+                    let unchanged = this_t.ptr_eq(&ft.this_t.0)
+                        && params
+                            .iter()
+                            .zip(ft.params.iter())
+                            .all(|(a, b)| a.1.ptr_eq(&b.1))
+                        && match (&rest_param, &ft.rest_param) {
+                            (Some(a), Some(b)) => a.2.ptr_eq(&b.2),
+                            _ => true,
+                        }
+                        && return_t.ptr_eq(&ft.return_t)
+                        && match (&type_guard, &ft.type_guard) {
+                            (Some(a), Some(b)) => a.ptr_eq(b),
+                            _ => true,
+                        };
+                    if unchanged {
+                        t
+                    } else {
+                        let ft = FunType {
+                            this_t: (this_t, ft.this_t.1.clone()),
+                            params,
+                            rest_param,
+                            return_t,
+                            type_guard,
+                            ..(**ft).clone()
+                        };
+                        Type::new(TypeInner::DefT(
+                            r.dupe(),
+                            DefT::new(DefTInner::FunT(statics.dupe(), Rc::new(ft))),
+                        ))
+                    }
+                }
+                TypeInner::DefT(_, def_t) if let DefTInner::PolyT(poly) = def_t.deref() => {
+                    let mut bound = bound.clone();
+                    bound.extend(poly.tparams.iter().map(|tp| tp.name.dupe()));
+                    type_mapper::type_default(self, cx, &(*zone, bound, *is_outermost_funt), t)
+                }
+                TypeInner::ThisInstanceT(this) => {
+                    let mut bound = bound.clone();
+                    bound.insert(this.subst_name.dupe());
+                    type_mapper::type_default(self, cx, &(*zone, bound, *is_outermost_funt), t)
+                }
+                TypeInner::EvalT {
+                    type_, defer_use_t, ..
+                } => {
+                    let type_prime = self.type_(cx, map_cx, type_.dupe());
+                    let destructor_prime = self.destructor(cx, map_cx, defer_use_t.2.dupe());
+                    if type_.ptr_eq(&type_prime) && Rc::ptr_eq(&defer_use_t.2, &destructor_prime) {
+                        t
+                    } else {
+                        flow_cache::eval::id(
+                            cx,
+                            type_prime,
+                            TypeDestructorT::new(TypeDestructorTInner(
+                                defer_use_t.0.dupe(),
+                                defer_use_t.1.dupe(),
+                                destructor_prime,
+                            )),
+                        )
+                    }
+                }
+                _ => type_mapper::type_default(self, cx, map_cx, t),
+            }
+        }
+    }
+
+    // A generic callback pins its own tparams from both the param side and the
+    // return side, so routing those sides to different precisions breaks the
+    // callback's internal coherence. Conservatively matches any generic
+    // argument; non-callback generic values rarely widen, so they skip anyway.
+    fn has_generic_arg<'cx>(cx: &Context<'cx>, check: &ImplicitInstantiationCheck) -> bool {
+        let args: &[CallArg] = match &check.operation.2 {
+            Operation::Call(calltype) => calltype.call_args_tlist.as_ref(),
+            Operation::Constructor(_, args) => args.as_ref(),
+            _ => return false,
+        };
+        args.iter().any(|arg| {
+            let t = match &**arg {
+                CallArgInner::Arg(t) | CallArgInner::SpreadArg(t) => t,
+            };
+            match cx.find_resolved(t) {
+                Some(resolved) => matches!(
+                    resolved.deref(),
+                    TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::PolyT(_))
+                ),
+                None => false,
+            }
+        })
+    }
+
     fn instantiate_poly_with_subst_map<'cx>(
         cx: &Context<'cx>,
         env: &FlowJsEnv,
@@ -2830,6 +3057,7 @@ pub mod kit {
         use_op: &UseOp,
         reason_op: &Reason,
         reason_tapp: &Reason,
+        skip_routing: bool,
     ) -> Result<Type, FlowJsException> {
         let generalized_targ_map: BTreeMap<SubstName, GeneralizedTarg> = subst_map
             .iter()
@@ -2894,14 +3122,58 @@ pub mod kit {
             FlowJs::rec_flow_t_with_env(cx, env, trace, frame, &gt.generalized, &bound_subst)?;
         }
 
+        // For `<U>(f: () => U): U`, `U` in the callback's return wants the inferred (precise)
+        // targ, so literals in the callback body don't trip invariance checks (`Array<'x'>` vs
+        // `Array<string>`), while the outer return wants the generalized one, so callers don't
+        // receive overly narrow singletons. Skipped when no widening happened or a
+        // callback argument is itself generic (its tparams would straddle both
+        // precisions).
+        let needs_routing =
+            !skip_routing && subst_map.values().any(|gt| gt.inferred != gt.generalized);
+        let (poly_t, subst_map) = if needs_routing {
+            // Fresh names must avoid every free name in the polytype (and every
+            // substitution key); alpha_rename then guarantees they alias nothing.
+            let mut used = type_subst::free_var_finder(cx, None, poly_t);
+            used.extend(subst_map.keys().duped());
+            let mut splitter = InwardSplitter {
+                targets: subst_map,
+                renames: BTreeMap::new(),
+                used,
+            };
+            let poly_t = splitter.type_(cx, &(Zone::Plain, BTreeSet::new(), true), poly_t.dupe());
+            let mut combined_subst_map = final_subst_map.dupe();
+            for (name, inward_name) in splitter.renames {
+                let gt = &subst_map[&name];
+                let inferred_prime = instantiation_utils::implicit_type_argument::mk_targ(
+                    cx,
+                    &gt.tparam,
+                    reason_op,
+                    reason_tapp,
+                );
+                FlowJs::rec_unify_with_env(
+                    cx,
+                    env,
+                    trace,
+                    use_op.dupe(),
+                    UnifyCause::Uncategorized,
+                    Some(true),
+                    &gt.inferred,
+                    &inferred_prime,
+                )?;
+                combined_subst_map.insert(inward_name, inferred_prime);
+            }
+            (poly_t, combined_subst_map)
+        } else {
+            (poly_t.dupe(), final_subst_map)
+        };
         let result = type_subst::subst(
             cx,
             Some(use_op.dupe()),
             true,
             false,
             type_subst::Purpose::Normal,
-            &final_subst_map,
-            poly_t.dupe(),
+            &subst_map,
+            poly_t,
         );
         FlowJs::reposition_with_env(
             cx,
@@ -2964,6 +3236,7 @@ pub mod kit {
                 &use_op,
                 reason_op,
                 reason_tapp,
+                has_generic_arg(cx, check),
             )?;
             Ok((result_t, inferred_targs))
         }
@@ -3170,6 +3443,8 @@ pub mod kit {
             &use_op,
             reason_op,
             reason_tapp,
+            // Monomorphize pins inferred == generalized, so routing is off anyway.
+            false,
         )
     }
 

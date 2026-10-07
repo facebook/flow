@@ -86,3 +86,61 @@ function test_regression() {
     format: union(literal('A'), literal('B'), literal('C')),
   });
 }
+
+// A generic call in the return of a callback passed to another generic call keeps its
+// precise result, while the outer call generalizes its own result.
+function test_callback_return() {
+  declare const xs: Array<Array<string>>;
+  declare const a: string;
+
+  const x1 = xs.map(x => x.map(_ => 'a')); // okay
+  x1 as Array<Array<string>>; // okay
+  const x2 = xs.map(x => x.map(y => `${a} ${y}`)); // okay
+  x2 as Array<Array<string>>; // okay
+  xs.map((x, i) => x.flatMap(y => (y ? [`${i} ${y}`] : []))); // okay
+
+  declare function useMemo<T>(create: () => T, deps: ReadonlyArray<unknown>): T;
+  const x3 = useMemo(() => xs[0].map(_ => 'a'), []); // okay
+  x3 as Array<string>; // okay
+  useMemo(() => new Map(xs[0].map(y => [y, `label ${y}`])), []); // okay
+  useMemo(() => xs[0].map(y => ({label: `label ${y}`})), []); // okay
+  Array.from({length: 2}, (_, i) => ['H1', 'H2'].map(h => `${2023 + i}${h}`)); // okay
+
+  declare function mymap<T, U>(xs: Array<T>, cb: (x: T) => U): Array<U>;
+  mymap(xs, x => mymap(x, _ => 'a')); // okay
+
+  declare class MyArr<T> {
+    map<U>(cb: (x: T) => U): MyArr<U>;
+  }
+  declare const ys: MyArr<MyArr<string>>;
+  ys.map(y => y.map(_ => 'a')); // okay
+
+  // Wrapped callbacks
+  declare function maybe_cb<U>(cb: ?() => U): U;
+  maybe_cb(() => xs[0].map(_ => 'a')); // okay
+  declare function obj_cb<U>(o: Readonly<{f: () => U}>): U;
+  obj_cb({f: () => xs[0].map(_ => 'a')}); // okay
+
+  // The outer result is still generalized
+  declare function f<U>(cb: () => U): U;
+  const x4 = f(() => 'x');
+  x4 as 'y'; // error string ~> 'y'
+  let x5 = f(() => 1);
+  x5 = 2; // okay
+
+  // A generic call passed directly as an argument is not a callback return
+  declare function id<T>(x: T): T;
+  id(xs[0].map(_ => 'a')); // TODO error 'a' and string are not exactly the same
+}
+
+// A generic function passed as a callback pins its own tparams from both the
+// param side and the return side, so routing those sides to different
+// precisions would break the callback's internal coherence. Routing is
+// skipped entirely for such calls.
+function test_generic_callback() {
+  declare function compactMap<T, K>(array: ReadonlyArray<T>, mapFn: (T, number) => ?K): Array<K>;
+  declare function ident<V>(x: V): V;
+
+  const r1 = compactMap(['lit'], ident); // okay
+  r1 as Array<string>; // okay
+}
