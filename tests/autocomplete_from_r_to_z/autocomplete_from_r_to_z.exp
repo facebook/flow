@@ -852,7 +852,7 @@ Flags: --pretty
     },
     {
       "name":"replaceAll",
-      "type":"(this: String, searchValue: string | RegExp, replaceValue: string | ((substring: string, ...args: Array<any>) => string)) => string"
+      "type":"(this: String, searchValue: string | RegExp, replacer: (substring: string, ...args: Array<any>) => string) => string"
     },
     {"name":"search","type":"(this: String, regexp: string | RegExp) => number"},
     {
