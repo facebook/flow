@@ -19,7 +19,7 @@ const fromBracketed = {[bracketed]: 1}; // ERROR: `symbol` is not a key
 // Another static of `Symbol` is not the registry lookup.
 declare const someSymbol: symbol;
 const keyOf = Symbol.keyFor(someSymbol);
-const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
+const fromKeyFor = {[keyOf]: 1}; // ERROR: `string | void` is not a key
 
 // `for` on something else is not the registry lookup either.
 declare const registry: {for: (key: string) => symbol};

@@ -100,9 +100,9 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:3
-   30|   (value?: unknown): symbol;
-         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:37:5
+   37|     (description?: string | number): symbol;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:23:5
@@ -282,8 +282,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                    ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:46:21
-   46| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:54:21
+   54| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -304,8 +304,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                    ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:46:21
-   46| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:54:21
+   54| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -326,8 +326,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                       ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:46:21
-   46| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:54:21
+   54| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -348,8 +348,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                           ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:46:21
-   46| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:54:21
+   54| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 

@@ -177,9 +177,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:40:19
@@ -193,9 +193,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:45:25
@@ -225,9 +225,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                             ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:54:21
@@ -241,9 +241,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:56:23
@@ -257,9 +257,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                              ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:61:21
@@ -273,9 +273,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- mint.js:69:24
@@ -289,9 +289,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mint.js:107:19
@@ -321,9 +321,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                                  ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:25:10
-   25|   new(): Symbol;
-                ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:31:12
+   31|     new(): Symbol;
+                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:11:24
@@ -337,9 +337,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:30:22
-   30|   (value?: unknown): symbol;
-                            ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:37:38
+   37|     (description?: string | number): symbol;
+                                            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:17:25
@@ -353,25 +353,25 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                                ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:36:21
-   36|   for(key: string): symbol;
-                           ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:44:23
+   44|     for(key: string): symbol;
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:22:22
 
 Cannot use `keyOf` [1] to assign a computed property. Computed properties may only be numeric or string literal values,
-but this one is a null or undefined [2]. Can you add an appropriate type annotation to `keyOf` [1]? See
+but this one is a `void` [2]. Can you add an appropriate type annotation to `keyOf` [1]? See
 https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
 
    notcalls.js:22:22
-   22| const fromKeyFor = {[keyOf]: 1}; // ERROR: `?string` is not a key
+   22| const fromKeyFor = {[keyOf]: 1}; // ERROR: `string | void` is not a key
                             ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:42:24
-   42|   keyFor(sym: symbol): ?string;
-                              ^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:51:35
+   51|     keyFor(sym: symbol): string | void;
+                                         ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:27:25
