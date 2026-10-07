@@ -165,6 +165,7 @@ pub fn main(path: Option<String>, filename: Option<String>) {
             &autocomplete_hooks,
             true,
             false,
+            Default::default(),
             &env,
             ScopeKind::Module,
             ast,

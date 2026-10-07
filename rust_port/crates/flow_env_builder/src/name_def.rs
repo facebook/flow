@@ -38,6 +38,8 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
 use flow_parser_utils::type_param_analysis::analyze_type_params;
 
+use crate::assertion_call_target::AssertionInfo;
+use crate::assertion_call_target::bare_asserted_argument;
 use crate::env_api::AutocompleteHooks;
 use crate::env_api::DefLocType;
 use crate::env_api::EnvInvariant;
@@ -1646,6 +1648,7 @@ struct DefFinder<'a> {
     autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
     react_jsx: bool,
     invariant_special_casing_disabled: bool,
+    assertion_calls: BTreeMap<ALoc, AssertionInfo>,
     env_info: &'a crate::env_api::EnvInfo<ALoc>,
 
     // Accumulator (the result being built)
@@ -1663,6 +1666,7 @@ impl<'a> DefFinder<'a> {
         autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
         react_jsx: bool,
         invariant_special_casing_disabled: bool,
+        assertion_calls: BTreeMap<ALoc, AssertionInfo>,
         env_info: &'a crate::env_api::EnvInfo<ALoc>,
         toplevel_scope: ScopeKind,
     ) -> Self {
@@ -1670,6 +1674,7 @@ impl<'a> DefFinder<'a> {
             autocomplete_hooks,
             react_jsx,
             invariant_special_casing_disabled,
+            assertion_calls,
             env_info,
             env_map: EnvMap::empty(),
             hint_map: ALocMap::new(),
@@ -3423,6 +3428,18 @@ impl<'a> DefFinder<'a> {
             return Ok(());
         }
 
+        // A proven bare assertion call checks the asserted argument as a
+        // condition (see `call_arg_list`), so record that argument under
+        // conditional context like legacy `invariant`. Otherwise standalone
+        // resolution checks member accesses strictly and the cached result
+        // poisons the lenient statement-level check.
+        let test_arg_index = self
+            .assertion_calls
+            .get(callee.loc())
+            .copied()
+            .filter(|assertion| bare_asserted_argument(*assertion, arguments).is_some())
+            .map(|assertion| assertion.parameter_index);
+
         match &**arguments {
             [ast::expression::ExpressionOrSpread::Expression(expr)]
                 if is_call_to_is_array(callee) =>
@@ -3529,6 +3546,7 @@ impl<'a> DefFinder<'a> {
                     hints,
                     arg_list,
                     targs,
+                    test_arg_index,
                 )?;
             }
         }
@@ -3542,6 +3560,7 @@ impl<'a> DefFinder<'a> {
         return_hints: &AstHints,
         arg_list: &ast::expression::ArgList<ALoc, ALoc>,
         targs: &Option<ast::expression::CallTypeArgs<ALoc, ALoc>>,
+        test_arg_index: Option<usize>,
     ) -> Result<(), EnvInvariant<ALoc>> {
         let arguments = &arg_list.arguments;
 
@@ -3554,45 +3573,56 @@ impl<'a> DefFinder<'a> {
         for (i, arg) in arguments.iter().enumerate() {
             match arg {
                 ast::expression::ExpressionOrSpread::Expression(expr) => {
-                    let arg_list_clone = arg_list.clone();
-                    let targs_clone = targs.clone();
-                    let return_hints_clone = return_hints.clone();
-                    let hints = {
-                        let instantiate_decomp =
-                            HintDecomposition::new(HintDecompositionInner::InstantiateCallee(
-                                flow_common::hint::FunCallImplicitInstantiationHints {
-                                    reason: call_reason.clone(),
-                                    return_hints: std::rc::Rc::new(std::cell::LazyCell::new(
-                                        Box::new(move || return_hints_clone.clone())
-                                            as Box<dyn Fn() -> AstHints>,
-                                    )),
-                                    targs: std::rc::Rc::new(std::cell::LazyCell::new(Box::new(
-                                        move || targs_clone.clone(),
-                                    )
-                                        as Box<
-                                            dyn Fn() -> Option<
-                                                ast::expression::CallTypeArgs<ALoc, ALoc>,
-                                            >,
-                                        >)),
-                                    arg_list: std::rc::Rc::new(std::cell::LazyCell::new(Box::new(
-                                        move || arg_list_clone.clone(),
-                                    )
-                                        as Box<dyn Fn() -> ast::expression::ArgList<ALoc, ALoc>>)),
-                                    arg_index: i as i32,
-                                },
-                            ));
-                        let hints =
-                            Hint::decompose(instantiate_decomp, call_arguments_hints.clone());
-                        let func_param_decomp =
-                            HintDecomposition::new(HintDecompositionInner::DecompFuncParam(
-                                param_str_list.clone(),
-                                i as i32,
-                                None,
-                            ));
-                        Hint::decompose(func_param_decomp, hints)
-                    };
                     let expr_tuple = (expr.loc().dupe(), expr.dupe());
-                    self.visit_expression(EnclosingContext::NoContext, &hints, &expr_tuple.1)?;
+                    if Some(i) == test_arg_index {
+                        self.visit_expression(
+                            EnclosingContext::OtherTestContext,
+                            &vec![],
+                            &expr_tuple.1,
+                        )?;
+                    } else {
+                        let arg_list_clone = arg_list.clone();
+                        let targs_clone = targs.clone();
+                        let return_hints_clone = return_hints.clone();
+                        let hints = {
+                            let instantiate_decomp =
+                                HintDecomposition::new(HintDecompositionInner::InstantiateCallee(
+                                    flow_common::hint::FunCallImplicitInstantiationHints {
+                                        reason: call_reason.clone(),
+                                        return_hints: std::rc::Rc::new(std::cell::LazyCell::new(
+                                            Box::new(move || return_hints_clone.clone())
+                                                as Box<dyn Fn() -> AstHints>,
+                                        )),
+                                        targs: std::rc::Rc::new(std::cell::LazyCell::new(
+                                            Box::new(move || targs_clone.clone())
+                                                as Box<
+                                                    dyn Fn() -> Option<
+                                                        ast::expression::CallTypeArgs<ALoc, ALoc>,
+                                                    >,
+                                                >,
+                                        )),
+                                        arg_list: std::rc::Rc::new(std::cell::LazyCell::new(
+                                            Box::new(move || arg_list_clone.clone())
+                                                as Box<
+                                                    dyn Fn()
+                                                        -> ast::expression::ArgList<ALoc, ALoc>,
+                                                >,
+                                        )),
+                                        arg_index: i as i32,
+                                    },
+                                ));
+                            let hints =
+                                Hint::decompose(instantiate_decomp, call_arguments_hints.clone());
+                            let func_param_decomp =
+                                HintDecomposition::new(HintDecompositionInner::DecompFuncParam(
+                                    param_str_list.clone(),
+                                    i as i32,
+                                    None,
+                                ));
+                            Hint::decompose(func_param_decomp, hints)
+                        };
+                        self.visit_expression(EnclosingContext::NoContext, &hints, &expr_tuple.1)?;
+                    }
                 }
                 ast::expression::ExpressionOrSpread::Spread(spread) => {
                     let spread_tuple = (spread.argument.loc().dupe(), spread.argument.clone());
@@ -3660,7 +3690,14 @@ impl<'a> DefFinder<'a> {
                 loc: loc.dupe(),
                 inner: Arc::new(expr.clone()),
             }));
-        self.visit_call_arguments(&call_reason, &call_arguments_hints, hints, arg_list, targs)?;
+        self.visit_call_arguments(
+            &call_reason,
+            &call_arguments_hints,
+            hints,
+            arg_list,
+            targs,
+            None,
+        )?;
         Ok(())
     }
 
@@ -4505,6 +4542,7 @@ impl<'a> DefFinder<'a> {
             record_hints,
             &arg_list,
             targs,
+            None,
         )?;
         Ok(())
     }
@@ -7187,6 +7225,7 @@ pub fn find_defs(
     autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     react_jsx: bool,
     invariant_special_casing_disabled: bool,
+    assertion_calls: BTreeMap<ALoc, AssertionInfo>,
     env_info: &crate::env_api::EnvInfo<ALoc>,
     toplevel_scope_kind: ScopeKind,
     ast: &ast::Program<ALoc, ALoc>,
@@ -7195,6 +7234,7 @@ pub fn find_defs(
         autocomplete_hooks,
         react_jsx,
         invariant_special_casing_disabled,
+        assertion_calls,
         env_info,
         toplevel_scope_kind,
     );

@@ -779,7 +779,7 @@ fn initialize_env_with_mode<'cx>(
                 ssa_values,
                 unbound_names,
                 providers,
-                assertion_calls,
+                assertion_calls.clone(),
                 aloc_ast,
             );
         let info = info.to_env_info();
@@ -799,6 +799,7 @@ fn initialize_env_with_mode<'cx>(
             &autocomplete_hooks,
             react_jsx,
             cx.invariant_special_casing_disabled(),
+            assertion_calls,
             &info,
             toplevel_scope_kind,
             aloc_ast,

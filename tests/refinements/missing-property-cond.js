@@ -47,7 +47,7 @@ function foo10() {
 }
 
 function foo11() {
-  declare function invariant(a: unknown): void;
+  declare function invariant(condition?: unknown, message?: string): asserts condition;
   declare const b: unknown;
   invariant(b != null && b.foo != null); // ok
 }

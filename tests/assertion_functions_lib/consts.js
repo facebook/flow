@@ -1,0 +1,1 @@
+export const ABSOLUTE_DATE_SENTINEL = 'ABSOLUTE_DATE';
