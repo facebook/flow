@@ -32,7 +32,9 @@ References:
 Error ----------------------------------------------------------------------------------------------------- lazy.js:9:12
 
 Cannot call `React.lazy` with function bound to `component` because in the return value: properties `catch`, `finally`,
-and `then` are missing in function [1] but exist in `Promise` [2]. [incompatible-type]
+and `then` are missing in `{...}` [1] but exist in
+`{catch<U = empty>(this: Promise<Readonly<{default: component(...any) renders any, ...}>>, onReject: ...` [2].
+[incompatible-type]
 
    lazy.js:9:12
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
@@ -56,7 +58,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because in the return value: property `catch` is missing in
-class `ClassComponent` [1] but exists in `Promise` [2]. [incompatible-type]
+class `ClassComponent` [1] but exists in `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2].
+[incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -80,7 +83,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because in the return value: property `finally` is missing
-in class `ClassComponent` [1] but exists in `Promise` [2]. [incompatible-type]
+in class `ClassComponent` [1] but exists in `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2].
+[incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -104,7 +108,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
 Cannot call `React.lazy` with function bound to `component` because in the return value: property `then` is missing in
-class `ClassComponent` [1] but exists in `Promise` [2]. [incompatible-type]
+class `ClassComponent` [1] but exists in `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2].
+[incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
