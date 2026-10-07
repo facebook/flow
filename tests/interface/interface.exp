@@ -343,8 +343,8 @@ References:
    indexer.js:129:19
    129|   values as Array<number>; // ERROR
                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:921:59
-   921|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
+   <BUILTINS>/lib.es5.js:701:59
+   701|     static from<T>(iterable: Iterable<T> | ArrayLike<T>): Array<T>;
                                                                   ^^^^^^^^ [3]
    indexer.js:129:13
    129|   values as Array<number>; // ERROR

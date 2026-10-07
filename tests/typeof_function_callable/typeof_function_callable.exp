@@ -22,16 +22,16 @@ Cannot cast `S` to boolean literal `false` because `SymbolConstructor` [1] is in
 [incompatible-type]
 
    test.js:7:1
-     7| S as false; // error: `SymbolConstructor` ~> `false`
-        ^
+    7| S as false; // error: `SymbolConstructor` ~> `false`
+       ^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:134:21
-   134| declare var Symbol: SymbolConstructor;
-                            ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:46:21
+   46| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
    test.js:7:6
-     7| S as false; // error: `SymbolConstructor` ~> `false`
-             ^^^^^ [2]
+    7| S as false; // error: `SymbolConstructor` ~> `false`
+            ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:1
@@ -40,16 +40,16 @@ Cannot cast `P` to boolean literal `false` because `PromiseConstructor` [1] is i
 [incompatible-type]
 
    test.js:9:1
-     9| P as false; // error: `PromiseConstructor` ~> `false`
-        ^
+    9| P as false; // error: `PromiseConstructor` ~> `false`
+       ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:125:22
-   125| declare var Promise: PromiseConstructor;
-                             ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:64:22
+   64| declare var Promise: PromiseConstructor;
+                            ^^^^^^^^^^^^^^^^^^ [1]
    test.js:9:6
-     9| P as false; // error: `PromiseConstructor` ~> `false`
-             ^^^^^ [2]
+    9| P as false; // error: `PromiseConstructor` ~> `false`
+            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:3

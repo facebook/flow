@@ -177,8 +177,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -193,8 +193,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -225,8 +225,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                             ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -241,8 +241,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -257,8 +257,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                              ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -273,8 +273,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -289,8 +289,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -321,8 +321,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                                  ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:34:10
-   34|   new(): Symbol;
+   <BUILTINS>/lib.es2015.symbol.js:25:10
+   25|   new(): Symbol;
                 ^^^^^^ [2]
 
 
@@ -337,8 +337,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:22
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:22
+   30|   (value?: unknown): symbol;
                             ^^^^^^ [2]
 
 
@@ -353,8 +353,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                                ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:50:21
-   50|   for(key: string): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:36:21
+   36|   for(key: string): symbol;
                            ^^^^^^ [2]
 
 
@@ -369,8 +369,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                             ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:71:24
-   71|   keyFor(sym: symbol): ?string;
+   <BUILTINS>/lib.es2015.symbol.js:42:24
+   42|   keyFor(sym: symbol): ?string;
                               ^^^^^^^ [2]
 
 

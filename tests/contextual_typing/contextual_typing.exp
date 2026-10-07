@@ -448,14 +448,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                     ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:468:53
-   468|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:458:53
+   458|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                             ^^^^^ [1]
    implicit_instantiation.js:61:19
     61|   const z5: Array<string> = z3.concat(1); // Only one error on 1 ~> string
                           ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:468:47
-   468|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:458:47
+   458|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                       ^^^^^^^^^^^^ [3]
    implicit_instantiation.js:61:13
     61|   const z5: Array<string> = z3.concat(1); // Only one error on 1 ~> string
@@ -486,8 +486,8 @@ Cannot cast `a` to `Set` because in type argument `T` [1]: `string` [2] is incom
           ^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:116:15
-   116| interface Set<T> {
+   <BUILTINS>/lib.es2015.iterable.js:141:15
+   141| interface Set<T> {
                       ^ [1]
    implicit_instantiation.js:144:29
    144| function test12(foo: ?Array<string>) {
@@ -507,8 +507,8 @@ Cannot cast `b` to `Set` because in type argument `T` [1]: `string` [2] is incom
           ^
 
 References:
-   <BUILTINS>/lib.es2015.iterable.js:116:15
-   116| interface Set<T> {
+   <BUILTINS>/lib.es2015.iterable.js:141:15
+   141| interface Set<T> {
                       ^ [1]
    implicit_instantiation.js:144:29
    144| function test12(foo: ?Array<string>) {
@@ -822,8 +822,8 @@ Cannot call `resolve` with `'s'` bound to `result` because: [incompatible-type]
                  ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:72:25
-   72|       resolve: (result: Promise<R> | R) => void,
+   <BUILTINS>/lib.es2015.promise.js:29:25
+   29|       resolve: (result: Promise<R> | R) => void,
                                ^^^^^^^^^^ [2]
    new_typeof_constructor_interface.js:29:7
    29| new P<number>(resolve => {

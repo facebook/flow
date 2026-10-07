@@ -134,23 +134,23 @@ Cannot call `React.lazy` with function bound to `component` because in the retur
 Functions without statics are not compatible with objects.
 
    lazy.js:11:34
-    11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
-                                         ^^^^^^^^^^^^^^^^^
+     11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing
+                                          ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:23
-    29| interface Promise<out R = unknown> {
-                              ^ [1]
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
    lazy.js:6:1
-     6| function FunctionComponent(x: Props): React.Node { return null }
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+      6| function FunctionComponent(x: Props): React.Node { return null }
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:907:18
-                         v
-   907|         Readonly<{
-   908|           default: component(...Config) renders Renders,
-   909|           ...
-   910|         }>,
-                ^ [3]
+                          v
+    907|         Readonly<{
+    908|           default: component(...Config) renders Renders,
+    909|           ...
+    910|         }>,
+                 ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
@@ -160,23 +160,23 @@ property `default` is missing in `{name: string, ...}` [2] but exists in
 `{readonly default: component(...any) renders any, ...}` [3]. [incompatible-type]
 
    lazy.js:12:34
-    12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
-                                         ^^^^^^^^^^^^^^
+     12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
+                                          ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:23
-    29| interface Promise<out R = unknown> {
-                              ^ [1]
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
    lazy.js:7:7
-     7| class ClassComponent extends React.Component<Props> {}
-              ^^^^^^^^^^^^^^ [2]
+      7| class ClassComponent extends React.Component<Props> {}
+               ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:907:18
-                         v
-   907|         Readonly<{
-   908|           default: component(...Config) renders Renders,
-   909|           ...
-   910|         }>,
-                ^ [3]
+                          v
+    907|         Readonly<{
+    908|           default: component(...Config) renders Renders,
+    909|           ...
+    910|         }>,
+                 ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13

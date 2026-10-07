@@ -8,8 +8,8 @@ Cannot use `new` on `JSON` [1]. Only classes and interfaces with a construct sig
              ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1444:19
-   1444| declare var JSON: JSON;
+   <BUILTINS>/lib.es5.js:1224:19
+   1224| declare var JSON: JSON;
                            ^^^^ [1]
 
 
@@ -30,8 +30,8 @@ Cannot cast `JSON.stringify(...)` to string because `void` [1] is incompatible w
          ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1441:21
-   1441|       ) => string | void,
+   <BUILTINS>/lib.es5.js:1221:21
+   1221|       ) => string | void,
                              ^^^^ [1]
    json_stringify.js:7:25
       7| JSON.stringify(bad1) as string;
@@ -325,11 +325,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -348,11 +348,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -371,11 +371,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                ^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -394,11 +394,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                 ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -417,11 +417,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                    ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -440,11 +440,11 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                                       ^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 
@@ -466,11 +466,11 @@ References:
    weakset.js:24:31
      24| function* numbers(): Iterable<number> {
                                        ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:1451:28
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:28
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                     ^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:1451:68
-   1451| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
+   <BUILTINS>/lib.es5.js:1231:68
+   1231| type WeaklyReferenceable = interface {} | ReadonlyArray<unknown> | symbol;
                                                                             ^^^^^^ [3]
 
 

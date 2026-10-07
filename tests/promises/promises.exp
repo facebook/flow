@@ -7,8 +7,8 @@ Cannot cast `a` to number because `string` [1] is incompatible with `number` [2]
          ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:95:59
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                  ^^^^^^^^^^^^^ [1]
    all.js:11:8
    11|   a as number;  // Error: string ~> number
@@ -24,8 +24,8 @@ Cannot cast `b` to boolean because `number` [1] is incompatible with `boolean` [
          ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:95:59
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                  ^^^^^^^^^^^^^ [1]
    all.js:12:8
    12|   b as boolean; // Error: number ~> boolean
@@ -41,8 +41,8 @@ Cannot cast `c` to string because `boolean` [1] is incompatible with `string` [2
          ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:95:59
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                  ^^^^^^^^^^^^^ [1]
    all.js:13:8
    13|   c as string;  // Error: boolean ~> string
@@ -58,8 +58,8 @@ Cannot cast `x` to undefined because `boolean` [1] is incompatible with `void` [
            ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:95:59
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                  ^^^^^^^^^^^^^ [1]
    all.js:17:10
    17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -75,8 +75,8 @@ Cannot cast `x` to undefined because `number` [1] is incompatible with `void` [2
            ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:95:59
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                  ^^^^^^^^^^^^^ [1]
    all.js:17:10
    17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -92,8 +92,8 @@ Cannot cast `x` to undefined because `string` [1] is incompatible with `void` [2
            ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:95:59
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/lib.es2015.promise.js:52:59
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                  ^^^^^^^^^^^^^ [1]
    all.js:17:10
    17|     x as void;  // Errors: string ~> void, number ~> void, boolean ~> void
@@ -109,12 +109,12 @@ Cannot call `Promise.all` because function [1] requires another argument. [incom
                ^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:94:5
+   <BUILTINS>/lib.es2015.promise.js:51:5
            v------------------------------------------------------
-   94|     all<T extends Iterable<unknown>>(promises: T): Promise<
-   95|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
-   96|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
-   97|     >;
+   51|     all<T extends Iterable<unknown>>(promises: T): Promise<
+   52|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: Awaited<T[K]>} :
+   53|       T extends Iterable<infer V> ? Array<Awaited<V>> : any
+   54|     >;
            ^ [1]
 
 
@@ -138,17 +138,17 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.allSettled` because function [1] requires another argument. [incompatible-type]
 
    allSettled.js:2:9
-     2| Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
-                ^^^^^^^^^^
+    2| Promise.allSettled<Array<unknown>>(); // Error: expected $Iterable instead of undefined (too few arguments)
+               ^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:104:5
-            v-------------------------------------------------------------
-   104|     allSettled<T extends Iterable<unknown>>(promises: T): Promise<
-   105|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
-   106|       T extends Iterable<infer V> ? Array<PromiseSettledResult<Awaited<V>>> : any
-   107|     >;
-            ^ [1]
+   <BUILTINS>/lib.es2020.promise.js:39:5
+           v-------------------------------------------------------------
+   39|     allSettled<T extends Iterable<unknown>>(promises: T): Promise<
+   40|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
+   41|       T extends Iterable<infer V> ? Array<PromiseSettledResult<Awaited<V>>> : any
+   42|     >;
+           ^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- allSettled.js:5:36
@@ -188,13 +188,13 @@ Error --------------------------------------------------------------------------
 Cannot call `second.value.foo` because property `foo` is missing in `Bar` [1]. [prop-missing]
 
    allSettled.js:37:30
-    37|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
-                                     ^^^
+   37|     console.log(second.value.foo()); // Error: second is known to be a Bar, not a Foo
+                                    ^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:105:80
-   105|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
-                                                                                       ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2020.promise.js:40:80
+   40|       T extends ReadonlyArray<unknown> ? {[K in keyof T]: PromiseSettledResult<Awaited<T[K]>>} :
+                                                                                      ^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:9
@@ -202,13 +202,13 @@ Error --------------------------------------------------------------------------
 Cannot call `Promise.any` because function [1] requires another argument. [incompatible-type]
 
    any.js:2:9
-     2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
-                ^^^
+    2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
+               ^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:122:5
-   122|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2021.promise.js:43:5
+   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:2:1
@@ -216,13 +216,13 @@ Error --------------------------------------------------------------------------
 Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
 
    any.js:2:1
-     2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    2| Promise.any<Array<unknown>>(); // Error: expected array instead of undefined (too few arguments)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:122:8
-   122|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2021.promise.js:43:8
+   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- any.js:5:1
@@ -230,13 +230,13 @@ Error --------------------------------------------------------------------------
 Cannot use function type [1] with fewer than 2 type arguments. [missing-type-arg]
 
    any.js:5:1
-     5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:122:8
-   122|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2021.promise.js:43:8
+   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ any.js:5:29
@@ -246,13 +246,13 @@ Cannot call `Promise.any` with `0` bound to `promises` because `0` [1], a primit
 as a subtype of an interface. [incompatible-type]
 
    any.js:5:29
-     5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
-                                    ^ [1]
+    5| Promise.any<Array<unknown>>(0); // Error: expected array instead of number
+                                   ^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:122:51
-   122|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
-                                                          ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2021.promise.js:43:51
+   43|     any<T, Elem extends Promise<T> | T>(promises: Iterable<Elem>): Promise<T>;
+                                                         ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- promise.js:16:19
@@ -629,16 +629,16 @@ Cannot cast `Promise.resolve()` to `Promise` because in type argument `R` [1]: `
 `number` [3]. [incompatible-type]
 
    resolve_void.js:1:1
-    1| Promise.resolve() as Promise<number>; // error
-       ^^^^^^^^^^^^^^^^^ [2]
+      1| Promise.resolve() as Promise<number>; // error
+         ^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:23
-   29| interface Promise<out R = unknown> {
-                             ^ [1]
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
    resolve_void.js:1:30
-    1| Promise.resolve() as Promise<number>; // error
-                                    ^^^^^^ [3]
+      1| Promise.resolve() as Promise<number>; // error
+                                      ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- resolve_void.js:3:17
@@ -647,16 +647,16 @@ Cannot cast `Promise.resolve(...)` to `Promise` because in type argument `R` [1]
 `number` [3]. [incompatible-type]
 
    resolve_void.js:3:17
-    3| Promise.resolve(undefined) as Promise<number>; // error
-                       ^^^^^^^^^ [2]
+      3| Promise.resolve(undefined) as Promise<number>; // error
+                         ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:23
-   29| interface Promise<out R = unknown> {
-                             ^ [1]
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
    resolve_void.js:3:39
-    3| Promise.resolve(undefined) as Promise<number>; // error
-                                             ^^^^^^ [3]
+      3| Promise.resolve(undefined) as Promise<number>; // error
+                                               ^^^^^^ [3]
 
 
 

@@ -306,16 +306,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `f15()` to empty because `Promise<void>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    main.js:60:1
-   60| f15() as empty;
-       ^^^^^
+     60| f15() as empty;
+         ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:11
-   29| interface Promise<out R = unknown> {
-                 ^^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:1861:11
+   1861| interface Promise<out R = unknown> {
+                   ^^^^^^^ [1]
    main.js:60:10
-   60| f15() as empty;
-                ^^^^^ [2]
+     60| f15() as empty;
+                  ^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- main.js:62:20

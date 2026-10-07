@@ -174,16 +174,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    test20.js:14:26
-     14| [""].reduce((acc,str) => acc * str.length);
-                                  ^^^^^^^^^^^^^^^^
+    14| [""].reduce((acc,str) => acc * str.length);
+                                 ^^^^^^^^^^^^^^^^
 
 References:
    test20.js:14:2
-     14| [""].reduce((acc,str) => acc * str.length);
-          ^^ [1]
-   <BUILTINS>/lib.es5.js:1100:13
-   1100|     length: number;
-                     ^^^^^^ [2]
+    14| [""].reduce((acc,str) => acc * str.length);
+         ^^ [1]
+   <BUILTINS>/lib.es5.js:880:13
+   880|     length: number;
+                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- test22.js:20:15

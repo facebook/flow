@@ -53,8 +53,8 @@ References:
    array_lib.js:13:14
     13| var e: Array<string> = a.reverse();
                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:897:16
-   897|     reverse(): Array<T>;
+   <BUILTINS>/lib.es5.js:677:16
+   677|     reverse(): Array<T>;
                        ^^^^^^^^ [3]
    array_lib.js:13:8
     13| var e: Array<string> = a.reverse();
@@ -76,14 +76,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:468:53
-   468|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:458:53
+   458|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                             ^^^^^ [1]
    array_lib.js:26:14
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
                      ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:468:47
-   468|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
+   <BUILTINS>/lib.es5.js:458:47
+   458|     >(...items: Array<ReadonlyArray<S> | S>): Array<T | S>;
                                                       ^^^^^^^^^^^^ [3]
    array_lib.js:26:8
     26| var n: Array<number> = h.concat('a', 'b', 'c'); // Error
@@ -95,16 +95,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    array_lib.js:58:29
-     58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
-                                     ^^^^^^^^^^^^^^^^
+    58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
+                                    ^^^^^^^^^^^^^^^^
 
 References:
    array_lib.js:58:4
-     58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
-            ^^ [1]
-   <BUILTINS>/lib.es5.js:1100:13
-   1100|     length: number;
-                     ^^^^^^ [2]
+    58|   [''].reduce((acc, str) => acc * str.length); // error, string ~> number
+           ^^ [1]
+   <BUILTINS>/lib.es5.js:880:13
+   880|     length: number;
+                    ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:59:34
@@ -112,16 +112,16 @@ Error --------------------------------------------------------------------------
 Cannot use operator `*` with operands `string` [1] and `number` [2] [unsafe-arithmetic]
 
    array_lib.js:59:34
-     59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-                                          ^^^^^^^^^^^^^^^^
+    59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+                                         ^^^^^^^^^^^^^^^^
 
 References:
    array_lib.js:59:4
-     59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
-            ^^ [1]
-   <BUILTINS>/lib.es5.js:1100:13
-   1100|     length: number;
-                     ^^^^^^ [2]
+    59|   [''].reduceRight((acc, str) => acc * str.length); // error, string ~> number
+           ^^ [1]
+   <BUILTINS>/lib.es5.js:880:13
+   880|     length: number;
+                    ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:71:3
@@ -139,14 +139,14 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
           ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:940:37
-   940|     static from(str: string): Array<string>;
+   <BUILTINS>/lib.es5.js:720:37
+   720|     static from(str: string): Array<string>;
                                             ^^^^^^ [1]
    array_lib.js:71:31
     71|   Array.from('abcd') as Array<empty>; // ERROR
                                       ^^^^^ [2]
-   <BUILTINS>/lib.es5.js:940:31
-   940|     static from(str: string): Array<string>;
+   <BUILTINS>/lib.es5.js:720:31
+   720|     static from(str: string): Array<string>;
                                       ^^^^^^^^^^^^^ [3]
    array_lib.js:71:25
     71|   Array.from('abcd') as Array<empty>; // ERROR
@@ -167,8 +167,8 @@ not shown. To see all branches, re-run Flow with --show-all-branches.
                 ^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:948:25
-   948| interface ArrayLike<out T> {
+   <BUILTINS>/lib.es5.js:728:25
+   728| interface ArrayLike<out T> {
                                 ^ [1]
    array_lib.js:75:30
     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
@@ -179,8 +179,8 @@ References:
    array_lib.js:75:20
     75|   const arrayLike: ArrayLike<string> = {0: 'hello', length: 1};
                            ^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/lib.es5.js:935:31
-   935|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
+   <BUILTINS>/lib.es5.js:715:31
+   715|     static from<A, This>(str: string, mapFn: (this: This, elem: string, index: number) => A, thisArg: This): Array<A>;
                                       ^^^^^^ [5]
 
 
@@ -235,13 +235,13 @@ Error --------------------------------------------------------------------------
 Cannot call `arr.at` because function [1] requires another argument. [incompatible-type]
 
    at.js:6:5
-     6| arr.at(); // ERROR
-            ^^
+    6| arr.at(); // ERROR
+           ^^
 
 References:
-   <BUILTINS>/lib.es5.js:458:5
-   458|     at(index: number): T | void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2022.array.js:28:5
+   28|     at(index: number): T | void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------------- at.js:7:8
@@ -250,13 +250,13 @@ Cannot call `arr.at` with `"1"` bound to `index` because `"1"` [1] is incompatib
 [incompatible-type]
 
    at.js:7:8
-     7| arr.at("1"); // ERROR
-               ^^^ [1]
+    7| arr.at("1"); // ERROR
+              ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:458:15
-   458|     at(index: number): T | void;
-                      ^^^^^^ [2]
+   <BUILTINS>/lib.es2022.array.js:28:15
+   28|     at(index: number): T | void;
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- at.js:14:7
@@ -264,13 +264,13 @@ Error --------------------------------------------------------------------------
 Cannot call `roArr.at` because function [1] requires another argument. [incompatible-type]
 
    at.js:14:7
-    14| roArr.at(); // ERROR
-              ^^
+   14| roArr.at(); // ERROR
+             ^^
 
 References:
-   <BUILTINS>/lib.es5.js:458:5
-   458|     at(index: number): T | void;
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2022.array.js:28:5
+   28|     at(index: number): T | void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ at.js:15:10
@@ -279,13 +279,13 @@ Cannot call `roArr.at` with `"1"` bound to `index` because `"1"` [1] is incompat
 [incompatible-type]
 
    at.js:15:10
-    15| roArr.at("1"); // ERROR
-                 ^^^ [1]
+   15| roArr.at("1"); // ERROR
+                ^^^ [1]
 
 References:
-   <BUILTINS>/lib.es5.js:458:15
-   458|     at(index: number): T | void;
-                      ^^^^^^ [2]
+   <BUILTINS>/lib.es2022.array.js:28:15
+   28|     at(index: number): T | void;
+                     ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- callback_this.js:6:25
@@ -312,22 +312,22 @@ Flow is showing the union/intersection branches that got closest to passing. Oth
 not shown. To see all branches, re-run Flow with --show-all-branches.
 
    filter_error_msg_quality_test.js:3:9
-      3| str_arr.filter(s => s.length) as Array<boolean>;
-                 ^^^^^^
+     3| str_arr.filter(s => s.length) as Array<boolean>;
+                ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:1100:13
-   1100|     length: number;
-                     ^^^^^^ [1]
-   <BUILTINS>/lib.es5.js:793:109
-    793|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
-                                                                                                                     ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:880:13
+   880|     length: number;
+                    ^^^^^^ [1]
+   <BUILTINS>/lib.es5.js:614:109
+   614|     filter<This, S extends T>(callbackfn: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+                                                                                                                    ^^^^^^^^^^^^^^^^^^ [2]
    filter_error_msg_quality_test.js:2:30
-      2| declare const str_arr: Array<string>;
-                                      ^^^^^^ [3]
+     2| declare const str_arr: Array<string>;
+                                     ^^^^^^ [3]
    filter_error_msg_quality_test.js:3:40
-      3| str_arr.filter(s => s.length) as Array<boolean>;
-                                                ^^^^^^^ [4]
+     3| str_arr.filter(s => s.length) as Array<boolean>;
+                                               ^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------- filter_error_msg_quality_test.js:7:18
@@ -353,8 +353,8 @@ References:
    filter_error_msg_quality_test.js:7:25
      7| nullable_str_arr.filter(s => !!s) as Array<string>;
                                 ^^^^^^^^ [3]
-   <BUILTINS>/lib.es5.js:786:24
-   786|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
+   <BUILTINS>/lib.es5.js:607:24
+   607|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
                                ^^^^^^^^^^^^^^ [4]
 
 
@@ -369,22 +369,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:3:34
-     3| const result1_1: Array<string> = arr1.flat(); // Error
-                                         ^^^^^^^^^^^
+    3| const result1_1: Array<string> = arr1.flat(); // Error
+                                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:635:34
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:55:34
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:3:24
-     3| const result1_1: Array<string> = arr1.flat(); // Error
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:635:28
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    3| const result1_1: Array<string> = arr1.flat(); // Error
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:55:28
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:3:18
-     3| const result1_1: Array<string> = arr1.flat(); // Error
-                         ^^^^^^^^^^^^^ [4]
+    3| const result1_1: Array<string> = arr1.flat(); // Error
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:5:42
@@ -416,22 +416,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:9:34
-     9| const result2_1: Array<string> = arr2.flat(); // Error
-                                         ^^^^^^^^^^^
+    9| const result2_1: Array<string> = arr2.flat(); // Error
+                                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:635:34
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:55:34
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:9:24
-     9| const result2_1: Array<string> = arr2.flat(); // Error
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:635:28
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    9| const result2_1: Array<string> = arr2.flat(); // Error
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:55:28
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:9:18
-     9| const result2_1: Array<string> = arr2.flat(); // Error
-                         ^^^^^^^^^^^^^ [4]
+    9| const result2_1: Array<string> = arr2.flat(); // Error
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:11:34
@@ -445,22 +445,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:11:34
-    11| const result2_3: Array<number> = arr2.flat(0); // Error
-                                         ^^^^^^^^^^^^
+   11| const result2_3: Array<number> = arr2.flat(0); // Error
+                                        ^^^^^^^^^^^^
 
 References:
    flat.js:7:19
-     7| const arr2: Array<Array<number>> = [[1]];
-                          ^^^^^^^^^^^^^ [1]
+    7| const arr2: Array<Array<number>> = [[1]];
+                         ^^^^^^^^^^^^^ [1]
    flat.js:11:24
-    11| const result2_3: Array<number> = arr2.flat(0); // Error
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:628:8
-   628|     ): Array<T>;
-               ^^^^^^^^ [3]
+   11| const result2_3: Array<number> = arr2.flat(0); // Error
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:48:8
+   48|     ): Array<T>;
+              ^^^^^^^^ [3]
    flat.js:11:18
-    11| const result2_3: Array<number> = arr2.flat(0); // Error
-                         ^^^^^^^^^^^^^ [4]
+   11| const result2_3: Array<number> = arr2.flat(0); // Error
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:13:34
@@ -474,22 +474,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:13:34
-    13| const result2_5: Array<string> = arr2.flat(1); // Error
-                                         ^^^^^^^^^^^^
+   13| const result2_5: Array<string> = arr2.flat(1); // Error
+                                        ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:635:34
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:55:34
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:13:24
-    13| const result2_5: Array<string> = arr2.flat(1); // Error
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:635:28
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   13| const result2_5: Array<string> = arr2.flat(1); // Error
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:55:28
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:13:18
-    13| const result2_5: Array<string> = arr2.flat(1); // Error
-                         ^^^^^^^^^^^^^ [4]
+   13| const result2_5: Array<string> = arr2.flat(1); // Error
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:17:34
@@ -505,22 +505,22 @@ the same
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:17:34
-    17| const result3_1: Array<number> = arr3.flat(); // Error
-                                         ^^^^^^^^^^^
+   17| const result3_1: Array<number> = arr3.flat(); // Error
+                                        ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:635:34
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:55:34
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:17:24
-    17| const result3_1: Array<number> = arr3.flat(); // Error
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:635:28
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   17| const result3_1: Array<number> = arr3.flat(); // Error
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:55:28
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:17:18
-    17| const result3_1: Array<number> = arr3.flat(); // Error
-                         ^^^^^^^^^^^^^ [4]
+   17| const result3_1: Array<number> = arr3.flat(); // Error
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:20:34
@@ -534,22 +534,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:20:34
-    20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
-                                         ^^^^^^^^^^^^
+   20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
+                                        ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:642:32
-   642|     flat(depth: number): Array<unknown>;
-                                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:62:32
+   62|     flat(depth: number): Array<unknown>;
+                                      ^^^^^^^ [1]
    flat.js:20:24
-    20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:642:26
-   642|     flat(depth: number): Array<unknown>;
-                                 ^^^^^^^^^^^^^^ [3]
+   20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:62:26
+   62|     flat(depth: number): Array<unknown>;
+                                ^^^^^^^^^^^^^^ [3]
    flat.js:20:18
-    20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
-                         ^^^^^^^^^^^^^ [4]
+   20| const result3_2: Array<number> = arr3.flat(2); // Error - don't support this
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:25:34
@@ -563,22 +563,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:25:34
-    25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
-                                         ^^^^^^^^^^^^
+   25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
+                                        ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:642:32
-   642|     flat(depth: number): Array<unknown>;
-                                       ^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:62:32
+   62|     flat(depth: number): Array<unknown>;
+                                      ^^^^^^^ [1]
    flat.js:25:24
-    25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
-                               ^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:642:26
-   642|     flat(depth: number): Array<unknown>;
-                                 ^^^^^^^^^^^^^^ [3]
+   25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
+                              ^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:62:26
+   62|     flat(depth: number): Array<unknown>;
+                                ^^^^^^^^^^^^^^ [3]
    flat.js:25:18
-    25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
-                         ^^^^^^^^^^^^^ [4]
+   25| const result2_6: Array<number> = arr2.flat(x); // Error - don't support this
+                        ^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
@@ -594,22 +594,22 @@ The above-mentioned two types must be the same because arrays are invariantly ty
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:30:41
-    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                                                ^^^^^^^^^^^
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                                               ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:635:34
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2019.array.js:55:34
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    flat.js:30:24
-    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                               ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/lib.es5.js:635:28
-   635|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                              ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es2019.array.js:55:28
+   55|     flat(depth: void | 1): Array<T extends ReadonlyArray<infer E> ? E : T>;
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    flat.js:30:18
-    30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
-                         ^^^^^^^^^^^^^^^^^^^^ [4]
+   30| const result4_1: Array<Array<number>> = arr4.flat(); // Error - should be flattened to Array<number>
+                        ^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- length.js:7:3

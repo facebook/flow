@@ -29,8 +29,8 @@ Cannot cast `map[Symbol.toStringTag]` to string literal `Set` because `"Map"` [1
        ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:28:36
-   28|     readonly [Symbol.toStringTag]: 'Map';
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:81:36
+   81|     readonly [Symbol.toStringTag]: 'Map';
                                           ^^^^^ [1]
    collection_to_string_tag.js:11:28
    11| map[Symbol.toStringTag] as 'Set'; // ERROR
@@ -47,8 +47,8 @@ Cannot cast `roSet[Symbol.toStringTag]` to string literal `Map` because `"Set"` 
        ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:32:36
-   32|     readonly [Symbol.toStringTag]: 'Set';
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:85:36
+   85|     readonly [Symbol.toStringTag]: 'Set';
                                           ^^^^^ [1]
    collection_to_string_tag.js:12:30
    12| roSet[Symbol.toStringTag] as 'Map'; // ERROR
@@ -65,8 +65,8 @@ Cannot cast `set` to `TaggedMap` because in property `[toStringTag]`: `"Set"` [1
        ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.wellknown.js:32:36
-   32|     readonly [Symbol.toStringTag]: 'Set';
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:85:36
+   85|     readonly [Symbol.toStringTag]: 'Set';
                                           ^^^^^ [1]
    collection_to_string_tag.js:19:54
    19| interface TaggedMap { readonly [Symbol.toStringTag]: 'Map' }
@@ -100,8 +100,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:39:3
-   39|   (value?: unknown): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:3
+   30|   (value?: unknown): symbol;
          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -145,16 +145,16 @@ Cannot assign `Symbol.toPrimitive` to `y` because unique symbol [1] is incompati
 [incompatible-type]
 
    symbol.js:46:34
-    46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
-                                         ^^^^^^^^^^^^^^^^^^
+   46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
+                                        ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:111:25
-   111|   readonly toPrimitive: unique symbol;
-                                ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.wellknown.js:63:25
+   63|   readonly toPrimitive: unique symbol;
+                               ^^^^^^^^^^^^^ [1]
    symbol.js:46:12
-    46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
-                   ^^^^^^^^^^^^^^^^^^^ [2]
+   46|   const y: typeof Symbol.match = Symbol.toPrimitive; // Error
+                  ^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- symbol.js:67:3
@@ -278,13 +278,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor` [1]. [prop-missing]
 
    type_well_known_symbol.js:37:29
-    37| type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
-                                    ^^^
+   37| type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
+                                   ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:134:21
-   134| declare var Symbol: SymbolConstructor;
-                            ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:46:21
+   46| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:38:21
@@ -300,13 +300,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor` [1]. [prop-missing]
 
    type_well_known_symbol.js:38:29
-    38| type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
-                                    ^^^
+   38| type BadSymbol2 = { [Symbol.xxx](x: unknown): boolean }; // ERROR: unsupported key
+                                   ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:134:21
-   134| declare var Symbol: SymbolConstructor;
-                            ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:46:21
+   46| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:40:24
@@ -322,13 +322,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor` [1]. [prop-missing]
 
    type_well_known_symbol.js:40:32
-    40| interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
-                                       ^^^
+   40| interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                      ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:134:21
-   134| declare var Symbol: SymbolConstructor;
-                            ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:46:21
+   46| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:41:28
@@ -344,13 +344,13 @@ Error --------------------------------------------------------------------------
 Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor` [1]. [prop-missing]
 
    type_well_known_symbol.js:41:36
-    41| declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
-                                           ^^^
+   41| declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                          ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:134:21
-   134| declare var Symbol: SymbolConstructor;
-                            ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.symbol.js:46:21
+   46| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
 
 
 

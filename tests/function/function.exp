@@ -1005,16 +1005,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `x.name` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    function.js:43:5
-    43|     x.name as void; // error, it's a string
-            ^^^^^^
+   43|     x.name as void; // error, it's a string
+           ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:260:20
-   260|     readonly name: string;
-                           ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.core.js:79:20
+   79|     readonly name: string;
+                          ^^^^^^ [1]
    function.js:43:15
-    43|     x.name as void; // error, it's a string
-                      ^^^^ [2]
+   43|     x.name as void; // error, it's a string
+                     ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:44:5
@@ -1022,16 +1022,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `y.name` to undefined because `string` [1] is incompatible with `void` [2]. [incompatible-type]
 
    function.js:44:5
-    44|     y.name as void; // error, it's a string
-            ^^^^^^
+   44|     y.name as void; // error, it's a string
+           ^^^^^^
 
 References:
-   <BUILTINS>/lib.es5.js:260:20
-   260|     readonly name: string;
-                           ^^^^^^ [1]
+   <BUILTINS>/lib.es2015.core.js:79:20
+   79|     readonly name: string;
+                          ^^^^^^ [1]
    function.js:44:15
-    44|     y.name as void; // error, it's a string
-                      ^^^^ [2]
+   44|     y.name as void; // error, it's a string
+                     ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- function.js:49:7
