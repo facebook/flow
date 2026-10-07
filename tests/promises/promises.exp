@@ -659,5 +659,99 @@ References:
                                                ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------- withResolvers.js:4:9
 
-Found 40 errors
+Cannot call `resolve` with `Promise.resolve(...)` bound to `value` because: [incompatible-type]
+ - Either 
+    - `Promise` [1] is incompatible with `PromiseLike` [2]
+       - in property `then` > the first parameter: `null | void` [3] is incompatible with
+         `(value: number) => TResult1 | PromiseLike<TResult1>` [4]
+ - Or 
+    - `Promise` [1] is incompatible with `PromiseLike` [2]
+       - in property `then` > the first parameter: `(value: 1) => Promise<empty>` [5] is incompatible with `void` [6]
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   withResolvers.js:4:9
+      4| resolve(Promise.resolve(1)); // Error (bug): `Promise` is not a subtype of `PromiseLike`
+                 ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.promise.js:38:51
+     38|     resolve<T = unknown>(object: Promise<T> | T): Promise<T>;
+                                                           ^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2024.promise.js:22:26
+     22|     resolve: (value: T | PromiseLike<T>) => void;
+                                  ^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/lib.es5.js:1869:18
+   1869|       onFulfill: null | void,
+                          ^^^^^^^^^^^ [3]
+   <BUILTINS>/lib.es5.js:1846:20
+   1846|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/lib.es5.js:1879:18
+   1879|       onFulfill: (value: R) => Promise<U> | U,
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/lib.es5.js:1846:19
+   1846|     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null | void,
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [6]
+
+
+Error --------------------------------------------------------------------------------------------- withResolvers.js:7:9
+
+Cannot call `resolve` with `'s'` bound to `value` because: [incompatible-type]
+ - Either `"s"` [1] is incompatible with `number` [2].
+ - Or `"s"` [1], a primitive, cannot be used as a subtype of `PromiseLike<number>` [3]. You can wrap it in
+   `new String(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+
+   withResolvers.js:7:9
+    7| resolve('s'); // Error: string ~> number
+               ^^^ [1]
+
+References:
+   withResolvers.js:1:58
+    1| const {promise, resolve, reject} = Promise.withResolvers<number>();
+                                                                ^^^^^^ [2]
+   <BUILTINS>/lib.es2024.promise.js:22:26
+   22|     resolve: (value: T | PromiseLike<T>) => void;
+                                ^^^^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- withResolvers.js:8:1
+
+Cannot cast `promise` to `Promise` because in type argument `R` [1]: `number` [2] is incompatible with `string` [3].
+[incompatible-type]
+
+   withResolvers.js:8:1
+      8| promise as Promise<string>; // Error: number ~> string
+         ^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:1861:23
+   1861| interface Promise<out R = unknown> {
+                               ^ [1]
+   withResolvers.js:1:58
+      1| const {promise, resolve, reject} = Promise.withResolvers<number>();
+                                                                  ^^^^^^ [2]
+   withResolvers.js:8:20
+      8| promise as Promise<string>; // Error: number ~> string
+                            ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- withResolvers.js:10:31
+
+Cannot call `Promise.withResolvers` because no arguments are expected by function type [1]. [extra-arg]
+
+   withResolvers.js:10:31
+   10| Promise.withResolvers<number>(1); // Error: no arguments expected
+                                     ^
+
+References:
+   <BUILTINS>/lib.es2024.promise.js:35:5
+   35|     withResolvers<T>(): PromiseWithResolvers<T>;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 44 errors
