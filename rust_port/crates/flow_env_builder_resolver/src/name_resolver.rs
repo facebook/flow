@@ -6576,77 +6576,86 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         if spread_before_index(&call.arguments.arguments, assertion.parameter_index) {
             return Ok(());
         }
-        self.with_persistent_refinement_scope(|this| {
-            match assertion.kind {
-                AssertionKind::Bare => {
-                    if bare_assertion_call_always_throws(assertion, &call.arguments.arguments) {
-                        return this.raise_abrupt_completion(AbruptCompletion::Throw);
+        match assertion.kind {
+            AssertionKind::Bare => {
+                if bare_assertion_call_always_throws(assertion, &call.arguments.arguments) {
+                    return self.raise_abrupt_completion(AbruptCompletion::Throw);
+                }
+                match call.arguments.arguments.get(assertion.parameter_index) {
+                    Some(ExpressionOrSpread::Expression(argument)) => {
+                        // Refine the asserted argument in an isolated scope.
+                        // Negated tests (e.g. `!==`) negate the whole current
+                        // scope, which would clobber enclosing branch
+                        // refinements when the call is nested; an isolated
+                        // scope popped without unrefining keeps the
+                        // refinement while leaving the enclosing scope
+                        // untouched, matching the old builtin `invariant`
+                        // handling.
+                        self.push_refinement_scope(empty_refinements());
+                        let result = self.expression_refinement(argument);
+                        self.pop_refinement_scope_without_unrefining();
+                        result
                     }
-                    match call.arguments.arguments.get(assertion.parameter_index) {
-                        Some(ExpressionOrSpread::Expression(argument)) => {
-                            this.expression_refinement(argument)
-                        }
-                        None | Some(ExpressionOrSpread::Spread(_)) => Ok(()),
-                    }
+                    None | Some(ExpressionOrSpread::Spread(_)) => Ok(()),
                 }
-                AssertionKind::TypeGuard => {
-                    let Some(ExpressionOrSpread::Expression(argument)) =
-                        call.arguments.arguments.get(assertion.parameter_index)
-                    else {
-                        return Ok(());
-                    };
-                    let Some(key) = refinement_key::RefinementKey::of_expression(argument) else {
-                        return Ok(());
-                    };
-                    let call_expr = Expression::new(ExpressionInner::Call {
-                        loc: loc.dupe(),
-                        inner: Arc::new(call.clone()),
-                    });
-                    this.add_pred_func_info(
-                        call.callee.loc().dupe(),
-                        call_expr,
-                        call.callee.clone(),
-                        call.targs.clone(),
-                        call.arguments.clone(),
-                    );
-                    let mut refining_locs = empty_refining_locs();
-                    refining_locs.insert(loc.dupe());
-                    this.add_single_refinement(
-                        &key,
-                        refining_locs,
-                        env_api::RefinementKind::AssertionR {
-                            func: Rc::new(call.callee.clone()),
-                            targs: call.targs.clone().map(Rc::new),
-                            arguments: Rc::new(call.arguments.clone()),
-                            index: Rc::from([assertion.parameter_index as i32].as_slice()),
-                        },
-                    );
-                    Ok(())
-                }
-            }?;
-            // Arguments after the asserted one are evaluated after the asserted
-            // value is observed, so replay them to let their writes and havoc
-            // invalidate the refinement when they touch the asserted binding.
-            // This mirrors the handling of `invariant` conditions in `call`,
-            // except reads are not re-recorded: they keep the entries from
-            // the first traversal (pre-refinement), so a later-arg read of
-            // the asserted binding neither resolves to the lazy `AssertionR`
-            // (whose forcing would re-enter the same pred-func lazy while
-            // the call's arguments are being typed and panic) nor has real
-            // errors suppressed.
-            this.with_skip_read_recording(|this| {
-                for arg in call
-                    .arguments
-                    .arguments
-                    .iter()
-                    .skip(assertion.parameter_index + 1)
-                {
-                    this.expression_or_spread(arg)?;
-                }
+            }
+            AssertionKind::TypeGuard => self.with_persistent_refinement_scope(|this| {
+                let Some(ExpressionOrSpread::Expression(argument)) =
+                    call.arguments.arguments.get(assertion.parameter_index)
+                else {
+                    return Ok(());
+                };
+                let Some(key) = refinement_key::RefinementKey::of_expression(argument) else {
+                    return Ok(());
+                };
+                let call_expr = Expression::new(ExpressionInner::Call {
+                    loc: loc.dupe(),
+                    inner: Arc::new(call.clone()),
+                });
+                this.add_pred_func_info(
+                    call.callee.loc().dupe(),
+                    call_expr,
+                    call.callee.clone(),
+                    call.targs.clone(),
+                    call.arguments.clone(),
+                );
+                let mut refining_locs = empty_refining_locs();
+                refining_locs.insert(loc.dupe());
+                this.add_single_refinement(
+                    &key,
+                    refining_locs,
+                    env_api::RefinementKind::AssertionR {
+                        func: Rc::new(call.callee.clone()),
+                        targs: call.targs.clone().map(Rc::new),
+                        arguments: Rc::new(call.arguments.clone()),
+                        index: Rc::from([assertion.parameter_index as i32].as_slice()),
+                    },
+                );
                 Ok(())
-            })?;
+            }),
+        }?;
+        // Arguments after the asserted one are evaluated after the asserted
+        // value is observed, so replay them to let their writes and havoc
+        // invalidate the refinement when they touch the asserted binding.
+        // This mirrors the handling of `invariant` conditions in `call`,
+        // except reads are not re-recorded: they keep the entries from
+        // the first traversal (pre-refinement), so a later-arg read of
+        // the asserted binding neither resolves to the lazy `AssertionR`
+        // (whose forcing would re-enter the same pred-func lazy while
+        // the call's arguments are being typed and panic) nor has real
+        // errors suppressed.
+        self.with_skip_read_recording(|this| {
+            for arg in call
+                .arguments
+                .arguments
+                .iter()
+                .skip(assertion.parameter_index + 1)
+            {
+                this.expression_or_spread(arg)?;
+            }
             Ok(())
-        })
+        })?;
+        Ok(())
     }
 
     fn add_pred_func_info(
@@ -7778,15 +7787,20 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             self.call_type_args(targs)?;
         }
         self.arg_list(arguments)?;
-        if let Some(assertion) = self.assertion_calls.get(callee.loc()).copied()
+        let assertion = self.assertion_calls.get(callee.loc()).copied();
+        if let Some(assertion) = assertion
             && bare_assertion_call_always_throws(assertion, &call.arguments.arguments)
         {
             self.raise_abrupt_completion(AbruptCompletion::Throw)?;
         }
-        self.havoc_current_env(
-            flow_common::refinement_invalidation::Reason::FunctionCall,
-            loc.dupe(),
-        );
+        // Proven assertion calls (e.g. a userland `invariant`) are assumed
+        // pure: unlike ordinary calls they do not invalidate refinements.
+        if assertion.is_none() {
+            self.havoc_current_env(
+                flow_common::refinement_invalidation::Reason::FunctionCall,
+                loc.dupe(),
+            );
+        }
 
         let mut refis: BTreeMap<Lookup, (ALoc, env_api::refi::Refinement<ALoc>)> = BTreeMap::new();
 

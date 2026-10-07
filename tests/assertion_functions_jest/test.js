@@ -38,3 +38,11 @@ function declaredInvariantRefines(value: ?string) {
   invariant(value != null);
   value as string;
 }
+
+function expressionPositionHavocsRefinements(object: {property: ?string}) {
+  if (object.property != null) {
+    const result = myAssert(true);
+    result as void;
+    object.property as string; // error: expression-position calls are ordinary calls
+  }
+}

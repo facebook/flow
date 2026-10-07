@@ -32,5 +32,39 @@ References:
                                                                  ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:46:5
 
-Found 2 errors
+Cannot cast `object.property` to string because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:46:5
+   46|     object.property as string; // error: expression-position calls are ordinary calls
+           ^^^^^^^^^^^^^^^
+
+References:
+   test.js:42:65
+   42| function expressionPositionHavocsRefinements(object: {property: ?string}) {
+                                                                       ^^^^^^^ [1]
+   test.js:46:24
+   46|     object.property as string; // error: expression-position calls are ordinary calls
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:46:5
+
+Cannot cast `object.property` to string because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:46:5
+   46|     object.property as string; // error: expression-position calls are ordinary calls
+           ^^^^^^^^^^^^^^^
+
+References:
+   test.js:42:65
+   42| function expressionPositionHavocsRefinements(object: {property: ?string}) {
+                                                                       ^^^^^^^ [1]
+   test.js:46:24
+   46|     object.property as string; // error: expression-position calls are ordinary calls
+                              ^^^^^^ [2]
+
+
+
+Found 4 errors
