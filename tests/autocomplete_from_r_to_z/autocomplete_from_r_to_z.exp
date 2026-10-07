@@ -839,11 +839,11 @@ Flags: --pretty
     {"name":"normalize","type":"(this: String, format?: string) => string"},
     {
       "name":"padEnd",
-      "type":"(this: String, targetLength: number, padString?: string) => string"
+      "type":"(this: String, maxLength: number, fillString?: string) => string"
     },
     {
       "name":"padStart",
-      "type":"(this: String, targetLength: number, padString?: string) => string"
+      "type":"(this: String, maxLength: number, fillString?: string) => string"
     },
     {"name":"repeat","type":"(this: String, count: number) => string"},
     {

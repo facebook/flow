@@ -37,7 +37,6 @@ flowlib_file!(
 );
 flowlib_file!(LIB_ES2016_ARRAY_INCLUDE_JS, "lib.es2016.array.include.js");
 flowlib_file!(LIB_ES2017_SHAREDMEMORY_JS, "lib.es2017.sharedmemory.js");
-flowlib_file!(LIB_ES2017_STRING_JS, "lib.es2017.string.js");
 flowlib_file!(LIB_ES2018_ASYNCGENERATOR_JS, "lib.es2018.asyncgenerator.js");
 flowlib_file!(LIB_ES2018_ASYNCITERABLE_JS, "lib.es2018.asynciterable.js");
 flowlib_file!(LIB_ES2018_PROMISE_JS, "lib.es2018.promise.js");
@@ -91,7 +90,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ),
     ("lib.es2016.array.include.js", LIB_ES2016_ARRAY_INCLUDE_JS),
     ("lib.es2017.sharedmemory.js", LIB_ES2017_SHAREDMEMORY_JS),
-    ("lib.es2017.string.js", LIB_ES2017_STRING_JS),
+    (
+        "lib.es2017.string.js",
+        tslib_contents::LIB_ES2017_STRING_D_TS,
+    ),
     ("lib.es2018.asyncgenerator.js", LIB_ES2018_ASYNCGENERATOR_JS),
     ("lib.es2018.asynciterable.js", LIB_ES2018_ASYNCITERABLE_JS),
     ("lib.es2018.promise.js", LIB_ES2018_PROMISE_JS),
