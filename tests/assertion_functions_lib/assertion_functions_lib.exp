@@ -6,5 +6,39 @@ Unreachable code. [unreachable-code]
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- test.js:104:10
 
-Found 1 error
+Cannot return `field.a` because `null` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:104:10
+   104|   return field.a;
+                 ^^^^^^^
+
+References:
+   test.js:101:41
+   101| function reproAssertThenCall(field: {a: ?string}): string {
+                                                ^^^^^^^ [1]
+   test.js:101:52
+   101| function reproAssertThenCall(field: {a: ?string}): string {
+                                                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:104:10
+
+Cannot return `field.a` because `void` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:104:10
+   104|   return field.a;
+                 ^^^^^^^
+
+References:
+   test.js:101:41
+   101| function reproAssertThenCall(field: {a: ?string}): string {
+                                                ^^^^^^^ [1]
+   test.js:101:52
+   101| function reproAssertThenCall(field: {a: ?string}): string {
+                                                           ^^^^^^ [2]
+
+
+
+Found 3 errors
