@@ -219,13 +219,13 @@ Cannot call `Promise` because function [1] requires another argument. [incompati
                    ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:30:5
-           v----------------------
-   30|     constructor(callback: (
-   31|       resolve: (result: Promise<R> | R) => void,
-   32|       reject: (error: any) => void
-   33|     ) => unknown): void;
-           ------------------^ [1]
+   <BUILTINS>/lib.es2015.promise.js:71:5
+           v---------------------------
+   71|     new<R = unknown>(callback: (
+   72|       resolve: (result: Promise<R> | R) => void,
+   73|       reject: (error: any) => void
+   74|     ) => unknown): Promise<R>;
+           ------------------------^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- globals.js:6:1
@@ -233,16 +233,16 @@ Error --------------------------------------------------------------------------
 Cannot cast `y` to empty because `Promise<string>` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    globals.js:6:1
-   6| y as empty;
-      ^
+    6| y as empty;
+       ^
 
 References:
-   globals.js:5:9
-   5| var y = new Promise<string>();
-              ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:74:20
+   74|     ) => unknown): Promise<R>;
+                          ^^^^^^^^^^ [1]
    globals.js:6:6
-   6| y as empty;
-           ^^^^^ [2]
+    6| y as empty;
+            ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- havoc.js:8:1

@@ -17,3 +17,15 @@ new B(resolve => { // ok
 new B<number>(resolve => {
   resolve('s'); // error: string ~> number
 });
+
+// `Promise` is one too.
+const P: typeof Promise = Promise;
+
+new P((resolve, reject) => { // ok
+  resolve(1);
+  reject(new Error());
+});
+
+new P<number>(resolve => {
+  resolve('s'); // error: string ~> number
+});

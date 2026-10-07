@@ -1565,9 +1565,9 @@ Cannot return `(typeof x) == "number"` because `Promise<boolean>` [1] is incompa
                 ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:15
-   29| declare class Promise<out R = unknown> {
-                     ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:11
+   29| interface Promise<out R = unknown> {
+                 ^^^^^^^ [1]
    invalid.js:28:35
    28| async function async(x: unknown): x is number { // error
                                          ^^^^^^^^^^^ [2]

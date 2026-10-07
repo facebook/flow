@@ -43,7 +43,11 @@ interface TaggedTemplateLiteralArray extends $ReadOnlyArray<string> {
 
 // Promise
 
-declare class Promise<out R> {}
+interface Promise<out R> {}
+
+interface PromiseConstructor {}
+
+declare var Promise: PromiseConstructor;
 
 // Iterable/Iterator/Generator
 

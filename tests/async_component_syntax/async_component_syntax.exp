@@ -37,9 +37,9 @@ Cannot return `result` because `Promise<string>` [1] is incompatible with `strin
                 ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:15
-   29| declare class Promise<out R = unknown> {
-                     ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:11
+   29| interface Promise<out R = unknown> {
+                 ^^^^^^^ [1]
    test.js:45:28
    45| async hook useAsyncHook(): string {
                                   ^^^^^^ [2]
@@ -55,9 +55,9 @@ Cannot return `await Promise.resolve(...)` because `Promise<"hello">` [1] is inc
                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:15
-   29| declare class Promise<out R = unknown> {
-                     ^^^^^^^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:11
+   29| interface Promise<out R = unknown> {
+                 ^^^^^^^ [1]
    test.js:63:43
    63| export async hook useExportedAsyncHook(): string {
                                                  ^^^^^^ [2]

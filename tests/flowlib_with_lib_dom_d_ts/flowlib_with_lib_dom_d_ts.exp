@@ -60,9 +60,9 @@ Cannot cast `promise` to `Promise` because in type argument `R` [1]: `HTMLDivEle
        ^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:27
-   29| declare class Promise<out R = unknown> {
-                                 ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:23
+   29| interface Promise<out R = unknown> {
+                             ^ [1]
    test.js:6:24
     6| const promise: Promise<HTMLDivElement> = Promise.resolve(element);
                               ^^^^^^^^^^^^^^ [2]

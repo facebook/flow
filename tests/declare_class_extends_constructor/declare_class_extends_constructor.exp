@@ -1,15 +1,15 @@
-Error ------------------------------------------------------------------------------------------------- importer.js:9:15
+Error ------------------------------------------------------------------------------------------------ importer.js:11:15
 
 Cannot get `ErrorSubclass.nope` because property `nope` is missing in statics of `ErrorSubclass` [1]. [prop-missing]
 
-   importer.js:9:15
-   9| ErrorSubclass.nope; // error: not a static of `ErrorConstructor`
-                    ^^^^
+   importer.js:11:15
+   11| ErrorSubclass.nope; // error: not a static of `ErrorConstructor`
+                     ^^^^
 
 References:
    exporter.js:4:15
-   4| declare class ErrorSubclass extends Error {}
-                    ^^^^^^^^^^^^^ [1]
+    4| declare class ErrorSubclass extends Error {}
+                     ^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- this_typed.js:19:1

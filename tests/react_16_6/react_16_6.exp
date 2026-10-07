@@ -29,14 +29,14 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
+Error ----------------------------------------------------------------------------------------------------- lazy.js:9:12
 
-Cannot call `React.lazy` with function bound to `component` because in the return value: `(x: Props) => React.Node` [1]
-is incompatible with `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value: properties `catch`, `finally`,
+and `then` are missing in function [1] but exist in `Promise` [2]. [incompatible-type]
 
-   lazy.js:9:18
+   lazy.js:9:12
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
-                         ^^^^^^^^^^^^^^^^^
+                   ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    lazy.js:6:1
@@ -55,8 +55,56 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
-Cannot call `React.lazy` with function bound to `component` because in the return value: class `ClassComponent` [1] is
-incompatible with `Promise<Readonly<{default: component(...any) renders any, ...}>>` [2]. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value: property `catch` is missing in
+class `ClassComponent` [1] but exists in `Promise` [2]. [incompatible-type]
+
+   lazy.js:10:18
+    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                         ^^^^^^^^^^^^^^
+
+References:
+   lazy.js:7:7
+     7| class ClassComponent extends React.Component<Props> {}
+              ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:906:24
+                               v-------
+   906|       component: () => Promise<
+   907|         Readonly<{
+   908|           default: component(...Config) renders Renders,
+   909|           ...
+   910|         }>,
+   911|       >,
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
+
+Cannot call `React.lazy` with function bound to `component` because in the return value: property `finally` is missing
+in class `ClassComponent` [1] but exists in `Promise` [2]. [incompatible-type]
+
+   lazy.js:10:18
+    10| React.lazy(() => ClassComponent); // Error incompatible with Promise
+                         ^^^^^^^^^^^^^^
+
+References:
+   lazy.js:7:7
+     7| class ClassComponent extends React.Component<Props> {}
+              ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:906:24
+                               v-------
+   906|       component: () => Promise<
+   907|         Readonly<{
+   908|           default: component(...Config) renders Renders,
+   909|           ...
+   910|         }>,
+   911|       >,
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
+
+Cannot call `React.lazy` with function bound to `component` because in the return value: property `then` is missing in
+class `ClassComponent` [1] but exists in `Promise` [2]. [incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -90,9 +138,9 @@ Functions without statics are not compatible with objects.
                                          ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:27
-    29| declare class Promise<out R = unknown> {
-                                  ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:23
+    29| interface Promise<out R = unknown> {
+                              ^ [1]
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -116,9 +164,9 @@ property `default` is missing in `{name: string, ...}` [2] but exists in
                                          ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:27
-    29| declare class Promise<out R = unknown> {
-                                  ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:29:23
+    29| interface Promise<out R = unknown> {
+                              ^ [1]
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [2]
@@ -365,4 +413,4 @@ References:
 
 
 
-Found 19 errors
+Found 21 errors

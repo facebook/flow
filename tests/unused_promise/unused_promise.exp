@@ -106,8 +106,8 @@ out-of-bounds array accesses, etc.). If the check is valid, you might want to ma
            ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:63:8
-   63|     ): Promise<R | U>;
+   <BUILTINS>/lib.es2015.promise.js:58:8
+   58|     ): Promise<R | U>;
               ^^^^^^^^^^^^^^ [1]
 
 

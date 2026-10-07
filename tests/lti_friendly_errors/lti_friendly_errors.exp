@@ -8,12 +8,12 @@ Cannot cast `p` to `Promise` because in type argument `R` [1]: `unknown` [2] is 
        ^
 
 References:
-   <BUILTINS>/lib.es2015.promise.js:29:27
-   29| declare class Promise<out R = unknown> {
-                                 ^ [1]
-   <BUILTINS>/lib.es2015.promise.js:29:31
-   29| declare class Promise<out R = unknown> {
-                                     ^^^^^^^ [2]
+   <BUILTINS>/lib.es2015.promise.js:29:23
+   29| interface Promise<out R = unknown> {
+                             ^ [1]
+   <BUILTINS>/lib.es2015.promise.js:71:13
+   71|     new<R = unknown>(callback: (
+                   ^^^^^^^ [2]
    reason_of_inferred_targs.js:2:14
     2| p as Promise<string>; // error
                     ^^^^^^ [3]

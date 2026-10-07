@@ -1,10 +1,12 @@
 // A value with a call or construct signature is a function at runtime.
 
-// `Map` and `Symbol` are `declare var`s of constructor interfaces.
+// `Map`, `Symbol` and `Promise` are `declare var`s of constructor interfaces.
 const M = typeof Map === 'function' && Map;
 M as false; // error: `MapConstructor` ~> `false`
 const S = typeof Symbol === 'function' && Symbol;
 S as false; // error: `SymbolConstructor` ~> `false`
+const P = typeof Promise === 'function' && Promise;
+P as false; // error: `PromiseConstructor` ~> `false`
 
 interface Callable {
   (): number;

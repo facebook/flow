@@ -2942,36 +2942,6 @@ fn lookup_builtin_typeapp_with_env<'cx>(
     typeapp(false, false, reason, t, targs)
 }
 
-pub fn builtin_promise_class_id<'cx>(cx: &Context<'cx>) -> Option<flow_aloc::ALocId> {
-    use flow_typing_type::type_::DefTInner;
-    use flow_typing_type::type_::PolyTData;
-
-    let (_, t) = cx.builtin_value_opt("Promise")?;
-    if let TypeInner::OpenT(tvar) = t.deref() {
-        let id = tvar.id();
-        let (_, constraints) = cx.find_constraints(id as i32);
-        if let Constraints::FullyResolved(s) = &constraints {
-            let forced = cx.force_fully_resolved_tvar(s);
-            if let TypeInner::DefT(_, def_t) = forced.deref() {
-                if let DefTInner::PolyT(box PolyTData { t_out, .. }) = def_t.deref() {
-                    if let TypeInner::DefT(_, inner_def_t) = t_out.deref() {
-                        if let DefTInner::ClassT(class_t) = inner_def_t.deref() {
-                            if let TypeInner::ThisInstanceT(box ThisInstanceTData {
-                                instance,
-                                ..
-                            }) = class_t.deref()
-                            {
-                                return Some(instance.inst.class_id.dupe());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
 pub fn is_builtin_class_id<'cx>(
     class_ref: &str,
     class_id: flow_aloc::ALocId,

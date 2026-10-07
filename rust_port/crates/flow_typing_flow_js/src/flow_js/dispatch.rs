@@ -10783,33 +10783,28 @@ fn __flow_impl<'cx>(
         {
             let class_id = &inst_t.inst.class_id;
             let super_ = &inst_t.super_;
-            match flow_js_utils::builtin_promise_class_id(cx) {
-                None => {}
-                Some(promise_class_id) => {
-                    if promise_class_id == *class_id {
-                        flow_js_utils::add_output_with_env(
-                            cx,
-                            env,
-                            ErrorMessage::EUnusedPromise {
-                                loc: reason.loc().dupe(),
-                                async_: *async_,
-                            },
-                        )?;
-                    } else {
-                        rec_flow(
-                            cx,
-                            env,
-                            trace,
-                            (
-                                super_,
-                                &UseT::new(UseTInner::CheckUnusedPromiseT {
-                                    reason: reason.dupe(),
-                                    async_: *async_,
-                                }),
-                            ),
-                        )?;
-                    }
-                }
+            if flow_js_utils::is_builtin_class_id("Promise", class_id.dupe(), cx) {
+                flow_js_utils::add_output_with_env(
+                    cx,
+                    env,
+                    ErrorMessage::EUnusedPromise {
+                        loc: reason.loc().dupe(),
+                        async_: *async_,
+                    },
+                )?;
+            } else {
+                rec_flow(
+                    cx,
+                    env,
+                    trace,
+                    (
+                        super_,
+                        &UseT::new(UseTInner::CheckUnusedPromiseT {
+                            reason: reason.dupe(),
+                            async_: *async_,
+                        }),
+                    ),
+                )?;
             }
         }
         (_, UseTInner::CheckUnusedPromiseT { .. }) => {}

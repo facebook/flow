@@ -608,13 +608,13 @@ where
 === Promise Types ===
 Found exact match 'StringPromise' defined at complex_types.js:79:6,79:18 with type `type StringPromise = Promise<string>` 
 where
-'Promise' is defined at [LIB] lib.es2015.promise.js:29:15-21
+'Promise' is defined at [LIB] lib.es2015.promise.js:29:11-17
 'StringPromise' is defined at complex_types.js:79:6-18
 
 Found exact match 'NestedPromise' defined at complex_types.js:80:6,80:18 with type `type NestedPromise = Promise<Promise<number>>` 
 where
 'NestedPromise' is defined at complex_types.js:80:6-18
-'Promise' is defined at [LIB] lib.es2015.promise.js:29:15-21
+'Promise' is defined at [LIB] lib.es2015.promise.js:29:11-17
 
 
 === Readonly Collections ===
@@ -696,7 +696,7 @@ where
 === Conditional Types ===
 Found exact match 'UnwrapPromise' defined at complex_types.js:125:6,125:18 with type `type UnwrapPromise<T> = T extends Promise<infer V> ? V : T` 
 where
-'Promise' is defined at [LIB] lib.es2015.promise.js:29:15-21
+'Promise' is defined at [LIB] lib.es2015.promise.js:29:11-17
 'UnwrapPromise' is defined at complex_types.js:125:6-18
 'V' is defined at complex_types.js:125:49
 
@@ -723,7 +723,7 @@ where
 Found exact match 'AsyncFn' defined at complex_types.js:145:6,145:12 with type `type AsyncFn<T> = () => Promise<T>` 
 where
 'AsyncFn' is defined at complex_types.js:145:6-12
-'Promise' is defined at [LIB] lib.es2015.promise.js:29:15-21
+'Promise' is defined at [LIB] lib.es2015.promise.js:29:11-17
 
 
 === Nested/Deep Object Types ===
