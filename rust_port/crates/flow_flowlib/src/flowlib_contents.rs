@@ -58,7 +58,6 @@ flowlib_file!(LIB_ES2022_ARRAY_JS, "lib.es2022.array.js");
 flowlib_file!(LIB_ES2022_ERROR_JS, "lib.es2022.error.js");
 flowlib_file!(LIB_ES2022_STRING_JS, "lib.es2022.string.js");
 flowlib_file!(LIB_ES2023_ARRAY_JS, "lib.es2023.array.js");
-flowlib_file!(LIB_ES2024_COLLECTION_JS, "lib.es2024.collection.js");
 flowlib_file!(LIB_ESNEXT_COLLECTION_JS, "lib.esnext.collection.js");
 flowlib_file!(LIB_ESNEXT_DECORATORS_JS, "lib.esnext.decorators.js");
 flowlib_file!(LIB_ESNEXT_DISPOSABLE_JS, "lib.esnext.disposable.js");
@@ -118,7 +117,10 @@ pub(super) static COMMON_CONTENTS: &[(&str, &str)] = &[
     ("lib.es2022.error.js", LIB_ES2022_ERROR_JS),
     ("lib.es2022.string.js", LIB_ES2022_STRING_JS),
     ("lib.es2023.array.js", LIB_ES2023_ARRAY_JS),
-    ("lib.es2024.collection.js", LIB_ES2024_COLLECTION_JS),
+    (
+        "lib.es2024.collection.js",
+        tslib_contents::LIB_ES2024_COLLECTION_D_TS,
+    ),
     (
         "lib.es2024.promise.js",
         tslib_contents::LIB_ES2024_PROMISE_D_TS,
