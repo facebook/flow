@@ -16,14 +16,6 @@ pub struct MemberInfo<T> {
 
 #[derive(Debug, Clone)]
 pub enum GetDefRequest<M, T> {
-    Identifier {
-        name: FlowSmolStr,
-        loc: M,
-    },
+    Identifier { name: FlowSmolStr, loc: M },
     Member(MemberInfo<T>),
-    JsxAttribute {
-        component_t: T,
-        name: FlowSmolStr,
-        loc: M,
-    },
 }

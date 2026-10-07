@@ -137,14 +137,6 @@ fn is_require<T: Dupe>(
     }
 }
 
-fn annot_of_jsx_name<T: Dupe>(name: &ast::jsx::Name<ALoc, T>) -> &T {
-    match name {
-        ast::jsx::Name::Identifier(id) => &id.loc,
-        ast::jsx::Name::NamespacedName(ns) => &ns.name.loc,
-        ast::jsx::Name::MemberExpression(me) => &me.property.loc,
-    }
-}
-
 struct RequireDeclaratorInfo<T> {
     toplevel_pattern_annot: T,
     require_t: T,
@@ -187,7 +179,7 @@ pub(crate) trait SearcherCallback<T: Dupe> {
         decl: &statement::ImportDeclaration<ALoc, T>,
     ) -> Result<Option<ALoc>, Found>;
 
-    fn component_name_of_jsx_element(
+    fn props_of_jsx_element(
         &self,
         loc: &T,
         expr: &ast::jsx::Element<ALoc, T>,
@@ -735,15 +727,12 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
                 if let ast::jsx::attribute::Name::Identifier(jsx_id) = &jsx_attr.name {
                     let annot = &jsx_id.loc;
                     if self.annot_covers_target(annot) {
-                        let loc = self.callback.loc_of_annot(annot);
-                        let component_t = self
-                            .callback
-                            .component_name_of_jsx_element(expr_loc, expr)?;
-                        self.request(GetDefRequest::JsxAttribute {
-                            component_t,
-                            name: jsx_id.name.dupe(),
-                            loc,
-                        })?;
+                        let props = self.callback.props_of_jsx_element(expr_loc, expr)?;
+                        self.request(GetDefRequest::Member(MemberInfo {
+                            prop_name: jsx_id.name.dupe(),
+                            object_type: props,
+                            force_instance: false,
+                        }))?;
                     }
                 }
             }
@@ -1369,13 +1358,12 @@ impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'c
         }
     }
 
-    fn component_name_of_jsx_element(
+    fn props_of_jsx_element(
         &self,
         _loc: &(ALoc, Type),
         expr: &ast::jsx::Element<ALoc, (ALoc, Type)>,
     ) -> Result<(ALoc, Type), Found> {
-        let opening = &expr.opening_element;
-        Ok(annot_of_jsx_name(&opening.name).dupe())
+        Ok(expr.opening_element.props.dupe())
     }
 
     fn type_from_enclosing_node(
@@ -1590,7 +1578,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
         }
     }
 
-    fn component_name_of_jsx_element(
+    fn props_of_jsx_element(
         &self,
         loc: &ALoc,
         expr: &ast::jsx::Element<ALoc, ALoc>,
@@ -1603,8 +1591,7 @@ impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
             .map_err(|_| Found::InternalError(InternalError::OnDemandTastError))?;
         match typed_expr.deref() {
             expression::ExpressionInner::JSXElement { inner, .. } => {
-                let opening = &inner.opening_element;
-                Ok(annot_of_jsx_name::<(ALoc, Type)>(&opening.name).dupe())
+                Ok(inner.opening_element.props.dupe())
             }
             _ => Err(Found::InternalError(InternalError::OnDemandTastError)),
         }

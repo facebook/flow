@@ -27,7 +27,6 @@ use vec1::Vec1;
 
 use crate::get_def_process_location;
 use crate::get_def_request::GetDefRequest;
-use crate::get_def_request::MemberInfo;
 use crate::get_def_types::Purpose;
 
 #[derive(Debug, Clone)]
@@ -131,32 +130,6 @@ fn process_request<'cx>(
                 t,
                 name,
             ))
-        }
-
-        GetDefRequest::JsxAttribute {
-            component_t: (_, component_t),
-            name,
-            loc,
-        } => {
-            use flow_common::reason::VirtualReasonDesc::*;
-            use flow_typing_type::type_::*;
-
-            let reason = reason::mk_reason(RProperty(Some(Name::new(name.dupe()))), loc.dupe());
-            let props_object = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
-                let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
-                let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
-                    use_op,
-                    reason: reason.dupe(),
-                    tool: Box::new(react::Tool::GetConfig { tout: tvar.dupe() }),
-                })));
-                flow_typing_flow_js::flow_js::flow_non_speculating(cx, (component_t, &use_t))
-            })?;
-            let req = GetDefRequest::Member(MemberInfo {
-                prop_name: name.dupe(),
-                object_type: (loc.dupe(), props_object),
-                force_instance: false,
-            });
-            process_request(loc_of_aloc, cx, typed_ast_opt, file_sig, scope_info, &req)
         }
     }
 }

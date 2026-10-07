@@ -36,3 +36,7 @@ const Foo = {Bar: C, Baz: {Bar: C}};
 //    ^
 <Foo.Baz.Bar x={msg} />;
 //        ^
+
+declare const I: React.ComponentType<{x: number}> & React.ComponentType<{y?: string}>;
+<I y={msg} />;
+// ^
