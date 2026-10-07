@@ -252,7 +252,6 @@ pub mod opts {
         pub ts_utility_syntax: bool,
         pub tslib_syntax: Option<bool>,
         pub typescript_library_definition_support: bool,
-        pub deprecated_utilities: BTreeMap<String, Vec<String>>,
         pub enable_custom_error: bool,
         pub assert_operator: AssertOperator,
         pub assertion_functions: Option<bool>,
@@ -273,24 +272,6 @@ pub mod opts {
         ".css", ".jpg", ".png", ".gif", ".eot", ".svg", ".ttf", ".woff", ".woff2", ".mp4", ".webm",
         ".webp",
     ];
-
-    fn default_deprecated_utilities() -> BTreeMap<String, Vec<String>> {
-        // The context check treats utility dirs as prefixes; an empty prefix matches every non-lib file.
-        let all_files_prefix = String::new();
-        [
-            "mixed",
-            "$ReadOnlyArray",
-            "$NonMaybeType",
-            "$ReadOnly",
-            "$Keys",
-            "$Values",
-            "$ReadOnlyMap",
-            "$ReadOnlySet",
-        ]
-        .into_iter()
-        .map(|utility| (utility.to_string(), vec![all_files_prefix.clone()]))
-        .collect()
-    }
 
     pub fn default_options() -> Opts {
         let module_resource_exts = MODULE_RESOURCE_EXTS
@@ -424,7 +405,6 @@ pub mod opts {
             ts_utility_syntax: true,
             tslib_syntax: None,
             typescript_library_definition_support: false,
-            deprecated_utilities: default_deprecated_utilities(),
             enable_custom_error: false,
             assert_operator: AssertOperator::Disabled,
             assertion_functions: None,

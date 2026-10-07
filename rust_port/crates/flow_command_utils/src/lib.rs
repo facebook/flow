@@ -2247,7 +2247,6 @@ pub fn make_options(
                 ts_utility_syntax,
                 tslib_syntax,
                 typescript_library_definition_support,
-                deprecated_utilities,
                 enable_custom_error,
                 assert_operator,
                 assertion_functions,
@@ -2419,22 +2418,6 @@ pub fn make_options(
             .collect::<Vec<_>>()
             .into();
 
-    let deprecated_utilities: Arc<BTreeMap<String, Vec<String>>> = Arc::new(
-        deprecated_utilities
-            .into_iter()
-            .map(|(k, v)| {
-                let v = v
-                    .into_iter()
-                    .map(|s| {
-                        let s = flow_common::files::expand_project_root_token(&root, &s);
-                        flow_common::files::expand_builtin_root_token(&flowlib_path, &s)
-                    })
-                    .collect();
-                (k, v)
-            })
-            .collect(),
-    );
-
     let enabled_rollouts: Arc<BTreeMap<String, String>> = Arc::new(
         rollouts
             .into_iter()
@@ -2544,7 +2527,6 @@ pub fn make_options(
         async_component_syntax_includes,
         debug: debug_override,
         declare_global_support,
-        deprecated_utilities,
         dev_only_refinement_info_as_errors,
         disable_invariant_special_casing,
         distributed: distributed_override,

@@ -1080,7 +1080,7 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Mixed { loc, comments } => {
-            if cx.is_utility_type_deprecated("mixed") && cx.ts_utility_syntax() {
+            if !cx.is_global_lib_context() && cx.ts_utility_syntax() {
                 flow_js_utils::add_output_non_speculating(
                     cx,
                     ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
@@ -2197,7 +2197,7 @@ fn convert_inner<'a>(
                     }
                     // $ReadOnlyArray<T> is the supertype of all tuples and all arrays
                     "$ReadOnlyArray" => {
-                        if cx.is_utility_type_deprecated("$ReadOnlyArray") {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
@@ -2228,7 +2228,7 @@ fn convert_inner<'a>(
                     }
                     // $NonMaybeType<T> acts as the type T without null and void
                     "$NonMaybeType" => {
-                        if cx.is_utility_type_deprecated("$NonMaybeType") {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
@@ -2421,7 +2421,7 @@ fn convert_inner<'a>(
                     }
                     // $ReadOnly<T>
                     "$ReadOnly" => {
-                        if cx.is_utility_type_deprecated("$ReadOnly") {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
@@ -2491,7 +2491,7 @@ fn convert_inner<'a>(
                     }
                     // $Keys<T> is the set of keys of T
                     "$Keys" => {
-                        if cx.is_utility_type_deprecated("$Keys") {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
@@ -2521,7 +2521,7 @@ fn convert_inner<'a>(
                     }
                     // $Values<T> is a union of all the own enumerable value types of T
                     "$Values" => {
-                        if cx.is_utility_type_deprecated("$Values") {
+                        if !cx.is_global_lib_context() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
@@ -2970,7 +2970,7 @@ fn convert_inner<'a>(
                         )?
                     }
                     "$ReadOnlyMap" => {
-                        if cx.is_utility_type_deprecated("$ReadOnlyMap") && cx.ts_utility_syntax() {
+                        if !cx.is_global_lib_context() && cx.ts_utility_syntax() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
@@ -2991,7 +2991,7 @@ fn convert_inner<'a>(
                         )?
                     }
                     "$ReadOnlySet" => {
-                        if cx.is_utility_type_deprecated("$ReadOnlySet") && cx.ts_utility_syntax() {
+                        if !cx.is_global_lib_context() && cx.ts_utility_syntax() {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
                                 ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
@@ -6477,7 +6477,7 @@ fn mk_type_param_inner<'a>(
     if *bound_kind == ast::types::type_param::BoundKind::Colon
         && matches!(bound, ast::types::AnnotationOrHint::Available(_))
         && !matches!(kind, TypeParamsContext::Infer)
-        && cx.is_colon_extends_deprecated()
+        && !cx.is_global_lib_context()
     {
         flow_js_utils::add_output_non_speculating(
             cx,

@@ -176,7 +176,6 @@ pub struct FrozenMetadata {
     pub async_component_syntax: bool,
     pub async_component_syntax_includes: Arc<[Regex]>,
     pub declare_global_support: bool,
-    pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub dev_only_refinement_info_as_errors: bool,
     pub disable_invariant_special_casing: bool,
     pub enable_const_params: bool,
@@ -239,7 +238,6 @@ impl Default for FrozenMetadata {
             async_component_syntax: false,
             async_component_syntax_includes: Arc::from([]),
             declare_global_support: false,
-            deprecated_utilities: Arc::new(BTreeMap::new()),
             dev_only_refinement_info_as_errors: false,
             disable_invariant_special_casing: false,
             enable_const_params: false,
@@ -683,7 +681,6 @@ pub fn mk_context_metadata(options: &Options, global_libdefs: Arc<BTreeSet<FileK
             ts_utility_syntax: options.ts_utility_syntax,
             tslib_syntax: options.tslib_syntax,
             typescript_library_definition_support: options.typescript_library_definition_support,
-            deprecated_utilities: options.deprecated_utilities.dupe(),
             assert_operator: options.assert_operator,
             assertion_functions: options.assertion_functions,
             type_expansion_recursion_limit: options.type_expansion_recursion_limit,
@@ -1154,22 +1151,6 @@ impl<'cx> Context<'cx> {
             }
     }
 
-    pub fn is_utility_type_deprecated(&self, t: &str) -> bool {
-        if self.is_global_lib_context() {
-            return false;
-        }
-        match self.0.metadata.frozen.deprecated_utilities.get(t) {
-            None => false,
-            Some(dirs) => {
-                let filename = self.0.file.to_absolute();
-                let normalized_filename =
-                    flow_common::sys_utils::normalize_filename_dir_sep(&filename);
-                dirs.iter()
-                    .any(|prefix| normalized_filename.starts_with(prefix))
-            }
-        }
-    }
-
     pub fn enable_relay_integration(&self) -> bool {
         self.0.metadata.frozen.enable_relay_integration
             && flow_common::relay_options::enabled_for_file(
@@ -1420,10 +1401,6 @@ impl<'cx> Context<'cx> {
 
     pub fn ts_syntax(&self) -> bool {
         self.0.metadata.frozen.ts_syntax
-    }
-
-    pub fn is_colon_extends_deprecated(&self) -> bool {
-        !self.is_global_lib_context()
     }
 
     pub fn ts_utility_syntax(&self) -> bool {

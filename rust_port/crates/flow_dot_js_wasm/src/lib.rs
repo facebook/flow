@@ -1386,8 +1386,8 @@ mod tests {
     #[test]
     fn check_content_supports_assertion_functions() {
         let value = check_content_value_with_config(
-            "declare function assertString(value: mixed): asserts value is string;\n\
-             declare const value: mixed;\n\
+            "declare function assertString(value: unknown): asserts value is string;\n\
+             declare const value: unknown;\n\
              assertString(value);\n\
              value as string;\n",
             json!({"experimental.assertion_functions": true}),

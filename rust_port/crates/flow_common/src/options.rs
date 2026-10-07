@@ -135,7 +135,6 @@ pub struct Options {
     pub async_component_syntax_includes: Arc<[Regex]>,
     pub debug: bool,
     pub declare_global_support: bool,
-    pub deprecated_utilities: Arc<BTreeMap<String, Vec<String>>>,
     pub dev_only_refinement_info_as_errors: bool,
     pub disable_invariant_special_casing: bool,
     pub distributed: bool,
