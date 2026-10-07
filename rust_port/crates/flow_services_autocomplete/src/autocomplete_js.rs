@@ -98,7 +98,7 @@ pub enum AutocompleteType {
     AcJsxAttribute {
         attribute_name: String,
         used_attr_names: BTreeSet<String>,
-        component_t: Type,
+        props: Type,
         has_value: bool,
     },
     AcJsxText,
@@ -222,11 +222,11 @@ impl From<flow_utils_concurrency::job_error::JobError> for Found {
 struct Inference;
 
 impl Inference {
-    fn type_of_component_name_of_jsx_element(
+    fn typed_opening_of_jsx_element(
         cx: &Context,
         loc: &ALoc,
         expr: &ast::jsx::Element<ALoc, ALoc>,
-    ) -> Result<Type, Found> {
+    ) -> Result<ast::jsx::Opening<ALoc, (ALoc, Type)>, Found> {
         let typed = typing_statement::expression(
             None,
             None,
@@ -240,12 +240,30 @@ impl Inference {
         .map_err(|_| Found::InternalExn("typed AST structure mismatch".to_string()))?;
         match typed.deref() {
             expression::ExpressionInner::JSXElement { inner, .. } => {
-                Ok(type_of_jsx_name(&inner.opening_element.name))
+                Ok(inner.opening_element.clone())
             }
             _ => Err(Found::InternalExn(
                 "typed AST structure mismatch".to_string(),
             )),
         }
+    }
+
+    fn type_of_component_name_of_jsx_element(
+        cx: &Context,
+        loc: &ALoc,
+        expr: &ast::jsx::Element<ALoc, ALoc>,
+    ) -> Result<Type, Found> {
+        let opening = Self::typed_opening_of_jsx_element(cx, loc, expr)?;
+        Ok(type_of_jsx_name(&opening.name))
+    }
+
+    fn type_of_props_of_jsx_element(
+        cx: &Context,
+        loc: &ALoc,
+        expr: &ast::jsx::Element<ALoc, ALoc>,
+    ) -> Result<Type, Found> {
+        let opening = Self::typed_opening_of_jsx_element(cx, loc, expr)?;
+        Ok(opening.props.1)
     }
 
     fn type_of_expression(
@@ -921,14 +939,14 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSea
             }
         }
         if let Some((ac_loc, attribute_name, has_value)) = found {
-            let component_t = Inference::type_of_component_name_of_jsx_element(self.cx, loc, expr)?;
+            let props = Inference::type_of_props_of_jsx_element(self.cx, loc, expr)?;
             return self.find(
                 ac_loc,
                 attribute_name.clone(),
                 AutocompleteType::AcJsxAttribute {
                     attribute_name,
                     used_attr_names,
-                    component_t,
+                    props,
                     has_value,
                 },
             );

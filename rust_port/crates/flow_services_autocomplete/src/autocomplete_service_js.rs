@@ -57,13 +57,8 @@ use flow_typing_flow_common::flow_js_utils;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::InstanceKind;
 use flow_typing_type::type_::ModuleType;
-use flow_typing_type::type_::ReactKitTData;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
-use flow_typing_type::type_::UseOp;
-use flow_typing_type::type_::UseT;
-use flow_typing_type::type_::UseTInner;
-use flow_typing_type::type_::VirtualRootUseOp;
 use flow_typing_type::type_::constraint::Constraints;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_util;
@@ -2543,32 +2538,11 @@ fn autocomplete_jsx_attribute(
     has_value: bool,
     edit_locs: &(Loc, Loc),
     token: &str,
-    cls: &Type,
-    attribute: &(Loc, String),
+    props: &Type,
 ) -> Result<AutocompleteServiceResult, flow_utils_concurrency::job_error::JobError> {
-    let reason = flow_common::reason::mk_reason(
-        VirtualReasonDesc::RProperty(Some(Name::new(attribute.1.clone()))),
-        ALoc::of_loc(attribute.0.clone()),
-    );
-    let props_object = flow_typing_tvar::mk_where::<flow_utils_concurrency::job_error::JobError>(
-        typing.cx,
-        reason.dupe(),
-        |_cx, tvar| {
-            let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
-            let use_t = UseT::new(UseTInner::ReactKitT(Box::new(ReactKitTData {
-                use_op,
-                reason: reason.dupe(),
-                tool: Box::new(flow_typing_type::type_::react::Tool::GetConfig {
-                    tout: tvar.dupe(),
-                }),
-            })));
-            flow_typing_flow_js::flow_js::flow_non_speculating(typing.cx, (cls, &use_t))?;
-            Ok(())
-        },
-    )?;
     let mut exclude_keys = used_attr_names.clone();
     exclude_keys.insert("children".to_string());
-    match members_of_type(typing, true, false, false, &exclude_keys, &props_object) {
+    match members_of_type(typing, true, false, false, &exclude_keys, props) {
         Err(err) => Ok(AutocompleteServiceResultGeneric::AcFatalError(err)),
         Ok((mems, errors_to_log)) => {
             let items = mems
@@ -3300,9 +3274,9 @@ pub fn autocomplete_get_results(
                     )?
                 }
                 autocomplete_js::AutocompleteType::AcJsxAttribute {
-                    attribute_name,
+                    attribute_name: _,
                     used_attr_names,
-                    component_t,
+                    props,
                     has_value,
                 } => autocomplete_jsx_attribute(
                     typing,
@@ -3310,8 +3284,7 @@ pub fn autocomplete_get_results(
                     has_value,
                     &edit_locs,
                     &token,
-                    &component_t,
-                    &(ac_loc.clone(), attribute_name),
+                    &props,
                 )?,
                 autocomplete_js::AutocompleteType::AcRecordField {
                     field_name: _,

@@ -1570,7 +1570,6 @@ dependencies = [
  "flow_typing_flow_common",
  "flow_typing_flow_js",
  "flow_typing_statement",
- "flow_typing_tvar",
  "flow_typing_ty_normalizer",
  "flow_typing_type",
  "flow_typing_utils",
