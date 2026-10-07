@@ -141,6 +141,7 @@ pub mod opts {
 
     #[derive(Debug, Clone)]
     pub struct Opts {
+        pub agent_progress_keepalive: Option<u32>,
         pub all: Option<bool>,
         pub autoimports: Option<bool>,
         pub autoimports_min_characters: Option<u32>,
@@ -280,6 +281,7 @@ pub mod opts {
             .collect();
 
         Opts {
+            agent_progress_keepalive: None,
             all: None,
             autoimports: None,
             autoimports_min_characters: None,
@@ -1964,6 +1966,18 @@ pub mod opts {
 
         type Parser = fn(RawValues, &mut Opts) -> Result<(), OptError>;
         let parsers: &[(&str, Parser)] = &[
+            ("agent_progress_keepalive", |values, config| {
+                parse_uint(
+                    |opts, v| {
+                        opts.agent_progress_keepalive = Some(v);
+                        Ok(())
+                    },
+                    None,
+                    false,
+                    values,
+                    config,
+                )
+            }),
             ("all", |values, config| {
                 parse_boolean(
                     |opts, v| {

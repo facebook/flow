@@ -21,6 +21,13 @@ use crate::command_connect_simple::BusyReason;
 use crate::command_connect_simple::CCSError;
 use crate::command_connect_simple::MismatchBehavior;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProgressMode {
+    Live,
+    Throttled { interval: Duration },
+    Silent,
+}
+
 pub struct Env<'a> {
     pub root: &'a Path,
     pub autostart: bool,
@@ -33,19 +40,19 @@ pub struct Env<'a> {
     #[allow(dead_code)]
     pub emoji: bool,
     pub quiet: bool,
-    pub show_progress: bool,
+    pub progress: ProgressMode,
     pub flowconfig_name: &'a str,
     pub rerun_on_mismatch: bool,
 }
 
 fn print_status(env: &Env<'_>, message: &str) {
-    if env.quiet {
+    if matches!(env.progress, ProgressMode::Silent) {
         return;
     }
 
     let stderr = std::io::stderr();
     let mut stderr = stderr.lock();
-    if env.show_progress && stderr.is_terminal() {
+    if matches!(env.progress, ProgressMode::Live) && stderr.is_terminal() {
         write!(stderr, "{}: {}", message, flow_utils_tty::spinner(false))
             .expect("failed to write spinner status");
     } else {

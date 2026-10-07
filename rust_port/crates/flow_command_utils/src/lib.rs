@@ -20,6 +20,7 @@ use std::sync::Arc;
 
 use flow_command_spec::Command;
 use flow_command_spec::arg_spec;
+use flow_commands_connect::command_connect::ProgressMode;
 use flow_common::options::Format;
 use flow_common::options::LogSaving;
 use flow_common::options::Options;
@@ -677,15 +678,6 @@ pub(crate) fn add_quiet_flag(spec: flow_command_spec::Spec) -> flow_command_spec
     )
 }
 
-fn add_show_progress_flag(spec: flow_command_spec::Spec) -> flow_command_spec::Spec {
-    spec.flag(
-        "--show-progress",
-        &arg_spec::truthy(),
-        "Show server progress, overriding the AI-agent default",
-        None,
-    )
-}
-
 #[derive(Clone, Copy, Debug, Default)]
 pub enum OnMismatchBehavior {
     #[default]
@@ -1279,7 +1271,6 @@ pub struct ConnectParams {
     pub temp_dir: Option<String>,
     pub ignore_version: bool,
     pub quiet: bool,
-    pub show_progress: bool,
     pub on_mismatch: OnMismatchBehavior,
 }
 
@@ -1287,8 +1278,38 @@ pub struct ConnectParams {
 // ready monitor can take longer than three seconds to drain connection attempts.
 const DEFAULT_CONNECT_RETRIES: i32 = 10;
 
-fn should_show_progress(quiet: bool, show_progress: bool, agent_invocation: bool) -> bool {
-    !quiet && (show_progress || !agent_invocation)
+// Seconds between "Please wait. ..." lines for AI-agent invocations when the
+// flowconfig does not set `agent_progress_keepalive`.
+const DEFAULT_AGENT_PROGRESS_KEEPALIVE_SECS: u64 = 30;
+
+fn progress_mode(
+    quiet: bool,
+    agent_invocation: bool,
+    agent_progress_keepalive: Option<u32>,
+) -> ProgressMode {
+    if quiet {
+        ProgressMode::Silent
+    } else if !agent_invocation {
+        ProgressMode::Live
+    } else {
+        match agent_progress_keepalive {
+            Some(0) => ProgressMode::Silent,
+            Some(secs) => ProgressMode::Throttled {
+                interval: std::time::Duration::from_secs(secs as u64),
+            },
+            None => ProgressMode::Throttled {
+                interval: std::time::Duration::from_secs(DEFAULT_AGENT_PROGRESS_KEEPALIVE_SECS),
+            },
+        }
+    }
+}
+
+fn should_emit_keepalive(
+    now: std::time::Instant,
+    last_print: Option<std::time::Instant>,
+    interval: std::time::Duration,
+) -> bool {
+    last_print.map_or(true, |t| now.duration_since(t) >= interval)
 }
 
 pub fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
@@ -1326,8 +1347,6 @@ pub fn get_connect_flags(args: &arg_spec::Values) -> ConnectParams {
         ignore_version: flow_command_spec::get(args, "--ignore-version", &arg_spec::truthy())
             .unwrap(),
         quiet: flow_command_spec::get(args, "--quiet", &arg_spec::truthy()).unwrap(),
-        show_progress: flow_command_spec::get(args, "--show-progress", &arg_spec::truthy())
-            .unwrap(),
         on_mismatch: flow_command_spec::get(
             args,
             "--on-mismatch",
@@ -1369,7 +1388,6 @@ fn add_connect_flags_with_lazy_collector(spec: flow_command_spec::Spec) -> flow_
     let spec = add_from_flag(spec);
     let spec = add_ignore_version_flag(spec);
     let spec = add_quiet_flag(spec);
-    let spec = add_show_progress_flag(spec);
     add_on_mismatch_flag(spec)
 }
 
@@ -2140,6 +2158,7 @@ pub fn make_options(
         strict_mode,
         options:
             flow_config::opts::Opts {
+                agent_progress_keepalive: _,
                 all,
                 autoimports,
                 autoimports_min_characters,
@@ -2672,10 +2691,10 @@ fn make_env<'a>(
         ignore_version: connect_flags.ignore_version,
         emoji: flowconfig.options.emoji.unwrap_or(false),
         quiet: connect_flags.quiet,
-        show_progress: should_show_progress(
+        progress: progress_mode(
             connect_flags.quiet,
-            connect_flags.show_progress,
             flow_event_logger::agent_invocation_id().is_some(),
+            flowconfig.options.agent_progress_keepalive,
         ),
         flowconfig_name,
         rerun_on_mismatch,
@@ -2947,11 +2966,12 @@ fn connect_and_make_request_inner(
     // Waits for a response over the socket. If the connection dies, this will throw an exception
     fn wait_for_response(
         stream: &mut flow_common_socket::socket::SocketStream,
-        show_progress: bool,
+        progress: ProgressMode,
         emoji: bool,
         _root: &std::path::Path,
     ) -> Result<server_prot::response::Response, ()> {
         let use_emoji = flow_utils_tty::supports_emoji() && emoji;
+        let mut last_print: Option<std::time::Instant> = None;
         stream.set_read_timeout(None).map_err(|_| ())?;
         loop {
             let response: Result<MonitorToClientMessage, _> =
@@ -2972,7 +2992,7 @@ fn connect_and_make_request_inner(
                             | std::io::ErrorKind::UnexpectedEof
                     ) =>
                 {
-                    if show_progress && flow_utils_tty::spinner_used() {
+                    if matches!(progress, ProgressMode::Live) && flow_utils_tty::spinner_used() {
                         let stderr = std::io::stderr();
                         let mut stderr = stderr.lock();
                         flow_utils_tty::print_clear_line(&mut stderr)
@@ -2981,7 +3001,7 @@ fn connect_and_make_request_inner(
                     return Err(());
                 }
                 Err(e) => {
-                    if show_progress && flow_utils_tty::spinner_used() {
+                    if matches!(progress, ProgressMode::Live) && flow_utils_tty::spinner_used() {
                         let stderr = std::io::stderr();
                         let mut stderr = stderr.lock();
                         flow_utils_tty::print_clear_line(&mut stderr)
@@ -3010,16 +3030,32 @@ fn connect_and_make_request_inner(
                         }
                     };
                     if let Some(status_string) = status_string {
-                        print_status(
-                            &format!("Please wait. {}", status_string),
-                            show_progress,
-                            true,
-                        );
+                        match progress {
+                            ProgressMode::Live => {
+                                print_status(
+                                    &format!("Please wait. {}", status_string),
+                                    true,
+                                    true,
+                                );
+                            }
+                            ProgressMode::Throttled { interval } => {
+                                let now = std::time::Instant::now();
+                                if should_emit_keepalive(now, last_print, interval) {
+                                    print_status(
+                                        &format!("Please wait. {}", status_string),
+                                        true,
+                                        false,
+                                    );
+                                    last_print = Some(now);
+                                }
+                            }
+                            ProgressMode::Silent => {}
+                        }
                     }
                     continue;
                 }
                 MonitorToClientMessage::Data(response) => {
-                    if show_progress && flow_utils_tty::spinner_used() {
+                    if matches!(progress, ProgressMode::Live) && flow_utils_tty::spinner_used() {
                         let stderr = std::io::stderr();
                         let mut stderr = stderr.lock();
                         flow_utils_tty::print_clear_line(&mut stderr)
@@ -3107,7 +3143,7 @@ fn connect_and_make_request_inner(
         flow_commands_connect::command_connect::connect(&env, &client_handshake);
 
     let response = match send_command(&mut stream, request) {
-        Ok(()) => wait_for_response(&mut stream, env.show_progress, env.emoji, root),
+        Ok(()) => wait_for_response(&mut stream, env.progress, env.emoji, root),
         Err(bincode::error::EncodeError::Io { inner, .. })
             if matches!(
                 inner.kind(),
@@ -3116,7 +3152,7 @@ fn connect_and_make_request_inner(
                     | std::io::ErrorKind::UnexpectedEof
             ) =>
         {
-            if env.show_progress && flow_utils_tty::spinner_used() {
+            if matches!(env.progress, ProgressMode::Live) && flow_utils_tty::spinner_used() {
                 let stderr = std::io::stderr();
                 let mut stderr = stderr.lock();
                 flow_utils_tty::print_clear_line(&mut stderr)
@@ -3139,8 +3175,8 @@ fn connect_and_make_request_inner(
                     retries,
                     if retries == 1 { "retry" } else { "retries" },
                 ),
-                !env.quiet,
-                env.show_progress,
+                !matches!(env.progress, ProgressMode::Silent),
+                matches!(env.progress, ProgressMode::Live),
             );
             connect_and_make_request_inner(
                 flowconfig_name,
@@ -3481,7 +3517,6 @@ mod tests {
 
     use super::builtin_lib_arg;
     use super::config_builtin_lib_of_arg;
-    use super::should_show_progress;
 
     #[test]
     fn builtin_lib_names_are_canonicalized() {
@@ -3506,26 +3541,5 @@ mod tests {
             "default"
         );
         assert_eq!(builtin_lib_arg(ConfigBuiltinLib::Flowlib), "core-only");
-    }
-
-    #[test]
-    fn human_invocations_show_progress_by_default() {
-        assert!(should_show_progress(false, false, false));
-    }
-
-    #[test]
-    fn agent_invocations_hide_progress_by_default() {
-        assert!(!should_show_progress(false, false, true));
-    }
-
-    #[test]
-    fn agents_can_request_progress() {
-        assert!(should_show_progress(false, true, true));
-    }
-
-    #[test]
-    fn quiet_takes_precedence_over_show_progress() {
-        assert!(!should_show_progress(true, true, true));
-        assert!(!should_show_progress(true, true, false));
     }
 }
