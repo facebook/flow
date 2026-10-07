@@ -236,7 +236,10 @@ fn mod_t(
             if matches!(
                 &inner.id,
                 generic::Identifier::Unqualified(id)
-                    if matches!(id.name.as_str(), "$ReadOnlyArray" | "Array" | "Iterable" | "Set")
+                    if matches!(
+                        id.name.as_str(),
+                        "$ReadOnlyArray" | "ReadonlyArray" | "Array" | "Iterable" | "Set"
+                    )
             ) && inner
                 .targs
                 .as_ref()

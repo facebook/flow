@@ -8,9 +8,11 @@ test.js:3:16,3:20
 
 test.js:6:16
 Flags:
-type ReadonlyArray<out T> = ReadonlyArray<T>
 
-'ReadonlyArray' defined at (lib) lib.es5.js:439:5
+ A class of Array methods and properties that don't mutate the array.
+class ReadonlyArray<out T>
+
+'ReadonlyArray' defined at (lib) lib.es5.js:444:14
 
 test.js:6:16,6:28
 

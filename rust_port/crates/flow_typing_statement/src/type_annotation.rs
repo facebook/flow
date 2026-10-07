@@ -2906,7 +2906,7 @@ fn convert_inner<'a>(
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
                             let elemt = elemts.into_iter().next().unwrap();
                             // As with `Array` above, the head still names the
-                            // `ReadonlyArray` alias, so record that for hover.
+                            // `ReadonlyArray` class, so record that for hover.
                             let id_t = unapplied_type_identifier_opt(cx, name, name_loc.dupe())?;
                             Ok(reconstruct_ast(
                                 Type::new(type_::TypeInner::DefT(

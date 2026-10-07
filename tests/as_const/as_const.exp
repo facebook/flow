@@ -54,7 +54,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:25:8
 
-Cannot call `arr1.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `arr1.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    array.js:25:8
     25|   arr1.push(4); // error cannot mutate readonly array
@@ -62,8 +62,8 @@ Cannot call `arr1.push` because property `push` is missing in `$ReadOnlyArray` [
 
 References:
    <BUILTINS>/lib.es5.js:444:15
-   444| declare class $ReadOnlyArray<out T> {
-                      ^^^^^^^^^^^^^^ [1]
+   444| declare class ReadonlyArray<out T> {
+                      ^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- array.js:29:17

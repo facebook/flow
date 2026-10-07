@@ -453,7 +453,7 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
 
 References:
    <BUILTINS>/lib.es5.js:587:21
-   587| declare class Array<T> extends $ReadOnlyArray<T> {
+   587| declare class Array<T> extends ReadonlyArray<T> {
                             ^ [1]
    misc.js:3:9
      3| var e = new Array(10);

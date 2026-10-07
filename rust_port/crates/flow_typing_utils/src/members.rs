@@ -950,11 +950,11 @@ pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type
                         elem_t.dupe(),
                     ),
                     ArrType::TupleAT(box TupleATData { elem_t, .. }) => (
-                        flow_js_utils::lookup_builtin_type(cx, "$ReadOnlyArray", reason.dupe()),
+                        flow_js_utils::lookup_builtin_type(cx, "ReadonlyArray", reason.dupe()),
                         elem_t.dupe(),
                     ),
                     ArrType::ROArrayAT(box (elem_t, _)) => (
-                        flow_js_utils::lookup_builtin_type(cx, "$ReadOnlyArray", reason.dupe()),
+                        flow_js_utils::lookup_builtin_type(cx, "ReadonlyArray", reason.dupe()),
                         elem_t.dupe(),
                     ),
                 };

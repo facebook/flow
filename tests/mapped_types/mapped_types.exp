@@ -97,7 +97,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- deep_types.js:46:11
 
-Cannot call `obj.arr.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `obj.arr.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    deep_types.js:46:11
    46|   obj.arr.push({value: 'updated value'}); // error: Cannot mutate arrays.
@@ -161,7 +161,7 @@ Cannot assign `'updated value'` to `obj.nested.doubleNested.value` because prope
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:55:7
 
-Cannot call `arr.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `arr.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    deep_types.js:55:7
    55|   arr.push('goodbye'); // error: Cannot mutate arrays.

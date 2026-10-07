@@ -10470,7 +10470,7 @@ fn __flow_impl<'cx>(
                         env,
                         reason,
                         Some(true),
-                        "$ReadOnlyArray",
+                        "ReadonlyArray",
                         vec![dro_elem],
                     );
                     let u_mod = type_util::mod_use_op_of_use_t(
@@ -10566,14 +10566,8 @@ fn __flow_impl<'cx>(
                 ReactDro(dro_loc.dupe(), dro_type.clone()),
                 elem_t.dupe(),
             );
-            let ro_arr = get_builtin_typeapp(
-                cx,
-                env,
-                reason,
-                Some(true),
-                "$ReadOnlyArray",
-                vec![dro_elem],
-            );
+            let ro_arr =
+                get_builtin_typeapp(cx, env, reason, Some(true), "ReadonlyArray", vec![dro_elem]);
             rec_flow(cx, env, trace, (&ro_arr, &u_mod))?;
         }
         (TypeInner::DefT(reason, def_t), _)
@@ -10591,7 +10585,7 @@ fn __flow_impl<'cx>(
                 ) =>
         {
             let t = elemt_of_arrtype(arr);
-            let ro_arr = get_builtin_typeapp(cx, env, reason, None, "$ReadOnlyArray", vec![t]);
+            let ro_arr = get_builtin_typeapp(cx, env, reason, None, "ReadonlyArray", vec![t]);
             rec_flow(cx, env, trace, (&ro_arr, u))?;
         }
         // ***********************

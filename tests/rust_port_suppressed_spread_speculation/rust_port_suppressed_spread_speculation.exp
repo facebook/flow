@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:40:15
 
-Cannot call `options.find` because property `find` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `options.find` because property `find` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    test.js:40:15
    40|       options.find(opt => opt.value === selectedOption)

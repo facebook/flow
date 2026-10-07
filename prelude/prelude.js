@@ -23,11 +23,11 @@ declare class String {
 
 declare class RegExp {}
 
-declare class $ReadOnlyArray<out T> {
+declare class ReadonlyArray<out T> {
   @@iterator(): Iterator<T>;
 }
-
-declare class Array<T> extends $ReadOnlyArray<T> {
+type $ReadOnlyArray<out T> = ReadonlyArray<T>;
+declare class Array<T> extends ReadonlyArray<T> {
   constructor(arrayLength?: number): void;
 }
 
@@ -37,8 +37,8 @@ interface ArrayLike<out T> {
 }
 type $ArrayLike<T> = ArrayLike<T>;
 
-interface TaggedTemplateLiteralArray extends $ReadOnlyArray<string> {
-  readonly raw: $ReadOnlyArray<string>;
+interface TaggedTemplateLiteralArray extends ReadonlyArray<string> {
+  readonly raw: ReadonlyArray<string>;
 }
 
 // Promise

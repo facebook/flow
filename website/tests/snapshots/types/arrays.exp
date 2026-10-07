@@ -17,7 +17,7 @@ Cannot assign `20` to `readonlyArray[1]` because read-only arrays cannot be writ
 
 Error ------------------------------------------------------------------------------- -:6:15
 
-Cannot call `readonlyArray.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `readonlyArray.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    -:6:15
    6| readonlyArray.push(4);          // Error!
@@ -30,7 +30,7 @@ References:
 
 Error ------------------------------------------------------------------------------- -:7:15
 
-Cannot call `readonlyArray.unshift` because property `unshift` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `readonlyArray.unshift` because property `unshift` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    -:7:15
    7| readonlyArray.unshift(4);       // Error!

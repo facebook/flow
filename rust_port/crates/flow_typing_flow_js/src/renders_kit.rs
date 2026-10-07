@@ -332,7 +332,7 @@ pub fn rec_renders_to_renders<'cx>(
                         env,
                         reasonl,
                         None,
-                        "$ReadOnlyArray",
+                        "ReadonlyArray",
                         vec![renders_star],
                     );
                     FlowJs::rec_flow_t_with_env(

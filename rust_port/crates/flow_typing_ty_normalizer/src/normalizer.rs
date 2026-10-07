@@ -4604,7 +4604,7 @@ mod expand_members {
         let builtin = match a {
             flow_typing_type::type_::ArrType::ArrayAT(box ArrayATData { .. }) => "Array",
             flow_typing_type::type_::ArrType::ROArrayAT(box (..))
-            | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => "$ReadOnlyArray",
+            | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => "ReadonlyArray",
         };
         let t = match a {
             flow_typing_type::type_::ArrType::ArrayAT(box ArrayATData { .. }) => {
@@ -4618,7 +4618,7 @@ mod expand_members {
             | flow_typing_type::type_::ArrType::TupleAT(box TupleATData { .. }) => {
                 flow_typing_flow_common::flow_js_utils::lookup_builtin_type(
                     env.genv.cx,
-                    "$ReadOnlyArray",
+                    "ReadonlyArray",
                     r.dupe(),
                 )
             }

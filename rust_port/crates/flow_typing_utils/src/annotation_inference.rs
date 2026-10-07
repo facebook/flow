@@ -2743,7 +2743,7 @@ fn elab_t_concrete<'cx>(
                                 cx,
                                 env,
                                 reason.dupe(),
-                                "$ReadOnlyArray",
+                                "ReadonlyArray",
                                 vec![elem_t],
                             );
                             elab_t(cx, env, dst_cx, Some(seen), arr_t, op)

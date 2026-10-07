@@ -5983,8 +5983,14 @@ pub fn rec_sub_t<'cx>(
                 && let DefTInner::ArrT(arr2) = ud.deref()
                 && let ArrType::ROArrayAT(box (elemt, _)) = arr2.as_ref() =>
         {
-            let arrt =
-                FlowJs::get_builtin_typeapp_with_env(cx, env, r2, None, "$ReadOnlyArray", vec![elemt.dupe()]);
+            let arrt = FlowJs::get_builtin_typeapp_with_env(
+                cx,
+                env,
+                r2,
+                None,
+                "ReadonlyArray",
+                vec![elemt.dupe()],
+            );
             FlowJs::rec_flow_with_env(cx, env, trace, l, &UseT::new(UseTInner::UseT(use_op, arrt)))
         }
 

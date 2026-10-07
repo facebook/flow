@@ -490,7 +490,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:3:5
 
-Cannot call `a.push` because property `push` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+Cannot call `a.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
 
    type_names.js:3:5
    3|   a.push(4); // error: readonly
@@ -554,7 +554,7 @@ Cannot assign empty string to `e.foo` because property `foo` is not writable. [c
 
 Error ---------------------------------------------------------------------------------------------- type_names.js:16:32
 
-Cannot call `exported_with_ts_typenames.a.push` because property `push` is missing in `$ReadOnlyArray` [1].
+Cannot call `exported_with_ts_typenames.a.push` because property `push` is missing in `ReadonlyArray` [1].
 [prop-missing]
 
    type_names.js:16:32

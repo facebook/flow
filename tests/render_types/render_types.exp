@@ -102,7 +102,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:14:2
 
-Cannot cast `<StarFoo />` to renders `Foo` because `$ReadOnlyArray` [1] does not render `Foo` [2]. [incompatible-type]
+Cannot cast `<StarFoo />` to renders `Foo` because `ReadonlyArray` [1] does not render `Foo` [2]. [incompatible-type]
 
    import.js:14:2
     14| <StarFoo /> as renders Foo; // ERROR
@@ -110,8 +110,8 @@ Cannot cast `<StarFoo />` to renders `Foo` because `$ReadOnlyArray` [1] does not
 
 References:
    <BUILTINS>/lib.es5.js:444:15
-   444| declare class $ReadOnlyArray<out T> {
-                      ^^^^^^^^^^^^^^ [1]
+   444| declare class ReadonlyArray<out T> {
+                      ^^^^^^^^^^^^^ [1]
    import.js:14:16
     14| <StarFoo /> as renders Foo; // ERROR
                        ^^^^^^^^^^^ [2]
@@ -134,7 +134,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:15:2
 
-Cannot cast `<StarFoo />` to renders? `Foo` because `$ReadOnlyArray` [1] does not render `Foo` [2]. [incompatible-type]
+Cannot cast `<StarFoo />` to renders? `Foo` because `ReadonlyArray` [1] does not render `Foo` [2]. [incompatible-type]
 
    import.js:15:2
     15| <StarFoo /> as renders? Foo; // ERROR
@@ -142,8 +142,8 @@ Cannot cast `<StarFoo />` to renders? `Foo` because `$ReadOnlyArray` [1] does no
 
 References:
    <BUILTINS>/lib.es5.js:444:15
-   444| declare class $ReadOnlyArray<out T> {
-                      ^^^^^^^^^^^^^^ [1]
+   444| declare class ReadonlyArray<out T> {
+                      ^^^^^^^^^^^^^ [1]
    import.js:15:16
     15| <StarFoo /> as renders? Foo; // ERROR
                        ^^^^^^^^^^^^ [2]

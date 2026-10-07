@@ -2153,7 +2153,7 @@ fn visit_mixed<'cx>(
         ALocSet::new()
     } else {
         // As a shorthand to mark tuple patterns as used, if our value is mixed/any, we
-        // can match against `$ReadOnlyArray<mixed>`
+        // can match against `ReadonlyArray<mixed>`
         let mixed_t = flow_typing_type::type_::mixed_t::make(reason.dupe());
         let arr_t = Type::new(TypeInner::DefT(
             reason.dupe(),
