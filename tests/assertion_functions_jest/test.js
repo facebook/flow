@@ -1,5 +1,12 @@
 declare function myAssert(condition: boolean): asserts condition;
 
+const cjsAssertString = require('./cjs_exports');
+
+function commonJSRequire(value: unknown) {
+  cjsAssertString(value);
+  value as string;
+}
+
 // Assertion functions only affect control flow when called as expression
 // statements. In expression position these calls return `void`.
 function reproNeverReturnsInMatch(type: string): string {
@@ -23,4 +30,11 @@ function reproNeverReturnsInNestedTernary(level: string): string {
 function sequenceExpressionAsserts(value: ?number): number {
   (myAssert(value != null), value as number);
   return value;
+}
+
+declare function invariant(condition: boolean): asserts condition;
+
+function declaredInvariantRefines(value: ?string) {
+  invariant(value != null);
+  value as string;
 }

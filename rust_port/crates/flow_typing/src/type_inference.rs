@@ -719,6 +719,7 @@ enum DeclaredTypesMode<'a> {
         ast: &'a ast::Program<Loc, Loc>,
         type_sig_options: &'a TypeSigOptions,
         current_type_sig: Option<Arc<PackedTypeSigModule<Loc>>>,
+        file_sig: &'a FileSig,
     },
 }
 
@@ -751,6 +752,7 @@ fn initialize_env_with_mode<'cx>(
                     ast,
                     type_sig_options,
                     current_type_sig,
+                    file_sig,
                 } => declared_types::pack(
                     type_sig_options,
                     cx,
@@ -759,6 +761,7 @@ fn initialize_env_with_mode<'cx>(
                     &scopes,
                     &providers,
                     current_type_sig,
+                    file_sig,
                 )
                 .map(|analysis| declared_types::resolve(cx, analysis)),
             }
@@ -892,6 +895,7 @@ pub fn initialize_env<'cx>(
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     ast: &ast::Program<Loc, Loc>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
+    file_sig: &FileSig,
 ) -> Result<(), flow_utils_concurrency::job_error::JobError> {
     let _resolved_declared_types = initialize_env_with_mode(
         cx,
@@ -901,6 +905,7 @@ pub fn initialize_env<'cx>(
             ast,
             type_sig_options,
             current_type_sig: None,
+            file_sig,
         },
     )?;
     Ok(())
@@ -949,6 +954,7 @@ pub fn infer_ast<'a>(
                 ast,
                 type_sig_options,
                 current_type_sig,
+                file_sig: &file_sig,
             },
         )?;
         let typed_statements = statement_mod::statement_list(cx, statements)?;

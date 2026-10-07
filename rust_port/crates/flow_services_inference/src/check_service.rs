@@ -96,6 +96,7 @@ pub struct CheckFileAndCompEnv {
                 &TypeSigOptions,
                 &ast::Program<Loc, Loc>,
                 &ast::Program<ALoc, ALoc>,
+                &FileSig,
             ) -> Result<(), flow_utils_concurrency::job_error::JobError>
             + 'static,
     >,
@@ -988,9 +989,10 @@ pub fn mk_check_file(
         move |cx: &Context<'static>,
               type_sig_options: &TypeSigOptions,
               ast: &ast::Program<Loc, Loc>,
-              aloc_ast: &ast::Program<ALoc, ALoc>| {
+              aloc_ast: &ast::Program<ALoc, ALoc>,
+              file_sig: &FileSig| {
             cx.set_merge_dst_cx(cx);
-            type_inference::initialize_env(cx, type_sig_options, None, ast, aloc_ast)
+            type_inference::initialize_env(cx, type_sig_options, None, ast, aloc_ast, file_sig)
         },
     );
 

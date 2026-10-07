@@ -878,6 +878,7 @@ fn autocomplete(params: &Value) -> Result<Value, String> {
             None,
             prepared.parsed.ast.as_ref(),
             aloc_ast,
+            &prepared.parsed.file_sig,
         )
         .map_err(|_| "autocomplete type inference failed".to_string())?;
         let module_system_info = LspModuleSystemInfo {

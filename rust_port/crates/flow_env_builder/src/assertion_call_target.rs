@@ -19,10 +19,14 @@ use flow_parser::ast::expression::Expression;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::expression::ExpressionOrSpread;
 use flow_parser::ast::expression::member;
-use flow_parser::ast::statement::ImportKind;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::file_sig::ImportedLocs;
+use flow_parser_utils::file_sig::Require;
+use flow_parser_utils::file_sig::RequireBindings;
+use vec1::Vec1;
 
 use crate::find_providers::State;
 use crate::provider_api::Info as ProviderInfo;
@@ -93,6 +97,7 @@ pub fn bare_assertion_call_always_throws(
 /// Which export an imported callee root refers to.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ImportedName {
+    CommonJS,
     Default,
     Named(FlowSmolStr),
     Namespace,
@@ -130,6 +135,8 @@ pub struct CalleeTarget<L> {
 struct Collector<'a, L: LocSig> {
     scope_info: &'a ScopeInfo<L>,
     provider_info: &'a ProviderInfo<L>,
+    /// `import` bindings and `X = require('source')` bindings, keyed by the
+    /// local identifier location.
     imports: BTreeMap<L, ImportedCallee>,
     targets: Vec<CalleeTarget<L>>,
 }
@@ -228,9 +235,10 @@ impl<'a, L: LocSig> Collector<'a, L> {
         }
 
         let root_binding_loc = def.locs.first().dupe();
-        let import = is_import
-            .then(|| self.imports.get(&root_binding_loc).cloned())
-            .flatten();
+        // The map only holds entries for `import` and `require` bindings, so a
+        // hit here identifies the callee root as one of those regardless of
+        // the binding kind.
+        let import = self.imports.get(&root_binding_loc).cloned();
 
         Some(CalleeTarget {
             call_loc: call_loc.dupe(),
@@ -246,76 +254,93 @@ impl<'a, L: LocSig> Collector<'a, L> {
     }
 }
 
-/// Maps each import-bound local name to the export it refers to, keyed by the
-/// local identifier location (which is also the scope binding location).
-fn import_descriptors<L: LocSig>(program: &ast::Program<L, L>) -> BTreeMap<L, ImportedCallee> {
-    struct Imports<L> {
-        imports: BTreeMap<L, ImportedCallee>,
+/// Records the local bindings of one named-import map (value, type, or
+/// typeof imports) as descriptors.
+fn record_named_imports(
+    imports: &mut BTreeMap<ALoc, ImportedCallee>,
+    source: &FlowSmolStr,
+    map: &BTreeMap<FlowSmolStr, BTreeMap<FlowSmolStr, Vec1<ImportedLocs>>>,
+    is_value: bool,
+) {
+    for (remote, locals) in map {
+        let remote = if remote.as_str() == "default" {
+            ImportedName::Default
+        } else {
+            ImportedName::Named(remote.dupe())
+        };
+        for locs in locals.values().flat_map(|locs| locs.iter()) {
+            imports.insert(
+                ALoc::of_loc(locs.local_loc.dupe()),
+                ImportedCallee {
+                    source: source.dupe(),
+                    remote: remote.clone(),
+                    is_value,
+                },
+            );
+        }
     }
+}
 
-    impl<'ast, L: LocSig> AstVisitor<'ast, L> for Imports<L> {
-        fn normalize_loc(loc: &'ast L) -> &'ast L {
-            loc
-        }
-
-        fn normalize_type(type_: &'ast L) -> &'ast L {
-            type_
-        }
-
-        fn import_declaration(
-            &mut self,
-            _loc: &'ast L,
-            decl: &'ast ast::statement::ImportDeclaration<L, L>,
-        ) -> Result<(), !> {
-            let source = decl.source.1.value.dupe();
-            let mut record = |loc: L, remote: ImportedName, kind: ImportKind| {
-                self.imports.insert(
-                    loc,
+/// Builds the import/require descriptor map from the file's signature: each
+/// import-bound local and each plain `X = require('source')` binding, keyed
+/// by its binding location. Destructured requires are skipped; each plain
+/// require binding is described as the CommonJS export of its module.
+pub fn file_sig_descriptors(file_sig: &FileSig) -> BTreeMap<ALoc, ImportedCallee> {
+    let mut imports = BTreeMap::new();
+    for require in file_sig.requires() {
+        match require {
+            Require::Import {
+                source,
+                named,
+                ns,
+                types,
+                typesof,
+                typesof_ns,
+                type_ns,
+                ..
+            } => {
+                record_named_imports(&mut imports, source.name(), named, true);
+                record_named_imports(&mut imports, source.name(), types, false);
+                record_named_imports(&mut imports, source.name(), typesof, false);
+                for id in ns.iter() {
+                    imports.insert(
+                        ALoc::of_loc(id.loc().dupe()),
+                        ImportedCallee {
+                            source: source.name().dupe(),
+                            remote: ImportedName::Namespace,
+                            is_value: true,
+                        },
+                    );
+                }
+                for id in typesof_ns.iter().chain(type_ns.iter()) {
+                    imports.insert(
+                        ALoc::of_loc(id.loc().dupe()),
+                        ImportedCallee {
+                            source: source.name().dupe(),
+                            remote: ImportedName::Namespace,
+                            is_value: false,
+                        },
+                    );
+                }
+            }
+            Require::Require {
+                source,
+                bindings: Some(RequireBindings::BindIdent(id)),
+                ..
+            } => {
+                imports.insert(
+                    ALoc::of_loc(id.loc().dupe()),
                     ImportedCallee {
-                        source: source.dupe(),
-                        remote,
-                        is_value: matches!(kind, ImportKind::ImportValue),
+                        source: source.name().dupe(),
+                        remote: ImportedName::CommonJS,
+                        is_value: true,
                     },
                 );
-            };
-            if let Some(default) = decl.default.as_ref() {
-                record(
-                    default.identifier.loc.dupe(),
-                    ImportedName::Default,
-                    decl.import_kind,
-                );
             }
-            match decl.specifiers.as_ref() {
-                Some(ast::statement::import_declaration::Specifier::ImportNamedSpecifiers(
-                    specs,
-                )) => {
-                    for spec in specs {
-                        let remote = if spec.remote.name.as_str() == "default" {
-                            ImportedName::Default
-                        } else {
-                            ImportedName::Named(spec.remote.name.dupe())
-                        };
-                        let local = spec.local.as_ref().unwrap_or(&spec.remote);
-                        let kind = spec.kind.unwrap_or(decl.import_kind);
-                        record(local.loc.dupe(), remote, kind);
-                    }
-                }
-                Some(ast::statement::import_declaration::Specifier::ImportNamespaceSpecifier(
-                    (_, id),
-                )) => {
-                    record(id.loc.dupe(), ImportedName::Namespace, decl.import_kind);
-                }
-                None => {}
-            }
-            ast_visitor::import_declaration_default(self, _loc, decl)
+            _ => {}
         }
     }
-
-    let mut imports = Imports {
-        imports: BTreeMap::new(),
-    };
-    let Ok(()) = imports.program(program);
-    imports.imports
+    imports
 }
 
 impl<'ast, L: LocSig> AstVisitor<'ast, L> for Collector<'_, L> {
@@ -352,15 +377,18 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for Collector<'_, L> {
 }
 
 /// Collects statically named callees that can be resolved from annotations alone.
+/// `imports` maps import- and require-bound locals to their source module
+/// (see `file_sig_descriptors`), keyed by binding location.
 pub fn collect<L: LocSig>(
     program: &ast::Program<L, L>,
     scope_info: &ScopeInfo<L>,
     provider_info: &ProviderInfo<L>,
+    imports: BTreeMap<L, ImportedCallee>,
 ) -> Vec<CalleeTarget<L>> {
     let mut collector = Collector {
         scope_info,
         provider_info,
-        imports: import_descriptors(program),
+        imports,
         targets: vec![],
     };
     let Ok(()) = collector.program(program);

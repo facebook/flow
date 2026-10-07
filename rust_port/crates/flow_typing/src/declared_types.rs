@@ -26,6 +26,7 @@ use flow_env_builder::assertion_call_target::CalleeTarget;
 use flow_env_builder::assertion_call_target::ImportedName;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
+use flow_parser_utils::file_sig::FileSig;
 use flow_type_sig::compact_table::Index;
 use flow_type_sig::compact_table::Table;
 use flow_type_sig::packed_type_sig::Module;
@@ -85,8 +86,10 @@ pub(crate) fn pack(
     scope_info: &flow_analysis::scope_api::ScopeInfo<ALoc>,
     provider_info: &flow_env_builder::provider_api::Info<ALoc>,
     current_type_sig: Option<Arc<Module<Loc>>>,
+    file_sig: &FileSig,
 ) -> Option<PackedAnalysis> {
-    let candidates = assertion_call_target::collect(aloc_ast, scope_info, provider_info);
+    let imports = assertion_call_target::file_sig_descriptors(file_sig);
+    let candidates = assertion_call_target::collect(aloc_ast, scope_info, provider_info, imports);
     if candidates.is_empty() {
         return None;
     }
@@ -293,6 +296,18 @@ fn imported_assertion_info(
     let Ok(module) = module(cx, cx) else {
         return None;
     };
+    if matches!(import.remote, ImportedName::CommonJS)
+        && let Some((_, export)) = &module.module_export_types.cjs_export
+    {
+        let callee_type = callee_type_for_classification(
+            cx,
+            &candidate.callee_loc,
+            &candidate.property_path,
+            export,
+        )?;
+        return assertion_info_of_type(cx, reason, &callee_type);
+    }
+    let exports = cx.find_exports(module.module_export_types.value_exports_tmap.dupe());
     let (export_name, property_path) = match &import.remote {
         ImportedName::Default => ("default", candidate.property_path.as_slice()),
         ImportedName::Named(name) => (name.as_str(), candidate.property_path.as_slice()),
@@ -300,8 +315,22 @@ fn imported_assertion_info(
             let (name, rest) = candidate.property_path.split_first()?;
             (name.as_str(), rest)
         }
+        ImportedName::CommonJS => {
+            // Mirror checking's `require()` typing
+            // (`cjs_require_t_kit::on_module_t_with_env`): without
+            // `cjs_export` (handled above) the value is the namespace
+            // object, unless `automatic_require_default` applies to a
+            // non-lib module that has a default export.
+            let automatic_require_default =
+                cx.automatic_require_default() && !cx.is_lib_reason_def(&module.module_reason);
+            if automatic_require_default && exports.get(&Name::new("default")).is_some() {
+                ("default", candidate.property_path.as_slice())
+            } else {
+                let (name, rest) = candidate.property_path.split_first()?;
+                (name.as_str(), rest)
+            }
+        }
     };
-    let exports = cx.find_exports(module.module_export_types.value_exports_tmap.dupe());
     let export = exports.get(&Name::new(export_name))?;
     let callee_type =
         callee_type_for_classification(cx, &candidate.callee_loc, property_path, &export.type_)?;

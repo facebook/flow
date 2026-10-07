@@ -1,0 +1,119 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:9:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:9:3
+   9|   value as number; // error
+        ^^^^^
+
+References:
+   esm_fn_default.js:2:65
+   2| declare function assertString(value: unknown): asserts value is string;
+                                                                      ^^^^^^ [1]
+   test.js:9:12
+   9|   value as number; // error
+                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:15:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:15:3
+   15|   value as string; // error
+         ^^^^^
+
+References:
+   esm_obj_default.js:1:65
+    1| declare function assertNumber(value: unknown): asserts value is number;
+                                                                       ^^^^^^ [1]
+   test.js:15:12
+   15|   value as string; // error
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:21:3
+
+Cannot cast `value` to number because `string` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:21:3
+   21|   value as number; // error
+         ^^^^^
+
+References:
+   cjs.js:1:65
+    1| declare function assertString(value: unknown): asserts value is string;
+                                                                       ^^^^^^ [1]
+   test.js:21:12
+   21|   value as number; // error
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:27:3
+
+Cannot cast `value` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:27:3
+   27|   value as string; // error
+         ^^^^^
+
+References:
+   esm_nodefault.js:1:72
+    1| declare export function assertNumber(value: unknown): asserts value is number;
+                                                                              ^^^^^^ [1]
+   test.js:27:12
+   27|   value as string; // error
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:31:3
+
+Cannot call `esmNoDefault` because a call signature declaring the expected parameter / return type is missing in module
+`./esm_nodefault` [1]. [prop-missing]
+
+   test.js:31:3
+   31|   esmNoDefault(value);
+         ^^^^^^^^^^^^
+
+References:
+   test.js:3:22
+    3| const esmNoDefault = require('./esm_nodefault');
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:32:3
+
+Cannot cast `value` to string because `unknown` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   test.js:32:3
+   32|   value as string; // error: bare namespace call does not narrow
+         ^^^^^
+
+References:
+   test.js:30:31
+   30| function nodefaultBare(value: unknown) {
+                                     ^^^^^^^ [1]
+   test.js:32:12
+   32|   value as string; // error: bare namespace call does not narrow
+                  ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:33:3
+
+Cannot cast `value` to number because `unknown` [1] is incompatible with `number` [2]. [incompatible-type]
+
+   test.js:33:3
+   33|   value as number; // error
+         ^^^^^
+
+References:
+   test.js:30:31
+   30| function nodefaultBare(value: unknown) {
+                                     ^^^^^^^ [1]
+   test.js:33:12
+   33|   value as number; // error
+                  ^^^^^^ [2]
+
+
+
+Found 7 errors

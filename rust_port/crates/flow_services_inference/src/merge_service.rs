@@ -1148,7 +1148,7 @@ pub fn compute_env_of_contents(
         aloc_table,
     );
     let aloc_ast = flow_aloc::loc_to_aloc_ast(ast.as_ref());
-    compute_env(&cx, &type_sig_options, ast.as_ref(), aloc_ast)?;
+    compute_env(&cx, &type_sig_options, ast.as_ref(), aloc_ast, &file_sig)?;
     Ok(cx)
 }
 
