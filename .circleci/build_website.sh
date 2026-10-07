@@ -10,4 +10,6 @@ mkdir -p "website/static/flow/master"
 cp "dist/flow.js" "website/static/flow/master/flow.js"
 rm -rf "website/static/flow/master/flowlib"
 cp -r "lib" "website/static/flow/master/flowlib"
+rm -rf "website/static/flow/master/tslib"
+cp -r "tslib" "website/static/flow/master/tslib"
 cd website && INCLUDE_PAST_RELEASES=1 IN_FLOW_TEST=1 FLOW_MAX_WORKERS=2 DOCUSAURUS_SSR_CONCURRENCY=2 yarn build

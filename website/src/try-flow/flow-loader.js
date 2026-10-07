@@ -69,6 +69,19 @@ const SPLIT_FLOWLIB_FILES: ReadonlyArray<string> = [
   'dom_extra_to_be_removed.js',
 ];
 
+// Flowlib files taken verbatim from `tslib/`. They keep their `.js` name so they are checked as
+// Flow libdefs, but their contents are fetched from the `.d.ts` file.
+const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
+  'lib.es2019.string.js',
+];
+
+function sourceUrlOf(url: string): string {
+  const filename = url.substring(url.lastIndexOf('/') + 1);
+  return TSLIB_SOURCED_FLOWLIB_FILES.includes(filename)
+    ? url.replace(/\/flowlib\/([^/]+)\.js$/, '/tslib/$1.d.ts')
+    : url;
+}
+
 const TRY_LIB_CONTENTS = `
 declare type $JSXIntrinsics = {
   [string]: {
@@ -110,7 +123,7 @@ function get(url: string) {
     req.onabort = () => {
       reject('Network request aborted');
     };
-    req.open('GET', url);
+    req.open('GET', sourceUrlOf(url));
     req.send();
   });
 }

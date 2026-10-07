@@ -6,6 +6,7 @@
   "repository": "facebook/flow",
   "files": [
     "flowlib",
+    "tslib",
     "flow.js",
     "README.md"
   ],

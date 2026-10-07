@@ -26,6 +26,7 @@ macro_rules! include_tslib {
 pub(super) const LIB_DOM_ASYNCITERABLE_D_TS: &str = include_tslib!("lib.dom.asynciterable.d.ts");
 pub(super) const LIB_DOM_D_TS: &str = include_tslib!("lib.dom.d.ts");
 pub(super) const LIB_DOM_ITERABLE_D_TS: &str = include_tslib!("lib.dom.iterable.d.ts");
+pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
 
 pub static CONTENTS: &[(&str, &str)] = &[
     ("lib.d.ts", include_tslib!("lib.d.ts")),
@@ -162,10 +163,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2019.object.d.ts",
         include_tslib!("lib.es2019.object.d.ts"),
     ),
-    (
-        "lib.es2019.string.d.ts",
-        include_tslib!("lib.es2019.string.d.ts"),
-    ),
+    ("lib.es2019.string.d.ts", LIB_ES2019_STRING_D_TS),
     (
         "lib.es2019.symbol.d.ts",
         include_tslib!("lib.es2019.symbol.d.ts"),

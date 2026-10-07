@@ -585,6 +585,7 @@ jobs:
       run: |
         cp dist/flow.js packages/try-flow-website-js/flow.js
         cp -r lib packages/try-flow-website-js/flowlib
+        cp -r tslib packages/try-flow-website-js/tslib
         make dist/npm-try-flow-website-js.tgz
     - name: Deploy to NPM
       run: |
