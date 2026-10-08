@@ -8270,19 +8270,141 @@ fn __flow_impl<'cx>(
                     &inst.inst_dict,
                 ),
             )?;
-            rec_flow(
-                cx,
-                env,
-                trace,
-                (
-                    super_,
-                    &UseT::new(UseTInner::ReposLowerT {
-                        reason: reason_inst.dupe(),
-                        use_desc: false,
-                        use_t: Box::new(UseT::new(UseTInner::ImplementsT(use_op.dupe(), t.dupe()))),
-                    }),
-                ),
-            )?;
+            // An interface can extend a class, as TypeScript's `interface
+            // RegExpMatchArray extends Array<string>` does, and then has the
+            // class's members. Sending [ImplementsT] on to such a super would
+            // report the class as "not an interface", at the class's location, so
+            // class supers are checked here instead.
+            // Each super carries the member names already checked by more derived
+            // declarations on its own chain.
+            let checked_names: BTreeSet<Name> =
+                std::iter::once(Name::new(FlowSmolStr::new_inline("constructor")))
+                    .chain(cx.find_props(inst.own_props.dupe()).keys().duped())
+                    .chain(cx.find_props(inst.proto_props.dupe()).keys().duped())
+                    .collect();
+            let mut supers = vec![(super_.dupe(), checked_names)];
+            let mut seen_classes = BTreeSet::new();
+            while let Some((super_, checked_names)) = supers.pop() {
+                for super_t in helpers::possible_concrete_types_for_inspection(
+                    cx,
+                    env,
+                    reason_of_t(&super_),
+                    &super_,
+                )? {
+                    match super_t.deref() {
+                        TypeInner::IntersectionT(_, rep) => {
+                            supers.extend(
+                                rep.members_iter()
+                                    .map(|member| (member.dupe(), checked_names.clone())),
+                            );
+                        }
+                        TypeInner::DefT(_, def_t)
+                            if let DefTInner::InstanceT(super_inst) = def_t.deref()
+                                && !matches!(
+                                    super_inst.inst.inst_kind,
+                                    InstanceKind::InterfaceKind { .. }
+                                ) =>
+                        {
+                            if !seen_classes.insert((super_t.dupe(), checked_names.clone())) {
+                                continue;
+                            }
+                            match t.deref() {
+                                // Private (`#`) members are not checked.
+                                TypeInner::DefT(_, def_t)
+                                    if matches!(
+                                        def_t.deref(),
+                                        DefTInner::InstanceT(_) | DefTInner::ObjT(_)
+                                    ) =>
+                                {
+                                    let unchecked = |props: properties::Id| {
+                                        properties::PropertiesMap::from_btree_map(
+                                            cx.find_props(props)
+                                                .iter()
+                                                .filter(|(name, _)| !checked_names.contains(*name))
+                                                .map(|(name, prop)| (name.dupe(), prop.dupe()))
+                                                .collect(),
+                                        )
+                                    };
+                                    let own_props = unchecked(super_inst.inst.own_props.dupe());
+                                    let proto_props = unchecked(super_inst.inst.proto_props.dupe());
+                                    let mut super_checked_names = checked_names.clone();
+                                    super_checked_names.extend(own_props.keys().duped());
+                                    super_checked_names.extend(proto_props.keys().duped());
+                                    structural_subtype(
+                                        cx,
+                                        env,
+                                        trace,
+                                        use_op.dupe(),
+                                        super_inst.inst.inst_abstract,
+                                        super_inst
+                                            .inst
+                                            .strictness_kind
+                                            .join(implementor_strictness_kind),
+                                        t,
+                                        &super_t,
+                                        (
+                                            cx.generate_property_map(own_props),
+                                            cx.generate_property_map(proto_props),
+                                            super_inst.inst.inst_call_t,
+                                            super_inst.inst.inst_construct_t,
+                                            &super_inst.inst.inst_dict,
+                                        ),
+                                    )?;
+                                    supers.push((super_inst.super_.dupe(), super_checked_names));
+                                }
+                                // An array's members come from a builtin instance, so
+                                // compare that instance with the class. A tuple's
+                                // members are those of `ReadonlyArray`.
+                                TypeInner::DefT(r, def_t)
+                                    if let DefTInner::ArrT(arr) = def_t.deref() =>
+                                {
+                                    let (name, elem_t) = match arr.as_ref() {
+                                        ArrType::ArrayAT(box ArrayATData { elem_t, .. }) => {
+                                            ("Array", elem_t)
+                                        }
+                                        ArrType::TupleAT(box TupleATData { elem_t, .. })
+                                        | ArrType::ROArrayAT(box (elem_t, _)) => {
+                                            ("ReadonlyArray", elem_t)
+                                        }
+                                    };
+                                    let instance = get_builtin_typeapp(
+                                        cx,
+                                        env,
+                                        r,
+                                        None,
+                                        name,
+                                        vec![elem_t.dupe()],
+                                    );
+                                    rec_flow_t(
+                                        cx,
+                                        env,
+                                        trace,
+                                        use_op.dupe(),
+                                        (&instance, &super_t),
+                                    )?;
+                                }
+                                _ => rec_flow_t(cx, env, trace, use_op.dupe(), (t, &super_t))?,
+                            }
+                        }
+                        _ => rec_flow(
+                            cx,
+                            env,
+                            trace,
+                            (
+                                &super_t,
+                                &UseT::new(UseTInner::ReposLowerT {
+                                    reason: reason_inst.dupe(),
+                                    use_desc: false,
+                                    use_t: Box::new(UseT::new(UseTInner::ImplementsT(
+                                        use_op.dupe(),
+                                        t.dupe(),
+                                    ))),
+                                }),
+                            ),
+                        )?,
+                    }
+                }
+            }
         }
         (TypeInner::DefT(_, def_t), UseTInner::ImplementsT(use_op, implementor))
             if let DefTInner::ObjT(obj) = def_t.deref()
@@ -10081,6 +10203,20 @@ fn __flow_impl<'cx>(
             let inst_construct_t = inst_t.inst.inst_construct_t;
             let inst_dict = &inst_t.inst.inst_dict;
             let check_structural_interface = |cx: &Context<'cx>, env: &FlowJsEnv| {
+                if matches!(inst_kind, InstanceKind::InterfaceKind { .. })
+                    && let TypeInner::DefT(_, def_t) = ext_l.deref()
+                    && matches!(def_t.deref(), DefTInner::ObjT(_))
+                {
+                    return rec_flow(
+                        cx,
+                        env,
+                        trace,
+                        (
+                            ext_u,
+                            &UseT::new(UseTInner::ImplementsT(use_op.dupe(), ext_l.dupe())),
+                        ),
+                    );
+                }
                 structural_subtype(
                     cx,
                     env,

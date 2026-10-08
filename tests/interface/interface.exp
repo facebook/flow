@@ -23,6 +23,510 @@ References:
                                        ^^^^ [3]
 
 
+Error -------------------------------------------------------------------------------------------- extends_class.js:10:1
+
+Cannot cast `strings` to `StringArrayWithExtra` because property `extra` is missing in `Array<string>` [1] but exists in
+`StringArrayWithExtra` [2]. [incompatible-type]
+
+   extends_class.js:10:1
+   10| strings as StringArrayWithExtra; // Error: `extra` is missing, and nothing else
+       ^^^^^^^
+
+References:
+   extends_class.js:9:24
+    9| declare const strings: Array<string>;
+                              ^^^^^^^^^^^^^ [1]
+   extends_class.js:10:12
+   10| strings as StringArrayWithExtra; // Error: `extra` is missing, and nothing else
+                  ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:13:1
+
+Cannot cast `numbers` to `StringArrayWithExtra` because property `extra` is missing in `Array<number>` [1] but exists in
+`StringArrayWithExtra` [2]. [incompatible-type]
+
+   extends_class.js:13:1
+   13| numbers as StringArrayWithExtra; // Error: `extra` is missing, and `number` is not `string`
+       ^^^^^^^
+
+References:
+   extends_class.js:12:24
+   12| declare const numbers: Array<number>;
+                              ^^^^^^^^^^^^^ [1]
+   extends_class.js:13:12
+   13| numbers as StringArrayWithExtra; // Error: `extra` is missing, and `number` is not `string`
+                  ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:13:1
+
+Cannot cast `numbers` to `StringArrayWithExtra` because in type argument `T` [1]: `number` [2] is incompatible with
+`string` [3]. [incompatible-type]
+
+   extends_class.js:13:1
+    13| numbers as StringArrayWithExtra; // Error: `extra` is missing, and `number` is not `string`
+        ^^^^^^^
+
+References:
+   <BUILTINS>/lib.es5.js:587:21
+   587| declare class Array<T> extends ReadonlyArray<T> {
+                            ^ [1]
+   extends_class.js:12:30
+    12| declare const numbers: Array<number>;
+                                     ^^^^^^ [2]
+   extends_class.js:5:46
+     5| interface StringArrayWithExtra extends Array<string> {
+                                                     ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:21:1
+
+Cannot cast `box` to `Box` because in type argument `T` [1]: property `extra` is missing in `Array<string>` [2] but
+exists in `StringArrayWithExtra` [3]. [incompatible-type]
+
+   extends_class.js:21:1
+   21| box as Box<Array<string>>; // Error: `extra` is missing in `Array<string>`, and nothing else
+       ^^^
+
+References:
+   extends_class.js:16:15
+   16| interface Box<T> {
+                     ^ [1]
+   extends_class.js:21:12
+   21| box as Box<Array<string>>; // Error: `extra` is missing in `Array<string>`, and nothing else
+                  ^^^^^^^^^^^^^ [2]
+   extends_class.js:20:24
+   20| declare const box: Box<StringArrayWithExtra>;
+                              ^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:30:7
+
+Cannot implement `BaseWithExtra` [1] with `ImplementsWithoutBase` because property `base` is missing in
+`ImplementsWithoutBase` [2] but exists in `Base` [3]. [incompatible-type]
+
+   extends_class.js:30:7
+   30| class ImplementsWithoutBase implements BaseWithExtra { // Error: `base` is missing
+             ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   extends_class.js:30:40
+   30| class ImplementsWithoutBase implements BaseWithExtra { // Error: `base` is missing
+                                              ^^^^^^^^^^^^^ [1]
+   extends_class.js:27:33
+   27| interface BaseWithExtra extends Base {
+                                       ^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:39:1
+
+Cannot cast `tuple` to `StringArrayWithExtra` because `ReadonlyArray<string>` [1] is incompatible with
+`Array<string>` [2]. [incompatible-type]
+
+   extends_class.js:39:1
+   39| tuple as StringArrayWithExtra; // Error: `extra` is missing, and `ReadonlyArray` is not `Array`
+       ^^^^^
+
+References:
+   extends_class.js:38:22
+   38| declare const tuple: [string, string];
+                            ^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:5:40
+    5| interface StringArrayWithExtra extends Array<string> {
+                                              ^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:39:1
+
+Cannot cast `tuple` to `StringArrayWithExtra` because property `extra` is missing in `[string, string]` [1] but exists
+in `StringArrayWithExtra` [2]. [incompatible-type]
+
+   extends_class.js:39:1
+   39| tuple as StringArrayWithExtra; // Error: `extra` is missing, and `ReadonlyArray` is not `Array`
+       ^^^^^
+
+References:
+   extends_class.js:38:22
+   38| declare const tuple: [string, string];
+                            ^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:39:10
+   39| tuple as StringArrayWithExtra; // Error: `extra` is missing, and `ReadonlyArray` is not `Array`
+                ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:48:1
+
+Cannot cast `strings` to `NamedStringArray` because property `name` is missing in `Array<string>` [1] but exists in
+`Named` [2]. [incompatible-type]
+
+   extends_class.js:48:1
+   48| strings as NamedStringArray; // Error: `name` is missing, and nothing else
+       ^^^^^^^
+
+References:
+   extends_class.js:9:24
+    9| declare const strings: Array<string>;
+                              ^^^^^^^^^^^^^ [1]
+   extends_class.js:48:12
+   48| strings as NamedStringArray; // Error: `name` is missing, and nothing else
+                  ^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:57:7
+
+Cannot implement `DerivedBaseWithExtra` [1] with `ImplementsNothing` because property `base` is missing in
+`ImplementsNothing` [2] but exists in `DerivedBase` [3]. [incompatible-type]
+
+   extends_class.js:57:7
+   57| class ImplementsNothing implements DerivedBaseWithExtra {} // Error: `extra` and `base` are missing, once each
+             ^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   extends_class.js:57:36
+   57| class ImplementsNothing implements DerivedBaseWithExtra {} // Error: `extra` and `base` are missing, once each
+                                          ^^^^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:54:40
+   54| interface DerivedBaseWithExtra extends DerivedBase {
+                                              ^^^^^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:57:7
+
+Cannot implement `DerivedBaseWithExtra` [1] with `ImplementsNothing` because property `extra` is missing in
+`ImplementsNothing` [2] but exists in `DerivedBaseWithExtra` [1]. [incompatible-type]
+
+   extends_class.js:57:7
+   57| class ImplementsNothing implements DerivedBaseWithExtra {} // Error: `extra` and `base` are missing, once each
+             ^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   extends_class.js:57:36
+   57| class ImplementsNothing implements DerivedBaseWithExtra {} // Error: `extra` and `base` are missing, once each
+                                          ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- extends_class.js:64:1
+
+Cannot cast `Statics` to `BaseWithExtra` because class `Statics` [1] is incompatible with `Base` [2].
+[incompatible-type]
+
+   extends_class.js:64:1
+   64| Statics as BaseWithExtra; // Error: `Statics` is not a `Base`
+       ^^^^^^^
+
+References:
+   extends_class.js:60:7
+   60| class Statics {
+             ^^^^^^^ [1]
+   extends_class.js:27:33
+   27| interface BaseWithExtra extends Base {
+                                       ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- extends_class.js:78:15
+
+Cannot implement `NarrowThenWide` [1] with `NumberXNarrowThenWide` because in property `x`: `number` [2] is incompatible
+with `string` [3]. [incompatible-type]
+
+   extends_class.js:78:15
+   78|   readonly x: number = 0;
+                     ^^^^^^ [2]
+
+References:
+   extends_class.js:77:40
+   77| class NumberXNarrowThenWide implements NarrowThenWide { // Error: `number` is not `string`
+                                              ^^^^^^^^^^^^^^ [1]
+   extends_class.js:73:15
+   73|   readonly x: string;
+                     ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- extends_class.js:82:15
+
+Cannot implement `WideThenNarrow` [1] with `NumberXWideThenNarrow` because in property `x`: `number` [2] is incompatible
+with `string` [3]. [incompatible-type]
+
+   extends_class.js:82:15
+   82|   readonly x: number = 0;
+                     ^^^^^^ [2]
+
+References:
+   extends_class.js:81:40
+   81| class NumberXWideThenNarrow implements WideThenNarrow { // Error: `number` is not `string`
+                                              ^^^^^^^^^^^^^^ [1]
+   extends_class.js:73:15
+   73|   readonly x: string;
+                     ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- extends_class.js:91:10
+
+Cannot implement `InterfaceBoth` [1] with `InterfaceNumberOnly` because in property `value`: `number` [2] is
+incompatible with `string` [3]. [incompatible-type]
+
+   extends_class.js:91:10
+   91|   value: number = 0; // ERROR
+                ^^^^^^ [2]
+
+References:
+   extends_class.js:90:38
+   90| class InterfaceNumberOnly implements InterfaceBoth {
+                                            ^^^^^^^^^^^^^ [1]
+   extends_class.js:89:42
+   89| interface InterfaceBoth extends IGeneric<string>, IGeneric<number> {}
+                                                ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:100:10
+
+Cannot implement `ClassBoth` [1] with `ClassNumberOnly` because in property `value`: `number` [2] is incompatible with
+`string` [3]. [incompatible-type]
+
+   extends_class.js:100:10
+   100|   value: number = 0; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:99:34
+    99| class ClassNumberOnly implements ClassBoth {
+                                         ^^^^^^^^^ [1]
+   extends_class.js:97:38
+    97| interface ClassBoth extends CGeneric<string>, CGeneric<number> {}
+                                             ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:103:10
+
+Cannot implement `ClassBothReversed` [1] with `ClassNumberOnlyReversed` because in property `value`: `number` [2] is
+incompatible with `string` [3]. [incompatible-type]
+
+   extends_class.js:103:10
+   103|   value: number = 0; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:102:42
+   102| class ClassNumberOnlyReversed implements ClassBothReversed {
+                                                 ^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:98:64
+    98| interface ClassBothReversed extends CGeneric<number>, CGeneric<string> {}
+                                                                       ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:106:10
+
+Cannot implement `ClassBoth` [1] with `ClassStringOnly` because in property `value`: `string` [2] is incompatible with
+`number` [3]. [incompatible-type]
+
+   extends_class.js:106:10
+   106|   value: string = ''; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:105:34
+   105| class ClassStringOnly implements ClassBoth {
+                                         ^^^^^^^^^ [1]
+   extends_class.js:97:56
+    97| interface ClassBoth extends CGeneric<string>, CGeneric<number> {}
+                                                               ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:109:10
+
+Cannot implement `ClassBothReversed` [1] with `ClassStringOnlyReversed` because in property `value`: `string` [2] is
+incompatible with `number` [3]. [incompatible-type]
+
+   extends_class.js:109:10
+   109|   value: string = ''; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:108:42
+   108| class ClassStringOnlyReversed implements ClassBothReversed {
+                                                 ^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:98:46
+    98| interface ClassBothReversed extends CGeneric<number>, CGeneric<string> {}
+                                                     ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:112:42
+
+Cannot assign object literal to `genericObject` because in property `value`: `0` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   extends_class.js:112:42
+   112| const genericObject: ClassBoth = {value: 0}; // ERROR
+                                                 ^ [1]
+
+References:
+   extends_class.js:97:38
+    97| interface ClassBoth extends CGeneric<string>, CGeneric<number> {}
+                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:113:58
+
+Cannot assign object literal to `genericObjectReversed` because in property `value`: `0` [1] is incompatible with
+`string` [2]. [incompatible-type]
+
+   extends_class.js:113:58
+   113| const genericObjectReversed: ClassBothReversed = {value: 0}; // ERROR
+                                                                 ^ [1]
+
+References:
+   extends_class.js:98:64
+    98| interface ClassBothReversed extends CGeneric<number>, CGeneric<string> {}
+                                                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:116:42
+
+Cannot assign object literal to `objectWithoutBase` because property `base` is missing in object literal [1] but exists
+in `{base: number, ...}` [2]. [incompatible-type]
+
+   extends_class.js:116:42
+   116| const objectWithoutBase: BaseWithExtra = {extra: ''}; // ERROR
+                                                 ^^^^^^^^^^^ [1]
+
+References:
+   extends_class.js:27:33
+    27| interface BaseWithExtra extends Base {
+                                        ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:117:51
+
+Cannot assign object literal to `objectWithWrongBase` because in property `base`: `""` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   extends_class.js:117:51
+   117| const objectWithWrongBase: BaseWithExtra = {base: '', extra: ''}; // ERROR
+                                                          ^^ [1]
+
+References:
+   extends_class.js:25:9
+    25|   base: number = 0;
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:119:56
+
+Cannot assign object literal to `objectWithoutDerivedBase` because property `base` is missing in object literal [1] but
+exists in `{base: number, ...}` [2]. [incompatible-type]
+
+   extends_class.js:119:56
+   119| const objectWithoutDerivedBase: DerivedBaseWithExtra = {extra: ''}; // ERROR
+                                                               ^^^^^^^^^^^ [1]
+
+References:
+   extends_class.js:54:40
+    54| interface DerivedBaseWithExtra extends DerivedBase {
+                                               ^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:122:40
+
+Cannot assign object literal to `wideObject` because in property `x`: `0` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   extends_class.js:122:40
+   122| const wideObject: NarrowThenWide = {x: 0, y: 0}; // ERROR
+                                               ^ [1]
+
+References:
+   extends_class.js:73:15
+    73|   readonly x: string;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:123:48
+
+Cannot assign object literal to `wideObjectReversed` because in property `x`: `0` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   extends_class.js:123:48
+   123| const wideObjectReversed: WideThenNarrow = {x: 0, y: 0}; // ERROR
+                                                       ^ [1]
+
+References:
+   extends_class.js:73:15
+    73|   readonly x: string;
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:131:10
+
+Cannot implement `RedeclaredThenGeneric` [1] with `NumberValueRedeclaredThenGeneric` because in property `value`:
+`number` [2] is incompatible with `string` [3]. [incompatible-type]
+
+   extends_class.js:131:10
+   131|   value: number = 0; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:130:51
+   130| class NumberValueRedeclaredThenGeneric implements RedeclaredThenGeneric {
+                                                          ^^^^^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:126:10
+   126|   value: string;
+                 ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:131:10
+
+Cannot implement `RedeclaredThenGeneric` [1] with `NumberValueRedeclaredThenGeneric` because in property `value`:
+`number` [2] is incompatible with `string` [3]. [incompatible-type]
+
+   extends_class.js:131:10
+   131|   value: number = 0; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:130:51
+   130| class NumberValueRedeclaredThenGeneric implements RedeclaredThenGeneric {
+                                                          ^^^^^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:128:69
+   128| interface RedeclaredThenGeneric extends RedeclaredGeneric, CGeneric<string> {}
+                                                                            ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:134:10
+
+Cannot implement `GenericThenRedeclared` [1] with `NumberValueGenericThenRedeclared` because in property `value`:
+`number` [2] is incompatible with `string` [3]. [incompatible-type]
+
+   extends_class.js:134:10
+   134|   value: number = 0; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:133:51
+   133| class NumberValueGenericThenRedeclared implements GenericThenRedeclared {
+                                                          ^^^^^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:126:10
+   126|   value: string;
+                 ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ extends_class.js:134:10
+
+Cannot implement `GenericThenRedeclared` [1] with `NumberValueGenericThenRedeclared` because in property `value`:
+`number` [2] is incompatible with `string` [3]. [incompatible-type]
+
+   extends_class.js:134:10
+   134|   value: number = 0; // ERROR
+                 ^^^^^^ [2]
+
+References:
+   extends_class.js:133:51
+   133| class NumberValueGenericThenRedeclared implements GenericThenRedeclared {
+                                                          ^^^^^^^^^^^^^^^^^^^^^ [1]
+   extends_class.js:129:50
+   129| interface GenericThenRedeclared extends CGeneric<string>, RedeclaredGeneric {}
+                                                         ^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------------ fun.js:5:19
 
 Cannot assign function to `f0` because in the return value: `0` [1] is incompatible with `void` [2]. [incompatible-type]
@@ -479,9 +983,9 @@ Cannot cast object literal to `B` because property `p` is missing in object lite
         ^^^^^^ [1]
 
 References:
-   inline.js:2:28
-    2| type B = interface extends A { q: number }
-                                  ^ [2]
+   inline.js:10:12
+   10| ({q: 0} as B); // error: missing property p
+                  ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- inline.js:11:2
@@ -1524,4 +2028,4 @@ References:
 
 
 
-Found 88 errors
+Found 117 errors
