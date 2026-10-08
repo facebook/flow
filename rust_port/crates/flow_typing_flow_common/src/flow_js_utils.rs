@@ -3802,10 +3802,7 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
     distributed_t: Type,
 ) -> impl Fn(Type) -> Type {
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
-    use flow_typing_type::type_::DepthTrace;
-    use flow_typing_type::type_::constraint::Bounds;
     use flow_typing_type::type_util::reason_of_t;
-    use flow_utils_union_find::Node;
     use tvar_visitors::has_unresolved_tvars;
 
     use crate::type_subst::Purpose;
@@ -3818,29 +3815,11 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
         // | _ ->
         _ => {
             if has_unresolved_tvars(cx, &distributed_t) {
-                let r = reason_of_t(&distributed_t).dupe();
-                let tvar_id = flow_common::reason::mk_id() as i32;
-
-                let mut lower = BTreeMap::default();
-                lower.insert(
+                flow_typing_tvar::mk_resolved(
+                    cx,
+                    reason_of_t(&distributed_t).dupe(),
                     distributed_t.dupe(),
-                    (DepthTrace::dummy_trace(), unknown_use()),
-                );
-                let bounds = Bounds {
-                    lower,
-                    upper: BTreeMap::default(),
-                    lowertvars: BTreeMap::default(),
-                    uppertvars: BTreeMap::default(),
-                };
-                let node = Node::create_root(Constraints::Unresolved(Rc::new(
-                    std::cell::RefCell::new(bounds),
-                )));
-                cx.add_fresh_tvar(tvar_id, node);
-
-                Type::new(TypeInner::OpenT(flow_typing_type::type_::Tvar::new(
-                    r,
-                    tvar_id as u32,
-                )))
+                )
             } else {
                 flow_typing_tvar::mk_fully_resolved(
                     cx,

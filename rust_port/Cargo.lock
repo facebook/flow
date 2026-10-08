@@ -2039,7 +2039,6 @@ dependencies = [
  "flow_typing_type",
  "flow_typing_visitors",
  "flow_utils_concurrency",
- "flow_utils_union_find",
  "regex",
  "vec1",
 ]
