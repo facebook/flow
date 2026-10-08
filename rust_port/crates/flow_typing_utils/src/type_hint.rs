@@ -11,6 +11,7 @@
 
 use std::cell::LazyCell;
 use std::cell::RefCell;
+use std::collections::BTreeSet;
 use std::collections::VecDeque;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -56,6 +57,8 @@ use flow_typing_type::type_::CallAction;
 use flow_typing_type::type_::CallArg;
 use flow_typing_type::type_::CallArgInner;
 use flow_typing_type::type_::CallTData;
+use flow_typing_type::type_::ConcretizationKind;
+use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::FunParam;
@@ -93,6 +96,7 @@ use flow_typing_type::type_::UseOp;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::any_t;
+use flow_typing_type::type_::concretize_seen::ConcretizeSeen;
 use flow_typing_type::type_::empty_tuple_view;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
@@ -1116,30 +1120,33 @@ fn type_of_hint_decomposition<'cx>(
                 }
             }
             ConcrHintDecompositionInner::DecompAwait => {
-                let t = t.dupe();
-                let reason2 = reason.dupe();
-                Ok(flow_typing_tvar::mk_where(
+                let collector = TypeCollector::create();
+                let tout = UseT::new(UseTInner::ConcretizeT(Box::new(ConcretizeTData {
+                    reason: reason.dupe(),
+                    kind: ConcretizationKind::ConcretizeForLowerBounds,
+                    seen: ConcretizeSeen::new(),
+                    collector: collector.dupe(),
+                })));
+                flow_js::flow_with_env(cx, env, (&t, &tout))?;
+                let promise_t = FlowJs::get_builtin_typeapp_with_env(
                     cx,
-                    reason.dupe(),
-                    move |cx, tout| -> Result<(), SandboxError> {
-                        flow_js::flow_t_with_env(cx, env, (&t, tout))?;
-                        let promise_t = FlowJs::get_builtin_typeapp_with_env(
-                            cx,
-                            env,
-                            &reason2,
-                            None,
-                            "Promise",
-                            vec![t.dupe()],
-                        );
-                        speculation_flow::resolved_lower_flow_t_unsafe(
-                            cx,
-                            env,
-                            &reason2,
-                            (&promise_t, tout),
-                        )?;
-                        Ok(())
-                    },
-                )?)
+                    env,
+                    reason,
+                    None,
+                    "Promise",
+                    vec![t.dupe()],
+                );
+                speculation_flow::resolved_lower_flow_unsafe(cx, env, reason, (&promise_t, &tout))?;
+                let mut lowers = Vec::new();
+                flow_js_utils::collect_lowers(
+                    false,
+                    cx,
+                    &mut BTreeSet::new(),
+                    &mut lowers,
+                    collector.collect_to_vec(),
+                );
+                type_util::union_of_ts_opt(reason.dupe(), lowers, Some(UnionKind::ResolvedKind))
+                    .ok_or_else(|| UnconstrainedTvarException.into())
             }
             ConcrHintDecompositionInner::DecompCallNew => {
                 let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
