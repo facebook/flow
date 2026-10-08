@@ -2525,7 +2525,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- literal_precision.js:57:11
 
-Cannot get `metrics[`...`]` because property `favorited_28d` is missing in object type [1]. [prop-missing]
+Cannot get `metrics[`...`]` because property `favorited_28d` is missing in
+`{views_28d?: number, views_7d?: number}` [1]. [prop-missing]
 
    literal_precision.js:57:11
    57|   metrics[`favorited_${period}`]; // error property missing
@@ -2539,7 +2540,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- literal_precision.js:57:11
 
-Cannot get `metrics[`...`]` because property `favorited_7d` is missing in object type [1]. [prop-missing]
+Cannot get `metrics[`...`]` because property `favorited_7d` is missing in `{views_28d?: number, views_7d?: number}` [1].
+[prop-missing]
 
    literal_precision.js:57:11
    57|   metrics[`favorited_${period}`]; // error property missing
