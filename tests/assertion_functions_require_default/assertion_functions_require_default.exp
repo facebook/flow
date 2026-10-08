@@ -68,8 +68,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:3
 
-Cannot call `esmNoDefault` because a call signature declaring the expected parameter / return type is missing in module
-`./esm_nodefault` [1]. [prop-missing]
+Cannot call `esmNoDefault` because a call signature declaring the expected parameter / return type is missing in
+`{readonly assertNumber: (value: unknown) => asserts value is number}` [1]. [prop-missing]
 
    test.js:31:3
    31|   esmNoDefault(value);

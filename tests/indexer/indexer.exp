@@ -127,7 +127,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:4
 
-Cannot get `o1.qux` because property `qux` is missing in object type [1]. [prop-missing]
+Cannot get `o1.qux` because property `qux` is missing in `{[key: Key1]: number}` [1]. [prop-missing]
 
    test.js:7:4
    7| o1.qux; // error: qux not found
@@ -141,7 +141,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:14:4
 
-Cannot get `o2.qux` because property `qux` is missing in object type [1]. [prop-missing]
+Cannot get `o2.qux` because property `qux` is missing in `{[key: Key2]: number}` [1]. [prop-missing]
 
    test.js:14:4
    14| o2.qux; // error: qux not found
@@ -155,8 +155,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:1
 
-Cannot extend `C` [1] with `D` because in property `x` > the indexer property's key: property `qux` is missing in object
-type [2]. [prop-missing]
+Cannot extend `C` [1] with `D` because in property `x` > the indexer property's key: property `qux` is missing in
+`{bar: string, foo: number, ...}` [2]. [prop-missing]
 
    test.js:19:1
        v---------------------------------------------------

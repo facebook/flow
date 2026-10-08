@@ -3084,7 +3084,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- methods.js:29:3
 
-Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
+Cannot get `E.nonExistent` because property `nonExistent` is missing in
+`{cast(this: typeof E, input: ?string): void | E, getName(this: typeof E, input: E): string, isValid(...` [1].
+[prop-missing]
 
    methods.js:29:3
     29| E.nonExistent; // Error
@@ -3105,7 +3107,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- methods.js:32:3
 
-Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumProto` [1]. [prop-missing]
+Cannot call `E.nonExistent` because property `nonExistent` is missing in
+`{cast(this: typeof E, input: ?string): void | E, getName(this: typeof E, input: E): string, isValid(...` [1].
+[prop-missing]
 
    methods.js:32:3
     32| E.nonExistent(); // Error
@@ -3140,7 +3144,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- methods.js:38:3
 
-Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-missing]
+Cannot call `E.A` because property `A` is missing in
+`{cast(this: typeof E, input: ?string): void | E, getName(this: typeof E, input: E): string, isValid(...` [1].
+[prop-missing]
 
    methods.js:38:3
     38| E.A(); // Error
@@ -3161,7 +3167,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- methods.js:41:3
 
-Cannot call `E.toString` because property `toString` is missing in `$EnumProto` [1]. [prop-missing]
+Cannot call `E.toString` because property `toString` is missing in
+`{cast(this: typeof E, input: ?string): void | E, getName(this: typeof E, input: E): string, isValid(...` [1].
+[prop-missing]
 
    methods.js:41:3
     41| E.toString(); // Error

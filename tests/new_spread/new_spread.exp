@@ -600,7 +600,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:3:4
 
-Cannot get `o1.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
+Cannot get `o1.someProp` because property `someProp` is missing in `{...}` [1]. [prop-missing]
 
    type_mixed.js:3:4
    3| o1.someProp as empty; // Error someProp does not exist
@@ -628,7 +628,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_mixed.js:7:4
 
-Cannot get `o2.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
+Cannot get `o2.someProp` because property `someProp` is missing in `{}` [1]. [prop-missing]
 
    type_mixed.js:7:4
    7| o2.someProp as empty; // Error someProp does not exist
@@ -693,7 +693,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:13:4
 
-Cannot get `o3.c` because property `c` is missing in object type [1]. [prop-missing]
+Cannot get `o3.c` because property `c` is missing in `{a: number, b?: number, ...}` [1]. [prop-missing]
 
    type_mixed.js:13:4
    13| o3.c as empty; // Error c does not exist
@@ -707,7 +707,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_mixed.js:16:7
 
-Cannot get `obj.someProp` because property `someProp` is missing in object type [1]. [prop-missing]
+Cannot get `obj.someProp` because property `someProp` is missing in `{...}` [1]. [prop-missing]
 
    type_mixed.js:16:7
    16|   obj.someProp as empty; // Error someProp does not exist

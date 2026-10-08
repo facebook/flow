@@ -1058,8 +1058,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:24:5
 
-Cannot call `useV` because a call signature declaring the expected parameter / return type is missing in module
-`./exp2` [1]. [prop-missing]
+Cannot call `useV` because a call signature declaring the expected parameter / return type is missing in
+`{readonly default: () => void, readonly useW: hook () => void}` [1]. [prop-missing]
 
    test.js:24:5
    24|     useV(); // error for calling module but no hook error

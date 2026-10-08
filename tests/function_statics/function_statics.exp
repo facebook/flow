@@ -95,7 +95,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- arrow.js:36:5
 
-Cannot get `f.xxx` because property `xxx` is missing in object type [1]. [prop-missing]
+Cannot get `f.xxx` because property `xxx` is missing in `{(): number, a: string, ...}` [1]. [prop-missing]
 
    arrow.js:36:5
    36|   f.xxx; // ERROR
@@ -157,7 +157,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_declaration.js:29:5
 
-Cannot assign `1` to `f.xxx` because property `xxx` is missing in function [1]. [prop-missing]
+Cannot assign `1` to `f.xxx` because property `xxx` is missing in
+`{a: number, b: () => number, c: string, d: () => string, ...}` [1]. [prop-missing]
 
    function_declaration.js:29:5
    29|   f.xxx = 1; // ERROR
@@ -286,7 +287,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:44:5
 
-Cannot get `f.xxx` because property `xxx` is missing in object type [1]. [prop-missing]
+Cannot get `f.xxx` because property `xxx` is missing in `{(): number, a: string, ...}` [1]. [prop-missing]
 
    function_expression.js:44:5
    44|   f.xxx; // ERROR

@@ -457,13 +457,16 @@ fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, 
 
 fn detect_test_prop_misses<'cx>(cx: &Context<'cx>) {
     let misses = cx.test_prop_get_never_hit();
-    for (prop_name, (reason_prop, reason_obj), use_op, suggestion) in misses.iter() {
+    for (prop_name, (reason_prop, obj_t), use_op, suggestion) in misses.iter() {
         flow_js::add_output_non_speculating(
             cx,
             ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name: prop_name.dupe(),
                 prop_loc: reason_prop.loc().dupe(),
-                reason_obj: reason_obj.dupe(),
+                object: flow_js_utils::type_reference_with_reason_for_error(
+                    obj_t,
+                    reason_of_t(obj_t).dupe(),
+                ),
                 use_op: use_op.dupe(),
                 suggestion: suggestion.dupe(),
             })),

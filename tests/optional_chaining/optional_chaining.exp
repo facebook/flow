@@ -2753,7 +2753,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- refinements.js:153:33
 
-Cannot get `b11?.a` because property `a` is missing in object type [1]. [prop-missing]
+Cannot get `b11?.a` because property `a` is missing in `{...}` [1]. [prop-missing]
 
    refinements.js:153:33
    153| var x11: empty = a11?.a || b11?.a;

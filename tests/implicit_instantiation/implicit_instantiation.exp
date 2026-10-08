@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:17:29
 
-Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+Cannot get `React.MISSING` because property `MISSING` is missing in `...` [1]. [prop-missing]
 
    unbound_module_prop.js:17:29
     17| deferredLoadComponent<React.MISSING, _>(Foo); // Error: MISSING is not a property of react
@@ -217,7 +217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:18:29
 
-Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+Cannot get `React.MISSING` because property `MISSING` is missing in `...` [1]. [prop-missing]
 
    unbound_module_prop.js:18:29
     18| deferredLoadComponent<React.MISSING<1>, _>(Foo); // Error: MISSING is not a property of react
@@ -231,7 +231,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:21:11
 
-Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+Cannot get `React.MISSING` because property `MISSING` is missing in `...` [1]. [prop-missing]
 
    unbound_module_prop.js:21:11
     21| bar<React.MISSING, _>({}, null); // Error
@@ -245,7 +245,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- unbound_module_prop.js:22:14
 
-Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+Cannot get `React.MISSING` because property `MISSING` is missing in `...` [1]. [prop-missing]
 
    unbound_module_prop.js:22:14
     22| bar<_, React.MISSING>({}, null); // Error

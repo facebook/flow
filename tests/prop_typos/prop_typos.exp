@@ -141,7 +141,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:35:3
 
-Cannot get `A.s11111` because property `s11111` (did you mean `s1111`?) is missing in statics of `A` [1]. [prop-missing]
+Cannot get `A.s11111` because property `s11111` (did you mean `s1111`?) is missing in
+`{name: string, s1111: void, ...}` [1]. [prop-missing]
 
    test.js:35:3
    35| A.s11111;
@@ -155,7 +156,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:3
 
-Cannot get `A.s22222` because property `s22222` is missing in statics of `A` [1]. [prop-missing]
+Cannot get `A.s22222` because property `s22222` is missing in `{name: string, s1111: void, ...}` [1]. [prop-missing]
 
    test.js:36:3
    36| A.s22222; // should have no suggestion
@@ -211,7 +212,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:41:3
 
-Cannot get `B.s11111` because property `s11111` (did you mean `s1111`?) is missing in statics of `B` [1]. [prop-missing]
+Cannot get `B.s11111` because property `s11111` (did you mean `s1111`?) is missing in
+`{name: string, s2222: void, ...}` [1]. [prop-missing]
 
    test.js:41:3
    41| B.s11111;
@@ -225,7 +227,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:3
 
-Cannot get `B.s22222` because property `s22222` (did you mean `s2222`?) is missing in statics of `B` [1]. [prop-missing]
+Cannot get `B.s22222` because property `s22222` (did you mean `s2222`?) is missing in
+`{name: string, s2222: void, ...}` [1]. [prop-missing]
 
    test.js:42:3
    42| B.s22222;
@@ -295,7 +298,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:48:3
 
-Cannot get `C.s11111` because property `s11111` (did you mean `s1111`?) is missing in statics of `C` [1]. [prop-missing]
+Cannot get `C.s11111` because property `s11111` (did you mean `s1111`?) is missing in
+`{name: string, s3333: void, ...}` [1]. [prop-missing]
 
    test.js:48:3
    48| C.s11111;
@@ -309,7 +313,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:49:3
 
-Cannot get `C.s22222` because property `s22222` (did you mean `s2222`?) is missing in statics of `C` [1]. [prop-missing]
+Cannot get `C.s22222` because property `s22222` (did you mean `s2222`?) is missing in
+`{name: string, s3333: void, ...}` [1]. [prop-missing]
 
    test.js:49:3
    49| C.s22222;
@@ -323,7 +328,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:50:3
 
-Cannot get `C.s33333` because property `s33333` (did you mean `s3333`?) is missing in statics of `C` [1]. [prop-missing]
+Cannot get `C.s33333` because property `s33333` (did you mean `s3333`?) is missing in
+`{name: string, s3333: void, ...}` [1]. [prop-missing]
 
    test.js:50:3
    50| C.s33333;
@@ -365,7 +371,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:55:7
 
-Cannot get `C.s333` because property `s333` (did you mean `s3333`?) is missing in statics of `C` [1]. [prop-missing]
+Cannot get `C.s333` because property `s333` (did you mean `s3333`?) is missing in
+`{name: string, s3333: void, ...}` [1]. [prop-missing]
 
    test.js:55:7
    55| if (C.s333) {} // Error with suggestion

@@ -114,6 +114,20 @@ References:
               ^^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- bound_lookup.js:4:3
+
+Cannot get `x.b` because property `b` is missing in `{a: number}` [1]. [prop-missing]
+
+   bound_lookup.js:4:3
+   4| x.b; // Error: `b` is missing in the bound
+        ^
+
+References:
+   bound_lookup.js:3:18
+   3| declare const x: ObjBound;
+                       ^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- decltest.js:2:36
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -391,4 +405,4 @@ Cannot assign `null` to `foo2.p` because property `p` is not writable. [cannot-w
 
 
 
-Found 25 errors
+Found 26 errors

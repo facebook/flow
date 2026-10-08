@@ -8,8 +8,8 @@ Cannot resolve name `myWeirdWindowScopedGlobal`. [cannot-resolve-name]
 
 Error ----------------------------------------------------------------------------------------------------- test.js:2:12
 
-Cannot get `globalThis.myWeirdGlobalScopedGlobal` because property `myWeirdGlobalScopedGlobal` is missing in namespace
-globalThis. [prop-missing]
+Cannot get `globalThis.myWeirdGlobalScopedGlobal` because property `myWeirdGlobalScopedGlobal` is missing in `...`.
+[prop-missing]
 
    2| globalThis.myWeirdGlobalScopedGlobal; // prop-missing
                  ^^^^^^^^^^^^^^^^^^^^^^^^^

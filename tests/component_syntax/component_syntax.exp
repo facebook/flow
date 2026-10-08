@@ -3092,7 +3092,7 @@ You may only use an identifier or a destructured object as a component rest para
 
 Error ---------------------------------------------------------------------------------------- rest_constraints.js:13:31
 
-Property `0` is missing in object type [1]. [prop-missing]
+Property `0` is missing in `{bar: number, foo: number}` [1]. [prop-missing]
 
    rest_constraints.js:13:31
    13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array
@@ -3106,7 +3106,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- rest_constraints.js:13:36
 
-Property `1` is missing in object type [1]. [prop-missing]
+Property `1` is missing in `{bar: number, foo: number}` [1]. [prop-missing]
 
    rest_constraints.js:13:36
    13| component DestructuredArr(...[foo, bar]: {foo: number, bar: number}) { // ERROR destructure array

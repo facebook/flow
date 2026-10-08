@@ -155,7 +155,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.ts:35:3
 
-Cannot get `o.foo` because property `foo` is missing in interface type [1]. [prop-missing]
+Cannot get `o.foo` because property `foo` is missing in `interface {}` [1]. [prop-missing]
 
    object.ts:35:3
    35| o.foo; // ERROR -- prop-missing

@@ -1527,7 +1527,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:18:64
 
-Cannot call `tup.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `tup.push` because property `push` is missing in `ReadonlyArray<number>` [1]. [prop-missing]
 
    readonly-array.js:18:64
    18| const arrayMethods = (tup: ReadonlyArray<number>): void => tup.push(123); // error
@@ -1558,7 +1558,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:26:17
 
-Cannot call `readOnlyRef.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `readOnlyRef.push` because property `push` is missing in `ReadonlyArray<1 | 2>` [1]. [prop-missing]
 
    readonly-array.js:26:17
     26|     readOnlyRef.push(123); // error
@@ -1589,7 +1589,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:36:44
 
-Cannot call `x.unshift` because property `unshift` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `x.unshift` because property `unshift` is missing in `ReadonlyArray<1 | 2>` [1]. [prop-missing]
 
    readonly-array.js:36:44
    36| function foo3(x: [1,2]): number { return x.unshift(); } // error

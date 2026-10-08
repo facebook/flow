@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:23:10
 
-Cannot call `f` because a call signature declaring the expected parameter / return type is missing in object type [1].
+Cannot call `f` because a call signature declaring the expected parameter / return type is missing in `{...}` [1].
 [prop-missing]
 
    A.js:23:10
@@ -275,8 +275,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- G.js:5:1
 
-Cannot call `o` because a call signature declaring the expected parameter / return type is missing in
-`Object.create` [1]. [prop-missing]
+Cannot call `o` because a call signature declaring the expected parameter / return type is missing in `{}` [1].
+[prop-missing]
 
    G.js:5:1
    5| o(); // error: o is not callable

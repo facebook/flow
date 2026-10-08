@@ -25,7 +25,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- enumerror.js:10:18
 
 Cannot call `isActive` with object literal bound to `ad` because in property `state`: property `PAUSE` (did you mean
-`PAUSED`?) is missing in object type [1]. [prop-missing]
+`PAUSED`?) is missing in `{ACTIVE: string, DELETED: string, PAUSED: string}` [1]. [prop-missing]
 
    enumerror.js:10:18
    10| isActive({state: 'PAUSE'});

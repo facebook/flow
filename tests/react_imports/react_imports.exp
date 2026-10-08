@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- commonjs.js:7:15
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
+Cannot get `React.Missing` because property `Missing` is missing in `...` [1]. [prop-missing]
 
    commonjs.js:7:15
    7| null as React.Missing; // Error
@@ -104,7 +104,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- es-default.js:7:15
 
-Cannot get `React.Missing` because property `Missing` is missing in namespace React [1]. [prop-missing]
+Cannot get `React.Missing` because property `Missing` is missing in `...` [1]. [prop-missing]
 
    es-default.js:7:15
       7| null as React.Missing; // Error: Not in default export.
@@ -163,7 +163,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es-namespace.js:7:15
 
-Cannot get `React.Missing` because property `Missing` is missing in module `react` [1]. [prop-missing]
+Cannot get `React.Missing` because property `Missing` is missing in `...` [1]. [prop-missing]
 
    es-namespace.js:7:15
      7| null as React.Missing; // Error

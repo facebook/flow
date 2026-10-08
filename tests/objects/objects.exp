@@ -231,7 +231,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:4:3
 
-Cannot get `x.foo` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `x.foo` because property `foo` is missing in `{"123": string, bar: string, ...}` [1]. [prop-missing]
 
    objects.js:4:3
    4| x.foo as string; // error, key doesn't exist
@@ -245,7 +245,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- objects.js:5:3
 
-Cannot get `x['foo']` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `x['foo']` because property `foo` is missing in `{"123": string, bar: string, ...}` [1]. [prop-missing]
 
    objects.js:5:3
    5| x['foo'] as string; // error, key doesn't exist
@@ -339,7 +339,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- objects.js:11:3
 
 Cannot assign `'derp'` to `x['foo' + 'bar']` because an index signature declaring the expected key / value type is
-missing in object type [1]. [prop-missing]
+missing in `{"123": string, bar: string, ...}` [1]. [prop-missing]
 
    objects.js:11:3
    11| x['foo' + 'bar'] = 'derp'; // error: no indexed type
@@ -353,7 +353,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:12:3
 
-Cannot get `x[`...`]` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `x[`...`]` because property `foo` is missing in `{"123": string, bar: string, ...}` [1]. [prop-missing]
 
    objects.js:12:3
    12| x[`foo`] as string; // error, key doesn't exist
@@ -381,7 +381,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:16:3
 
-Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot assign `'abc'` to `y['bar']` because property `bar` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    objects.js:16:3
    16| y['bar'] = 'abc'; // error, property not found

@@ -1,0 +1,4 @@
+type $JSXIntrinsics = {
+  noinstance: {props: {}, ...},
+  ...
+};

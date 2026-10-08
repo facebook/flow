@@ -2228,7 +2228,7 @@ fn flow_obj_to_obj<'cx>(
                             }
                             _ => {
                                 let lookup_kind = match &ldict {
-                                    None => LookupKind::Strict(lreason.dupe()),
+                                    None => LookupKind::Strict(l.dupe()),
                                     _ => LookupKind::NonstrictReturning(Box::new(
                                         NonstrictReturningData(None, None),
                                     )),
@@ -5466,7 +5466,7 @@ pub fn rec_sub_t<'cx>(
                                     None, None,
                                 )))
                             } else {
-                                LookupKind::Strict(lreason.dupe())
+                                LookupKind::Strict(l.dupe())
                             };
                             FlowJs::rec_flow_with_env(
                                 cx, env,
@@ -5521,7 +5521,7 @@ pub fn rec_sub_t<'cx>(
                         use_desc: false,
                         use_t: Box::new(UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: ureason.dupe(),
-                            lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                            lookup_kind: Box::new(LookupKind::Strict(l.dupe())),
                             indexer_fallback: None,
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref),

@@ -1239,8 +1239,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:119:19
 
-Cannot get `rendersFooOrBar.props` because property `props` is missing in `ExactReactElement_DEPRECATED` [1].
-[prop-missing]
+Cannot get `rendersFooOrBar.props` because property `props` is missing in `{...}` [1]. [prop-missing]
 
    renders_to_renders.js:119:19
    119|   rendersFooOrBar.props; // ERROR
@@ -1268,21 +1267,8 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:120:15
 
-Cannot get `rendersNode.props` because property `props` is missing in `ExactReactElement_DEPRECATED` [1]. [prop-missing]
-
-   renders_to_renders.js:120:15
-   120|   rendersNode.props; // ERROR
-                      ^^^^^
-
-References:
-   <BUILTINS>/react.js:443:30
-   443|   declare export type Node = React$Node;
-                                     ^^^^^^^^^^ [1]
-
-
-Error ------------------------------------------------------------------------------------- renders_to_renders.js:120:15
-
-Cannot get `rendersNode.props` because property `props` is missing in `Iterable` [1]. [prop-missing]
+Cannot get `rendersNode.props` because property `props` is missing in `Iterable<?React.Node, void, void>` [1].
+[prop-missing]
 
    renders_to_renders.js:120:15
    120|   rendersNode.props; // ERROR
@@ -1364,6 +1350,20 @@ References:
                                      ^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------- renders_to_renders.js:120:15
+
+Cannot get `rendersNode.props` because property `props` is missing in `{...}` [1]. [prop-missing]
+
+   renders_to_renders.js:120:15
+   120|   rendersNode.props; // ERROR
+                      ^^^^^
+
+References:
+   <BUILTINS>/react.js:443:30
+   443|   declare export type Node = React$Node;
+                                     ^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------- renders_to_renders.js:126:3
 
 Cannot cast `rendersBaz` to empty because `{...}` [1] is incompatible with `empty` [2]. [incompatible-type]
@@ -1383,7 +1383,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- renders_to_renders.js:127:14
 
-Cannot get `rendersBaz.props` because property `props` is missing in `ExactReactElement_DEPRECATED` [1]. [prop-missing]
+Cannot get `rendersBaz.props` because property `props` is missing in `{...}` [1]. [prop-missing]
 
    renders_to_renders.js:127:14
    127|   rendersBaz.props; // ERROR

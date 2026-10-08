@@ -135,7 +135,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- extends_ctor.js:65:13
 
-Cannot get `FromStatics.nope` because property `nope` is missing in statics of `FromStatics` [1]. [prop-missing]
+Cannot get `FromStatics.nope` because property `nope` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    extends_ctor.js:65:13
    65| FromStatics.nope; // ERROR
@@ -197,7 +197,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- extends_ctor_usage.js:7:13
 
-Cannot get `FromStatics.nope` because property `nope` is missing in statics of `FromStatics` [1]. [prop-missing]
+Cannot get `FromStatics.nope` because property `nope` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    extends_ctor_usage.js:7:13
     7| FromStatics.nope; // ERROR

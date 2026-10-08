@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- call.js:15:14
 
-Cannot get `onlyDeclared[minted]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `onlyDeclared[minted]` because property `[symbol]` is missing in `{[symbol]: number}` [1]. [prop-missing]
 
    call.js:15:14
    15| onlyDeclared[minted]; // ERROR: the minted symbol is a different key
@@ -120,7 +120,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- call_consumer.js:15:7
 
-Cannot get `table[local]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `table[local]` because property `[symbol]` is missing in
+`{[symbol]: number, [symbol]: string, [symbol]: boolean, [symbol]: null}` [1]. [prop-missing]
 
    call_consumer.js:15:7
    15| table[local]; // ERROR: not a key of `table`
@@ -140,7 +141,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- call_consumer.js:18:7
 
-Cannot get `table[localAnnotated]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `table[localAnnotated]` because property `[symbol]` is missing in
+`{[symbol]: number, [symbol]: string, [symbol]: boolean, [symbol]: null}` [1]. [prop-missing]
 
    call_consumer.js:18:7
    18| table[localAnnotated]; // ERROR: not a key of `table`
@@ -250,7 +252,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- class_operations.js:21:3
 
-Cannot get `o[a]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `o[a]` because property `[symbol]` is missing in `interface {x: boolean; [symbol]: string}` [1].
+[prop-missing]
 
    class_operations.js:21:3
    21| o[a]; // ERROR: [a] removed
@@ -819,7 +822,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- omit.js:12:3
 
-Cannot get `o[Keys.a]` because property `[a]` is missing in `Omit` [1]. [prop-missing]
+Cannot get `o[Keys.a]` because property `[a]` is missing in `{x: boolean, [b]: string}` [1]. [prop-missing]
 
    omit.js:12:3
    12| o[Keys.a]; // ERROR: [a] removed
@@ -1158,7 +1161,7 @@ Use `symbol` instead, or `typeof` a binding declared with `unique symbol`. [unsu
 
 Error ----------------------------------------------------------------------------------------------- position.js:113:32
 
-Cannot get `byProp[OkC.f]` because property `[f]` is missing in object type [1]. [prop-missing]
+Cannot get `byProp[OkC.f]` because property `[f]` is missing in `{[a]: number}` [1]. [prop-missing]
 
    position.js:113:32
    113| const crossed: number = byProp[OkC.f]; // ERROR: a different symbol

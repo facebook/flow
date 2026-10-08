@@ -2695,7 +2695,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:671:7
 
-Cannot get `obj[getKey(...)]` because property `c` is missing in object type [1]. [prop-missing]
+Cannot get `obj[getKey(...)]` because property `c` is missing in `{a: number, b: string}` [1]. [prop-missing]
 
    local.js:671:7
    671|   obj[getKey('c')]; // error 'c' is missing in obj
@@ -2709,7 +2709,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:673:7
 
-Cannot assign `1` to `obj[getKey(...)]` because property `c` is missing in object type [1]. [prop-missing]
+Cannot assign `1` to `obj[getKey(...)]` because property `c` is missing in `{a: number, b: string}` [1]. [prop-missing]
 
    local.js:673:7
    673|   obj[getKey('c')] = 1; // error 'c' is missing in obj

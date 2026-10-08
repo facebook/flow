@@ -80,7 +80,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:8:19
 
-Cannot access string literal `xxx` on indexed access because property `xxx` is missing in object type [1].
+Cannot access string literal `xxx` on indexed access because property `xxx` is missing in `{bar: number}` [1].
 [prop-missing]
 
    optional.js:8:19
@@ -207,7 +207,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:23:15
 
-Cannot access string literal `xxx` on indexed access because property `xxx` is missing in object type [1].
+Cannot access string literal `xxx` on indexed access because property `xxx` is missing in `{b: Z, opt_b: ?Z}` [1].
 [prop-missing]
 
    optional.js:23:15

@@ -582,7 +582,7 @@ function broken(): number {return 1+;}
         .waitUntilLSPMessage(
           9000,
           'textDocument/publishDiagnostics',
-          'property `foo` is missing in  exports [1].',
+          'property `foo` is missing in  `{}` [1].',
         )
         .verifyAllLSPMessagesInStep(
           [
@@ -592,7 +592,7 @@ function broken(): number {return 1+;}
                 diagnostics: [
                   {
                     code: 'prop-missing',
-                    message: 'property `foo` is missing in  exports [1].',
+                    message: 'property `foo` is missing in  `{}` [1].',
                     range: {
                       end: {character: 10, line: 2},
                       start: {character: 7, line: 2},
@@ -606,7 +606,7 @@ function broken(): number {return 1+;}
                           },
                           uri: '<PLACEHOLDER_PROJECT_URL>/empty.js',
                         },
-                        message: '[1] exports',
+                        message: '[1] `{}`',
                       },
                     ],
                     severity: 1,

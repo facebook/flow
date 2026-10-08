@@ -2356,7 +2356,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:10
 
-Cannot get `this.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `this.y` because property `y` is missing in `{f: number, ...}` [1]. [prop-missing]
 
    test.js:13:10
    13|     this.y; // error no property y

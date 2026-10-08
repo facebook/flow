@@ -954,8 +954,8 @@ fn dump_use_t_<CX>(
                 };
                 format!("Nonstrict{}{}", default_str, testid_str)
             }
-            type_::LookupKind::Strict(r) => {
-                format!("Strict {:?}", dump_reason(cx, r))
+            type_::LookupKind::Strict(t) => {
+                format!("Strict {:?}", dump_reason(cx, reason_of_t(t)))
             }
         }
     };
@@ -2219,7 +2219,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
             prop_name,
             prop_loc,
-            reason_obj,
+            object,
             use_op,
             suggestion,
         }) => {
@@ -2235,7 +2235,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 "EPropNotFoundInLookup ({}, {}, {}, {}, {})",
                 prop_str,
                 string_of_aloc(None, prop_loc),
-                dump_reason(cx, reason_obj),
+                dump_error_type_reference(cx, object),
                 string_of_use_op(use_op),
                 suggestion_str
             )

@@ -124,7 +124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ consumer.js:77:16
 
-Cannot get `unknownValue.tagName` because property `tagName` is missing in `BoxLike` [1]. [prop-missing]
+Cannot get `unknownValue.tagName` because property `tagName` is missing in `BoxLike<any>` [1]. [prop-missing]
 
    consumer.js:77:16
    77|   unknownValue.tagName; // ERROR: the refinement is `BoxLike<any>`, not `empty`

@@ -123,7 +123,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- expression.js:141:10
 
-Cannot get `dict[match]` because property `xxx` is missing in object type [1]. [prop-missing]
+Cannot get `dict[match]` because property `xxx` is missing in `{["a" | "b"]: number}` [1]. [prop-missing]
 
    expression.js:141:10
    141|     2 => 'xxx', // ERROR: 'xxx' is not a subtype of 'a' | 'b'

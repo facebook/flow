@@ -70,7 +70,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:4:34
 
-Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in object type [1]. [prop-missing]
+Cannot get `any.yep2` because property `yep2` (did you mean `yep1`?) is missing in `{yep1: true, ...}` [1].
+[prop-missing]
 
    intrinsic.js:4:34
    4| (any as React.ElementRef<'foo'>).yep2; // Error
@@ -84,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:5:34
 
-Cannot get `any.nope` because property `nope` is missing in object type [1]. [prop-missing]
+Cannot get `any.nope` because property `nope` is missing in `{yep1: true, ...}` [1]. [prop-missing]
 
    intrinsic.js:5:34
    5| (any as React.ElementRef<'foo'>).nope; // Error
@@ -98,7 +99,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:6:34
 
-Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in object type [1]. [prop-missing]
+Cannot get `any.yep1` because property `yep1` (did you mean `yep2`?) is missing in `{yep2: true, ...}` [1].
+[prop-missing]
 
    intrinsic.js:6:34
    6| (any as React.ElementRef<'bar'>).yep1; // Error
@@ -112,7 +114,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intrinsic.js:8:34
 
-Cannot get `any.nope` because property `nope` is missing in object type [1]. [prop-missing]
+Cannot get `any.nope` because property `nope` is missing in `{yep2: true, ...}` [1]. [prop-missing]
 
    intrinsic.js:8:34
    8| (any as React.ElementRef<'bar'>).nope; // Error

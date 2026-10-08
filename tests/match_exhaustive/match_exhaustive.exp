@@ -159,7 +159,7 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:92:6
 
-Property `0` is missing in `Array` [1]. [prop-missing]
+Property `0` is missing in `Array<boolean>` [1]. [prop-missing]
 
    arrays.js:92:6
    92|     {0: true, ...} => {} // ERROR: cannot access property 0
@@ -182,7 +182,7 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:93:6
 
-Property `1` is missing in `Array` [1]. [prop-missing]
+Property `1` is missing in `Array<boolean>` [1]. [prop-missing]
 
    arrays.js:93:6
    93|     {1: 'xxx', ...} => {} // ERROR: unused, cannot access property 1
@@ -1161,7 +1161,7 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error --------------------------------------------------------------------------------------------------- guards.js:88:6
 
-Property `baz` is missing in object type [1]. [prop-missing]
+Property `baz` is missing in `{foo: 1}` [1]. [prop-missing]
 
    guards.js:88:6
    88|     {baz: 3} | {bar: 2} if (cond) => {} // ERROR

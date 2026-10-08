@@ -433,7 +433,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                         lower,
                         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                             reason: reason_struct.dupe(),
-                            lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                            lookup_kind: Box::new(LookupKind::Strict(lower.dupe())),
                             indexer_fallback: None,
                             try_ts_on_failure: vec![].into(),
                             propref: Box::new(propref.clone()),
@@ -468,7 +468,7 @@ pub(super) fn inst_structural_subtype<'cx>(
                 lower,
                 &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                     reason: reason_struct.dupe(),
-                    lookup_kind: Box::new(LookupKind::Strict(lreason.dupe())),
+                    lookup_kind: Box::new(LookupKind::Strict(lower.dupe())),
                     indexer_fallback: None,
                     try_ts_on_failure: vec![].into(),
                     propref: Box::new(propref.clone()),

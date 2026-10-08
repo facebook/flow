@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:5:12
 
-Cannot get `esmodule.default` because property `default` is missing in module `./esmodule` [1]. [missing-export]
+Cannot get `esmodule.default` because property `default` is missing in `{readonly pi: 3.14}` [1]. [missing-export]
 
    test.js:5:12
    5|   esmodule.default; // error
@@ -30,7 +30,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:19
 
-Cannot get `esmodulePromise.pi` because property `pi` is missing in `Promise` [1]. [prop-missing]
+Cannot get `esmodulePromise.pi` because property `pi` is missing in `Promise<{readonly pi: 3.14}>` [1]. [prop-missing]
 
    test.js:8:19
    8|   esmodulePromise.pi as string; // error

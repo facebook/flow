@@ -15,7 +15,6 @@ use flow_common::reason::Name;
 use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::is_nullish_reason;
 use flow_common::reason::mk_reason;
 use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -132,7 +131,6 @@ use super::intermediate_error_types::MessageNoDefaultExportData;
 use super::intermediate_error_types::MessageNoNamedExportData;
 use super::intermediate_error_types::MessageOnlyDefaultExportData;
 use super::intermediate_error_types::MessagePropExtraAgainstExactObjectData;
-use super::intermediate_error_types::MessagePropMissingData;
 use super::intermediate_error_types::MessagePropPolarityMismatchData;
 use super::intermediate_error_types::MessagePropsMissingWithPrintedTypeData;
 use super::intermediate_error_types::MessageReactIntrinsicOverlapData;
@@ -171,7 +169,6 @@ use crate::error_message::IncompatibleTypesWithExampleData;
 use crate::error_message::IndexerCheckFailedData;
 use crate::error_message::MatchExampleReference;
 use crate::error_message::PrivatePropMissingInLookupData;
-use crate::error_message::PropMissingInLookupData;
 use crate::error_message::PropMissingInSubtypingData;
 use crate::error_message::PropPolarityMismatchData;
 use crate::error_message::PropsExtraAgainstExactObjectData;
@@ -737,7 +734,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
             }
             FlowErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
-                reason_obj,
+                object,
                 prop_loc,
                 use_op,
                 suggestion,
@@ -748,7 +745,7 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                     || is_not_duplicate(FlowErrorMessage::EPropNotFoundInLookup(Box::new(
                         EPropNotFoundInLookupData {
                             prop_name: prop_name.clone(),
-                            reason_obj: reason_obj.dupe(),
+                            object: object.clone(),
                             prop_loc: prop_loc.dupe(),
                             use_op: use_op_new,
                             suggestion: suggestion.clone(),
@@ -3034,25 +3031,6 @@ where
             mk_error(kind, loc, code, message, None, Some(vec![]), Some(vec![]))
         };
 
-    let mk_prop_missing_in_lookup_error = |loc: Loc,
-                                           prop: Option<FlowSmolStr>,
-                                           lower: VirtualReason<L>,
-                                           use_op: VirtualUseOp<L>,
-                                           suggestion: Option<FlowSmolStr>|
-     -> IntermediateError<L> {
-        let lower = mod_lower_reason_according_to_use_ops(lower.dupe(), &use_op);
-        mk_use_op_error(
-            loc,
-            use_op,
-            None,
-            Message::MessagePropMissing(Box::new(MessagePropMissingData {
-                lower,
-                prop,
-                suggestion,
-            })),
-        )
-    };
-
     let mk_prop_missing_in_subtyping_error = |prop: Option<FlowSmolStr>,
                                               suggestion: Option<FlowSmolStr>,
                                               loc: L,
@@ -3691,23 +3669,6 @@ where
                 explanation,
             }),
         ) => mk_use_op_error(loc_of_aloc(&loc), use_op, explanation, message),
-
-        (
-            None,
-            FriendlyMessageRecipe::PropMissingInLookup(box PropMissingInLookupData {
-                loc,
-                prop,
-                reason_obj,
-                use_op,
-                suggestion,
-            }),
-        ) => mk_prop_missing_in_lookup_error(
-            loc_of_aloc(&loc),
-            prop.dupe(),
-            reason_obj,
-            use_op,
-            suggestion.dupe(),
-        ),
 
         (
             None,
@@ -8282,26 +8243,6 @@ where
                     text("Read the docs on Flow's multi-platform support for more information: "),
                     text("https://flow.org/en/docs/react/multiplatform"),
                 ])
-            }
-            MessagePropMissing(box MessagePropMissingData {
-                lower,
-                prop,
-                suggestion,
-            }) => {
-                use super::error_message::mk_prop_message;
-                let prop_message = mk_prop_message(prop.as_deref());
-                let suggestion: Vec<friendly::MessageFeature<Loc>> = match suggestion {
-                    Some(s) => vec![text(" (did you mean "), code(s), text("?)")],
-                    None => vec![],
-                };
-                if prop.is_none() && is_nullish_reason(lower) {
-                    friendly::Message(vec![ref_(lower), text(" does not have properties")])
-                } else {
-                    let mut features = prop_message;
-                    features.extend(suggestion);
-                    features.extend(vec![text(" is missing in "), ref_(lower)]);
-                    friendly::Message(features)
-                }
             }
             MessagePropMissingWithPrintedType {
                 lower,

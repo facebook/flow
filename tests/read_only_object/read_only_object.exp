@@ -32,7 +32,8 @@ Cannot assign `42` to `unionObj.p` because property `p` is not writable. [cannot
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:12
 
-Cannot get `unionObj.q` because property `q` is missing in object type [1]. [prop-missing]
+Cannot get `unionObj.q` because property `q` is missing in `{readonly key: 1, readonly p: number, ...}` [1].
+[prop-missing]
 
    test.js:22:12
    22|   unionObj.q as number; // Should error!
@@ -78,7 +79,8 @@ Cannot assign `42` to `spreadUnionObj.z` because property `z` is not writable. [
 
 Error ---------------------------------------------------------------------------------------------------- test.js:38:18
 
-Cannot get `spreadUnionObj.q` because property `q` is missing in object type [1]. [prop-missing]
+Cannot get `spreadUnionObj.q` because property `q` is missing in
+`{readonly key: 1, readonly p: number, readonly z: number, ...}` [1]. [prop-missing]
 
    test.js:38:18
    38|   spreadUnionObj.q as number; // Should error!

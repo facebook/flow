@@ -5205,8 +5205,8 @@ pub enum DerivedReference {
 /// kinds control what happens when a property is not found.
 ///
 /// Strict
-///   If the property is not found, emit an error. The reason should point to
-///   the original lookup location.
+///   If the property is not found, emit an error against the stored type, the
+///   object the lookup started from.
 ///
 /// NonstrictReturning None
 ///   If the property is not found, do nothing. Note that lookups of this kind
@@ -5216,16 +5216,13 @@ pub enum DerivedReference {
 ///   If the property is not found, unify a default type with the *original*
 ///   tvar from the lookup. *)
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct NonstrictReturningData(
-    pub Option<(Type, Type)>,
-    pub Option<(i32, (Reason, Reason))>,
-);
+pub struct NonstrictReturningData(pub Option<(Type, Type)>, pub Option<(i32, (Reason, Type))>);
 
 /// Controls how a property lookup terminates after traversing the prototype chain.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LookupKind {
-    /// Reports a missing-property error using the stored reason if the lookup fails.
-    Strict(Reason),
+    /// Reports a missing-property error against the stored object type if the lookup fails.
+    Strict(Type),
     /// Does not report a missing-property error. On failure, it may return a default
     /// type and record a property-test miss.
     NonstrictReturning(Box<NonstrictReturningData>),

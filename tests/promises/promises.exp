@@ -597,7 +597,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ resolve_global.js:35:18
 
-Cannot call `Promise.resolve` because property `resolve` is missing in statics of `Promise` [1]. [prop-missing]
+Cannot call `Promise.resolve` because property `resolve` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    resolve_global.js:35:18
    35|   return Promise.resolve(0);

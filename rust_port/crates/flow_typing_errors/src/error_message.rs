@@ -1282,7 +1282,7 @@ pub struct EExpectedBigIntLitData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub struct EPropNotFoundInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop_name: Option<Name>,
     pub prop_loc: L,
-    pub reason_obj: VirtualReason<L>,
+    pub object: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
     pub suggestion: Option<FlowSmolStr>,
 }
@@ -4648,13 +4648,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
                 prop_loc,
-                reason_obj,
+                object,
                 use_op,
                 suggestion,
             }) => EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                 prop_name,
                 prop_loc: f(prop_loc),
-                reason_obj: map_reason(reason_obj),
+                object: map_error_type_ref_with_reason(object),
                 use_op: map_use_op(use_op),
                 suggestion,
             })),
@@ -7780,6 +7780,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: use_op.map(|use_op| map_use_op(&f, use_op)),
             })),
 
+            EPropNotFoundInLookup(box EPropNotFoundInLookupData {
+                prop_name,
+                prop_loc,
+                object,
+                use_op,
+                suggestion,
+            }) => EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
+                prop_name,
+                prop_loc,
+                object: map_error_type_ref_with_reason(object),
+                use_op: map_use_op(&f, use_op),
+                suggestion,
+            })),
+
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
                 lower_loc,
@@ -8948,25 +8962,6 @@ pub struct IncompatibleInvariantSubtypingData<L: Dupe + PartialOrd + Ord + Parti
     pub explanation: Option<Explanation<L>>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    PartialEq,
-    Eq,
-    Hash,
-    PartialOrd,
-    Ord,
-    serde::Serialize,
-    serde::Deserialize
-)]
-pub struct PropMissingInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub loc: L,
-    pub prop: Option<FlowSmolStr>,
-    pub suggestion: Option<FlowSmolStr>,
-    pub reason_obj: VirtualReason<L>,
-    pub use_op: VirtualUseOp<L>,
-}
-
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PrivatePropMissingInLookupData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub loc: L,
@@ -9089,7 +9084,6 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     Speculation(Box<SpeculationData<L>>),
     IncompatibleSubtyping(Box<IncompatibleSubtypingData<L>>),
     IncompatibleInvariantSubtyping(Box<IncompatibleInvariantSubtypingData<L>>),
-    PropMissingInLookup(Box<PropMissingInLookupData<L>>),
     PrivatePropMissingInLookup(Box<PrivatePropMissingInLookupData<L>>),
     PropMissingInSubtyping(Box<PropMissingInSubtypingData<L>>),
     PropsMissingInSubtyping(Box<PropsMissingInSubtypingData<L>>),
@@ -9307,16 +9301,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 prop_name,
-                reason_obj,
+                object,
                 prop_loc,
                 use_op,
                 suggestion,
-            }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
+            }) => UseOp(Box::new(UseOpData {
                 loc: prop_loc,
-                prop: prop_name.as_ref().map(|n| n.display_smol_str()),
-                reason_obj,
+                message: Message::MessagePropMissingWithPrintedType {
+                    lower: Box::new(MessageTypeReferenceData {
+                        loc: object.reference_loc,
+                        desc: expect_type_desc(object.type_desc),
+                    }),
+                    upper: None,
+                    prop: prop_name.as_ref().map(|n| n.display_smol_str()),
+                    suggestion,
+                },
                 use_op,
-                suggestion,
+                explanation: None,
             })),
 
             ErrorMessage::EPropNotFoundInSubtyping(box EPropNotFoundInSubtypingData {

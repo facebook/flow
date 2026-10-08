@@ -253,7 +253,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- test3_exact_annot.js:7:3
 
-Cannot get `a.b` because property `b` is missing in object type [1]. [prop-missing]
+Cannot get `a.b` because property `b` is missing in `{a: number}` [1]. [prop-missing]
 
    test3_exact_annot.js:7:3
    7| a.b as number; // error: property `b` not found

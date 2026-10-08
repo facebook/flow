@@ -484,6 +484,7 @@ fn annot_lookup_failed<'cx>(
     name: &Name,
     use_op: &UseOp,
     propref: &type_::PropRef,
+    objt: &Type,
     indexer_fallback: Option<&type_::IndexerFallbackData>,
 ) -> Type {
     use flow_typing_flow_common::flow_js_utils::get_prop_t_kit;
@@ -494,7 +495,10 @@ fn annot_lookup_failed<'cx>(
             flow_typing_errors::error_message::ErrorMessage::EPropNotFoundInLookup(Box::new(
                 EPropNotFoundInLookupData {
                     prop_loc: reason_prop.loc().dupe(),
-                    reason_obj: reason_op.dupe(),
+                    object: flow_js_utils::type_reference_with_reason_for_error(
+                        objt,
+                        type_util::reason_of_t(objt).dupe(),
+                    ),
                     prop_name: Some(name.dupe()),
                     use_op: use_op.dupe(),
                     suggestion: None,
@@ -2348,6 +2352,7 @@ fn elab_t_concrete<'cx>(
                         name,
                         use_op,
                         propref,
+                        objt,
                         indexer_fallback.as_deref(),
                     )
                 }
@@ -2366,6 +2371,7 @@ fn elab_t_concrete<'cx>(
                         name,
                         use_op,
                         propref,
+                        objt,
                         indexer_fallback.as_deref(),
                     )
                 }
@@ -2600,9 +2606,7 @@ fn elab_t_concrete<'cx>(
             use flow_typing_flow_common::flow_js_utils::get_prop_t_kit;
 
             match t.deref() {
-                TypeInner::DefT(reason_instance, def_t)
-                    if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
-                {
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
                     match propref {
                         type_::PropRef::Named { .. } => {
                             let trace = dummy_trace();
@@ -2615,7 +2619,7 @@ fn elab_t_concrete<'cx>(
                                 None,
                                 false,
                                 inst_t.super_.dupe(),
-                                type_::LookupKind::Strict(reason_instance.dupe()),
+                                type_::LookupKind::Strict(t.dupe()),
                                 &type_::hint_unavailable(),
                                 false,
                                 &inst_t.inst,

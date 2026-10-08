@@ -352,7 +352,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ exported.js:80:13
 
-Cannot get `exported_ns.React` because property `React` is missing in namespace exported_ns [1]. [prop-missing]
+Cannot get `exported_ns.React` because property `React` is missing in
+`{readonly B: typeof B, readonly bar1: number, readonly bar2: boolean, readonly bar3: string, readonl...` [1].
+[prop-missing]
 
    exported.js:80:13
    80| exported_ns.React; // error: prop-missing
@@ -380,7 +382,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ exported.js:81:13
 
-Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in namespace exported_ns [1]. [prop-missing]
+Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in
+`{readonly B: typeof B, readonly bar1: number, readonly bar2: boolean, readonly bar3: string, readonl...` [1].
+[prop-missing]
 
    exported.js:81:13
    81| exported_ns.CONSTANT as empty; // prop-missing
@@ -814,8 +818,7 @@ Cannot use declare module.exports statements with in `declare namespace`. The st
 
 Error --------------------------------------------------------------------------------------------- typing_test.js:15:36
 
-Cannot get `unsupported_declare_module_exports.foo` because property `foo` is missing in namespace
-unsupported_declare_module_exports [1]. [prop-missing]
+Cannot get `unsupported_declare_module_exports.foo` because property `foo` is missing in `{}` [1]. [prop-missing]
 
    typing_test.js:15:36
    15| unsupported_declare_module_exports.foo; // prop-missing because `declare module.exports` is ignored
@@ -1009,7 +1012,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typing_test.js:39:13
 
-Cannot get `exported_ns.React` because property `React` is missing in namespace exported_ns [1]. [prop-missing]
+Cannot get `exported_ns.React` because property `React` is missing in
+`{readonly B: typeof B, readonly bar1: number, readonly bar2: boolean, readonly bar3: string, readonl...` [1].
+[prop-missing]
 
    typing_test.js:39:13
    39| exported_ns.React; // error: prop-missing
@@ -1037,7 +1042,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typing_test.js:40:13
 
-Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in namespace exported_ns [1]. [prop-missing]
+Cannot get `exported_ns.CONSTANT` because property `CONSTANT` is missing in
+`{readonly B: typeof B, readonly bar1: number, readonly bar2: boolean, readonly bar3: string, readonl...` [1].
+[prop-missing]
 
    typing_test.js:40:13
    40| exported_ns.CONSTANT as empty; // error: prop-missing

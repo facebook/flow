@@ -63,7 +63,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- dictionary.js:56:5
 
-Cannot assign `'err'` to `o.prop` because property `prop` is missing in object type [1]. [prop-missing]
+Cannot assign `'err'` to `o.prop` because property `prop` is missing in `{[k: number]: any}` [1]. [prop-missing]
 
    dictionary.js:56:5
    56|   o.prop = 'err'; // error: string ~> number

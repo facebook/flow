@@ -57,7 +57,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:27:19
 
-Cannot get `inexactObject.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in object type [1].
+Cannot get `inexactObject.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in `{x: string}` [1].
 [prop-missing]
 
    test.js:27:19
@@ -72,7 +72,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:30:17
 
-Cannot get `exactObject.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in object type [1].
+Cannot get `exactObject.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in `{x: string}` [1].
 [prop-missing]
 
    test.js:30:17
@@ -87,8 +87,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:33:20
 
-Cannot get `unionOfObjects.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in object type [1].
-[prop-missing]
+Cannot get `unionOfObjects.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in
+`{x: string}` [1]. [prop-missing]
 
    test.js:33:20
    33| if (unionOfObjects.thisPropDoesNotExist) {} // Error
@@ -103,8 +103,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:38:5
 
 Cannot get `intersectionOfObjects.thisPropDoesNotExist` because: [incompatible-use]
- - Either property `thisPropDoesNotExist` is missing in object type [1].
- - Or property `thisPropDoesNotExist` is missing in object type [2].
+ - Either property `thisPropDoesNotExist` is missing in `{x: string}` [1].
+ - Or property `thisPropDoesNotExist` is missing in `{y: string}` [2].
 
    test.js:38:5
    38| if (intersectionOfObjects.thisPropDoesNotExist) {} // Error
@@ -121,8 +121,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:43:13
 
-Cannot get `myClass.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in statics of
-`myClass` [1]. [prop-missing]
+Cannot get `myClass.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in
+`{name: string, ...}` [1]. [prop-missing]
 
    test.js:43:13
    43| if (myClass.thisPropDoesNotExist) {} // Error

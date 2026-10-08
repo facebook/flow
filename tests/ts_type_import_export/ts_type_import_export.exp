@@ -197,7 +197,9 @@ References:
 
 Error -------------------------------------------------------------------------------------- importer_namespace.ts:30:20
 
-Cannot get `NS.MyType` because property `MyType` is missing in module `./exporter` [1]. [missing-export]
+Cannot get `NS.MyType` because property `MyType` is missing in
+`{readonly MyClass: typeof MyClass, readonly MyEnum: {readonly A: "a", readonly B: "b"}, readonly myV...` [1].
+[missing-export]
 
    importer_namespace.ts:30:20
    30| const badType = NS.MyType; // ERROR: a type is not a runtime member of the namespace

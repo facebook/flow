@@ -535,7 +535,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:18:5
 
-Cannot get `o.z` because property `z` is missing in interface type [1]. [prop-missing]
+Cannot get `o.z` because property `z` is missing in `interface extends J, K {}` [1]. [prop-missing]
 
    inline.js:18:5
    18|   o.z; // error: undeclared property z
@@ -549,7 +549,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:21:5
 
-Cannot get `o.name` because property `name` is missing in interface type [1]. [prop-missing]
+Cannot get `o.name` because property `name` is missing in `interface extends J, K {}` [1]. [prop-missing]
 
    inline.js:21:5
    21|   o.name;

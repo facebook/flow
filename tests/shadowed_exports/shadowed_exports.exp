@@ -16,8 +16,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- shadow_exports.js:4:8
 
-Cannot assign `42` to `module.exports` because property `exports` is missing in statics of function type [1].
-[prop-missing]
+Cannot assign `42` to `module.exports` because property `exports` is missing in `{...}` [1]. [prop-missing]
 
    shadow_exports.js:4:8
    4| module.exports = 42;

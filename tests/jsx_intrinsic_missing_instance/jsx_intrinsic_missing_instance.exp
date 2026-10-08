@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Property `instance` is missing in `{props: {}, ...}` [1]. [prop-missing]
+
+   4| <noinstance ref={ref} />; // Error: the intrinsic has no `instance`
+       ^^^^^^^^^^ [1]
+
+
+
+Found 1 error

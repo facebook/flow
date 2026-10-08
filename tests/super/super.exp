@@ -288,7 +288,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- super.js:15:12
 
-Cannot call `super.doesntExist` because property `doesntExist` is missing in statics of `A` [1]. [prop-missing]
+Cannot call `super.doesntExist` because property `doesntExist` is missing in
+`{name: string, staticMethod(x: string): string, ...}` [1]. [prop-missing]
 
    super.js:15:12
    15|     (super.doesntExist()); // error, A doesn't have a doesntExist method

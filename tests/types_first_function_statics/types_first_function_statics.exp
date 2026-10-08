@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- b.js:6:3
 
-Cannot get `a.other` because property `other` is missing in statics of function [1]. [prop-missing]
+Cannot get `a.other` because property `other` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    b.js:6:3
    6| a.other as number;
@@ -48,7 +48,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- b.js:14:8
 
-Cannot get `poly_a.other` because property `other` is missing in statics of function [1]. [prop-missing]
+Cannot get `poly_a.other` because property `other` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    b.js:14:8
    14| poly_a.other as number;
@@ -62,7 +62,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- conditional-import.js:4:3
 
-Cannot get `f.a` because property `a` is missing in statics of function [1]. [prop-missing]
+Cannot get `f.a` because property `a` is missing in `{legal: number, ...}` [1]. [prop-missing]
 
    conditional-import.js:4:3
    4| f.a as number; // ERROR
@@ -76,7 +76,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- conditional-import.js:5:3
 
-Cannot get `f.b` because property `b` is missing in statics of function [1]. [prop-missing]
+Cannot get `f.b` because property `b` is missing in `{legal: number, ...}` [1]. [prop-missing]
 
    conditional-import.js:5:3
    5| f.b as number; // ERROR
@@ -90,7 +90,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- conditional-import.js:8:3
 
-Cannot get `g.a` because property `a` is missing in statics of function [1]. [prop-missing]
+Cannot get `g.a` because property `a` is missing in `{legal: number, ...}` [1]. [prop-missing]
 
    conditional-import.js:8:3
     8| g.a as number; // ERROR
@@ -104,7 +104,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- conditional.js:10:5
 
-Cannot assign `1` to `f.a` because property `a` is missing in function [1]. [prop-missing]
+Cannot assign `1` to `f.a` because property `a` is missing in `{legal: number, ...}` [1]. [prop-missing]
 
    conditional.js:10:5
    10|   f.a = 1;
@@ -118,7 +118,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- conditional.js:15:7
 
-Cannot assign `1` to `f.b` because property `b` is missing in function [1]. [prop-missing]
+Cannot assign `1` to `f.b` because property `b` is missing in `{legal: number, ...}` [1]. [prop-missing]
 
    conditional.js:15:7
    15|     f.b = 1;
@@ -132,7 +132,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- conditional.js:25:5
 
-Cannot assign `1` to `g.a` because property `a` is missing in function [1]. [prop-missing]
+Cannot assign `1` to `g.a` because property `a` is missing in `{legal: number, ...}` [1]. [prop-missing]
 
    conditional.js:25:5
    25|   g.a = 1;

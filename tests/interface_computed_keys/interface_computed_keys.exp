@@ -513,7 +513,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- imp.js:159:8
 
-Cannot get `Holder.a` because property `a` is missing in statics of `Holder` [1]. [prop-missing]
+Cannot get `Holder.a` because property `a` is missing in `{b: string, dk: string, name: string, ...}` [1].
+[prop-missing]
 
    imp.js:159:8
    159| Holder.a; // ERROR: `a` is an instance property, not a static one
@@ -733,7 +734,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_keys.js:98:13
 
-Cannot get `WithTypeKey.anything` because property `anything` is missing in statics of `WithTypeKey` [1]. [prop-missing]
+Cannot get `WithTypeKey.anything` because property `anything` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    type_keys.js:98:13
    98| WithTypeKey.anything; // ERROR: the static member was dropped
@@ -747,7 +748,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_keys.js:107:11
 
-Cannot get `Merged.Key` because property `Key` is missing in statics of `Merged` [1]. [prop-missing]
+Cannot get `Merged.Key` because property `Key` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    type_keys.js:107:11
    107|   [Merged.Key]: number, // ERROR: reads `Merged.Key` as a value
@@ -1411,7 +1412,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- within.js:97:8
 
-Cannot get `Holder.a` because property `a` is missing in statics of `Holder` [1]. [prop-missing]
+Cannot get `Holder.a` because property `a` is missing in `{b: string, name: string, ...}` [1]. [prop-missing]
 
    within.js:97:8
    97| Holder.a; // ERROR: `a` is an instance property, not a static one

@@ -60,7 +60,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:4:34
 
-Cannot get `React.unstable_AsyncMode` because property `unstable_AsyncMode` is missing in exports [1]. [prop-missing]
+Cannot get `React.unstable_AsyncMode` because property `unstable_AsyncMode` is missing in `{}` [1]. [prop-missing]
 
    B.js:4:34
      4| const AsyncMode: boolean = React.unstable_AsyncMode;

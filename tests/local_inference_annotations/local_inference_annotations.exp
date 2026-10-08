@@ -372,7 +372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- destructuring_init.js:3:6
 
-Property `0` is missing in statics of function type [1]. [prop-missing]
+Property `0` is missing in `{...}` [1]. [prop-missing]
 
    destructuring_init.js:3:6
    3| let [a]: number => number = (x) => { // ERROR
@@ -394,7 +394,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error ---------------------------------------------------------------------------------------- destructuring_init.js:9:8
 
-Property `x` is missing in statics of function type [1]. [prop-missing]
+Property `x` is missing in `{...}` [1]. [prop-missing]
 
    destructuring_init.js:9:8
    9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available
@@ -408,7 +408,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- destructuring_init.js:9:14
 
-Property `y` is missing in statics of function type [1]. [prop-missing]
+Property `y` is missing in `{...}` [1]. [prop-missing]
 
    destructuring_init.js:9:14
    9| const {x: b, y: c}: number => void = (x) => { // This x has an annot available

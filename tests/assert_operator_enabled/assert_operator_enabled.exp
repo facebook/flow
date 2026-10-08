@@ -508,7 +508,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:80:5
 
-Cannot get `x.f` because property `f` is missing in object type [1]. [prop-missing]
+Cannot get `x.f` because property `f` is missing in `{a?: {b?: number}, c: {d?: number, e?: number, f?: number}}` [1].
+[prop-missing]
 
    test.js:80:5
    80|   x.f.d += 42; // error addition

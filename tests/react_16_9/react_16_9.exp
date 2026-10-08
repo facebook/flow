@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- profiler.js:5:26
 
-Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnType` is missing in module `react` [1].
+Cannot get `React.ProfilerOnRenderFnType` because property `ProfilerOnRenderFnType` is missing in `...` [1].
 [prop-missing]
 
    profiler.js:5:26

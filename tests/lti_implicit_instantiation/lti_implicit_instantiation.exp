@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ call_poly_class.js:10:1
 
-Cannot call `C` because a call signature declaring the expected parameter / return type is missing in statics of
-`C` [1]. [prop-missing]
+Cannot call `C` because a call signature declaring the expected parameter / return type is missing in
+`{name: string, ...}` [1]. [prop-missing]
 
    call_poly_class.js:10:1
    10| C(3); // ERROR: `C` has no call signature; pinning must not panic on the empty type-arg list
@@ -779,7 +779,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- upper_non_t.js:99:6
 
-Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
+Cannot get `r1.bad` because property `bad` is missing in `Array<string>` [1]. [prop-missing]
 
    upper_non_t.js:99:6
     99|   r1.bad; // error
@@ -815,7 +815,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:104:6
 
-Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
+Cannot get `r2.bad` because property `bad` is missing in `Array<1 | 2>` [1]. [prop-missing]
 
    upper_non_t.js:104:6
    104|   r2.bad; // error

@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------- keyMirror.js:7:9
 
 Cannot assign `key` to `ret[key]` because an index signature declaring the expected key / value type is missing in
-object type [1]. [prop-missing]
+`{...}` [1]. [prop-missing]
 
    keyMirror.js:7:9
    7|     ret[key] = key; // error: no indexed type

@@ -51,7 +51,7 @@ Cannot call function without exactly 1 type argument. [nonpolymorphic-type-arg]
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:14:26
 
-Cannot call method `defineProperty` because property `c` is missing in object type [1]. [prop-missing]
+Cannot call method `defineProperty` because property `c` is missing in `{a: number, b: number}` [1]. [prop-missing]
 
    obj.js:14:26
    14| Object.defineProperty(y, 'c', {value: 42});
@@ -65,7 +65,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:15:26
 
-Cannot call method `defineProperty` because property `c` is missing in object type [1]. [prop-missing]
+Cannot call method `defineProperty` because property `c` is missing in `{a: number, b: number}` [1]. [prop-missing]
 
    obj.js:15:26
    15| Object.defineProperty(y, 'c', {writable:false});
@@ -87,7 +87,7 @@ Cannot resolve name `x`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:18:8
 
-Cannot call method `defineProperties` because property `d` is missing in object type [1]. [prop-missing]
+Cannot call method `defineProperties` because property `d` is missing in `{a: number, b: number}` [1]. [prop-missing]
 
    obj.js:18:8
    18| Object.defineProperties(y, {d: {value: 42}, a: {writable:false}, b:{get: () => "a"}});
@@ -123,7 +123,8 @@ Cannot call non-polymorphic function with type arguments. [nonpolymorphic-type-a
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:26:58
 
-Cannot get `Object.freeze<...>(...).b` because property `b` is missing in object type [1]. [prop-missing]
+Cannot get `Object.freeze<...>(...).b` because property `b` is missing in `{readonly a: number, ...}` [1].
+[prop-missing]
 
    obj.js:26:58
    26| Object.freeze<{readonly a: number, ...}>({a: 42, b: 42}).b; // b is hidden

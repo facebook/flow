@@ -1810,8 +1810,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- useContext_hook.js:4:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useContext_hook.js:4:9
       4|   React.useMutationEffect(); // Error: function requires another argument.
@@ -1921,7 +1920,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- useDebugValue_hook.js:3:30
 
-Cannot call `React.useDebugValue` because property `useDebugValue` is missing in namespace React [1]. [prop-missing]
+Cannot call `React.useDebugValue` because property `useDebugValue` is missing in `...` [1]. [prop-missing]
 
    useDebugValue_hook.js:3:30
       3| const undefinedValue = React.useDebugValue(123);
@@ -2231,8 +2230,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:4:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:4:9
       4|   React.useMutationEffect(); // Error: function requires another argument.
@@ -2246,8 +2244,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:9:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:9:9
       9|   React.useMutationEffect(() => {});
@@ -2261,8 +2258,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:10:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:10:9
      10|   React.useMutationEffect(() => {}, []);
@@ -2276,8 +2272,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:11:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:11:9
      11|   React.useMutationEffect(() => {}, [1, 2, 3]);
@@ -2291,8 +2286,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:14:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:14:9
      14|   React.useMutationEffect(() => () => {});
@@ -2306,8 +2300,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:15:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:15:9
      15|   React.useMutationEffect(() => () => {}, []);
@@ -2321,8 +2314,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:16:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:16:9
      16|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
@@ -2336,8 +2328,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:20:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:20:9
      20|   React.useMutationEffect(1); // Error: number is incompatible with function type
@@ -2351,8 +2342,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:21:9
 
-Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in namespace React [1].
-[prop-missing]
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in `...` [1]. [prop-missing]
 
    useMutationEffect_hook.js:21:9
      21|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array

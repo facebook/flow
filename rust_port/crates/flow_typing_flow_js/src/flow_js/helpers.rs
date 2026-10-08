@@ -1781,7 +1781,6 @@ pub(super) fn instance_lookup_kind<'cx>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
     trace: DepthTrace,
-    reason_instance: &Reason,
     reason_op: &Reason,
     method_accessible: bool,
     instance_t: &Type,
@@ -1794,12 +1793,11 @@ pub(super) fn instance_lookup_kind<'cx>(
             from_indexed_access,
             ..
         } if !from_indexed_access || flow_js_utils::is_munged_prop_name(cx, name) => {
-            Ok(LookupKind::Strict(reason_instance.dupe()))
+            Ok(LookupKind::Strict(instance_t.dupe()))
         }
         _ => {
             let propref = propref.clone();
             let reason_op = reason_op.dupe();
-            let reason_instance = reason_instance.dupe();
             let lookup_default_second =
                 flow_typing_tvar::mk_where(cx, reason_op.dupe(), |cx, tvar| {
                     rec_flow(
@@ -1810,7 +1808,7 @@ pub(super) fn instance_lookup_kind<'cx>(
                             tvar,
                             &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
-                                lookup_kind: Box::new(LookupKind::Strict(reason_instance.dupe())),
+                                lookup_kind: Box::new(LookupKind::Strict(instance_t.dupe())),
                                 indexer_fallback: None,
                                 try_ts_on_failure: Rc::from([]),
                                 propref: Box::new(propref.clone()),

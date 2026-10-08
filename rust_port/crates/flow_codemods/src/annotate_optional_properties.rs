@@ -37,7 +37,7 @@ fn data_of_prop_missing_error(
         msg,
     );
     let root = flow_typing_type::type_::root_of_use_op(&op);
-    let (value, name, obj_def_loc) = match (root, msg) {
+    let (value, name, object) = match (root, msg) {
         (
             VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. })
             | VirtualRootUseOp::GetProperty(value),
@@ -45,20 +45,16 @@ fn data_of_prop_missing_error(
                 object,
                 prop: Some(name),
                 ..
-            }),
-        ) => (value, name, &object.definition_loc),
-        (
-            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. })
-            | VirtualRootUseOp::GetProperty(value),
-            ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
-                reason_obj,
+            })
+            | ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
+                object,
                 prop_name: Some(name),
                 ..
             }),
-        ) => (value, name, reason_obj.def_loc()),
+        ) => (value, name, object),
         _ => return None,
     };
-    let obj_loc = loc_of_aloc(obj_def_loc);
+    let obj_loc = loc_of_aloc(&object.definition_loc);
     let init_locs = vec![loc_of_aloc(value.def_loc())];
     let prop_accesses_ = prop_accesses(&op);
     Some(PropData {

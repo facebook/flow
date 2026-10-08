@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------ importer.js:16:15
 
-Cannot get `ErrorSubclass.nope` because property `nope` is missing in statics of `ErrorSubclass` [1]. [prop-missing]
+Cannot get `ErrorSubclass.nope` because property `nope` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    importer.js:16:15
    16| ErrorSubclass.nope; // error: not a static of `ErrorConstructor`

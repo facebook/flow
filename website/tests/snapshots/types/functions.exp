@@ -145,8 +145,8 @@ Found 1 error
 === block 21 ===
 Error ---------------------------------------------------------------------------- -:6:10
 
-Cannot assign `"runs later"` to `callback.description` because property `description` is missing in statics of function
-type [1]. [prop-missing]
+Cannot assign `"runs later"` to `callback.description` because property `description` is missing in `{...}` [1].
+[prop-missing]
 
    -:6:10
    6| callback.description = "runs later"; // Error!

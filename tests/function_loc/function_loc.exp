@@ -102,7 +102,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ arrow_with_statics_dep.js:4:3
 
-Cannot get `f.missing` because property `missing` is missing in statics of function [1]. [prop-missing]
+Cannot get `f.missing` because property `missing` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    arrow_with_statics_dep.js:4:3
    4| f.missing; // err
@@ -252,7 +252,7 @@ References:
 
 Error ---------------------------------------------------------------------------- function_decl_with_statics_dep.js:4:3
 
-Cannot get `f.missing` because property `missing` is missing in statics of function [1]. [prop-missing]
+Cannot get `f.missing` because property `missing` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    function_decl_with_statics_dep.js:4:3
    4| f.missing; // err

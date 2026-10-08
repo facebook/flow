@@ -43,7 +43,8 @@ Class static blocks are not supported. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:3
 
-Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1]. [prop-missing]
+Cannot assign function to `A.qux` because property `qux` is missing in
+`{bar(y: string): void, foo(x: number): void, name: string, x: number, y: string, ...}` [1]. [prop-missing]
 
    test.js:7:3
    7| A.qux = function(x: string) { } // error
@@ -149,7 +150,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:7
 
-Cannot call `B.qux` because property `qux` is missing in statics of `B` [1]. [prop-missing]
+Cannot call `B.qux` because property `qux` is missing in
+`{badCreate(this: typeof B): number, create(this: typeof B): A, foo(x: string): void, main(): void, n...` [1].
+[prop-missing]
 
    test.js:19:7
    19|     B.qux(0); // error
@@ -177,7 +180,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:40:7
 
-Cannot call `D.foo` because property `foo` is missing in statics of `D` [1]. [prop-missing]
+Cannot call `D.foo` because property `foo` is missing in `{main(): void, name: string, ...}` [1]. [prop-missing]
 
    test.js:40:7
    40|     D.foo(0); // error
@@ -219,7 +222,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:53:10
 
-Cannot call `this.bar` because property `bar` is missing in statics of `E` [1]. [prop-missing]
+Cannot call `this.bar` because property `bar` is missing in
+`{foo(this: typeof E): string, name: string, x: number, ...}` [1]. [prop-missing]
 
    test.js:53:10
    53|     this.bar(); // error
@@ -267,7 +271,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:68:3
 
-Cannot assign function to `N.xxx` because property `xxx` is missing in statics of `N` [1]. [prop-missing]
+Cannot assign function to `N.xxx` because property `xxx` is missing in
+`{f(): string, name: string, x: number, ...}` [1]. [prop-missing]
 
    test.js:68:3
    68| N.xxx = () => {}; // ERROR

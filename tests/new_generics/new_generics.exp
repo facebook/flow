@@ -359,7 +359,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:10:5
 
-Cannot assign `'hi'` to `a['foo']` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot assign `'hi'` to `a['foo']` because property `foo` is missing in `{[X]: string}` [1]. [prop-missing]
 
    computed_keys.js:10:5
    10|   a['foo'] = 'hi'; // nope
@@ -373,8 +373,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:13:5
 
-Cannot assign `42` to `b[x]` because an index signature declaring the expected key / value type is missing in object
-type [1]. [prop-missing]
+Cannot assign `42` to `b[x]` because an index signature declaring the expected key / value type is missing in
+`{prop: number, ...}` [1]. [prop-missing]
 
    computed_keys.js:13:5
    13|   b[x] = 42; // nope
@@ -388,7 +388,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:14:5
 
-Cannot assign `42` to `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
+Cannot assign `42` to `b[y]` because property `lit` is missing in `{prop: number, ...}` [1]. [prop-missing]
 
    computed_keys.js:14:5
    14|   b[y] = 42; // nope
@@ -419,7 +419,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- computed_keys.js:17:5
 
-Cannot get `b[y]` because property `lit` is missing in object type [1]. [prop-missing]
+Cannot get `b[y]` because property `lit` is missing in `{prop: number, ...}` [1]. [prop-missing]
 
    computed_keys.js:17:5
    17|   b[y]; // nope

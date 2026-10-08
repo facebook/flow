@@ -744,7 +744,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:169:5
 
-Cannot get `x['foo']` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `x['foo']` because property `foo` is missing in `{[number]: boolean}` [1]. [prop-missing]
 
    test.js:169:5
    169|   x['foo']; // ERROR

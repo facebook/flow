@@ -877,7 +877,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:20:3
 
-Cannot get `s.a` because property `a` is missing in `PickStrings` [1]. [prop-missing]
+Cannot get `s.a` because property `a` is missing in mapped type [1]. [prop-missing]
 
    mapped_type_as.js:20:3
    20| s.a; // ERROR - missing
@@ -936,7 +936,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- mapped_type_as.js:47:4
 
-Cannot get `ev.a` because property `a` is missing in mapped type [1]. [prop-missing]
+Cannot get `ev.a` because property `a` is missing in `{}` [1]. [prop-missing]
 
    mapped_type_as.js:47:4
    47| ev.a; // ERROR - missing
@@ -980,7 +980,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ mapped_type_as.js:100:4
 
-Cannot get `dr.foo` because property `foo` is missing in mapped type [1]. [prop-missing]
+Cannot get `dr.foo` because property `foo` is missing in `{}` [1]. [prop-missing]
 
    mapped_type_as.js:100:4
    100| dr.foo; // ERROR

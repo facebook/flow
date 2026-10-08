@@ -308,7 +308,7 @@ enum TestPropHitOrMiss {
     Hit,
     Miss {
         name: Option<Name>,
-        reasons: (Reason, Reason),
+        prop_reason_and_object: (Reason, Type),
         use_op: UseOp,
         suggestion: Option<FlowSmolStr>,
     },
@@ -2733,7 +2733,7 @@ impl<'cx> Context<'cx> {
         &self,
         id: i32,
         name: Option<Name>,
-        reasons: (Reason, Reason),
+        prop_reason_and_object: (Reason, Type),
         use_op: UseOp,
         suggestion: Option<FlowSmolStr>,
     ) {
@@ -2748,7 +2748,7 @@ impl<'cx> Context<'cx> {
                 id,
                 TestPropHitOrMiss::Miss {
                     name,
-                    reasons,
+                    prop_reason_and_object,
                     use_op,
                     suggestion,
                 },
@@ -2758,7 +2758,7 @@ impl<'cx> Context<'cx> {
 
     pub fn test_prop_get_never_hit(
         &self,
-    ) -> Vec<(Option<Name>, (Reason, Reason), UseOp, Option<FlowSmolStr>)> {
+    ) -> Vec<(Option<Name>, (Reason, Type), UseOp, Option<FlowSmolStr>)> {
         self.0
             .ccx
             .test_prop_hits_and_misses
@@ -2768,12 +2768,12 @@ impl<'cx> Context<'cx> {
                 TestPropHitOrMiss::Hit => None,
                 TestPropHitOrMiss::Miss {
                     name,
-                    reasons,
+                    prop_reason_and_object,
                     use_op,
                     suggestion,
                 } => Some((
                     name.dupe(),
-                    reasons.dupe(),
+                    prop_reason_and_object.dupe(),
                     use_op.dupe(),
                     suggestion.dupe(),
                 )),

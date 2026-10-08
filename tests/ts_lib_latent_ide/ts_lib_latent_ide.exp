@@ -1,7 +1,9 @@
 ======Queries before the global exists======
 Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
 
-Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in
+`{readonly $iterate: <T>(p: Iterable<T>) => T, readonly Array: typeof Array, readonly Boolean: typeof...`.
+[prop-missing]
 
    2| globalThis.IdeG;
                  ^^^^
@@ -45,7 +47,9 @@ Flags: --pretty --imports
 ======Queries after the global is created======
 Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
 
-Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in
+`{readonly $iterate: <T>(p: Iterable<T>) => T, readonly Array: typeof Array, readonly Boolean: typeof...`.
+[prop-missing]
 
    2| globalThis.IdeG;
                  ^^^^
@@ -98,7 +102,9 @@ Flags: --pretty --imports
 ======Queries after the global becomes external======
 Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
 
-Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in
+`{readonly $iterate: <T>(p: Iterable<T>) => T, readonly Array: typeof Array, readonly Boolean: typeof...`.
+[prop-missing]
 
    2| globalThis.IdeG;
                  ^^^^
@@ -142,7 +148,9 @@ Flags: --pretty --imports
 ======Queries after a TypeScript module augments globals======
 Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
 
-Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in
+`{readonly $iterate: <T>(p: Iterable<T>) => T, readonly Array: typeof Array, readonly Boolean: typeof...`.
+[prop-missing]
 
    2| globalThis.IdeG;
                  ^^^^
@@ -200,7 +208,9 @@ Flags: --pretty --imports
 ======Queries after the global augmentation is removed======
 Error --------------------------------------------------------------------------------------------- autocomplete.js:2:12
 
-Cannot get `globalThis.IdeG` because property `IdeG` is missing in namespace globalThis. [prop-missing]
+Cannot get `globalThis.IdeG` because property `IdeG` is missing in
+`{readonly $iterate: <T>(p: Iterable<T>) => T, readonly Array: typeof Array, readonly Boolean: typeof...`.
+[prop-missing]
 
    2| globalThis.IdeG;
                  ^^^^

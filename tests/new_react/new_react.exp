@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------- argless_function.js:10:3
 
-Cannot assign `3` to `x.foo` because property `foo` is missing in function [1]. [prop-missing]
+Cannot assign `3` to `x.foo` because property `foo` is missing in `{}` [1]. [prop-missing]
 
    argless_function.js:10:3
    10| x.foo = 3; // Error, the props type for Component is a sealed empty object.
@@ -351,7 +351,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- state6.js:34:25
 
-Cannot get `props.nope` because property `nope` is missing in object type [1]. [prop-missing]
+Cannot get `props.nope` because property `nope` is missing in `{prop: number, ...}` [1]. [prop-missing]
 
    state6.js:34:25
    34|       console.log(props.nope); // Error: `nope` does not exist.

@@ -14,7 +14,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- react.js:6:13
 
-Cannot get `react.NotAType` because property `NotAType` is missing in module `react` [1]. [prop-missing]
+Cannot get `react.NotAType` because property `NotAType` is missing in `...` [1]. [prop-missing]
 
    react.js:6:13
    6| "" as react.NotAType; // error NotAType missing in react

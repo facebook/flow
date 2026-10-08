@@ -844,7 +844,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:40:3
 
-Cannot get `React.Fragment` because property `Fragment` is missing in object type [1]. [prop-missing]
+Cannot get `React.Fragment` because property `Fragment` is missing in `{createElement: React.CreateElement, ...}` [1].
+[prop-missing]
 
    expression.js:40:3
    40| ((<>foo</> as empty) as T).p as empty;

@@ -164,7 +164,7 @@ fn strict_lookup_failed<'cx>(
     trace: DepthTrace,
     l: &Type,
     reason_op: &Reason,
-    strict_reason: &Reason,
+    strict_obj: &Type,
     propref: &PropRef,
     action: &LookupAction,
     ids: Option<&properties::Set>,
@@ -189,7 +189,10 @@ fn strict_lookup_failed<'cx>(
                     env,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_loc,
-                        reason_obj: strict_reason.dupe(),
+                        object: flow_js_utils::type_reference_with_reason_for_error(
+                            strict_obj,
+                            reason_of_t(strict_obj).dupe(),
+                        ),
                         prop_name,
                         use_op: flow_js_utils::use_op_of_lookup_action(action),
                         suggestion,
@@ -244,7 +247,7 @@ fn strict_computed_lookup_failed<'cx>(
     trace: DepthTrace,
     l: &Type,
     reason_op: &Reason,
-    strict_reason: &Reason,
+    strict_obj: &Type,
     propref: &PropRef,
     elem_t: &Type,
     action: &LookupAction,
@@ -303,7 +306,10 @@ fn strict_computed_lookup_failed<'cx>(
                     env,
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_loc: reason_op.loc().dupe(),
-                        reason_obj: strict_reason.dupe(),
+                        object: flow_js_utils::type_reference_with_reason_for_error(
+                            strict_obj,
+                            reason_of_t(strict_obj).dupe(),
+                        ),
                         prop_name: None,
                         use_op: flow_js_utils::use_op_of_lookup_action(action),
                         suggestion: None,
@@ -2716,7 +2722,10 @@ fn __flow_impl<'cx>(
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: prop,
                             prop_loc: reason_op.loc().dupe(),
-                            reason_obj: reason_o.dupe(),
+                            object: flow_js_utils::type_reference_with_reason_for_error(
+                                l,
+                                reason_o.dupe(),
+                            ),
                             use_op: use_op.dupe(),
                             suggestion,
                         }))
@@ -2784,7 +2793,10 @@ fn __flow_impl<'cx>(
                             EPropNotFoundInLookupData {
                                 prop_name: Some(x.dupe()),
                                 prop_loc: reason_op.loc().dupe(),
-                                reason_obj: reason_o.dupe(),
+                                object: flow_js_utils::type_reference_with_reason_for_error(
+                                    l,
+                                    reason_o.dupe(),
+                                ),
                                 use_op: use_op.dupe(),
                                 suggestion: prop_typo_suggestion_for_name(cx, &prop_ids, &x),
                             },
@@ -2819,7 +2831,7 @@ fn __flow_impl<'cx>(
                 ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                     prop_name: None,
                     prop_loc: reason_op.loc().dupe(),
-                    reason_obj: reason_o.dupe(),
+                    object: flow_js_utils::type_reference_with_reason_for_error(l, reason_o.dupe()),
                     use_op: use_op.dupe(),
                     suggestion: None,
                 }))
@@ -5435,7 +5447,10 @@ fn __flow_impl<'cx>(
                     let error_message =
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_loc: reason_prop.loc().dupe(),
-                            reason_obj: reason.dupe(),
+                            object: flow_js_utils::type_reference_with_reason_for_error(
+                                l,
+                                reason.dupe(),
+                            ),
                             prop_name,
                             use_op: use_op.dupe(),
                             suggestion: None,
@@ -6269,7 +6284,7 @@ fn __flow_impl<'cx>(
             )?;
         }
         (
-            TypeInner::DefT(reason_instance, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::SetPropT(use_op, reason_op, propref, mode, write_ctx, tin, prop_tout),
         ) if matches!(def_t.deref(), DefTInner::InstanceT(_)) => {
             let lookup_action = LookupAction::WriteProp(Box::new(WritePropData {
@@ -6285,7 +6300,6 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 trace,
-                reason_instance,
                 reason_op,
                 method_accessible,
                 l,
@@ -6424,7 +6438,7 @@ fn __flow_impl<'cx>(
                 (&t, &Type::new(TypeInner::OpenT((*data.tout).dupe()))),
             )?;
         }
-        (TypeInner::DefT(reason_instance, def_t), UseTInner::GetPropT(box data))
+        (TypeInner::DefT(_, def_t), UseTInner::GetPropT(box data))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
             let super_ = &inst_t.super_;
@@ -6439,7 +6453,6 @@ fn __flow_impl<'cx>(
                 cx,
                 env,
                 trace,
-                reason_instance,
                 &data.reason,
                 method_accessible,
                 l,
@@ -6487,7 +6500,7 @@ fn __flow_impl<'cx>(
         // * ... and their methods called *
         // ********************************
         (
-            TypeInner::DefT(reason_instance, def_t),
+            TypeInner::DefT(_, def_t),
             UseTInner::MethodT(box MethodTData {
                 use_op,
                 reason: reason_call,
@@ -6513,7 +6526,6 @@ fn __flow_impl<'cx>(
                         cx,
                         env,
                         trace,
-                        reason_instance,
                         reason_lookup,
                         method_accessible,
                         l,
@@ -9257,7 +9269,7 @@ fn __flow_impl<'cx>(
                 PropRef::Named { reason, .. } => reason,
                 PropRef::Computed(_) => reason_op,
             };
-            let test_info = Some((*id, (reason_prop.dupe(), reason_of_t(l).dupe())));
+            let test_info = Some((*id, (reason_prop.dupe(), l.dupe())));
             let lookup_default = match l.deref() {
                 TypeInner::DefT(_, obj_def) if matches!(obj_def.deref(), DefTInner::ObjT(obj) if obj_type::is_exact(&obj.flags.obj_kind)) =>
                 {
@@ -9511,7 +9523,7 @@ fn __flow_impl<'cx>(
         // ***************
 
         // Lookups can be strict or non-strict, as denoted by the presence or
-        // absence of strict_reason in the following two pattern matches.
+        // absence of strict_obj in the following two pattern matches.
         // Strictness derives from whether the object is sealed and was
         // created in the same scope in which the lookup occurs - see
         // mk_strict_lookup_reason below. The failure of a strict lookup
@@ -9732,7 +9744,7 @@ fn __flow_impl<'cx>(
             TypeInner::DefT(_, def_t),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
-                lookup_kind: box LookupKind::Strict(strict_reason),
+                lookup_kind: box LookupKind::Strict(strict_obj),
                 indexer_fallback,
                 try_ts_on_failure,
                 propref,
@@ -9751,7 +9763,7 @@ fn __flow_impl<'cx>(
                 trace,
                 l,
                 reason_op,
-                strict_reason,
+                strict_obj,
                 propref,
                 action,
                 ids.as_ref(),
@@ -9763,7 +9775,7 @@ fn __flow_impl<'cx>(
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
-                lookup_kind: box LookupKind::Strict(strict_reason),
+                lookup_kind: box LookupKind::Strict(strict_obj),
                 indexer_fallback,
                 try_ts_on_failure,
                 propref,
@@ -9779,7 +9791,7 @@ fn __flow_impl<'cx>(
                 trace,
                 l,
                 reason_op,
-                strict_reason,
+                strict_obj,
                 propref,
                 action,
                 ids.as_ref(),
@@ -9792,7 +9804,7 @@ fn __flow_impl<'cx>(
             TypeInner::DefT(_, def_t),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
-                lookup_kind: box LookupKind::Strict(strict_reason),
+                lookup_kind: box LookupKind::Strict(strict_obj),
                 try_ts_on_failure,
                 propref,
                 lookup_action: action,
@@ -9806,22 +9818,14 @@ fn __flow_impl<'cx>(
             && let PropRef::Computed(elem_t) = &**propref =>
         {
             strict_computed_lookup_failed(
-                cx,
-                env,
-                trace,
-                l,
-                reason_op,
-                strict_reason,
-                propref,
-                elem_t,
-                action,
+                cx, env, trace, l, reason_op, strict_obj, propref, elem_t, action,
             )?;
         }
         (
             TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_),
             UseTInner::LookupT(box LookupTData {
                 reason: reason_op,
-                lookup_kind: box LookupKind::Strict(strict_reason),
+                lookup_kind: box LookupKind::Strict(strict_obj),
                 indexer_fallback: _,
                 try_ts_on_failure,
                 propref,
@@ -9834,15 +9838,7 @@ fn __flow_impl<'cx>(
             && let PropRef::Computed(elem_t) = &**propref =>
         {
             strict_computed_lookup_failed(
-                cx,
-                env,
-                trace,
-                l,
-                reason_op,
-                strict_reason,
-                propref,
-                elem_t,
-                action,
+                cx, env, trace, l, reason_op, strict_obj, propref, elem_t, action,
             )?;
         }
         (
@@ -9893,7 +9889,7 @@ fn __flow_impl<'cx>(
                 //  a condition, in which case we consider the object's property to be
                 //  `mixed`.
                 let use_op = flow_js_utils::use_op_of_lookup_action(action);
-                if let Some((id, reasons)) = test_opt {
+                if let Some((id, prop_reason_and_object)) = test_opt {
                     let suggestion: Option<FlowSmolStr> = match &**propref {
                         PropRef::Named { name, .. } => ids.as_ref().and_then(|ids| {
                             let ids_vec: Vec<_> = ids.iter().duped().collect();
@@ -9908,7 +9904,7 @@ fn __flow_impl<'cx>(
                         cx.test_prop_miss(
                             *id,
                             name_of_propref(propref),
-                            (reasons.0.dupe(), reasons.1.dupe()),
+                            prop_reason_and_object.dupe(),
                             use_op.dupe(),
                             suggestion,
                         );

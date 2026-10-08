@@ -108,7 +108,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- delete.js:37:21
 
-Cannot call method `freeze` because property `freeze` is missing in statics of `Object` [1]. [prop-missing]
+Cannot call method `freeze` because property `freeze` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    delete.js:37:21
    37| const obj4 = Object.freeze({f: 1});

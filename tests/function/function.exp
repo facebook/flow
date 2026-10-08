@@ -543,7 +543,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bind.js:17:7
 
-Cannot call `x.bind` because property `bind` is missing in object type [1]. [prop-missing]
+Cannot call `x.bind` because property `bind` is missing in `{a: string, ...}` [1]. [prop-missing]
 
    bind.js:17:7
    17|     x.bind(x, 'foo'); // error

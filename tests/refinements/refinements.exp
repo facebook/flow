@@ -482,7 +482,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:37:14
 
-Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
+Cannot get `x.result` because property `result` is missing in `{done: false, ...}` [1]. [prop-missing]
 
    bool.js:37:14
    37|     return x.result; // error
@@ -524,7 +524,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:44:14
 
-Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
+Cannot get `x.result` because property `result` is missing in `{done: false, ...}` [1]. [prop-missing]
 
    bool.js:44:14
    44|     return x.result; // error
@@ -884,7 +884,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:14
 
-Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
+Cannot get `x.result` because property `result` is missing in `{done: false, ...}` [1]. [prop-missing]
 
    cond_prop.js:19:14
    19|     return x.result; // error
@@ -898,7 +898,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:24:16
 
-Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
+Cannot get `x.result` because property `result` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    cond_prop.js:24:16
    24|       return x.result; // error, consider { foo: "herp", done: "derp" }
@@ -926,7 +926,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:14
 
-Cannot get `x.result` because property `result` is missing in object type [1]. [prop-missing]
+Cannot get `x.result` because property `result` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    cond_prop.js:26:14
    26|     return x.result; // error
@@ -940,7 +940,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:34:11
 
-Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in object type [1]. [prop-missing]
+Cannot get `t.bar` because property `bar` (did you mean `baz`?) is missing in `{baz: string, quux: string, ...}` [1].
+[prop-missing]
 
    cond_prop.js:34:11
    34|         t.bar as string; // error, consider { baz: "x", quux: "y", foo: "boom" }
@@ -968,7 +969,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:44:11
 
-Cannot get `t.foo` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `t.foo` because property `foo` is missing in `{baz: string, quux: string, ...}` [1]. [prop-missing]
 
    cond_prop.js:44:11
    44|         t.foo as interface {}; // error, consider { baz: "x", quux: "y", bar: "boom" }
@@ -982,7 +983,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:46:11
 
-Cannot get `t.quux` because property `quux` is missing in object type [1]. [prop-missing]
+Cannot get `t.quux` because property `quux` is missing in `{bar: string, foo: {...}, ...}` [1]. [prop-missing]
 
    cond_prop.js:46:11
    46|         t.quux as string; // error, consider { foo: {}, bar: "" }
@@ -1010,7 +1011,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:52:11
 
-Cannot get `o.p` because property `p` is missing in object type [1]. [prop-missing]
+Cannot get `o.p` because property `p` is missing in `{...}` [1]. [prop-missing]
 
    cond_prop.js:52:11
    52|     if (o.p) {
@@ -1827,7 +1828,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:9:7
 
-Cannot call `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot call `x.z` because property `z` is missing in `{y?: () => void, ...}` [1]. [prop-missing]
 
    hasOwnProperty.js:9:7
    9|     x.z(); // error: unreachable, but we don't help you here
@@ -8565,7 +8566,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:2:9
 
-Cannot get `o.p1` because property `p1` is missing in object type [1]. [prop-missing]
+Cannot get `o.p1` because property `p1` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    missing-property-cond.js:2:9
    2|   if (o.p1) { // Error, testing for unknown property
@@ -8579,7 +8580,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:8:9
 
-Cannot get `o.p2` because property `p2` is missing in object type [1]. [prop-missing]
+Cannot get `o.p2` because property `p2` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    missing-property-cond.js:8:9
    8|   if (o.p2) { // Error, testing for unknown property
@@ -8621,7 +8622,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:14:5
 
-Cannot get `o.p3` because property `p3` is missing in object type [1]. [prop-missing]
+Cannot get `o.p3` because property `p3` is missing in `{x: number, ...}` [1]. [prop-missing]
 
    missing-property-cond.js:14:5
    14|   o.p3.x; // usual error outside conditional
@@ -8635,7 +8636,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:18:9
 
-Cannot get `o.p4` because property `p4` is missing in object type [1]. [prop-missing]
+Cannot get `o.p4` because property `p4` is missing in `{x: number}` [1]. [prop-missing]
 
    missing-property-cond.js:18:9
    18|   if (o.p4) { // Error, testing for unknown property
@@ -10583,7 +10584,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:75:21
 
-Cannot get `obj.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `obj.bar` because property `bar` is missing in `{foo: number, ...}` [1]. [prop-missing]
 
    number.js:75:21
    75|     if (num === obj.bar) { // Error, accessing unknown property
@@ -12906,7 +12907,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:75:21
 
-Cannot get `obj.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `obj.bar` because property `bar` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    string.js:75:21
    75|     if (str === obj.bar) { // Error, testing for unknown property
@@ -13089,7 +13090,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- super_member.js:12:15
 
-Cannot get `super.prop` because property `prop` is missing in super of `B` [1]. [prop-missing]
+Cannot get `super.prop` because property `prop` is missing in `typeof Object.prototype` [1]. [prop-missing]
 
    super_member.js:12:15
    12|     if (super.prop) { // Error, super.prop doesn't exist
@@ -13473,7 +13474,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:7
 
-Cannot get `x.raw` because property `raw` is missing in object type [1]. [prop-missing]
+Cannot get `x.raw` because property `raw` is missing in `{kind: "Fruit", taste: "Good", ...}` [1]. [prop-missing]
 
    tagged_union.js:40:7
    40|     x.raw as 'Yes' | 'No'; // 2 errors:
@@ -13549,7 +13550,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:72:21
 
-Cannot get `x.A` because property `A` is missing in object type [1]. [prop-missing]
+Cannot get `x.A` because property `A` is missing in `{C: number, kind: 3, ...}` [1]. [prop-missing]
 
    tagged_union.js:72:21
    72|   default: return x.A; // error, x: C and property A not found in type C
@@ -13622,7 +13623,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:96:11
 
-Cannot get `x.fooTypo` because property `fooTypo` is missing in object type [1]. [prop-missing]
+Cannot get `x.fooTypo` because property `fooTypo` is missing in `{foo: {bar: 1, ...}, ...}` [1]. [prop-missing]
 
    tagged_union.js:96:11
    96|     if (x.fooTypo.bar === 1) {} // error, fooTypo doesn't exist
@@ -13664,7 +13665,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:111:11
 
-Cannot get `x.legnth` because property `legnth` (did you mean `length`?) is missing in array type [1]. [prop-missing]
+Cannot get `x.legnth` because property `legnth` (did you mean `length`?) is missing in `Array<string>` [1].
+[prop-missing]
 
    tagged_union.js:111:11
    111|     if (x.legnth === 0) { // Error, typos
@@ -13723,7 +13725,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:116:11
 
-Cannot get `y.legnth` because property `legnth` (did you mean `length`?) is missing in string [1]. [prop-missing]
+Cannot get `y.legnth` because property `legnth` (did you mean `length`?) is missing in `string` [1]. [prop-missing]
 
    tagged_union.js:116:11
    116|     if (y.legnth === 0) { // Error, typo
@@ -13805,7 +13807,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:121:11
 
-Cannot get `z.toStirng` because property `toStirng` (did you mean `toString`?) is missing in number [1]. [prop-missing]
+Cannot get `z.toStirng` because property `toStirng` (did you mean `toString`?) is missing in `number` [1].
+[prop-missing]
 
    tagged_union.js:121:11
    121|     if (z.toStirng === 0) { // Error, typo
@@ -13887,7 +13890,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:126:11
 
-Cannot get `q.valeuOf` because property `valeuOf` (did you mean `valueOf`?) is missing in boolean [1]. [prop-missing]
+Cannot get `q.valeuOf` because property `valeuOf` (did you mean `valueOf`?) is missing in `boolean` [1]. [prop-missing]
 
    tagged_union.js:126:11
    126|     if (q.valeuOf === 0) { // Error, typo
@@ -13973,7 +13976,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:138:11
 
-Cannot get `t.calll` because property `calll` is missing in statics of function type [1]. [prop-missing]
+Cannot get `t.calll` because property `calll` is missing in `{...}` [1]. [prop-missing]
 
    tagged_union.js:138:11
    138|     if (t.calll === 0) { // error: calll prop missing
@@ -14127,7 +14130,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:156:11
 
-Cannot get `x.badStr` because property `badStr` is missing in object type [1]. [prop-missing]
+Cannot get `x.badStr` because property `badStr` is missing in `{boolean: boolean, num: number, str: string, ...}` [1].
+[prop-missing]
 
    tagged_union.js:156:11
    156|     if (x.badStr === 'bad') { // Error, reading unknown property
@@ -14172,7 +14176,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:159:11
 
-Cannot get `x.badNum` because property `badNum` is missing in object type [1]. [prop-missing]
+Cannot get `x.badNum` because property `badNum` is missing in `{boolean: boolean, num: number, str: string, ...}` [1].
+[prop-missing]
 
    tagged_union.js:159:11
    159|     if (x.badNum === 123) { // Error, reading unknown property
@@ -14217,7 +14222,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- tagged_union.js:162:11
 
-Cannot get `x.badBool` because property `badBool` is missing in object type [1]. [prop-missing]
+Cannot get `x.badBool` because property `badBool` is missing in `{boolean: boolean, num: number, str: string, ...}` [1].
+[prop-missing]
 
    tagged_union.js:162:11
    162|     if (x.badBool === true) { // Error, reading unknown property
@@ -14290,7 +14296,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:171:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: 123, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:171:9
    171|       x.z; // error
@@ -14332,7 +14338,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:174:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:174:9
    174|       x.y; // error
@@ -14374,7 +14380,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:178:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:178:9
    178|       x.y; // error
@@ -14416,7 +14422,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:181:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: 123, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:181:9
    181|       x.z; // error
@@ -14458,7 +14464,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:189:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:189:9
    189|       x.z; // error
@@ -14472,7 +14478,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:191:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:191:9
    191|       x.y; // error: x.foo could be a string
@@ -14486,7 +14492,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:192:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:192:9
    192|       x.z; // error: could still be either case (if foo was a different number)
@@ -14528,7 +14534,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:197:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:197:9
    197|       x.y; // error
@@ -14570,7 +14576,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:200:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:200:9
    200|       x.z; // error
@@ -14612,7 +14618,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:208:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:208:9
    208|       x.z; // error
@@ -14626,7 +14632,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:210:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: string, z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:210:9
    210|       x.y; // error: x.foo could be a string
@@ -14640,7 +14646,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:211:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:211:9
    211|       x.z; // error: could still be either case (if foo was a different number)
@@ -14682,7 +14688,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:216:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: string, z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:216:9
    216|       x.y; // error
@@ -14696,7 +14702,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:218:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: string, z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:218:9
    218|       x.y; // error: x.foo could be a different string
@@ -14710,7 +14716,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:219:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:219:9
    219|       x.z; // error: x.foo could be a number
@@ -14724,7 +14730,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:229:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: string, z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:229:9
    229|       x.y; // error: flow isn't smart enough to figure this out yet
@@ -14738,7 +14744,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:230:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: number, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:230:9
    230|       x.z; // error
@@ -14780,7 +14786,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:238:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: null, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:238:9
    238|       x.z; // error
@@ -14822,7 +14828,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:241:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:241:9
    241|       x.y; // error
@@ -14864,7 +14870,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:245:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:245:9
    245|       x.y; // error
@@ -14906,7 +14912,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:248:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: null, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:248:9
    248|       x.z; // error
@@ -14948,7 +14954,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:256:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: void, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:256:9
    256|       x.z; // error
@@ -14990,7 +14996,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:259:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:259:9
    259|       x.y; // error
@@ -15032,7 +15038,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:263:9
 
-Cannot get `x.y` because property `y` is missing in object type [1]. [prop-missing]
+Cannot get `x.y` because property `y` is missing in `{foo: "foo", z: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:263:9
    263|       x.y; // error
@@ -15074,7 +15080,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:266:9
 
-Cannot get `x.z` because property `z` is missing in object type [1]. [prop-missing]
+Cannot get `x.z` because property `z` is missing in `{foo: void, y: string, ...}` [1]. [prop-missing]
 
    tagged_union.js:266:9
    266|       x.z; // error

@@ -68,7 +68,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- async.js:15:16
 
-Cannot call `commit` because property `variables` is missing in `Promise` [1]. [prop-missing]
+Cannot call `commit` because property `variables` is missing in `Promise<{variables: any}>` [1]. [prop-missing]
 
    async.js:15:16
    15|   return await commit({});  // error: property 'variables' is missing (reference

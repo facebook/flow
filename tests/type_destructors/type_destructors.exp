@@ -453,7 +453,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tvar4.js:48:1
 
-Cannot call `fn4` because property `p` is missing in object type [1]. [prop-missing]
+Cannot call `fn4` because property `p` is missing in `{}` [1]. [prop-missing]
 
    tvar4.js:48:1
    48| fn4((x: {}) => {})(42);

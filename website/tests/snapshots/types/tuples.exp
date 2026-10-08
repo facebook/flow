@@ -164,7 +164,7 @@ No errors!
 === block 13 ===
 Error -------------------------------------------------------------------------------- -:5:7
 
-Cannot call `tuple.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `tuple.push` because property `push` is missing in `ReadonlyArray<number>` [1]. [prop-missing]
 
    -:5:7
    5| tuple.push(3); // Error!

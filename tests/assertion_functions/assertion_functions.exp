@@ -1417,8 +1417,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- requires.js:60:3
 
-Cannot call `esModule` because a call signature declaring the expected parameter / return type is missing in module
-`./exports` [1]. [prop-missing]
+Cannot call `esModule` because a call signature declaring the expected parameter / return type is missing in
+`{readonly ExportedAssertions: typeof ExportedAssertions, readonly agreedUnionAssertion: ImportedAsse...` [1].
+[prop-missing]
 
    requires.js:60:3
    60|   esModule(value);

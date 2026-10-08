@@ -184,7 +184,7 @@ Found 1 error
 === block 15 ===
 Error ---------------------------------------------------------------------------- -:6:11
 
-Cannot get `fooAndBar.baz` because property `baz` (did you mean `bar`?) is missing in `Pick` [1]. [prop-missing]
+Cannot get `fooAndBar.baz` because property `baz` (did you mean `bar`?) is missing in object type [1]. [prop-missing]
 
    -:6:11
    6| fooAndBar.baz; // error: baz is missing
@@ -201,7 +201,7 @@ Found 1 error
 === block 16 ===
 Error ----------------------------------------------------------------------------- -:7:9
 
-Cannot get `justBaz.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+Cannot get `justBaz.foo` because property `foo` is missing in `{baz: boolean}` [1]. [prop-missing]
 
    -:7:9
    7| justBaz.foo; // error: missing foo
@@ -214,7 +214,7 @@ References:
 
 Error ----------------------------------------------------------------------------- -:8:9
 
-Cannot get `justBaz.bar` because property `bar` (did you mean `baz`?) is missing in `Omit` [1]. [prop-missing]
+Cannot get `justBaz.bar` because property `bar` (did you mean `baz`?) is missing in `{baz: boolean}` [1]. [prop-missing]
 
    -:8:9
    8| justBaz.bar; // error: missing bar
@@ -231,7 +231,7 @@ Found 2 errors
 === block 17 ===
 Error ---------------------------------------------------------------------------- -:6:14
 
-Cannot get `numberRecord.baz` because property `baz` (did you mean `bar`?) is missing in `Record` [1]. [prop-missing]
+Cannot get `numberRecord.baz` because property `baz` (did you mean `bar`?) is missing in object type [1]. [prop-missing]
 
    -:6:14
    6| numberRecord.baz; // error

@@ -97,7 +97,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- deep_types.js:46:11
 
-Cannot call `obj.arr.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `obj.arr.push` because property `push` is missing in
+`ReadonlyArray<DeepReadOnly<{value: string, ...}>>` [1]. [prop-missing]
 
    deep_types.js:46:11
    46|   obj.arr.push({value: 'updated value'}); // error: Cannot mutate arrays.
@@ -161,7 +162,7 @@ Cannot assign `'updated value'` to `obj.nested.doubleNested.value` because prope
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:55:7
 
-Cannot call `arr.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `arr.push` because property `push` is missing in `ReadonlyArray<DeepReadOnly<string>>` [1]. [prop-missing]
 
    deep_types.js:55:7
    55|   arr.push('goodbye'); // error: Cannot mutate arrays.
@@ -616,7 +617,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:36:24
 
-Cannot get `obj.notAProp` because property `notAProp` is missing in `DeepRequired` [1]. [prop-missing]
+Cannot get `obj.notAProp` because property `notAProp` is missing in mapped type [1]. [prop-missing]
 
    idx_replacement.js:36:24
    36|   idx(obj1, obj => obj.notAProp); // error: prop-missing
@@ -893,7 +894,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:52:18
 
-Cannot get `_.c` because property `c` is missing in `DeepRequired` [1]. [prop-missing]
+Cannot get `_.c` because property `c` is missing in mapped type [1]. [prop-missing]
 
    idx_replacement.js:52:18
    52|   idx(ab, _ => _.c) as empty; // error
@@ -1017,7 +1018,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:73:18
 
-Cannot get `n.nope` because property `nope` is missing in `DeepRequired` [1]. [prop-missing]
+Cannot get `n.nope` because property `nope` is missing in `number` [1]. [prop-missing]
 
    idx_replacement.js:73:18
    73|   idx(42, n => n.nope); // error: prop-missing
@@ -1031,8 +1032,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:80:18
 
-Cannot call `obj` because a call signature declaring the expected parameter / return type is missing in
-`DeepRequired` [1]. [prop-missing]
+Cannot call `obj` because a call signature declaring the expected parameter / return type is missing in `{}` [1].
+[prop-missing]
 
    idx_replacement.js:80:18
    80|   idx({}, obj => obj()); // error
@@ -1540,7 +1541,7 @@ Error --------------------------------------------------------------------------
 
 Cannot get `form.formState.errors.name` because: [incompatible-use]
  - Either cannot call `useForm` because `boolean` [1] is not an object.
- - Or property `name` is missing in object type [2].
+ - Or property `name` is missing in `{root?: {[key: string]: GlobalError} & GlobalError, ...}` [2].
 
    issue-9448.js:56:1
    56| form.formState.errors.name?.message as ?string; // ERROR
@@ -2112,7 +2113,7 @@ Error --------------------------------------------------------------------------
 
 Error -------------------------------------------------------------------------------------------- pick_and_omit.js:17:9
 
-Cannot assign `3` to `noFoo.foo` because property `foo` is missing in `Omit` [1]. [prop-missing]
+Cannot assign `3` to `noFoo.foo` because property `foo` is missing in mapped type [1]. [prop-missing]
 
    pick_and_omit.js:17:9
    17|   noFoo.foo = 3; // ERROR!
@@ -2171,7 +2172,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:63:11
 
-Cannot get `onlyFoo.bar` because property `bar` is missing in `Pick` [1]. [prop-missing]
+Cannot get `onlyFoo.bar` because property `bar` is missing in mapped type [1]. [prop-missing]
 
    pick_and_omit.js:63:11
    63|   onlyFoo.bar; // ERROR!

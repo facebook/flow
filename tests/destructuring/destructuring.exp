@@ -428,7 +428,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:27:8
 
-Property `q` is missing in object type [1]. [prop-missing]
+Property `q` is missing in `{r?: string, ...}` [1]. [prop-missing]
 
    defaults.js:27:8
    27|   {p: {q, ...o} = {q: 0, r: 0}}: {p?: {r?: string, ...}, ...} = {p: {q: 0, r: ''}},
@@ -1027,8 +1027,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:8
 
-Cannot get `rest.baz` because property `baz` (did you mean `bar`?) is missing in rest of object pattern [1].
-[prop-missing]
+Cannot get `rest.baz` because property `baz` (did you mean `bar`?) is missing in `{bar: number}` [1]. [prop-missing]
 
    destructuring.js:46:8
    46|   rest.baz as string; // error, rest is sealed
@@ -1108,8 +1107,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:70:26
 
-Cannot get `others.childprop1` because property `childprop1` (did you mean `childprop2`?) is missing in rest of object
-pattern [1]. [prop-missing]
+Cannot get `others.childprop1` because property `childprop1` (did you mean `childprop2`?) is missing in
+`{baseprop2: number, childprop2: number}` [1]. [prop-missing]
 
    destructuring.js:70:26
    70| var cp2: number = others.childprop1; // Error: `childprop1` is not in `others` as it was separately destructured
@@ -1149,7 +1148,7 @@ Destructuring assignment must be initialized [ParseError]
 
 Error ------------------------------------------------------------------------------- destructuring_missing_props.js:3:6
 
-Property `nonExistent` is missing in object type [1]. [prop-missing]
+Property `nonExistent` is missing in `{foo: string}` [1]. [prop-missing]
 
    destructuring_missing_props.js:3:6
    3| var {nonExistent, defaults = 'hi', foo = 3} = x; // Error, missing nonExistent
@@ -1208,7 +1207,7 @@ References:
 
 Error ------------------------------------------------------------------------------- destructuring_missing_props.js:9:6
 
-Property `nonExistent2` is missing in object type [1]. [prop-missing]
+Property `nonExistent2` is missing in `{bar: string}` [1]. [prop-missing]
 
    destructuring_missing_props.js:9:6
    9| var {nonExistent2, defaults2 = 'hi', bar = 3} = y; // Error, missing nonExistent2
@@ -1265,7 +1264,7 @@ References:
 
 Error ------------------------------------------------------------------------------ destructuring_missing_props.js:17:6
 
-Property `grunt` is missing in object type [1]. [prop-missing]
+Property `grunt` is missing in `{thud: string, ...}` [1]. [prop-missing]
 
    destructuring_missing_props.js:17:6
    17| var {grunt = 15210} = z; // Error, grunt missing in inexact object type
@@ -1508,7 +1507,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_rest.js:5:9
 
-Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of object pattern [1]. [prop-missing]
+Cannot assign `0` to `o1_rest.x` because property `x` is missing in `{q: number, ...}` [1]. [prop-missing]
 
    object_rest.js:5:9
    5| o1_rest.x = 0; // error: rest result is sealed
@@ -1522,7 +1521,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:11:9
 
-Cannot assign `0` to `o2_rest.x` because property `x` is missing in rest of object pattern [1]. [prop-missing]
+Cannot assign `0` to `o2_rest.x` because property `x` is missing in `{q: number}` [1]. [prop-missing]
 
    object_rest.js:11:9
    11| o2_rest.x = 0; // error: rest result is sealed
@@ -1536,7 +1535,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:16:9
 
-Cannot assign `0` to `o3_rest.x` because property `x` is missing in rest of object pattern [1]. [prop-missing]
+Cannot assign `0` to `o3_rest.x` because property `x` is missing in `{q: number}` [1]. [prop-missing]
 
    object_rest.js:16:9
    16| o3_rest.x = 0; // error: rest result is sealed
@@ -1665,7 +1664,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuple.js:11:10
 
-Property `0` is missing in object type [1]. [prop-missing]
+Property `0` is missing in `{foo: 1, ...}` [1]. [prop-missing]
 
    tuple.js:11:10
    11|   const [x] = o; // ERROR
@@ -1679,7 +1678,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuple.js:16:10
 
-Property `0` is missing in statics of function type [1]. [prop-missing]
+Property `0` is missing in `{...}` [1]. [prop-missing]
 
    tuple.js:16:10
    16|   const [x] = f; // ERROR

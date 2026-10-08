@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------------------- keyvalue.js:3:7
 
-Cannot get `x[""]` because property `` is missing in object type [1]. [prop-missing]
+Cannot get `x[""]` because property `` is missing in `{[key: number]: string}` [1]. [prop-missing]
 
    keyvalue.js:3:7
    3|     x[""] as number;

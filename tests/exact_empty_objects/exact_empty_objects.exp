@@ -266,7 +266,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:49:6
 
-Cannot get `x.XXX` because property `XXX` is missing in object type [1]. [prop-missing]
+Cannot get `x.XXX` because property `XXX` is missing in `{prop: number}` [1]. [prop-missing]
 
    defaulting.js:49:6
    49|   (x.XXX); // ERROR
@@ -365,7 +365,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- defaulting.js:73:6
 
-Cannot get `x.XXX` because property `XXX` is missing in object type [1]. [prop-missing]
+Cannot get `x.XXX` because property `XXX` is missing in `{prop: number, ...}` [1]. [prop-missing]
 
    defaulting.js:73:6
    73|   (x.XXX); // ERROR

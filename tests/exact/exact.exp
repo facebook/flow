@@ -230,7 +230,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:22:6
 
-Cannot get `x.NONE` because property `NONE` is missing in object type [1]. [prop-missing]
+Cannot get `x.NONE` because property `NONE` is missing in `{all: string, some: string}` [1]. [prop-missing]
 
    nonstrict-access.js:22:6
    22|   (x.NONE); // ERROR
@@ -244,7 +244,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:23:6
 
-Cannot get `x['NONE']` because property `NONE` is missing in object type [1]. [prop-missing]
+Cannot get `x['NONE']` because property `NONE` is missing in `{all: string, some: string}` [1]. [prop-missing]
 
    nonstrict-access.js:23:6
    23|   (x['NONE']); // ERROR
@@ -275,7 +275,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- nonstrict-access.js:31:10
 
-Property `NONE` is missing in object type [1]. [prop-missing]
+Property `NONE` is missing in `{all: string, some: string}` [1]. [prop-missing]
 
    nonstrict-access.js:31:10
    31|   const {NONE} = x; // ERROR
@@ -320,7 +320,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- nonstrict-access.js:83:7
 
-Cannot get `Foo[k]` because property `xxx` is missing in object type [1]. [prop-missing]
+Cannot get `Foo[k]` because property `xxx` is missing in `{bar: 2, foo: 1, ...}` [1]. [prop-missing]
 
    nonstrict-access.js:83:7
    83|   Foo[k]; // ERROR: prop-missing
@@ -624,7 +624,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ prop_test.js:12:9
 
-Cannot get `p.xxx` because property `xxx` is missing in `Person` [1]. [prop-missing]
+Cannot get `p.xxx` because property `xxx` is missing in `{first: string, last: string}` [1]. [prop-missing]
 
    prop_test.js:12:9
    12|   if (p.xxx) {     // Error - xxx doesn't exist in the exact type

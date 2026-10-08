@@ -7910,10 +7910,10 @@ pub mod get_prop_t_kit {
                             };
                             LookupKind::NonstrictReturning(Box::new(NonstrictReturningData(
                                 lookup_default,
-                                Some((*id, (reason_prop.dupe(), reason_obj.dupe()))),
+                                Some((*id, (reason_prop.dupe(), l.dupe()))),
                             )))
                         }
-                        _ => LookupKind::Strict(reason_obj.dupe()),
+                        _ => LookupKind::Strict(l.dupe()),
                     };
                     let data = CgLookupArgs {
                         reason_op,

@@ -18,7 +18,7 @@ signature over that type, label the key, as in `[key: K]`. [illegal-key]
 
 Error ----------------------------------------------------------------------------------------------------- exp.js:76:40
 
-Cannot get `Merged.Key` because property `Key` is missing in statics of `Merged` [1]. [prop-missing]
+Cannot get `Merged.Key` because property `Key` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    exp.js:76:40
    76| export type UnlabeledMerged = {[Merged.Key]: number}; // ERROR: reads `Merged.Key` as a value
@@ -242,7 +242,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- imp.js:102:12
 
-Cannot get `valueParam.b` because property `b` is missing in `ValueParam` [1]. [prop-missing]
+Cannot get `valueParam.b` because property `b` is missing in `{a: number}` [1]. [prop-missing]
 
    imp.js:102:12
    102| valueParam.b; // ERROR: property `b` is missing (named, not an indexer)
@@ -562,7 +562,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_keys.js:37:5
 
-Cannot get `x.anything` because property `anything` is missing in `Unbounded` [1]. [prop-missing]
+Cannot get `x.anything` because property `anything` is missing in `{[keyof {a: number, b: number}]: string}` [1].
+[prop-missing]
 
    type_keys.js:37:5
    37|   x.anything as string; // ERROR: `anything` is not in the `keyof T` key set
@@ -639,7 +640,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_keys.js:88:33
 
-Cannot get `Merged.Key` because property `Key` is missing in statics of `Merged` [1]. [prop-missing]
+Cannot get `Merged.Key` because property `Key` is missing in `{name: string, ...}` [1]. [prop-missing]
 
    type_keys.js:88:33
    88| type UnlabeledMerged = {[Merged.Key]: number}; // ERROR: reads `Merged.Key` as a value
@@ -699,7 +700,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_keys.js:109:5
 
-Cannot get `x.b` because property `b` is missing in `ValueParam` [1]. [prop-missing]
+Cannot get `x.b` because property `b` is missing in `{a: number}` [1]. [prop-missing]
 
    type_keys.js:109:5
    109|   x.b; // ERROR: property `b` is missing (named, not an indexer)
@@ -873,7 +874,7 @@ signature instead, label the key, as in `[key: K]`. [illegal-key]
 
 Error ---------------------------------------------------------------------------------------------- value_keys.js:43:39
 
-Cannot get `WideHolder.nope` because property `nope` is missing in statics of `WideHolder` [1]. [prop-missing]
+Cannot get `WideHolder.nope` because property `nope` is missing in `{n: number, name: string, ...}` [1]. [prop-missing]
 
    value_keys.js:43:39
    43| type FromMissingStatic = {[WideHolder.nope]: number}; // ERROR: names no one property

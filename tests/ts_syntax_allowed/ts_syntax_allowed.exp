@@ -433,7 +433,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `'x'` to `f4[0]` because: [incompatible-use]
  - Either read-only arrays cannot be written to.
- - Or property `0` is missing in object type [1].
+ - Or property `0` is missing in `{length: number}` [1].
 
    readonly_type_precedence.js:25:1
    25| f4[0] = 'x'; // ERROR: not writable
@@ -490,7 +490,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:3:5
 
-Cannot call `a.push` because property `push` is missing in `ReadonlyArray` [1]. [prop-missing]
+Cannot call `a.push` because property `push` is missing in `ReadonlyArray<number>` [1]. [prop-missing]
 
    type_names.js:3:5
    3|   a.push(4); // error: readonly
@@ -504,7 +504,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:5:5
 
-Cannot call `b.add` because property `add` is missing in `ReadonlySet` [1]. [prop-missing]
+Cannot call `b.add` because property `add` is missing in `ReadonlySet<number>` [1]. [prop-missing]
 
    type_names.js:5:5
    5|   b.add(3); // error: readonly
@@ -518,7 +518,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_names.js:7:5
 
-Cannot call `c.add` because property `add` is missing in `ReadonlyMap` [1]. [prop-missing]
+Cannot call `c.add` because property `add` is missing in `ReadonlyMap<number, string>` [1]. [prop-missing]
 
    type_names.js:7:5
    7|   c.add(3, ''); // error: readonly
@@ -554,7 +554,7 @@ Cannot assign empty string to `e.foo` because property `foo` is not writable. [c
 
 Error ---------------------------------------------------------------------------------------------- type_names.js:16:32
 
-Cannot call `exported_with_ts_typenames.a.push` because property `push` is missing in `ReadonlyArray` [1].
+Cannot call `exported_with_ts_typenames.a.push` because property `push` is missing in `ReadonlyArray<number>` [1].
 [prop-missing]
 
    type_names.js:16:32
@@ -569,7 +569,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_names.js:17:32
 
-Cannot call `exported_with_ts_typenames.b.add` because property `add` is missing in `ReadonlySet` [1]. [prop-missing]
+Cannot call `exported_with_ts_typenames.b.add` because property `add` is missing in `ReadonlySet<number>` [1].
+[prop-missing]
 
    type_names.js:17:32
    17|   exported_with_ts_typenames.b.add(3); // error: readonly
@@ -583,7 +584,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_names.js:18:32
 
-Cannot call `exported_with_ts_typenames.c.add` because property `add` is missing in `ReadonlyMap` [1]. [prop-missing]
+Cannot call `exported_with_ts_typenames.c.add` because property `add` is missing in `ReadonlyMap<number, string>` [1].
+[prop-missing]
 
    type_names.js:18:32
    18|   exported_with_ts_typenames.c.add(3, ''); // error: readonly

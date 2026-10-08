@@ -53,7 +53,8 @@ expression. [signature-verification-failure]
 
 Error ------------------------------------------------------------------------------------------------------- imp.js:8:7
 
-Cannot get `table[local]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `table[local]` because property `[symbol]` is missing in `{[symbol]: number, [symbol]: string}` [1].
+[prop-missing]
 
    imp.js:8:7
    8| table[local]; // ERROR: not a key of `table`
@@ -67,7 +68,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ imp.js:14:7
 
-Cannot get `table[reRegistered]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `table[reRegistered]` because property `[symbol]` is missing in `{[symbol]: number, [symbol]: string}` [1].
+[prop-missing]
 
    imp.js:14:7
    14| table[reRegistered]; // ERROR: not a key of `table`
@@ -81,7 +83,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- keys.js:10:11
 
-Cannot get `annotated[otherKey]` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot get `annotated[otherKey]` because property `[symbol]` is missing in `{[symbol]: number}` [1]. [prop-missing]
 
    keys.js:10:11
    10| annotated[otherKey]; // ERROR: a different symbol
@@ -109,7 +111,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:35:1
 
-Cannot cast `otherKey` to `Keys` because property `[symbol]` is missing in object type [1]. [prop-missing]
+Cannot cast `otherKey` to `Keys` because property `[symbol]` is missing in `{[symbol]: number}` [1]. [prop-missing]
 
    keys.js:35:1
    35| otherKey as Keys; // ERROR: not a key of `annotated`

@@ -2602,10 +2602,6 @@ pub enum ReasonClassification {
     Unclassified,
 }
 
-pub fn is_nullish_reason<L: Dupe>(r: &VirtualReason<L>) -> bool {
-    r.desc.classify() == ReasonClassification::Nullish
-}
-
 pub fn is_scalar_reason_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> bool {
     desc.is_scalar()
 }

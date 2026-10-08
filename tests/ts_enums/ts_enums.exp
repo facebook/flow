@@ -281,8 +281,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- reverse.ts:28:8
 
-Cannot get `Status["active"]` because property `active` (did you mean `Active`?) is missing in enum `Status` [1].
-[prop-missing]
+Cannot get `Status["active"]` because property `active` (did you mean `Active`?) is missing in
+`{readonly Active: "active"}` [1]. [prop-missing]
 
    reverse.ts:28:8
    28| Status["active"]; // ERROR: no reverse mapping for string enums

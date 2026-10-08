@@ -241,7 +241,7 @@ fn get_intrinsic<'cx>(
         &intrinsic,
         &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
             reason: reason_op.dupe(),
-            lookup_kind: Box::new(LookupKind::Strict(reason_op.dupe())),
+            lookup_kind: Box::new(LookupKind::Strict(intrinsic.dupe())),
             indexer_fallback: None,
             try_ts_on_failure: vec![].into(),
             propref: Box::new(propref),

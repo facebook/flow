@@ -130,7 +130,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ consumer.js:21:14
 
-Cannot get `interfaceMap.namedKey` because property `namedKey` is missing in interface type [1]. [prop-missing]
+Cannot get `interfaceMap.namedKey` because property `namedKey` is missing in `interface {[key: string]: number}` [1].
+[prop-missing]
 
    consumer.js:21:14
    21| interfaceMap.namedKey as number; // ERROR: inline Flow interfaces keep strict named access

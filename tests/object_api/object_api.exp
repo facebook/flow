@@ -590,7 +590,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_missing.js:3:12
 
-Cannot call method `doesNotExist` because property `doesNotExist` is missing in statics of `Object` [1]. [prop-missing]
+Cannot call method `doesNotExist` because property `doesNotExist` is missing in
+`{(o: void | null): {[key: any]: any}, (o: boolean): Boolean, (o: number): Number, (o: string): Strin...` [1].
+[prop-missing]
 
    object_missing.js:3:12
     3|     Object.doesNotExist();

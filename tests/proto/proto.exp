@@ -468,7 +468,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- null.js:13:17
 
-Cannot get `o_nonstrict.p` because property `p` is missing in object type [1]. [prop-missing]
+Cannot get `o_nonstrict.p` because property `p` is missing in `{...}` [1]. [prop-missing]
 
    null.js:13:17
    13| if (o_nonstrict.p) { // Error - property p is unknown

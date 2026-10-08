@@ -86,8 +86,8 @@ Cannot assign `3456` to `frozenObjectWithSpread.baz` because property `baz` is n
 
 Error ---------------------------------------------------------------------------------------------- downstream.js:23:24
 
-Cannot get `frozenObjectWithSpread.corge` because property `corge` is missing in frozen object literal [1].
-[prop-missing]
+Cannot get `frozenObjectWithSpread.corge` because property `corge` is missing in
+`{readonly bar: "12345", readonly baz: number}` [1]. [prop-missing]
 
    downstream.js:23:24
    23| frozenObjectWithSpread.corge; // error corge is missing
@@ -109,8 +109,8 @@ Cannot resolve name `baz`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------- downstream.js:25:24
 
-Cannot assign function to `frozenObjectWithSpread.toString` because property `toString` is missing in frozen object
-literal [1]. [prop-missing]
+Cannot assign function to `frozenObjectWithSpread.toString` because property `toString` is missing in
+`{readonly bar: "12345", readonly baz: number}` [1]. [prop-missing]
 
    downstream.js:25:24
    25| frozenObjectWithSpread.toString = function () {}; // error toString missing
@@ -335,8 +335,8 @@ Cannot assign `3456` to `frozenObjectWithSpread.baz` because property `baz` is n
 
 Error ------------------------------------------------------------------------------------------- object_freeze.js:29:24
 
-Cannot get `frozenObjectWithSpread.corge` because property `corge` is missing in frozen object literal [1].
-[prop-missing]
+Cannot get `frozenObjectWithSpread.corge` because property `corge` is missing in
+`{readonly bar: "12345", readonly baz: number}` [1]. [prop-missing]
 
    object_freeze.js:29:24
    29| frozenObjectWithSpread.corge; // error corge is missing
@@ -368,8 +368,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_freeze.js:31:24
 
-Cannot assign function to `frozenObjectWithSpread.toString` because property `toString` is missing in frozen object
-literal [1]. [prop-missing]
+Cannot assign function to `frozenObjectWithSpread.toString` because property `toString` is missing in
+`{readonly bar: "12345", readonly baz: number}` [1]. [prop-missing]
 
    object_freeze.js:31:24
    31| frozenObjectWithSpread.toString = function () {}; // error toString missing

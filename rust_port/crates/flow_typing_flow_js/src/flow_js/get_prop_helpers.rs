@@ -411,7 +411,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
     trace: DepthTrace,
     use_op: &UseOp,
     elem_t: &Type,
-    reason_obj: &Reason,
+    obj_t: &Type,
     tin: &Type,
 ) -> Result<(), FlowJsException> {
     let reason = reason_of_t(elem_t);
@@ -422,7 +422,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
         use_op: &UseOp,
         elem_t: &Type,
         reason: &Reason,
-        reason_obj: &Reason,
+        obj_t: &Type,
         tin: &Type,
     ) -> Result<(), FlowJsException> {
         match elem_t.deref() {
@@ -449,7 +449,10 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_name: None,
                         prop_loc: reason.loc().dupe(),
-                        reason_obj: reason_obj.dupe(),
+                        object: flow_js_utils::type_reference_with_reason_for_error(
+                            obj_t,
+                            reason_of_t(obj_t).dupe(),
+                        ),
                         use_op: use_op.dupe(),
                         suggestion: None,
                     })),
@@ -463,7 +466,10 @@ pub(super) fn write_computed_obj_prop<'cx>(
                     ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                         prop_name: None,
                         prop_loc: reason.loc().dupe(),
-                        reason_obj: reason_obj.dupe(),
+                        object: flow_js_utils::type_reference_with_reason_for_error(
+                            obj_t,
+                            reason_of_t(obj_t).dupe(),
+                        ),
                         use_op: use_op.dupe(),
                         suggestion: None,
                     })),
@@ -471,10 +477,10 @@ pub(super) fn write_computed_obj_prop<'cx>(
                 Ok(())
             }
             TypeInner::GenericT(box GenericTData { bound, .. }) => {
-                loop_(cx, env, trace, use_op, bound, reason, reason_obj, tin)
+                loop_(cx, env, trace, use_op, bound, reason, obj_t, tin)
             }
             TypeInner::NominalT { nominal_type, .. } if let Some(upper) = &nominal_type.upper_t => {
-                loop_(cx, env, trace, use_op, upper, reason, reason_obj, tin)
+                loop_(cx, env, trace, use_op, upper, reason, obj_t, tin)
             }
             TypeInner::DefT(reason, def_t)
                 if let DefTInner::SingletonNumT {
@@ -513,7 +519,7 @@ pub(super) fn write_computed_obj_prop<'cx>(
     }
     let ts = possible_concrete_types_for_computed_object_keys(cx, env, reason, elem_t)?;
     for t in &ts {
-        loop_(cx, env, trace, use_op, t, reason, reason_obj, tin)?;
+        loop_(cx, env, trace, use_op, t, reason, obj_t, tin)?;
     }
     Ok(())
 }
@@ -605,7 +611,10 @@ pub(super) fn write_obj_prop<'cx>(
                         ErrorMessage::EPropNotFoundInLookup(Box::new(EPropNotFoundInLookupData {
                             prop_name: Some(name.dupe()),
                             prop_loc: reason_prop.loc().dupe(),
-                            reason_obj: reason_obj.dupe(),
+                            object: flow_js_utils::type_reference_with_reason_for_error(
+                                &obj_t,
+                                reason_obj.dupe(),
+                            ),
                             use_op: use_op.dupe(),
                             suggestion: prop_typo_suggestion_for_name(
                                 cx,
@@ -623,7 +632,7 @@ pub(super) fn write_obj_prop<'cx>(
                             &o.proto_t,
                             &UseT::new(UseTInner::LookupT(Box::new(LookupTData {
                                 reason: reason_op.dupe(),
-                                lookup_kind: Box::new(LookupKind::Strict(reason_obj.dupe())),
+                                lookup_kind: Box::new(LookupKind::Strict(obj_t.dupe())),
                                 indexer_fallback: None,
                                 try_ts_on_failure: Rc::from([]),
                                 propref: Box::new(propref.clone()),
@@ -637,7 +646,7 @@ pub(super) fn write_obj_prop<'cx>(
                 }
             }
             PropRef::Computed(elem_t) => {
-                write_computed_obj_prop(cx, env, trace, use_op, elem_t, reason_obj, tin)
+                write_computed_obj_prop(cx, env, trace, use_op, elem_t, &obj_t, tin)
             }
         },
     }

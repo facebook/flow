@@ -224,7 +224,8 @@ Cannot import `childProp` because there is no `childProp` export in `./CommonJS_
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:59:23
 
-Cannot get `(new CJS_Clobb_Class()).doesntExist` because property `doesntExist` is missing in `Test` [1]. [prop-missing]
+Cannot get `(new CJS_Clobb_Class()).doesntExist` because property `doesntExist` is missing in `CJS_Clobb_Class` [1].
+[prop-missing]
 
    es6modules.js:59:23
    59| new CJS_Clobb_Class().doesntExist; // Error: Class has no `doesntExist` property
@@ -288,8 +289,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:67:37
 
-Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3` is missing in module
-`./CommonJS_Clobbering_Class` [1]. [prop-missing]
+Cannot call `CJS_Clobb_Class_NS.staticNumber3` because property `staticNumber3` is missing in
+`{readonly default: typeof CJS_Clobb_Class}` [1]. [prop-missing]
 
    es6modules.js:67:37
    67| var i1: number = CJS_Clobb_Class_NS.staticNumber3(); // Error: Class statics not copied to Namespace object
@@ -380,7 +381,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es6modules.js:88:11
 
-Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in module `./CommonJS_Named` [1].
+Cannot get `CJS_Named.doesntExist` because property `doesntExist` is missing in
+`{readonly default: {readonly numberValue1: number, readonly numberValue2: number, readonly numberVal...` [1].
 [missing-export]
 
    es6modules.js:88:11
@@ -709,8 +711,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- es6modules.js:171:40
 
-Cannot get `require(...).doesntExist` because property `doesntExist` is missing in module
-`./ES6_Default_AnonFunction2` [1]. [missing-export]
+Cannot get `require(...).doesntExist` because property `doesntExist` is missing in
+`{readonly default: () => number}` [1]. [missing-export]
 
    es6modules.js:171:40
    171| require('./ES6_Default_AnonFunction2').doesntExist; // Error: 'doesntExist' isn't an export

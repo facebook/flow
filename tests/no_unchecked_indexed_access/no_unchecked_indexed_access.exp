@@ -244,7 +244,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ obj_test.js:13:14
 
 Cannot assign `undefined` to `protoDictObj[key]` because an index signature declaring the expected key / value type is
-missing in object type [1]. [prop-missing]
+missing in `{}` [1]. [prop-missing]
 
    obj_test.js:13:14
    13| protoDictObj[key] = undefined; // error: cannot write, proto ignored
@@ -258,8 +258,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ obj_test.js:14:14
 
-Cannot assign `undefined` to `protoDictObj.hahaha` because property `hahaha` is missing in object type [1].
-[prop-missing]
+Cannot assign `undefined` to `protoDictObj.hahaha` because property `hahaha` is missing in `{}` [1]. [prop-missing]
 
    obj_test.js:14:14
    14| protoDictObj.hahaha = undefined; // error: cannot write, proto ignored

@@ -244,7 +244,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:93:3
 
-Cannot get `c.foo` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `c.foo` because property `foo` is missing in `{bar: number, ...}` [1]. [prop-missing]
 
    type_widening.js:93:3
    93| c.foo as number; // Error, foo does not appear in all branches
@@ -258,7 +258,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:94:3
 
-Cannot get `c.bar` because property `bar` (did you mean `baz`?) is missing in object type [1]. [prop-missing]
+Cannot get `c.bar` because property `bar` (did you mean `baz`?) is missing in `{baz: number, ...}` [1]. [prop-missing]
 
    type_widening.js:94:3
    94| c.bar as number; // Error, bar does not appear in all branches
@@ -272,7 +272,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:94:3
 
-Cannot get `c.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `c.bar` because property `bar` is missing in `{foo: number, ...}` [1]. [prop-missing]
 
    type_widening.js:94:3
    94| c.bar as number; // Error, bar does not appear in all branches
@@ -286,7 +286,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:95:3
 
-Cannot get `c.baz` because property `baz` (did you mean `bar`?) is missing in object type [1]. [prop-missing]
+Cannot get `c.baz` because property `baz` (did you mean `bar`?) is missing in `{bar: number, ...}` [1]. [prop-missing]
 
    type_widening.js:95:3
    95| c.baz as number; // Error, baz does not appear in all branches
@@ -300,7 +300,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:95:3
 
-Cannot get `c.baz` because property `baz` is missing in object type [1]. [prop-missing]
+Cannot get `c.baz` because property `baz` is missing in `{foo: number, ...}` [1]. [prop-missing]
 
    type_widening.js:95:3
    95| c.baz as number; // Error, baz does not appear in all branches
@@ -314,7 +314,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- type_widening.js:96:3
 
-Cannot get `c.qux` because property `qux` is missing in object type [1]. [prop-missing]
+Cannot get `c.qux` because property `qux` is missing in `{foo: number, ...}` [1]. [prop-missing]
 
    type_widening.js:96:3
    96| c.qux as number; // Error, qux does not appear in all branches
@@ -345,7 +345,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:131:17
 
-Cannot get `optional_spread.foo` because property `foo` is missing in object type [1]. [prop-missing]
+Cannot get `optional_spread.foo` because property `foo` is missing in `{bar?: number, ...}` [1]. [prop-missing]
 
    type_widening.js:131:17
    131| optional_spread.foo as number; // Error, foo does not appear in all branches, might be undefined
@@ -376,7 +376,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:132:17
 
-Cannot get `optional_spread.bar` because property `bar` (did you mean `baz`?) is missing in object type [1].
+Cannot get `optional_spread.bar` because property `bar` (did you mean `baz`?) is missing in `{baz?: number, ...}` [1].
 [prop-missing]
 
    type_widening.js:132:17
@@ -391,7 +391,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:132:17
 
-Cannot get `optional_spread.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `optional_spread.bar` because property `bar` is missing in `{foo?: number, ...}` [1]. [prop-missing]
 
    type_widening.js:132:17
    132| optional_spread.bar as number; // Error, bar does not appear in all branches, might be undefined
@@ -422,7 +422,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:133:17
 
-Cannot get `optional_spread.baz` because property `baz` (did you mean `bar`?) is missing in object type [1].
+Cannot get `optional_spread.baz` because property `baz` (did you mean `bar`?) is missing in `{bar?: number, ...}` [1].
 [prop-missing]
 
    type_widening.js:133:17
@@ -437,7 +437,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:133:17
 
-Cannot get `optional_spread.baz` because property `baz` is missing in object type [1]. [prop-missing]
+Cannot get `optional_spread.baz` because property `baz` is missing in `{foo?: number, ...}` [1]. [prop-missing]
 
    type_widening.js:133:17
    133| optional_spread.baz as number; // Error, baz does not appear in all branches, might be undefined
@@ -468,7 +468,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:134:17
 
-Cannot get `optional_spread.qux` because property `qux` is missing in object type [1]. [prop-missing]
+Cannot get `optional_spread.qux` because property `qux` is missing in `{foo?: number, ...}` [1]. [prop-missing]
 
    type_widening.js:134:17
    134| optional_spread.qux as number; // Error, qux does not appear in all branches, might be undefined
@@ -721,7 +721,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:217:26
 
-Cannot get `indexer_on_second_spread.bar` because property `bar` is missing in object type [1]. [prop-missing]
+Cannot get `indexer_on_second_spread.bar` because property `bar` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    type_widening.js:217:26
    217| indexer_on_second_spread.bar as number; // Error, no indexer if it's only in one branch
@@ -735,7 +735,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:218:26
 
-Cannot get `indexer_on_second_spread.baz` because property `baz` is missing in object type [1]. [prop-missing]
+Cannot get `indexer_on_second_spread.baz` because property `baz` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    type_widening.js:218:26
    218| indexer_on_second_spread.baz as number; // Error, no indexer if it's only in one branch
@@ -749,7 +749,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ type_widening.js:219:26
 
-Cannot get `indexer_on_second_spread.qux` because property `qux` is missing in object type [1]. [prop-missing]
+Cannot get `indexer_on_second_spread.qux` because property `qux` is missing in `{foo: string, ...}` [1]. [prop-missing]
 
    type_widening.js:219:26
    219| indexer_on_second_spread.qux as number; // Error, no indexer if it's only in one branch

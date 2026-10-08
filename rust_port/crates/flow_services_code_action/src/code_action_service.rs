@@ -61,6 +61,7 @@ use flow_typing_errors::error_message::EIncompatibleTypesWithUseOpData;
 use flow_typing_errors::error_message::EIncorrectTypeWithReplacementData;
 use flow_typing_errors::error_message::EInvalidRendersTypeArgumentData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
+use flow_typing_errors::error_message::EPropNotFoundInLookupData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
 use flow_typing_errors::error_message::ETSSyntaxData;
 use flow_typing_errors::error_message::EVarianceKeywordData;
@@ -78,7 +79,6 @@ use flow_typing_errors::error_message::MatchInvalidObjectShorthandData;
 use flow_typing_errors::error_message::MatchNonExhaustiveObjectPatternData;
 use flow_typing_errors::error_message::MatchNotExhaustiveData;
 use flow_typing_errors::error_message::MatchUnusedPatternData;
-use flow_typing_errors::error_message::PropMissingInLookupData;
 use flow_typing_errors::error_message::ReadonlyTypeKind;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
@@ -2324,33 +2324,33 @@ pub fn ast_transforms_of_error(
             &lazy_error_loc,
             loc,
         ),
-        error_message => match error_message.clone().friendly_message_of_msg() {
-            FriendlyMessageRecipe::PropMissingInLookup(box PropMissingInLookupData {
-                loc: error_loc,
-                suggestion: Some(suggestion),
-                prop: Some(prop_name),
-                ..
-            }) => {
-                if loc_opt_intersects(loc, error_loc.dupe()) {
-                    let title = format!("Replace `{}` with `{}`", prop_name, suggestion);
-                    let suggestion: FlowSmolStr = suggestion.as_str().into();
-                    vec![AstTransformOfError {
-                        title,
-                        diagnostic_title: "replace_prop_typo_at_target".to_string(),
-                        transform: untyped_ast_transform(Box::new(move |ast, loc| {
-                            autofix_prop_typo::replace_prop_typo_at_target(
-                                suggestion.dupe(),
-                                ast,
-                                loc,
-                            )
-                        })),
-                        target_loc: error_loc,
-                        confidence: QuickfixConfidence::BestEffort,
-                    }]
-                } else {
-                    vec![]
-                }
+        ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
+            prop_loc: error_loc,
+            suggestion: Some(suggestion),
+            prop_name: Some(prop_name),
+            ..
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let title = format!(
+                    "Replace `{}` with `{}`",
+                    prop_name.display_smol_str(),
+                    suggestion
+                );
+                let suggestion: FlowSmolStr = suggestion.as_str().into();
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title: "replace_prop_typo_at_target".to_string(),
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_prop_typo::replace_prop_typo_at_target(suggestion.dupe(), ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
             }
+        }
+        error_message => match error_message.clone().friendly_message_of_msg() {
             FriendlyMessageRecipe::IncompatibleTypeUse(box IncompatibleTypeUseData {
                 loc: error_loc,
                 upper_kind: UpperKind::IncompatibleGetPropT(..),

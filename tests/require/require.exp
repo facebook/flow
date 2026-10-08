@@ -8,7 +8,7 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------- require-type-error.js:4:8
 
-Property `MyType` is missing in module `./exports-type` [1]. [prop-missing]
+Property `MyType` is missing in `{readonly default: {}}` [1]. [prop-missing]
 
    require-type-error.js:4:8
    4| const {MyType} = require('./exports-type');

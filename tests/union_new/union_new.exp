@@ -189,7 +189,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- test22.js:20:15
 
 Cannot get `x.result` because: [incompatible-use]
- - Either property `result` is missing in object type [1].
+ - Either property `result` is missing in `{type: "ERROR", ...}` [1].
  - Or property `result` is missing in `Empty` [2].
 
    test22.js:20:15
