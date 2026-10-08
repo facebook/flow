@@ -13,9 +13,7 @@ const _b = <C baz={3} />; // Error, bar missing
 undefined as React.ElementRef<typeof C>;
 3 as React.ElementRef<typeof C>; // Error, 3 is not void.
 
-// ElementConfig tests get_defaults and props_to_tout
-
-({foo: 3, bar: 3}) as React.ElementConfig<typeof C>;
-({bar: 3}) as React.ElementConfig<typeof C>;
-({foo: 3, bar: 3, baz: 3}) as React.ElementConfig<typeof C>;
-({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
+({foo: 3, bar: 3}) as React.ComponentProps<typeof C>;
+({bar: 3}) as React.ComponentProps<typeof C>;
+({foo: 3, bar: 3, baz: 3}) as React.ComponentProps<typeof C>;
+({baz: 3}) as React.ComponentProps<typeof C>; // Error, bar missing

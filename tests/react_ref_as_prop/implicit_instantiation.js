@@ -8,12 +8,12 @@ declare function id<Props extends {...}>(
 const IdMappedFnWithoutRefProp = id(FnWithoutRefProp); // ok
 const IdMappedFnWithOptionalRefProp = id(FnWithOptionalRefProp); // ok
 const IdMappedFnWithRequiredRefProp = id(FnWithRequiredRefProp); // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing ref prop
-({}) as React.ElementConfig<typeof IdMappedFnWithoutRefProp>; // error: missing foo prop
-({}) as React.ElementConfig<typeof IdMappedFnWithOptionalRefProp>; // error: missing foo prop
-({}) as React.ElementConfig<typeof IdMappedFnWithRequiredRefProp>; // error: missing foo prop
+({foo: ''}) as React.ComponentProps<typeof IdMappedFnWithoutRefProp>; // ok
+({foo: ''}) as React.ComponentProps<typeof IdMappedFnWithOptionalRefProp>; // ok
+({foo: ''}) as React.ComponentProps<typeof IdMappedFnWithRequiredRefProp>; // error: missing ref prop
+({}) as React.ComponentProps<typeof IdMappedFnWithoutRefProp>; // error: missing foo prop
+({}) as React.ComponentProps<typeof IdMappedFnWithOptionalRefProp>; // error: missing foo prop
+({}) as React.ComponentProps<typeof IdMappedFnWithRequiredRefProp>; // error: missing foo prop
 undefined as React.ElementRef<typeof IdMappedFnWithoutRefProp>; // ok
 null as React.ElementRef<typeof IdMappedFnWithoutRefProp>; // error: null ~> void
 new HTMLElement() as React.ElementRef<typeof IdMappedFnWithOptionalRefProp>; // ok
@@ -27,12 +27,12 @@ id((props) => { props as {readonly foo: string} }) as component(foo: string); //
 const IdMappedCompWithoutRefProp = id(CompWithoutRefProp); // ok
 const IdMappedCompWithOptionalRefProp = id(CompWithOptionalRefProp); // ok
 const IdMappedCompWithRequiredRefProp = id(CompWithRequiredRefProp); // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // ok
-({foo: ''}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing ref prop
-({}) as React.ElementConfig<typeof IdMappedCompWithoutRefProp>; // error: missing foo prop
-({}) as React.ElementConfig<typeof IdMappedCompWithOptionalRefProp>; // error: missing foo prop
-({}) as React.ElementConfig<typeof IdMappedCompWithRequiredRefProp>; // error: missing foo prop
+({foo: ''}) as React.ComponentProps<typeof IdMappedCompWithoutRefProp>; // ok
+({foo: ''}) as React.ComponentProps<typeof IdMappedCompWithOptionalRefProp>; // ok
+({foo: ''}) as React.ComponentProps<typeof IdMappedCompWithRequiredRefProp>; // error: missing ref prop
+({}) as React.ComponentProps<typeof IdMappedCompWithoutRefProp>; // error: missing foo prop
+({}) as React.ComponentProps<typeof IdMappedCompWithOptionalRefProp>; // error: missing foo prop
+({}) as React.ComponentProps<typeof IdMappedCompWithRequiredRefProp>; // error: missing foo prop
 undefined as React.ElementRef<typeof IdMappedCompWithoutRefProp>;
 null as React.ElementRef<typeof IdMappedCompWithoutRefProp>; // error: null ~> empty
 new HTMLElement() as React.ElementRef<typeof IdMappedCompWithOptionalRefProp>; // ok

@@ -1426,8 +1426,8 @@ References:
    569| <EnhancedClass_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:588:12
@@ -1525,8 +1525,8 @@ References:
    609| />;
         -^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:627:55
@@ -1575,8 +1575,8 @@ References:
    631| <EnhancedFunction_ManyProps />; // Error: There are no props.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:650:12
@@ -1674,8 +1674,8 @@ References:
    671| />;
         -^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:689:55
@@ -2111,8 +2111,8 @@ References:
    838| <EnhancedClass_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:846:7
@@ -2159,8 +2159,8 @@ References:
    855| <EnhancedFunction_OptionalProps />; // Error: `foo` is required.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:863:7
@@ -2299,8 +2299,8 @@ References:
    951| />;
         -^ [1]
    test.js:9:24
-     9| ): React.ComponentType<React.ElementConfig<Component>> {
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+     9| ): React.ComponentType<React.ComponentProps<Component>> {
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- test.js:969:20

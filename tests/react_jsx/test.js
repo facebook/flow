@@ -6,7 +6,7 @@ const any: any = null;
 // Utility. We want to be able to enhance some components.
 function hoc<Props extends {...}, Component extends React.ComponentType<Props>>(
   WrappedComponent: Component,
-): React.ComponentType<React.ElementConfig<Component>> {
+): React.ComponentType<React.ComponentProps<Component>> {
   return (props: Props) => <WrappedComponent {...props} />;
 }
 

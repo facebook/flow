@@ -408,19 +408,19 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
+Error ---------------------------------------------------------------------------------------------- destructors.js:19:2
 
-Cannot cast object literal to `React.ElementConfig` because property `bar` is missing in object literal [1] but exists
+Cannot cast object literal to `React.ComponentProps` because property `bar` is missing in object literal [1] but exists
 in `{readonly bar: number, readonly foo?: number, readonly ref?: React.RefSetter<void>, ...}` [2]. [incompatible-type]
 
-   destructors.js:21:2
-   21| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
+   destructors.js:19:2
+   19| ({baz: 3}) as React.ComponentProps<typeof C>; // Error, bar missing
         ^^^^^^^^ [1]
 
 References:
-   destructors.js:21:15
-   21| ({baz: 3}) as React.ElementConfig<typeof C>; // Error, bar missing
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   destructors.js:19:15
+   19| ({baz: 3}) as React.ComponentProps<typeof C>; // Error, bar missing
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:13

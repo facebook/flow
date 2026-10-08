@@ -9,7 +9,7 @@ declare function HOC<
 >(
   Component: TComponent,
 ): React.ComponentType<
-   Omit<React.ElementConfig<TComponent>, 'foo'>
+   Omit<React.ComponentProps<TComponent>, 'foo'>
 >;
 type MockFn<TArguments extends ReadonlyArray<any>, TReturn> = {
   (...args: TArguments): TReturn,
@@ -28,7 +28,7 @@ const Component = fn<[{user: unknown}], _>(({user}) => (
 
 
 let RefetchContainer = HOC<any, _>(Component); // Error, mock is not a Component
-<RefetchContainer />;
+<RefetchContainer />; // Error, HOC rejected the component
 
 // This test makes sure that create element issues always point to callers of the
 // component instead of the defintion

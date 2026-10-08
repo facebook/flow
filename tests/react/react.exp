@@ -270,11 +270,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:52:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    element_config.js:52:6
-   52| ({p: 'foo'}) as React.ElementConfig<typeof A>; // Error: string ~> number
+   52| ({p: 'foo'}) as React.ComponentProps<typeof A>; // Error: string ~> number
             ^^^^^ [1]
 
 References:
@@ -285,11 +285,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:56:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    element_config.js:56:6
-   56| ({p: 'foo'}) as React.ElementConfig<typeof B>; // Error: string ~> number
+   56| ({p: 'foo'}) as React.ComponentProps<typeof B>; // Error: string ~> number
             ^^^^^ [1]
 
 References:
@@ -300,26 +300,26 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:58:9
 
-Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in `{...}` [1] but exist in
+Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
 `{p: ?number, readonly ref?: React.RefSetter<C>, ...}` [2]. [incompatible-type]
 
    element_config.js:58:9
-   58| ({}) as {...} as React.ElementConfig<typeof C>; // Error: missing property `p`
+   58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
                ^^^^^ [1]
 
 References:
    element_config.js:58:18
-   58| ({}) as {...} as React.ElementConfig<typeof C>; // Error: missing property `p`
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- element_config.js:60:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    element_config.js:60:6
-   60| ({p: 'foo'}) as React.ElementConfig<typeof C>; // Error: string ~> number
+   60| ({p: 'foo'}) as React.ComponentProps<typeof C>; // Error: string ~> number
             ^^^^^ [1]
 
 References:
@@ -330,26 +330,26 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:62:9
 
-Cannot cast `{...}` to `React.ElementConfig` because properties `p` and `ref` are missing in `{...}` [1] but exist in
+Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
 `{p: ?number, readonly ref?: React.RefSetter<D>, ...}` [2]. [incompatible-type]
 
    element_config.js:62:9
-   62| ({}) as {...} as React.ElementConfig<typeof D>; // Error: missing property `p`
+   62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
                ^^^^^ [1]
 
 References:
    element_config.js:62:18
-   62| ({}) as {...} as React.ElementConfig<typeof D>; // Error: missing property `p`
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- element_config.js:64:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    element_config.js:64:6
-   64| ({p: 'foo'}) as React.ElementConfig<typeof D>; // Error: string ~> number
+   64| ({p: 'foo'}) as React.ComponentProps<typeof D>; // Error: string ~> number
             ^^^^^ [1]
 
 References:
@@ -360,41 +360,41 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:71:2
 
-Cannot cast object literal to `React.ElementConfig` because property `p` is extra in object literal [1] but missing in
+Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
 `{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:71:2
-   71| ({p: 42}) as React.ElementConfig<typeof F>; // Error: extra property `p`
+   71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
         ^^^^^^^ [1]
 
 References:
    element_config.js:71:14
-   71| ({p: 42}) as React.ElementConfig<typeof F>; // Error: extra property `p`
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- element_config.js:72:2
 
-Cannot cast object literal to `React.ElementConfig` because property `p` is extra in object literal [1] but missing in
+Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
 `{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
 
    element_config.js:72:2
-   72| ({p: 'foo'}) as React.ElementConfig<typeof F>; // Error: extra property `p`
+   72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
         ^^^^^^^^^^ [1]
 
 References:
    element_config.js:72:17
-   72| ({p: 'foo'}) as React.ElementConfig<typeof F>; // Error: extra property `p`
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- element_config.js:76:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    element_config.js:76:6
-   76| ({p: 'foo'}) as React.ElementConfig<typeof G>; // Error: string ~> number
+   76| ({p: 'foo'}) as React.ComponentProps<typeof G>; // Error: string ~> number
             ^^^^^ [1]
 
 References:
@@ -420,11 +420,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:84:6
 
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
 `number` [2]. [incompatible-type]
 
    element_config.js:84:6
-   84| ({p: 'foo'}) as React.ElementConfig<typeof I>; // Error: string ~> number
+   84| ({p: 'foo'}) as React.ComponentProps<typeof I>; // Error: string ~> number
             ^^^^^ [1]
 
 References:
@@ -894,8 +894,8 @@ References:
    30| <MyEnhancedComponent1 />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc5.js:10:24
-   10| ): React.ComponentType<React.ElementConfig<Component>> {
-                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   10| ): React.ComponentType<React.ComponentProps<Component>> {
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:32:27

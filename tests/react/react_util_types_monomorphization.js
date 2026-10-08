@@ -3,7 +3,7 @@ import * as React from 'react';
 declare class PolyComponent<T> extends React.Component<{foo: T, ...}> {}
 
 {
-  declare const config: React.ElementConfig<typeof PolyComponent>; // T instantiated to mixed
+  declare const config: React.ComponentProps<typeof PolyComponent>; // T instantiated to mixed
   config.foo as string; // error: mixed ~> string
 }
 
