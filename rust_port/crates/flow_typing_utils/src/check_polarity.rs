@@ -36,7 +36,6 @@ use flow_typing_type::type_::Property;
 use flow_typing_type::type_::PropertyInner;
 use flow_typing_type::type_::ReactAbstractComponentTData;
 use flow_typing_type::type_::ThisTypeAppTData;
-use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
@@ -248,44 +247,18 @@ fn check_polarity_impl<'cx>(
         TypeInner::KeysT(_, inner_t) => {
             check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, inner_t)?;
         }
-        //   | EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, r, ReadOnlyType); id } ->
         TypeInner::EvalT {
-            type_: eval_t,
-            defer_use_t,
-            id,
+            defer_use_t, id, ..
         } if matches!(
             defer_use_t.deref(),
-            flow_typing_type::type_::TypeDestructorTInner(
-                _,
-                _,
-                d,
-            ) if matches!(d.deref(), flow_typing_type::type_::Destructor::ReadOnlyType)
+            type_::TypeDestructorTInner(_, _, d) if matches!(d.deref(), Destructor::ReadOnlyType)
         ) =>
         {
-            if !seen.contains(id) {
-                let type_::TypeDestructorTInner(use_op, r, _d) = defer_use_t.deref();
-                let trace_val = trace.unwrap_or_else(DepthTrace::dummy_trace);
-                let out = flow_typing_tvar::mk_no_wrap_where(
-                    cx,
-                    r.dupe(),
-                    |cx, tvar_reason, tvar_id| {
-                        let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                        flow_typing_flow_js::flow_js::FlowJs::eval_destructor_with_env(
-                            cx,
-                            env,
-                            trace_val,
-                            use_op.dupe(),
-                            r,
-                            eval_t,
-                            &Destructor::ReadOnlyType,
-                            &tvar,
-                        )
-                    },
-                )?;
-                seen.insert(id.dupe());
+            if seen.insert(id.dupe()) {
+                let type_::TypeDestructorTInner(_, reason, _) = defer_use_t.deref();
                 let concrete_types =
                     flow_typing_flow_js::flow_js::FlowJs::possible_concrete_types_for_inspection_with_env(
-                        cx, env, r, &out,
+                        cx, env, reason, t,
                     )?;
                 for ct in &concrete_types {
                     check_polarity_impl(cx, env, trace, seen, tparams, Polarity::Positive, ct)?;
