@@ -59,7 +59,7 @@ Converts implicitly inexact object type syntax `{}` to explicitly inexact `{...}
 Run with `yarn run flow-codemod convertImplicitInexactObjectTypes`.
 
 ### Remove explicitly exact object type syntax
-Converts explicitly exact object type syntax `{| |}` to be just be `{ }`. To be done after you turn on `exact_by_default=true` in your `.flowconfig`.
+Converts explicitly exact object type syntax `{| |}` to be just `{ }`. Object types are exact by default.
 
 Run with `yarn run flow-codemod removeExplicitlyExactObjectTypeSyntax`.
 

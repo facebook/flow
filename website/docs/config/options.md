@@ -914,10 +914,11 @@ type O2 = {| foo: number |}; // exact (explicit syntax)
 type O3 = {foo: number, ...}; // inexact (explicit `...`)
 ```
 
-`exact_by_default=true` has been the default since 2023. Setting
+Exact object types have been the default since 2023. Setting
 `exact_by_default=false` (which made object types inexact unless written with the
-explicit exact `{| |}` syntax) was **deprecated in Flow 0.314.0** and is now
-rejected. Delete the option from your `.flowconfig` when migrating. See the
+explicit exact `{| |}` syntax) was **deprecated in Flow 0.314.0**. The option is
+now unsupported, including `exact_by_default=true`. Delete it from your
+`.flowconfig` when migrating. See the
 [objects documentation](../types/objects.md) for more.
 
 ### casting_syntax {#toc-casting-syntax}

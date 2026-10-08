@@ -1,5 +1,4 @@
 [options]
 all=true
 lazy_mode=true
-saved_state.direct_serialization=true
 saved_state.parallel_decompress=true

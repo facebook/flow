@@ -1,8 +1,8 @@
 // @flow
 //
 // Cross-file: a `.js` consumer of types declared in `instance_lib.ts`.
-// Class and interface instances flow into both exact (default in `.js` with
-// `exact_by_default`) and explicit-inexact `{..., ...}` object targets.
+// Class and interface instances flow into both exact (default in `.js`)
+// and explicit-inexact `{..., ...}` object targets.
 //
 // The imported class and interface retain TypeScript's structural object
 // compatibility in this Flow consumer.

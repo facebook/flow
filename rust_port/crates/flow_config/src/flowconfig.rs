@@ -1753,23 +1753,6 @@ pub mod opts {
         )
     }
 
-    fn saved_state_allow_reinit_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_boolean(
-            |_opts, v| {
-                if v {
-                    Ok(())
-                } else {
-                    Err("Support for saved_state.allow_reinit=false is removed.".to_string())
-                }
-            },
-            values,
-            config,
-        )
-    }
-
     fn saved_state_fetcher_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
         enum_parser(
             &[
@@ -1781,26 +1764,6 @@ pub mod opts {
             |opts, v| {
                 opts.saved_state_fetcher = v;
                 Ok(())
-            },
-            values,
-            config,
-        )
-    }
-
-    fn saved_state_direct_serialization_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_boolean(
-            |_opts, v| {
-                if v {
-                    Ok(())
-                } else {
-                    Err(
-                        "Support for saved_state.direct_serialization=false is removed."
-                            .to_string(),
-                    )
-                }
             },
             values,
             config,
@@ -1829,26 +1792,6 @@ pub mod opts {
             |opts, v| {
                 opts.saved_state_persist_export_index = v;
                 Ok(())
-            },
-            values,
-            config,
-        )
-    }
-
-    fn saved_state_reinit_on_lib_change_parser(
-        values: RawValues,
-        config: &mut Opts,
-    ) -> Result<(), OptError> {
-        parse_boolean(
-            |_opts, v| {
-                if v {
-                    Ok(())
-                } else {
-                    Err(
-                        "Support for saved_state.reinit_on_lib_change=false is removed."
-                            .to_string(),
-                    )
-                }
             },
             values,
             config,
@@ -2093,25 +2036,6 @@ pub mod opts {
             ("saved_state_restart_on_reinit", |values, config| {
                 saved_state_restart_on_reinit_parser(values, config)
             }),
-            ("exact_by_default", |values, config| {
-                parse_boolean(
-                    |_opts, v| {
-                        if v {
-                            Ok(())
-                        } else {
-                            Err(
-                                "`exact_by_default=false` has been deprecated. Read this [blog post](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69) for details on how to migrate to `exact_by_default=true` (the default since 2023), and our [docs on objects](https://flow.org/en/docs/types/objects/)."
-                                    .to_string(),
-                            )
-                        }
-                    },
-                    values,
-                    config,
-                )
-            }),
-            ("experimental.always_generalize_jsx", |values, config| {
-                enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config)
-            }),
             ("experimental.assert_operator", |values, config| {
                 assert_operator_parser(values, config)
             }),
@@ -2213,9 +2137,6 @@ pub mod opts {
             ("experimental.facebook_module_interop", |values, config| {
                 facebook_module_interop_parser(values, config)
             }),
-            ("experimental.fast_symlink_resolution", |values, config| {
-                enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config)
-            }),
             (
                 "experimental.function_and_object_type_is_no_longer_any",
                 |values, config| {
@@ -2228,14 +2149,6 @@ pub mod opts {
                         config,
                     )
                 },
-            ),
-            (
-                "experimental.importable_global_libdefs",
-                |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
-            ),
-            (
-                "experimental.interface_dictionary_typing_fix",
-                |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
             ),
             (
                 "experimental.log_per_error_typing_telemetry",
@@ -2279,13 +2192,6 @@ pub mod opts {
             (
                 "experimental.multi_platform.extension_group_mapping",
                 |values, config| multi_platform_extension_group_mapping_parser(values, config),
-            ),
-            ("experimental.new_this_typing", |values, config| {
-                enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config)
-            }),
-            (
-                "experimental.opaque_type_new_bound_syntax",
-                |values, config| enum_parser(&[("true", ())], |_opts, ()| Ok(()), values, config),
             ),
             ("experimental.projects", |values, config| {
                 projects_parser(values, config)
@@ -2736,23 +2642,14 @@ pub mod opts {
                 "relay_integration.module_prefix.includes",
                 |values, config| relay_integration_module_prefix_includes_parser(values, config),
             ),
-            ("saved_state.allow_reinit", |values, config| {
-                saved_state_allow_reinit_parser(values, config)
-            }),
             ("saved_state.fetcher", |values, config| {
                 saved_state_fetcher_parser(values, config)
-            }),
-            ("saved_state.direct_serialization", |values, config| {
-                saved_state_direct_serialization_parser(values, config)
             }),
             ("saved_state.parallel_decompress", |values, config| {
                 saved_state_parallel_decompress_parser(values, config)
             }),
             ("saved_state.persist_export_index", |values, config| {
                 saved_state_persist_export_index_parser(values, config)
-            }),
-            ("saved_state.reinit_on_lib_change", |values, config| {
-                saved_state_reinit_on_lib_change_parser(values, config)
             }),
             (
                 "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
@@ -3641,6 +3538,43 @@ mod tests {
 
             assert!(result.is_ok(), "failed to parse builtin_lib={value}");
             assert_eq!(config.options.builtin_lib, expected);
+        }
+    }
+
+    #[test]
+    fn removed_true_only_options_are_unsupported() {
+        for option in [
+            "exact_by_default",
+            "experimental.always_generalize_jsx",
+            "experimental.fast_symlink_resolution",
+            "experimental.importable_global_libdefs",
+            "experimental.interface_dictionary_typing_fix",
+            "experimental.new_this_typing",
+            "experimental.opaque_type_new_bound_syntax",
+            "saved_state.allow_reinit",
+            "saved_state.direct_serialization",
+            "saved_state.reinit_on_lib_change",
+        ] {
+            for value in ["true", "false"] {
+                let mut config = empty_config();
+                let warnings = parse(
+                    &mut config,
+                    vec![
+                        (1, "[options]".to_owned()),
+                        (2, format!("{option}={value}")),
+                    ],
+                    true,
+                )
+                .map_err(|Error(line, message)| (line, message))
+                .expect("unsupported options should produce warnings");
+
+                assert_eq!(warnings.len(), 1, "{option}={value}");
+                assert_eq!(warnings[0].0, 2);
+                assert_eq!(
+                    warnings[0].1,
+                    format!("Unsupported option specified! ({option})")
+                );
+            }
         }
     }
 

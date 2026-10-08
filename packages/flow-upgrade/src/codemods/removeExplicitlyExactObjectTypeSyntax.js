@@ -15,7 +15,7 @@ import {codemod} from '../Types';
 export default codemod({
   title: 'Remove explicitly exact object type syntax',
   describe:
-    'Convert explicitly exact object type syntax `{| |}` to be just be `{ }`. To be done after you turn on `exact_by_default=true` in your `.flowconfig`.',
+    'Convert explicitly exact object type syntax `{| |}` to be just `{ }`. Object types are exact by default.',
   transform: context => {
     return {
       'ObjectTypeAnnotation[exact=true]'(node) {

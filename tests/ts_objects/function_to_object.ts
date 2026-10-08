@@ -6,7 +6,7 @@
 
 declare function f(): void;
 
-// Exact target (`{}` is exact under exact_by_default): accepted in .ts.
+// Exact target (`{}` is exact by default): accepted in .ts.
 f satisfies {}; // OK
 
 // Exact target with required props the function does not have: must still
