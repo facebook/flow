@@ -6373,23 +6373,23 @@ where
             }
             MessageCannotSpreadInexactMayOverwriteIndexer(
                 box MessageCannotSpreadInexactMayOverwriteIndexerData {
-                    spread_reason,
+                    spread_loc,
                     key,
                     value,
-                    object2_reason,
+                    object2,
                 },
             ) => friendly::Message(vec![
-                text("Flow cannot determine a type for "),
-                ref_(spread_reason),
+                text("Flow cannot determine a type for the "),
+                hardcoded_string_desc_ref("spread", spread_loc),
                 text(". "),
-                ref_(object2_reason),
+                ref_of_ty_or_desc(&object2.loc, &object2.desc),
                 text(" is inexact and may "),
                 text("have a property key that conflicts with "),
                 ref_of_ty_or_desc(&key.loc, &key.desc),
                 text(" or a property value that conflicts with "),
                 ref_of_ty_or_desc(&value.loc, &value.desc),
                 text(". Try making "),
-                ref_(object2_reason),
+                ref_of_ty_or_desc(&object2.loc, &object2.desc),
                 text(" exact"),
             ]),
             MessageCannotSpreadInterface {

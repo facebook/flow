@@ -289,24 +289,26 @@ References:
 
 Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:38:53
 
-Cannot spread object literal because Flow cannot determine a type for `TsNarrowInterface` [1]. `TsNarrowInterface` [1]
-is inexact and may have a property key that conflicts with `string` [2] or a property value that conflicts with
-`number` [3]. Try making `TsNarrowInterface` [1] exact. [cannot-spread-inexact]
+Cannot spread object literal because Flow cannot determine a type for the spread [1].
+`interface {extra: string; inherited: FlowDog; inheritedFunction: () => string; inheritedMethod(this:...` [2] is inexact
+and may have a property key that conflicts with `string` [3] or a property value that conflicts with `number` [4]. Try
+making `interface {extra: string; inherited: FlowDog; inheritedFunction: () => string; inheritedMethod(this:...` [2]
+exact. [cannot-spread-inexact]
 
    object_slice_ts_interface.js:38:53
    38| const valueSpreadAfterIndexer = {...indexedHead, ...tsNarrowInterfaceValue}; // ERROR
-                                                           ^^^^^^^^^^^^^^^^^^^^^^
+                                                           ^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    object_slice_ts.ts:30:46
    30| export declare const tsNarrowInterfaceValue: TsNarrowInterface;
-                                                    ^^^^^^^^^^^^^^^^^ [1]
+                                                    ^^^^^^^^^^^^^^^^^ [2]
    object_slice_ts_interface.js:37:30
    37| declare const indexedHead: {[string]: number};
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [3]
    object_slice_ts_interface.js:37:39
    37| declare const indexedHead: {[string]: number};
-                                             ^^^^^^ [3]
+                                             ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------- object_slice_ts_interface.js:48:33

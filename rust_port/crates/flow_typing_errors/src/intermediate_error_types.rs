@@ -1456,8 +1456,8 @@ pub struct MessageCannotSpreadGeneralData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageCannotSpreadInexactMayOverwriteIndexerData<L: Dupe> {
-    pub spread_reason: VirtualReason<L>,
-    pub object2_reason: VirtualReason<L>,
+    pub spread_loc: L,
+    pub object2: Box<MessageTypeReferenceData<L>>,
     pub key: Box<MessageTypeReferenceData<L>>,
     pub value: Box<MessageTypeReferenceData<L>>,
 }

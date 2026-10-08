@@ -3612,10 +3612,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
-            spread_reason,
+            spread_loc,
             key_desc,
             value_desc,
-            object2_reason,
+            object2,
             use_op,
             ..
         }) => {
@@ -3629,10 +3629,10 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "EInexactMayOverwriteIndexer ({}) ({}) ({}) ({}) ({})",
-                dump_reason(cx, spread_reason),
+                string_of_aloc(None, spread_loc),
                 key,
                 value,
-                dump_reason(cx, object2_reason),
+                dump_error_type_reference(cx, object2),
                 string_of_use_op(use_op)
             )
         }

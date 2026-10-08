@@ -589,12 +589,15 @@ fn spread2<'cx>(
         ))),
         (Some(d1), _) if !(exact2 || *inline2 || allow_inexact) => Err(Box::new(
             ErrorMessage::EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
-                spread_reason: reason.dupe(),
+                spread_loc: reason.loc().dupe(),
                 key_loc: type_util::ref_loc_of_t(&d1.key).dupe(),
                 key_desc: flow_js_utils::type_or_type_desc_for_error(&d1.key),
                 value_loc: type_util::ref_loc_of_t(&d1.value).dupe(),
                 value_desc: flow_js_utils::type_or_type_desc_for_error(&d1.value),
-                object2_reason: r2.dupe(),
+                object2: flow_js_utils::type_reference_with_reason_for_error(
+                    &object_type_of_slice(cx, slice2),
+                    r2.dupe(),
+                ),
                 use_op: use_op.dupe(),
             })),
         )),

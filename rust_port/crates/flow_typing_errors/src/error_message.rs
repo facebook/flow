@@ -2557,21 +2557,21 @@ pub struct EUnableToSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct EInexactMayOverwriteIndexerData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub spread_reason: VirtualReason<L>,
+    pub spread_loc: L,
     pub key_loc: L,
     pub key_desc: TypeOrTypeDesc<L>,
     pub value_loc: L,
     pub value_desc: TypeOrTypeDesc<L>,
-    pub object2_reason: VirtualReason<L>,
+    pub object2: ErrorTypeReferenceWithLocData<L>,
     pub use_op: VirtualUseOp<L>,
 }
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialEq for EInexactMayOverwriteIndexerData<L> {
     fn eq(&self, other: &Self) -> bool {
-        self.spread_reason == other.spread_reason
+        self.spread_loc == other.spread_loc
             && self.key_loc == other.key_loc
             && self.value_loc == other.value_loc
-            && self.object2_reason == other.object2_reason
+            && self.object2 == other.object2
             && self.use_op == other.use_op
     }
 }
@@ -2582,10 +2582,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq + Hash> Hash
     for EInexactMayOverwriteIndexerData<L>
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        self.spread_reason.hash(state);
+        self.spread_loc.hash(state);
         self.key_loc.hash(state);
         self.value_loc.hash(state);
-        self.object2_reason.hash(state);
+        self.object2.hash(state);
         self.use_op.hash(state);
     }
 }
@@ -2600,11 +2600,11 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> PartialOrd
 
 impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EInexactMayOverwriteIndexerData<L> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.spread_reason
-            .cmp(&other.spread_reason)
+        self.spread_loc
+            .cmp(&other.spread_loc)
             .then_with(|| self.key_loc.cmp(&other.key_loc))
             .then_with(|| self.value_loc.cmp(&other.value_loc))
-            .then_with(|| self.object2_reason.cmp(&other.object2_reason))
+            .then_with(|| self.object2.cmp(&other.object2))
             .then_with(|| self.use_op.cmp(&other.use_op))
     }
 }
@@ -5980,20 +5980,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
-                spread_reason,
+                spread_loc,
                 key_loc,
                 key_desc,
                 value_loc,
                 value_desc,
-                object2_reason,
+                object2,
                 use_op,
             }) => EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
-                spread_reason: map_reason(spread_reason),
+                spread_loc: f(spread_loc),
                 key_loc: f(key_loc),
                 key_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), key_desc),
                 value_loc: f(value_loc),
                 value_desc: type_or_type_desc::map_loc(|l: &L| f(l.dupe()), value_desc),
-                object2_reason: map_reason(object2_reason),
+                object2: map_error_type_ref_with_reason(object2),
                 use_op: map_use_op(use_op),
             })),
 
@@ -7572,20 +7572,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
-                spread_reason,
+                spread_loc,
                 key_loc,
                 key_desc,
                 value_loc,
                 value_desc,
-                object2_reason,
+                object2,
                 use_op,
             }) => EInexactMayOverwriteIndexer(Box::new(EInexactMayOverwriteIndexerData {
-                spread_reason,
+                spread_loc,
                 key_loc,
                 key_desc: f(key_desc),
                 value_loc,
                 value_desc: f(value_desc),
-                object2_reason,
+                object2: map_error_type_ref_with_reason(object2),
                 use_op,
             })),
 
@@ -11511,20 +11511,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             }
 
             ErrorMessage::EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
-                spread_reason,
+                spread_loc,
                 key_loc,
                 key_desc,
                 value_loc,
                 value_desc,
-                object2_reason,
+                object2,
                 use_op,
             }) => {
-                let loc = spread_reason.loc.dupe();
+                let loc = spread_loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
                     message: Message::MessageCannotSpreadInexactMayOverwriteIndexer(Box::new(
                         MessageCannotSpreadInexactMayOverwriteIndexerData {
-                            spread_reason,
+                            spread_loc,
                             key: Box::new(MessageTypeReferenceData {
                                 loc: key_loc,
                                 desc: expect_type_desc(key_desc),
@@ -11533,7 +11533,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                                 loc: value_loc,
                                 desc: expect_type_desc(value_desc),
                             }),
-                            object2_reason,
+                            object2: Box::new(MessageTypeReferenceData {
+                                loc: object2.reference_loc,
+                                desc: expect_type_desc(object2.type_desc),
+                            }),
                         },
                     )),
                     explanation: None,

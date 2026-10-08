@@ -1,3 +1,47 @@
+Error -------------------------------------------------------------------------------------------- inexact_right.js:3:11
+
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{foo: number, ...}` [2] is
+inexact and may have a property key that conflicts with `string` [3] or a property value that conflicts with
+`number` [4]. Try making `{foo: number, ...}` [2] exact. [cannot-spread-inexact]
+
+   inexact_right.js:3:11
+   3| const u = {...s, ...t}; // Error
+                ^^^^^^^^^^^^ [1]
+
+References:
+   inexact_right.js:2:10
+   2| const t: {foo: number, ...} = {foo: 3};
+               ^^^^^^^^^^^^^^^^^^ [2]
+   inexact_right.js:1:12
+   1| const s: {[string]: number} = {};
+                 ^^^^^^ [3]
+   inexact_right.js:1:21
+   1| const s: {[string]: number} = {};
+                          ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------- inexact_right.js:10:21
+
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `interface {foo: number}` [2] is
+inexact and may have a property key that conflicts with `string` [3] or a property value that conflicts with
+`number` [4]. Try making `interface {foo: number}` [2] exact. [cannot-spread-inexact]
+
+   inexact_right.js:10:21
+   10| const w = {...s, ...child}; // Error
+                           ^^^^^ [1]
+
+References:
+   inexact_right.js:9:22
+    9| declare const child: Child;
+                            ^^^^^ [2]
+   inexact_right.js:1:12
+    1| const s: {[string]: number} = {};
+                  ^^^^^^ [3]
+   inexact_right.js:1:21
+    1| const s: {[string]: number} = {};
+                           ^^^^^^ [4]
+
+
 Error ------------------------------------------------------------------------------------------- named_operands.js:2:11
 
 Flow cannot determine a type for the spread [1]. `interface {[string]: number}` [2] cannot be spread because the indexer
@@ -147,4 +191,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors
