@@ -4,8 +4,8 @@ import * as React from 'react';
 
 type ElementProp<
   T extends React.ElementType,
-  P extends keyof React.ElementConfig<T>,
-> = React.ElementConfig<T>[P];
+  P extends keyof React.ComponentProps<T>,
+> = React.ComponentProps<T>[P];
 
 type BaseProps = Readonly<{
   theme?: ElementProp<typeof TimeoutFn, 'theme'>,

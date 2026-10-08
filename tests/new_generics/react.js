@@ -24,7 +24,7 @@ function connect<TProps extends {...}, SProps extends TProps>(): component(ref?:
 
 function hoc<Props extends {...}, Component extends component(...Props)>(
   WrappedComponent: Component,
-): React.ComponentType<React.ElementConfig<Component>> {
+): React.ComponentType<React.ComponentProps<Component>> {
   return (props: Props) => <WrappedComponent {...props} />;
 }
 

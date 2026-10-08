@@ -22,8 +22,8 @@ Cannot cast `foo` to empty because `{readonly foo: string}` [1] is incompatible 
 
 References:
    test.js:10:22
-   10|   declare const foo: React.ElementConfig<T2>;
-                            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   10|   declare const foo: React.ComponentProps<T2>;
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    test.js:12:10
    12|   foo as empty; // error
                 ^^^^^ [2]

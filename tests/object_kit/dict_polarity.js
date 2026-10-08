@@ -105,15 +105,15 @@ declare component ReadonlyRestComponent(...props: ReadonlyDict);
 declare component WriteonlyRestComponent(...props: WriteonlyDict);
 
 {
-  declare const invariant: React.ElementConfig<typeof InvariantRestComponent>;
+  declare const invariant: React.ComponentProps<typeof InvariantRestComponent>;
   invariant.arbitrary as number; // OK
   invariant.arbitrary = 0; // OK
 
-  declare const readonly: React.ElementConfig<typeof ReadonlyRestComponent>;
+  declare const readonly: React.ComponentProps<typeof ReadonlyRestComponent>;
   readonly.arbitrary as number; // OK
   readonly.arbitrary = 0; // OK
 
-  declare const writeonly: React.ElementConfig<typeof WriteonlyRestComponent>;
+  declare const writeonly: React.ComponentProps<typeof WriteonlyRestComponent>;
   writeonly.arbitrary as unknown; // OK
   writeonly.arbitrary = 0; // OK
 }
@@ -132,15 +132,15 @@ class WriteonlyDefaultsComponent extends React.Component<WriteonlyDict> {
 }
 
 {
-  declare const invariant: React.ElementConfig<typeof InvariantDefaultsComponent>;
+  declare const invariant: React.ComponentProps<typeof InvariantDefaultsComponent>;
   invariant.arbitrary as number; // OK
   invariant.arbitrary = 0; // OK
 
-  declare const readonly: React.ElementConfig<typeof ReadonlyDefaultsComponent>;
+  declare const readonly: React.ComponentProps<typeof ReadonlyDefaultsComponent>;
   readonly.arbitrary as number; // OK
   readonly.arbitrary = 0; // OK
 
-  declare const writeonly: React.ElementConfig<typeof WriteonlyDefaultsComponent>;
+  declare const writeonly: React.ComponentProps<typeof WriteonlyDefaultsComponent>;
   writeonly.arbitrary as unknown; // OK
   writeonly.arbitrary = 0; // OK
 }

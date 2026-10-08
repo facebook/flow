@@ -29,8 +29,8 @@ declare function ValuesFn<T>(x: Values<T>): T;
 ValuesFn(3); // Error: T under constrained.
 declare function ElementRef<T>(x: React.ElementRef<T>): T;
 ElementRef(1); // Error: T under constrained.
-declare function ElementConfig<T>(x: React.ElementConfig<T>): T;
-ElementConfig({foo: 3}) as React.ComponentType<
+declare function ComponentProps<T extends React.ElementType>(x: React.ComponentProps<T>): T;
+ComponentProps({foo: 3}) as React.ComponentType<
   {foo: number, ...},
 >; // ok
 declare function Exact<T>(x: $Exact<T>): T;
