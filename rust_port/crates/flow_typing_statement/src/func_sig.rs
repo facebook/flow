@@ -255,38 +255,22 @@ impl FuncScopeVisitor<'_, '_, '_> {
             Kind::Generator { .. } => {
                 // Convert the return expression's type R to Generator<Y,R,N>, where
                 // Y and R are internals, installed earlier.
-                let return_tvar = flow_typing_tvar::mk_where(
-                    self.cx,
-                    reason::mk_reason(
-                        reason::VirtualReasonDesc::RCustom("generator return".into()),
-                        loc.dupe(),
-                    ),
-                    |cx, tvar| flow_js::flow_t_non_speculating(cx, (t, tvar)),
-                )?;
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
                     &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
                     None,
                     "Generator",
-                    vec![self.yield_t.dupe(), return_tvar, self.next_t.dupe()],
+                    vec![self.yield_t.dupe(), t.dupe(), self.next_t.dupe()],
                 );
                 flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)?
             }
             Kind::AsyncGenerator { .. } => {
-                let return_tvar = flow_typing_tvar::mk_where(
-                    self.cx,
-                    reason::mk_reason(
-                        reason::VirtualReasonDesc::RCustom("async generator return".into()),
-                        loc.dupe(),
-                    ),
-                    |cx, tvar| flow_js::flow_t_non_speculating(cx, (t, tvar)),
-                )?;
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
                     self.cx,
                     &reason::mk_reason(type_util::desc_of_t(t).clone(), loc.dupe()),
                     None,
                     "AsyncGenerator",
-                    vec![self.yield_t.dupe(), return_tvar, self.next_t.dupe()],
+                    vec![self.yield_t.dupe(), t.dupe(), self.next_t.dupe()],
                 );
                 flow_js::reposition_non_speculating(self.cx, loc.dupe(), t_prime)?
             }
