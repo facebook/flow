@@ -4451,10 +4451,10 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
         }
         Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
             record_name,
-            obj_reason,
+            obj_loc,
         } => Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
             record_name,
-            obj_reason: map_reason(obj_reason),
+            obj_loc: f(&obj_loc),
         },
         Explanation::ExplanationStringCasingMustBeCanonical { kind_name } => {
             Explanation::ExplanationStringCasingMustBeCanonical { kind_name }

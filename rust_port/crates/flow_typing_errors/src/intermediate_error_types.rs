@@ -1138,7 +1138,7 @@ pub enum Explanation<L: Dupe> {
     ExplanationAdditionalUnionMembers(Box<ExplanationAdditionalUnionMembersData<L>>),
     ExplanationObjectLiteralNeedsRecordSyntax {
         record_name: FlowSmolStr,
-        obj_reason: VirtualReason<L>,
+        obj_loc: L,
     },
     ExplanationStringCasingMustBeCanonical {
         kind_name: FlowSmolStr,

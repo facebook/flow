@@ -5566,7 +5566,7 @@ pub fn rec_sub_t<'cx>(
                     Some(
                         intermediate_error_types::Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
                             record_name: record_name.dupe(),
-                            obj_reason: lreason.dupe(),
+                            obj_loc: type_util::ref_loc_of_t(l).dupe(),
                         },
                     ),
                 ),

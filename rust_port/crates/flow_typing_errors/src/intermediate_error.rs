@@ -4352,12 +4352,12 @@ where
             }
             ExplanationObjectLiteralNeedsRecordSyntax {
                 record_name,
-                obj_reason,
+                obj_loc,
             } => friendly::Message(vec![
                 text("Fix by adding the record name "),
                 code(record_name),
                 text(" before the "),
-                ref_(obj_reason),
+                friendly::hardcoded_string_desc_ref("object literal", loc_of_aloc(obj_loc)),
                 text(", e.g. "),
                 code(&format!("{} {{...}}", record_name)),
             ]),

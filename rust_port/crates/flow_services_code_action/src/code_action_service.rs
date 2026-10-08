@@ -2170,14 +2170,12 @@ pub fn ast_transforms_of_error(
             }
         }
         ErrorMessage::EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
+            lower_loc,
             explanation:
-                Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
-                    record_name,
-                    obj_reason,
-                }),
+                Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax { record_name, .. }),
             ..
         }) => {
-            let error_loc = obj_reason.loc().dupe();
+            let error_loc = lower_loc.dupe();
             if loc_opt_intersects(loc, error_loc.dupe()) {
                 let record_name_str = record_name.to_string();
                 let record_name_smol: FlowSmolStr = record_name.as_str().into();
