@@ -335,17 +335,18 @@ component MyComponent(foo: number, bar: string = 'str') {
 ({foo: 3}) as React.PropsOf<MyComponent>;
 ```
 
-### `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
+### `React.ComponentProps<typeof Component>` {#toc-react-componentprops}
+
+Use `React.ComponentProps` to extract the props accepted by a component or JSX intrinsic.
+Prefer it over `React.ElementConfig`.
 
 Like [React.PropsOf](#toc-react-propsof), this utility gets the type of the object that you must pass in to a
-component in order to instantiate it via `createElement()` or `jsx()`. While `PropsOf` takes in an element of
-a component, which is convenient when using [Component Syntax](./component-syntax.md), `ElementConfig` takes in the type of a component
-instead. `typeof Component` must be the type *of* a React component so you need to use `typeof` as in
-`React.ElementConfig<typeof Component>`.
+component in order to instantiate it via `createElement()` or JSX. While `PropsOf` takes in an element of
+a component, which is convenient when using [Component Syntax](./component-syntax.md), `ComponentProps` takes in the type of a component
+instead. Use `typeof` as in `React.ComponentProps<typeof Component>`.
 
-Importantly, props with defaults are optional in the resulting type.
-
-For example,
+Props with defaults are optional in the resulting type. The result also includes
+any `ref` prop the component accepts.
 
 ```js flow-check
 import * as React from 'react';
@@ -354,16 +355,20 @@ component MyComponent(foo: number = 42) {
   return foo;
 }
 
-// `React.ElementConfig<>` does not require `foo` since it has a default value.
-({}) as React.ElementConfig<typeof MyComponent>;
+// `foo` is optional because it has a default value.
+({}) as React.ComponentProps<typeof MyComponent>; // OK
 ```
 
-Note that `typeof Component` must be the type *of* a React component so you need to use
-`typeof` as in `React.ElementConfig<typeof MyComponent>`.
+For JSX intrinsics, pass the tag name, such as `React.ComponentProps<'div'>`.
 
 ## Deprecated types {#toc-deprecated-types}
 
 Types kept for backward compatibility. Prefer the alternatives noted below.
+
+### `React.ElementConfig<typeof Component>` {#toc-react-elementconfig}
+
+Use [`React.ComponentProps<typeof Component>`](#toc-react-componentprops) instead.
+`React.ElementConfig` is kept for backward compatibility.
 
 ### `ExactReactElement_DEPRECATED<typeof Component>` {#toc-react-element}
 
