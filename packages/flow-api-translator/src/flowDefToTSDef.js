@@ -3329,8 +3329,8 @@ const getTransforms = (
               },
             };
           }
-          // React.ElementConfig<A> ->  React.JSX.LibraryManagedAttributes<A, React.ComponentProps<A>>
-          // React$ElementConfig<A> ->  React.JSX.LibraryManagedAttributes<A, React.ComponentProps<A>>
+          // React.ComponentProps<A> -> React.JSX.LibraryManagedAttributes<A, React.ComponentProps<A>>
+          case 'React.ComponentProps':
           case 'React.ElementConfig':
           case 'React$ElementConfig': {
             const [param] = assertHasExactlyNTypeParameters(1);

@@ -110,7 +110,7 @@ Converts:
 Converts:
 
 - `React.AbstractComponent<Props>` to `React.ComponentType<Props>`
-- `React.ElementConfig<React.AbstractComponent<Props, Instance>>` to `Props`
+- `React.ComponentProps<React.AbstractComponent<Props, Instance>>` to `Props`
 - `React.ElementRef<React.AbstractComponent<Props, Instance>>` to `Instance`
 - `React.ElementRef<React.AbstractComponent<Props>` to `mixed`
 

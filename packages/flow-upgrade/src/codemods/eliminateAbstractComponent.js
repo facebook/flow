@@ -47,11 +47,12 @@ function eliminateAbstractComponent(
     return null;
   }
 
-  // React.ElementConfig<React.AbstractComponent<Props, ...> -> Props
+  // React.ComponentProps<React.AbstractComponent<Props, ...> -> Props
   if (
     maybeQualifiedIdentifier.type === 'QualifiedTypeIdentifier' &&
     maybeQualifiedIdentifier.qualification.name === 'React' &&
-    maybeQualifiedIdentifier.id.name === 'ElementConfig' &&
+    (maybeQualifiedIdentifier.id.name === 'ComponentProps' ||
+      maybeQualifiedIdentifier.id.name === 'ElementConfig') &&
     typeParameters != null &&
     typeParameters.params.length === 1 &&
     typeParameters.params[0].type === 'GenericTypeAnnotation' &&
@@ -64,7 +65,7 @@ function eliminateAbstractComponent(
     return typeParameters.params[0].typeParameters.params[0];
   }
 
-  // React.ElementConfig<React.AbstractComponent<Props, Instance, ...> -> Instance
+  // React.ElementRef<React.AbstractComponent<Props, Instance, ...> -> Instance
   if (
     maybeQualifiedIdentifier.type === 'QualifiedTypeIdentifier' &&
     maybeQualifiedIdentifier.qualification.name === 'React' &&
@@ -81,7 +82,7 @@ function eliminateAbstractComponent(
     return typeParameters.params[0].typeParameters.params[1];
   }
 
-  // React.ElementConfig<React.AbstractComponent<Props> -> mixed
+  // React.ElementRef<React.AbstractComponent<Props> -> mixed
   if (
     maybeQualifiedIdentifier.type === 'QualifiedTypeIdentifier' &&
     maybeQualifiedIdentifier.qualification.name === 'React' &&
@@ -105,7 +106,7 @@ export default codemod({
   title: 'Eliminate `React.AbstractComponent<...>`',
   describe: `
 - \`React.AbstractComponent<Props>\` -> \`React.ComponentType<Props>\`
-- \`React.ElementConfig<React.AbstractComponent<Props, Instance>>\` -> \`Props\`
+- \`React.ComponentProps<React.AbstractComponent<Props, Instance>>\` -> \`Props\`
 - \`React.ElementRef<React.AbstractComponent<Props, Instance>>\` -> \`Instance\`
 - \`React.ElementRef<React.AbstractComponent<Props>\` -> \`mixed\``,
   transform: context => {

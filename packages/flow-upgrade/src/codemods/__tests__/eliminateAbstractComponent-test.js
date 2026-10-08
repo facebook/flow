@@ -21,8 +21,8 @@ testCodemod('eliminateAbstractComponent', codemod, {
     },
     {
       description: 'strategy 2',
-      code: `type A = React.ElementConfig<React.AbstractComponent<Props>>;
-             type B = React.ElementConfig<React.AbstractComponent<Props, Instance>>;`,
+      code: `type A = React.ComponentProps<React.AbstractComponent<Props>>;
+             type B = React.ComponentProps<React.AbstractComponent<Props, Instance>>;`,
       output: `type A = Props;\ntype B = Props;`,
     },
     {
@@ -44,7 +44,7 @@ testCodemod('eliminateAbstractComponent', codemod, {
     },
     {
       description: 'strategy 2 fail',
-      code: 'type A = React.ElementConfig<1>;',
+      code: 'type A = React.ComponentProps<1>;',
     },
   ],
 });
