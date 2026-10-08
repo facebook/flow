@@ -22,8 +22,8 @@ An annotation on `opt` is required because Flow cannot infer its type from local
 
 Error ---------------------------------------------------------------------------------------------------- test.js:45:18
 
-Cannot return `emptyFunction.thatReturnsNull` because inexact `FunctionReturning` [1] is incompatible with exact
-`LocalDateInterval` [2]. [incompatible-exact]
+Cannot return `emptyFunction.thatReturnsNull` because inexact `(...args: ReadonlyArray<unknown>) => null` [1] is
+incompatible with exact `LocalDateInterval` [2]. [incompatible-exact]
 
    test.js:45:18
    45|           return emptyFunction.thatReturnsNull;

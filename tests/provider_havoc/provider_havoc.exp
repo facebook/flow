@@ -450,7 +450,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:46:20
 
-Cannot assign `{...}` to `x` because inexact object type [1] is incompatible with exact object literal [2].
+Cannot assign `{...}` to `x` because inexact `{a: number, ...}` [1] is incompatible with exact object literal [2].
 [incompatible-exact]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different

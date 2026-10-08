@@ -113,7 +113,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- driver.js:17:1
 
-Cannot cast `b3` to object type because inexact object literal [1] is incompatible with exact object type [2].
+Cannot cast `b3` to object type because inexact object literal [1] is incompatible with exact `{}` [2].
 [incompatible-exact]
 
    driver.js:17:1

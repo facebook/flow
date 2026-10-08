@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_continues.js:3:8
 
-Cannot cast `any` to object type because inexact object type [1] is incompatible with exact object type [2].
+Cannot cast `any` to object type because inexact `{p: number, ...}` [1] is incompatible with exact `{p: string}` [2].
 [incompatible-exact]
 
    error_continues.js:3:8
@@ -139,8 +139,8 @@ Cannot create exact type from `PersonPred` [1]. [invalid-exact]
 
 Error --------------------------------------------------------------------------------------------------- literal.js:3:7
 
-Cannot assign `p` to `o.p` because inexact object type [1] is incompatible with exact object literal [2].
-[incompatible-exact]
+Cannot assign `p` to `o.p` because inexact `{q: number, r: number, ...}` [1] is incompatible with exact object
+literal [2]. [incompatible-exact]
 
    literal.js:3:7
    3| o.p = p; // error
@@ -381,8 +381,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:7:13
 
-Cannot assign `new class { ... }()` to `c` because inexact `<<anonymous class>>` [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot assign `new class { ... }()` to `c` because inexact `<<anonymous class>>` [1] is incompatible with exact
+`{}` [2]. [incompatible-exact]
 
    not_object.js:7:13
    7| let c: {} = new (class {})();
@@ -396,8 +396,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:8:13
 
-Cannot assign function to `f` because inexact function [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot assign function to `f` because inexact `() => void` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    not_object.js:8:13
    8| let f: {} = () => {};
@@ -411,8 +410,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:11:1
 
-Cannot cast `u` to object type because inexact object type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `u` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    not_object.js:11:1
    11| u as {};
@@ -446,8 +444,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- not_object.js:14:1
 
-Cannot cast `v` to object type because inexact object type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `v` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    not_object.js:14:1
    14| v as {};
@@ -714,7 +711,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:6:3
 
-Cannot call `f` with `o` bound to `o` because inexact object type [1] is incompatible with exact object type [2].
+Cannot call `f` with `o` bound to `o` because inexact `{p: null, ...}` [1] is incompatible with exact `{p: null}` [2].
 [incompatible-exact]
 
    use_ops.js:6:3

@@ -53,8 +53,8 @@ References:
 
 Error ------------------------------------------------------------------------ -:19:31
 
-Cannot assign `baseInexact` to `widened` because inexact object type [1] is incompatible with exact `WithUnixTime` [2].
-[incompatible-exact]
+Cannot assign `baseInexact` to `widened` because inexact `{id: string, ...}` [1] is incompatible with exact
+`WithUnixTime` [2]. [incompatible-exact]
 
    -:19:31
    19| const widened: WithUnixTime = baseInexact;    // ERROR
@@ -510,8 +510,8 @@ No errors!
 === block 28 ===
 Error ------------------------------------------------------------------------- -:5:10
 
-Cannot return `((typeof x) === "object") && (x !== null)` because indexed object [1] is incompatible with exact
-`User` [2]. [incompatible-indexer]
+Cannot return `((typeof x) === "object") && (x !== null)` because indexed `{readonly [string]: unknown}` [1] is
+incompatible with exact `User` [2]. [incompatible-indexer]
 
 The type of `x` [3] at the return expression `((typeof x) === "object") && (x !== null)` [4] needs to be compatible with
 the guard type `User` [2]. See 1. in

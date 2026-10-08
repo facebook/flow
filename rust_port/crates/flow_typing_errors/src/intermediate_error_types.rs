@@ -2405,8 +2405,8 @@ pub enum Message<L: Dupe> {
 
     MessageIncompatibleWithExact {
         kind: ExactnessErrorKind,
-        lower: VirtualReason<L>,
-        upper: VirtualReason<L>,
+        lower: MessageTypeReferenceData<L>,
+        upper: MessageTypeReferenceData<L>,
     },
 
     MessageIncompatibleWithIndexed {

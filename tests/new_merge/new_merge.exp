@@ -680,8 +680,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:129:1
 
-Cannot cast `p1_22` to object type because inexact `P1` [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `p1_22` to object type because inexact `{f: string, g: string, ...}` [1] is incompatible with exact
+`{f: string, g: string}` [2]. [incompatible-exact]
 
    main.js:129:1
    129| p1_22 as {f: string, g: string}; // error incompatible exact
@@ -698,8 +698,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:130:1
 
-Cannot cast `p2_22` to object type because inexact `P2` [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `p2_22` to object type because inexact `{f: string, g: string, ...}` [1] is incompatible with exact
+`{f: string, g: string}` [2]. [incompatible-exact]
 
    main.js:130:1
    130| p2_22 as {f: string, g: string}; // error incompatible exact

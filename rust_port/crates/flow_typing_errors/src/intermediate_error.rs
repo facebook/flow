@@ -15,9 +15,7 @@ use flow_common::reason::Name;
 use flow_common::reason::ReasonDescFunction;
 use flow_common::reason::VirtualReason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_common::reason::is_array_reason;
 use flow_common::reason::is_nullish_reason;
-use flow_common::reason::is_scalar_reason;
 use flow_common::reason::mk_reason;
 use flow_common_errors::error_codes::ErrorCode;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
@@ -388,46 +386,26 @@ pub fn score_of_msg<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(msg: &FlowError
     // other. e.g. number ~> string. If one type is a scalar or array and the
     // other type is not then we decrement our score.
     score
-        + if let FlowErrorMessage::EIncompatibleTypesWithUseOp(
-            box EIncompatibleTypesWithUseOpData {
-                lower_desc,
-                upper_desc,
-                branches,
-                ..
-            },
-        ) = msg
-        {
-            if branches.is_empty() {
-                score_categories(type_category(lower_desc), type_category(upper_desc))
-            } else {
-                REASON_SCORE
-            }
-        } else {
-            let reasons: Option<(&VirtualReason<L>, &VirtualReason<L>)> = match msg {
-                FlowErrorMessage::EIncompatibleWithExact((rl, ru), _, _) => Some((rl, ru)),
-                _ => None,
-            };
-            match reasons {
-                Some((rl, ru)) => {
-                    if is_nullish_reason(rl) && is_nullish_reason(ru) {
-                        REASON_SCORE
-                    } else if is_nullish_reason(rl) || is_nullish_reason(ru) {
-                        // T ~> null should have a lower score then T ~> scalar
-                        0
-                    } else if is_scalar_reason(rl) && is_scalar_reason(ru) {
-                        REASON_SCORE
-                    } else if is_scalar_reason(rl) || is_scalar_reason(ru) {
-                        1
-                    } else if is_array_reason(rl) && is_array_reason(ru) {
-                        REASON_SCORE
-                    } else if is_array_reason(rl) || is_array_reason(ru) {
-                        1
-                    } else {
-                        REASON_SCORE
-                    }
+        + match msg {
+            FlowErrorMessage::EIncompatibleTypesWithUseOp(
+                box EIncompatibleTypesWithUseOpData {
+                    lower_desc,
+                    upper_desc,
+                    branches,
+                    ..
+                },
+            ) => {
+                if branches.is_empty() {
+                    score_categories(type_category(lower_desc), type_category(upper_desc))
+                } else {
+                    REASON_SCORE
                 }
-                None => REASON_SCORE,
             }
+            FlowErrorMessage::EIncompatibleWithExact((lower, upper), _, _) => score_categories(
+                type_category(&lower.type_desc),
+                type_category(&upper.type_desc),
+            ),
+            _ => REASON_SCORE,
         }
 }
 
@@ -5504,9 +5482,9 @@ where
                 };
                 friendly::Message(vec![
                     text(object_kind),
-                    ref_(lower),
+                    ref_of_ty_or_desc(&lower.loc, &lower.desc),
                     text(" is incompatible with exact "),
-                    ref_(upper),
+                    ref_of_ty_or_desc(&upper.loc, &upper.desc),
                 ])
             }
             MessageIncompatibleGeneral { lower, upper } => friendly::Message(vec![

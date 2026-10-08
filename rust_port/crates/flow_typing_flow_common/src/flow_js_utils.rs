@@ -2094,7 +2094,7 @@ pub fn exact_obj_error<'cx>(
     env: &FlowJsEnv,
     obj_kind: &flow_typing_type::type_::ObjKind,
     use_op: UseOp,
-    exact_reason: Reason,
+    exact: &Type,
     l: &Type,
 ) -> Result<(), FlowJsException> {
     use flow_typing_errors::error_message::ErrorMessage;
@@ -2106,11 +2106,18 @@ pub fn exact_obj_error<'cx>(
         ObjKind::Indexed { .. } => ExactnessErrorKind::UnexpectedIndexer,
         _ => ExactnessErrorKind::UnexpectedInexact,
     };
-    let reasons = ordered_reasons(cx, (reason_of_t(l).dupe(), exact_reason));
+    let (lower, upper) = ordered_types(cx, (l, exact));
     add_output_with_env(
         cx,
         env,
-        ErrorMessage::EIncompatibleWithExact(reasons, use_op, error_kind),
+        ErrorMessage::EIncompatibleWithExact(
+            (
+                type_reference_with_reason_for_error(lower, reason_of_t(lower).dupe()),
+                type_reference_with_reason_for_error(upper, reason_of_t(upper).dupe()),
+            ),
+            use_op,
+            error_kind,
+        ),
     )
 }
 

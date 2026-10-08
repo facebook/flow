@@ -1784,14 +1784,7 @@ fn flow_obj_to_obj<'cx>(
                 lreason.dupe(),
                 DefT::new(DefTInner::ObjT(l_obj.dupe())),
             ));
-            flow_js_utils::exact_obj_error(
-                cx,
-                env,
-                &lflags.obj_kind,
-                use_op.dupe(),
-                ureason.dupe(),
-                &l_t,
-            )?;
+            flow_js_utils::exact_obj_error(cx, env, &lflags.obj_kind, use_op.dupe(), u, &l_t)?;
         }
         let missing_props: Vec<Name> = cx
             .fold_props(
@@ -5287,12 +5280,16 @@ pub fn rec_sub_t<'cx>(
                     .join(obj.strictness_kind)
                     .is_typescript_loose() =>
         {
+            let (lower_t, upper_t) = flow_js_utils::ordered_types(cx, (l, u));
             let (lower_reason, upper_reason) =
                 flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
             flow_js_utils::add_output_with_env(
                 cx,env,
                 ErrorMessage::EIncompatibleWithExact(
-                    (lower_reason, upper_reason),
+                    (
+                        flow_js_utils::type_reference_with_reason_for_error(lower_t, lower_reason),
+                        flow_js_utils::type_reference_with_reason_for_error(upper_t, upper_reason),
+                    ),
                     use_op,
                     intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
                 ),
@@ -6156,10 +6153,21 @@ pub fn rec_sub_t<'cx>(
             let reasons = flow_js_utils::ordered_reasons(cx, (lreason.dupe(), ureason.dupe()));
             match &obj.flags.obj_kind {
                 ObjKind::Exact => {
+                    let (lower_t, upper_t) = flow_js_utils::ordered_types(cx, (l, u));
+                    let (lower_reason, upper_reason) = reasons;
                     flow_js_utils::add_output_with_env(
                         cx,env,
                         ErrorMessage::EIncompatibleWithExact(
-                            reasons,
+                            (
+                                flow_js_utils::type_reference_with_reason_for_error(
+                                    lower_t,
+                                    lower_reason,
+                                ),
+                                flow_js_utils::type_reference_with_reason_for_error(
+                                    upper_t,
+                                    upper_reason,
+                                ),
+                            ),
                             use_op,
                             intermediate_error_types::ExactnessErrorKind::UnexpectedInexact,
                         ),

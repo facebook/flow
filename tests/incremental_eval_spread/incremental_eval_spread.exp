@@ -1,6 +1,7 @@
 Error --------------------------------------------------------------------------------------------------------- b.js:6:1
 
-Cannot cast `a` to object type because inexact `A` [1] is incompatible with exact object type [2]. [incompatible-exact]
+Cannot cast `a` to object type because inexact `{f: string, t: number, ...}` [1] is incompatible with exact
+`{f: string, t: number}` [2]. [incompatible-exact]
 
    b.js:6:1
    6| a as { f: string, t: number };

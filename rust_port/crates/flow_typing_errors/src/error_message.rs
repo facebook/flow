@@ -3501,7 +3501,10 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     EUnionSpeculationFailed(Box<EUnionSpeculationFailedData<L>>),
 
     EIncompatibleWithExact(
-        (VirtualReason<L>, VirtualReason<L>),
+        (
+            ErrorTypeReferenceWithLocData<L>,
+            ErrorTypeReferenceWithLocData<L>,
+        ),
         VirtualUseOp<L>,
         ExactnessErrorKind,
     ),
@@ -4980,9 +4983,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 branches: branches.into_iter().map(map_branch).collect(),
             })),
 
-            EIncompatibleWithExact((r1, r2), op, kind) => {
-                EIncompatibleWithExact((map_reason(r1), map_reason(r2)), map_use_op(op), kind)
-            }
+            EIncompatibleWithExact((r1, r2), op, kind) => EIncompatibleWithExact(
+                (
+                    map_error_type_ref_with_reason(r1),
+                    map_error_type_ref_with_reason(r2),
+                ),
+                map_use_op(op),
+                kind,
+            ),
 
             EFunctionIncompatibleWithIndexer((r1, r2), op) => EFunctionIncompatibleWithIndexer(
                 (
@@ -7178,6 +7186,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 polarity_upper,
                 use_op,
             })),
+
+            EIncompatibleWithExact((lower, upper), use_op, kind) => EIncompatibleWithExact(
+                (
+                    map_error_type_ref_with_reason(lower),
+                    map_error_type_ref_with_reason(upper),
+                ),
+                use_op,
+                kind,
+            ),
 
             EFunctionIncompatibleWithIndexer((lower, upper), use_op) => {
                 EFunctionIncompatibleWithIndexer(
@@ -10810,7 +10827,17 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 let loc = lower.loc.dupe();
                 UseOp(Box::new(UseOpData {
                     loc,
-                    message: Message::MessageIncompatibleWithExact { kind, lower, upper },
+                    message: Message::MessageIncompatibleWithExact {
+                        kind,
+                        lower: MessageTypeReferenceData {
+                            loc: lower.reference_loc,
+                            desc: expect_type_desc(lower.type_desc),
+                        },
+                        upper: MessageTypeReferenceData {
+                            loc: upper.reference_loc,
+                            desc: expect_type_desc(upper.type_desc),
+                        },
+                    },
                     use_op,
                     explanation: None,
                 }))

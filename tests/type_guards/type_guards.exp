@@ -1974,7 +1974,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: `string` [1] is incompatible with `number` [2].
- - Or inexact object type [3] is incompatible with exact `A` [4].
+ - Or inexact `{tag_: "A", ...}` [3] is incompatible with exact `A` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2002,7 +2002,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: `number` [1] is incompatible with `string` [2].
- - Or inexact object type [3] is incompatible with exact `B` [4].
+ - Or inexact `{tag_: "A", ...}` [3] is incompatible with exact `B` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2064,7 +2064,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: `string` [1] is incompatible with `number` [2].
- - Or inexact object type [3] is incompatible with exact object type [4].
+ - Or inexact `{readonly tag_: "A", ...}` [3] is incompatible with exact
+   `{readonly foo: number, readonly tag: "A"}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2092,7 +2093,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: `number` [1] is incompatible with `string` [2].
- - Or inexact object type [3] is incompatible with exact object type [4].
+ - Or inexact `{readonly tag_: "A", ...}` [3] is incompatible with exact
+   `{readonly foo: string, readonly tag: "B"}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2120,7 +2122,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `A` because: [incompatible-type]
  - Either in property `foo`: `string` [1] is incompatible with `number` [2].
- - Or inexact object type [3] is incompatible with exact object type [4].
+ - Or inexact `{readonly tag: "C", ...}` [3] is incompatible with exact
+   `{readonly foo: number, readonly tag1: "A", readonly tag2: 1}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -2148,7 +2151,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to `B` because: [incompatible-type]
  - Either in property `foo`: `number` [1] is incompatible with `string` [2].
- - Or inexact object type [3] is incompatible with exact object type [4].
+ - Or inexact `{readonly tag: "C", ...}` [3] is incompatible with exact
+   `{readonly foo: string, readonly tag1: "B", readonly tag2: 1}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -4202,7 +4206,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:328:14
 
-Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompatible with exact object type [2].
+Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompatible with exact `{a: number}` [2].
 [incompatible-exact]
 
 The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard
@@ -4310,7 +4314,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- this_classes.js:343:14
 
-Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompatible with exact object type [2].
+Cannot return `(typeof this.a) === 'number'` because inexact `A` [1] is incompatible with exact `{a: number}` [2].
 [incompatible-exact]
 
 The type of this [3] at the return expression `(typeof this.a) === 'number'` [4] needs to be compatible with the guard

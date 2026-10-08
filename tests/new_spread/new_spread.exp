@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:36:1
 
-Cannot cast `o4` to object type because inexact object type [1] is incompatible with exact object type [2].
+Cannot cast `o4` to object type because inexact `{p: T, ...}` [1] is incompatible with exact `{p: T}` [2].
 [incompatible-exact]
 
    type.js:36:1
@@ -762,8 +762,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:10:1
 
-Cannot cast `o1` to object type because inexact object type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `o1` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    type_void.js:10:1
    10| o1 as {}; // error
@@ -831,8 +830,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:26:1
 
-Cannot cast `o3` to object type because inexact object type [1] is incompatible with exact object type [2].
-[incompatible-exact]
+Cannot cast `o3` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    type_void.js:26:1
    26| o3 as {}; // error

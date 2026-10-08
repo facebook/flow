@@ -484,7 +484,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:6:1
 
-Cannot cast `a` to object type because indexed object literal [1] is incompatible with exact object type [2].
+Cannot cast `a` to object type because indexed object literal [1] is incompatible with exact `{}` [2].
 [incompatible-indexer]
 
    union.js:6:1
@@ -550,8 +550,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- union_key.js:11:10
 
-Cannot return object literal because indexed object literal [1] is incompatible with exact object type [2].
-[incompatible-indexer]
+Cannot return object literal because indexed object literal [1] is incompatible with exact
+`{readonly a: boolean, readonly b: boolean}` [2]. [incompatible-indexer]
 
    union_key.js:11:10
    11|   return {...params, [key]: true}; // ok: key set is normalized to StrT. error: indexed incompatible with Params
@@ -565,8 +565,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- union_key.js:17:10
 
-Cannot return object literal because indexed object literal [1] is incompatible with exact object type [2].
-[incompatible-indexer]
+Cannot return object literal because indexed object literal [1] is incompatible with exact
+`{readonly a: boolean, readonly b: boolean}` [2]. [incompatible-indexer]
 
    union_key.js:17:10
    17|   return {...params, [key]: true}; // ok: key set is normalized to StrT. error: indexed incompatible with Params
@@ -580,8 +580,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- union_key.js:23:10
 
-Cannot return object literal because indexed object literal [1] is incompatible with exact object type [2].
-[incompatible-indexer]
+Cannot return object literal because indexed object literal [1] is incompatible with exact
+`{readonly a: boolean, readonly b: boolean}` [2]. [incompatible-indexer]
 
    union_key.js:23:10
    23|   return {...params, [key]: true}; // ok: key set is normalized to StrT. error: indexed incompatible with Params

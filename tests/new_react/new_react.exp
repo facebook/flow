@@ -311,7 +311,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with function bound to `partialState` because: [incompatible-type]
  - Either in the return value > property `bar`: `"42"` [1] is incompatible with `number` [2].
- - Or inexact function [3] is incompatible with exact `State` [4].
+ - Or inexact `() => {bar: "42"}` [3] is incompatible with exact `{readonly bar?: number, readonly foo?: number}` [4].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -367,7 +367,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-type]
  - Either in the first parameter: `number` [1] is incompatible with `State` [2].
- - Or inexact `StateUpdater3` [3] is incompatible with exact `State` [2].
+ - Or inexact `StateUpdater3` [3] is incompatible with exact `{readonly bar?: number, readonly foo?: number}` [2].
 
 Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
 not shown. To see all branches, re-run Flow with --show-all-branches.
@@ -387,8 +387,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- state6.js:45:2
 
-Cannot cast function to partial `State` because inexact function [1] is incompatible with exact `State` [2].
-[incompatible-exact]
+Cannot cast function to partial `State` because inexact `() => void` [1] is incompatible with exact
+`{bar?: number, foo?: number}` [2]. [incompatible-exact]
 
    state6.js:45:2
    45| (() => {}) as Partial<State>; // Error: Functions are not a valid object shape.

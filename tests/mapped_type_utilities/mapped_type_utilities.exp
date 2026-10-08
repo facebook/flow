@@ -348,7 +348,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:10:1
 
-Cannot cast `indexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
+Cannot cast `indexed` to object type because indexed object type [1] is incompatible with exact `{foo: number}` [2].
 [incompatible-indexer]
 
    record.js:10:1
@@ -366,7 +366,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:16:1
 
-Cannot cast `numIndexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
+Cannot cast `numIndexed` to object type because indexed object type [1] is incompatible with exact `{"1": string}` [2].
 [incompatible-indexer]
 
    record.js:16:1
@@ -384,7 +384,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- record.js:22:1
 
-Cannot cast `symIndexed` to object type because indexed `Record` [1] is incompatible with exact object type [2].
+Cannot cast `symIndexed` to object type because indexed object type [1] is incompatible with exact `{foo: boolean}` [2].
 [incompatible-indexer]
 
    record.js:22:1

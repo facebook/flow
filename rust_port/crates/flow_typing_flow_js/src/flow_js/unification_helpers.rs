@@ -361,7 +361,7 @@ fn __unify_inner<'cx>(
                             env,
                             &lflags.obj_kind,
                             use_op.dupe(),
-                            ureason.dupe(),
+                            t2,
                             t1,
                         )?;
                     }
@@ -374,7 +374,7 @@ fn __unify_inner<'cx>(
                             env,
                             &uflags.obj_kind,
                             use_op.dupe(),
-                            lreason.dupe(),
+                            t1,
                             t2,
                         )?;
                     }

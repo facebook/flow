@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Cannot cast `x` to object type because inexact `U` [1] is incompatible with exact object type [2]. [incompatible-exact]
+Cannot cast `x` to object type because inexact `U` [1] is incompatible with exact `{}` [2]. [incompatible-exact]
 
    test.js:8:1
    8| x as {||}; // Error, inexact vs. exact

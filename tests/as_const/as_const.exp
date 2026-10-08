@@ -523,8 +523,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:17:8
 
-Cannot cast `_` to `typeof obj1` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj1` because inexact `{readonly f: 1, ...}` [1] is incompatible with exact
+`{readonly f: 1}` [2]. [incompatible-exact]
 
    import-object.js:17:8
    17|   _ as {readonly f: 1, ...} as typeof obj1; // error inexact ~> exact
@@ -570,8 +570,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:38:8
 
-Cannot cast `_` to `typeof obj3` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj3` because inexact `{readonly f: 1, ...}` [1] is incompatible with exact
+`{readonly f: 1}` [2]. [incompatible-exact]
 
    import-object.js:38:8
    38|   _ as {readonly f: 1, ...} as typeof obj3; // error inexact ~> exact
@@ -617,8 +617,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:50:8
 
-Cannot cast `_` to `typeof obj4` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj4` because inexact `{readonly f: 1, ...}` [1] is incompatible with exact
+`{readonly f: number}` [2]. [incompatible-exact]
 
    import-object.js:50:8
    50|   _ as {readonly f: 1, ...} as typeof obj4; // error inexact ~> exact
@@ -668,8 +668,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:61:8
 
-Cannot cast `_` to `typeof obj5` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj5` because inexact `{readonly f: number, ...}` [1] is incompatible with exact
+`{readonly f: number}` [2]. [incompatible-exact]
 
    import-object.js:61:8
    61|   _ as {readonly f: number, ...} as typeof obj5; // error inexact ~> exact
@@ -737,8 +737,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-object.js:91:21
 
-Cannot cast `_` to `typeof obj8` because in property `f`: inexact object type [1] is incompatible with exact const
-object literal [2]. [incompatible-exact]
+Cannot cast `_` to `typeof obj8` because in property `f`: inexact `{readonly g: 1, ...}` [1] is incompatible with exact
+`{readonly g: 1}` [2]. [incompatible-exact]
 
    import-object.js:91:21
    91|   _ as {readonly f: {readonly g: 1, ...}} as typeof obj8; // error inexact ~> exact
@@ -1131,8 +1131,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:30:8
 
-Cannot cast `_` to `typeof obj1` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj1` because inexact `{readonly f: 1, ...}` [1] is incompatible with exact
+`{readonly f: 1}` [2]. [incompatible-exact]
 
    object.js:30:8
    30|   _ as {readonly f: 1, ...} as typeof obj1; // error inexact ~> exact
@@ -1178,8 +1178,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:51:8
 
-Cannot cast `_` to `typeof obj3` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj3` because inexact `{readonly f: 1, ...}` [1] is incompatible with exact
+`{readonly f: 1}` [2]. [incompatible-exact]
 
    object.js:51:8
    51|   _ as {readonly f: 1, ...} as typeof obj3; // error inexact ~> exact
@@ -1225,8 +1225,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:63:8
 
-Cannot cast `_` to `typeof obj4` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj4` because inexact `{readonly f: 1, ...}` [1] is incompatible with exact
+`{readonly f: number}` [2]. [incompatible-exact]
 
    object.js:63:8
    63|   _ as {readonly f: 1, ...} as typeof obj4; // error inexact ~> exact
@@ -1276,8 +1276,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:74:8
 
-Cannot cast `_` to `typeof obj5` because inexact object type [1] is incompatible with exact const object literal [2].
-[incompatible-exact]
+Cannot cast `_` to `typeof obj5` because inexact `{readonly f: number, ...}` [1] is incompatible with exact
+`{readonly f: number}` [2]. [incompatible-exact]
 
    object.js:74:8
    74|   _ as {readonly f: number, ...} as typeof obj5; // error inexact ~> exact
@@ -1345,8 +1345,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- object.js:104:21
 
-Cannot cast `_` to `typeof obj8` because in property `f`: inexact object type [1] is incompatible with exact const
-object literal [2]. [incompatible-exact]
+Cannot cast `_` to `typeof obj8` because in property `f`: inexact `{readonly g: 1, ...}` [1] is incompatible with exact
+`{readonly g: 1}` [2]. [incompatible-exact]
 
    object.js:104:21
    104|   _ as {readonly f: {readonly g: 1, ...}} as typeof obj8; // error inexact ~> exact

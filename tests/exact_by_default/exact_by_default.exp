@@ -15,8 +15,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:6
 
-Cannot call `test` with `inexact` bound to `x` because inexact object type [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot call `test` with `inexact` bound to `x` because inexact `{foo: number, ...}` [1] is incompatible with exact
+`{foo: number}` [2]. [incompatible-exact]
 
    test.js:9:6
    9| test(inexact); // Error inexact ~> exact

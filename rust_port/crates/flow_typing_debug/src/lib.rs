@@ -2731,11 +2731,11 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 string_of_aloc(None, loc),
             )
         }
-        ErrorMessage::EIncompatibleWithExact((reason1, reason2), use_op, _) => {
+        ErrorMessage::EIncompatibleWithExact((lower, upper), use_op, _) => {
             format!(
                 "EIncompatibleWithExact (({}, {}), {})",
-                dump_reason(cx, reason1),
-                dump_reason(cx, reason2),
+                dump_error_type_reference(cx, lower),
+                dump_error_type_reference(cx, upper),
                 string_of_use_op(use_op)
             )
         }

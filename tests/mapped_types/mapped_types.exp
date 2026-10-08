@@ -2272,7 +2272,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:26:3
 
-Cannot cast `withIndexer` to object type because indexed `Semi` [1] is incompatible with exact object type [2].
+Cannot cast `withIndexer` to object type because indexed mapped type [1] is incompatible with exact `{foo: number}` [2].
 [incompatible-indexer]
 
    semi_homomorphic.js:26:3
@@ -2290,7 +2290,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- semi_homomorphic.js:34:3
 
-Cannot cast `p` to `MappedWithoutIndexer` because indexed `P` [1] is incompatible with exact `Semi` [2].
+Cannot cast `p` to `MappedWithoutIndexer` because indexed `P` [1] is incompatible with exact mapped type [2].
 [incompatible-indexer]
 
    semi_homomorphic.js:34:3

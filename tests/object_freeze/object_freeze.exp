@@ -189,8 +189,8 @@ Incorrect arguments passed to `Object.assign` because property `bar` is not writ
 
 Error ----------------------------------------------------------------------------------------------- downstream.js:37:1
 
-Cannot cast `frozenInexact` to object type because inexact frozen object literal [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `frozenInexact` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2].
+[incompatible-exact]
 
    downstream.js:37:1
    37| frozenInexact as {}; // Error: inexact -> exact
@@ -448,8 +448,8 @@ Incorrect arguments passed to `Object.assign` because property `bar` is not writ
 
 Error -------------------------------------------------------------------------------------------- object_freeze.js:43:1
 
-Cannot cast `frozenInexact` to object type because inexact frozen object literal [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `frozenInexact` to object type because inexact `{...}` [1] is incompatible with exact `{}` [2].
+[incompatible-exact]
 
    object_freeze.js:43:1
    43| frozenInexact as {}; // Error: inexact -> exact

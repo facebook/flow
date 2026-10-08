@@ -320,8 +320,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:34:1
 
-Cannot cast `add` to `ExactCallableObj` because inexact function [1] is incompatible with exact `ExactCallableObj` [2].
-[incompatible-exact]
+Cannot cast `add` to `ExactCallableObj` because inexact `(x: number, y: number) => number` [1] is incompatible with
+exact `ExactCallableObj` [2]. [incompatible-exact]
 
    used_as_callable_object.js:34:1
    34| add as ExactCallableObj; // error inexact obj
@@ -376,8 +376,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:39:1
 
-Cannot cast `addWithBar` to `ExactCallableObj` because inexact function [1] is incompatible with exact
-`ExactCallableObj` [2]. [incompatible-exact]
+Cannot cast `addWithBar` to `ExactCallableObj` because inexact `(x: number, y: number) => number` [1] is incompatible
+with exact `ExactCallableObj` [2]. [incompatible-exact]
 
    used_as_callable_object.js:39:1
    39| addWithBar as ExactCallableObj; // error inexact obj

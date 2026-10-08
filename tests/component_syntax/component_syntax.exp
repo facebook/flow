@@ -1244,8 +1244,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:51:1
 
-Cannot cast `Baz` to component because indexed props of component [1] is incompatible with exact props of component
-Baz [2]. [incompatible-indexer]
+Cannot cast `Baz` to component because indexed `{readonly [string]: unknown}` [1] is incompatible with exact `{}` [2].
+[incompatible-indexer]
 
    errors.js:51:1
    51| Baz as component(...unknown);
@@ -2246,7 +2246,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- props_reason.js:6:39
 
-Cannot assign `Foo` to `a` because inexact object type [1] is incompatible with exact props of component Foo [2].
+Cannot assign `Foo` to `a` because inexact `{...}` [1] is incompatible with exact `{readonly x: number}` [2].
 [incompatible-exact]
 
    props_reason.js:6:39
@@ -2623,8 +2623,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact function type [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact `(string | null) => void | (() => void)` [1] is
+incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2641,8 +2641,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact object type [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact `{writeonly current: string | null, ...}` [1] is
+incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
 
    refs.js:12:1
    12| Foo as component(ref: React.RefSetter<string>); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2738,8 +2738,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact function type [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact `(typeof Reffed | null) => void | (() => void)` [1] is
+incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
@@ -2756,8 +2756,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:1
 
-Cannot cast `Foo` to component because in property `ref`: inexact object type [1] is incompatible with exact object
-type [2]. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact `{writeonly current: typeof Reffed | null, ...}` [1]
+is incompatible with exact `{current: typeof Reffed}` [2]. [incompatible-exact]
 
    refs.js:13:1
    13| Foo as component(ref: React.RefSetter<typeof Reffed>); //err
