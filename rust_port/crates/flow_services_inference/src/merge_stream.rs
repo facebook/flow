@@ -332,18 +332,15 @@ impl<A> MergeStream<A> {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Mutex;
-
     use flow_utils_concurrency::map_reduce::Bucket;
     use flow_utils_concurrency::worker_cancel;
     use vec1::Vec1;
 
     use super::MergeStream;
+    use crate::dep_graph_test_utils::WORKER_CANCEL_TEST_LOCK;
     use crate::dep_graph_test_utils::make_dependency_graph;
     use crate::dep_graph_test_utils::make_fake_file_key;
     use crate::dep_graph_test_utils::make_filename_set;
-
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
 
     fn component(file: &str) -> Vec1<flow_parser::file_key::FileKey> {
         Vec1::try_from_vec(vec![make_fake_file_key(file)])
@@ -352,7 +349,9 @@ mod tests {
 
     #[test]
     fn canceled_stream_does_not_wait_on_blocked_components() {
-        let _lock = TEST_LOCK.lock().expect("test lock should not be poisoned");
+        let _lock = WORKER_CANCEL_TEST_LOCK
+            .lock()
+            .expect("worker cancellation test lock should not be poisoned");
         worker_cancel::resume_workers();
 
         let graph = make_dependency_graph(&[("a", vec!["b"]), ("b", vec![])]);
@@ -370,12 +369,12 @@ mod tests {
         }
 
         worker_cancel::stop_workers();
-        match stream.next() {
+        let next = stream.next();
+        worker_cancel::resume_workers();
+        match next {
             Bucket::Done => {}
             Bucket::Job(_) => panic!("canceled stream should not schedule more merge work"),
             Bucket::Wait => panic!("canceled stream should not wait for blocked components"),
         }
-
-        worker_cancel::resume_workers();
     }
 }

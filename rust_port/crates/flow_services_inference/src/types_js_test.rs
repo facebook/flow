@@ -15,6 +15,7 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use vec1::Vec1;
 
+use crate::dep_graph_test_utils::WORKER_CANCEL_TEST_LOCK;
 use crate::dep_graph_test_utils::make_dependency_graph;
 use crate::dep_graph_test_utils::make_fake_file_key;
 use crate::dep_graph_test_utils::make_filename_set;
@@ -134,6 +135,9 @@ fn determine_what_to_recheck(
     implementation_dependency_graph: &[(&str, Vec<&str>)],
     freshparsed: &[&str],
 ) -> DetermineWhatToRecheckResult {
+    let _lock = WORKER_CANCEL_TEST_LOCK
+        .lock()
+        .expect("worker cancellation test lock should not be poisoned");
     let sig_dependency_graph = make_dependency_graph(sig_dependency_graph);
     let implementation_dependency_graph = make_dependency_graph(implementation_dependency_graph);
     let checked_files = checked_files_of_graph(&implementation_dependency_graph);

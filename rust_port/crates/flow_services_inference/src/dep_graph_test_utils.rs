@@ -7,11 +7,14 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::sync::Mutex;
 
 use flow_common_utils::graph::Graph;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
+
+pub(crate) static WORKER_CANCEL_TEST_LOCK: Mutex<()> = Mutex::new(());
 
 pub fn make_fake_file_key(filename: &str) -> FileKey {
     FileKey::new(FileKeyInner::SourceFile(format!(
