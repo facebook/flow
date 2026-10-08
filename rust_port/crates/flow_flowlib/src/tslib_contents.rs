@@ -30,6 +30,7 @@ pub(super) const LIB_ES2017_STRING_D_TS: &str = include_tslib!("lib.es2017.strin
 pub(super) const LIB_ES2018_REGEXP_D_TS: &str = include_tslib!("lib.es2018.regexp.d.ts");
 pub(super) const LIB_ES2019_STRING_D_TS: &str = include_tslib!("lib.es2019.string.d.ts");
 pub(super) const LIB_ES2021_STRING_D_TS: &str = include_tslib!("lib.es2021.string.d.ts");
+pub(super) const LIB_ES2022_STRING_D_TS: &str = include_tslib!("lib.es2022.string.d.ts");
 pub(super) const LIB_ES2024_COLLECTION_D_TS: &str = include_tslib!("lib.es2024.collection.d.ts");
 pub(super) const LIB_ES2024_PROMISE_D_TS: &str = include_tslib!("lib.es2024.promise.d.ts");
 
@@ -247,10 +248,7 @@ pub static CONTENTS: &[(&str, &str)] = &[
         "lib.es2022.regexp.d.ts",
         include_tslib!("lib.es2022.regexp.d.ts"),
     ),
-    (
-        "lib.es2022.string.d.ts",
-        include_tslib!("lib.es2022.string.d.ts"),
-    ),
+    ("lib.es2022.string.d.ts", LIB_ES2022_STRING_D_TS),
     (
         "lib.es2023.array.d.ts",
         include_tslib!("lib.es2023.array.d.ts"),
