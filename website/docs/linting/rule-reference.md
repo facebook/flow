@@ -167,7 +167,7 @@ type A = $Omit<{x: number, y: number}, 'x'>; // Error
 type B = Omit<{x: number, y: number}, 'x'>; // Ok
 ```
 
-**`React$` types** such as `React$Node` and `React$ElementConfig` should be accessed via the `React` namespace using dot syntax (`React.Node`, `React.ElementConfig`):
+**`React$` types** such as `React$Node` and `React$Context` should be accessed via the `React` namespace using dot syntax (`React.Node`, `React.Context`):
 
 ```js flow-check
 import * as React from 'react';

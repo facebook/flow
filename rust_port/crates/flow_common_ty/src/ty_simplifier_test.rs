@@ -21,6 +21,7 @@ mod tests {
 
     use crate::ty::AnyKind;
     use crate::ty::BotKind;
+    use crate::ty::GenKind;
     use crate::ty::NamedProp;
     use crate::ty::ObjKind;
     use crate::ty::ObjT;
@@ -29,7 +30,6 @@ mod tests {
     use crate::ty::PropSource;
     use crate::ty::Ty;
     use crate::ty::UnsoundnessKind;
-    use crate::ty::Utility;
     use crate::ty_symbol::Provenance;
     use crate::ty_symbol::RemoteInfo;
     use crate::ty_symbol::Symbol;
@@ -94,14 +94,16 @@ mod tests {
         let patched = patch_up_react_symbol(&internal_symbol).unwrap();
         assert_eq!(patched.sym_name, "React.RendersExactly");
 
-        let element_config = Arc::new(Ty::Utility(Utility::ReactElementConfigType(Arc::new(
-            Ty::Num,
+        let component_props = Arc::new(Ty::Generic(Box::new((
+            component_props_symbol,
+            GenKind::TypeAliasKind,
+            Some(Arc::from([Arc::new(Ty::Num)])),
         ))));
-        let patched = patch_up_react_types(element_config);
+        let patched = patch_up_react_types(component_props);
         assert!(matches!(
             patched.as_ref(),
             Ty::Generic(box (symbol, _, Some(args)))
-                if symbol.sym_name == "React.ElementConfig"
+                if symbol.sym_name == "React.ComponentProps"
                     && matches!(args.as_ref(), [type_] if matches!(type_.as_ref(), Ty::Num))
         ));
     }
