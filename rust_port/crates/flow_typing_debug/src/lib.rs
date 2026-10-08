@@ -2008,7 +2008,7 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             UpperKind::IncompatibleGetKeysT => "IncompatibleGetKeysT".to_string(),
             UpperKind::IncompatibleHasOwnPropT(_, _) => "IncompatibleHasOwnPropT".to_string(),
             UpperKind::IncompatibleGetValuesT => "IncompatibleGetValuesT".to_string(),
-            UpperKind::IncompatibleMapTypeTObject(_) => "IncompatibleMapTypeTObject".to_string(),
+            UpperKind::IncompatibleMapTypeTObject => "IncompatibleMapTypeTObject".to_string(),
             UpperKind::IncompatibleGetStaticsT => "IncompatibleGetStaticsT".to_string(),
             UpperKind::IncompatibleBindT => "IncompatibleBindT".to_string(),
             UpperKind::IncompatibleUnclassified(ctor) => {

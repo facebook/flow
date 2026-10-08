@@ -4040,7 +4040,7 @@ pub enum UpperKind<L: Dupe> {
     IncompatibleGetKeysT,
     IncompatibleHasOwnPropT(L, Option<Name>),
     IncompatibleGetValuesT,
-    IncompatibleMapTypeTObject(VirtualReason<L>),
+    IncompatibleMapTypeTObject,
     IncompatibleGetStaticsT,
     IncompatibleBindT,
     IncompatibleUnclassified(FlowSmolStr),
@@ -4545,9 +4545,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 UpperKind::IncompatibleVarianceCheckT => UpperKind::IncompatibleVarianceCheckT,
                 UpperKind::IncompatibleGetKeysT => UpperKind::IncompatibleGetKeysT,
                 UpperKind::IncompatibleGetValuesT => UpperKind::IncompatibleGetValuesT,
-                UpperKind::IncompatibleMapTypeTObject(reason) => {
-                    UpperKind::IncompatibleMapTypeTObject(map_reason(reason))
-                }
+                UpperKind::IncompatibleMapTypeTObject => UpperKind::IncompatibleMapTypeTObject,
                 UpperKind::IncompatibleGetStaticsT => UpperKind::IncompatibleGetStaticsT,
                 UpperKind::IncompatibleBindT => UpperKind::IncompatibleBindT,
                 UpperKind::IncompatibleUnclassified(s) => UpperKind::IncompatibleUnclassified(s),

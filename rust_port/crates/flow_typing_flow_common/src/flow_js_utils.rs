@@ -1462,13 +1462,9 @@ pub fn error_message_kind_of_upper<CX>(
         }
         UseTInner::GetValuesT(..) => UpperKind::IncompatibleGetValuesT,
         UseTInner::GetDictValuesT(..) => UpperKind::IncompatibleGetValuesT,
-        UseTInner::MapTypeT(box MapTypeTData {
-            reason,
-            type_map: kind,
-            ..
-        }) => {
+        UseTInner::MapTypeT(box MapTypeTData { type_map: kind, .. }) => {
             if matches!(kind, flow_typing_type::type_::TypeMap::ObjectKeyMirror) {
-                UpperKind::IncompatibleMapTypeTObject(reason.dupe())
+                UpperKind::IncompatibleMapTypeTObject
             } else {
                 UpperKind::IncompatibleUnclassified(string_of_use_ctor(u).into())
             }

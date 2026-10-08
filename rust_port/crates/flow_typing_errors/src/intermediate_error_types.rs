@@ -1747,9 +1747,8 @@ pub enum LowerRequirement {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct MessageInvalidArgumentWithPrintedTypeData<L: Dupe> {
+pub struct MessageInvalidKeyMirrorArgumentData<L: Dupe> {
     pub lower: MessageTypeReferenceData<L>,
-    pub upper: VirtualReason<L>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -2417,8 +2416,6 @@ pub enum Message<L: Dupe> {
 
     MessageIncorrectType(IncorrectType),
 
-    MessageInvalidArgumentWithPrintedType(Box<MessageInvalidArgumentWithPrintedTypeData<L>>),
-
     MessageInvalidCatchParameterAnnotation {
         ts_utility_syntax: bool,
     },
@@ -2433,6 +2430,8 @@ pub enum Message<L: Dupe> {
 
     MessageInvalidImportStarUse(L),
     MessageInvalidInferType,
+
+    MessageInvalidKeyMirrorArgument(Box<MessageInvalidKeyMirrorArgumentData<L>>),
 
     MessageInvalidLintSettings(LintParseError),
     MessageInvalidMappedTypeInInterfaceOrDeclaredClass,

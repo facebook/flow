@@ -121,8 +121,8 @@ use super::intermediate_error_types::MessageIncompatibleGeneralWithPrintedTypesD
 use super::intermediate_error_types::MessageIncompatibleTupleArityData;
 use super::intermediate_error_types::MessageIncompleteExhausiveCheckEnumData;
 use super::intermediate_error_types::MessageIndexerCheckFailedData;
-use super::intermediate_error_types::MessageInvalidArgumentWithPrintedTypeData;
 use super::intermediate_error_types::MessageInvalidEnumMemberCheckData;
+use super::intermediate_error_types::MessageInvalidKeyMirrorArgumentData;
 use super::intermediate_error_types::MessageInvalidKeyPropertyInSpreadData;
 use super::intermediate_error_types::MessageInvalidRendersTypeArgumentData;
 use super::intermediate_error_types::MessageInvalidSelfReferencingDefaultData;
@@ -3497,14 +3497,13 @@ where
                 lower_is_not(LowerRequirement::Object),
             ),
 
-            UpperKind::IncompatibleMapTypeTObject(upper) => mk_use_op_error(
+            UpperKind::IncompatibleMapTypeTObject => mk_use_op_error(
                 use_loc,
                 use_op,
                 None,
-                Message::MessageInvalidArgumentWithPrintedType(Box::new(
-                    MessageInvalidArgumentWithPrintedTypeData {
+                Message::MessageInvalidKeyMirrorArgument(Box::new(
+                    MessageInvalidKeyMirrorArgumentData {
                         lower: lower_type_ref.clone(),
-                        upper,
                     },
                 )),
             ),
@@ -5564,12 +5563,12 @@ where
                 parts.extend(upper_parts);
                 friendly::Message(parts)
             }
-            MessageInvalidArgumentWithPrintedType(
-                box MessageInvalidArgumentWithPrintedTypeData { lower, upper },
+            MessageInvalidKeyMirrorArgument(
+                box MessageInvalidKeyMirrorArgumentData { lower },
             ) => friendly::Message(vec![
                 ref_of_ty_or_desc(&lower.loc, &lower.desc),
                 text(" is not a valid argument of "),
-                ref_(upper),
+                code("$KeyMirror"),
             ]),
             MessageCannotAccessObjectWithComputedProp {
                 object,
