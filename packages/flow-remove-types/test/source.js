@@ -352,3 +352,7 @@ const asIndexed = 'indexed' as [string, number][0];
 // chained `as`
 const chain1 = '1' as any as any as any;
 const chain2 = '1' as const as any;
+
+type TemplateLiteralType = `prefix-${string}`;
+const templateLiteral: `prefix-${string}` = `prefix-${42}`;
+const asTemplateLiteral = templateLiteral as `prefix-${string}`;

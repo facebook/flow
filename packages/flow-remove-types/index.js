@@ -7,7 +7,7 @@
  * @format
  */
 
-var parse = require('hermes-parser').parse;
+var parse = require('flow-parser').parse;
 var vlq = require('vlq');
 
 /**

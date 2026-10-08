@@ -281,4 +281,7 @@ const asIndexed = 'indexed';
 const chain1 = '1';
 const chain2 = '1';
 
+const templateLiteral = `prefix-${42}`;
+const asTemplateLiteral = templateLiteral;
+
 //# sourceMappingURL=source.js.map

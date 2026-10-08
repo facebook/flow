@@ -505,6 +505,18 @@ escalade@^3.2.0:
   resolved "https://registry.yarnpkg.com/escalade/-/escalade-3.2.0.tgz#011a3f69856ba189dffa7dc8fcce99d2a87903e5"
   integrity sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==
 
+flow-estree@0.334.0:
+  version "0.334.0"
+  resolved "https://registry.yarnpkg.com/flow-estree/-/flow-estree-0.334.0.tgz#55944ad4cc448b498143bdfde2e00edc9bd1a508"
+  integrity sha512-E8zNomhaybCb3TBaOxB2QQDiulVbs28Z4Vhd7q3d+3HFmYkYajcJHYZq/vnM9IsapsefmHNtJDXSEgX8CE2lEA==
+
+flow-parser@0.334.0:
+  version "0.334.0"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.334.0.tgz#279a6a342d8c69c8ee996382c707522b04d8f819"
+  integrity sha512-8kdYh95xATXk80xdt+xEp8QFt90zACVtfYlA51DoSwjAiLtRi7OYRbYRP5Zuk/HGMIvKSvm31pQrWiCcqF2OLg==
+  dependencies:
+    flow-estree "0.334.0"
+
 fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"
