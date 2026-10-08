@@ -3,8 +3,8 @@
 // returns what its callee says it returns.
 
 // `new Symbol()` is a runtime error, and it is not the call that mints.
-const constructed = new Symbol();
-const fromConstructed = {[constructed]: 1}; // ERROR: an instance is not a key
+const constructed = new Symbol(); // ERROR: `SymbolConstructor` has no construct signature
+const fromConstructed = {[constructed]: 1};
 
 // An optional call is a different expression, and one that can return `void`.
 const optional = Symbol?.();

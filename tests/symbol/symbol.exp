@@ -73,6 +73,70 @@ References:
                                                             ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- constructor.js:2:5
+
+Cannot use `new` on `SymbolConstructor` [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
+
+   constructor.js:2:5
+    2| new Symbol(); // Error: `Symbol` can't be constructed
+           ^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:3:32
+
+Cannot assign `Symbol` to `asClass` because a construct signature declaring the expected parameter / return type is
+missing in `SymbolConstructor` [1] but exists in `Class<Symbol>` [2]. [incompatible-type]
+
+   constructor.js:3:32
+    3| const asClass: Class<Symbol> = Symbol; // Error: no construct signature
+                                      ^^^^^^
+
+References:
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
+   constructor.js:3:16
+    3| const asClass: Class<Symbol> = Symbol; // Error: no construct signature
+                      ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- constructor.js:8:3
+
+Cannot cast `x` to string because `Symbol` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   constructor.js:8:3
+   8|   x as string; // Error: narrowed to `Symbol`, not `empty`
+        ^
+
+References:
+   constructor.js:6:18
+   6| declare const x: Symbol | string;
+                       ^^^^^^ [1]
+   constructor.js:8:8
+   8|   x as string; // Error: narrowed to `Symbol`, not `empty`
+             ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- constructor.js:19:5
+
+Cannot call `SymbolSubclass` because property `constructor` is missing in `SymbolSubclass` [1]. [prop-missing]
+
+   constructor.js:19:5
+   19| new SymbolSubclass(); // Error: no constructor to inherit
+           ^^^^^^^^^^^^^^
+
+References:
+   constructor.js:15:15
+   15| declare class SymbolSubclass extends Symbol {}
+                     ^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:1
 
 Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator<number, void, void>` [1] is incompatible with
@@ -100,8 +164,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                        ^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:5
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:5
+   30|     (description?: string | number): symbol;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -282,8 +346,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                    ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:54:21
-   54| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -304,8 +368,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                    ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:54:21
-   54| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -326,8 +390,8 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                       ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:54:21
-   54| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -348,10 +412,10 @@ Cannot get `Symbol.xxx` because property `xxx` is missing in `SymbolConstructor`
                                           ^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:54:21
-   54| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
 
 
 
-Found 23 errors
+Found 27 errors

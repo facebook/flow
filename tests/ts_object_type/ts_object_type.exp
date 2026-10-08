@@ -145,8 +145,8 @@ Cannot assign `Symbol()` to `p7` because `symbol` [1] is incompatible with `inte
                           ^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [1]
    object.ts:30:11
    30| const p7: object = Symbol(); // ERROR -- symbol is not an object

@@ -26,8 +26,8 @@ Cannot cast `S` to boolean literal `false` because `SymbolConstructor` [1] is in
        ^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:54:21
-   54| declare var Symbol: SymbolConstructor;
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
                            ^^^^^^^^^^^^^^^^^ [1]
    test.js:7:6
     7| S as false; // error: `SymbolConstructor` ~> `false`

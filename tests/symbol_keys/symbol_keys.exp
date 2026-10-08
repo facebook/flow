@@ -21,8 +21,8 @@ Cannot assign `Symbol()` to `viaTypeof` because `symbol` [1] is incompatible wit
                                           ^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [1]
    call.js:42:18
    42| const viaTypeof: typeof declared = Symbol(); // ERROR
@@ -93,8 +93,8 @@ Cannot assign object literal to `inObject` because in property `a`: `symbol` [1]
                                                          ^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [1]
    call.js:62:30
    62| const inObject: {readonly a: unique symbol} = {a: Symbol()}; // ERROR

@@ -177,8 +177,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -193,8 +193,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                          ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -225,8 +225,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                             ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -241,8 +241,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -257,8 +257,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                              ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -273,8 +273,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -289,8 +289,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -310,20 +310,19 @@ References:
                             ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- notcalls.js:7:27
+Error ------------------------------------------------------------------------------------------------- notcalls.js:6:25
 
-Cannot use `constructed` [1] to assign a computed property. Computed properties may only be numeric or string literal
-values, but this one is a `Symbol` [2]. Can you add an appropriate type annotation to `constructed` [1]? See
-https://flow.org/en/docs/types/literals/ for more information on literal types. [invalid-computed-prop]
+Cannot use `new` on `SymbolConstructor` [1]. Only classes and interfaces with a construct signature can be constructed.
+[invalid-constructor]
 
-   notcalls.js:7:27
-    7| const fromConstructed = {[constructed]: 1}; // ERROR: an instance is not a key
-                                 ^^^^^^^^^^^ [1]
+   notcalls.js:6:25
+    6| const constructed = new Symbol(); // ERROR: `SymbolConstructor` has no construct signature
+                               ^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:31:12
-   31|     new(): Symbol;
-                  ^^^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:47:21
+   47| declare var Symbol: SymbolConstructor;
+                           ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:11:24
@@ -337,8 +336,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                               ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:37:38
-   37|     (description?: string | number): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:30:38
+   30|     (description?: string | number): symbol;
                                             ^^^^^^ [2]
 
 
@@ -353,8 +352,8 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                                ^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:44:23
-   44|     for(key: string): symbol;
+   <BUILTINS>/lib.es2015.symbol.js:37:23
+   37|     for(key: string): symbol;
                              ^^^^^^ [2]
 
 
@@ -369,9 +368,9 @@ https://flow.org/en/docs/types/literals/ for more information on literal types. 
                             ^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.symbol.js:51:35
-   51|     keyFor(sym: symbol): string | void;
-                                         ^^^^ [2]
+   <BUILTINS>/lib.es2015.symbol.js:44:35
+   44|     keyFor(sym: symbol): string | undefined;
+                                         ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ notcalls.js:27:25
