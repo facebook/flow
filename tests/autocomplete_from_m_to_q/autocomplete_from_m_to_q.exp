@@ -428,6 +428,8 @@ Flags: --pretty
     },
     {"name":"RangeError","type":"RangeErrorConstructor"},
     {"name":"ReadonlyArray","type":"typeof ReadonlyArray"},
+    {"name":"ReadonlyWeakMap","type":"typeof ReadonlyWeakMap"},
+    {"name":"ReadonlyWeakSet","type":"typeof ReadonlyWeakSet"},
     {"name":"ReferenceError","type":"ReferenceErrorConstructor"},
     {
       "name":"Reflect",

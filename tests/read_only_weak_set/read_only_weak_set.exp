@@ -1,3 +1,19 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:4:24
+
+The utility type `$ReadOnlyWeakSet` is deprecated, use `ReadonlyWeakSet` instead. [deprecated-utility]
+
+   4|     good (x: number) : $ReadOnlyWeakSet<T> { // Fine, invariant in invariant position
+                             ^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:10:23
+
+The utility type `$ReadOnlyWeakSet` is deprecated, use `ReadonlyWeakSet` instead. [deprecated-utility]
+
+   10|     bad (x: number) : $ReadOnlyWeakSet<T> { // Error: T in invariant position
+                             ^^^^^^^^^^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:10:40
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -11,6 +27,14 @@ References:
    test.js:9:15
     9| class Foo<out T extends {}> {
                      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:23
+
+The utility type `$ReadOnlyWeakSet` is deprecated, use `ReadonlyWeakSet` instead. [deprecated-utility]
+
+   16|     bad (x: number) : $ReadOnlyWeakSet<T> {// Error: T in invariant position
+                             ^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:40
@@ -59,4 +83,4 @@ References:
 
 
 
-Found 4 errors
+Found 7 errors

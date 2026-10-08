@@ -48,20 +48,20 @@ Cannot instantiate `EnumValue` because in type argument `TRepresentationType`: [
                          ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/misc.js:137:32
-   137| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/misc.js:133:32
+   133| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                        ^^^^^^ [2]
-   <BUILTINS>/misc.js:137:41
-   137| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/misc.js:133:41
+   133| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                 ^^^^^^ [3]
-   <BUILTINS>/misc.js:137:50
-   137| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/misc.js:133:50
+   133| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                          ^^^^^^ [4]
-   <BUILTINS>/misc.js:137:59
-   137| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/misc.js:133:59
+   133| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                                   ^^^^^^^ [5]
-   <BUILTINS>/misc.js:137:69
-   137| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
+   <BUILTINS>/misc.js:133:69
+   133| type EnumRepresentationTypes = string | number | symbol | boolean | bigint;
                                                                             ^^^^^^ [6]
 
 
@@ -143,8 +143,8 @@ Cannot cast `x` to `EnumValue` because in the enum's representation type: `numbe
           ^
 
 References:
-   <BUILTINS>/misc.js:151:16
-   151| > = $EnumValue<TRepresentationType>;
+   <BUILTINS>/misc.js:147:16
+   147| > = $EnumValue<TRepresentationType>;
                        ^^^^^^^^^^^^^^^^^^^ [1]
    abstract-enum-value.js:35:18
     35|   x as EnumValue<boolean>; // ERROR
@@ -161,8 +161,8 @@ Cannot cast `x` to `EnumValue` because in the enum's representation type: `strin
           ^
 
 References:
-   <BUILTINS>/misc.js:151:16
-   151| > = $EnumValue<TRepresentationType>;
+   <BUILTINS>/misc.js:147:16
+   147| > = $EnumValue<TRepresentationType>;
                        ^^^^^^^^^^^^^^^^^^^ [1]
    abstract-enum-value.js:35:18
     35|   x as EnumValue<boolean>; // ERROR
@@ -234,8 +234,8 @@ Cannot instantiate `Enum` because in type argument `TEnumValue`: `boolean` [1] i
                       ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/misc.js:168:34
-   168| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/misc.js:164:34
+   164| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                                          ^^^^^^^^^^^ [2]
 
 
@@ -266,11 +266,11 @@ Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1] > type argum
           ^
 
 References:
-   <BUILTINS>/misc.js:168:15
-   168| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/misc.js:164:15
+   164| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                       ^^^^^^^^^^ [1]
-   <BUILTINS>/misc.js:150:7
-   150|   out TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
+   <BUILTINS>/misc.js:146:7
+   146|   out TRepresentationType extends EnumRepresentationTypes = EnumRepresentationTypes
               ^^^^^^^^^^^^^^^^^^^ [2]
    abstract-enum.js:15:35
     15|   declare const x: Enum<EnumValue<string>>;
@@ -290,8 +290,8 @@ Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: enum [2] is
           ^
 
 References:
-   <BUILTINS>/misc.js:168:15
-   168| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/misc.js:164:15
+   164| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                       ^^^^^^^^^^ [1]
    abstract-enum.js:15:25
     15|   declare const x: Enum<EnumValue<string>>;
@@ -339,8 +339,8 @@ Cannot call `f` because in type argument `TEnumValue`: `true` [1] is incompatibl
           ^^^^ [1]
 
 References:
-   <BUILTINS>/misc.js:168:34
-   168| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
+   <BUILTINS>/misc.js:164:34
+   164| type Enum<out TEnumValue extends EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
                                          ^^^^^^^^^^^ [2]
 
 
@@ -2406,8 +2406,8 @@ References:
    exhaustive-check.js:3:6
      3| enum E {
              ^ [3]
-   <BUILTINS>/misc.js:110:3
-   110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
+   <BUILTINS>/misc.js:106:3
+   106|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -3091,15 +3091,15 @@ Cannot get `E.nonExistent` because property `nonExistent` is missing in `$EnumPr
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:107:59
+   <BUILTINS>/misc.js:103:59
                                                                   v
-   107| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
-   108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
-   109|   getName(this: TEnum, input: TEnumValue): string,
-   110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): IteratorObject<TEnumValue>,
-   112|   __proto__: null,
-   113| }
+   103| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
+   104|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
+   105|   getName(this: TEnum, input: TEnumValue): string,
+   106|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
+   107|   members(this: TEnum): IteratorObject<TEnumValue>,
+   108|   __proto__: null,
+   109| }
         ^ [1]
 
 
@@ -3112,15 +3112,15 @@ Cannot call `E.nonExistent` because property `nonExistent` is missing in `$EnumP
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:107:59
+   <BUILTINS>/misc.js:103:59
                                                                   v
-   107| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
-   108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
-   109|   getName(this: TEnum, input: TEnumValue): string,
-   110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): IteratorObject<TEnumValue>,
-   112|   __proto__: null,
-   113| }
+   103| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
+   104|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
+   105|   getName(this: TEnum, input: TEnumValue): string,
+   106|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
+   107|   members(this: TEnum): IteratorObject<TEnumValue>,
+   108|   __proto__: null,
+   109| }
         ^ [1]
 
 
@@ -3147,15 +3147,15 @@ Cannot call `E.A` because property `A` is missing in `$EnumProto` [1]. [prop-mis
           ^
 
 References:
-   <BUILTINS>/misc.js:107:59
+   <BUILTINS>/misc.js:103:59
                                                                   v
-   107| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
-   108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
-   109|   getName(this: TEnum, input: TEnumValue): string,
-   110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): IteratorObject<TEnumValue>,
-   112|   __proto__: null,
-   113| }
+   103| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
+   104|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
+   105|   getName(this: TEnum, input: TEnumValue): string,
+   106|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
+   107|   members(this: TEnum): IteratorObject<TEnumValue>,
+   108|   __proto__: null,
+   109| }
         ^ [1]
 
 
@@ -3168,15 +3168,15 @@ Cannot call `E.toString` because property `toString` is missing in `$EnumProto` 
           ^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:107:59
+   <BUILTINS>/misc.js:103:59
                                                                   v
-   107| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
-   108|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
-   109|   getName(this: TEnum, input: TEnumValue): string,
-   110|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
-   111|   members(this: TEnum): IteratorObject<TEnumValue>,
-   112|   __proto__: null,
-   113| }
+   103| type $EnumProto<TEnum, TEnumValue, TRepresentationType> = {
+   104|   cast(this: TEnum, input: ?TRepresentationType): void | TEnumValue,
+   105|   getName(this: TEnum, input: TEnumValue): string,
+   106|   isValid(this: TEnum, input: ?TRepresentationType | TEnumValue): boolean,
+   107|   members(this: TEnum): IteratorObject<TEnumValue>,
+   108|   __proto__: null,
+   109| }
         ^ [1]
 
 
@@ -3189,8 +3189,8 @@ Cannot cast `E.getName(...)` to boolean because `string` [1] is incompatible wit
         ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/misc.js:109:44
-   109|   getName(this: TEnum, input: TEnumValue): string,
+   <BUILTINS>/misc.js:105:44
+   105|   getName(this: TEnum, input: TEnumValue): string,
                                                    ^^^^^^ [1]
    methods.js:44:19
     44| E.getName(E.B) as boolean; // Error - wrong type

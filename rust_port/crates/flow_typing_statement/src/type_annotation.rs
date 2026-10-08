@@ -1080,17 +1080,15 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::Mixed { loc, comments } => {
-            if !cx.is_global_lib_context() && cx.ts_utility_syntax() {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                        EIncorrectTypeWithReplacementData {
-                            loc: loc.dupe(),
-                            kind: intermediate_error_types::IncorrectType::Mixed,
-                        },
-                    )),
-                );
-            }
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                    EIncorrectTypeWithReplacementData {
+                        loc: loc.dupe(),
+                        kind: intermediate_error_types::IncorrectType::Mixed,
+                    },
+                )),
+            );
             let rt = mixed_t::at(loc.dupe());
             ast::types::Type::new(TypeInner::Mixed {
                 loc: (loc.dupe(), rt),
@@ -2197,16 +2195,16 @@ fn convert_inner<'a>(
                     }
                     // $ReadOnlyArray<T> is the supertype of all tuples and all arrays
                     "$ReadOnlyArray" => {
-                        if !cx.is_global_lib_context() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarReadOnlyArray,
-                                })),
-                            );
-                        }
+                                },
+                            )),
+                        );
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (elemts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
@@ -2228,16 +2226,16 @@ fn convert_inner<'a>(
                     }
                     // $NonMaybeType<T> acts as the type T without null and void
                     "$NonMaybeType" => {
-                        if !cx.is_global_lib_context() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarNonMaybeType,
-                                })),
-                            );
-                        }
+                                },
+                            )),
+                        );
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
@@ -2421,18 +2419,15 @@ fn convert_inner<'a>(
                     }
                     // $ReadOnly<T>
                     "$ReadOnly" => {
-                        if !cx.is_global_lib_context() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind:
-                                            intermediate_error_types::IncorrectType::DollarReadOnly,
-                                    },
-                                )),
-                            );
-                        }
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
+                                    loc: loc.dupe(),
+                                    kind: intermediate_error_types::IncorrectType::DollarReadOnly,
+                                },
+                            )),
+                        );
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
@@ -2491,17 +2486,15 @@ fn convert_inner<'a>(
                     }
                     // $Keys<T> is the set of keys of T
                     "$Keys" => {
-                        if !cx.is_global_lib_context() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind: intermediate_error_types::IncorrectType::DollarKeys,
-                                    },
-                                )),
-                            );
-                        }
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
+                                    loc: loc.dupe(),
+                                    kind: intermediate_error_types::IncorrectType::DollarKeys,
+                                },
+                            )),
+                        );
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
@@ -2521,17 +2514,15 @@ fn convert_inner<'a>(
                     }
                     // $Values<T> is a union of all the own enumerable value types of T
                     "$Values" => {
-                        if !cx.is_global_lib_context() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
-                                    EIncorrectTypeWithReplacementData {
-                                        loc: loc.dupe(),
-                                        kind: intermediate_error_types::IncorrectType::DollarValues,
-                                    },
-                                )),
-                            );
-                        }
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
+                                    loc: loc.dupe(),
+                                    kind: intermediate_error_types::IncorrectType::DollarValues,
+                                },
+                            )),
+                        );
                         check_type_arg_arity(cx, loc.dupe(), t, inner.targs.as_ref(), 1, || {
                             let (ts, targs_ast) =
                                 convert_type_params(cx, env, inner.targs.as_ref())?;
@@ -2970,16 +2961,16 @@ fn convert_inner<'a>(
                         )?
                     }
                     "$ReadOnlyMap" => {
-                        if !cx.is_global_lib_context() && cx.ts_utility_syntax() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarReadOnlyMap,
-                                })),
-                            );
-                        }
+                                },
+                            )),
+                        );
                         local_generic_type(
                             cx,
                             env,
@@ -2991,16 +2982,54 @@ fn convert_inner<'a>(
                         )?
                     }
                     "$ReadOnlySet" => {
-                        if !cx.is_global_lib_context() && cx.ts_utility_syntax() {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(
+                                EIncorrectTypeWithReplacementData {
                                     loc: loc.dupe(),
                                     kind:
                                         intermediate_error_types::IncorrectType::DollarReadOnlySet,
-                                })),
-                            );
-                        }
+                                },
+                            )),
+                        );
+                        local_generic_type(
+                            cx,
+                            env,
+                            name,
+                            name_loc.dupe(),
+                            loc.dupe(),
+                            inner.targs.as_ref(),
+                            &reconstruct_ast,
+                        )?
+                    }
+                    "$ReadOnlyWeakMap" => {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                                loc: loc.dupe(),
+                                kind:
+                                    intermediate_error_types::IncorrectType::DollarReadOnlyWeakMap,
+                            })),
+                        );
+                        local_generic_type(
+                            cx,
+                            env,
+                            name,
+                            name_loc.dupe(),
+                            loc.dupe(),
+                            inner.targs.as_ref(),
+                            &reconstruct_ast,
+                        )?
+                    }
+                    "$ReadOnlyWeakSet" => {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EIncorrectTypeWithReplacement(Box::new(EIncorrectTypeWithReplacementData {
+                                loc: loc.dupe(),
+                                kind:
+                                    intermediate_error_types::IncorrectType::DollarReadOnlyWeakSet,
+                            })),
+                        );
                         local_generic_type(
                             cx,
                             env,
@@ -6477,7 +6506,6 @@ fn mk_type_param_inner<'a>(
     if *bound_kind == ast::types::type_param::BoundKind::Colon
         && matches!(bound, ast::types::AnnotationOrHint::Available(_))
         && !matches!(kind, TypeParamsContext::Infer)
-        && !cx.is_global_lib_context()
     {
         flow_js_utils::add_output_non_speculating(
             cx,

@@ -8,8 +8,8 @@ Cannot cast `M` to boolean literal `false` because `MapConstructor` [1] is incom
        ^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:49:18
-   49| declare var Map: MapConstructor;
+   <BUILTINS>/lib.es2015.collection.js:51:18
+   51| declare var Map: MapConstructor;
                         ^^^^^^^^^^^^^^ [1]
    test.js:5:6
     5| M as false; // error: `MapConstructor` ~> `false`

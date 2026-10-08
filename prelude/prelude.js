@@ -99,7 +99,7 @@ declare var module: {
   ...
 };
 
-declare var exports: {writeonly [key: string]: mixed};
+declare var exports: {writeonly [key: string]: unknown};
 
 declare module 'react' {
   type Node = any;

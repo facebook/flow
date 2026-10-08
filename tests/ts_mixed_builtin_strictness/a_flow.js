@@ -13,4 +13,5 @@ declare interface FlowBaseMap {
 declare interface FlowDerivedMap extends FlowBaseMap {
   custom: string;
 }
+// $FlowFixMe[deprecated-utility]
 declare var flowKeys: $Keys<FlowDerivedMap>;

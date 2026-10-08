@@ -625,12 +625,12 @@ where
 Found exact match 'ReadOnlyMap_t' defined at complex_types.js:85:6,85:18 with type `type ReadOnlyMap_t = ReadonlyMap<string, number>` 
 where
 'ReadOnlyMap_t' is defined at complex_types.js:85:6-18
-'ReadonlyMap' is defined at [LIB] lib.es2015.collection.js:106:11-21
+'ReadonlyMap' is defined at [LIB] lib.es2015.symbol.wellknown.js:80:11-21
 
 Found exact match 'ReadOnlySet_t' defined at complex_types.js:86:6,86:18 with type `type ReadOnlySet_t = ReadonlySet<string>` 
 where
 'ReadOnlySet_t' is defined at complex_types.js:86:6-18
-'ReadonlySet' is defined at [LIB] lib.es2015.collection.js:108:11-21
+'ReadonlySet' is defined at [LIB] lib.esnext.collection.js:29:11-21
 
 
 === Interfaces ===
@@ -793,18 +793,18 @@ where
 Found exact match 'DataAttr' defined at complex_types.js:199:6,199:13 with type `type DataAttr = StringPrefix<"data-">` 
 where
 'DataAttr' is defined at complex_types.js:199:6-13
-'StringPrefix' is defined at [LIB] misc.js:122:6-17
+'StringPrefix' is defined at [LIB] misc.js:118:6-17
 
 Found exact match 'ExclaimStr' defined at complex_types.js:200:6,200:15 with type `type ExclaimStr = StringSuffix<"!">` 
 where
 'ExclaimStr' is defined at complex_types.js:200:6-15
-'StringSuffix' is defined at [LIB] misc.js:131:6-17
+'StringSuffix' is defined at [LIB] misc.js:127:6-17
 
 Found exact match 'CSSVar' defined at complex_types.js:201:6,201:11 with type `type CSSVar = StringPrefix<"var(--"> & StringSuffix<")">` 
 where
 'CSSVar' is defined at complex_types.js:201:6-11
-'StringPrefix' is defined at [LIB] misc.js:122:6-17
-'StringSuffix' is defined at [LIB] misc.js:131:6-17
+'StringPrefix' is defined at [LIB] misc.js:118:6-17
+'StringSuffix' is defined at [LIB] misc.js:127:6-17
 
 
 === Mapped Types over Tuples ===

@@ -127,8 +127,8 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:76
-    46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:76
+    48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
    <BUILTINS>/lib.es5.js:444:15
    444| declare class ReadonlyArray<out T> {
@@ -144,8 +144,8 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:76
-    46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:76
+    48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
    <BUILTINS>/lib.es5.js:444:15
    444| declare class ReadonlyArray<out T> {
@@ -161,8 +161,8 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:76
-    46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:76
+    48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
    <BUILTINS>/lib.es5.js:444:15
    444| declare class ReadonlyArray<out T> {
@@ -178,8 +178,8 @@ Error --------------------------------------------------------------------------
              ^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:76
-    46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:76
+    48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                                                                    ^^^^^^^^^ [1]
    <BUILTINS>/lib.es5.js:444:15
    444| declare class ReadonlyArray<out T> {

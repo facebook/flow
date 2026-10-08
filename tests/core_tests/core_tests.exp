@@ -50,8 +50,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:27
-   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:27
+   48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -59,8 +59,8 @@ References:
    map.js:28:22
    28|     let x = new Map(['foo', 123]); // error
                             ^^^^^ [4]
-   <BUILTINS>/lib.es2015.collection.js:46:36
-   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:36
+   48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -76,8 +76,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                            ^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:27
-   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:27
+   48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -85,8 +85,8 @@ References:
    map.js:28:29
    28|     let x = new Map(['foo', 123]); // error
                                    ^^^ [4]
-   <BUILTINS>/lib.es2015.collection.js:46:36
-   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:36
+   48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
@@ -102,8 +102,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                                                 ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:27
-   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:27
+   48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -128,8 +128,8 @@ Cannot call `Map` with array literal bound to `iterable` because: [incompatible-
                                                 ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:46:27
-   46|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
+   <BUILTINS>/lib.es2015.collection.js:48:27
+   48|     new<K, V>(iterable?: ?Iterable<[readonly key: K, readonly value: V]>): Map<K, V>;
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/lib.es2015.iterable.js:41:24
    41| interface Iterator<out Yield,out Return=void,in Next=void> {
@@ -151,8 +151,8 @@ Cannot cast `x.get(...)` to boolean because `void` [1] is incompatible with `boo
            ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/lib.es2015.collection.js:36:22
-   36|     get(key: K): V | void;
+   <BUILTINS>/lib.es2015.collection.js:38:22
+   38|     get(key: K): V | void;
                             ^^^^ [1]
    map.js:34:21
    34|     x.get('foo') as boolean; // error, string | void

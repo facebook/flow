@@ -1,0 +1,16 @@
+type DeprecatedMixed = mixed;
+type DeprecatedReadOnlyArray = $ReadOnlyArray<number>;
+type DeprecatedNonMaybeType = $NonMaybeType<?number>;
+type DeprecatedReadOnly = $ReadOnly<{value: number}>;
+type DeprecatedKeys = $Keys<{value: number}>;
+type DeprecatedValues = $Values<{value: number}>;
+type DeprecatedReadOnlyMap = $ReadOnlyMap<string, number>;
+type DeprecatedReadOnlySet = $ReadOnlySet<number>;
+type DeprecatedReadOnlyWeakMap = $ReadOnlyWeakMap<symbol, number>;
+type DeprecatedReadOnlyWeakSet = $ReadOnlyWeakSet<symbol>;
+type DeprecatedPartial = $Partial<{value: number}>;
+type DeprecatedShape = $Shape<{value: number}>;
+type DeprecatedBool = bool;
+type DeprecatedColon<T: string> = T;
+type DeprecatedCovariant<+T> = () => T;
+type DeprecatedContravariant<-T> = (T) => void;

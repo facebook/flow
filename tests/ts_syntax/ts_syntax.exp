@@ -1,3 +1,133 @@
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:1:24
+
+The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utility]
+
+   1| type DeprecatedMixed = mixed;
+                             ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:2:32
+
+The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
+
+   2| type DeprecatedReadOnlyArray = $ReadOnlyArray<number>;
+                                     ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:3:31
+
+The utility type `$NonMaybeType` is deprecated, use `NonNullable` instead. [deprecated-utility]
+
+   3| type DeprecatedNonMaybeType = $NonMaybeType<?number>;
+                                    ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:4:27
+
+The utility type `$ReadOnly` is deprecated, use `Readonly` instead. [deprecated-utility]
+
+   4| type DeprecatedReadOnly = $ReadOnly<{value: number}>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:5:23
+
+The utility type `$Keys` is deprecated, use `keyof` instead. For example, `type KeyType = keyof MyObjectType;` 
+[deprecated-utility]
+
+   5| type DeprecatedKeys = $Keys<{value: number}>;
+                            ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:6:25
+
+The utility type `$Values` is deprecated, use `Values` instead. [deprecated-utility]
+
+   6| type DeprecatedValues = $Values<{value: number}>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:7:30
+
+The utility type `$ReadOnlyMap` is deprecated, use `ReadonlyMap` instead. [deprecated-utility]
+
+   7| type DeprecatedReadOnlyMap = $ReadOnlyMap<string, number>;
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:8:30
+
+The utility type `$ReadOnlySet` is deprecated, use `ReadonlySet` instead. [deprecated-utility]
+
+   8| type DeprecatedReadOnlySet = $ReadOnlySet<number>;
+                                   ^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ libs/deprecated.js:9:34
+
+The utility type `$ReadOnlyWeakMap` is deprecated, use `ReadonlyWeakMap` instead. [deprecated-utility]
+
+   9| type DeprecatedReadOnlyWeakMap = $ReadOnlyWeakMap<symbol, number>;
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:10:34
+
+The utility type `$ReadOnlyWeakSet` is deprecated, use `ReadonlyWeakSet` instead. [deprecated-utility]
+
+   10| type DeprecatedReadOnlyWeakSet = $ReadOnlyWeakSet<symbol>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:11:26
+
+The utility type `$Partial` is deprecated, use `Partial` instead. [deprecated-utility]
+
+   11| type DeprecatedPartial = $Partial<{value: number}>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:12:24
+
+The utility type `$Shape` is deprecated, use `Partial` instead. [deprecated-utility]
+
+   12| type DeprecatedShape = $Shape<{value: number}>;
+                              ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:13:23
+
+Deprecated type. Use `boolean` instead. [deprecated-type]
+
+   13| type DeprecatedBool = bool;
+                             ^^^^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:14:22
+
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`).
+[unsupported-syntax]
+
+   14| type DeprecatedColon<T: string> = T;
+                            ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:15:26
+
+The `+` variance sigil is deprecated. Use `out` instead. [unsupported-syntax]
+
+   15| type DeprecatedCovariant<+T> = () => T;
+                                ^
+
+
+Error ----------------------------------------------------------------------------------------- libs/deprecated.js:16:30
+
+The `-` variance sigil is deprecated. Use `in` instead. [unsupported-syntax]
+
+   16| type DeprecatedContravariant<-T> = (T) => void;
+                                    ^
+
+
 Error --------------------------------------------------------------------------------------------- accessibility.js:2:3
 
 Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
@@ -411,9 +541,9 @@ The utility type `$ReadOnlyMap` is deprecated, use `ReadonlyMap` instead. [depre
 
 Error ----------------------------------------------------------------------------------- deprecated/readonlymap.js:2:14
 
-Cannot assign `3` to `x` because `3` [1], a primitive, cannot be used as a subtype of
-`$ReadOnlyMap<string, number>` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use
-it as a subtype of an interface. [incompatible-type]
+Cannot assign `3` to `x` because `3` [1], a primitive, cannot be used as a subtype of `ReadonlyMap<string, number>` [2].
+You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of an interface.
+[incompatible-type]
 
    deprecated/readonlymap.js:2:14
    2| const x: T = 3; // ERROR
@@ -1265,4 +1395,4 @@ types. [unsupported-syntax]
 
 
 
-Found 139 errors
+Found 155 errors
