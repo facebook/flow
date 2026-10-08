@@ -1929,10 +1929,10 @@ fn elab_t_concrete<'cx>(
         }
         (TypeInner::AnyT(_, _), OpInner::AnnotSpecializeT(_)) => t,
         // Mirrors the [SpecializeT] rule for a value with a construct
-        // signature: it is class-like, so extending it is allowed and there is
-        // nothing to specialize. Without this a signature-verified file falls
-        // through to [general_error] and every consumer of the class sees
-        // [any].
+        // signature or a `prototype`: it is class-like, so extending it is
+        // allowed and there is nothing to specialize. Without this a
+        // signature-verified file falls through to [general_error] and every
+        // consumer of the class sees [any].
         (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT(data))
             if data.types.is_none() && matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
         {
@@ -1951,12 +1951,12 @@ fn elab_t_concrete<'cx>(
                 );
                 Ok(collector.collect_to_vec())
             };
-            let construct_ts = flow_js_utils::collect_construct_ts(&concretize, cx, &t)
+            let inheritable = flow_js_utils::is_inheritable(&concretize, cx, &t)
                 .expect("annotation_inference concretize closure is infallible");
-            if construct_ts.is_empty() {
-                general_error(cx, dst_cx, &t, &op)
-            } else {
+            if inheritable {
                 t
+            } else {
+                general_error(cx, dst_cx, &t, &op)
             }
         }
         (
@@ -2074,8 +2074,8 @@ fn elab_t_concrete<'cx>(
                 .expect("annotation_inference concretize closure is infallible");
             match base {
                 Some(base) => reposition(cx, reason.loc().dupe(), base),
-                // No signature after all; the specialize step above has already
-                // reported it.
+                // No instance to inherit after all; the specialize step above has
+                // already reported it.
                 None => any_t::error(reason.dupe()),
             }
         }

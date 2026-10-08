@@ -4,6 +4,7 @@ import {
   HTMLElementLike,
   MultiParentChild,
   OverloadedHTMLElementLike,
+  PrototypeOnlyHTMLElementLike,
   UnionReturningHTMLElementLike,
   element,
   multiParentBase,
@@ -90,4 +91,16 @@ if (!(multiParentBase instanceof MultiParentChild)) {
 if (multiParentUnion instanceof MultiParentChild) {
   multiParentUnion.child as number;
   multiParentUnion.other; // ERROR: the unrelated union member is pruned
+}
+
+// Without a construct signature, the instance type comes from `prototype`, as in
+// TypeScript.
+if (element instanceof PrototypeOnlyHTMLElementLike) {
+  element.htmlOnly as number;
+  element.htmlOnly as string; // ERROR: the refinement is the `prototype` type
+}
+
+if (!(element instanceof PrototypeOnlyHTMLElementLike)) {
+  element.tagName as string;
+  element.htmlOnly; // ERROR: the negative branch retains the original supertype
 }

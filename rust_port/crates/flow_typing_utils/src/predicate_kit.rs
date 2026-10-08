@@ -2162,8 +2162,16 @@ fn instanceof_test<'cx>(
                 t,
             )
         };
-        let construct_returns =
+        let mut construct_returns =
             flow_js_utils::collect_construct_return_ts(&concretize, &concretize_sig, cx, right_t)?;
+        // Like TypeScript, narrow to the type of `prototype` when there is no
+        // construct signature to read the instance from.
+        if construct_returns.is_empty()
+            && flow_js_utils::collect_construct_ts(&concretize, cx, right_t)?.is_empty()
+            && let Some(prototype) = flow_js_utils::collect_prototype_t(&concretize, cx, right_t)?
+        {
+            construct_returns.push(prototype);
+        }
         if !construct_returns.is_empty() {
             let mut classes = Vec::new();
             for return_t in construct_returns {

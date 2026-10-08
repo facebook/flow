@@ -1,15 +1,51 @@
-Error ------------------------------------------------------------------------------------------------ importer.js:11:15
+Error ------------------------------------------------------------------------------------------------ importer.js:16:15
 
 Cannot get `ErrorSubclass.nope` because property `nope` is missing in statics of `ErrorSubclass` [1]. [prop-missing]
 
-   importer.js:11:15
-   11| ErrorSubclass.nope; // error: not a static of `ErrorConstructor`
+   importer.js:16:15
+   16| ErrorSubclass.nope; // error: not a static of `ErrorConstructor`
                      ^^^^
 
 References:
    exporter.js:4:15
     4| declare class ErrorSubclass extends Error {}
                      ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- importer.js:20:1
+
+Cannot cast `prototypeOnly.instanceProp` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   importer.js:20:1
+   20| prototypeOnly.instanceProp as string; // error: number is not string
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   exporter.js:11:17
+   11|   instanceProp: number;
+                       ^^^^^^ [1]
+   importer.js:20:31
+   20| prototypeOnly.instanceProp as string; // error: number is not string
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- no_prototype_fallback.js:14:13
+
+Cannot extend `AnyPrototypeSubclass` [1] with `AnyPrototype` because `AnyPrototypeConstructor` [2] is not inheritable.
+[incompatible-use]
+
+   no_prototype_fallback.js:14:13
+   14| declare var AnyPrototype: AnyPrototypeConstructor;
+                   ^^^^^^^^^^^^
+
+References:
+   no_prototype_fallback.js:15:15
+   15| declare class AnyPrototypeSubclass extends AnyPrototype {} // error: not inheritable
+                     ^^^^^^^^^^^^^^^^^^^^ [1]
+   no_prototype_fallback.js:14:27
+   14| declare var AnyPrototype: AnyPrototypeConstructor;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- this_typed.js:19:1
@@ -31,4 +67,4 @@ References:
 
 
 
-Found 2 errors
+Found 4 errors

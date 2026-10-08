@@ -4440,13 +4440,13 @@ fn __flow_impl<'cx>(
                 }
             }
         }
-        // A value with a construct signature is class-like, so it can be
-        // extended. `class_sig` specializes the extends clause eagerly, and
-        // that is the step that used to report the whole thing as "not
-        // inheritable" — an interface has nothing to specialize, so pass it
-        // through the way a non-polymorphic class goes through above. The
-        // instance it contributes to the derived class is worked out by
-        // [ThisSpecializeT] below.
+        // A value with a construct signature (or failing that, a `prototype`)
+        // is class-like, so it can be extended. `class_sig` specializes the
+        // extends clause eagerly, and that is the step that used to report the
+        // whole thing as "not inheritable" — an interface has nothing to
+        // specialize, so pass it through the way a non-polymorphic class goes
+        // through above. The instance it contributes to the derived class is
+        // worked out by [ThisSpecializeT] below.
         (
             TypeInner::DefT(reason_l, def_t),
             UseTInner::SpecializeT(box SpecializeTData {
@@ -4460,9 +4460,8 @@ fn __flow_impl<'cx>(
             let concretize = |t: &Type| -> Result<Vec<Type>, FlowJsException> {
                 helpers::possible_concrete_types_for_inspection(cx, env, reason_of_t(t), t)
             };
-            if flow_js_utils::collect_construct_ts(&concretize, cx, l)?.is_empty() {
-                // Not constructable, so not inheritable either. Report what the
-                // fallthrough would have.
+            if !flow_js_utils::is_inheritable(&concretize, cx, l)? {
+                // Not inheritable. Report what the fallthrough would have.
                 flow_js_utils::add_output_with_env(
                     cx,
                     env,
@@ -4562,8 +4561,8 @@ fn __flow_impl<'cx>(
         // Extending a value with a construct signature: the instance the
         // derived class inherits from is what the signature returns.
         // TypeScript's [resolveBaseTypesOfClass] does the same, and takes the
-        // first signature — `prototype` is deliberately not consulted here,
-        // unlike `instanceof` narrowing.
+        // first signature. Unlike TypeScript, a value with no construct
+        // signature falls back to its `prototype`; see [construct_base_instance].
         (TypeInner::DefT(reason_l, def_t), UseTInner::ThisSpecializeT(r, this, k))
             if matches!(def_t.deref(), DefTInner::InstanceT(_)) =>
         {
@@ -4579,9 +4578,9 @@ fn __flow_impl<'cx>(
             };
             match flow_js_utils::construct_base_instance(&concretize, cx, l, this)? {
                 Some(base) => continue_repos(cx, env, trace, r, false, &base, k)?,
-                // No signature after all. The eager specialization of the
-                // extends clause has already reported that; carry on with
-                // `any` rather than reporting it twice.
+                // No instance to inherit after all. The eager specialization
+                // of the extends clause has already reported that; carry on
+                // with `any` rather than reporting it twice.
                 None => {
                     let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
                     continue_repos(cx, env, trace, r, false, &any, k)?

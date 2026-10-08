@@ -78,3 +78,10 @@ export declare var MultiParentChild: {
 
 export declare var multiParentBase: MultiParentBase;
 export declare var multiParentUnion: MultiParentBase | OtherLike;
+
+export interface PrototypeOnlyHTMLElementLikeConstructor {
+  prototype: HTMLElementLike;
+  (): HTMLElementLike;
+}
+
+export declare var PrototypeOnlyHTMLElementLike: PrototypeOnlyHTMLElementLikeConstructor;

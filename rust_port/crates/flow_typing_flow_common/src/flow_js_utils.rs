@@ -326,6 +326,101 @@ pub fn collect_construct_ts<'cx>(
     go(concretize, cx, Vec::new(), t)
 }
 
+// The type of the `prototype` property an interface-typed constructor value
+// declares, searched through the same wrappers and [extends] as
+// [collect_construct_ts]. It stands in for the instance where a value has no
+// construct signature: TypeScript's `SymbolConstructor` has a `prototype` but no
+// `new`, yet `x instanceof Symbol` narrows and `declare class C extends Symbol`
+// has an instance to inherit.
+pub fn collect_prototype_t<'cx>(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Result<Option<Type>, FlowJsException> {
+    fn go<'cx>(
+        concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+        cx: &Context<'cx>,
+        name: &Name,
+        t: &Type,
+    ) -> Result<Option<Type>, FlowJsException> {
+        use flow_typing_type::type_::property;
+
+        match t.deref() {
+            TypeInner::ObjProtoT(_) | TypeInner::FunProtoT(_) | TypeInner::NullProtoT(_) => {
+                return Ok(None);
+            }
+            TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::NullT) => {
+                return Ok(None);
+            }
+            _ => {}
+        }
+        for t in concretize(t)? {
+            let (inst, super_) = match t.deref() {
+                TypeInner::DefT(_, def_t) if let DefTInner::InstanceT(inst_t) = def_t.deref() => {
+                    (&inst_t.inst, &inst_t.super_)
+                }
+                TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {
+                    (&instance.inst, &instance.super_)
+                }
+                TypeInner::GenericT(box GenericTData { bound, .. }) => {
+                    if let Some(prototype) = go(concretize, cx, name, bound)? {
+                        return Ok(Some(prototype));
+                    }
+                    continue;
+                }
+                TypeInner::IntersectionT(_, rep) => {
+                    for member in rep.members_iter() {
+                        if let Some(prototype) = go(concretize, cx, name, member)? {
+                            return Ok(Some(prototype));
+                        }
+                    }
+                    continue;
+                }
+                _ => continue,
+            };
+            if !matches!(inst.inst_kind, InstanceKind::InterfaceKind { .. }) {
+                continue;
+            }
+            for props in [inst.own_props.dupe(), inst.proto_props.dupe()] {
+                if let Some(prop) = cx.get_prop(props, name)
+                    && let Some(prototype) = property::read_t(&prop)
+                {
+                    // As in TypeScript, a `prototype` of type `any` says nothing
+                    // about the instance.
+                    if concretize(&prototype)?
+                        .iter()
+                        .all(|t| matches!(t.deref(), TypeInner::AnyT(..)))
+                    {
+                        return Ok(None);
+                    }
+                    return Ok(Some(prototype));
+                }
+            }
+            if let Some(prototype) = go(concretize, cx, name, super_)? {
+                return Ok(Some(prototype));
+            }
+        }
+        Ok(None)
+    }
+    go(
+        concretize,
+        cx,
+        &Name::new(FlowSmolStr::new_inline("prototype")),
+        t,
+    )
+}
+
+// Whether a value can be extended: it has a construct signature, or failing
+// that, a `prototype` ([collect_prototype_t]).
+pub fn is_inheritable<'cx>(
+    concretize: &dyn Fn(&Type) -> Result<Vec<Type>, FlowJsException>,
+    cx: &Context<'cx>,
+    t: &Type,
+) -> Result<bool, FlowJsException> {
+    Ok(!collect_construct_ts(concretize, cx, t)?.is_empty()
+        || collect_prototype_t(concretize, cx, t)?.is_some())
+}
+
 // What each construct signature returns, overloads flattened out, in the source
 // order [collect_construct_ts] preserves.
 fn construct_return_ts(construct_ts: &[Type]) -> Vec<Type> {
@@ -410,6 +505,10 @@ fn void_returning(construct: &Type) -> Type {
 // extends carries them. `node.js.flow`'s `declare class Buffer extends
 // Uint8Array` needs both: `Buffer.from` resolves through `static_`, and
 // `new Buffer()` through [inst_construct_t].
+//
+// A value without a construct signature contributes its `prototype` instead
+// ([collect_prototype_t]): `node.js.flow`'s `declare class $SymbolReplModeMagic
+// extends Symbol` extends TypeScript's `SymbolConstructor`, which has no `new`.
 pub fn construct_base_instance<'cx>(
     concretize: &dyn Fn(&Type, Option<&Type>) -> Result<Vec<Type>, FlowJsException>,
     cx: &Context<'cx>,
@@ -428,8 +527,16 @@ pub fn construct_base_instance<'cx>(
         .map(&concretize_fully)
         .collect::<Result<Vec<_>, _>>()?
         .concat();
-    let Some(base) = construct_return_ts(&construct_ts).into_iter().next() else {
-        return Ok(None);
+    let base = if construct_ts.is_empty() {
+        let Some(prototype) = collect_prototype_t(&concretize_fully, cx, t)? else {
+            return Ok(None);
+        };
+        prototype
+    } else {
+        let Some(base) = construct_return_ts(&construct_ts).into_iter().next() else {
+            return Ok(None);
+        };
+        base
     };
     // The return type arrives still wrapped in whatever the signature wrote —
     // an [AnnotT] over the interface, typically — and only the instance
