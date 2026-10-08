@@ -2808,14 +2808,14 @@ fn resolve_generator_next<'cx>(
                 let return_reason = reason
                     .dupe()
                     .replace_desc(reason::VirtualReasonDesc::RUnusedReturn);
-                let yield_tvar = flow_typing_tvar::mk(cx, yield_reason);
-                let return_tvar = flow_typing_tvar::mk(cx, return_reason);
+                let yield_t = type_::empty_t::make(yield_reason);
+                let return_targ = type_::empty_t::make(return_reason);
                 let t = flow_js::FlowJs::get_builtin_typeapp(
                     cx,
                     &reason,
                     None,
                     gen_name,
-                    vec![yield_tvar, return_tvar, next.dupe()],
+                    vec![yield_t, return_targ, next.dupe()],
                 );
                 let return_t_reason = type_util::reason_of_t(&return_t);
                 let return_t_loc = return_t_reason.loc().dupe();
