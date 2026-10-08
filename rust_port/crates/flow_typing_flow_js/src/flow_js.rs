@@ -204,6 +204,7 @@ use vec1::Vec1;
 use crate::implicit_instantiation;
 use crate::react_kit;
 use crate::subtyping_kit;
+use crate::tvar_resolver;
 
 mod any_helpers;
 pub(crate) mod const_fold_expansion;
@@ -1706,14 +1707,12 @@ fn mk_default<'cx>(
          -> Result<Type, FlowJsException> {
             let t1 = t1?;
             let t2 = t2?;
-            // Tvar.mk_where cx reason (fun tvar ->
-            //     flow_t cx (t1, tvar);
-            //     flow_t cx (t2, tvar))
-            flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
-                flow_t_with_env(cx, env, (&t1, tvar))?;
-                flow_t_with_env(cx, env, (&t2, tvar))?;
-                Ok(())
-            })
+            let collector = type_collector::TypeCollector::create();
+            collector.add(t1);
+            collector.add(t2);
+            Ok(collector
+                .union_opt(reason.dupe())
+                .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
         },
         &|r: Reason,
           t: Result<Type, FlowJsException>,
