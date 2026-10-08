@@ -383,6 +383,19 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for Collector<'_, L> {
         }
         ast_visitor::return_default(self, loc, ret)
     }
+
+    fn arrow_function(
+        &mut self,
+        loc: &'ast L,
+        func: &'ast ast::function::Function<L, L>,
+    ) -> Result<(), !> {
+        // An arrow expression body is an implicit return, so a direct
+        // assertion call there is statement-like for abnormal control flow.
+        if let ast::function::Body::BodyExpression(body) = &func.body {
+            self.collect_assertion_flow_calls(body);
+        }
+        ast_visitor::arrow_function_default(self, loc, func)
+    }
 }
 
 /// Collects statically named callees that can be resolved from annotations alone.
