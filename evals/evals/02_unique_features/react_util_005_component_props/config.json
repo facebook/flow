@@ -1,12 +1,12 @@
 {
   "metadata": {
-    "name": "react_util_005_element_config",
+    "name": "react_util_005_component_props",
     "category": "unique_features",
     "tags": [
       "flow",
       "react",
       "react_utility_types",
-      "element_config"
+      "component_props"
     ],
     "difficulty": "hard"
   },
@@ -18,7 +18,7 @@
       },
       {
         "type": "ast_query",
-        "selector": ".name == \"ElementConfig\""
+        "selector": ".name == \"ComponentProps\""
       }
     ]
   }

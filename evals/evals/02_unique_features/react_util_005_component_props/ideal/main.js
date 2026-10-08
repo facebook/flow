@@ -24,8 +24,8 @@ component Card(
 }
 
 function renderWithOverrides(
-  base: React.ElementConfig<typeof Card>,
-  overrides: Partial<React.ElementConfig<typeof Card>>,
+  base: React.ComponentProps<typeof Card>,
+  overrides: Partial<React.ComponentProps<typeof Card>>,
 ): React.Node {
   return <Card {...base} {...overrides} />;
 }
