@@ -36,7 +36,7 @@ class G extends React.Component<{p: ?number, ...}> {
 }
 
 class H extends React.Component<{p?: ?number, ...}> {
-  static defaultProps: {p: string, ...} = {p: 'foo'}; // Error: string ~> number
+  static defaultProps: {p: string, ...} = {p: 'foo'};
 }
 
 class I extends React.Component<{p?: ?number, ...}> {
@@ -44,7 +44,7 @@ class I extends React.Component<{p?: ?number, ...}> {
 }
 
 class J extends React.Component<{p?: ?number, ...}> {
-  static defaultProps: {p?: string, ...} = {} as {p?: string, ...}; // Error: string ~> number
+  static defaultProps: {p?: string, ...} = {} as {p?: string, ...};
 }
 
 ({}) as React.ComponentProps<typeof A>; // OK
@@ -75,27 +75,20 @@ exactEmptyObject as React.ComponentProps<typeof F>; // OK
 ({p: 42}) as React.ComponentProps<typeof G>; // OK
 ({p: 'foo'}) as React.ComponentProps<typeof G>; // Error: string ~> number
 
-({}) as React.ElementConfig<typeof H>; // OK
-({p: 42}) as React.ElementConfig<typeof H>; // OK
-({p: 'foo'}) as React.ElementConfig<typeof H>; // Error: string ~> number
+({}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+({p: 42}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+({p: 'foo'}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
 
 ({}) as React.ComponentProps<typeof I>; // OK
 ({p: 42}) as React.ComponentProps<typeof I>; // OK
 ({p: 'foo'}) as React.ComponentProps<typeof I>; // Error: string ~> number
 
-({}) as React.ElementConfig<typeof J>; // OK
-({p: 42}) as React.ElementConfig<typeof J>; // OK
-({p: 'foo'}) as React.ElementConfig<typeof J>; // Error: string ~> number
+({}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+({p: 42}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+({p: 'foo'}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
 
 declare class PolyComponent<T> extends React.Component<{foo: T, ...}> {}
 declare function PolyFunction<T>(props: {foo: T, ...}): React.Node;
-
-declare function inferFromElementConfig<T>(
-  config: React.ElementConfig<typeof PolyComponent<T>>,
-): T;
-const elementConfigResult = inferFromElementConfig({foo: 42});
-elementConfigResult as number;
-elementConfigResult as string; // error: number ~> string
 
 declare function inferFromComponentProps<T>(
   props: React.ComponentProps<typeof PolyComponent<T>>,

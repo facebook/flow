@@ -1,3 +1,458 @@
+Error ----------------------------------------------------------------------------------------- component_props.js:15:48
+
+Cannot initialize property `defaultProps` with object literal because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:15:48
+   15|   static defaultProps: {p: ?number, ...} = {p: 'foo'}; // Error: string ~> number
+                                                      ^^^^^ [1]
+
+References:
+   component_props.js:15:29
+   15|   static defaultProps: {p: ?number, ...} = {p: 'foo'}; // Error: string ~> number
+                                   ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:31:29
+
+Cannot initialize property `defaultProps` with object literal because property `p` is extra in object literal [1] but
+missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   component_props.js:31:29
+   31|   static defaultProps: {} = {p: 42}; // Error: extra property `p`
+                                   ^^^^^^^ [1]
+
+References:
+   component_props.js:31:24
+   31|   static defaultProps: {} = {p: 42}; // Error: extra property `p`
+                              ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:52:6
+
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:52:6
+   52| ({p: 'foo'}) as React.ComponentProps<typeof A>; // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   component_props.js:10:38
+   10| class A extends React.Component<{p: ?number, ...}> {
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:56:6
+
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:56:6
+   56| ({p: 'foo'}) as React.ComponentProps<typeof B>; // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   component_props.js:14:38
+   14| class B extends React.Component<{p: ?number, ...}> {
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:58:9
+
+Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
+`{p: ?number, readonly ref?: React.RefSetter<C>, ...}` [2]. [incompatible-type]
+
+   component_props.js:58:9
+   58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
+               ^^^^^ [1]
+
+References:
+   component_props.js:58:18
+   58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:60:6
+
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:60:6
+   60| ({p: 'foo'}) as React.ComponentProps<typeof C>; // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   component_props.js:18:38
+   18| class C extends React.Component<{p: ?number, ...}> {
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:62:9
+
+Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
+`{p: ?number, readonly ref?: React.RefSetter<D>, ...}` [2]. [incompatible-type]
+
+   component_props.js:62:9
+   62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
+               ^^^^^ [1]
+
+References:
+   component_props.js:62:18
+   62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:64:6
+
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:64:6
+   64| ({p: 'foo'}) as React.ComponentProps<typeof D>; // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   component_props.js:22:38
+   22| class D extends React.Component<{p: ?number, ...}> {
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:71:2
+
+Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
+`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   component_props.js:71:2
+   71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
+        ^^^^^^^ [1]
+
+References:
+   component_props.js:71:14
+   71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:72:2
+
+Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
+`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   component_props.js:72:2
+   72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
+        ^^^^^^^^^^ [1]
+
+References:
+   component_props.js:72:17
+   72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:76:6
+
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:76:6
+   76| ({p: 'foo'}) as React.ComponentProps<typeof G>; // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   component_props.js:34:38
+   34| class G extends React.Component<{p: ?number, ...}> {
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:78:2
+
+Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   component_props.js:78:2
+   78| ({}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+        ^^ [1]
+
+References:
+   component_props.js:78:9
+   78| ({}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:78:30
+
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `H` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   component_props.js:78:30
+   78| ({}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+                                    ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
+   component_props.js:39:28
+   39|   static defaultProps: {p: string, ...} = {p: 'foo'};
+                                  ^^^^^^ [3]
+   component_props.js:38:39
+   38| class H extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:79:2
+
+Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   component_props.js:79:2
+   79| ({p: 42}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+        ^^^^^^^ [1]
+
+References:
+   component_props.js:79:14
+   79| ({p: 42}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:79:35
+
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `H` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   component_props.js:79:35
+   79| ({p: 42}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+                                         ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
+   component_props.js:39:28
+   39|   static defaultProps: {p: string, ...} = {p: 'foo'};
+                                  ^^^^^^ [3]
+   component_props.js:38:39
+   38| class H extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:80:2
+
+Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   component_props.js:80:2
+   80| ({p: 'foo'}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+        ^^^^^^^^^^ [1]
+
+References:
+   component_props.js:80:17
+   80| ({p: 'foo'}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:80:38
+
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `H` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   component_props.js:80:38
+   80| ({p: 'foo'}) as React.ComponentProps<typeof H>; // ERROR: incompatible default props
+                                            ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
+   component_props.js:39:28
+   39|   static defaultProps: {p: string, ...} = {p: 'foo'};
+                                  ^^^^^^ [3]
+   component_props.js:38:39
+   38| class H extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:84:6
+
+Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
+`number` [2]. [incompatible-type]
+
+   component_props.js:84:6
+   84| ({p: 'foo'}) as React.ComponentProps<typeof I>; // Error: string ~> number
+            ^^^^^ [1]
+
+References:
+   component_props.js:42:39
+   42| class I extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:86:2
+
+Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   component_props.js:86:2
+   86| ({}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+        ^^ [1]
+
+References:
+   component_props.js:86:9
+   86| ({}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:86:30
+
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `J` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   component_props.js:86:30
+   86| ({}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+                                    ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
+   component_props.js:47:29
+   47|   static defaultProps: {p?: string, ...} = {} as {p?: string, ...};
+                                   ^^^^^^ [3]
+   component_props.js:46:39
+   46| class J extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:87:2
+
+Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   component_props.js:87:2
+   87| ({p: 42}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+        ^^^^^^^ [1]
+
+References:
+   component_props.js:87:14
+   87| ({p: 42}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:87:35
+
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `J` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   component_props.js:87:35
+   87| ({p: 42}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+                                         ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
+   component_props.js:47:29
+   47|   static defaultProps: {p?: string, ...} = {} as {p?: string, ...};
+                                   ^^^^^^ [3]
+   component_props.js:46:39
+   46| class J extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:88:2
+
+Cannot cast object literal to `React.ComponentProps` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   component_props.js:88:2
+   88| ({p: 'foo'}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+        ^^^^^^^^^^ [1]
+
+References:
+   component_props.js:88:17
+   88| ({p: 'foo'}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:88:38
+
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `J` [1] is incompatible with `string` [2].
+ - Or `string` [3] is incompatible with `number` [4].
+
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   component_props.js:88:38
+   88| ({p: 'foo'}) as React.ComponentProps<typeof J>; // ERROR: incompatible default props
+                                            ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
+   component_props.js:47:29
+   47|   static defaultProps: {p?: string, ...} = {} as {p?: string, ...};
+                                   ^^^^^^ [3]
+   component_props.js:46:39
+   46| class J extends React.Component<{p?: ?number, ...}> {
+                                             ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ component_props.js:98:1
+
+Cannot cast `componentPropsResult` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   component_props.js:98:1
+   98| componentPropsResult as string; // error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   component_props.js:96:60
+   96| const componentPropsResult = inferFromComponentProps({foo: 42});
+                                                                  ^^ [1]
+   component_props.js:98:25
+   98| componentPropsResult as string; // error: number ~> string
+                               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- component_props.js:105:1
+
+Cannot cast `functionComponentPropsResult` to string because `number` [1] is incompatible with `string` [2].
+[incompatible-type]
+
+   component_props.js:105:1
+   105| functionComponentPropsResult as string; // error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   component_props.js:103:76
+   103| const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42});
+                                                                                   ^^ [1]
+   component_props.js:105:33
+   105| functionComponentPropsResult as string; // error: number ~> string
+                                        ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------- contravariant_refsetter.js:9:1
 
 Cannot cast `x` to `React.RefSetter` because in type argument `T` [1]: [incompatible-type]
@@ -129,18 +584,41 @@ References:
              ^^^ [2]
 
 
-Error ------------------------------------------------------------------------------- default_props_not_in_props.js:9:35
+Error ------------------------------------------------------------------------------- default_props_not_in_props.js:9:36
 
-Property `p` is missing in `{ref?: React.RefSetter<K>}` [1] but exists in `{p: number}` [2]. [incompatible-type]
+Cannot instantiate `React.ComponentProps` because in type argument `T`: [incompatible-type]
+ - Either class `K` [1] is incompatible with `string` [2].
+ - Or property `p` is missing in `{ref?: React.RefSetter<K>}` [1] but exists in `{p: number}` [3].
 
-   default_props_not_in_props.js:9:35
-   9| const config: React.ElementConfig<typeof K> = {}; // ERROR: `p` is missing in the props
-                                        ^^^^^^^^ [1]
+Flow is showing the union/intersection branches that got closest to passing. Other branches were less compatible and are
+not shown. To see all branches, re-run Flow with --show-all-branches.
+
+   default_props_not_in_props.js:9:36
+    9| const config: React.ComponentProps<typeof K> = {}; // ERROR: the default prop is not declared in K's props
+                                          ^^^^^^^^ [1]
 
 References:
+   <BUILTINS>/react.js:43:5
+   43|   | string
+           ^^^^^^ [2]
    default_props_not_in_props.js:6:24
-   6|   static defaultProps: {p: number} = {p: 1};
-                             ^^^^^^^^^^^ [2]
+    6|   static defaultProps: {p: number} = {p: 1};
+                              ^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- default_props_not_in_props.js:9:48
+
+Cannot assign object literal to `config` because object literal [1] is incompatible with `empty` [2].
+[incompatible-type]
+
+   default_props_not_in_props.js:9:48
+   9| const config: React.ComponentProps<typeof K> = {}; // ERROR: the default prop is not declared in K's props
+                                                     ^^ [1]
+
+References:
+   default_props_not_in_props.js:9:15
+   9| const config: React.ComponentProps<typeof K> = {}; // ERROR: the default prop is not declared in K's props
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- default_props_not_in_props.js:10:2
@@ -208,296 +686,6 @@ References:
    default_props_write_only.js:7:1
    7| <K />; // ERROR: `defaultProps` is write-only in the statics of `K`
       ^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:15:48
-
-Cannot initialize property `defaultProps` with object literal because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:15:48
-   15|   static defaultProps: {p: ?number, ...} = {p: 'foo'}; // Error: string ~> number
-                                                      ^^^^^ [1]
-
-References:
-   element_config.js:15:29
-   15|   static defaultProps: {p: ?number, ...} = {p: 'foo'}; // Error: string ~> number
-                                   ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:31:29
-
-Cannot initialize property `defaultProps` with object literal because property `p` is extra in object literal [1] but
-missing in `{}` [2]. Exact objects do not accept extra props. [incompatible-type]
-
-   element_config.js:31:29
-   31|   static defaultProps: {} = {p: 42}; // Error: extra property `p`
-                                   ^^^^^^^ [1]
-
-References:
-   element_config.js:31:24
-   31|   static defaultProps: {} = {p: 42}; // Error: extra property `p`
-                              ^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:39:28
-
-`string` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   element_config.js:39:28
-   39|   static defaultProps: {p: string, ...} = {p: 'foo'}; // Error: string ~> number
-                                  ^^^^^^ [1]
-
-References:
-   element_config.js:38:39
-   38| class H extends React.Component<{p?: ?number, ...}> {
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:47:29
-
-`string` [1] is incompatible with `number` [2]. [incompatible-type]
-
-   element_config.js:47:29
-   47|   static defaultProps: {p?: string, ...} = {} as {p?: string, ...}; // Error: string ~> number
-                                   ^^^^^^ [1]
-
-References:
-   element_config.js:46:39
-   46| class J extends React.Component<{p?: ?number, ...}> {
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:52:6
-
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:52:6
-   52| ({p: 'foo'}) as React.ComponentProps<typeof A>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:10:38
-   10| class A extends React.Component<{p: ?number, ...}> {
-                                            ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:56:6
-
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:56:6
-   56| ({p: 'foo'}) as React.ComponentProps<typeof B>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:14:38
-   14| class B extends React.Component<{p: ?number, ...}> {
-                                            ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:58:9
-
-Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
-`{p: ?number, readonly ref?: React.RefSetter<C>, ...}` [2]. [incompatible-type]
-
-   element_config.js:58:9
-   58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
-               ^^^^^ [1]
-
-References:
-   element_config.js:58:18
-   58| ({}) as {...} as React.ComponentProps<typeof C>; // Error: missing property `p`
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:60:6
-
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:60:6
-   60| ({p: 'foo'}) as React.ComponentProps<typeof C>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:18:38
-   18| class C extends React.Component<{p: ?number, ...}> {
-                                            ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:62:9
-
-Cannot cast `{...}` to `React.ComponentProps` because properties `p` and `ref` are missing in `{...}` [1] but exist in
-`{p: ?number, readonly ref?: React.RefSetter<D>, ...}` [2]. [incompatible-type]
-
-   element_config.js:62:9
-   62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
-               ^^^^^ [1]
-
-References:
-   element_config.js:62:18
-   62| ({}) as {...} as React.ComponentProps<typeof D>; // Error: missing property `p`
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:64:6
-
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:64:6
-   64| ({p: 'foo'}) as React.ComponentProps<typeof D>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:22:38
-   22| class D extends React.Component<{p: ?number, ...}> {
-                                            ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:71:2
-
-Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
-`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
-
-   element_config.js:71:2
-   71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
-        ^^^^^^^ [1]
-
-References:
-   element_config.js:71:14
-   71| ({p: 42}) as React.ComponentProps<typeof F>; // Error: extra property `p`
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:72:2
-
-Cannot cast object literal to `React.ComponentProps` because property `p` is extra in object literal [1] but missing in
-`{readonly ref?: React.RefSetter<F>}` [2]. Exact objects do not accept extra props. [incompatible-type]
-
-   element_config.js:72:2
-   72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
-        ^^^^^^^^^^ [1]
-
-References:
-   element_config.js:72:17
-   72| ({p: 'foo'}) as React.ComponentProps<typeof F>; // Error: extra property `p`
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:76:6
-
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:76:6
-   76| ({p: 'foo'}) as React.ComponentProps<typeof G>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:34:38
-   34| class G extends React.Component<{p: ?number, ...}> {
-                                            ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:80:6
-
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:80:6
-   80| ({p: 'foo'}) as React.ElementConfig<typeof H>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:38:39
-   38| class H extends React.Component<{p?: ?number, ...}> {
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:84:6
-
-Cannot cast object literal to `React.ComponentProps` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:84:6
-   84| ({p: 'foo'}) as React.ComponentProps<typeof I>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:42:39
-   42| class I extends React.Component<{p?: ?number, ...}> {
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:88:6
-
-Cannot cast object literal to `React.ElementConfig` because in property `p`: `"foo"` [1] is incompatible with
-`number` [2]. [incompatible-type]
-
-   element_config.js:88:6
-   88| ({p: 'foo'}) as React.ElementConfig<typeof J>; // Error: string ~> number
-            ^^^^^ [1]
-
-References:
-   element_config.js:46:39
-   46| class J extends React.Component<{p?: ?number, ...}> {
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- element_config.js:98:1
-
-Cannot cast `elementConfigResult` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   element_config.js:98:1
-   98| elementConfigResult as string; // error: number ~> string
-       ^^^^^^^^^^^^^^^^^^^
-
-References:
-   element_config.js:96:58
-   96| const elementConfigResult = inferFromElementConfig({foo: 42});
-                                                                ^^ [1]
-   element_config.js:98:24
-   98| elementConfigResult as string; // error: number ~> string
-                              ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:105:1
-
-Cannot cast `componentPropsResult` to string because `number` [1] is incompatible with `string` [2]. [incompatible-type]
-
-   element_config.js:105:1
-   105| componentPropsResult as string; // error: number ~> string
-        ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   element_config.js:103:60
-   103| const componentPropsResult = inferFromComponentProps({foo: 42});
-                                                                   ^^ [1]
-   element_config.js:105:25
-   105| componentPropsResult as string; // error: number ~> string
-                                ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ element_config.js:112:1
-
-Cannot cast `functionComponentPropsResult` to string because `number` [1] is incompatible with `string` [2].
-[incompatible-type]
-
-   element_config.js:112:1
-   112| functionComponentPropsResult as string; // error: number ~> string
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   element_config.js:110:76
-   110| const functionComponentPropsResult = inferFromFunctionComponentProps({foo: 42});
-                                                                                   ^^ [1]
-   element_config.js:112:33
-   112| functionComponentPropsResult as string; // error: number ~> string
-                                        ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8
@@ -2576,4 +2764,4 @@ References:
 
 
 
-Found 144 errors
+Found 152 errors

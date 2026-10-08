@@ -6,5 +6,5 @@ class K extends React.Component<{}> {
   static defaultProps: {p: number} = {p: 1};
 }
 
-const config: React.ElementConfig<typeof K> = {}; // ERROR: `p` is missing in the props
+const config: React.ComponentProps<typeof K> = {}; // ERROR: the default prop is not declared in K's props
 <K />; // ERROR: also reported at the element

@@ -1,8 +1,11 @@
 const React = require('react');
 
-type F<T> = (React.ElementConfig<T> => void) => void // error should not appear here
+type F<T extends React.ElementType> = {
+  apply: (React.ComponentProps<T> => void) => void,
+  component: T,
+};
 
-declare function foo<T>(x: T): (React.ElementConfig<T> => void) => void
+declare function foo<T extends React.ElementType>(x: T): F<T>;
 
 declare function bar<P>(x: React.ComponentType<{ m: number, ...P, ...}>): React.ComponentType<P>;
 

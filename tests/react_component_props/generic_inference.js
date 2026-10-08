@@ -1,13 +1,9 @@
 import * as React from 'react';
 
-declare function viaElementConfig<P extends {...}>(
-  props: React.ElementConfig<component(...P)>,
-): P;
 declare function viaComponentProps<P extends {...}>(
   props: React.ComponentProps<component(...P)>,
 ): P;
 
-viaElementConfig({name: 'a'}); // ok
 viaComponentProps({name: 'a'}); // ok
 viaComponentProps({name: 'a'}).name as number; // error: string ~> number
 

@@ -159,5 +159,4 @@ function non_evaluated() {
 
 
 // TODO
-// React.ElementConfigType
 // React.ElementRefType

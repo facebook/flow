@@ -1,1 +1,1 @@
-export type ElementConfig<T> = T;
+export type ComponentProps<T> = T;
