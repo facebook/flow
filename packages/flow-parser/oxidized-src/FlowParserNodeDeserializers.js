@@ -1092,6 +1092,7 @@ module.exports = [
     };
     node.key = this.deserializeNode();
     node.value = this.deserializeNode();
+    node.typeAnnotation = this.deserializeNode();
     node.computed = this.deserializeBoolean();
     node.variance = this.deserializeNode();
     if (this.deserializeBoolean()) node['override'] = true;

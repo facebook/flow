@@ -45,6 +45,11 @@
         "optional": true
       },
       {
+        "type": "NodePtr",
+        "name": "typeAnnotation",
+        "optional": true
+      },
+      {
         "type": "NodeBoolean",
         "name": "computed",
         "optional": false

@@ -1044,7 +1044,8 @@ export type AbstractPropertyDefinition =
   | AbstractPropertyDefinitionWithComputedName
   | AbstractPropertyDefinitionWithNonComputedName;
 interface AbstractPropertyDefinitionBase extends BaseNode {
-  readonly value: TypeAnnotation | null;
+  readonly value: null;
+  readonly typeAnnotation: TypeAnnotation | null;
   readonly variance: Variance | null;
   readonly override?: true;
   readonly tsAccessibility?: TSAccessibility;

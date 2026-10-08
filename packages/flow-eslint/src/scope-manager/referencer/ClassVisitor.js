@@ -171,7 +171,7 @@ class ClassVisitor extends Visitor {
     if (node.computed) {
       this._referencer.visit(node.key);
     }
-    this.visitType(node.value);
+    this.visitType(node.typeAnnotation);
     this.visitType(node.variance);
   }
 

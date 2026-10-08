@@ -29,6 +29,7 @@ module.exports = {
   AbstractPropertyDefinition: [
     'key',
     'value',
+    'typeAnnotation',
     'variance',
   ],
   AnyTypeAnnotation: [],

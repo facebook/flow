@@ -149,9 +149,27 @@ describe('abstract classes', () => {
 
     expect(base.body.body[0]).toMatchObject({
       type: 'AbstractPropertyDefinition',
+      value: null,
+      typeAnnotation: {
+        type: 'TypeAnnotation',
+        typeAnnotation: {type: 'NumberTypeAnnotation'},
+      },
     });
     expect(base.body.body[0]).not.toHaveProperty('override');
     expect(base.body.body[0]).not.toHaveProperty('tsAccessibility');
+  });
+
+  test('preserves abstract properties without annotations', () => {
+    const [base] = parse('abstract class Base { abstract value; }').body;
+    if (base.type !== 'ClassDeclaration') {
+      throw new Error('expected a class declaration');
+    }
+
+    expect(base.body.body[0]).toMatchObject({
+      type: 'AbstractPropertyDefinition',
+      value: null,
+      typeAnnotation: null,
+    });
   });
 
   test('preserves abstract method definitions', () => {

@@ -3558,8 +3558,9 @@ fn class_abstract_property(
     );
     let mut fields = vec![
         ("key", key),
+        ("value", Value::Null),
         (
-            "value",
+            "typeAnnotation",
             annotation_or_hint(offset_table, config, &abs_prop.annot),
         ),
         ("computed", bool_value(computed)),

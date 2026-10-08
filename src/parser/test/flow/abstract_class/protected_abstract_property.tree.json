@@ -1,164 +1,165 @@
 {
-  "type": "Program",
-  "loc": {
-    "source": null,
-    "start": {
-      "line": 1,
-      "column": 0
-    },
-    "end": {
-      "line": 3,
-      "column": 1
-    }
-  },
-  "range": [
-    0,
-    57
-  ],
   "body": [
     {
-      "type": "ClassDeclaration",
-      "loc": {
-        "source": null,
-        "start": {
-          "line": 1,
-          "column": 0
-        },
-        "end": {
-          "line": 3,
-          "column": 1
-        }
-      },
-      "range": [
-        0,
-        57
-      ],
-      "id": {
-        "type": "Identifier",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 15
-          },
-          "end": {
-            "line": 1,
-            "column": 18
-          }
-        },
-        "range": [
-          15,
-          18
-        ],
-        "name": "Foo",
-        "typeAnnotation": null,
-        "optional": false
-      },
+      "abstract": true,
       "body": {
-        "type": "ClassBody",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 19
-          },
-          "end": {
-            "line": 3,
-            "column": 1
-          }
-        },
-        "range": [
-          19,
-          57
-        ],
         "body": [
           {
-            "type": "AbstractPropertyDefinition",
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 25,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 21,
+                  "line": 2
+                }
+              },
+              "name": "name",
+              "optional": false,
+              "range": [
+                42,
+                46
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
             "loc": {
+              "end": {
+                "column": 34,
+                "line": 2
+              },
               "source": null,
               "start": {
-                "line": 2,
-                "column": 2
-              },
-              "end": {
-                "line": 2,
-                "column": 34
+                "column": 2,
+                "line": 2
               }
             },
             "range": [
               23,
               55
             ],
-            "key": {
-              "type": "Identifier",
+            "tsAccessibility": "protected",
+            "type": "AbstractPropertyDefinition",
+            "typeAnnotation": {
               "loc": {
+                "end": {
+                  "column": 33,
+                  "line": 2
+                },
                 "source": null,
                 "start": {
-                  "line": 2,
-                  "column": 21
-                },
-                "end": {
-                  "line": 2,
-                  "column": 25
-                }
-              },
-              "range": [
-                42,
-                46
-              ],
-              "name": "name",
-              "typeAnnotation": null,
-              "optional": false
-            },
-            "value": {
-              "type": "TypeAnnotation",
-              "loc": {
-                "source": null,
-                "start": {
-                  "line": 2,
-                  "column": 25
-                },
-                "end": {
-                  "line": 2,
-                  "column": 33
+                  "column": 25,
+                  "line": 2
                 }
               },
               "range": [
                 46,
                 54
               ],
+              "type": "TypeAnnotation",
               "typeAnnotation": {
-                "type": "StringTypeAnnotation",
                 "loc": {
+                  "end": {
+                    "column": 33,
+                    "line": 2
+                  },
                   "source": null,
                   "start": {
-                    "line": 2,
-                    "column": 27
-                  },
-                  "end": {
-                    "line": 2,
-                    "column": 33
+                    "column": 27,
+                    "line": 2
                   }
                 },
                 "range": [
                   48,
                   54
-                ]
+                ],
+                "type": "StringTypeAnnotation"
               }
             },
-            "computed": false,
-            "variance": null,
-            "tsAccessibility": "protected"
+            "value": null,
+            "variance": null
           }
-        ]
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 3
+          },
+          "source": null,
+          "start": {
+            "column": 19,
+            "line": 1
+          }
+        },
+        "range": [
+          19,
+          57
+        ],
+        "type": "ClassBody"
       },
-      "typeParameters": null,
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 18,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 1
+          }
+        },
+        "name": "Foo",
+        "optional": false,
+        "range": [
+          15,
+          18
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 3
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        57
+      ],
       "superClass": null,
       "superTypeArguments": null,
-      "implements": [],
-      "decorators": [],
-      "abstract": true
+      "type": "ClassDeclaration",
+      "typeParameters": null
     }
   ],
-  "comments": []
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 1,
+      "line": 3
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    57
+  ],
+  "type": "Program"
 }

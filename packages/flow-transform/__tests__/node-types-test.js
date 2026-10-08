@@ -11,6 +11,19 @@
 import * as t from '../src/generated/node-types';
 
 describe('generated node builders', () => {
+  test('parents abstract property type annotations', () => {
+    const property = t.AbstractPropertyDefinition({
+      key: t.Identifier({name: 'value'}),
+      typeAnnotation: t.TypeAnnotation({
+        typeAnnotation: t.NumberTypeAnnotation(),
+      }),
+      computed: false,
+    });
+
+    expect(property.value).toBeNull();
+    expect(property.typeAnnotation?.parent).toBe(property);
+  });
+
   test('preserves export kinds', () => {
     const id = t.Identifier({name: 'Foo'});
 

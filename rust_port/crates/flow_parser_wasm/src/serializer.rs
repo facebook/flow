@@ -2562,10 +2562,9 @@ impl<'a> Serializer<'a> {
                 );
             }
             ast::class::BodyElement::AbstractProperty(ap) => {
-                // 94: AbstractPropertyDefinition — key value computed variance override tsAccessibility
                 self.write_node_header(NodeKind::AbstractPropertyDefinition, &ap.loc);
                 self.serialize_object_key(&ap.key);
-                // value: TypeAnnotation node from annotation_or_hint
+                self.write_null_node();
                 self.serialize_annotation_or_hint(&ap.annot);
                 self.write_bool(is_key_computed(&ap.key));
                 match &ap.variance {

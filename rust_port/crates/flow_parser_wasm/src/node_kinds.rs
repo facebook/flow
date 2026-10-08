@@ -1052,6 +1052,7 @@ define_nodes! {
     AbstractPropertyDefinition = 94 {
         key: Node,
         value: Node,
+        typeAnnotation: Node,
         computed: Boolean,
         variance: Node,
         override: TrueBoolean,

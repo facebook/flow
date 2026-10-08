@@ -249,6 +249,9 @@ export type AbstractMethodDefinitionProps = {
 export type AbstractPropertyDefinitionProps = {
   readonly key: MaybeDetachedNode<AbstractPropertyDefinitionType['key']>,
   readonly value?: ?MaybeDetachedNode<AbstractPropertyDefinitionType['value']>,
+  readonly typeAnnotation?: ?MaybeDetachedNode<
+    AbstractPropertyDefinitionType['typeAnnotation'],
+  >,
   readonly computed: AbstractPropertyDefinitionType['computed'],
   readonly variance?: ?MaybeDetachedNode<
     AbstractPropertyDefinitionType['variance'],
@@ -1621,6 +1624,7 @@ export function AbstractPropertyDefinition(props: {
       type: 'AbstractPropertyDefinition',
       key: asDetachedNodeForCodeGen(props.key),
       value: asDetachedNodeForCodeGen(props.value),
+      typeAnnotation: asDetachedNodeForCodeGen(props.typeAnnotation),
       computed: props.computed,
       variance: asDetachedNodeForCodeGen(props.variance),
       override: props.override,

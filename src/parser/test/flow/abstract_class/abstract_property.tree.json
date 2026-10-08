@@ -1,163 +1,284 @@
 {
-  "type": "Program",
-  "loc": {
-    "source": null,
-    "start": {
-      "line": 1,
-      "column": 0
-    },
-    "end": {
-      "line": 3,
-      "column": 1
-    }
-  },
-  "range": [
-    0,
-    47
-  ],
   "body": [
     {
-      "type": "ClassDeclaration",
-      "loc": {
-        "source": null,
-        "start": {
-          "line": 1,
-          "column": 0
-        },
-        "end": {
-          "line": 3,
-          "column": 1
-        }
-      },
-      "range": [
-        0,
-        47
-      ],
-      "id": {
-        "type": "Identifier",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 15
-          },
-          "end": {
-            "line": 1,
-            "column": 18
-          }
-        },
-        "range": [
-          15,
-          18
-        ],
-        "name": "Foo",
-        "typeAnnotation": null,
-        "optional": false
-      },
+      "abstract": true,
       "body": {
-        "type": "ClassBody",
-        "loc": {
-          "source": null,
-          "start": {
-            "line": 1,
-            "column": 19
-          },
-          "end": {
-            "line": 3,
-            "column": 1
-          }
-        },
-        "range": [
-          19,
-          47
-        ],
         "body": [
           {
-            "type": "AbstractPropertyDefinition",
+            "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 15,
+                  "line": 2
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 2
+                }
+              },
+              "name": "name",
+              "optional": false,
+              "range": [
+                32,
+                36
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
             "loc": {
+              "end": {
+                "column": 24,
+                "line": 2
+              },
               "source": null,
               "start": {
-                "line": 2,
-                "column": 2
-              },
-              "end": {
-                "line": 2,
-                "column": 24
+                "column": 2,
+                "line": 2
               }
             },
             "range": [
               23,
               45
             ],
-            "key": {
-              "type": "Identifier",
+            "type": "AbstractPropertyDefinition",
+            "typeAnnotation": {
               "loc": {
+                "end": {
+                  "column": 23,
+                  "line": 2
+                },
                 "source": null,
                 "start": {
-                  "line": 2,
-                  "column": 11
-                },
-                "end": {
-                  "line": 2,
-                  "column": 15
-                }
-              },
-              "range": [
-                32,
-                36
-              ],
-              "name": "name",
-              "typeAnnotation": null,
-              "optional": false
-            },
-            "value": {
-              "type": "TypeAnnotation",
-              "loc": {
-                "source": null,
-                "start": {
-                  "line": 2,
-                  "column": 15
-                },
-                "end": {
-                  "line": 2,
-                  "column": 23
+                  "column": 15,
+                  "line": 2
                 }
               },
               "range": [
                 36,
                 44
               ],
+              "type": "TypeAnnotation",
               "typeAnnotation": {
-                "type": "StringTypeAnnotation",
                 "loc": {
+                  "end": {
+                    "column": 23,
+                    "line": 2
+                  },
                   "source": null,
                   "start": {
-                    "line": 2,
-                    "column": 17
-                  },
-                  "end": {
-                    "line": 2,
-                    "column": 23
+                    "column": 17,
+                    "line": 2
                   }
                 },
                 "range": [
                   38,
                   44
-                ]
+                ],
+                "type": "StringTypeAnnotation"
               }
             },
+            "value": null,
+            "variance": null
+          },
+          {
             "computed": false,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 18,
+                  "line": 3
+                },
+                "source": null,
+                "start": {
+                  "column": 11,
+                  "line": 3
+                }
+              },
+              "name": "untyped",
+              "optional": false,
+              "range": [
+                57,
+                64
+              ],
+              "type": "Identifier",
+              "typeAnnotation": null
+            },
+            "loc": {
+              "end": {
+                "column": 19,
+                "line": 3
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 3
+              }
+            },
+            "range": [
+              48,
+              65
+            ],
+            "type": "AbstractPropertyDefinition",
+            "typeAnnotation": null,
+            "value": null,
+            "variance": null
+          },
+          {
+            "computed": true,
+            "key": {
+              "loc": {
+                "end": {
+                  "column": 22,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 12,
+                  "line": 4
+                }
+              },
+              "range": [
+                78,
+                88
+              ],
+              "raw": "\"computed\"",
+              "type": "Literal",
+              "value": "computed"
+            },
+            "loc": {
+              "end": {
+                "column": 32,
+                "line": 4
+              },
+              "source": null,
+              "start": {
+                "column": 2,
+                "line": 4
+              }
+            },
+            "range": [
+              68,
+              98
+            ],
+            "type": "AbstractPropertyDefinition",
+            "typeAnnotation": {
+              "loc": {
+                "end": {
+                  "column": 31,
+                  "line": 4
+                },
+                "source": null,
+                "start": {
+                  "column": 23,
+                  "line": 4
+                }
+              },
+              "range": [
+                89,
+                97
+              ],
+              "type": "TypeAnnotation",
+              "typeAnnotation": {
+                "loc": {
+                  "end": {
+                    "column": 31,
+                    "line": 4
+                  },
+                  "source": null,
+                  "start": {
+                    "column": 25,
+                    "line": 4
+                  }
+                },
+                "range": [
+                  91,
+                  97
+                ],
+                "type": "NumberTypeAnnotation"
+              }
+            },
+            "value": null,
             "variance": null
           }
-        ]
+        ],
+        "loc": {
+          "end": {
+            "column": 1,
+            "line": 5
+          },
+          "source": null,
+          "start": {
+            "column": 19,
+            "line": 1
+          }
+        },
+        "range": [
+          19,
+          100
+        ],
+        "type": "ClassBody"
       },
-      "typeParameters": null,
+      "decorators": [],
+      "id": {
+        "loc": {
+          "end": {
+            "column": 18,
+            "line": 1
+          },
+          "source": null,
+          "start": {
+            "column": 15,
+            "line": 1
+          }
+        },
+        "name": "Foo",
+        "optional": false,
+        "range": [
+          15,
+          18
+        ],
+        "type": "Identifier",
+        "typeAnnotation": null
+      },
+      "implements": [],
+      "loc": {
+        "end": {
+          "column": 1,
+          "line": 5
+        },
+        "source": null,
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      },
+      "range": [
+        0,
+        100
+      ],
       "superClass": null,
       "superTypeArguments": null,
-      "implements": [],
-      "decorators": [],
-      "abstract": true
+      "type": "ClassDeclaration",
+      "typeParameters": null
     }
   ],
-  "comments": []
+  "comments": [],
+  "loc": {
+    "end": {
+      "column": 1,
+      "line": 5
+    },
+    "source": null,
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  },
+  "range": [
+    0,
+    100
+  ],
+  "type": "Program"
 }
