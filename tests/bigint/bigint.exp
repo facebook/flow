@@ -124,7 +124,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `x` to union type because `0n | 1n` [1] is incompatible with `2n | 3n` [2]. [incompatible-type]
 
-Type union type [1] includes members `0n`, `1n` that are not included in type union type [2].
+Type `0n | 1n` [1] includes members `0n`, `1n` that are not included in type `2n | 3n` [2].
 
    bigint.js:49:3
    49|   x as 2n | 3n; // ERROR

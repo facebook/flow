@@ -2831,8 +2831,6 @@ pub fn union_to_union<'cx>(
             if cx.is_verbose() {
                 eprintln!("UnionT ~> UnionT fast path (False)");
             }
-            let reason_lower = type_util::reason_of_t(l).dupe();
-            let reason_upper = type_util::reason_of_t(u).dupe();
             let members: Vec<flow_data_structure_wrapper::smol_str::FlowSmolStr> =
                 take_n_from_set(3, &diff)
                     .iter()
@@ -2842,8 +2840,10 @@ pub fn union_to_union<'cx>(
             let explanation = Some(
                 intermediate_error_types::Explanation::ExplanationAdditionalUnionMembers(Box::new(
                     intermediate_error_types::ExplanationAdditionalUnionMembersData {
-                        left: reason_lower.dupe(),
-                        right: reason_upper.dupe(),
+                        left_loc: type_util::ref_loc_of_t(l).dupe(),
+                        left_desc: flow_js_utils::type_or_type_desc_for_error(l),
+                        right_loc: type_util::ref_loc_of_t(u).dupe(),
+                        right_desc: flow_js_utils::type_or_type_desc_for_error(u),
                         members,
                         extra_number,
                     },

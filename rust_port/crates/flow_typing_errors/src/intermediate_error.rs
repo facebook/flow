@@ -4330,13 +4330,20 @@ where
                 }
             }
             ExplanationAdditionalUnionMembers(data) => {
+                use super::error_message::expect_type_desc;
                 let ExplanationAdditionalUnionMembersData {
-                    left,
-                    right,
+                    left_loc,
+                    left_desc,
+                    right_loc,
+                    right_desc,
                     members,
                     extra_number,
                 } = data.as_ref();
-                let mut features = vec![text("Type "), ref_(left), text(" includes members ")];
+                let mut features = vec![
+                    text("Type "),
+                    ref_of_ty_or_desc(left_loc, &expect_type_desc(left_desc.clone())),
+                    text(" includes members "),
+                ];
                 for (i, member) in members.iter().enumerate() {
                     if i > 0 {
                         features.push(text(", "));
@@ -4347,7 +4354,10 @@ where
                     features.push(text(&format!(" and {} more", extra_number)));
                 }
                 features.push(text(" that are not included in type "));
-                features.push(ref_(right));
+                features.push(ref_of_ty_or_desc(
+                    right_loc,
+                    &expect_type_desc(right_desc.clone()),
+                ));
                 friendly::Message(features)
             }
             ExplanationObjectLiteralNeedsRecordSyntax {

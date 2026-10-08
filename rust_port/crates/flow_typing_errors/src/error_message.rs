@@ -4435,15 +4435,19 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
         },
         Explanation::ExplanationAdditionalUnionMembers(data) => {
             let ExplanationAdditionalUnionMembersData {
-                left,
-                right,
+                left_loc,
+                left_desc,
+                right_loc,
+                right_desc,
                 members,
                 extra_number,
             } = *data;
             Explanation::ExplanationAdditionalUnionMembers(Box::new(
                 ExplanationAdditionalUnionMembersData {
-                    left: map_reason(left),
-                    right: map_reason(right),
+                    left_loc: f(&left_loc),
+                    left_desc: type_or_type_desc::map_loc(f, left_desc),
+                    right_loc: f(&right_loc),
+                    right_desc: type_or_type_desc::map_loc(f, right_desc),
                     members,
                     extra_number,
                 },
@@ -6838,6 +6842,31 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     },
                 })
             };
+        let map_eager_explanation =
+            |explanation: Option<Explanation<L>>| -> Option<Explanation<L>> {
+                explanation.map(|e| match e {
+                    Explanation::ExplanationAdditionalUnionMembers(
+                        box ExplanationAdditionalUnionMembersData {
+                            left_loc,
+                            left_desc,
+                            right_loc,
+                            right_desc,
+                            members,
+                            extra_number,
+                        },
+                    ) => Explanation::ExplanationAdditionalUnionMembers(Box::new(
+                        ExplanationAdditionalUnionMembersData {
+                            left_loc,
+                            left_desc: f(left_desc),
+                            right_loc,
+                            right_desc: f(right_desc),
+                            members,
+                            extra_number,
+                        },
+                    )),
+                    e => e,
+                })
+            };
         let map_error_type_ref = |r: ErrorTypeReferenceData<L>| -> ErrorTypeReferenceData<L> {
             ErrorTypeReferenceData {
                 loc: r.loc,
@@ -7277,7 +7306,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                     upper_def_loc,
                     lower_desc: f(lower_desc),
                     upper_desc: f(upper_desc),
-                    explanation,
+                    explanation: map_eager_explanation(explanation),
                     example: example.map(|example| {
                         Box::new(Self::convert_type_to_type_desc(f.clone(), *example))
                     }),
@@ -7741,7 +7770,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 upper_def_loc,
                 lower_desc: f(lower_desc),
                 upper_desc: f(upper_desc),
-                explanation,
+                explanation: map_eager_explanation(explanation),
                 example: example
                     .map(|example| Box::new(Self::convert_type_to_type_desc(f.clone(), *example))),
                 branches: branches
@@ -9044,7 +9073,7 @@ pub enum FriendlyMessageRecipe<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     PropPolarityMismatch(Box<PropPolarityMismatchData<L>>),
 }
 
-fn expect_type_desc<L: Dupe>(
+pub(crate) fn expect_type_desc<L: Dupe>(
     type_or_desc: TypeOrTypeDesc<L>,
 ) -> Result<ALocElt, VirtualReasonDesc<L>> {
     match type_or_desc {

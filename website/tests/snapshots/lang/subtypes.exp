@@ -13,7 +13,7 @@ Error --------------------------------------------------------------------------
 Cannot call `f` with `fiveOrSix` bound to `param` because `5 | 6` [1] is incompatible with `1 | 2 | 3 | 4 | 5` [2].
 [incompatible-type]
 
-Type union type [1] includes members `6` that are not included in type union type [2].
+Type `5 | 6` [1] includes members `6` that are not included in type `1 | 2 | 3 | 4 | 5` [2].
 
    -:10:3
    10| f(fiveOrSix); // Error!
@@ -74,7 +74,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `f1` to `FuncType` because in the return value: `"A" | "B" | "C"` [1] is incompatible with `"A" | "B"` [2].
 [incompatible-type]
 
-Type union type [1] includes members `C` that are not included in type union type [2].
+Type `"A" | "B" | "C"` [1] includes members `C` that are not included in type `"A" | "B"` [2].
 
    -:8:1
    8| f1 as FuncType; // Error

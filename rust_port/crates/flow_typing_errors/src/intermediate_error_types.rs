@@ -1084,8 +1084,10 @@ pub struct ExplanationPropertyMissingDueToNeutralOptionalPropertyData<L: Dupe> {
     serde::Deserialize
 )]
 pub struct ExplanationAdditionalUnionMembersData<L: Dupe> {
-    pub left: VirtualReason<L>,
-    pub right: VirtualReason<L>,
+    pub left_loc: L,
+    pub left_desc: TypeOrTypeDesc<L>,
+    pub right_loc: L,
+    pub right_desc: TypeOrTypeDesc<L>,
     pub members: Vec<FlowSmolStr>,
     pub extra_number: i32,
 }
