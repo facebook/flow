@@ -277,7 +277,10 @@ pub fn default_resolve_touts<'cx>(
             resolve_spread_type,
             ..
         }) => resolve_spread_resolve(&resolve_spread_type.rrt_resolve_to),
-        UseTInner::CondT(box CondTData { false_t: t, .. }) => resolve(t.dupe()),
+        UseTInner::CondT(box CondTData { collector, .. }) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::ExtendsUseT(..) => Ok(()),
         UseTInner::ResolveUnionT(box ResolveUnionTData { upper, .. }) => {
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), upper)

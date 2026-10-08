@@ -1932,7 +1932,7 @@ pub struct CondTData {
     pub loc: ALoc,
     pub opt_type: Option<Type>,
     pub true_t: Type,
-    pub false_t: Type,
+    pub collector: type_collector::TypeCollector,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

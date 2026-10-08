@@ -1659,14 +1659,13 @@ fn dump_use_t_<CX>(
         UseTInner::CondT(box CondTData {
             opt_type: then_t,
             true_t: else_t,
-            false_t: tout,
             ..
         }) => {
             let then_str = match then_t {
                 Some(t) => format!("Some ({})", kid(tvars, t)),
                 None => "None".to_string(),
             };
-            let extra = format!("{}, {}, {}", then_str, kid(tvars, else_t), kid(tvars, tout));
+            let extra = format!("{}, {}", then_str, kid(tvars, else_t));
             p(cx, use_t, true, &extra)
         }
         UseTInner::ExtendsUseT(box ExtendsUseTData {

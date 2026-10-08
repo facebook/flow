@@ -8648,7 +8648,7 @@ fn __flow_impl<'cx>(
                 loc,
                 opt_type: then_t_opt,
                 true_t: else_t,
-                false_t: tout,
+                collector,
             }),
         ) if opaque.upper_t.is_some() => {
             let t = opaque.upper_t.as_ref().unwrap();
@@ -8666,7 +8666,7 @@ fn __flow_impl<'cx>(
                         loc: loc.dupe(),
                         opt_type: new_then_t_opt,
                         true_t: else_t.dupe(),
-                        false_t: tout.dupe(),
+                        collector: collector.dupe(),
                     }))),
                 ),
             )?;
@@ -9459,34 +9459,20 @@ fn __flow_impl<'cx>(
         // ***************************
         // * conditional type switch *
         // ***************************
-
-        // Use our alternate if our lower bound is empty.
-        (
-            TypeInner::DefT(_, def_t),
-            UseTInner::CondT(box CondTData {
-                loc: _,
-                opt_type: _,
-                true_t: else_t,
-                false_t: tout,
-            }),
-        ) if matches!(def_t.deref(), DefTInner::EmptyT) => {
-            rec_flow_t(cx, env, trace, unknown_use(), (else_t, tout))?;
-        }
-        // Otherwise continue by Flowing out lower bound to tout.
         (
             _,
             UseTInner::CondT(box CondTData {
                 loc: _,
                 opt_type: then_t_opt,
-                true_t: _,
-                false_t: tout,
+                true_t: else_t,
+                collector,
             }),
         ) => {
-            let then_t = match then_t_opt {
-                Some(t) => t,
-                None => l,
+            let t = match l.deref() {
+                TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::EmptyT) => else_t,
+                _ => then_t_opt.as_ref().unwrap_or(l),
             };
-            rec_flow_t(cx, env, trace, unknown_use(), (then_t, tout))?;
+            collector.add(t.dupe());
         }
         // *****************
         // * repositioning *

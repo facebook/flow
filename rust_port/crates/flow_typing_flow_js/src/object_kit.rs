@@ -936,36 +936,33 @@ pub(super) fn run_with_env<'cx>(
                                 let is_method =
                                     property::is_method(p1_prop) || property::is_method(p2_prop);
                                 let l = property::first_loc(p1_prop);
-                                // Use CondT to replace void with t1.
-                                let t1_clone = t1.dupe();
-                                let t2_clone = t2.dupe();
-                                let t =
-                                    flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
-                                        let filter_id = FlowJs::filter_optional_with_env(
-                                            cx,
-                                            env,
-                                            Some(trace),
-                                            reason,
-                                            &t1_clone,
-                                        )?;
-                                        let open_t = Type::new(TypeInner::OpenT(Tvar::new(
-                                            reason.dupe(),
-                                            filter_id,
-                                        )));
-                                        FlowJs::rec_flow_with_env(
-                                            cx,
-                                            env,
-                                            trace,
-                                            &open_t,
-                                            &UseT::new(UseTInner::CondT(Box::new(CondTData {
-                                                loc: reason.loc().dupe(),
-                                                opt_type: None,
-                                                true_t: t2_clone.dupe(),
-                                                false_t: tvar.dupe(),
-                                            }))),
-                                        )?;
-                                        Ok::<(), FlowJsException>(())
-                                    })?;
+                                let collector = TypeCollector::create();
+                                let filter_id = FlowJs::filter_optional_with_env(
+                                    cx,
+                                    env,
+                                    Some(trace),
+                                    reason,
+                                    &t1,
+                                )?;
+                                let open_t = Type::new(TypeInner::OpenT(Tvar::new(
+                                    reason.dupe(),
+                                    filter_id,
+                                )));
+                                FlowJs::rec_flow_with_env(
+                                    cx,
+                                    env,
+                                    trace,
+                                    &open_t,
+                                    &UseT::new(UseTInner::CondT(Box::new(CondTData {
+                                        loc: reason.loc().dupe(),
+                                        opt_type: None,
+                                        true_t: t2.dupe(),
+                                        collector: collector.dupe(),
+                                    }))),
+                                )?;
+                                let t = collector
+                                    .union_opt(reason.dupe())
+                                    .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason));
                                 Some(slice_utils::mk_slice_prop(l, t, prop_polarity, is_method))
                             }
                         };
