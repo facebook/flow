@@ -1,3 +1,60 @@
+Error ------------------------------------------------------------------------------------------- named_operands.js:2:11
+
+Flow cannot determine a type for the spread [1]. `interface {[string]: number}` [2] cannot be spread because the indexer
+`string` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try spreading
+`interface {[string]: number}` [2] first or remove the indexer. [cannot-spread-indexer]
+
+   named_operands.js:2:11
+   2| type T1 = {foo: number, ...I}; // Error
+                ^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   named_operands.js:2:28
+   2| type T1 = {foo: number, ...I}; // Error
+                                 ^ [2]
+   named_operands.js:1:15
+   1| interface I {[string]: number}
+                    ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- named_operands.js:6:11
+
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `interface {[string]: number}` [2]
+cannot be spread because the indexer `string` [3] may overwrite properties with explicit keys in a way that Flow cannot
+track. Try spreading `interface {[string]: number}` [2] first or remove the indexer. [cannot-spread-indexer]
+
+   named_operands.js:6:11
+   6| const o = {a: 1, ...c}; // Error
+                ^^^^^^^^^^^^ [1]
+
+References:
+   named_operands.js:5:18
+   5| declare const c: C;
+                       ^ [2]
+   named_operands.js:4:19
+   4| declare class C {[string]: number}
+                        ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- named_operands.js:9:13
+
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{[string]: number, ...T}` [2]
+cannot be spread because the indexer `string` [3] may overwrite properties with explicit keys in a way that Flow cannot
+track. Try spreading `{[string]: number, ...T}` [2] first or remove the indexer. [cannot-spread-indexer]
+
+   named_operands.js:9:13
+   9|   const p = {a: 1, ...x}; // Error
+                  ^^^^^^^^^^^^ [1]
+
+References:
+   named_operands.js:8:45
+   8| function f<T extends {[string]: number}>(x: T) {
+                                                  ^ [2]
+   named_operands.js:8:24
+   8| function f<T extends {[string]: number}>(x: T) {
+                             ^^^^^^ [3]
+
+
 Error ---------------------------------------------------------------------------------------------------- test.js:12:11
 
 Cannot spread object literal because `number` [1] is incompatible with `string` [2]. [incompatible-type]
@@ -34,9 +91,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:11
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{[string]: number}` [2] cannot be
 spread because the indexer `string` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
+spreading `{[string]: number}` [2] first or remove the indexer. [cannot-spread-indexer]
 
    test.js:16:11
    16| const l = {...j, ...k}; // Error, there may be some properties in j that are not overwritten by the indexer
@@ -53,9 +110,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:11
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{[string]: string}` [2] cannot be
 spread because the indexer `string` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
+spreading `{[string]: string}` [2] first or remove the indexer. [cannot-spread-indexer]
 
    test.js:20:11
    20| const o = {...m, ...n}; // Error, indexer may overwrite properties with explicit keys
@@ -72,9 +129,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:24:11
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object type [2] cannot be
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. `{[string]: string}` [2] cannot be
 spread because the indexer `string` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
-spreading object type [2] first or remove the indexer. [cannot-spread-indexer]
+spreading `{[string]: string}` [2] first or remove the indexer. [cannot-spread-indexer]
 
    test.js:24:11
    24| const r = {...p, ...q}; // Error, indexer may overwrite properties with explicit keys
@@ -90,4 +147,4 @@ References:
 
 
 
-Found 5 errors
+Found 8 errors

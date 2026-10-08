@@ -654,7 +654,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- computed-property.js:21:22
 
-Cannot spread object literal because Flow cannot determine a type for object literal [1]. object literal [2] cannot be
+Cannot spread object literal because Flow cannot determine a type for the spread [1]. object literal [2] cannot be
 spread because the indexer `E` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try
 spreading object literal [2] first or remove the indexer. [cannot-spread-indexer]
 

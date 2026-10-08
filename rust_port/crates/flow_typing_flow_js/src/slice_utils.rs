@@ -549,7 +549,7 @@ fn spread2<'cx>(
     (
         inline2,
         _inexact_reason2,
-        object::Slice {
+        slice2 @ object::Slice {
             reason: r2,
             strictness_kind: strictness_kind2,
             props: props2,
@@ -577,8 +577,11 @@ fn spread2<'cx>(
         }
         (_, Some(d2)) => Err(Box::new(ErrorMessage::ECannotSpreadIndexerOnRight(
             Box::new(ECannotSpreadIndexerOnRightData {
-                spread_reason: reason.dupe(),
-                object_reason: r2.dupe(),
+                spread_loc: reason.loc().dupe(),
+                object: flow_js_utils::type_reference_with_reason_for_error(
+                    &object_type_of_slice(cx, slice2),
+                    r2.dupe(),
+                ),
                 key_loc: type_util::ref_loc_of_t(&d2.key).dupe(),
                 key_desc: flow_js_utils::type_or_type_desc_for_error(&d2.key),
                 use_op: use_op.dupe(),

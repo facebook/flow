@@ -2153,8 +2153,8 @@ pub enum Message<L: Dupe> {
     MessageCannotImportGlobalLibdef(Box<MessageCannotImportGlobalLibdefData>),
 
     MessageCannotSpreadDueToPotentialOverwrite {
-        spread_reason: VirtualReason<L>,
-        object_reason: VirtualReason<L>,
+        spread_loc: L,
+        object: Box<MessageTypeReferenceData<L>>,
         key: Box<MessageTypeReferenceData<L>>,
     },
 

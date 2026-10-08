@@ -729,9 +729,9 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------- type_union.js:14:19
 
-Flow cannot determine a type for object type [1]. object type [2] cannot be spread because the indexer `number` [3] may
-overwrite properties with explicit keys in a way that Flow cannot track. Try spreading object type [2] first or remove
-the indexer. [cannot-spread-indexer]
+Flow cannot determine a type for the spread [1]. `{[number]: string}` [2] cannot be spread because the indexer
+`number` [3] may overwrite properties with explicit keys in a way that Flow cannot track. Try spreading
+`{[number]: string}` [2] first or remove the indexer. [cannot-spread-indexer]
 
    type_union.js:14:19
    14| declare const x1: {...Union1, ...Union2, ...}; // Error, indexer on right

@@ -6312,21 +6312,21 @@ where
                 friendly::Message(features)
             }
             MessageCannotSpreadDueToPotentialOverwrite {
-                spread_reason,
-                object_reason,
+                spread_loc,
+                object,
                 key,
             } => friendly::Message(vec![
-                text("Flow cannot determine a type for "),
-                ref_(spread_reason),
+                text("Flow cannot determine a type for the "),
+                hardcoded_string_desc_ref("spread", spread_loc),
                 text(". "),
-                ref_(object_reason),
+                ref_of_ty_or_desc(&object.loc, &object.desc),
                 text(" cannot be spread because the indexer "),
                 ref_of_ty_or_desc(&key.loc, &key.desc),
                 text(
                     " may overwrite properties with explicit keys in a way that Flow cannot track. ",
                 ),
                 text("Try spreading "),
-                ref_(object_reason),
+                ref_of_ty_or_desc(&object.loc, &object.desc),
                 text(" first or remove the indexer"),
             ]),
             MessageCannotSpreadGeneral(box MessageCannotSpreadGeneralData {

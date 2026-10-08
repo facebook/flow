@@ -3576,8 +3576,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::ECannotSpreadIndexerOnRight(box ECannotSpreadIndexerOnRightData {
-            spread_reason,
-            object_reason,
+            spread_loc,
+            object,
             key_desc,
             use_op,
             ..
@@ -3588,8 +3588,8 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             };
             format!(
                 "ECannotSpreadIndexerOnRight ({}) ({}) ({}) ({})",
-                dump_reason(cx, spread_reason),
-                dump_reason(cx, object_reason),
+                string_of_aloc(None, spread_loc),
+                dump_error_type_reference(cx, object),
                 key,
                 string_of_use_op(use_op)
             )
