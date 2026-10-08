@@ -2833,7 +2833,7 @@ Cannot call `id` with `xs[0].map(...)` bound to `x` because in array element: `s
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string>` [3] and `Array<string>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<string>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    nested_generic_calls.js:133:21
