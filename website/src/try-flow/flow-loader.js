@@ -74,6 +74,7 @@ const SPLIT_FLOWLIB_FILES: ReadonlyArray<string> = [
 const TSLIB_SOURCED_FLOWLIB_FILES: ReadonlyArray<string> = [
   'lib.es2017.string.js',
   'lib.es2019.string.js',
+  'lib.es2021.string.js',
   'lib.es2024.collection.js',
   'lib.es2024.promise.js',
 ];
