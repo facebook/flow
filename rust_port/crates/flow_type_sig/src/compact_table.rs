@@ -55,6 +55,7 @@
 //
 // Note that the table has not actually been created at this point. Rather,
 // we've only calculated the index of where the data will be, once copied.
+// The data of elided nodes is dropped.
 //
 // Once compacted, the builder is "consumed" and reverts to its initial state.
 // The builder can be re-used to build a new table starting at phase 1.
@@ -63,7 +64,8 @@
 //
 // The `copy` function will allocate an array populated with data. This is the
 // fully compacted table. The provided transform function will be applied to
-// each marked node, in order, to produce the value stored at each index.
+// each marked node, in order, to produce the value stored at each index. The
+// node's data is dropped afterwards.
 
 use std::cell::Cell;
 use std::cell::Ref;
@@ -141,12 +143,46 @@ enum MarkStatus {
 }
 
 // Nodes form a doubly linked list using immutable references with interior mutability.
+// The arena never runs destructors, so a node's data is released explicitly
+// once nothing can read it again: when compaction elides the node, when its
+// table is copied, or when its builder or compacted table is dropped first.
 pub(super) struct NodeInner<'a, T> {
-    data: RefCell<T>,
+    data: RefCell<Option<T>>,
     next: Cell<Option<&'a NodeInner<'a, T>>>,
     prev: Cell<Option<&'a NodeInner<'a, T>>>,
     mark_status: RefCell<MarkStatus>,
     index: Cell<isize>,
+}
+
+impl<'a, T> NodeInner<'a, T> {
+    fn data(&self) -> Ref<'_, T> {
+        Ref::map(self.data.borrow(), |data| {
+            data.as_ref()
+                .expect("compact table node read after its data was released")
+        })
+    }
+
+    fn take_data(&self) -> T {
+        self.data
+            .take()
+            .expect("compact table node data released twice")
+    }
+
+    fn release(&self) {
+        drop(self.data.take());
+    }
+}
+
+/// Releases the data of every node in the ring starting at `head`.
+fn release_ring<'a, T>(head: &'a NodeInner<'a, T>) {
+    let mut node = head;
+    loop {
+        node.release();
+        node = node.next.get().unwrap();
+        if std::ptr::eq(node, head) {
+            break;
+        }
+    }
 }
 
 /// A handle to a node in the builder's arena.
@@ -157,11 +193,14 @@ pub(super) struct Node<'a, T> {
 
 impl<'a, T> Node<'a, T> {
     pub(super) fn data(&self) -> Ref<'_, T> {
-        self.inner.data.borrow()
+        self.inner.data()
     }
 
     pub(super) fn data_mut(&self) -> RefMut<'_, T> {
-        self.inner.data.borrow_mut()
+        RefMut::map(self.inner.data.borrow_mut(), |data| {
+            data.as_mut()
+                .expect("compact table node written after its data was released")
+        })
     }
 
     pub(super) fn ptr_eq(&self, other: &Self) -> bool {
@@ -173,7 +212,7 @@ impl<'a, T> Node<'a, T> {
             return;
         }
         self.inner.mark_status.replace(MarkStatus::Marked);
-        let is_dirty = visitor(&self.inner.data.borrow());
+        let is_dirty = visitor(&self.inner.data());
         self.inner.mark_status.replace(if is_dirty {
             MarkStatus::MarkedDirty
         } else {
@@ -197,6 +236,14 @@ pub(super) struct Builder<'a, T> {
     head: Option<&'a NodeInner<'a, T>>,
 }
 
+impl<'a, T> Drop for Builder<'a, T> {
+    fn drop(&mut self) {
+        if let Some(head) = self.head.take() {
+            release_ring(head);
+        }
+    }
+}
+
 impl<'a, T> Builder<'a, T> {
     pub(super) fn new(arena: &'a bumpalo::Bump) -> Self {
         Self { arena, head: None }
@@ -211,7 +258,7 @@ impl<'a, T> Builder<'a, T> {
 
     // Note that the builder accumulates nodes in insertion order.
     pub(super) fn push(&mut self, data: T) -> Node<'a, T> {
-        let data = RefCell::new(data);
+        let data = RefCell::new(Some(data));
         let mark_status = RefCell::new(MarkStatus::Unmarked);
 
         match self.head {
@@ -257,8 +304,8 @@ impl<'a, T> Builder<'a, T> {
         }
     }
 
-    pub(super) fn merge_spliced(&self, into: Node<'a, T>, b: Builder<'a, T>) {
-        match b.head {
+    pub(super) fn merge_spliced(&self, into: Node<'a, T>, mut b: Builder<'a, T>) {
+        match b.head.take() {
             None => {}
             Some(head) => {
                 let last = head.prev.get().unwrap();
@@ -312,11 +359,7 @@ impl<'a, T> Builder<'a, T> {
                 } else if node.mark_status.borrow().deref() != &MarkStatus::Unmarked {
                     match merge {
                         Some(merge_fn) => {
-                            let merge_result = {
-                                let prev_data = prev.data.borrow();
-                                let node_data = node.data.borrow();
-                                merge_fn(&prev_data, &node_data)
-                            };
+                            let merge_result = merge_fn(&prev.data(), &node.data());
                             match merge_result {
                                 None => {
                                     node.index.set(prev.index.get() + 1);
@@ -326,8 +369,9 @@ impl<'a, T> Builder<'a, T> {
                                     node = node.next.get().unwrap();
                                 }
                                 Some(merged) => {
-                                    prev.data.replace(merged);
+                                    prev.data.replace(Some(merged));
                                     node.index.set(prev.index.get());
+                                    node.release();
                                     node = node.next.get().unwrap();
                                 }
                             }
@@ -342,6 +386,7 @@ impl<'a, T> Builder<'a, T> {
                         }
                     }
                 } else {
+                    node.release();
                     node = node.next.get().unwrap();
                 }
             }
@@ -366,6 +411,7 @@ impl<'a, T> Builder<'a, T> {
                     let next = node.next.get().unwrap();
                     return Some(loop1(node, node, next, merge));
                 } else {
+                    node.release();
                     node = node.next.get().unwrap();
                 }
             }
@@ -381,6 +427,7 @@ impl<'a, T> Builder<'a, T> {
                         inner: Some(loop1(head, head, next, merge.as_ref())),
                     }
                 } else {
+                    head.release();
                     let next = head.next.get().unwrap();
                     let inner = loop0(head, head, next, merge.as_ref());
                     Indexed { inner }
@@ -415,15 +462,15 @@ pub(super) struct Indexed<'a, T> {
 }
 
 impl<'a, T> Indexed<'a, T> {
-    pub(super) fn copy<F, U>(self, mut f: F) -> (Table<U>, Vec<usize>)
+    pub(super) fn copy<F, U>(mut self, mut f: F) -> (Table<U>, Vec<usize>)
     where
         F: FnMut(&T) -> U,
     {
-        match self.inner {
+        match self.inner.take() {
             None => (Table(Vec::with_capacity(0)), Vec::with_capacity(0)),
             Some(CompactedNodes { head, size }) => {
                 let mut dst = Vec::with_capacity(size);
-                dst.push(f(&head.data.borrow()));
+                dst.push(f(&head.take_data()));
                 let mut dirty_indices =
                     if head.mark_status.borrow().deref() == &MarkStatus::MarkedDirty {
                         vec![head.index.get() as usize]
@@ -435,7 +482,7 @@ impl<'a, T> Indexed<'a, T> {
                     if std::ptr::eq(node, head) {
                         break;
                     } else {
-                        dst.push(f(&node.data.borrow()));
+                        dst.push(f(&node.take_data()));
                         if node.mark_status.borrow().deref() == &MarkStatus::MarkedDirty {
                             dirty_indices.push(node.index.get() as usize);
                         }
@@ -444,6 +491,14 @@ impl<'a, T> Indexed<'a, T> {
                 }
                 (Table(dst), dirty_indices)
             }
+        }
+    }
+}
+
+impl<'a, T> Drop for Indexed<'a, T> {
+    fn drop(&mut self) {
+        if let Some(CompactedNodes { head, .. }) = self.inner.take() {
+            release_ring(head);
         }
     }
 }
@@ -560,6 +615,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use std::cell::Cell;
     use std::cell::RefCell;
     use std::rc::Rc;
 
@@ -793,5 +849,60 @@ mod tests {
 2| C -> 1
 "#;
         assert_eq!(output.trim(), expected.trim());
+    }
+
+    /// Counts its live instances, to observe which node data has been dropped.
+    struct Counted(Rc<Cell<usize>>);
+
+    impl Counted {
+        fn new(live: &Rc<Cell<usize>>) -> Self {
+            live.set(live.get() + 1);
+            Counted(live.dupe())
+        }
+    }
+
+    impl Drop for Counted {
+        fn drop(&mut self) {
+            self.0.set(self.0.get() - 1);
+        }
+    }
+
+    #[test]
+    fn releases_data() {
+        let live = Rc::new(Cell::new(0));
+        let arena = bumpalo::Bump::new();
+        let mut builder = Builder::new(&arena);
+        let a = builder.push(('A', Counted::new(&live)));
+        let _b = builder.push(('B', Counted::new(&live)));
+        let c = builder.push(('C', Counted::new(&live)));
+        let d = builder.push(('C', Counted::new(&live)));
+        a.mark(|_| false);
+        c.mark(|_| false);
+        d.mark(|_| false);
+
+        // `c` and `d` merge into one entry.
+        let merge = |x: &(char, Counted), y: &(char, Counted)| {
+            (x.0 == y.0).then(|| (x.0, Counted::new(&live)))
+        };
+        let indexed = builder.compact(Some(merge));
+        assert_eq!(live.get(), 2, "compaction drops elided and merged data");
+        let (copy, _) = indexed.copy(|_| ());
+        assert_eq!(copy.len(), 2);
+        assert_eq!(live.get(), 0, "copying drops the remaining data");
+    }
+
+    #[test]
+    fn releases_data_without_copy() {
+        let live = Rc::new(Cell::new(0));
+        let arena = bumpalo::Bump::new();
+        let mut builder = Builder::new(&arena);
+        builder.push(Counted::new(&live));
+        drop(builder);
+        assert_eq!(live.get(), 0, "dropping a builder drops its data");
+
+        let mut builder = Builder::new(&arena);
+        builder.push(Counted::new(&live)).mark(|_| false);
+        drop(builder.compact_without_merge());
+        assert_eq!(live.get(), 0, "dropping a compacted table drops its data");
     }
 }
