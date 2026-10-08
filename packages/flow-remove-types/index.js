@@ -163,9 +163,13 @@ var removeFlowVisitor = {
   OpaqueType: removeNode,
   DeclareOpaqueType: removeNode,
   DeclareExportDeclaration: removeNode,
+  AbstractMethodDefinition: removeAbstractMethod,
+  AbstractPropertyDefinition: removeNode,
 
-  ClassDeclaration: removeImplementedInterfaces,
-  ClassExpression: removeImplementedInterfaces,
+  ClassDeclaration: removeClassTypes,
+  ClassExpression: removeClassTypes,
+
+  MethodDefinition: removeOverrideModifier,
 
   AsExpression: function (context, node, ast) {
     var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
@@ -221,6 +225,7 @@ var removeFlowVisitor = {
     if (node.declare || (context.ignoreUninitializedFields && !node.value)) {
       return removeNode(context, node);
     }
+    removeOverrideModifier(context, node);
     if (node.variance != null) {
       removeNode(context, node.variance);
     }
@@ -387,6 +392,35 @@ var removeFlowVisitor = {
     }
   },
 };
+
+function removeAbstractMethod(context, node) {
+  removeNode(context, node);
+  var tokens = context.ast.tokens;
+  var nextToken = tokens[findTokenIndexAtEndOfNode(tokens, node) + 1];
+  if (nextToken && getLabel(nextToken) === ';') {
+    removeNode(context, nextToken);
+  }
+  return false;
+}
+
+function removeClassTypes(context, node, ast) {
+  if (node.abstract) {
+    var idx = findTokenIndexAtStartOfNode(ast.tokens, node);
+    removeNode(context, ast.tokens[idx]);
+  }
+  removeImplementedInterfaces(context, node, ast);
+}
+
+function removeOverrideModifier(context, node) {
+  if (node.override) {
+    var tokens = context.ast.tokens;
+    var idx = findTokenIndexAtStartOfNode(tokens, node);
+    while (getLabel(tokens[idx]) !== 'override') {
+      idx++;
+    }
+    removeNode(context, tokens[idx]);
+  }
+}
 
 // If this class declaration or expression implements interfaces, remove
 // the associated tokens.

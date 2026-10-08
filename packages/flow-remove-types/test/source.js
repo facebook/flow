@@ -356,3 +356,68 @@ const chain2 = '1' as const as any;
 type TemplateLiteralType = `prefix-${string}`;
 const templateLiteral: `prefix-${string}` = `prefix-${42}`;
 const asTemplateLiteral = templateLiteral as `prefix-${string}`;
+
+export abstract /*.*/ class AbstractBase<T> {
+  abstract property: T;
+  abstract method<U>(value: U): U;
+  abstract ['computed'](value: T): T;
+  abstract withoutSemicolon(): void
+
+  concrete(value: T): T {
+    return value;
+  }
+
+  static create(): number {
+    return 1;
+  }
+}
+
+abstract class AbstractDerived extends AbstractBase<number> implements Foo {
+  abstract override property: number;
+  abstract override method<U>(value: U): U;
+}
+
+class ConcreteDerived extends AbstractDerived {
+  override /*.*/ property: number = 42;
+  override uninitialized: number;
+
+  override method<U>(value: U): U {
+    return value;
+  }
+
+  static /*.*/ override create(): number {
+    return 2;
+  }
+
+  override ['computed'](value: number): number {
+    return value;
+  }
+
+  override get result(): number {
+    return this.property;
+  }
+
+  override set result(value: number): void {
+    this.property = value;
+  }
+}
+
+const AbstractExpression = abstract class {
+  abstract property: string;
+  abstract method(): void;
+};
+
+export default abstract class {
+  abstract method(): void;
+}
+
+declare abstract class DeclaredAbstract {
+  abstract method(): void;
+}
+
+class ModifierNames {
+  abstract: string = 'abstract';
+  override(): string {
+    return 'override';
+  }
+}

@@ -356,3 +356,68 @@ const chain2 = '1'                ;
                                               
 const templateLiteral                     = `prefix-${42}`;
 const asTemplateLiteral = templateLiteral                      ;
+
+export          /*.*/ class AbstractBase    {
+                       
+                                  
+                                     
+                                   
+
+  concrete(value   )    {
+    return value;
+  }
+
+  static create()         {
+    return 1;
+  }
+}
+
+         class AbstractDerived extends AbstractBase                        {
+                                     
+                                           
+}
+
+class ConcreteDerived extends AbstractDerived {
+           /*.*/ property         = 42;
+                                 
+
+           method   (value   )    {
+    return value;
+  }
+
+  static /*.*/          create()         {
+    return 2;
+  }
+
+           ['computed'](value        )         {
+    return value;
+  }
+
+           get result()         {
+    return this.property;
+  }
+
+           set result(value        )       {
+    this.property = value;
+  }
+}
+
+const AbstractExpression =          class {
+                            
+                          
+};
+
+export default          class {
+                          
+}
+
+                                         
+                          
+ 
+
+class ModifierNames {
+  abstract         = 'abstract';
+  override()         {
+    return 'override';
+  }
+}
