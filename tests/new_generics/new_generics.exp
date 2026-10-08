@@ -438,7 +438,7 @@ the same as `Plugin<TItem, TColumnKey>` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either annotate array literal [1] with `Array<Plugin<TItem, TColumnKey>>` [3]
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<Plugin<TItem, TColumnKey>>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    defaulted_type_args.js:46:10

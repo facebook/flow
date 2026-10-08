@@ -940,7 +940,7 @@ pub enum ExplanationWithLazyParts<L: Dupe> {
         upper_array_loc: L,
         lower_array_desc: TypeOrTypeDesc<L>,
         upper_array_desc: TypeOrTypeDesc<L>,
-        upper_array_reason: VirtualReason<L>,
+        upper_array_reference_loc: L,
     },
     LazyExplanationInvariantSubtypingDueToMutableProperty {
         lower_obj_loc: L,
@@ -1009,7 +1009,7 @@ pub struct ExplanationInvariantSubtypingDueToMutableArrayData<L: Dupe> {
     pub upper_array_loc: L,
     pub lower_array_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub upper_array_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_array_reason: VirtualReason<L>,
+    pub upper_array_reference_loc: L,
 }
 
 #[derive(

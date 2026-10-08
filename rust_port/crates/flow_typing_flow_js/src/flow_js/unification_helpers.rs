@@ -74,19 +74,20 @@ pub(super) fn __unify<'cx>(
                         UnifyCause::MutableArray {
                             lower_array_t,
                             upper_array_t,
-                            upper_array_reason,
                         } => {
                             let lower_array_desc = TypeOrTypeDescT::Type(lower_array_t.dupe());
                             let upper_array_desc = TypeOrTypeDescT::Type(upper_array_t.dupe());
                             let lower_array_loc = reason_of_t(lower_array_t).def_loc().dupe();
                             let upper_array_loc = reason_of_t(upper_array_t).def_loc().dupe();
+                            let upper_array_reference_loc =
+                                type_util::ref_loc_of_t(upper_array_t).dupe();
                             Some(
                                 ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                                     lower_array_loc,
                                     upper_array_loc,
                                     lower_array_desc,
                                     upper_array_desc,
-                                    upper_array_reason: upper_array_reason.dupe(),
+                                    upper_array_reference_loc,
                                 },
                             )
                         }

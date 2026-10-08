@@ -2725,7 +2725,6 @@ fn array_flow<'cx>(
     lit1: bool,
     strictness_kind: TypeStrictnessKind,
     _r1: &Reason,
-    r2: &Reason,
     l: &Type,
     u: &Type,
     ts1: &[Type],
@@ -2748,7 +2747,6 @@ fn array_flow<'cx>(
                         UnifyCause::MutableArray {
                             lower_array_t: l.dupe(),
                             upper_array_t: u.dupe(),
-                            upper_array_reason: r2.dupe(),
                         },
                         lit1 || strictness_kind.is_typescript_loose(),
                         e1,
@@ -2767,7 +2765,6 @@ fn array_flow<'cx>(
                     UnifyCause::MutableArray {
                         lower_array_t: l.dupe(),
                         upper_array_t: u.dupe(),
-                        upper_array_reason: r2.dupe(),
                     },
                     lit1 || strictness_kind.is_typescript_loose(),
                     e1,
@@ -5686,7 +5683,6 @@ pub fn rec_sub_t<'cx>(
                 lit1,
                 strictness_kind1.join(*strictness_kind2),
                 r1,
-                r2,
                 l,
                 u,
                 &ts1,

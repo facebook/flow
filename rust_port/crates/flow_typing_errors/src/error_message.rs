@@ -4242,13 +4242,13 @@ fn map_loc_of_lazy_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
             upper_array_loc,
             lower_array_desc,
             upper_array_desc,
-            upper_array_reason,
+            upper_array_reference_loc,
         } => ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
             lower_array_loc: f(&lower_array_loc),
             upper_array_loc: f(&upper_array_loc),
             lower_array_desc: type_or_type_desc::map_loc(f, lower_array_desc),
             upper_array_desc: type_or_type_desc::map_loc(f, upper_array_desc),
-            upper_array_reason: map_reason(upper_array_reason),
+            upper_array_reference_loc: f(&upper_array_reference_loc),
         },
         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
             lower_obj_loc,
@@ -4331,7 +4331,7 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                 upper_array_loc,
                 lower_array_desc,
                 upper_array_desc,
-                upper_array_reason,
+                upper_array_reference_loc,
             } = *data;
             Explanation::ExplanationInvariantSubtypingDueToMutableArray(Box::new(
                 ExplanationInvariantSubtypingDueToMutableArrayData {
@@ -4339,7 +4339,7 @@ fn map_loc_of_explanation<L: Dupe, M: Dupe, F: Fn(&L) -> M>(
                     upper_array_loc: f(&upper_array_loc),
                     lower_array_desc: lower_array_desc.map_err(map_desc),
                     upper_array_desc: upper_array_desc.map_err(map_desc),
-                    upper_array_reason: map_reason(upper_array_reason),
+                    upper_array_reference_loc: f(&upper_array_reference_loc),
                 },
             ))
         }
@@ -6802,13 +6802,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         upper_array_loc,
                         lower_array_desc,
                         upper_array_desc,
-                        upper_array_reason,
+                        upper_array_reference_loc,
                     } => ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
                         lower_array_loc,
                         upper_array_loc,
                         lower_array_desc: f(lower_array_desc),
                         upper_array_desc: f(upper_array_desc),
-                        upper_array_reason,
+                        upper_array_reference_loc,
                     },
                     ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                         lower_obj_loc,
@@ -11781,13 +11781,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                             upper_array_loc,
                             lower_array_desc,
                             upper_array_desc,
-                            upper_array_reason,
+                            upper_array_reference_loc,
                         } => Explanation::ExplanationInvariantSubtypingDueToMutableArray(Box::new(ExplanationInvariantSubtypingDueToMutableArrayData {
                             lower_array_loc: lower_array_loc.dupe(),
                             upper_array_loc: upper_array_loc.dupe(),
                             lower_array_desc: expect_type_desc(lower_array_desc.clone()),
                             upper_array_desc: expect_type_desc(upper_array_desc.clone()),
-                            upper_array_reason: upper_array_reason.dupe(),
+                            upper_array_reference_loc: upper_array_reference_loc.dupe(),
                         })),
                         ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                             lower_obj_loc,

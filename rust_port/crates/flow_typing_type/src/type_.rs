@@ -10409,7 +10409,6 @@ pub enum UnifyCause {
     MutableArray {
         lower_array_t: Type,
         upper_array_t: Type,
-        upper_array_reason: Reason,
     },
     MutableProperty {
         lower_obj_t: Type,

@@ -4463,7 +4463,7 @@ where
                     upper_array_loc,
                     lower_array_desc,
                     upper_array_desc,
-                    upper_array_reason,
+                    upper_array_reference_loc,
                 } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
 
@@ -4518,7 +4518,10 @@ where
                 ];
                 features.extend(fix_suggestion);
                 features.push(text("\n- Or make "));
-                features.push(ref_(upper_array_reason));
+                features.push(ref_of_ty_or_desc(
+                    upper_array_reference_loc,
+                    upper_array_desc,
+                ));
                 features.push(text(" a "));
                 features.push(code("ReadonlyArray"));
                 features.push(text(".\nSee "));

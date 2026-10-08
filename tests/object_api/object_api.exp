@@ -36,7 +36,7 @@ exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number]>` [1] and `Array<[string, empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<[string, empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:27:1
@@ -59,7 +59,7 @@ exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: unknown]>` [1] and `Array<[string, empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<[string, empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:28:1
@@ -82,7 +82,7 @@ not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string | "a", value: unknown]>` [1] and `Array<[string, empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<[string, empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:29:1
@@ -105,7 +105,7 @@ is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number | boolean]>` [1] and `Array<[string, empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<[string, empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:30:1
@@ -128,7 +128,7 @@ exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: unknown]>` [1] and `Array<[string, empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<[string, empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:31:1
@@ -151,7 +151,7 @@ exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: "a" | "b", value: unknown]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<["a" | "b", empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:32:1
@@ -174,7 +174,7 @@ exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: "a" | "b", value: unknown]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<["a" | "b", empty]>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:33:1
@@ -197,7 +197,7 @@ exactly the same as `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number]>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_entries.js:34:1
@@ -322,7 +322,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"prop"` 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"prop">` [1] and `Array<"error">` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<"error">` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:24:1
@@ -345,7 +345,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"bar_pro
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"bar_prop">` [1] and `Array<"error">` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<"error">` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:31:1
@@ -368,7 +368,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"hi"` [1
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"hi">` [3] and `Array<"bye">` [4] exactly the same
-- Or make array type [4] a `ReadonlyArray`.
+- Or make `Array<"bye">` [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:37:5
@@ -394,7 +394,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `string` 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string>` [1] and `Array<"123">` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<"123">` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:43:5
@@ -417,7 +417,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"hi"` [1
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"hi">` [1] and `Array<"bye">` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<"bye">` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:49:5
@@ -440,7 +440,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"123"` [
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"123">` [1] and `Array<"456">` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<"456">` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:55:5
@@ -463,7 +463,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"x" | "y
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"x" | "y">` [1] and `Array<"$value" | "$key">` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<"$value" | "$key">` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_keys.js:67:1
@@ -1039,7 +1039,7 @@ Cannot cast `Object.values(...)` to array type because in array element: `number
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number>` [3] and `Array<empty>` [4] exactly the same
-- Or make array type [4] a `ReadonlyArray`.
+- Or make `Array<empty>` [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:27:1
@@ -1065,7 +1065,7 @@ Cannot cast `Object.values(...)` to array type because in array element: `unknow
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:28:1
@@ -1088,7 +1088,7 @@ Cannot cast `Object.values(...)` to array type because in array element: `unknow
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:29:1
@@ -1111,7 +1111,7 @@ as `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number | boolean>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:30:1
@@ -1134,7 +1134,7 @@ Cannot cast `Object.values(...)` to array type because in array element: `unknow
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:31:1
@@ -1157,7 +1157,7 @@ Cannot cast `Object.values(...)` to array type because in array element: `unknow
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:32:1
@@ -1180,7 +1180,7 @@ Cannot cast `Object.values(...)` to array type because in array element: `unknow
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<unknown>` [1] and `Array<empty>` [3] exactly the same
-- Or make array type [3] a `ReadonlyArray`.
+- Or make `Array<empty>` [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    object_values.js:33:1
