@@ -1478,6 +1478,49 @@ fn mk_inference_targ<'cx>(
     tvar
 }
 
+fn force_type_arguments(cx: &Context<'_>, targs: &[Targ]) {
+    struct Forcer<'a, 'cx> {
+        cx: &'a Context<'cx>,
+        seen: BTreeSet<i32>,
+    }
+
+    impl TypeVisitor<()> for Forcer<'_, '_> {
+        fn tvar<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            (): (),
+            _reason: &Reason,
+            id: u32,
+        ) {
+            let (root_id, constraints) = self.cx.find_constraints(id as i32);
+            if !self.seen.insert(root_id) {
+                return;
+            }
+            match constraints {
+                constraint::Constraints::FullyResolved(state)
+                    if !self.cx.is_active_tvar_forcing_state(&state) =>
+                {
+                    let t = self.cx.force_fully_resolved_tvar(&state);
+                    self.type_(cx, pole, (), &t);
+                }
+                constraint::Constraints::Resolved(t) => self.type_(cx, pole, (), &t),
+                _ => {}
+            }
+        }
+    }
+
+    let mut forcer = Forcer {
+        cx,
+        seen: BTreeSet::new(),
+    };
+    for targ in targs {
+        if let Targ::ExplicitArg(t) = targ {
+            forcer.type_(cx, Polarity::Positive, (), t);
+        }
+    }
+}
+
 fn check_instantiation<'cx, Obs: Observer>(
     cx: &Context<'cx>,
     env: &FlowJsEnv,
@@ -1655,7 +1698,7 @@ fn check_instantiation<'cx, Obs: Observer>(
                     use_op.dupe(),
                     reason_op,
                     reason_tapp,
-                    false,
+                    true,
                     None,
                     &check.lhs,
                     targs,
@@ -1744,28 +1787,21 @@ fn make_pin_type<'cx, Obs: Observer>(
     let pin_tparam = |inferred: Type| Ok(Obs::on_pinned_tparam(cx, tparam, inferred));
 
     match polarity {
+        // Nothing observes an unmarked tparam's solution, so it is never underconstrained.
         None => match merge_lower_bounds(cx, env, t)? {
-            None => {
-                let on_upper_empty = |cx: &Context<'_>,
-                                      env: &FlowJsEnv,
-                                      tparam: &TypeParam,
-                                      _tparam_binder_reason: &Reason,
-                                      _instantiation_reason: &Reason|
-                 -> Result<InferredTarg, FlowJsException> {
+            None => match merge_upper_bounds(cx, env, &mut BTreeSet::new(), t)? {
+                UseTResult::UpperEmpty | UseTResult::UpperNonT(_) => {
                     Obs::on_constant_tparam_missing_bounds(cx, env, tparam)
-                };
-                use_upper_bounds::<Obs>(
-                    cx,
-                    env,
-                    use_op,
-                    tparam,
-                    t,
-                    default_bound,
-                    Some(&on_upper_empty),
-                    tparam_binder_reason,
-                    instantiation_reason,
-                )
-            }
+                }
+                UseTResult::UpperPlaceholder(inferred) => {
+                    cx.set_synthesis_produced_uncacheable_result();
+                    Ok(InferredTarg {
+                        tparam: tparam.dupe(),
+                        inferred,
+                    })
+                }
+                UseTResult::UpperT(inferred) => pin_tparam(inferred),
+            },
             Some(inferred) => pin_tparam(inferred),
         },
         // TODO(jmbrown): The neutral case should also unify upper/lower bounds. In order
@@ -2451,11 +2487,15 @@ pub mod instantiation_solver {
         ),
         FlowJsException,
     > {
-        // Force pending lazy tvars (e.g. from qualified type lookups like React.Foo
-        // in explicit type args) so their errors are captured in init_errors below,
-        // rather than being discarded by the error filtering in the finally block.
-        for s in cx.post_component_tvar_forcing_states().iter() {
-            cx.force_fully_resolved_tvar(s);
+        let targs = match &check.operation.2 {
+            Operation::Call(call) => call.call_targs.as_deref(),
+            Operation::Constructor(targs, _) | Operation::ReactJSX { targs, .. } => {
+                targs.as_deref()
+            }
+            Operation::SubtypeLowerPoly(_) => None,
+        };
+        if let Some(targs) = targs {
+            force_type_arguments(cx, targs);
         }
         // Push a preservation level OUTSIDE run_and_rolled_back_cache so it
         // sits below the rollback truncation line and survives the restore.

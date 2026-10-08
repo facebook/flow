@@ -398,36 +398,36 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:64:51
 
-Cannot return `f` because in the second parameter: `boolean` [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot return `f` because in the return value: `unknown` [1] is incompatible with `boolean` [2]. [incompatible-type]
 
    subtyping.js:64:51
    64| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
                                                          ^
 
 References:
-   subtyping.js:64:39
-   64| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
-                                             ^^^^^^^ [1]
    subtyping.js:64:33
    64| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
-                                       ^ [2]
+                                       ^ [1]
+   subtyping.js:64:39
+   64| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
+                                             ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:51
 
-Cannot return `f` because in the first parameter: `empty` [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot return `f` because in the return value: `unknown` [1] is incompatible with `empty` [2]. [incompatible-type]
 
    subtyping.js:66:51
    66| (f: <R>(R, unknown) => R): (<S, T>(S, T) => T) => f; // error
                                                          ^
 
 References:
-   subtyping.js:66:45
-   66| (f: <R>(R, unknown) => R): (<S, T>(S, T) => T) => f; // error
-                                                   ^ [1]
    subtyping.js:66:36
    66| (f: <R>(R, unknown) => R): (<S, T>(S, T) => T) => f; // error
-                                          ^ [2]
+                                          ^ [1]
+   subtyping.js:66:45
+   66| (f: <R>(R, unknown) => R): (<S, T>(S, T) => T) => f; // error
+                                                   ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:65
@@ -540,19 +540,19 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:80:54
 
-Cannot return `f` because in the second parameter: `number` [1] is incompatible with `string` [2]. [incompatible-type]
+Cannot return `f` because in the return value: `string` [1] is incompatible with `number` [2]. [incompatible-type]
 
    subtyping.js:80:54
    80| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
                                                             ^
 
 References:
-   subtyping.js:80:43
-   80| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
-                                                 ^^^^^^ [1]
    subtyping.js:80:32
    80| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
-                                      ^^^^^^ [2]
+                                      ^^^^^^ [1]
+   subtyping.js:80:43
+   80| (f: <T>(T, T) => T): ((number, string) => number) => f; // error
+                                                 ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:10

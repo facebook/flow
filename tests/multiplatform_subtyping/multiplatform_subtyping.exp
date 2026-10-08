@@ -19,7 +19,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:65:22
 
 Cannot conform to common interface module because in property `GenericDifferentSizedTypeParametersError1`:
-`GenericDifferentSizedTypeParametersError1<empty, empty>` [1] is incompatible with
+`GenericDifferentSizedTypeParametersError1<unknown, unknown>` [1] is incompatible with
 `GenericDifferentSizedTypeParametersError1<T2>` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -37,7 +37,7 @@ References:
 Error --------------------------------------------------------------------------------------------- classes.ios.js:69:22
 
 Cannot conform to common interface module because in property `GenericDifferentSizedTypeParametersError2`:
-`GenericDifferentSizedTypeParametersError2<empty>` [1] is incompatible with
+`GenericDifferentSizedTypeParametersError2<unknown>` [1] is incompatible with
 `GenericDifferentSizedTypeParametersError2<T1, T2>` [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

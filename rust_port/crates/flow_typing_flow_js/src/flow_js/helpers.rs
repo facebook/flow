@@ -1932,7 +1932,7 @@ pub(super) fn reposition<'cx>(
                                 let lazy_t_val = flow_typing_tvar::mk_fully_resolved_lazy(
                                     cx,
                                     reason.dupe(),
-                                    true,
+                                    false,
                                     Box::new({
                                         let cell = lazy_thunk_cell.dupe();
                                         move |_cx| {
@@ -1955,6 +1955,15 @@ pub(super) fn reposition<'cx>(
                                 lazy_thunk_cell
                                     .set(thunk_result)
                                     .expect("lazy_thunk_cell already set");
+                                // Queued for post-component forcing only now that it can be
+                                // forced: a solve inside the recursion above forces every
+                                // queued state.
+                                let lazy_id = open_tvar(&lazy_t_val).id() as i32;
+                                if let (_, Constraints::FullyResolved(state)) =
+                                    cx.find_constraints(lazy_id)
+                                {
+                                    cx.add_post_component_tvar_forcing_state(lazy_id, state);
+                                }
                                 lazy_t_val
                             };
                             match t.deref() {

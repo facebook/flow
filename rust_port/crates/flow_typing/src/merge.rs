@@ -122,9 +122,7 @@ use flow_utils_concurrency::job_error::JobError;
 use flow_utils_union_find::Node;
 
 fn force_lazy_tvars<'cx>(cx: &Context<'cx>) {
-    for s in cx.post_component_tvar_forcing_states().iter() {
-        cx.force_fully_resolved_tvar(s);
-    }
+    cx.force_post_component_tvars();
 }
 
 fn detect_sketchy_null_checks<'cx>(cx: &Context<'cx>, tast: &ast::Program<ALoc, (ALoc, Type)>) {

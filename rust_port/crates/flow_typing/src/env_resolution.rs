@@ -3610,10 +3610,7 @@ pub fn resolve_component<'cx>(
                 }
             }
         }
-        let forcing_states = cx.post_component_tvar_forcing_states();
-        for s in forcing_states.iter() {
-            cx.force_fully_resolved_tvar(s);
-        }
+        cx.force_post_component_tvars();
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec!["Forced all lazy tvars after resolving component".to_string()]
         });

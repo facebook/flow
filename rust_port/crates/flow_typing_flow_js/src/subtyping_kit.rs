@@ -57,6 +57,8 @@ use flow_typing_flow_common::obj_type;
 use flow_typing_flow_common::string_case_transform;
 use flow_typing_flow_js_env::FlowJsEnv;
 use flow_typing_flow_js_env::type_app_expansion;
+use flow_typing_implicit_instantiation_check::ImplicitInstantiationCheck;
+use flow_typing_implicit_instantiation_check::Operation;
 use flow_typing_type::type_::AnyErrorKind;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
@@ -123,6 +125,7 @@ use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::constraint;
 use flow_typing_type::type_::dummy_prototype;
 use flow_typing_type::type_::empty_t;
+use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::mixed_t;
 use flow_typing_type::type_::mk_functiontype;
 use flow_typing_type::type_::name_of_propref;
@@ -140,6 +143,7 @@ use vec1::Vec1;
 
 use crate::flow_js::FlowJs;
 use crate::flow_js::prop_typo_suggestion_for_name;
+use crate::implicit_instantiation;
 use crate::renders_kit;
 use crate::speculation_kit;
 use crate::template_literal_type;
@@ -4900,15 +4904,39 @@ pub fn rec_sub_t<'cx>(
         {
             let reason_op = type_util::reason_of_t(u);
             let ids = Vec1::try_from_vec(ids.to_vec()).unwrap();
-            let (t_, _) = FlowJs::instantiate_poly_with_env(
-                cx, env,
-                trace,
-                use_op.dupe(),
-                reason_op,
-                reason_tapp,
-                None,
-                (tparams_loc.dupe(), ids, t.dupe()),
-            )?;
+            // Outside implicit instantiation nothing expects unresolved tvars, so the
+            // type arguments are solved instead of instantiated as fresh tvars.
+            let (t_, _) = if env.in_implicit_instantiation() {
+                FlowJs::instantiate_poly_with_env(
+                    cx, env,
+                    trace,
+                    use_op.dupe(),
+                    reason_op,
+                    reason_tapp,
+                    None,
+                    (tparams_loc.dupe(), ids, t.dupe()),
+                )?
+            } else {
+                let check = ImplicitInstantiationCheck {
+                    lhs: l.dupe(),
+                    poly_t: (tparams_loc.dupe(), ids, t.dupe()),
+                    operation: (
+                        use_op.dupe(),
+                        reason_op.dupe(),
+                        Operation::SubtypeLowerPoly(u.dupe()),
+                    ),
+                };
+                implicit_instantiation::kit::run_call(
+                    cx,
+                    env,
+                    &check,
+                    &hint_unavailable(),
+                    trace,
+                    use_op.dupe(),
+                    reason_op,
+                    reason_tapp,
+                )?
+            };
             FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &t_, u)
         }
         // when a this-abstracted class flows to upper bounds, fix the class

@@ -428,6 +428,7 @@ pub struct ComponentT<'cx> {
     // Post-inference checks
     delayed_forcing_tvars: RefCell<FlowOrdSet<i32>>,
     post_component_tvar_forcing_states: RefCell<FlowVector<ForcingState<'cx, Context<'cx>>>>,
+    active_tvar_forcing_states: RefCell<Vec<ForcingState<'cx, Context<'cx>>>>,
     post_inference_polarity_checks: RefCell<
         Vec<(
             BTreeMap<SubstName, type_::TypeParam>,
@@ -790,6 +791,7 @@ pub fn make_ccx<'cx>() -> ComponentT<'cx> {
         synthesis_produced_uncacheable_result: RefCell::new(false),
         delayed_forcing_tvars: RefCell::new(CACHED_ORD_SET.with(|c| c.clone())),
         post_component_tvar_forcing_states: RefCell::new(FlowVector::new()),
+        active_tvar_forcing_states: RefCell::new(Vec::new()),
         post_inference_polarity_checks: RefCell::new(Vec::new()),
         post_inference_validation_flows: RefCell::new(VecDeque::new()),
         post_inference_validation_callbacks: RefCell::new(Vec::new()),
@@ -1455,6 +1457,29 @@ impl<'cx> Context<'cx> {
             .ccx
             .post_component_tvar_forcing_states
             .replace(FlowVector::new())
+    }
+
+    pub fn force_post_component_tvars(&self) {
+        for state in self.post_component_tvar_forcing_states().iter() {
+            if self.is_active_tvar_forcing_state(state) {
+                self.0
+                    .ccx
+                    .post_component_tvar_forcing_states
+                    .borrow_mut()
+                    .push_back(state.clone());
+            } else {
+                self.force_fully_resolved_tvar(state);
+            }
+        }
+    }
+
+    pub fn is_active_tvar_forcing_state(&self, state: &ForcingState<'cx, Context<'cx>>) -> bool {
+        self.0
+            .ccx
+            .active_tvar_forcing_states
+            .borrow()
+            .iter()
+            .any(|active| active.ptr_eq(state))
     }
 
     pub fn post_inference_polarity_checks(
@@ -3133,6 +3158,23 @@ impl<'cx> Context<'cx> {
     }
 
     pub fn force_fully_resolved_tvar(&self, s: &ForcingState<'cx, Context<'cx>>) -> Type {
+        struct ForcingGuard<'a, 'cx> {
+            states: &'a RefCell<Vec<ForcingState<'cx, Context<'cx>>>>,
+            len: usize,
+        }
+
+        impl Drop for ForcingGuard<'_, '_> {
+            fn drop(&mut self) {
+                self.states.borrow_mut().truncate(self.len);
+            }
+        }
+
+        let states = &self.0.ccx.active_tvar_forcing_states;
+        let _guard = ForcingGuard {
+            states,
+            len: states.borrow().len(),
+        };
+        states.borrow_mut().push(s.clone());
         s.force(self, |reason| self.on_cyclic_tvar_error(reason.dupe()))
     }
 
@@ -3298,5 +3340,51 @@ impl<'cx> Context<'cx> {
             )),
             sig_help: std::rc::Rc::new(std::cell::RefCell::new(std::collections::VecDeque::new())),
         }
+    }
+}
+
+#[cfg(test)]
+mod forcing_tests {
+    use std::cell::OnceCell;
+
+    use flow_aloc::ALocTable;
+    use flow_common::reason::locationless_reason;
+
+    use super::*;
+
+    fn context() -> Context<'static> {
+        let file = FileKey::source_file_of_absolute("/forcing_test.js");
+        let aloc_table: LazyALocTable = Rc::new(LazyCell::new(Box::new({
+            let file = file.dupe();
+            move || Rc::new(ALocTable::empty(file))
+        })));
+        Context::make(
+            Rc::new(make_ccx()),
+            Metadata::default(),
+            file,
+            Arc::default(),
+            aloc_table,
+            Rc::new(|_, _| ResolvedRequire::MissingModule),
+            Rc::new(|_| Builtins::empty()),
+            CheckBudget::new(None),
+        )
+    }
+
+    #[test]
+    fn direct_recursive_forcing_still_reports_a_cycle() {
+        let cx = context();
+        let reason = locationless_reason(VirtualReasonDesc::RNumber);
+        let state = Rc::new(OnceCell::new());
+        let active = ForcingState::of_lazy_t(reason, {
+            let state = state.dupe();
+            move |cx: &Context| {
+                cx.force_fully_resolved_tvar(state.get().expect("initialized state"))
+            }
+        });
+        state.set(active.clone()).expect("uninitialized state");
+
+        cx.force_fully_resolved_tvar(&active);
+        assert!(active.already_forced_with_cyclic_error());
+        assert_eq!(cx.errors().len(), 1);
     }
 }

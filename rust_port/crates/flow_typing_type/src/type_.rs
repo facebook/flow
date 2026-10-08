@@ -9628,6 +9628,10 @@ pub mod constraint {
                 self.error_reason.as_ref()
             }
 
+            pub fn ptr_eq(&self, other: &Self) -> bool {
+                Rc::ptr_eq(&self.inner, &other.inner)
+            }
+
             pub fn get_forced_for_debugging(&self) -> Option<A> {
                 match unsafe { &*self.inner.get() } {
                     ForcingStateInner::Lazy(_)
