@@ -8880,7 +8880,7 @@ pub fn optional_chain<'a>(
                 let super_t = super_(cx, super_loc.dupe())?;
                 // check_super_abstract cx super_t name super_loc;
                 check_super_abstract(cx, &super_t, &name, super_loc.dupe())?;
-                let meth_generic_this = flow_typing_tvar::mk(cx, reason.dupe());
+                let meth_generic_this = type_::empty_t::make(reason.dupe());
                 let (targts, targs) = convert_call_targs_opt(cx, inner.targs.as_ref())?;
                 let (argts, arguments_ast) = arg_list(cx, &inner.arguments)?;
                 let specialized_callee = cx.new_specialized_callee();
