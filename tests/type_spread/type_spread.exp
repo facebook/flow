@@ -77,7 +77,7 @@ Cannot cast `X16` to `C16` because in property `p`: `void | string | number` [1]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `D16` [3] and `{p?: string, ...}` [4] exactly the same
-- Or make property `p` in object type [5] readonly. See
+- Or make property `p` in `{p?: string, ...}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    all_cases.js:193:1

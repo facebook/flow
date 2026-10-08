@@ -4536,7 +4536,7 @@ where
                     upper_obj_loc,
                     lower_obj_desc,
                     upper_obj_desc,
-                    upper_object_reason,
+                    upper_object_loc,
                     property_name,
                 } = data.as_ref();
                 use flow_common::reason::VirtualReasonDesc::*;
@@ -4598,7 +4598,7 @@ where
                 features.push(text("\n- Or make "));
                 features.extend(prop);
                 features.push(text(" in "));
-                features.push(ref_(upper_object_reason));
+                features.push(ref_of_ty_or_desc(upper_object_loc, upper_obj_desc));
                 features.push(text(" readonly. See "));
                 features.push(text(
                     "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number",

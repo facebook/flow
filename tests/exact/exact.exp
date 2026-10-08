@@ -38,7 +38,7 @@ Cannot cast `any` to object type because in property `p`: `number` [1] is not ex
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: number, ...}` [3] and `{p: string}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    error_continues.js:3:12
@@ -690,7 +690,7 @@ Cannot assign `a` to `b` because in property `p`: `{q: null, ...}` [1] is not ex
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: {q: null, ...}, ...}` [3] and `{p: {q: null}, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: {q: null}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    use_ops.js:2:34

@@ -179,7 +179,7 @@ Cannot cast `r5` to function type because in the return value > property `f`: `X
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either make `{f: X}` [3] and `{f: empty}` [4] exactly the same
-- Or make property `f` in object type [4] readonly. See
+- Or make property `f` in `{f: empty}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    function_typeof.js:57:1

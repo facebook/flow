@@ -332,7 +332,6 @@ fn rec_flow_p_inner<'cx>(
                     UnifyCause::MutableProperty {
                         lower_obj_t: lower_obj_t.dupe(),
                         upper_obj_t: upper_obj_t.dupe(),
-                        upper_object_reason: type_util::reason_of_t(upper_obj_t).dupe(),
                         property_name,
                     }
                 }
@@ -2318,7 +2317,7 @@ fn flow_obj_to_obj<'cx>(
                             DefT::new(DefTInner::ObjT(u_obj.dupe())),
                         )),
                     ),
-                    upper_object_reason: ureason.dupe(),
+                    upper_object_loc: ureason.annot_loc().unwrap_or(ureason.def_loc()).dupe(),
                     property_name: Some(name.display_smol_str()),
                 },
             );

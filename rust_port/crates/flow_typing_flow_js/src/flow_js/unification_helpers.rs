@@ -94,20 +94,20 @@ pub(super) fn __unify<'cx>(
                         UnifyCause::MutableProperty {
                             lower_obj_t,
                             upper_obj_t,
-                            upper_object_reason,
                             property_name,
                         } => {
                             let lower_obj_desc = TypeOrTypeDescT::Type(lower_obj_t.dupe());
                             let upper_obj_desc = TypeOrTypeDescT::Type(upper_obj_t.dupe());
                             let lower_obj_loc = reason_of_t(lower_obj_t).def_loc().dupe();
                             let upper_obj_loc = reason_of_t(upper_obj_t).def_loc().dupe();
+                            let upper_object_loc = type_util::ref_loc_of_t(upper_obj_t).dupe();
                             Some(
                                 ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
                                     lower_obj_loc,
                                     upper_obj_loc,
                                     lower_obj_desc,
                                     upper_obj_desc,
-                                    upper_object_reason: upper_object_reason.dupe(),
+                                    upper_object_loc,
                                     property_name: property_name.dupe(),
                                 },
                             )

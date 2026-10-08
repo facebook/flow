@@ -192,7 +192,7 @@ Cannot cast `x` to object type because in property `a`: `0` [1] is not exactly t
 
 The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
 - Either make `{a: 0, ...}` [3] and `{a: 1, b: void, ...}` [4] exactly the same
-- Or make property `a` in object type [4] readonly. See
+- Or make property `a` in `{a: 1, b: void, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    refinement.js:90:5

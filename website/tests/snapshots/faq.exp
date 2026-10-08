@@ -166,7 +166,7 @@ Cannot call `fn` with `object` bound to `obj` because in property `a`: `string` 
 
 The above-mentioned two types must be the same because property `a` is invariantly typed. To fix the error,
 - Either make `{a: string}` [3] and `{a: string | number}` [4] exactly the same
-- Or make property `a` in object type [4] readonly. See
+- Or make property `a` in `{a: string | number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    -:9:4

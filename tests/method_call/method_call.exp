@@ -5,7 +5,7 @@ same as `() => number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{foo: () => number, x: number}` [4]
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{foo: () => number, x: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:15:1
@@ -34,7 +34,7 @@ same as `() => number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{foo: () => number, y: number}` [4]
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{foo: () => number, y: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:15:1

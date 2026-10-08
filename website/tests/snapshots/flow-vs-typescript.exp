@@ -292,7 +292,7 @@ Cannot call `markFree` with `item` bound to `p` because in property `price`: `nu
 
 The above-mentioned two types must be the same because property `price` is invariantly typed. To fix the error,
 - Either make `{price: number}` [3] and `{price: number | string}` [4] exactly the same
-- Or make property `price` in object type [4] readonly. See
+- Or make property `price` in `{price: number | string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    -:11:10

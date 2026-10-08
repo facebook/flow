@@ -196,7 +196,7 @@ Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in at
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: ?string}` [4] and `{[string]: ?number}` [5] exactly the same
-- Or make the indexer in object type [5] readonly. See
+- Or make the indexer in `{[string]: ?number}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    maybe.js:12:12
@@ -301,7 +301,7 @@ as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{foo?: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:5:28
@@ -327,7 +327,7 @@ as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{foo?: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:6:28
@@ -353,7 +353,7 @@ as `void | boolean` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
 - Either make `{bar?: number, foo?: string}` [3] and `{bar?: boolean, foo?: string}` [4] exactly the same
-- Or make property `bar` in object type [4] readonly. See
+- Or make property `bar` in `{bar?: boolean, foo?: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:7:42
@@ -379,7 +379,7 @@ Cannot cast `Object.assign(...)` to object type because in property `b`: `void |
 
 The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
 - Either make `{a?: number, b?: string, c?: boolean}` [3] and `{a?: number, b?: true, c?: boolean}` [4] exactly the same
-- Or make property `b` in object type [4] readonly. See
+- Or make property `b` in `{a?: number, b?: true, c?: boolean}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    spread.js:10:26

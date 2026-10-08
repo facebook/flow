@@ -5,7 +5,7 @@ Cannot call `register` because in type argument `T` > property `foo`: `number` [
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: number}` [3] and `{[string]: RecursiveProp}` [4] exactly the same
-- Or make property `foo` in object type [5] readonly. See
+- Or make property `foo` in `{[string]: RecursiveProp}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    required-positioning.js:18:26

@@ -12,7 +12,7 @@ Cannot assign `employee` to `person` because in property `who`: `Employee` [1] i
 
 The above-mentioned two types must be the same because property `who` is invariantly typed. To fix the error,
 - Either make `{who: Employee}` [3] and `{who: Person}` [4] exactly the same
-- Or make property `who` in object type [4] readonly. See
+- Or make property `who` in `{who: Person}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    -:6:31

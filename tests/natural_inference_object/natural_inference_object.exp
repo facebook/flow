@@ -28,7 +28,7 @@ Cannot cast `bar` to object type because in property `baz`: `number` [1] is not 
 
 The above-mentioned two types must be the same because property `baz` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{baz: string | number}` [4]
-- Or make property `baz` in object type [4] readonly. See
+- Or make property `baz` in `{baz: string | number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    enforced.js:5:1

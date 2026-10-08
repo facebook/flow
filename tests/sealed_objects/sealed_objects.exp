@@ -81,7 +81,7 @@ Cannot assign `{...}` to `o7` because in property `y`: `number` [1] is not exact
 
 The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,
 - Either make `{[_: any]: number, x: number}` [3] and `{x: number, y?: string, ...}` [4] exactly the same
-- Or make property `y` in object type [4] readonly. See
+- Or make property `y` in `{x: number, y?: string, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:19:81

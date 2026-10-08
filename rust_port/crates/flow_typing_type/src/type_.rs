@@ -10413,7 +10413,6 @@ pub enum UnifyCause {
     MutableProperty {
         lower_obj_t: Type,
         upper_obj_t: Type,
-        upper_object_reason: Reason,
         property_name: Option<FlowSmolStr>,
     },
     Uncategorized,

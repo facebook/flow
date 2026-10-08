@@ -67,7 +67,7 @@ Cannot cast `o2` to object type because in property `p`: `void | T` [1] is not e
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: T, ...}` [3] and `{p: T, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: T, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type.js:23:1
@@ -261,7 +261,7 @@ Cannot cast `o9` to object type because in property `p`: `T` [1] is not exactly 
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: T, q: U, ...}` [3] and `{p?: T, q: U, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p?: T, q: U, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type.js:74:1
@@ -322,7 +322,7 @@ Cannot cast `o1` to object type because in property `p`: `unknown` [1] is not ex
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: unknown, ...}` [3] and `{p?: T, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p?: T, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_contra.js:6:1
@@ -368,7 +368,7 @@ Cannot cast `o2` to object type because in the indexer property: `unknown` [1] i
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: unknown}` [3] and `{[string]: T}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[string]: T}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_contra.js:12:1
@@ -414,7 +414,7 @@ Cannot cast `o3` to object type because in property `p`: `unknown` [1] is not ex
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: unknown, ...}` [1] and `{p: T, ...}` [3] exactly the same
-- Or make property `p` in object type [3] readonly. See
+- Or make property `p` in `{p: T, ...}` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_contra.js:18:1
@@ -457,7 +457,7 @@ Cannot cast `o1` to object type because in property `p`: `U` [1] is not exactly 
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[string]: T, p: U}` [3] and `{[string]: T, p?: T | U}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[string]: T, p?: T | U}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_dict.js:5:1
@@ -562,7 +562,7 @@ Cannot cast `o1` to object type because in property `p`: `number & (string | num
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: number & (string | number), ...}` [3] and `{p?: number, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p?: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_instance.js:6:1
@@ -937,7 +937,7 @@ Cannot cast `o6` to object type because in property `p`: `T` [1] is not exactly 
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: T, ...}` [3] and `{p?: T, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p?: T, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type_void.js:50:1

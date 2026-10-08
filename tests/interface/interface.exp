@@ -176,7 +176,7 @@ Cannot cast `x` to `Invariant` because in the indexer property: `number` [1] is 
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[Keys]: number}` [3] and `{[Keys]: number | string}` [4] exactly the same
-- Or make the indexer in `Invariant` [5] readonly. See
+- Or make the indexer in `{[Keys]: number | string}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    indexer.js:64:3
@@ -229,7 +229,7 @@ Cannot cast `x` to interface type because in the indexer property: `number | str
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[Keys]: number | string}` [3] and `{[Keys]: number}` [4] exactly the same
-- Or make the indexer in interface type [4] readonly. See
+- Or make the indexer in `{[Keys]: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    indexer.js:77:3
@@ -701,7 +701,7 @@ Cannot cast `o3` to interface type because in the indexer property: `number` [1]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[string]: boolean}` [4] exactly the same
-- Or make the indexer in interface type [4] readonly. See
+- Or make the indexer in `{[string]: boolean}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:43:1
@@ -745,7 +745,7 @@ Cannot cast `o3` to interface type because in the indexer property's key: `strin
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[number]: number}` [4] exactly the same
-- Or make the indexer in interface type [4] readonly. See
+- Or make the indexer in `{[number]: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:46:1
@@ -793,7 +793,7 @@ Cannot cast `o4` to interface type because in the indexer property's key: `"asdf
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: "asdf"]: number}` [3] and `{[string]: number}` [4] exactly the same
-- Or make the indexer in interface type [4] readonly. See
+- Or make the indexer in `{[string]: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:51:1
@@ -822,7 +822,7 @@ Cannot cast `o6` to interface type because in the indexer property's key: `strin
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[key: "asdf"]: number}` [4] exactly the same
-- Or make the indexer in interface type [4] readonly. See
+- Or make the indexer in `{[key: "asdf"]: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:59:1

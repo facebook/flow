@@ -233,7 +233,7 @@ Cannot cast `c` to object type because in property `x`: `string` [1] is not exac
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `S` [3] and `{x: number, ...}` [4] exactly the same
-- Or make property `x` in object type [4] readonly. See
+- Or make property `x` in `{x: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    f2.js:4:1
@@ -266,7 +266,7 @@ Cannot cast `c` to object type because in property `x`: `string` [1] is not exac
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `S` [3] and `{x: number, ...}` [4] exactly the same
-- Or make property `x` in object type [4] readonly. See
+- Or make property `x` in `{x: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    f2.js:4:1

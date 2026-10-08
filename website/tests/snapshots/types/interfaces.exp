@@ -144,7 +144,7 @@ Cannot assign `x` to `value1` because in property `property`: `number` [1] is no
 
 The above-mentioned two types must be the same because property `property` is invariantly typed. To fix the error,
 - Either make `{property: number}` [3] and `{property: number | string, ...}` [4] exactly the same
-- Or make property `property` in `Invariant` [5] readonly. See
+- Or make property `property` in `{property: number | string, ...}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    -:12:27

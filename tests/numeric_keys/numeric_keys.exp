@@ -358,7 +358,7 @@ Cannot cast `o` to object type because in property `1`: `boolean` [1] is not exa
 
 The above-mentioned two types must be the same because property `1` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: true, "1": true}` [4]
-- Or make property `1` in object type [4] readonly. See
+- Or make property `1` in `{[number]: true, "1": true}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:21:3
@@ -391,7 +391,7 @@ Cannot cast `o` to object type because in property `2`: `boolean` [1] is not exa
 
 The above-mentioned two types must be the same because property `2` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: true, "1": true}` [4]
-- Or make property `2` in object type [4] readonly. See
+- Or make property `2` in `{[number]: true, "1": true}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:21:3

@@ -230,7 +230,7 @@ Cannot cast `C` to object type because in property `p`: `string` [1] is not exac
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{name: string, p: string, ...}` [3] and `{p: number, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    statics.js:10:1

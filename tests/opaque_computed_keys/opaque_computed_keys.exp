@@ -41,7 +41,7 @@ Cannot cast `obj` to object type because in the indexer property's key: `Op` [1]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[string]: string}` [4]
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[string]: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    main.js:9:1

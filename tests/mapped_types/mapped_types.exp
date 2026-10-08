@@ -1865,7 +1865,7 @@ Cannot cast `withLeftovers` to object type because in property `foo`: number [1]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make mapped type [3] and `{[number]: string, foo: string}` [4] exactly the same
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{[number]: string, foo: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    non_homomorphic.js:21:3
@@ -1894,7 +1894,7 @@ Cannot cast `withLeftovers` to object type because in the indexer property: numb
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make mapped type [3] and `{[number]: string, foo: string}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[number]: string, foo: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    non_homomorphic.js:21:3
@@ -2430,7 +2430,7 @@ Cannot cast `badVal` to `Mapped` because in property `foo`: `{contents: string}`
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: {contents: string}}` [3] and mapped type [4] exactly the same
-- Or make property `foo` in `Mapped` [5] readonly. See
+- Or make property `foo` in mapped type [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:45:3
@@ -2500,7 +2500,7 @@ Cannot cast `badB` to `Mapped` because in array element > property `contents`: `
 
 The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
 - Either make `{contents: string}` [3] and `{contents: ROArr[number]}` [4] exactly the same
-- Or make property `contents` in `Box` [5] readonly. See
+- Or make property `contents` in `{contents: ROArr[number]}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:60:3
@@ -2532,7 +2532,7 @@ Cannot cast `badC` to `Mapped` because in property `1.contents`: `string` [1] is
 
 The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
 - Either make `{contents: string}` [3] and `{contents: Tuple[1]}` [4] exactly the same
-- Or make property `contents` in `Box` [5] readonly. See
+- Or make property `contents` in `{contents: Tuple[1]}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:61:3
@@ -2716,7 +2716,7 @@ Cannot cast `constrained` to object type because in property `foo`: `Constrained
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make mapped type [3] and `{foo: {contents: number}}` [4] exactly the same
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{foo: {contents: number}}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:132:3

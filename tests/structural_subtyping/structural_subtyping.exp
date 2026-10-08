@@ -100,7 +100,7 @@ Cannot cast `y` to `IHasXString` because in property `x`: `number` [1] is not ex
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{[key: string]: number}` [3] and `{x: string, ...}` [4] exactly the same
-- Or make property `x` in `IHasXString` [5] readonly. See
+- Or make property `x` in `{x: string, ...}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    obj.js:18:3

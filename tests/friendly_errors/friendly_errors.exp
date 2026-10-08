@@ -359,7 +359,7 @@ Cannot cast `o` to object type because in the indexer property's key: `number` [
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: number]: any}` [3] and `{[k: string]: any}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[k: string]: any}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    indexer-key-compatibility.js:7:1
@@ -388,7 +388,7 @@ as `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: string, ...}` [3] and `{p: number, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary-for-covariant-ops.js:8:8
@@ -417,7 +417,7 @@ Cannot cast `any` to `X` because in type argument `T` [1] > property `p`: `strin
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: string, ...}` [4] and `{p: number, ...}` [5] exactly the same
-- Or make property `p` in object type [5] readonly. See
+- Or make property `p` in `{p: number, ...}` [5] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary-for-covariant-ops.js:11:8
@@ -546,7 +546,7 @@ Cannot cast object literal to `B` because in property `a.b`: `number` [1] is not
 
 The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
 - Either make `{b: number, ...}` [3] and `{b: string, ...}` [4] exactly the same
-- Or make property `b` in object type [4] readonly. See
+- Or make property `b` in `{b: string, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary.js:17:6
@@ -640,7 +640,7 @@ Cannot cast object literal to `C` because in property `a.b`: `{c: number, ...}` 
 
 The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
 - Either make `{b: {c: number, ...}, ...}` [3] and `{b: {c: string, ...}, ...}` [4] exactly the same
-- Or make property `b` in object type [4] readonly. See
+- Or make property `b` in `{b: {c: string, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary.js:26:6
@@ -669,7 +669,7 @@ Cannot cast object literal to `C` because in property `a.b.c`: `number` [1] is n
 
 The above-mentioned two types must be the same because property `c` is invariantly typed. To fix the error,
 - Either make `{c: number, ...}` [3] and `{c: string, ...}` [4] exactly the same
-- Or make property `c` in object type [4] readonly. See
+- Or make property `c` in `{c: string, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary.js:28:10
@@ -763,7 +763,7 @@ Cannot cast object literal to `D` because in property `a.b`: `{c: {d: number, ..
 
 The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
 - Either make `{b: {c: {d: number, ...}, ...}, ...}` [3] and `{b: {c: {d: string, ...}, ...}, ...}` [4] exactly the same
-- Or make property `b` in object type [4] readonly. See
+- Or make property `b` in `{b: {c: {d: string, ...}, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary.js:37:6
@@ -792,7 +792,7 @@ Cannot cast object literal to `D` because in property `a.b.c`: `{d: number, ...}
 
 The above-mentioned two types must be the same because property `c` is invariantly typed. To fix the error,
 - Either make `{c: {d: number, ...}, ...}` [3] and `{c: {d: string, ...}, ...}` [4] exactly the same
-- Or make property `c` in object type [4] readonly. See
+- Or make property `c` in `{c: {d: string, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary.js:39:10
@@ -821,7 +821,7 @@ Cannot cast object literal to `D` because in property `a.b.c.d`: `number` [1] is
 
 The above-mentioned two types must be the same because property `d` is invariantly typed. To fix the error,
 - Either make `{d: number, ...}` [3] and `{d: string, ...}` [4] exactly the same
-- Or make property `d` in object type [4] readonly. See
+- Or make property `d` in `{d: string, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    loc-primary.js:41:14

@@ -253,7 +253,7 @@ Cannot call `{...}.method` because in property `prop`: `number` [1] is not exact
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: boolean, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:25:18
@@ -294,7 +294,7 @@ Cannot call `{...}.method` because in property `prop`: `number` [1] is not exact
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: boolean, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:32:18
@@ -335,7 +335,7 @@ Cannot call `{...}.method` because in property `prop`: `number` [1] is not exact
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: boolean, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:39:18
@@ -376,7 +376,7 @@ Cannot call `{...}.method` because in property `prop`: `number` [1] is not exact
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: boolean, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:46:19
@@ -720,7 +720,7 @@ Cannot call `{...}.method` because in property `prop`: `boolean` [1] is not exac
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:17:18
@@ -761,7 +761,7 @@ Cannot call `{...}.method` because in property `prop`: `boolean` [1] is not exac
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:24:18
@@ -802,7 +802,7 @@ Cannot call `{...}.method` because in property `prop`: `boolean` [1] is not exac
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:31:18
@@ -843,7 +843,7 @@ Cannot call `{...}.method` because in property `prop`: `boolean` [1] is not exac
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:38:19
@@ -1791,7 +1791,7 @@ Cannot call `{...}.method` because in property `prop`: `boolean` [1] is not exac
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:16:18
@@ -1832,7 +1832,7 @@ Cannot call `{...}.method` because in property `prop`: `boolean` [1] is not exac
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
-- Or make property `prop` in interface type [4] readonly. See
+- Or make property `prop` in `{prop: number, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:23:18

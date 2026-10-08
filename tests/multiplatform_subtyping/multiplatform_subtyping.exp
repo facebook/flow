@@ -146,7 +146,7 @@ exactly the same as `number` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
 - Either make `{bar: string, name: string, ...}` [4] and `{bar: number, name: string, ...}` [1] exactly the same
-- Or make property `bar` in `ImplHasDifferentSig` [1] readonly. See
+- Or make property `bar` in `{bar: number, name: string, ...}` [1] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    classes.ios.js:8:22
@@ -172,7 +172,7 @@ exactly the same as `string` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
 - Either make `{bar: number, name: string, ...}` [1] and `{bar: string, name: string, ...}` [4] exactly the same
-- Or make property `bar` in `ImplHasDifferentSig` [4] readonly. See
+- Or make property `bar` in `{bar: string, name: string, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    classes.ios.js:8:22

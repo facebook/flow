@@ -5,7 +5,7 @@ Cannot assign `y` to `x` because in property `x`: `{bar: number, ...}` [1] is no
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {bar: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
-- Or make property `x` in object type [4] readonly. See
+- Or make property `x` in `{x: {foo: string, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:3:9
@@ -34,7 +34,7 @@ Cannot assign `y` to `x` because in property `foo`: `number` [1] is not exactly 
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: number, ...}` [3] and `{foo: string, ...}` [4] exactly the same
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{foo: string, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:7:9
@@ -63,7 +63,7 @@ Cannot assign `y` to `x` because in property `x`: `{foo: number, ...}` [1] is no
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {foo: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
-- Or make property `x` in object type [4] readonly. See
+- Or make property `x` in `{x: {foo: string, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:11:9
@@ -110,7 +110,7 @@ Cannot assign `y` to `x` because in property `x`: `{readonly foo: number, ...}` 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {readonly foo: number, ...}, ...}` [3] and `{x: {readonly foo: string, ...}, ...}` [4] exactly the
 same
-- Or make property `x` in object type [4] readonly. See
+- Or make property `x` in `{x: {readonly foo: string, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:19:9
@@ -157,7 +157,7 @@ Cannot assign `y` to `x` because in property `x`: `{writeonly foo: number, ...}`
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {writeonly foo: number, ...}, ...}` [3] and `{x: {writeonly foo: string, ...}, ...}` [4] exactly the
 same
-- Or make property `x` in object type [4] readonly. See
+- Or make property `x` in `{x: {writeonly foo: string, ...}, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:27:9

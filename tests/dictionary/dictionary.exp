@@ -206,7 +206,7 @@ Cannot assign `x` to `a` because in the indexer property: `B` [1] is not exactly
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: A}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[k: string]: A}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:101:29
@@ -235,7 +235,7 @@ Cannot assign `x` to `c` because in the indexer property: `B` [1] is not exactly
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: C}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[k: string]: C}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:106:29
@@ -381,7 +381,7 @@ Cannot assign `x` to `a` because in the indexer property's key: `B` [1] is not e
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: B]: any}` [3] and `{[k: A]: any}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[k: A]: any}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:142:26
@@ -410,7 +410,7 @@ Cannot assign `x` to `c` because in the indexer property's key: `B` [1] is not e
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: B]: any}` [3] and `{[k: C]: any}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[k: C]: any}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:144:26
@@ -588,7 +588,7 @@ Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: A}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: B, p: A}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:174:35
@@ -616,7 +616,7 @@ Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: C}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: B, p: C}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:179:35
@@ -661,7 +661,7 @@ Cannot assign `xa` to `a` because in property `p`: `B` [1] is not exactly the sa
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: A, p: B}` [3] and `{[k: string]: A}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: A}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:188:29
@@ -689,7 +689,7 @@ Cannot assign `xc` to `c` because in property `p`: `B` [1] is not exactly the sa
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: C, p: B}` [3] and `{[k: string]: C}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: C}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:193:29
@@ -792,7 +792,7 @@ Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p: A, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: A, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:206:24
@@ -820,7 +820,7 @@ Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p: C, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p: C, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:211:24
@@ -865,7 +865,7 @@ Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B}` [3] and `{[k: string]: A}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: A}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:216:29
@@ -893,7 +893,7 @@ Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B}` [3] and `{[k: string]: C}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: C}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:221:29
@@ -938,7 +938,7 @@ Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B, x: X}` [3] and `{[k: string]: A, x: X}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: A, x: X}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:228:35
@@ -966,7 +966,7 @@ Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B, x: X}` [3] and `{[k: string]: C, x: X}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: C, x: X}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:230:35
@@ -1052,7 +1052,7 @@ Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: A}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: B, p: A}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:240:35
@@ -1080,7 +1080,7 @@ Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: C}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: B, p: C}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:242:35
@@ -1108,7 +1108,7 @@ Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p?: A, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p?: A, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:246:25
@@ -1136,7 +1136,7 @@ Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p?: C, ...}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{p?: C, ...}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:254:25
@@ -1164,7 +1164,7 @@ Cannot return `x` because in property `p`: `A` [1] is not exactly the same as `B
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: A}` [3] and `{[k: string]: B}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: B}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:259:10
@@ -1192,7 +1192,7 @@ Cannot return `x` because in property `p`: `C` [1] is not exactly the same as `B
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: C}` [3] and `{[k: string]: B}` [4] exactly the same
-- Or make property `p` in object type [4] readonly. See
+- Or make property `p` in `{[k: string]: B}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:269:10
@@ -1235,7 +1235,7 @@ Cannot assign `x` to `y` because in the indexer property: `string` [1] is not ex
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: string}` [3] and `{[key: string]: number}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[key: string]: number}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:4:34
@@ -1264,7 +1264,7 @@ Cannot assign `x` to `z` because in the indexer property's key: `string` [1] is 
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: string}` [3] and `{[key: number]: string}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[key: number]: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:5:34
@@ -1293,7 +1293,7 @@ Cannot assign `a` to `b` because in the indexer property: `?string` [1] is not e
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: ?string}` [3] and `{[key: string]: string}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[key: string]: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:8:34
@@ -1322,7 +1322,7 @@ Cannot assign `b` to `c` because in the indexer property: `string` [1] is not ex
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: string}` [3] and `{[key: string]: ?string}` [4] exactly the same
-- Or make the indexer in object type [4] readonly. See
+- Or make the indexer in `{[key: string]: ?string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:9:35
@@ -1439,7 +1439,7 @@ Cannot return `x` because in property `foo`: `number` [1] is not exactly the sam
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{[key: string]: number}` [3] and `{[key: string]: number, foo: string}` [4] exactly the same
-- Or make property `foo` in object type [4] readonly. See
+- Or make property `foo` in `{[key: string]: number, foo: string}` [4] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:42:10
