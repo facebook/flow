@@ -6075,6 +6075,8 @@ pub enum TypeMap {
 /// respective catch-all cases appears in flow_js.rs.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ConcretizationKind {
+    /// Capture results before unwrapping their constraint nodes.
+    ConcretizeForLowerBounds,
     ConcretizeForCJSExtractNamedExportsAndTypeExports,
     ConcretizeForOptionalChain,
     ConcretizeForImportsExports,
@@ -6087,7 +6089,9 @@ pub enum ConcretizationKind {
     ConcretizeForObjectAssign,
     ConcretizeForDestructuring,
     ConcretizeForSentinelPropTest,
-    ConcretizeForMatchArg { keep_unions: bool },
+    ConcretizeForMatchArg {
+        keep_unions: bool,
+    },
     ConcretizeAll,
 }
 
@@ -11571,6 +11575,9 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::HasOwnPropT(..) => "HasOwnPropT".to_string(),
         UseTInner::ImplementsT(..) => "ImplementsT".to_string(),
         UseTInner::ConcretizeT(box ConcretizeTData { kind, .. }) => match kind {
+            ConcretizationKind::ConcretizeForLowerBounds => {
+                "ConcretizeT ConcretizeForLowerBounds".to_string()
+            }
             ConcretizationKind::ConcretizeForImportsExports => {
                 "ConcretizeT ConcretizeForImportsExports".to_string()
             }

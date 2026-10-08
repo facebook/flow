@@ -381,6 +381,10 @@ pub(super) fn lookup_prop_type_direct<'cx>(
 pub(super) fn empty_success(u: &UseT<Context>) -> bool {
     match u.deref() {
         // Work has to happen when Empty flows to these types
+        UseTInner::ConcretizeT(box ConcretizeTData {
+            kind: ConcretizationKind::ConcretizeForLowerBounds,
+            ..
+        }) => false,
         UseTInner::UseT(_, t) if type_util::constraint_node_id(t).is_some() => false,
         UseTInner::EvalTypeDestructorT(..) => false,
         UseTInner::UseT(_, t)

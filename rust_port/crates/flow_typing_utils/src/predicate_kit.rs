@@ -3185,7 +3185,11 @@ pub(crate) fn run_predicate_for_filtering<'cx>(
     p: &Predicate,
     tout: &Tvar,
 ) -> Result<(), JobError> {
-    run_predicate_for_filtering_with_env(cx, &FlowJsEnv::entry(), t, p, tout)
+    let use_t = UseT::new(UseTInner::UseT(
+        unknown_use(),
+        Type::new(TypeInner::OpenT(tout.dupe())),
+    ));
+    run_predicate_for_filtering_with_env(cx, &FlowJsEnv::entry(), t, p, &use_t)
 }
 
 pub(super) fn run_predicate_for_filtering_with_env<'cx>(
@@ -3193,7 +3197,7 @@ pub(super) fn run_predicate_for_filtering_with_env<'cx>(
     env: &FlowJsEnv,
     t: &Type,
     p: &Predicate,
-    tout: &Tvar,
+    tout: &UseT<Context<'cx>>,
 ) -> Result<(), JobError> {
     let collector = TypeCollector::create();
     let changed = Rc::new(RefCell::new(false));
@@ -3213,12 +3217,9 @@ pub(super) fn run_predicate_for_filtering_with_env<'cx>(
         &result_collector,
         &|cx, trace, rc, l| predicate_no_concretization(cx, env, trace, rc, l, &p_clone),
     ))?;
-    let tout_type = Type::new(TypeInner::OpenT(tout.dupe()));
     let collected = result_collector.collector.collect_to_vec();
     for t in collected.iter() {
-        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_t_with_env(
-            cx, env, t, &tout_type,
-        ))?;
+        flow_js_utils::flow_js_result_to_job_error(FlowJs::flow_with_env(cx, env, t, tout))?;
     }
     Ok(())
 }

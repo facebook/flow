@@ -63,7 +63,6 @@ use flow_typing_type::type_::Predicate;
 use flow_typing_type::type_::RootUseOp;
 use flow_typing_type::type_::SwitchRefinementCheckData;
 use flow_typing_type::type_::TupleATData;
-use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::UnaryArithKind;
@@ -1083,25 +1082,40 @@ pub mod operators {
         ))
     }
 
-    fn mk_tvar_and_resolve_to_logical_union<'cx>(
+    fn collect_logical_union<'cx>(
         cx: &Context<'cx>,
         reason: &Reason,
-        f: impl FnOnce(&Context<'cx>, &type_::Tvar) -> Result<(), FlowJsException>,
+        f: impl FnOnce(&Context<'cx>, &UseT<Context<'cx>>) -> Result<(), FlowJsException>,
     ) -> Result<Type, FlowJsException> {
-        use flow_typing_type::type_::Tvar;
-        let id = flow_typing_tvar::mk_no_wrap(cx, reason);
-        let tout = Tvar::new(reason.dupe(), id as u32);
-        f(cx, &tout)?;
-        match flow_js_utils::merge_tvar_opt(
-            cx,
+        use std::collections::BTreeSet;
+
+        use flow_typing_type::type_::ConcretizationKind;
+        use flow_typing_type::type_::ConcretizeTData;
+        use flow_typing_type::type_::concretize_seen::ConcretizeSeen;
+        use flow_typing_type::type_::type_collector::TypeCollector;
+
+        let collector = TypeCollector::create();
+        let use_t = UseT::new(UseTInner::ConcretizeT(Box::new(ConcretizeTData {
+            reason: reason.dupe(),
+            kind: ConcretizationKind::ConcretizeForLowerBounds,
+            seen: ConcretizeSeen::new(),
+            collector: collector.dupe(),
+        })));
+        f(cx, &use_t)?;
+        let mut lowers = Vec::new();
+        flow_js_utils::collect_lowers(
             true,
-            type_::union_rep::UnionKind::LogicalKind,
-            reason,
-            id,
-        ) {
-            Some(t) => Ok(t),
-            None => Ok(tvar_resolver::default_no_lowers(reason)),
-        }
+            cx,
+            &mut BTreeSet::new(),
+            &mut lowers,
+            collector.collect_to_vec(),
+        );
+        Ok(type_util::union_of_ts_opt(
+            reason.dupe(),
+            lowers,
+            Some(type_::union_rep::UnionKind::LogicalKind),
+        )
+        .unwrap_or_else(|| tvar_resolver::default_no_lowers(reason)))
     }
 
     pub fn logical_and<'cx>(
@@ -1120,92 +1134,74 @@ pub mod operators {
         left: &Type,
         right: &Type,
     ) -> Result<Type, JobError> {
-        flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
-            cx,
-            reason,
-            |cx, tout| {
-                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
-                    cx,
-                    env,
-                    reason_of_t(left),
-                    left,
-                )?;
-                for left in &ts {
-                    if let TypeInner::DefT(reason, def_t) = left.deref() {
-                        if matches!(
-                            def_t.deref(),
-                            DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
-                        ) {
-                            flow_js_utils::add_output_with_env(
-                                cx,
-                                env,
-                                ErrorMessage::ESketchyNumberLint(
-                                    flow_lint_settings::lints::SketchyNumberKind::And,
-                                    flow_js_utils::type_reference_with_reason_for_error(
-                                        left,
-                                        reason.dupe(),
-                                    ),
+        flow_js_utils::flow_js_result_to_job_error(collect_logical_union(cx, reason, |cx, tout| {
+            let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx,
+                env,
+                reason_of_t(left),
+                left,
+            )?;
+            for left in &ts {
+                if let TypeInner::DefT(reason, def_t) = left.deref() {
+                    if matches!(
+                        def_t.deref(),
+                        DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. }
+                    ) {
+                        flow_js_utils::add_output_with_env(
+                            cx,
+                            env,
+                            ErrorMessage::ESketchyNumberLint(
+                                flow_lint_settings::lints::SketchyNumberKind::And,
+                                flow_js_utils::type_reference_with_reason_for_error(
+                                    left,
+                                    reason.dupe(),
                                 ),
-                            )?;
-                        }
+                            ),
+                        )?;
                     }
-                    // a falsy && b ~> a
-                    // a truthy && b ~> b
-                    // a && b ~> a falsy | b
-                    match type_filter::truthy(cx, left.dupe()) {
-                        type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                        {
-                            // falsy
-                            predicate_kit::run_predicate_for_filtering_with_env(
-                                cx,
-                                env,
-                                left,
-                                &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
-                                    type_::PredicateInner::TruthyP,
-                                ))),
-                                tout,
-                            )?;
-                        }
-                        _ => {
-                            match type_filter::not_truthy(cx, left.dupe()) {
-                                type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                                {
-                                    // truthy
-                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
-                                        type_::unknown_use(),
-                                        Type::new(TypeInner::OpenT(Tvar::new(
-                                            tout.reason().dupe(),
-                                            tout.id(),
-                                        ))),
-                                    ));
-                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
-                                }
-                                _ => {
-                                    predicate_kit::run_predicate_for_filtering_with_env(
-                                        cx,
-                                        env,
-                                        left,
-                                        &Predicate::new(type_::PredicateInner::NotP(
-                                            Predicate::new(type_::PredicateInner::TruthyP),
-                                        )),
-                                        tout,
-                                    )?;
-                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
-                                        type_::unknown_use(),
-                                        Type::new(TypeInner::OpenT(Tvar::new(
-                                            tout.reason().dupe(),
-                                            tout.id(),
-                                        ))),
-                                    ));
-                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
-                                }
+                }
+                // a falsy && b ~> a
+                // a truthy && b ~> b
+                // a && b ~> a falsy | b
+                match type_filter::truthy(cx, left.dupe()) {
+                    type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                    {
+                        // falsy
+                        predicate_kit::run_predicate_for_filtering_with_env(
+                            cx,
+                            env,
+                            left,
+                            &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                type_::PredicateInner::TruthyP,
+                            ))),
+                            tout,
+                        )?;
+                    }
+                    _ => {
+                        match type_filter::not_truthy(cx, left.dupe()) {
+                            type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                            {
+                                // truthy
+                                flow_js::flow_with_env(cx, env, (right, tout))?;
+                            }
+                            _ => {
+                                predicate_kit::run_predicate_for_filtering_with_env(
+                                    cx,
+                                    env,
+                                    left,
+                                    &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                        type_::PredicateInner::TruthyP,
+                                    ))),
+                                    tout,
+                                )?;
+                                flow_js::flow_with_env(cx, env, (right, tout))?;
                             }
                         }
                     }
                 }
-                Ok(())
-            },
-        ))
+            }
+            Ok(())
+        }))
     }
 
     pub fn logical_or<'cx>(
@@ -1224,70 +1220,52 @@ pub mod operators {
         left: &Type,
         right: &Type,
     ) -> Result<Type, JobError> {
-        flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
-            cx,
-            reason,
-            |cx, tout| {
-                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
-                    cx,
-                    env,
-                    reason_of_t(left),
-                    left,
-                )?;
-                for left in &ts {
-                    // a truthy || b ~> a
-                    // a falsy || b ~> b
-                    // a || b ~> a truthy | b
-                    match type_filter::not_truthy(cx, left.dupe()) {
-                        type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                        {
-                            // truthy
-                            predicate_kit::run_predicate_for_filtering_with_env(
-                                cx,
-                                env,
-                                left,
-                                &Predicate::new(type_::PredicateInner::TruthyP),
-                                tout,
-                            )?;
-                        }
-                        _ => {
-                            match type_filter::truthy(cx, left.dupe()) {
-                                type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                                {
-                                    // falsy
-                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
-                                        type_::unknown_use(),
-                                        Type::new(TypeInner::OpenT(Tvar::new(
-                                            tout.reason().dupe(),
-                                            tout.id(),
-                                        ))),
-                                    ));
-                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
-                                }
-                                _ => {
-                                    predicate_kit::run_predicate_for_filtering_with_env(
-                                        cx,
-                                        env,
-                                        left,
-                                        &Predicate::new(type_::PredicateInner::TruthyP),
-                                        tout,
-                                    )?;
-                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
-                                        type_::unknown_use(),
-                                        Type::new(TypeInner::OpenT(Tvar::new(
-                                            tout.reason().dupe(),
-                                            tout.id(),
-                                        ))),
-                                    ));
-                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
-                                }
+        flow_js_utils::flow_js_result_to_job_error(collect_logical_union(cx, reason, |cx, tout| {
+            let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx,
+                env,
+                reason_of_t(left),
+                left,
+            )?;
+            for left in &ts {
+                // a truthy || b ~> a
+                // a falsy || b ~> b
+                // a || b ~> a truthy | b
+                match type_filter::not_truthy(cx, left.dupe()) {
+                    type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                    {
+                        // truthy
+                        predicate_kit::run_predicate_for_filtering_with_env(
+                            cx,
+                            env,
+                            left,
+                            &Predicate::new(type_::PredicateInner::TruthyP),
+                            tout,
+                        )?;
+                    }
+                    _ => {
+                        match type_filter::truthy(cx, left.dupe()) {
+                            type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                            {
+                                // falsy
+                                flow_js::flow_with_env(cx, env, (right, tout))?;
+                            }
+                            _ => {
+                                predicate_kit::run_predicate_for_filtering_with_env(
+                                    cx,
+                                    env,
+                                    left,
+                                    &Predicate::new(type_::PredicateInner::TruthyP),
+                                    tout,
+                                )?;
+                                flow_js::flow_with_env(cx, env, (right, tout))?;
                             }
                         }
                     }
                 }
-                Ok(())
-            },
-        ))
+            }
+            Ok(())
+        }))
     }
 
     pub fn logical_nullish_coalesce<'cx>(
@@ -1306,86 +1284,68 @@ pub mod operators {
         left: &Type,
         right: &Type,
     ) -> Result<Type, JobError> {
-        flow_js_utils::flow_js_result_to_job_error(mk_tvar_and_resolve_to_logical_union(
-            cx,
-            reason,
-            |cx, tout| {
-                let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
-                    cx,
-                    env,
-                    reason_of_t(left),
-                    left,
-                )?;
-                for left in &ts {
-                    let maybe_result = type_filter::maybe(cx, left.dupe());
-                    match &maybe_result {
-                        type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                        {
-                            predicate_kit::run_predicate_for_filtering_with_env(
-                                cx,
-                                env,
-                                left,
-                                &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
-                                    type_::PredicateInner::MaybeP,
-                                ))),
-                                tout,
-                            )?;
-                        }
-                        // This `AnyT` case is required to have similar behavior to the other logical operators.
-                        type_filter::FilterResult { type_: t, .. }
-                            if matches!(t.deref(), TypeInner::AnyT(_, _)) =>
-                        {
-                            // not-nullish
-                            predicate_kit::run_predicate_for_filtering_with_env(
-                                cx,
-                                env,
-                                left,
-                                &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
-                                    type_::PredicateInner::MaybeP,
-                                ))),
-                                tout,
-                            )?;
-                        }
-                        _ => {
-                            match type_filter::not_maybe(cx, left.dupe()) {
-                                type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
-                                {
-                                    // nullish
-                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
-                                        type_::unknown_use(),
-                                        Type::new(TypeInner::OpenT(Tvar::new(
-                                            tout.reason().dupe(),
-                                            tout.id(),
-                                        ))),
-                                    ));
-                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
-                                }
-                                _ => {
-                                    predicate_kit::run_predicate_for_filtering_with_env(
-                                        cx,
-                                        env,
-                                        left,
-                                        &Predicate::new(type_::PredicateInner::NotP(
-                                            Predicate::new(type_::PredicateInner::MaybeP),
-                                        )),
-                                        tout,
-                                    )?;
-                                    let use_t = type_::UseT::new(type_::UseTInner::UseT(
-                                        type_::unknown_use(),
-                                        Type::new(TypeInner::OpenT(Tvar::new(
-                                            tout.reason().dupe(),
-                                            tout.id(),
-                                        ))),
-                                    ));
-                                    flow_js::flow_with_env(cx, env, (right, &use_t))?;
-                                }
+        flow_js_utils::flow_js_result_to_job_error(collect_logical_union(cx, reason, |cx, tout| {
+            let ts = FlowJs::possible_concrete_types_for_inspection_with_env(
+                cx,
+                env,
+                reason_of_t(left),
+                left,
+            )?;
+            for left in &ts {
+                let maybe_result = type_filter::maybe(cx, left.dupe());
+                match &maybe_result {
+                    type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                    {
+                        predicate_kit::run_predicate_for_filtering_with_env(
+                            cx,
+                            env,
+                            left,
+                            &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                type_::PredicateInner::MaybeP,
+                            ))),
+                            tout,
+                        )?;
+                    }
+                    // This `AnyT` case is required to have similar behavior to the other logical operators.
+                    type_filter::FilterResult { type_: t, .. }
+                        if matches!(t.deref(), TypeInner::AnyT(_, _)) =>
+                    {
+                        // not-nullish
+                        predicate_kit::run_predicate_for_filtering_with_env(
+                            cx,
+                            env,
+                            left,
+                            &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                type_::PredicateInner::MaybeP,
+                            ))),
+                            tout,
+                        )?;
+                    }
+                    _ => {
+                        match type_filter::not_maybe(cx, left.dupe()) {
+                            type_filter::FilterResult { type_: t, .. } if matches!(t.deref(), TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::EmptyT)) =>
+                            {
+                                // nullish
+                                flow_js::flow_with_env(cx, env, (right, tout))?;
+                            }
+                            _ => {
+                                predicate_kit::run_predicate_for_filtering_with_env(
+                                    cx,
+                                    env,
+                                    left,
+                                    &Predicate::new(type_::PredicateInner::NotP(Predicate::new(
+                                        type_::PredicateInner::MaybeP,
+                                    ))),
+                                    tout,
+                                )?;
+                                flow_js::flow_with_env(cx, env, (right, tout))?;
                             }
                         }
                     }
                 }
-                Ok(())
-            },
-        ))
+            }
+            Ok(())
+        }))
     }
 
     pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Result<Type, JobError> {

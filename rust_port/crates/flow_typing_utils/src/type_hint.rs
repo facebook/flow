@@ -1633,7 +1633,13 @@ fn type_of_hint_decomposition<'cx>(
                                     cx,
                                     reason.dupe(),
                                     move |cx, r, id| {
-                                        let tout = Tvar::new(r.dupe(), id as u32);
+                                        let tout = UseT::new(UseTInner::UseT(
+                                            unknown_use(),
+                                            Type::new(TypeInner::OpenT(Tvar::new(
+                                                r.dupe(),
+                                                id as u32,
+                                            ))),
+                                        ));
                                         crate::predicate_kit::run_predicate_for_filtering_with_env(
                                             cx, env, &t, &predicate, &tout,
                                         )?;

@@ -565,6 +565,23 @@ fn __flow_impl<'cx>(
             )));
         }
 
+        (
+            _,
+            UseTInner::ConcretizeT(box ConcretizeTData {
+                kind: ConcretizationKind::ConcretizeForLowerBounds,
+                collector,
+                ..
+            }),
+        ) => match active_constraint_node(cx, env, l) {
+            Some(node) => {
+                for lower in flow_js_utils::possible_types(cx, node.id()) {
+                    collector.add(lower);
+                }
+            }
+            None => collector
+                .add(frozen_implicit_instantiation_tvar(cx, env, l).unwrap_or_else(|| l.dupe())),
+        },
+
         // ******************
         // * process X ~> Y *
         // ******************
