@@ -7342,33 +7342,32 @@ where
                 }
             },
             MessageExponentialSpread(box MessageExponentialSpreadData {
-                reason,
-                reasons_for_operand1,
-                reasons_for_operand2,
+                spread_loc,
+                operand1,
+                operand2,
             }) => {
-                use super::intermediate_error_types::ExponentialSpreadReasonGroup;
-                let format_reason_group =
-                    |ExponentialSpreadReasonGroup {
-                         first_reason,
-                         second_reason,
-                     }: &ExponentialSpreadReasonGroup<L>|
+                use super::intermediate_error_types::ExponentialSpreadOperandGroup;
+                let format_operand_group =
+                    |ExponentialSpreadOperandGroup { first, second }: &ExponentialSpreadOperandGroup<
+                        MessageTypeReferenceData<L>,
+                    >|
                      -> Vec<friendly::MessageFeature<Loc>> {
-                        match second_reason {
-                            None => vec![ref_(first_reason)],
-                            Some(second_reason) => vec![
+                        match second {
+                            None => vec![ref_of_ty_or_desc(&first.loc, &first.desc)],
+                            Some(second) => vec![
                                 text("inferred union from "),
-                                ref_(first_reason),
+                                ref_of_ty_or_desc(&first.loc, &first.desc),
                                 text(" | "),
-                                ref_(second_reason),
+                                ref_of_ty_or_desc(&second.loc, &second.desc),
                             ],
                         }
                     };
-                let mut union_refs = format_reason_group(reasons_for_operand1);
+                let mut union_refs = format_operand_group(operand1);
                 union_refs.push(text(" and "));
-                union_refs.extend(format_reason_group(reasons_for_operand2));
+                union_refs.extend(format_operand_group(operand2));
                 let mut features = vec![
-                    text("Computing "),
-                    ref_(reason),
+                    text("Computing the "),
+                    hardcoded_string_desc_ref("spread", spread_loc),
                     text(
                         " may lead to an exponentially large number of cases to reason about because ",
                     ),

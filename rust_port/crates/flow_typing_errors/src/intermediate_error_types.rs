@@ -167,10 +167,11 @@ pub enum ExpectedModulePurpose {
     ReactModuleForReactElementRefType,
 }
 
+/// The first lower bound that reached one operand of an exponential spread, and the most recent
+/// later one, if any.
 #[derive(
     Debug,
     Clone,
-    Dupe,
     PartialEq,
     Eq,
     PartialOrd,
@@ -179,9 +180,9 @@ pub enum ExpectedModulePurpose {
     serde::Serialize,
     serde::Deserialize
 )]
-pub struct ExponentialSpreadReasonGroup<L: Dupe> {
-    pub first_reason: VirtualReason<L>,
-    pub second_reason: Option<VirtualReason<L>>,
+pub struct ExponentialSpreadOperandGroup<T> {
+    pub first: T,
+    pub second: Option<T>,
 }
 
 #[derive(
@@ -1520,9 +1521,9 @@ pub struct MessageEnumInvalidMemberInitializerData<L: Dupe> {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct MessageExponentialSpreadData<L: Dupe> {
-    pub reason: VirtualReason<L>,
-    pub reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
-    pub reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
+    pub spread_loc: L,
+    pub operand1: ExponentialSpreadOperandGroup<MessageTypeReferenceData<L>>,
+    pub operand2: ExponentialSpreadOperandGroup<MessageTypeReferenceData<L>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

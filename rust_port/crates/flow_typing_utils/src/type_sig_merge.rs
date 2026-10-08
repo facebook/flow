@@ -3672,7 +3672,7 @@ fn merge_obj_spread_lit<'cx>(
         todo_rev: todo_rev.into_iter().collect(),
         acc,
         spread_id: reason::mk_id() as i32,
-        union_reason: None,
+        union_t: None,
         curr_resolve_idx: 0,
     };
     annotation_inference::object_spread(cx, use_op, reason, target, state, t)

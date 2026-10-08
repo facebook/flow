@@ -963,7 +963,7 @@ pub fn elab_t<'cx>(
                         todo_rev: todo_rev.dupe(),
                         acc,
                         spread_id: flow_common::reason::mk_id() as i32,
-                        union_reason: None,
+                        union_t: None,
                         curr_resolve_idx: 0,
                     };
                     let t = object_spread_with_env(

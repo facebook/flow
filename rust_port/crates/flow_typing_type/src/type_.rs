@@ -8720,7 +8720,7 @@ pub mod object {
             pub todo_rev: flow_data_structure_wrapper::list::FlowOcamlList<Operand>,
             pub acc: flow_data_structure_wrapper::list::FlowOcamlList<AccElement>,
             pub spread_id: i32,
-            pub union_reason: Option<Reason>,
+            pub union_t: Option<Type>,
             pub curr_resolve_idx: i32,
         }
 

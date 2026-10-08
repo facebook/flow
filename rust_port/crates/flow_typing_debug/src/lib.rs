@@ -179,7 +179,7 @@ use flow_typing_errors::error_message::UpperKind;
 use flow_typing_errors::error_message::string_of_invalid_render_type_kind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
 use flow_typing_errors::intermediate_error_types::DocblockError;
-use flow_typing_errors::intermediate_error_types::ExponentialSpreadReasonGroup;
+use flow_typing_errors::intermediate_error_types::ExponentialSpreadOperandGroup;
 use flow_typing_errors::intermediate_error_types::ExpressionFunctionKind;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceData;
 use flow_typing_errors::intermediate_error_types::ExpressionReferenceKind;
@@ -1171,8 +1171,8 @@ fn dump_use_t_<CX>(
                 .map(|op| spread_operand(tvars, op))
                 .collect();
             let acc_strs: Vec<String> = state.acc.iter().map(acc_element).collect();
-            let union_reason_str = match &state.union_reason {
-                Some(r) => dump_reason(cx, r),
+            let union_reason_str = match &state.union_t {
+                Some(t) => dump_reason(cx, reason_of_t(t)),
                 None => "None".to_string(),
             };
             format!(
@@ -3637,22 +3637,23 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
             )
         }
         ErrorMessage::EExponentialSpread(box EExponentialSpreadData {
-            reason,
-            reasons_for_operand1,
-            reasons_for_operand2,
+            spread_loc,
+            operand1,
+            operand2,
         }) => {
-            let format_reason_group = |g: &ExponentialSpreadReasonGroup<ALoc>| {
-                let second = match &g.second_reason {
-                    Some(r) => dump_reason(cx, r),
-                    None => "None".to_string(),
+            let format_operand_group =
+                |g: &ExponentialSpreadOperandGroup<ErrorTypeReferenceWithLocData<ALoc>>| {
+                    let second = match &g.second {
+                        Some(t) => dump_error_type_reference(cx, t),
+                        None => "None".to_string(),
+                    };
+                    format!("[{}; {}]", dump_error_type_reference(cx, &g.first), second)
                 };
-                format!("[{}; {}]", dump_reason(cx, &g.first_reason), second)
-            };
             format!(
                 "EExponentialSpread(Box::new(EExponentialSpreadData {})) ({}) ({})",
-                dump_reason(cx, reason),
-                format_reason_group(reasons_for_operand1),
-                format_reason_group(reasons_for_operand2)
+                string_of_aloc(None, spread_loc),
+                format_operand_group(operand1),
+                format_operand_group(operand2)
             )
         }
         ErrorMessage::EEnumError(enum_error) => match enum_error {

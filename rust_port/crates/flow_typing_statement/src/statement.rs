@@ -713,7 +713,7 @@ pub mod object_expression_acc {
                             None => flow_data_structure_wrapper::list::FlowOcamlList::new(),
                         },
                         spread_id: mk_id() as i32,
-                        union_reason: None,
+                        union_t: None,
                         curr_resolve_idx: 0,
                     };
                     let tout = flow_typing_flow_js::tvar_resolver::mk_tvar_and_fully_resolve_where::<

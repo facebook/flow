@@ -32,12 +32,15 @@ use flow_typing_errors::error_message::EUnsupportedExactData;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::intermediate_error_types;
+use flow_typing_errors::intermediate_error_types::ExponentialSpreadOperandGroup;
 use flow_typing_errors::intermediate_error_types::RecordBannedTypeUtilOp;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
 use flow_typing_flow_common::flow_js_utils::SpeculativeError;
 use flow_typing_flow_common::obj_type;
 use flow_typing_flow_js_env::FlowJsEnv;
+use flow_typing_spread_cache::LowerBound;
+use flow_typing_spread_cache::LowerBoundGroup;
 use flow_typing_type::type_::AnySource;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::DefT;
@@ -1001,7 +1004,7 @@ pub fn object_spread_with_env<'cx, A>(
     let todo_rev = state.todo_rev;
     let acc = state.acc;
     let spread_id = state.spread_id;
-    let union_reason = state.union_reason;
+    let union_t = state.union_t;
     let curr_resolve_idx = state.curr_resolve_idx;
     let resolved = object::spread::AccElement::ResolvedSlice(object::Resolved(x.clone()));
 
@@ -1023,39 +1026,52 @@ pub fn object_spread_with_env<'cx, A>(
     if !prev_can_spread {
         return return_(cx, use_op, any_t::error(reason.dupe()));
     }
-    match (union_reason, &x) {
+    match (union_t, &x) {
         (None, x) => {
             for slice in x.iter() {
                 flow_typing_spread_cache::add_lower_bound(
                     cache,
                     spread_id,
                     curr_resolve_idx,
-                    slice.reason.dupe(),
+                    LowerBound::Slice(slice.clone()),
                     &Vec1::new(slice.clone()),
                 );
             }
         }
-        (Some(union_reason), _) => {
+        (Some(union_t), _) => {
             flow_typing_spread_cache::add_lower_bound(
                 cache,
                 spread_id,
                 curr_resolve_idx,
-                union_reason.dupe(),
+                LowerBound::Union(union_t),
                 &x,
             );
         }
     }
     let can_spread = flow_typing_spread_cache::can_spread(cache, spread_id);
     if prev_can_spread && !can_spread {
-        let (reasons_for_operand1, reasons_for_operand2) =
-            flow_typing_spread_cache::get_error_groups(cache, spread_id);
+        let (group1, group2) = flow_typing_spread_cache::get_error_groups(cache, spread_id);
+        let operand_ref = |bound: LowerBound| match bound {
+            LowerBound::Union(t) => flow_js_utils::type_reference_with_reason_for_error(
+                &t,
+                type_util::reason_of_t(&t).dupe(),
+            ),
+            LowerBound::Slice(slice) => flow_js_utils::type_reference_with_reason_for_error(
+                &object_type_of_slice(cx, &slice),
+                slice.reason.dupe(),
+            ),
+        };
+        let operand_group = |group: LowerBoundGroup| ExponentialSpreadOperandGroup {
+            first: operand_ref(group.first),
+            second: group.second.map(operand_ref),
+        };
         add_output(
             cx,
             env,
             ErrorMessage::EExponentialSpread(Box::new(EExponentialSpreadData {
-                reason: reason.dupe(),
-                reasons_for_operand1,
-                reasons_for_operand2,
+                spread_loc: reason.loc().dupe(),
+                operand1: operand_group(group1),
+                operand2: operand_group(group2),
             })),
         )?;
         return return_(cx, use_op, any_t::error(reason.dupe()));
@@ -1076,7 +1092,7 @@ pub fn object_spread_with_env<'cx, A>(
                     todo_rev,
                     acc: new_acc,
                     spread_id,
-                    union_reason: None,
+                    union_t: None,
                     curr_resolve_idx,
                 };
                 let tool = object::Tool::Spread(Box::new((options.clone(), state)));
@@ -2676,7 +2692,7 @@ fn resolve_with_env<'cx, A>(
             let tool = match tool {
                 object::Tool::Spread(box (options, state)) => {
                     let mut state = state.clone();
-                    state.union_reason = Some(union_reason.dupe());
+                    state.union_t = Some(t.dupe());
                     object::Tool::Spread(Box::new((options.clone(), state)))
                 }
                 _ => tool.clone(),

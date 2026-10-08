@@ -2132,8 +2132,6 @@ name = "flow_typing_spread_cache"
 version = "0.0.0"
 dependencies = [
  "dupe",
- "flow_aloc",
- "flow_common",
  "flow_data_structure_wrapper",
  "flow_typing_errors",
  "flow_typing_type",

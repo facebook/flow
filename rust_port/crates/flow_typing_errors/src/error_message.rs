@@ -80,7 +80,7 @@ use crate::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePr
 use crate::intermediate_error_types::ExplanationInvariantSubtypingDueToMutablePropertyData;
 use crate::intermediate_error_types::ExplanationPropertyMissingDueToNeutralOptionalPropertyData;
 use crate::intermediate_error_types::ExplanationWithLazyParts;
-use crate::intermediate_error_types::ExponentialSpreadReasonGroup;
+use crate::intermediate_error_types::ExponentialSpreadOperandGroup;
 use crate::intermediate_error_types::ExpressionReferenceData;
 use crate::intermediate_error_types::ExpressionReferenceKind;
 use crate::intermediate_error_types::FunctionReferenceData;
@@ -2621,9 +2621,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> Ord for EInexactMayOverwriteIn
     serde::Deserialize
 )]
 pub struct EExponentialSpreadData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub reason: VirtualReason<L>,
-    pub reasons_for_operand1: ExponentialSpreadReasonGroup<L>,
-    pub reasons_for_operand2: ExponentialSpreadReasonGroup<L>,
+    pub spread_loc: L,
+    pub operand1: ExponentialSpreadOperandGroup<ErrorTypeReferenceWithLocData<L>>,
+    pub operand2: ExponentialSpreadOperandGroup<ErrorTypeReferenceWithLocData<L>>,
 }
 
 #[derive(
@@ -4174,16 +4174,16 @@ pub fn string_of_invalid_render_type_kind<T>(kind: &InvalidRenderTypeKind<T>) ->
     }
 }
 
-fn map_loc_of_exponential_spread_reason_group<L: Dupe, M: Dupe, F>(
+fn map_exponential_spread_operand_group<T, U, F>(
     f: F,
-    group: ExponentialSpreadReasonGroup<L>,
-) -> ExponentialSpreadReasonGroup<M>
+    group: ExponentialSpreadOperandGroup<T>,
+) -> ExponentialSpreadOperandGroup<U>
 where
-    F: Fn(VirtualReason<L>) -> VirtualReason<M>,
+    F: Fn(T) -> U,
 {
-    ExponentialSpreadReasonGroup {
-        first_reason: f(group.first_reason),
-        second_reason: group.second_reason.map(f),
+    ExponentialSpreadOperandGroup {
+        first: f(group.first),
+        second: group.second.map(f),
     }
 }
 
@@ -5998,18 +5998,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             })),
 
             EExponentialSpread(box EExponentialSpreadData {
-                reason,
-                reasons_for_operand1,
-                reasons_for_operand2,
+                spread_loc,
+                operand1,
+                operand2,
             }) => EExponentialSpread(Box::new(EExponentialSpreadData {
-                reason: map_reason(reason),
-                reasons_for_operand1: map_loc_of_exponential_spread_reason_group(
-                    map_reason,
-                    reasons_for_operand1,
+                spread_loc: f(spread_loc),
+                operand1: map_exponential_spread_operand_group(
+                    map_error_type_ref_with_reason,
+                    operand1,
                 ),
-                reasons_for_operand2: map_loc_of_exponential_spread_reason_group(
-                    map_reason,
-                    reasons_for_operand2,
+                operand2: map_exponential_spread_operand_group(
+                    map_error_type_ref_with_reason,
+                    operand2,
                 ),
             })),
 
@@ -7587,6 +7587,22 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: map_use_op(&f, use_op),
             })),
 
+            EExponentialSpread(box EExponentialSpreadData {
+                spread_loc,
+                operand1,
+                operand2,
+            }) => EExponentialSpread(Box::new(EExponentialSpreadData {
+                spread_loc,
+                operand1: map_exponential_spread_operand_group(
+                    map_error_type_ref_with_reason,
+                    operand1,
+                ),
+                operand2: map_exponential_spread_operand_group(
+                    map_error_type_ref_with_reason,
+                    operand2,
+                ),
+            })),
+
             EInexactMayOverwriteIndexer(box EInexactMayOverwriteIndexerData {
                 spread_loc,
                 key_loc,
@@ -8349,19 +8365,14 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             Self::EDefinitionCycle(dependencies) => Some(dependencies.first().0.loc.dupe()),
 
             Self::EExponentialSpread(box EExponentialSpreadData {
-                reasons_for_operand1,
-                reasons_for_operand2,
-                ..
+                operand1, operand2, ..
             }) => {
-                let union_reason = match (
-                    &reasons_for_operand1.second_reason,
-                    &reasons_for_operand2.second_reason,
-                ) {
-                    (None, _) => &reasons_for_operand1.first_reason,
-                    (_, None) => &reasons_for_operand2.first_reason,
-                    (Some(r), _) => r,
+                let union = match (&operand1.second, &operand2.second) {
+                    (None, _) => &operand1.first,
+                    (_, None) => &operand2.first,
+                    (Some(t), _) => t,
                 };
-                Some(union_reason.loc.dupe())
+                Some(union.loc.dupe())
             }
 
             Self::EBindingError(box (_, loc, _, _)) => Some(loc.dupe()),
@@ -9846,16 +9857,23 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
             })),
             ErrorMessage::EExponentialSpread(box EExponentialSpreadData {
-                reason,
-                reasons_for_operand1,
-                reasons_for_operand2,
-            }) => Normal(Message::MessageExponentialSpread(Box::new(
-                MessageExponentialSpreadData {
-                    reason,
-                    reasons_for_operand1,
-                    reasons_for_operand2,
-                },
-            ))),
+                spread_loc,
+                operand1,
+                operand2,
+            }) => {
+                let message_type_ref =
+                    |t: ErrorTypeReferenceWithLocData<L>| MessageTypeReferenceData {
+                        loc: t.reference_loc,
+                        desc: expect_type_desc(t.type_desc),
+                    };
+                Normal(Message::MessageExponentialSpread(Box::new(
+                    MessageExponentialSpreadData {
+                        spread_loc,
+                        operand1: map_exponential_spread_operand_group(message_type_ref, operand1),
+                        operand2: map_exponential_spread_operand_group(message_type_ref, operand2),
+                    },
+                )))
+            }
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess(
                 box EnumInvalidMemberAccessData {
                     member: EnumMemberAccess::Named { name, suggestion },

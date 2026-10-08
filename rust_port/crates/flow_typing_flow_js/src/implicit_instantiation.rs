@@ -986,7 +986,7 @@ fn reverse_obj_kit_rest<'cx>(
             ),
             acc: flow_data_structure_wrapper::list::FlowOcamlList::new(),
             spread_id: flow_common::reason::mk_id() as i32,
-            union_reason: None,
+            union_t: None,
             curr_resolve_idx: 0,
         };
         let open_t_prime = Type::new(TypeInner::OpenT(Tvar::new(
