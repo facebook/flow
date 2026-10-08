@@ -1761,8 +1761,7 @@ pub mod special_cased_functions {
                 (TypeInner::IntersectionT(_, rep), kind) => {
                     let kind = kind.clone();
                     let members: Vec<Type> = rep.members_iter().duped().collect();
-                    let init = flow_typing_tvar::mk(cx, reason_op.dupe());
-                    let mut tvar = init;
+                    let mut previous: Option<Type> = None;
                     for member in &members {
                         let cached = fix_cache.borrow().get(member).cloned();
                         let member_tvar = match cached {
@@ -1775,10 +1774,14 @@ pub mod special_cased_functions {
                                 )
                             })?,
                         };
-                        flow_js::flow_t_with_env(cx, env, (&member_tvar, &tvar))?;
-                        tvar = member_tvar;
+                        if let Some(previous) = previous {
+                            flow_js::flow_t_with_env(cx, env, (&member_tvar, &previous))?;
+                        }
+                        previous = Some(member_tvar);
                     }
-                    flow_js::flow_t_with_env(cx, env, (&tvar, t))?;
+                    if let Some(previous) = previous {
+                        flow_js::flow_t_with_env(cx, env, (&previous, t))?;
+                    }
                     Ok(())
                 }
                 (TypeInner::DefT(lreason, def_t), ObjAssignKind::ObjAssign { .. })
