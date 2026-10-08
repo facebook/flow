@@ -205,7 +205,6 @@ pub struct Options {
     pub saved_state_force_recheck: bool,
     pub saved_state_no_fallback: bool,
     pub saved_state_persist_export_index: bool,
-    pub saved_state_reinit_on_lib_change: bool,
     pub saved_state_skip_version_check: bool,
     pub saved_state_verify: bool,
     pub slow_to_check_logging: SlowToCheckLogging,

@@ -2252,7 +2252,6 @@ pub fn make_options(
                 saved_state_parallel_decompress,
                 saved_state_fetcher,
                 saved_state_persist_export_index,
-                saved_state_reinit_on_lib_change,
                 saved_state_skip_version_check,
                 supported_operating_systems,
                 strict_es6_import_export,
@@ -2630,7 +2629,6 @@ pub fn make_options(
         saved_state_force_recheck,
         saved_state_no_fallback,
         saved_state_persist_export_index,
-        saved_state_reinit_on_lib_change,
         saved_state_skip_version_check: saved_state_skip_version_check_override
             || saved_state_skip_version_check,
         saved_state_verify,
