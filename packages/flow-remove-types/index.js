@@ -165,17 +165,15 @@ var removeFlowVisitor = {
   DeclareExportDeclaration: removeNode,
   AbstractMethodDefinition: removeAbstractMethod,
   AbstractPropertyDefinition: removeNode,
+  NamespaceExportDeclaration: removeNode,
 
   ClassDeclaration: removeClassTypes,
   ClassExpression: removeClassTypes,
 
   MethodDefinition: removeOverrideModifier,
 
-  AsExpression: function (context, node, ast) {
-    var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
-    removeNode(context, ast.tokens[typeIdx - 1]); // `as` token
-    removeNode(context, node.typeAnnotation);
-  },
+  AsExpression: removeTypeCast,
+  SatisfiesExpression: removeTypeCast,
 
   AsConstExpression: function (context, node, ast) {
     var idx = findTokenIndexAtEndOfNode(ast.tokens, node.expression);
@@ -229,16 +227,48 @@ var removeFlowVisitor = {
     if (node.variance != null) {
       removeNode(context, node.variance);
     }
+    if (node.optional) {
+      var tokens = context.ast.tokens;
+      var idx = findTokenIndexAtEndOfNode(tokens, node.key);
+      do {
+        idx++;
+      } while (getLabel(tokens[idx]) !== '?');
+      removeNode(context, tokens[idx]);
+    }
   },
 
   ExportNamedDeclaration: function (context, node) {
     if (node.exportKind === 'type' || node.exportKind === 'typeof') {
       return removeNode(context, node);
     }
+    if (
+      node.specifiers.length > 0 &&
+      node.specifiers.every(function (specifier) {
+        return (
+          specifier.exportKind === 'type' || specifier.exportKind === 'typeof'
+        );
+      })
+    ) {
+      return removeNode(context, node);
+    }
+  },
+
+  ExportSpecifier: function (context, node) {
+    if (node.exportKind === 'type' || node.exportKind === 'typeof') {
+      removeNode(context, node);
+      removeTrailingCommaNode(context, node);
+      return false;
+    }
   },
 
   ExportAllDeclaration: function (context, node) {
     if (node.exportKind === 'type') {
+      return removeNode(context, node);
+    }
+  },
+
+  ImportEqualsDeclaration: function (context, node) {
+    if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
     }
   },
@@ -392,6 +422,13 @@ var removeFlowVisitor = {
     }
   },
 };
+
+function removeTypeCast(context, node, ast) {
+  var typeIdx = findTokenIndexAtStartOfNode(ast.tokens, node.typeAnnotation);
+  removeNode(context, ast.tokens[typeIdx - 1]);
+  removeNode(context, node.typeAnnotation);
+  node.typeAnnotation = null;
+}
 
 function removeAbstractMethod(context, node) {
   removeNode(context, node);

@@ -421,3 +421,49 @@ class ModifierNames {
     return 'override';
   }
 }
+
+const satisfiesObject = {value: 42} /*.*/ satisfies /*.*/ {value: number};
+const satisfiesGeneric = [] satisfies Array<number>;
+const satisfiesFunction = ((value: number): number => value) satisfies <T>(value: T) => T;
+const satisfiesConst = {value: 42} as const satisfies {value: number};
+const satisfiesChain = 42 satisfies number as number satisfies number;
+const satisfiesTemplate = 'prefix-42' satisfies `prefix-${number}`;
+const satisfiesPredicate = ((value: mixed): boolean => true) satisfies (value: mixed) => value is number;
+const asPredicate = ((value: mixed): boolean => true) as (value: mixed) => value is number;
+
+class OptionalFields extends ConcreteDerived {
+  optional?: string;
+  initialized?: number = 42;
+  ['question?'] /*.*/ ? /*.*/ : number;
+  [true ? 'first' : 'second']?: number;
+  #private?: string;
+  static optionalStatic?: boolean;
+  readonly optionalReadonly?: number;
+  override property?: number;
+  declare optionalDeclare?: number;
+}
+
+export {type StringType as InlineType};
+export {type SomeType as OnlyInlineType, type SomeOtherType as OtherInlineType} from 'type-only-module';
+export {type SomeType as FirstInlineType, Something as InlineFirst} from 'some-module';
+export {Something as InlineLast, type SomeType as LastInlineType} from 'some-module';
+export {Something as InlineTrailing, type SomeType as TrailingInlineType,} from 'some-module';
+export {Something as InlineMiddle, type SomeType as MiddleInlineType, SomeOtherThing as InlineOther} from 'some-module';
+export {
+  type SomeType as CommentedInlineType,
+  Something as InlineCommented,
+  type /*.*/ SomeOtherType as OtherCommentedInlineType /*.*/,
+} from 'some-module';
+export {} from 'side-effect-module';
+
+const type = 42;
+export {type as ContextualType};
+export {Something as type} from 'some-module';
+
+export as namespace SyntaxNamespace;
+
+import type ModuleTypes = require('module-types');
+import type QualifiedType = Namespace.Types;
+export import type ExportedModuleTypes = require('exported-module-types');
+export import type ExportedQualifiedType = Namespace.Types;
+import type SemicolonlessType = require('semicolonless-types')

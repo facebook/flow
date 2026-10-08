@@ -421,3 +421,49 @@ class ModifierNames {
     return 'override';
   }
 }
+
+const satisfiesObject = {value: 42} /*.*/           /*.*/                ;
+const satisfiesGeneric = []                        ;
+const satisfiesFunction = ((value        )         => value)                             ;
+const satisfiesConst = {value: 42}                                   ;
+const satisfiesChain = 42                                            ;
+const satisfiesTemplate = 'prefix-42'                             ;
+const satisfiesPredicate = ((value       )          => true)                                            ;
+const asPredicate = ((value       )          => true)                                     ;
+
+class OptionalFields extends ConcreteDerived {
+                    
+  initialized          = 42;
+                                       
+                                       
+                    
+                                  
+                                     
+                             
+                                   
+}
+
+                                       
+                                                                                                        
+export {                                  Something as InlineFirst} from 'some-module';
+export {Something as InlineLast,                                } from 'some-module';
+export {Something as InlineTrailing,                                     } from 'some-module';
+export {Something as InlineMiddle,                                    SomeOtherThing as InlineOther} from 'some-module';
+export {
+                                       
+  Something as InlineCommented,
+                                                       /*.*/ 
+} from 'some-module';
+export {} from 'side-effect-module';
+
+const type = 42;
+export {type as ContextualType};
+export {Something as type} from 'some-module';
+
+                                    
+
+                                                  
+                                            
+                                                                          
+                                                           
+                                                              
