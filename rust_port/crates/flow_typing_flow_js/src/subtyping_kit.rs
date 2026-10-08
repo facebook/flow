@@ -2379,7 +2379,7 @@ fn flow_obj_to_obj<'cx>(
                     upper_obj_loc: ureason.def_loc().dupe(),
                     lower_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t1.dupe()),
                     upper_obj_desc: type_or_type_desc::TypeOrTypeDescT::Type(t2.dupe()),
-                    upper_object_reason: ureason.dupe(),
+                    upper_object_loc: type_util::ref_loc_of_t(&t2).dupe(),
                     properties: properties.clone(),
                 };
             flow_js_utils::add_output_with_env(

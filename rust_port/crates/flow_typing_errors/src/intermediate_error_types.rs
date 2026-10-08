@@ -955,7 +955,7 @@ pub enum ExplanationWithLazyParts<L: Dupe> {
         upper_obj_loc: L,
         lower_obj_desc: TypeOrTypeDesc<L>,
         upper_obj_desc: TypeOrTypeDesc<L>,
-        upper_object_reason: VirtualReason<L>,
+        upper_object_loc: L,
         properties: Vec<Name>,
     },
 }
@@ -1048,7 +1048,7 @@ pub struct ExplanationInvariantSubtypingDueToMutablePropertiesData<L: Dupe> {
     pub upper_obj_loc: L,
     pub lower_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
     pub upper_obj_desc: Result<ALocElt, VirtualReasonDesc<L>>,
-    pub upper_object_reason: VirtualReason<L>,
+    pub upper_object_loc: L,
     pub properties: Vec<Name>,
 }
 

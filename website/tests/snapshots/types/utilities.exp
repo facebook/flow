@@ -123,7 +123,7 @@ the same as those of `{age?: number, name?: string}` [2]. [incompatible-type]
 The above-mentioned two types must be the same because properties `age` and `name` are invariantly typed. To fix the
 error,
 - Either make `Person` [3] and `{age?: number, name?: string}` [3] exactly the same
-- Or make properties `age` and `name` in `Person` [2] readonly. See
+- Or make properties `age` and `name` in `{age?: number, name?: string}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    -:13:10

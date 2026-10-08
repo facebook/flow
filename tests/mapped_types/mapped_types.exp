@@ -366,7 +366,7 @@ those of mapped type [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
 - Either make `{a: string, b: string}` [1] and mapped type [3] exactly the same
-- Or make properties `a` and `b` in `IdentityMap` [2] readonly. See
+- Or make properties `a` and `b` in mapped type [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    identity.js:17:10
@@ -423,7 +423,7 @@ Cannot cast `foo` to object type because properties `a` and `b` of mapped type [
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
 - Either make mapped type [3] and `{a: string, b: string}` [2] exactly the same
-- Or make properties `a` and `b` in object type [2] readonly. See
+- Or make properties `a` and `b` in `{a: string, b: string}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    identity.js:31:2
@@ -1086,7 +1086,7 @@ those of `{bar: empty, readonly baz: empty, foo: empty}` [2]. [incompatible-type
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
 - Either make object type [3] and `{bar: empty, readonly baz: empty, foo: empty}` [2] exactly the same
-- Or make properties `bar` and `foo` in object type [2] readonly. See
+- Or make properties `bar` and `foo` in `{bar: empty, readonly baz: empty, foo: empty}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    import.js:18:3
@@ -1168,7 +1168,7 @@ those of `{bar: empty, readonly baz: empty, foo: empty}` [2]. [incompatible-type
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
 - Either make object type [3] and `{bar: empty, readonly baz: empty, foo: empty}` [2] exactly the same
-- Or make properties `bar` and `foo` in object type [2] readonly. See
+- Or make properties `bar` and `foo` in `{bar: empty, readonly baz: empty, foo: empty}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    import.js:47:3
@@ -1842,7 +1842,7 @@ those of `{bar: empty, foo: empty}` [2]. [incompatible-type]
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
 - Either make mapped type [3] and `{bar: empty, foo: empty}` [2] exactly the same
-- Or make properties `bar` and `foo` in object type [2] readonly. See
+- Or make properties `bar` and `foo` in `{bar: empty, foo: empty}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    non_homomorphic.js:12:3
@@ -1939,7 +1939,7 @@ exactly the same as those of `{bar: "baz", baz: "foo", foo: "bar"}` [2]. [incomp
 The above-mentioned two types must be the same because properties `bar`, `baz`, and `foo` are invariantly typed. To fix
 the error,
 - Either make mapped type [3] and `{bar: "baz", baz: "foo", foo: "bar"}` [2] exactly the same
-- Or make properties `bar`, `baz`, and `foo` in object type [2] readonly. See
+- Or make properties `bar`, `baz`, and `foo` in `{bar: "baz", baz: "foo", foo: "bar"}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    non_homomorphic.js:40:3
@@ -1981,7 +1981,7 @@ those of `{bar: empty, baz: number, foo: empty}` [2]. [incompatible-type]
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
 - Either make mapped type [3] and `{bar: empty, baz: number, foo: empty}` [2] exactly the same
-- Or make properties `bar` and `foo` in object type [2] readonly. See
+- Or make properties `bar` and `foo` in `{bar: empty, baz: number, foo: empty}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    non_homomorphic.js:48:3
@@ -2056,7 +2056,7 @@ those of `{bar?: number, foo: string}` [2]. [incompatible-type]
 The above-mentioned two types must be the same because properties `bar` and `foo` are invariantly typed. To fix the
 error,
 - Either make mapped type [3] and `{bar?: number, foo: string}` [2] exactly the same
-- Or make properties `bar` and `foo` in object type [2] readonly. See
+- Or make properties `bar` and `foo` in `{bar?: number, foo: string}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    optionality.js:9:3

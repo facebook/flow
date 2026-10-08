@@ -471,7 +471,7 @@ those of `{a: T, b: S}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
 - Either make `{a: S, b: T}` [1] and `{a: T, b: S}` [2] exactly the same
-- Or make properties `a` and `b` in object type [2] readonly. See
+- Or make properties `a` and `b` in `{a: T, b: S}` [2] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    subtyping.js:73:65
