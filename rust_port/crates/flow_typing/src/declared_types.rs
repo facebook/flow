@@ -354,6 +354,13 @@ fn assertion_info_of_type(
         TypeInner::DefT(_, def_t) => match def_t.deref() {
             DefTInner::FunT(_, function) => assertion_of_function(function),
             DefTInner::PolyT(poly) => assertion_info_of_type(cx, reason, &poly.t_out),
+            // Callable objects (e.g. node's `assert` module, whose exports
+            // object carries the `asserts` call signature): classify through
+            // the call type.
+            DefTInner::ObjT(obj) if let Some(id) = obj.call_t.as_ref() => {
+                let call_t = cx.find_call(*id);
+                assertion_info_of_type(cx, reason, &call_t)
+            }
             _ => None,
         },
         // Unions never classify, even when all members agree: TS does not
