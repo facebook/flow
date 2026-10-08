@@ -4784,7 +4784,9 @@ fn __flow_impl<'cx>(
                     ),
                     use_op_c.dupe(),
                     reason_op_c.dupe(),
-                    calltype_c.clone(),
+                    flow_typing_implicit_instantiation_check::Call::from_funcall(
+                        calltype_c.clone(),
+                    ),
                 )
             };
             let t_ = instantiate_poly_call_or_new(cx, env, trace, lparts, uparts, &check)?;

@@ -1622,7 +1622,11 @@ fn check_instantiation<'cx, Obs: Observer>(
                 call_action: Box::new(CallAction::Funcalltype(Box::new(FuncallType {
                     call_targs: Some(call_targs.into()),
                     call_tout: Tvar::new(reason_op.dupe(), new_tout as u32),
-                    ..calltype.clone()
+                    call_this_t: calltype.call_this_t.dupe(),
+                    call_args_tlist: calltype.call_args_tlist.dupe(),
+                    call_strict_arity: calltype.call_strict_arity,
+                    call_speculation_hint_state: calltype.call_speculation_hint_state.dupe(),
+                    call_specialized_callee: calltype.call_specialized_callee.clone(),
                 }))),
                 return_hint: hint_unavailable(),
             })));

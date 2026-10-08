@@ -647,7 +647,6 @@ fn instantiate_callee<'cx>(
                                             _ => None,
                                         }
                                     };
-                                    let tout_id = flow_typing_tvar::mk_no_wrap(cx, reason);
                                     let check = ImplicitInstantiationCheck::of_call(
                                         t.dupe(),
                                         (
@@ -658,11 +657,10 @@ fn instantiate_callee<'cx>(
                                         ),
                                         unknown_use(),
                                         reason.dupe(),
-                                        FuncallType {
+                                        flow_typing_implicit_instantiation_check::Call {
                                             call_this_t: unsoundness::unresolved_any(reason.dupe()),
                                             call_targs: call_targs.clone().map(|v| v.into()),
                                             call_args_tlist: call_args_tlist.into(),
-                                            call_tout: Tvar::new(reason.dupe(), tout_id as u32),
                                             call_strict_arity: true,
                                             call_speculation_hint_state: None,
                                             call_specialized_callee: None,

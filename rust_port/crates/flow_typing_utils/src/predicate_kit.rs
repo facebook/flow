@@ -68,7 +68,6 @@ use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::elemt_of_arrtype;
 use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::inter_rep;
-use flow_typing_type::type_::mk_functioncalltype;
 use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::type_collector::TypeCollector;
@@ -1150,15 +1149,14 @@ fn call_latent_pred<'cx>(
                     }) => {
                         let reason_tapp = r;
                         let fun_t_c = t.dupe();
-                        let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
-                        let tvar = Tvar::new(reason.dupe(), tvar_id as u32);
-                        let calltype = mk_functioncalltype(
-                            reason.dupe(),
-                            targs.dupe(),
-                            Rc::from(argts),
-                            true,
-                            tvar,
-                        );
+                        let calltype = flow_typing_implicit_instantiation_check::Call {
+                            call_this_t: flow_typing_type::type_::global_this(reason.dupe()),
+                            call_targs: targs.dupe(),
+                            call_args_tlist: Rc::from(argts),
+                            call_strict_arity: true,
+                            call_speculation_hint_state: None,
+                            call_specialized_callee: None,
+                        };
                         let tparams_loc_c = tparams_loc.dupe();
                         let ids_c = ids.dupe();
                         let t_out_c = t_out_inner.dupe();
