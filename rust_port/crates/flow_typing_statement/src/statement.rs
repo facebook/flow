@@ -431,10 +431,10 @@ pub mod object_expression_acc {
                                 })
                             }
                             Some(DictType {
-                                dict_name: _,
+                                ref dict_name,
                                 key: ref existing_key,
                                 value: ref existing_value,
-                                ..
+                                dict_polarity,
                             }) => {
                                 let use_op = UseOp::Op(std::sync::Arc::new(
                                     type_::RootUseOp::ObjectAddComputedProperty {
@@ -446,6 +446,52 @@ pub mod object_expression_acc {
                                     flow_typing_context::TypingMode::CheckingMode
                                 ) {
                                     // These checks should not affect synthesis results
+                                    let keys_are_compatible = key == *existing_key
+                                        || speculation_flow::is_subtyping_successful(
+                                            cx,
+                                            key.dupe(),
+                                            existing_key.dupe(),
+                                        )
+                                        .unwrap_or(true);
+                                    let widened_key =
+                                        type_::str_module_t::why(reason_of_t(existing_key).dupe());
+                                    let is_string_key = |key: &Type| {
+                                        speculation_flow::is_subtyping_successful(
+                                            cx,
+                                            key.dupe(),
+                                            widened_key.dupe(),
+                                        )
+                                        .unwrap_or(false)
+                                    };
+                                    // The accumulator stores one indexer key type, so disjoint
+                                    // string keys like `a_${number}` and `b_${number}` must widen
+                                    // to `string`.
+                                    if !keys_are_compatible
+                                        && is_string_key(&key)
+                                        && is_string_key(existing_key)
+                                    {
+                                        flow_js::flow_non_speculating(
+                                            cx,
+                                            (
+                                                &value,
+                                                &UseT::new(UseTInner::UseT(
+                                                    use_op,
+                                                    existing_value.dupe(),
+                                                )),
+                                            ),
+                                        )?;
+                                        let dict_name = dict_name.clone();
+                                        let existing_value = existing_value.dupe();
+                                        return Ok(Self {
+                                            computed_props: Some(DictType {
+                                                dict_name,
+                                                key: widened_key,
+                                                value: existing_value,
+                                                dict_polarity,
+                                            }),
+                                            ..self
+                                        });
+                                    }
                                     flow_js::flow_non_speculating(
                                         cx,
                                         (
@@ -7932,17 +7978,21 @@ fn expression_<'a>(
                     (t, vec![])
                 }
                 _ => {
-                    let is_as_const = *as_const;
+                    // The precision decision is needed up front to propagate
+                    // it into substitutions; the final type goes through
+                    // `adjust_precision` exactly like primitive literals.
+                    let needs_precise = natural_inference::needs_precise_type(
+                        cx, &encl_ctx, decl, *as_const, frozen, has_hint, &loc,
+                    );
+                    // Like primitive literals, `as const` (or frozen)
+                    // templates are frozen: they never generalize.
+                    let from_annot = *as_const || *frozen == FrozenKind::FrozenProp;
                     let t_out = type_::str_module_t::at(loc.dupe());
                     let expressions: Vec<_> = inner
                         .expressions
                         .iter()
                         .map(|expr| {
-                            let e = if is_as_const {
-                                expression(None, None, Some(true), cx, expr)?
-                            } else {
-                                expression(None, None, None, cx, expr)?
-                            };
+                            let e = expression(None, None, Some(needs_precise), cx, expr)?;
                             let t = e.loc().1.dupe();
                             let reason = reason_of_t(&t).dupe();
                             let concrete_types = flow_js_utils::flow_js_result_to_job_error(
@@ -7989,25 +8039,35 @@ fn expression_<'a>(
                             Ok(e)
                         })
                         .collect::<Result<_, CheckExprError>>()?;
-                    let t = if is_as_const {
-                        let quasis = inner
-                            .quasis
-                            .iter()
-                            .map(|quasi| quasi.value.cooked.dupe())
-                            .collect();
-                        // Resolve tvars (e.g. identifier lookups) so literal
-                        // unions fold eagerly, matching TypeScript.
-                        let types = expressions
-                            .iter()
-                            .map(|e| {
-                                let t = e.loc().1.dupe();
-                                cx.find_resolved(&t).unwrap_or(t)
-                            })
-                            .collect();
-                        template_literal_type::resolve_for_value(quasis, types, loc.dupe(), cx)
-                    } else {
-                        t_out
-                    };
+                    let t = natural_inference::adjust_precision(
+                        cx,
+                        &syntactic_flags,
+                        || {
+                            let quasis = inner
+                                .quasis
+                                .iter()
+                                .map(|quasi| quasi.value.cooked.dupe())
+                                .collect();
+                            // Resolve tvars (e.g. identifier lookups) so literal
+                            // unions fold eagerly, matching TypeScript.
+                            let types = expressions
+                                .iter()
+                                .map(|e| {
+                                    let t = e.loc().1.dupe();
+                                    cx.find_resolved(&t).unwrap_or(t)
+                                })
+                                .collect();
+                            template_literal_type::resolve_for_value(
+                                quasis,
+                                types,
+                                loc.dupe(),
+                                cx,
+                                from_annot,
+                            )
+                        },
+                        || t_out.dupe(),
+                        &loc,
+                    );
                     (t, expressions)
                 }
             };

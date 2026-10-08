@@ -1048,6 +1048,13 @@ pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, env: &FlowJsEnv, t: &T
             }
             _ => {}
         },
+        TypeInner::TemplateLiteralT {
+            reason,
+            from_annot: false,
+            ..
+        } if env.in_implicit_instantiation() => {
+            cx.record_primitive_literal_check(reason.loc().dupe());
+        }
         _ => {}
     }
 }

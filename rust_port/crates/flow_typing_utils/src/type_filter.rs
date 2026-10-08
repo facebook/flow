@@ -23,6 +23,7 @@ use flow_common::reason::mk_reason;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_typing_context::Context;
 use flow_typing_flow_common::obj_type;
+use flow_typing_flow_js::template_literal_type;
 use flow_typing_type::type_::ArrType;
 use flow_typing_type::type_::ArrayATData;
 use flow_typing_type::type_::ArrayLengthOp;
@@ -772,6 +773,33 @@ pub fn string_literal(expected_loc: ALoc, expected: FlowSmolStr, t: Type) -> Fil
             _ => changed_result(empty_t::why(reason_of_t(&t).dupe())),
         },
         TypeInner::AnyT(_, _) => unchanged_result(t),
+        TypeInner::TemplateLiteralT { quasis, types, .. } => {
+            // `x === 'lit'` keeps the literal when it matches the template
+            // shape, and empties only on certain mismatch. Placeholders that
+            // cannot be decided match conservatively.
+            let (quasis, types) = template_literal_type::fold_concrete_placeholders(quasis, types);
+            match template_literal_type::match_string_against_template(
+                expected.as_str(),
+                &quasis,
+                &types,
+            ) {
+                template_literal_type::MatchResult::Match(_) => {
+                    changed_result(Type::new(TypeInner::DefT(
+                        reason_of_t(&t).dupe().replace_desc_new(expected_desc),
+                        DefT::new(DefTInner::SingletonStrT {
+                            from_annot: false,
+                            value: expected,
+                        }),
+                    )))
+                }
+                template_literal_type::MatchResult::Mismatch => {
+                    changed_result(empty_t::why(reason_of_t(&t).dupe()))
+                }
+                // Malformed templates cannot occur; leave them alone rather
+                // than inventing an empty.
+                template_literal_type::MatchResult::InvariantViolation => unchanged_result(t),
+            }
+        }
         _ => changed_result(empty_t::why(reason_of_t(&t).dupe())),
     }
 }

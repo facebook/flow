@@ -1620,6 +1620,7 @@ mod type_converter {
             },
             TypeInner::TemplateLiteralT {
                 reason: _,
+                from_annot: _,
                 quasis,
                 types,
             } => {

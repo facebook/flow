@@ -156,22 +156,107 @@ References:
               ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ as_const.js:105:3
+Error ------------------------------------------------------------------------------------------------ as_const.js:106:3
 
-Cannot cast `y` to template literal type because `string` [1] is incompatible with ``${string}dp`` [2].
+Cannot cast `y` to template literal type because `string` [1] is incompatible with ``${string}px`` [2].
 [incompatible-type]
 
-   as_const.js:105:3
-   105|   y as `${string}dp`; // ERROR - no precision without as const
+   as_const.js:106:3
+   106|   y as `${string}px`; // ERROR
           ^
 
 References:
    as_const.js:103:13
    103|   const y = `${s}dp`;
                     ^^^^^^^^ [1]
-   as_const.js:105:8
-   105|   y as `${string}dp`; // ERROR - no precision without as const
+   as_const.js:106:8
+   106|   y as `${string}px`; // ERROR
                ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ as_const.js:111:3
+
+Cannot cast `z` to template literal type because `string` [1] is incompatible with ``${string}dp`` [2].
+[incompatible-type]
+
+   as_const.js:111:3
+   111|   z as `${string}dp`; // ERROR - let widens to string
+          ^
+
+References:
+   as_const.js:109:11
+   109|   let z = `${s}dp`;
+                  ^^^^^^^^ [1]
+   as_const.js:111:8
+   111|   z as `${string}dp`; // ERROR - let widens to string
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- as_const.js:117:38
+
+Cannot assign template string to `bad` because `string` [1] is incompatible with ``pre-${string}-other`` [2].
+[incompatible-type]
+
+   as_const.js:117:38
+   117|   const bad: `pre-${string}-other` = `pre-${s}-suf`; // ERROR
+                                             ^^^^^^^^^^^^^^ [1]
+
+References:
+   as_const.js:117:14
+   117|   const bad: `pre-${string}-other` = `pre-${s}-suf`; // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ as_const.js:126:3
+
+Cannot cast `x` to string literal `hello mars` because `"hello world"` [1] is incompatible with `"hello mars"` [2].
+[incompatible-type]
+
+   as_const.js:126:3
+   126|   x as "hello mars"; // ERROR
+          ^
+
+References:
+   as_const.js:124:13
+   124|   const x = `hello ${lit}`;
+                    ^^^^^^^^^^^^^^ [1]
+   as_const.js:126:8
+   126|   x as "hello mars"; // ERROR
+               ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ as_const.js:131:3
+
+Cannot cast `x` to string literal `n124` because `"n123"` [1] is incompatible with `"n124"` [2]. [incompatible-type]
+
+   as_const.js:131:3
+   131|   x as "n124"; // ERROR
+          ^
+
+References:
+   as_const.js:129:13
+   129|   const x = `n${123}`;
+                    ^^^^^^^^^ [1]
+   as_const.js:131:8
+   131|   x as "n124"; // ERROR
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ as_const.js:137:3
+
+Cannot cast `x` to string literal `xa` because `"xb"` [1] is incompatible with `"xa"` [2]. [incompatible-type]
+
+   as_const.js:137:3
+   137|   x as "xa"; // ERROR
+          ^
+
+References:
+   as_const.js:135:13
+   135|   const x = `x${u}`;
+                    ^^^^^^^ [1]
+   as_const.js:137:8
+   137|   x as "xa"; // ERROR
+               ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- as_const_import.js:5:1
@@ -184,8 +269,8 @@ Cannot cast `exported_suffix` to template literal type because `string` [1] is i
         ^^^^^^^^^^^^^^^
 
 References:
-   as_const.js:109:32
-   109| export const exported_suffix = `${s}dp` as const;
+   as_const.js:141:32
+   141| export const exported_suffix = `${s}dp` as const;
                                        ^^^^^^^^ [1]
    as_const_import.js:5:20
      5| exported_suffix as `${string}px`; // ERROR
@@ -202,12 +287,48 @@ Cannot cast `exported_folded` to string literal `hello mars` because `"hello wor
         ^^^^^^^^^^^^^^^
 
 References:
-   as_const.js:110:32
-   110| export const exported_folded = `hello ${"world"}` as const;
+   as_const.js:142:32
+   142| export const exported_folded = `hello ${"world"}` as const;
                                        ^^^^^^^^^^^^^^^^^^ [1]
    as_const_import.js:9:20
      9| exported_folded as "hello mars"; // ERROR
                            ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ as_const_import.js:13:1
+
+Cannot cast `exported_const_suffix` to template literal type because `string` [1] is incompatible with
+``${string}px`` [2]. [incompatible-type]
+
+   as_const_import.js:13:1
+    13| exported_const_suffix as `${string}px`; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   as_const.js:144:38
+   144| export const exported_const_suffix = `${s}dp`;
+                                             ^^^^^^^^ [1]
+   as_const_import.js:13:26
+    13| exported_const_suffix as `${string}px`; // ERROR
+                                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ as_const_import.js:17:1
+
+Cannot cast `exported_const_folded` to string literal `hello mars` because `"hello world"` [1] is incompatible with
+`"hello mars"` [2]. [incompatible-type]
+
+   as_const_import.js:17:1
+    17| exported_const_folded as "hello mars"; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   as_const.js:145:38
+   145| export const exported_const_folded = `hello ${"world"}`;
+                                             ^^^^^^^^^^^^^^^^^^ [1]
+   as_const_import.js:17:26
+    17| exported_const_folded as "hello mars"; // ERROR
+                                 ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- basic.js:5:1
@@ -2297,6 +2418,193 @@ References:
                           ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- literal_precision.js:13:25
+
+Cannot add computed property because `string` [1] is incompatible with `boolean` [2]. [incompatible-type]
+
+   literal_precision.js:13:25
+   13|   ({[`a_${n}`]: false, [`b_${n}`]: 'x'}); // error string ~> boolean (values still conflict)
+                               ^^^^^^^^
+
+References:
+   literal_precision.js:13:36
+   13|   ({[`a_${n}`]: false, [`b_${n}`]: 'x'}); // error string ~> boolean (values still conflict)
+                                          ^^^ [1]
+   literal_precision.js:13:17
+   13|   ({[`a_${n}`]: false, [`b_${n}`]: 'x'}); // error string ~> boolean (values still conflict)
+                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- literal_precision.js:15:14
+
+Cannot add computed property because `number` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   literal_precision.js:15:14
+   15|   ({[s]: 1, [n]: 2}); // error number ~> string (non-string-like keys stay strict)
+                    ^
+
+References:
+   literal_precision.js:6:18
+    6| declare const n: number;
+                        ^^^^^^ [1]
+   literal_precision.js:5:18
+    5| declare const s: string;
+                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- literal_precision.js:33:6
+
+Cannot add computed property because the indexer [1] may overwrite properties with explicit keys [2] in a way that Flow
+cannot track. [invalid-computed-prop]
+
+   literal_precision.js:33:6
+   33|     [SHAPE.NODE as string]: {}, // TODO error indexer may overwrite explicit keys
+            ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   literal_precision.js:32:6
+   32|     [`${SHAPE.LINK}:hover`]: {},
+            ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- literal_precision.js:40:7
+
+Cannot compare ``${number}:${number}`` [1] to `""` [2], because ``${number}:${number}`` [3] is not a subtype of `""` [2]
+and `""` [2] is not a subtype of ``${number}:${number}`` [3]. In **rare** cases, these types may have overlapping values
+but lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow
+check.  [invalid-compare]
+
+   literal_precision.js:40:7
+   40|   if (key === '') {} // error
+             ^^^^^^^^^^
+
+References:
+   literal_precision.js:39:9
+   39|   const key = `${n}:${n}`;
+               ^^^ [1]
+   literal_precision.js:40:15
+   40|   if (key === '') {} // error
+                     ^^ [2]
+   literal_precision.js:39:15
+   39|   const key = `${n}:${n}`;
+                     ^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------- literal_precision.js:47:14
+
+Cannot call `lines.push` because in array element: [incompatible-type]
+ - Either `""` [1] is incompatible with ``Processed: ${string}`` [2].
+ - Or `""` [1] is incompatible with ``Updated: ${string}`` [3].
+
+   literal_precision.js:47:14
+   47|   lines.push(''); // TODO error '' ~> `Processed: ${string}` | `Updated: ${string}`
+                    ^^ [1]
+
+References:
+   literal_precision.js:46:12
+   46|   lines = [`Processed: ${s}`, `Updated: ${s}`];
+                  ^^^^^^^^^^^^^^^^^ [2]
+   literal_precision.js:46:31
+   46|   lines = [`Processed: ${s}`, `Updated: ${s}`];
+                                     ^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------- literal_precision.js:53:9
+
+Cannot access object literal [1] with computed property using ``size${number}`` [2]. [invalid-computed-prop]
+
+   literal_precision.js:53:9
+   53|   SIZES[`size${n}`]; // error
+               ^^^^^^^^^^ [2]
+
+References:
+   literal_precision.js:52:17
+   52|   const SIZES = {size48: 30, size64: 41};
+                       ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- literal_precision.js:57:11
+
+Cannot get `metrics[`...`]` because property `favorited_28d` is missing in object type [1]. [prop-missing]
+
+   literal_precision.js:57:11
+   57|   metrics[`favorited_${period}`]; // error property missing
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   literal_precision.js:54:34
+   54|   declare const metrics: Partial<{views_7d: number, views_28d: number}>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- literal_precision.js:57:11
+
+Cannot get `metrics[`...`]` because property `favorited_7d` is missing in object type [1]. [prop-missing]
+
+   literal_precision.js:57:11
+   57|   metrics[`favorited_${period}`]; // error property missing
+                 ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   literal_precision.js:54:34
+   54|   declare const metrics: Partial<{views_7d: number, views_28d: number}>;
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- literal_precision.js:90:6
+
+Cannot add computed property because `42` [1] is incompatible with `string` [2]. [incompatible-type]
+
+   literal_precision.js:90:6
+   90|     [`${prefix}_url`]: 42, // error number ~> string
+            ^^^^^^^^^^^^^^^
+
+References:
+   literal_precision.js:90:24
+   90|     [`${prefix}_url`]: 42, // error number ~> string
+                              ^^ [1]
+   literal_precision.js:87:15
+   87| ): {[string]: string} {
+                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- literal_precision.js:109:7
+
+Cannot compare `string` [1] to `number` [2]. [invalid-compare]
+
+   literal_precision.js:109:7
+   109|   if (s < 5) {} // error string ~> number
+              ^
+
+References:
+   literal_precision.js:5:18
+     5| declare const s: string;
+                         ^^^^^^ [1]
+   literal_precision.js:109:11
+   109|   if (s < 5) {} // error string ~> number
+                  ^ [2]
+
+
+Error --------------------------------------------------------------------------------------- literal_precision.js:116:7
+
+Cannot compare ``H${number | 1}`` [1] to `"Hx"` [2], because ``H${number | 1}`` [1] is not a subtype of `"Hx"` [2] and
+`"Hx"` [2] is not a subtype of ``H${number | 1}`` [1]. In **rare** cases, these types may have overlapping values but
+lack a subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check.
+ [invalid-compare]
+
+   literal_precision.js:116:7
+   116|   if (`H${x}` !== 'Hx') {} // error: neither number text nor '1' is 'x'
+              ^^^^^^^^^^^^^^^^
+
+References:
+   literal_precision.js:116:7
+   116|   if (`H${x}` !== 'Hx') {} // error: neither number text nor '1' is 'x'
+              ^^^^^^^ [1]
+   literal_precision.js:116:19
+   116|   if (`H${x}` !== 'Hx') {} // error: neither number text nor '1' is 'x'
+                          ^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------- path_test.js:44:13
 
 Cannot call `get` because in type argument `P`: [incompatible-type]
@@ -2353,4 +2661,4 @@ References:
 
 
 
-Found 152 errors
+Found 170 errors

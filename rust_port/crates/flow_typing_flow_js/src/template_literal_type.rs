@@ -278,6 +278,25 @@ pub fn lexical_validator_of(t: &Type) -> Option<Box<dyn Fn(&str) -> bool>> {
                 None => None,
             }
         }
+        // A mixed union accepts a substring producible through any member:
+        // general members contribute their validator, concrete members their
+        // stringified values. A member with neither (generics, `any`,
+        // objects, ...) keeps the flow-based fallback instead of guessing.
+        TypeInner::UnionT(_, rep) => {
+            let mut validators: Vec<Box<dyn Fn(&str) -> bool>> = Vec::new();
+            let mut concrete: Vec<FlowSmolStr> = Vec::new();
+            for member in rep.members_iter() {
+                if let Some(validate) = lexical_validator_of(member) {
+                    validators.push(validate);
+                } else {
+                    let ss = extract_strings(member)?;
+                    concrete.extend(ss);
+                }
+            }
+            Some(Box::new(move |s: &str| {
+                validators.iter().any(|v| v(s)) || concrete.iter().any(|c| c.as_str() == s)
+            }))
+        }
         _ => None,
     }
 }
@@ -852,6 +871,7 @@ pub fn resolve<'cx>(
         let reason = reason::mk_annot_reason(VirtualReasonDesc::RTemplateLiteralType, loc.dupe());
         Type::new(TypeInner::TemplateLiteralT {
             reason,
+            from_annot: true,
             quasis: quasis.to_vec(),
             types: types.to_vec(),
         })
@@ -917,10 +937,10 @@ pub fn resolve<'cx>(
     }
 }
 
-/// Value-inference counterpart of [resolve] for `as const` template literals.
-/// Mirrors TypeScript: `` `prefix${x}` as const `` infers `` `prefix${string}` ``
-/// when `x: string`, and eagerly folds to a string literal when every
-/// placeholder is literal.
+/// Value-inference counterpart of [resolve] for precise template literal values.
+/// Mirrors TypeScript: `const` declarations and `as const` expressions retain
+/// `` `prefix${string}` `` when a placeholder has type `string`, and eagerly fold
+/// to a string literal when every placeholder is literal.
 ///
 /// Unlike [resolve], this never emits placeholder or complexity errors: the
 /// substituted expressions were already checked for string coercion during
@@ -931,11 +951,13 @@ pub fn resolve_for_value<'cx>(
     types: Vec<Type>,
     loc: ALoc,
     cx: &Context<'cx>,
+    from_annot: bool,
 ) -> Type {
     let unresolved = || {
         let reason = reason::mk_reason(VirtualReasonDesc::RTemplateString, loc.dupe());
         Type::new(TypeInner::TemplateLiteralT {
             reason,
+            from_annot,
             quasis: quasis.to_vec(),
             types: types.to_vec(),
         })
@@ -946,7 +968,7 @@ pub fn resolve_for_value<'cx>(
         return Type::new(TypeInner::DefT(
             reason,
             DefT::new(DefTInner::SingletonStrT {
-                from_annot: true,
+                from_annot,
                 value: s,
             }),
         ));
@@ -965,7 +987,7 @@ pub fn resolve_for_value<'cx>(
         Type::new(TypeInner::DefT(
             r,
             DefT::new(DefTInner::SingletonStrT {
-                from_annot: true,
+                from_annot,
                 value: s.dupe(),
             }),
         ))
@@ -1160,7 +1182,9 @@ pub fn subtype_template_into_union<'cx>(
 /// shape `prefix${string}suffix`: every LHS placeholder coerces to a string,
 /// and the LHS's outer quasis (start/end) lexically match the RHS's
 /// prefix/suffix. Uses raw LHS quasis/types (no folding) to preserve the
-/// prior inline subtyping-kit guard's semantics.
+/// prior inline subtyping-kit guard's semantics; the RHS is folded so that
+/// annotations with concrete-string placeholders (e.g.
+/// `` `${string}${'dp'}` ``) match the `prefix${string}suffix` shape.
 fn is_wide_string_template_match(
     lq_raw: &[FlowSmolStr],
     lt_raw: &[Type],
@@ -1206,6 +1230,7 @@ pub fn try_subtype_template_to_template<'cx>(
     trace: DepthTrace,
     use_op: UseOp,
     l_reason: &reason::Reason,
+    l_from_annot: bool,
     upper: &Type,
     lq_raw: &[FlowSmolStr],
     lt_raw: &[Type],
@@ -1274,6 +1299,7 @@ pub fn try_subtype_template_to_template<'cx>(
         } else {
             let lower = Type::new(TypeInner::TemplateLiteralT {
                 reason: l_reason.dupe(),
+                from_annot: l_from_annot,
                 quasis: vec![chopped.into(), FlowSmolStr::new_inline("")],
                 types: vec![lt[0].dupe()],
             });
@@ -1296,6 +1322,7 @@ pub fn try_subtype_template_to_template<'cx>(
         } else {
             let lower = Type::new(TypeInner::TemplateLiteralT {
                 reason: l_reason.dupe(),
+                from_annot: l_from_annot,
                 quasis: vec![FlowSmolStr::new_inline(""), chopped.into()],
                 types: vec![lt[0].dupe()],
             });
@@ -1303,7 +1330,7 @@ pub fn try_subtype_template_to_template<'cx>(
         }
         return Ok(TlToTlResult::Handled);
     }
-    if is_wide_string_template_match(lq_raw, lt_raw, rq_raw, rt_raw) {
+    if is_wide_string_template_match(lq_raw, lt_raw, &rq, &rt) {
         Ok(TlToTlResult::Handled)
     } else {
         Ok(TlToTlResult::NotApplicable)

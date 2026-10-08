@@ -285,6 +285,7 @@ pub enum TypeInner {
     /// template literal types, e.g. `hello ${string}`
     TemplateLiteralT {
         reason: Reason,
+        from_annot: bool,
         quasis: Vec<FlowSmolStr>,
         types: Vec<Type>,
     },

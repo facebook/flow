@@ -445,6 +445,35 @@ fn props_to_tout<'cx>(
     tout: Type,
 ) -> Result<(), FlowJsException> {
     let dropped = drop_generic(component.dupe());
+    let general_intrinsic = |gen_lit: Literal| {
+        let props = flow_typing_tvar::mk(cx, reason_op.dupe());
+        let i =
+            tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_op.dupe(), |cx, tout_t| {
+                get_intrinsic(
+                    cx,
+                    env,
+                    trace,
+                    type_util::reason_of_t(component),
+                    reason_op,
+                    &Artifact::Instance,
+                    &IntrinsicLiteral::General(gen_lit.clone()),
+                    Polarity::Positive,
+                    tout_t,
+                )
+            })?;
+        get_intrinsic(
+            cx,
+            env,
+            trace,
+            type_util::reason_of_t(component),
+            reason_op,
+            &Artifact::Props,
+            &IntrinsicLiteral::General(gen_lit),
+            Polarity::Positive,
+            &tout,
+        )?;
+        add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, &i, tout.dupe())
+    };
     match dropped.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             // Class components or legacy components.
@@ -557,39 +586,7 @@ fn props_to_tout<'cx>(
                 add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, &i, tout)?;
                 Ok(())
             }
-            DefTInner::StrGeneralT(gen_lit) => {
-                let props = flow_typing_tvar::mk(cx, reason_op.dupe());
-                let i = tvar_resolver::mk_tvar_and_fully_resolve_where(
-                    cx,
-                    reason_op.dupe(),
-                    |cx, tout_t| {
-                        get_intrinsic(
-                            cx,
-                            env,
-                            trace,
-                            type_util::reason_of_t(component),
-                            reason_op,
-                            &Artifact::Instance,
-                            &IntrinsicLiteral::General(gen_lit.clone()),
-                            Polarity::Positive,
-                            tout_t,
-                        )
-                    },
-                )?;
-                get_intrinsic(
-                    cx,
-                    env,
-                    trace,
-                    type_util::reason_of_t(component),
-                    reason_op,
-                    &Artifact::Props,
-                    &IntrinsicLiteral::General(gen_lit.clone()),
-                    Polarity::Positive,
-                    &tout,
-                )?;
-                add_optional_ref_prop_to_props(cx, env, trace, &props, reason_op, &i, tout)?;
-                Ok(())
-            }
+            DefTInner::StrGeneralT(gen_lit) => general_intrinsic(gen_lit.clone()),
             DefTInner::ReactAbstractComponentT(box ReactAbstractComponentTData {
                 config, ..
             }) => {
@@ -629,6 +626,13 @@ fn props_to_tout<'cx>(
                 Ok(())
             }
         },
+        TypeInner::TemplateLiteralT { quasis, .. } => {
+            general_intrinsic(if quasis.iter().any(|q| !q.is_empty()) {
+                Literal::Truthy
+            } else {
+                Literal::AnyLiteral
+            })
+        }
         // Any and any specializations
         TypeInner::AnyT(reason, src) => {
             FlowJs::rec_flow_t_with_env(
@@ -818,6 +822,19 @@ pub(super) fn run_with_env<'cx>(
     ) -> Result<Type, FlowJsException> {
         let component = l;
         let dropped = drop_generic(component.dupe());
+        let intrinsic_to_props = |component: &Type| {
+            let props = Type::new(TypeInner::EvalT {
+                type_: component.dupe(),
+                defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+                    unknown_use(),
+                    reason_op.dupe(),
+                    Rc::new(Destructor::ReactElementConfigType),
+                )),
+                id: eval::Id::generate_id(),
+            });
+            FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
+            Ok(props)
+        };
         match dropped.deref() {
             TypeInner::DefT(r, def_t) => match &**def_t {
                 // Class components or legacy components.
@@ -906,33 +923,8 @@ pub(super) fn run_with_env<'cx>(
                     Ok(mixed)
                 }
                 // Intrinsic components.
-                DefTInner::SingletonStrT { .. } => {
-                    let c = &dropped;
-                    let props = Type::new(TypeInner::EvalT {
-                        type_: c.dupe(),
-                        defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
-                            unknown_use(),
-                            reason_op.dupe(),
-                            Rc::new(Destructor::ReactElementConfigType),
-                        )),
-                        id: eval::Id::generate_id(),
-                    });
-                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
-                    Ok(props)
-                }
-                DefTInner::StrGeneralT(_) => {
-                    let c = &dropped;
-                    let props = Type::new(TypeInner::EvalT {
-                        type_: c.dupe(),
-                        defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
-                            unknown_use(),
-                            reason_op.dupe(),
-                            Rc::new(Destructor::ReactElementConfigType),
-                        )),
-                        id: eval::Id::generate_id(),
-                    });
-                    FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &props)?;
-                    Ok(props)
+                DefTInner::SingletonStrT { .. } | DefTInner::StrGeneralT(_) => {
+                    intrinsic_to_props(&dropped)
                 }
                 // ...otherwise, error.
                 _ => {
@@ -943,6 +935,7 @@ pub(super) fn run_with_env<'cx>(
                     Ok(any)
                 }
             },
+            TypeInner::TemplateLiteralT { .. } => intrinsic_to_props(&dropped),
             TypeInner::AnyT(reason, source) => {
                 let any = any_t::why(source.clone(), reason.dupe());
                 FlowJs::rec_flow_t_with_env(cx, env, trace, unknown_use(), tin, &any)?;

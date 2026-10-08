@@ -505,6 +505,7 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
         }
         TypeInner::TemplateLiteralT {
             reason,
+            from_annot,
             quasis,
             types,
         } => {
@@ -522,6 +523,7 @@ pub fn type_default<'cx, A, M: TypeMapper<'cx, A> + ?Sized>(
             } else {
                 Type::new(TypeInner::TemplateLiteralT {
                     reason: reason.dupe(),
+                    from_annot: *from_annot,
                     quasis: quasis.to_vec(),
                     types: types_prime.to_vec(),
                 })

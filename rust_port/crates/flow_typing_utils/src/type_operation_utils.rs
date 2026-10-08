@@ -336,6 +336,17 @@ pub mod operators {
 
     use super::*;
 
+    fn is_string_like(t: &Type) -> bool {
+        match t.deref() {
+            TypeInner::DefT(_, def_t) => matches!(
+                def_t.deref(),
+                DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
+            ),
+            TypeInner::TemplateLiteralT { .. } => true,
+            _ => false,
+        }
+    }
+
     pub fn arith<'cx>(
         cx: &Context<'cx>,
         reason: &Reason,
@@ -405,17 +416,7 @@ pub mod operators {
             (l, r): (&Type, &Type),
         ) -> Result<(), FlowJsException> {
             match (l.deref(), r.deref()) {
-                (TypeInner::DefT(_, def_l), TypeInner::DefT(_, def_r))
-                    if matches!(
-                        def_l.deref(),
-                        DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
-                    ) && matches!(
-                        def_r.deref(),
-                        DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
-                    ) =>
-                {
-                    Ok(())
-                }
+                _ if is_string_like(l) && is_string_like(r) => Ok(()),
                 (TypeInner::DefT(_, def_l), TypeInner::DefT(_, def_r))
                     if matches!(
                         def_l.deref(),
@@ -562,23 +563,7 @@ pub mod operators {
                     true
                 }
                 (l_inner, r_inner) => {
-                    let l_is_str = match l_inner {
-                        TypeInner::DefT(_, def_t) => matches!(
-                            def_t.deref(),
-                            DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
-                        ),
-                        TypeInner::TemplateLiteralT { .. } => true,
-                        _ => false,
-                    };
-                    let r_is_str = match r_inner {
-                        TypeInner::DefT(_, def_t) => matches!(
-                            def_t.deref(),
-                            DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. }
-                        ),
-                        TypeInner::TemplateLiteralT { .. } => true,
-                        _ => false,
-                    };
-                    if l_is_str && r_is_str {
+                    if is_string_like(l) && is_string_like(r) {
                         return true;
                     }
                     match (l_inner, r_inner) {

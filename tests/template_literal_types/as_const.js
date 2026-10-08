@@ -98,13 +98,48 @@ declare const n: number;
   x as "bye"; // ERROR
 }
 
-// Without as const - still general string
+// Without as const - const infers precisely, let widens
 {
   const y = `${s}dp`;
   y as string; // OK
-  y as `${string}dp`; // ERROR - no precision without as const
+  y as `${string}dp`; // OK - const preserves template
+  y as `${string}px`; // ERROR
+}
+{
+  let z = `${s}dp`;
+  z as string; // OK
+  z as `${string}dp`; // ERROR - let widens to string
+}
+
+// Annotated init without as const - contextual precision
+{
+  const x: `pre-${string}-suf` = `pre-${s}-suf`; // OK
+  const bad: `pre-${string}-other` = `pre-${s}-suf`; // ERROR
+  let w: `pre-${string}-suf` = `pre-${s}-suf`; // OK - hint applies to let too
+}
+
+// Const literal substitution folds without as const
+{
+  const lit = "world";
+  const x = `hello ${lit}`;
+  x as "hello world"; // OK
+  x as "hello mars"; // ERROR
+}
+{
+  const x = `n${123}`;
+  x as "n123"; // OK
+  x as "n124"; // ERROR
+}
+{
+  declare const u: "a" | "b";
+  const x = `x${u}`;
+  x as "xa" | "xb"; // OK
+  x as "xa"; // ERROR
 }
 
 // Exported as const templates (exercises type_sig_merge)
 export const exported_suffix = `${s}dp` as const;
 export const exported_folded = `hello ${"world"}` as const;
+// Exported plain const template (exercises const_decl merge)
+export const exported_const_suffix = `${s}dp`;
+export const exported_const_folded = `hello ${"world"}`;

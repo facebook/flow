@@ -746,5 +746,331 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ template.js:32:33
 
-Found 47 errors
+Cannot assign template string to `x` because `string` [1] is incompatible with ``${string}${"px"}`` [2].
+[incompatible-type]
+
+   template.js:32:33
+   32|   const x: StringSuffix<'px'> = `${n}dp`; // ERROR
+                                       ^^^^^^^^ [1]
+
+References:
+   template.js:32:12
+   32|   const x: StringSuffix<'px'> = `${n}dp`; // ERROR
+                  ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:37:34
+
+Cannot assign template string to `x` because `string` [1] is incompatible with ``${"foo"}${string}`` [2].
+[incompatible-type]
+
+   template.js:37:34
+   37|   const x: StringPrefix<'foo'> = `bar${n}`; // ERROR
+                                        ^^^^^^^^^ [1]
+
+References:
+   template.js:37:12
+   37|   const x: StringPrefix<'foo'> = `bar${n}`; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:42:33
+
+Cannot assign template string to `x` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+[incompatible-type]
+
+   template.js:42:33
+   42|   const x: StringSuffix<'dp'> = `${n}`; // ERROR
+                                       ^^^^^^ [1]
+
+References:
+   template.js:42:12
+   42|   const x: StringSuffix<'dp'> = `${n}`; // ERROR
+                  ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:43:34
+
+Cannot assign template string to `y` because `string` [1] is incompatible with ``${"abc"}${string}`` [2].
+[incompatible-type]
+
+   template.js:43:34
+   43|   const y: StringPrefix<'abc'> = `${n}`; // ERROR
+                                        ^^^^^^ [1]
+
+References:
+   template.js:43:12
+   43|   const y: StringPrefix<'abc'> = `${n}`; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- template.js:59:4
+
+Cannot cast `y` to template literal type because `string` [1] is incompatible with ``${string}px`` [2].
+[incompatible-type]
+
+   template.js:59:4
+   59|   (y as `${string}px`); // ERROR
+          ^
+
+References:
+   template.js:56:13
+   56|   const y = `${n}dp`;
+                   ^^^^^^^^ [1]
+   template.js:59:9
+   59|   (y as `${string}px`); // ERROR
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- template.js:65:4
+
+Cannot cast `z` to template literal type because `string` [1] is incompatible with ``${string}dp`` [2].
+[incompatible-type]
+
+   template.js:65:4
+   65|   (z as `${string}dp`); // ERROR - let widens to string
+          ^
+
+References:
+   template.js:63:11
+   63|   let z = `${n}dp`;
+                 ^^^^^^^^ [1]
+   template.js:65:9
+   65|   (z as `${string}dp`); // ERROR - let widens to string
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- template.js:73:3
+
+Cannot cast `w` to template literal type because `string` [1] is incompatible with ``${string}dp`` [2].
+[incompatible-type]
+
+   template.js:73:3
+   73|   w as `${string}dp`; // ERROR - let generalizes on read
+         ^
+
+References:
+   template.js:70:16
+   70|   const tmpl = `${n}dp`;
+                      ^^^^^^^^ [1]
+   template.js:73:8
+   73|   w as `${string}dp`; // ERROR - let generalizes on read
+              ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- template.js:90:3
+
+Cannot cast `value` to `StringSuffix` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+[incompatible-type]
+
+   template.js:90:3
+   90|   value as StringSuffix<'dp'>; // ERROR - T generalizes to string
+         ^^^^^
+
+References:
+   template.js:88:26
+   88|   const value = identity(`${n}dp`);
+                                ^^^^^^^^ [1]
+   template.js:90:12
+   90|   value as StringSuffix<'dp'>; // ERROR - T generalizes to string
+                  ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:100:3
+
+Cannot cast `wrapped.value` to `StringSuffix` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+[incompatible-type]
+
+   template.js:100:3
+   100|   wrapped.value as StringSuffix<'dp'>; // ERROR - T generalizes to string
+          ^^^^^^^^^^^^^
+
+References:
+   template.js:98:24
+    98|   const wrapped = wrap(`${n}dp`);
+                               ^^^^^^^^ [1]
+   template.js:100:20
+   100|   wrapped.value as StringSuffix<'dp'>; // ERROR - T generalizes to string
+                           ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:108:3
+
+Cannot cast `value` to template literal type because `string` [1] is incompatible with ``pre-${string}-suf`` [2].
+[incompatible-type]
+
+   template.js:108:3
+   108|   value as `pre-${string}-suf`; // ERROR - T generalizes to string
+          ^^^^^
+
+References:
+   template.js:106:26
+   106|   const value = identity(`pre-${n}-suf`);
+                                 ^^^^^^^^^^^^^^ [1]
+   template.js:108:12
+   108|   value as `pre-${string}-suf`; // ERROR - T generalizes to string
+                   ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:109:3
+
+Cannot cast `value` to `StringPrefix` because `string` [1] is incompatible with ``${"pre-"}${string}`` [2].
+[incompatible-type]
+
+   template.js:109:3
+   109|   value as StringPrefix<'pre-'>; // ERROR
+          ^^^^^
+
+References:
+   template.js:106:26
+   106|   const value = identity(`pre-${n}-suf`);
+                                 ^^^^^^^^^^^^^^ [1]
+   template.js:109:12
+   109|   value as StringPrefix<'pre-'>; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:110:3
+
+Cannot cast `value` to `StringSuffix` because `string` [1] is incompatible with ``${string}${"-suf"}`` [2].
+[incompatible-type]
+
+   template.js:110:3
+   110|   value as StringSuffix<'-suf'>; // ERROR
+          ^^^^^
+
+References:
+   template.js:106:26
+   106|   const value = identity(`pre-${n}-suf`);
+                                 ^^^^^^^^^^^^^^ [1]
+   template.js:110:12
+   110|   value as StringSuffix<'-suf'>; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:111:3
+
+Cannot cast `value` to template literal type because `string` [1] is incompatible with ``other-${string}-suf`` [2].
+[incompatible-type]
+
+   template.js:111:3
+   111|   value as `other-${string}-suf`; // ERROR
+          ^^^^^
+
+References:
+   template.js:106:26
+   106|   const value = identity(`pre-${n}-suf`);
+                                 ^^^^^^^^^^^^^^ [1]
+   template.js:111:12
+   111|   value as `other-${string}-suf`; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:112:3
+
+Cannot cast `value` to template literal type because `string` [1] is incompatible with ``pre-${string}-other`` [2].
+[incompatible-type]
+
+   template.js:112:3
+   112|   value as `pre-${string}-other`; // ERROR
+          ^^^^^
+
+References:
+   template.js:106:26
+   106|   const value = identity(`pre-${n}-suf`);
+                                 ^^^^^^^^^^^^^^ [1]
+   template.js:112:12
+   112|   value as `pre-${string}-other`; // ERROR
+                   ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:130:3
+
+Cannot cast `v` to string literal `hello` because `string` [1] is incompatible with `"hello"` [2]. [incompatible-type]
+
+   template.js:130:3
+   130|   v as 'hello'; // ERROR - T generalizes to string
+          ^
+
+References:
+   template.js:128:16
+   128|   const v = id('hello');
+                       ^^^^^^^ [1]
+   template.js:130:8
+   130|   v as 'hello'; // ERROR - T generalizes to string
+               ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- template.js:142:39
+
+Cannot assign `identity(...)` to `invalid` because `string` [1] is incompatible with ``${string}${"px"}`` [2].
+[incompatible-type]
+
+   template.js:142:39
+   142|   const invalid: StringSuffix<'px'> = identity(`${n}dp`); // ERROR
+                                              ^^^^^^^^^^^^^^^^^^
+
+References:
+   template.js:142:48
+   142|   const invalid: StringSuffix<'px'> = identity(`${n}dp`); // ERROR
+                                                       ^^^^^^^^ [1]
+   template.js:142:18
+   142|   const invalid: StringSuffix<'px'> = identity(`${n}dp`); // ERROR
+                         ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:166:3
+
+Cannot cast `v` to template literal type because `string` [1] is incompatible with ``${string}px`` [2].
+[incompatible-type]
+
+   template.js:166:3
+   166|   v as `${string}px`; // ERROR
+          ^
+
+References:
+   template.js:164:22
+   164|   const v = identity(`${n}dp` as const);
+                             ^^^^^^^^ [1]
+   template.js:166:8
+   166|   v as `${string}px`; // ERROR
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:175:3
+
+Cannot cast `v` to string literal `hello world` because `string` [1] is incompatible with `"hello world"` [2].
+[incompatible-type]
+
+   template.js:175:3
+   175|   v as 'hello world'; // ERROR - folded value generalizes like a literal
+          ^
+
+References:
+   template.js:173:22
+   173|   const v = identity(`hello ${lit}`);
+                             ^^^^^^^^^^^^^^ [1]
+   template.js:175:8
+   175|   v as 'hello world'; // ERROR - folded value generalizes like a literal
+               ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ template.js:233:3
+
+Cannot cast template string to `StringSuffix` because `string` [1] is incompatible with ``${string}${"dp"}`` [2].
+[incompatible-type]
+
+   template.js:233:3
+   233|   `${n}px` as StringSuffix<'dp'>; // ERROR
+          ^^^^^^^^ [1]
+
+References:
+   template.js:233:15
+   233|   `${n}px` as StringSuffix<'dp'>; // ERROR
+                      ^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 66 errors

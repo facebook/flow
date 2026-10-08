@@ -283,10 +283,12 @@ pub fn mod_reason_of_t(f: &dyn Fn(Reason) -> Reason, t: &Type) -> Type {
         }
         TypeInner::TemplateLiteralT {
             reason,
+            from_annot,
             quasis,
             types,
         } => Type::new(TypeInner::TemplateLiteralT {
             reason: f(reason.dupe()),
+            from_annot: *from_annot,
             quasis: quasis.to_vec(),
             types: types.to_vec(),
         }),
@@ -1963,6 +1965,7 @@ where
             && matches!(u_types[0].deref(), TypeInner::DefT(_, d) if matches!(&**d, D::StrGeneralT(_)))
             && l_quasis[0].as_str().starts_with(u_quasis[0].as_str()) =>
         {
+            on_singleton_eq(l);
             true
         }
         // Suffix-extends-suffix mirror
@@ -1983,6 +1986,7 @@ where
             && matches!(u_types[0].deref(), TypeInner::DefT(_, d) if matches!(&**d, D::StrGeneralT(_)))
             && l_quasis[1].as_str().ends_with(u_quasis[1].as_str()) =>
         {
+            on_singleton_eq(l);
             true
         }
 

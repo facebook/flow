@@ -297,6 +297,7 @@ pub fn resolve<'cx>(
                         .collect();
                     Type::new(TypeInner::TemplateLiteralT {
                         reason: r,
+                        from_annot: true,
                         quasis: quasis_prime,
                         types: types_prime,
                     })
@@ -314,6 +315,7 @@ pub fn resolve<'cx>(
                             let quasis_prime = transform_quasis(kind, quasis.clone());
                             Type::new(TypeInner::TemplateLiteralT {
                                 reason: r,
+                                from_annot: true,
                                 quasis: quasis_prime,
                                 types: types.clone(),
                             })
@@ -337,6 +339,7 @@ pub fn resolve<'cx>(
                                 types_prime.extend(rest_types.iter().cloned());
                                 Type::new(TypeInner::TemplateLiteralT {
                                     reason: r.dupe(),
+                                    from_annot: true,
                                     quasis: quasis.clone(),
                                     types: types_prime,
                                 })
@@ -346,6 +349,7 @@ pub fn resolve<'cx>(
                             //    interpolations correctly.
                             let suffix = Type::new(TypeInner::TemplateLiteralT {
                                 reason: r.dupe(),
+                                from_annot: true,
                                 quasis: rest_quasis.to_vec(),
                                 types: rest_types.to_vec(),
                             });
@@ -380,6 +384,7 @@ pub fn resolve<'cx>(
                             types_prime.extend(rest_types.iter().cloned());
                             Type::new(TypeInner::TemplateLiteralT {
                                 reason: r,
+                                from_annot: true,
                                 quasis: quasis.clone(),
                                 types: types_prime,
                             })
@@ -389,6 +394,7 @@ pub fn resolve<'cx>(
                             let quasis_prime = transform_quasis(kind, quasis.clone());
                             Type::new(TypeInner::TemplateLiteralT {
                                 reason: r,
+                                from_annot: true,
                                 quasis: quasis_prime,
                                 types: types.clone(),
                             })

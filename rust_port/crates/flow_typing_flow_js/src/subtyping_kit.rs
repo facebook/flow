@@ -3904,6 +3904,7 @@ pub fn rec_sub_t<'cx>(
         (
             TypeInner::TemplateLiteralT {
                 reason: reason_s,
+                from_annot,
                 quasis,
                 types,
             },
@@ -3911,6 +3912,7 @@ pub fn rec_sub_t<'cx>(
         ) => {
             let l_new = Type::new(TypeInner::TemplateLiteralT {
                 reason: reason_s.dupe(),
+                from_annot: *from_annot,
                 quasis: quasis.to_vec(),
                 types: types.to_vec(),
             });
@@ -3937,9 +3939,16 @@ pub fn rec_sub_t<'cx>(
                 ..
             }),
             TypeInner::KeysT(reason_op, o),
-        ) if let TypeInner::TemplateLiteralT { quasis, types, .. } = bound.deref() => {
+        ) if let TypeInner::TemplateLiteralT {
+            from_annot,
+            quasis,
+            types,
+            ..
+        } = bound.deref() =>
+        {
             let l_new = Type::new(TypeInner::TemplateLiteralT {
                 reason: reason_s.dupe(),
+                from_annot: *from_annot,
                 quasis: quasis.to_vec(),
                 types: types.to_vec(),
             });
@@ -4508,6 +4517,7 @@ pub fn rec_sub_t<'cx>(
         (
             TypeInner::TemplateLiteralT {
                 reason: l_reason,
+                from_annot: l_from_annot,
                 quasis: lq,
                 types: lt,
             },
@@ -4521,13 +4531,20 @@ pub fn rec_sub_t<'cx>(
             trace,
             use_op.dupe(),
             l_reason,
+            *l_from_annot,
             u,
             lq,
             lt,
             rq,
             rt,
         )? {
-            template_literal_type::TlToTlResult::Handled => Ok(()),
+            template_literal_type::TlToTlResult::Handled => {
+                // The template was checked against a matching template
+                // annotation: keep its precision through generalization,
+                // like a singleton checked against a matching literal.
+                flow_js_utils::update_lit_type_from_annot(cx, env, l);
+                Ok(())
+            }
             template_literal_type::TlToTlResult::NotApplicable => {
                 template_literal_type::subtype_template_to_other(
                     cx, env, trace, use_op, l_reason, u, lq, lt,
@@ -4539,6 +4556,7 @@ pub fn rec_sub_t<'cx>(
                 reason,
                 quasis,
                 types,
+                ..
             },
             _,
         ) => template_literal_type::subtype_template_to_other(

@@ -3282,16 +3282,19 @@ fn merge_value<'cx>(
         }
         Value::TemplateLiteral(inner) => {
             let ValueTemplateLiteral { loc, quasis, types } = inner.as_ref();
-            if as_const {
+            if as_const || const_decl {
                 let ts = types
                     .iter()
-                    .map(|t| merge_impl(env, cx, file, t, as_const, false))
+                    .map(|t| merge_impl(env, cx, file, t, as_const, const_decl))
                     .collect();
                 flow_typing_flow_js::template_literal_type::resolve_for_value(
                     quasis.clone(),
                     ts,
                     loc.dupe(),
                     cx,
+                    // Mirror `Value::StringLit`: only `as const` exports are
+                    // frozen; plain `const` exports still generalize.
+                    as_const,
                 )
             } else {
                 let reason = reason::mk_reason(RString, loc.dupe());

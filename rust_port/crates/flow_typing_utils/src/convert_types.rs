@@ -554,6 +554,7 @@ fn type_to_json_uncached<'cx>(cx: &TypeJsonCx<'_, 'cx>, depth: i32, t: &Type) ->
         TypeInner::AnyT(_, _) => json_with_type("Any", vec![]),
         TypeInner::TemplateLiteralT {
             reason: _,
+            from_annot: _,
             quasis,
             types,
         } => {

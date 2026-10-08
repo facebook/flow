@@ -2,3 +2,5 @@
 all=true
 builtin_lib=flowlib
 component_syntax=true
+experimental.ts_syntax=true
+experimental.tslib_syntax=true

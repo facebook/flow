@@ -291,6 +291,19 @@ fn unique_symbol_action(
     }
 }
 
+// Template literals from values generalize to `string`, exactly like string
+// literals. There is no separate const form: keeping the template as-is is
+// already the precise form that `const` type parameters want.
+fn template_literal_action(action: SingletonAction, t: Type, r: &Reason) -> Type {
+    match action {
+        SingletonAction::KeepAsIs | SingletonAction::KeepAsConst => t,
+        SingletonAction::DoNotKeep => Type::new(TypeInner::DefT(
+            r.dupe().replace_desc(VirtualReasonDesc::RString),
+            DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
+        )),
+    }
+}
+
 fn literal_type_mapper_tvar<'cx>(
     type_fn: &mut dyn FnMut(&Context<'cx>, &LiteralMapCx, Type) -> Type,
     cx: &Context<'cx>,
@@ -400,6 +413,14 @@ fn literal_type_mapper_type_dispatch<'cx>(
             }
             _ => LiteralMapAction::Done(t.dupe()),
         },
+        TypeInner::TemplateLiteralT {
+            reason,
+            from_annot: false,
+            ..
+        } => {
+            let action = singleton_action(reason.loc());
+            LiteralMapAction::Done(template_literal_action(action, t.dupe(), reason))
+        }
         _ => LiteralMapAction::Done(t.dupe()),
     }
 }
@@ -514,6 +535,9 @@ fn is_literal_type<'cx>(cx: &Context<'cx>, seen: &mut BTreeSet<i32>, t: &Type) -
             }) => true,
             _ => false,
         },
+        TypeInner::TemplateLiteralT {
+            from_annot: false, ..
+        } => true,
         _ => false,
     }
 }
@@ -806,6 +830,9 @@ fn is_generalization_candidate_inner<'cx>(
         TypeInner::UnionT(_, rep) => rep
             .members_iter()
             .any(|member| is_generalization_candidate_inner(cx, seen, member)),
+        TypeInner::TemplateLiteralT {
+            from_annot: false, ..
+        } => true,
         _ => false,
     }
 }
@@ -881,7 +908,11 @@ pub fn enclosing_context_needs_precise(encl_ctx: &EnclosingContext) -> bool {
 ///    until this point. For example, in `{f:['a']}`, if the outer object has a
 ///    hint then `'a'` is also considered to have a hint. Finally, if none of the
 ///    above hold, we check for a hint for the target location.
-fn needs_precise_type<'cx>(
+///
+/// Template literals with substitutions share this predicate (see the
+/// `TemplateLiteral` branch in `flow_typing_statement`), so they stay
+/// precise under exactly the same conditions as primitive literals.
+pub fn needs_precise_type<'cx>(
     cx: &Context<'cx>,
     encl_ctx: &EnclosingContext,
     decl: &Option<VariableKind>,
