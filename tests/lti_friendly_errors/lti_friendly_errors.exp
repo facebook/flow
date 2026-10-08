@@ -55,8 +55,7 @@ References:
 
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:9:19
 
-Cannot get `s.abcd` because property `abcd` is missing in `unknown` (inferred from type parameter's bound) [1].
-[incompatible-type]
+Cannot get `s.abcd` because property `abcd` is missing in `unknown` [1]. [incompatible-type]
 
    reason_of_inferred_targs.js:9:19
    9| magicCall1(s => s.abcd); // error

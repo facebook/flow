@@ -37,51 +37,36 @@ fn data_of_prop_missing_error(
         msg,
     );
     let root = flow_typing_type::type_::root_of_use_op(&op);
-    match (root, msg) {
+    let (value, name, obj_def_loc) = match (root, msg) {
         (
-            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. }),
+            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. })
+            | VirtualRootUseOp::GetProperty(value),
             ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
-                reason_obj,
+                object,
                 prop: Some(name),
                 ..
             }),
-        )
-        | (
-            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. }),
+        ) => (value, name, &object.definition_loc),
+        (
+            VirtualRootUseOp::SetProperty(box SetPropertyData { value, .. })
+            | VirtualRootUseOp::GetProperty(value),
             ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
                 reason_obj,
                 prop_name: Some(name),
                 ..
             }),
-        )
-        | (
-            VirtualRootUseOp::GetProperty(value),
-            ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
-                reason_obj,
-                prop: Some(name),
-                ..
-            }),
-        )
-        | (
-            VirtualRootUseOp::GetProperty(value),
-            ErrorMessage::EPropNotFoundInLookup(box EPropNotFoundInLookupData {
-                reason_obj,
-                prop_name: Some(name),
-                ..
-            }),
-        ) => {
-            let obj_loc = loc_of_aloc(reason_obj.def_loc());
-            let init_locs = vec![loc_of_aloc(value.def_loc())];
-            let prop_accesses_ = prop_accesses(&op);
-            Some(PropData {
-                obj_loc,
-                name: name.dupe(),
-                init_locs,
-                prop_accesses: prop_accesses_,
-            })
-        }
-        _ => None,
-    }
+        ) => (value, name, reason_obj.def_loc()),
+        _ => return None,
+    };
+    let obj_loc = loc_of_aloc(obj_def_loc);
+    let init_locs = vec![loc_of_aloc(value.def_loc())];
+    let prop_accesses_ = prop_accesses(&op);
+    Some(PropData {
+        obj_loc,
+        name: name.dupe(),
+        init_locs,
+        prop_accesses: prop_accesses_,
+    })
 }
 
 const WIDTH: usize = 45;

@@ -1176,7 +1176,7 @@ pub struct IncompatibleUpperData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 pub struct EIncompatiblePropData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     pub prop: Option<Name>,
     pub prop_loc: L,
-    pub reason_obj: VirtualReason<L>,
+    pub object: ErrorTypeReferenceWithLocData<L>,
     pub special: Option<LowerKind>,
     pub use_op: Option<VirtualUseOp<L>>,
 }
@@ -4595,13 +4595,13 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op,
                 prop,
                 prop_loc,
-                reason_obj,
+                object,
                 special,
             }) => EIncompatibleProp(Box::new(EIncompatiblePropData {
                 use_op: use_op.map(map_use_op),
                 prop,
                 prop_loc: f(prop_loc),
-                reason_obj: map_reason(reason_obj),
+                object: map_error_type_ref_with_reason(object),
                 special,
             })),
 
@@ -7766,6 +7766,20 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 use_op: use_op.map(|use_op| map_use_op(&f, use_op)),
             })),
 
+            EIncompatibleProp(box EIncompatiblePropData {
+                prop,
+                prop_loc,
+                object,
+                special,
+                use_op,
+            }) => EIncompatibleProp(Box::new(EIncompatiblePropData {
+                prop,
+                prop_loc,
+                object: map_error_type_ref_with_reason(object),
+                special,
+                use_op: use_op.map(|use_op| map_use_op(&f, use_op)),
+            })),
+
             EIncompatibleTypesWithUseOp(box EIncompatibleTypesWithUseOpData {
                 use_op,
                 lower_loc,
@@ -10403,16 +10417,37 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
                 prop,
                 prop_loc,
-                reason_obj,
+                object,
+                special,
                 use_op,
-                ..
-            }) => PropMissingInLookup(Box::new(PropMissingInLookupData {
-                loc: prop_loc,
-                prop: prop.map(|n| n.display_smol_str()),
-                reason_obj,
-                use_op: use_op.unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
-                suggestion: None,
-            })),
+            }) => {
+                let lower = Box::new(MessageTypeReferenceData {
+                    loc: object.reference_loc,
+                    desc: expect_type_desc(object.type_desc),
+                });
+                let message = match prop {
+                    None if matches!(
+                        special,
+                        Some(LowerKind::PossiblyNull | LowerKind::PossiblyVoid)
+                    ) =>
+                    {
+                        Message::MessageLowerDoesNotHavePropertiesWithPrintedType(lower)
+                    }
+                    prop => Message::MessagePropMissingWithPrintedType {
+                        lower,
+                        upper: None,
+                        prop: prop.map(|n| n.display_smol_str()),
+                        suggestion: None,
+                    },
+                };
+                UseOp(Box::new(UseOpData {
+                    loc: prop_loc,
+                    message,
+                    use_op: use_op
+                        .unwrap_or(VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))),
+                    explanation: None,
+                }))
+            }
 
             ErrorMessage::EDevOnlyRefinedLocInfo(box EDevOnlyRefinedLocInfoData {
                 refining_locs,

@@ -2058,15 +2058,15 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         }
         ErrorMessage::EIncompatibleProp(box EIncompatiblePropData {
             prop_loc,
-            reason_obj,
+            object,
             special: _,
             prop: _,
             use_op: _,
         }) => {
             format!(
-                "EIncompatibleProp(Box::new(EIncompatiblePropData {{ reason_prop = {}; reason_obj = {}; special = _; prop = _; use_op = _ }}))",
+                "EIncompatibleProp(Box::new(EIncompatiblePropData {{ reason_prop = {}; object = {}; special = _; prop = _; use_op = _ }}))",
                 string_of_aloc(None, prop_loc),
-                dump_reason(cx, reason_obj)
+                dump_error_type_reference(cx, object)
             )
         }
         ErrorMessage::EExportValueAsType(box (loc, name)) => {

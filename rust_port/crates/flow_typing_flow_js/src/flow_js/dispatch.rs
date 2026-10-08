@@ -10804,7 +10804,10 @@ fn __flow_impl<'cx>(
                 ErrorMessage::EIncompatibleProp(Box::new(EIncompatiblePropData {
                     prop: name_of_propref(propref),
                     prop_loc: reason_of_propref(propref).loc().dupe(),
-                    reason_obj: reason_of_t(l).dupe(),
+                    object: flow_js_utils::type_reference_with_reason_for_error(
+                        l,
+                        reason_of_t(l).dupe(),
+                    ),
                     special: flow_js_utils::error_message_kind_of_lower(l),
                     use_op,
                 })),
