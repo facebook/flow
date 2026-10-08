@@ -5971,48 +5971,41 @@ fn __flow_impl<'cx>(
         // *************************
         // * statics can be read   *
         // *************************
-        (TypeInner::DefT(_, def_t), UseTInner::GetStaticsT(tout))
+        (TypeInner::DefT(_, def_t), UseTInner::GetStaticsT(reason_op, collector))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
         {
-            let static_ = &inst_t.static_;
-            let reason_op = tout.reason();
-            let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow(
+            let static_ = helpers::reposition_reason(
                 cx,
                 env,
-                trace,
-                (
-                    static_,
-                    &UseT::new(UseTInner::ReposLowerT {
-                        reason: reason_op.dupe(),
-                        use_desc: false,
-                        use_t: Box::new(UseT::new(UseTInner::UseT(unknown_use(), open_tout))),
-                    }),
-                ),
+                Some(trace),
+                reason_op,
+                false,
+                &inst_t.static_,
             )?;
+            let mut statics = Vec::new();
+            flow_js_utils::collect_lowers(
+                true,
+                cx,
+                &mut BTreeSet::new(),
+                &mut statics,
+                vec![static_],
+            );
+            for static_ in statics {
+                collector.add(static_);
+            }
         }
-        (TypeInner::AnyT(_, src), UseTInner::GetStaticsT(tout)) => {
-            let reason_op = tout.reason();
-            let any = any_t::why(*src, reason_op.dupe());
-            let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow_t(cx, env, trace, unknown_use(), (&any, &open_tout))?;
+        (TypeInner::AnyT(_, src), UseTInner::GetStaticsT(reason_op, collector)) => {
+            collector.add(any_t::why(*src, reason_op.dupe()));
         }
-        (TypeInner::ObjProtoT(_), UseTInner::GetStaticsT(tout)) => {
-            let reason_op = tout.reason();
-            let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-            rec_flow(
+        (TypeInner::ObjProtoT(_), UseTInner::GetStaticsT(reason_op, collector)) => {
+            collector.add(helpers::reposition_reason(
                 cx,
                 env,
-                trace,
-                (
-                    l,
-                    &UseT::new(UseTInner::ReposLowerT {
-                        reason: reason_op.dupe(),
-                        use_desc: false,
-                        use_t: Box::new(UseT::new(UseTInner::UseT(unknown_use(), open_tout))),
-                    }),
-                ),
-            )?;
+                Some(trace),
+                reason_op,
+                false,
+                l,
+            )?);
         }
         // ********************
         // * __proto__ getter *
@@ -8686,15 +8679,14 @@ fn __flow_impl<'cx>(
                 method_action: action,
             }),
         ) if let DefTInner::ClassT(instance) = def_t.deref() => {
-            let statics_tvar = flow_typing_tvar::mk_no_wrap(cx, reason);
-            let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
+            let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
                 env,
                 trace,
                 (
                     instance,
-                    &UseT::new(UseTInner::GetStaticsT(Box::new(statics.dupe()))),
+                    &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
                 ),
             )?;
             let method_type = flow_typing_tvar::mk_no_wrap_where(
@@ -8712,20 +8704,14 @@ fn __flow_impl<'cx>(
                         tout: Box::new(tout),
                         hint: hint_unavailable(),
                     })));
-                    let open_statics = Type::new(TypeInner::OpenT(statics.dupe()));
-                    rec_flow(
-                        cx,
-                        env,
-                        trace,
-                        (
-                            &open_statics,
-                            &UseT::new(UseTInner::ReposLowerT {
-                                reason: reason.dupe(),
-                                use_desc: false,
-                                use_t: Box::new(get_prop_u),
-                            }),
-                        ),
-                    )?;
+                    let repos_use = UseT::new(UseTInner::ReposLowerT {
+                        reason: reason.dupe(),
+                        use_desc: false,
+                        use_t: Box::new(get_prop_u),
+                    });
+                    for static_ in collector.collect_to_vec() {
+                        rec_flow(cx, env, trace, (&static_, &repos_use))?;
+                    }
                     Ok::<(), FlowJsException>(())
                 },
             )?;
@@ -8744,19 +8730,19 @@ fn __flow_impl<'cx>(
             if let DefTInner::ClassT(instance) = def_t.deref()
                 && flow_js_utils::object_like_op(u) =>
         {
-            let statics_tvar = flow_typing_tvar::mk_no_wrap(cx, reason);
-            let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
+            let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
                 env,
                 trace,
                 (
                     instance,
-                    &UseT::new(UseTInner::GetStaticsT(Box::new(statics.dupe()))),
+                    &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
                 ),
             )?;
-            let open_statics = Type::new(TypeInner::OpenT(statics.dupe()));
-            rec_flow(cx, env, trace, (&open_statics, u))?;
+            for static_ in collector.collect_to_vec() {
+                rec_flow(cx, env, trace, (&static_, u))?;
+            }
         }
         // ************************
         // * classes as functions *
@@ -8783,19 +8769,19 @@ fn __flow_impl<'cx>(
         (TypeInner::DefT(reason, def_t), UseTInner::CallT(..))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
-            let statics_tvar = flow_typing_tvar::mk_no_wrap(cx, reason);
-            let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
+            let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
                 env,
                 trace,
                 (
                     instance,
-                    &UseT::new(UseTInner::GetStaticsT(Box::new(statics.dupe()))),
+                    &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
                 ),
             )?;
-            let open_statics = Type::new(TypeInner::OpenT(statics.dupe()));
-            rec_flow(cx, env, trace, (&open_statics, u))?;
+            for static_ in collector.collect_to_vec() {
+                rec_flow(cx, env, trace, (&static_, u))?;
+            }
         }
         // *********
         // * enums *
@@ -9940,19 +9926,19 @@ fn __flow_impl<'cx>(
         (TypeInner::DefT(reason, def_t), UseTInner::ExtendsUseT(..))
             if let DefTInner::ClassT(instance) = def_t.deref() =>
         {
-            let statics_tvar = flow_typing_tvar::mk_no_wrap(cx, reason);
-            let statics = Tvar::new(reason.dupe(), statics_tvar as u32);
+            let collector = type_collector::TypeCollector::create();
             rec_flow(
                 cx,
                 env,
                 trace,
                 (
                     instance,
-                    &UseT::new(UseTInner::GetStaticsT(Box::new(statics.dupe()))),
+                    &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
                 ),
             )?;
-            let open_statics = Type::new(TypeInner::OpenT(statics));
-            rec_flow(cx, env, trace, (&open_statics, u))?;
+            for static_ in collector.collect_to_vec() {
+                rec_flow(cx, env, trace, (&static_, u))?;
+            }
         }
         (
             root,

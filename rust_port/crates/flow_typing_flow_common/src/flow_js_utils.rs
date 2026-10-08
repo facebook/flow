@@ -1494,7 +1494,7 @@ pub fn error_message_loc_of_upper<CX>(u: &UseT<CX>) -> ALoc {
         UseTInner::SetElemT(data) => data.reason.loc().dupe(),
         UseTInner::GetElemT(data) => data.reason.loc().dupe(),
         UseTInner::CallElemT(data) => data.reason.loc().dupe(),
-        UseTInner::GetStaticsT(tvar) => tvar.reason().loc().dupe(),
+        UseTInner::GetStaticsT(reason, _) => reason.loc().dupe(),
         UseTInner::GetProtoT(reason, _) => reason.loc().dupe(),
         UseTInner::SetProtoT(reason, _) => reason.loc().dupe(),
         UseTInner::ReposLowerT { reason, .. } => reason.loc().dupe(),

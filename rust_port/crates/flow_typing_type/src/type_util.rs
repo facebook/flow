@@ -945,7 +945,7 @@ pub fn util_use_op_of_use_t<T, CX>(
             })
         }
         UseTInner::CallElemT(..)
-        | UseTInner::GetStaticsT(_)
+        | UseTInner::GetStaticsT(..)
         | UseTInner::GetProtoT(_, _)
         | UseTInner::SetProtoT(_, _)
         | UseTInner::MixinT(_, _)

@@ -507,14 +507,15 @@ fn instantiate_callee<'cx>(
                     }
                     DefTInner::ClassT(instance) => {
                         let class_reason = type_util::reason_of_t(t);
-                        let statics_id = flow_typing_tvar::mk_no_wrap(cx, class_reason);
-                        let statics = Type::new(TypeInner::OpenT(Tvar::new(
+                        let collector = TypeCollector::create();
+                        let use_t = UseT::new(UseTInner::GetStaticsT(
                             class_reason.dupe(),
-                            statics_id as u32,
-                        )));
-                        let statics_tvar = Tvar::new(class_reason.dupe(), statics_id as u32);
-                        let use_t = UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar)));
+                            collector.dupe(),
+                        ));
                         flow_js::flow_with_env(cx, env, (instance, &use_t))?;
+                        let statics = collector
+                            .union_opt(class_reason.dupe())
+                            .unwrap_or_else(|| tvar_resolver::default_no_lowers(class_reason));
                         let resolved = get_t(cx, statics);
                         handle_poly(
                             cx,

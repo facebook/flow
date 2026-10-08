@@ -49,6 +49,7 @@ use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_::str_module_t;
 use flow_typing_type::type_::symbol_t;
+use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
@@ -56,6 +57,7 @@ use vec1::Vec1;
 
 use crate::flow_js::FlowJs;
 use crate::slice_utils;
+use crate::tvar_resolver;
 
 // We use this function to transform a resolved UnionT into a ((name * reason) list * Type.t),
 // which represents a tuple of key names (with reasons for error messages) and an indexer to be
@@ -1385,17 +1387,17 @@ pub(super) fn run_with_env<'cx>(
                    r: &Reason,
                    i: &Type|
      -> Result<Type, FlowJsException> {
-        flow_typing_tvar::mk_no_wrap_where(cx, r.dupe(), |cx, reason, tvar_id| {
-            let tvar = Tvar::new(reason.dupe(), tvar_id as u32);
-            FlowJs::rec_flow_with_env(
-                cx,
-                env,
-                trace,
-                i,
-                &UseT::new(UseTInner::GetStaticsT(Box::new(tvar))),
-            )?;
-            Ok(())
-        })
+        let collector = TypeCollector::create();
+        FlowJs::rec_flow_with_env(
+            cx,
+            env,
+            trace,
+            i,
+            &UseT::new(UseTInner::GetStaticsT(r.dupe(), collector.dupe())),
+        )?;
+        Ok(collector
+            .union_opt(r.dupe())
+            .unwrap_or_else(|| tvar_resolver::default_no_lowers(r)))
     };
     slice_utils::run_with_env(
         &flow_js_utils::add_output_with_env,

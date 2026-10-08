@@ -222,7 +222,10 @@ pub fn default_resolve_touts<'cx>(
             method_action: action,
             ..
         }) => resolve_method_action(action),
-        UseTInner::GetStaticsT(tvar) => resolve_tvar(tvar),
+        UseTInner::GetStaticsT(_, collector) => {
+            collector.add(any.dupe());
+            Ok(())
+        }
         UseTInner::GetProtoT(_, collector) => {
             collector.add(any.dupe());
             Ok(())

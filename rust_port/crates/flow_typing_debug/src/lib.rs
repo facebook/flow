@@ -1392,10 +1392,7 @@ fn dump_use_t_<CX>(
             p(cx, use_t, true, &extra)
         }
         UseTInner::GetProtoT(..) => p(cx, use_t, true, ""),
-        UseTInner::GetStaticsT(tv) => {
-            let extra = tvar(tvars, tv.id() as i32);
-            p(cx, use_t, true, &extra)
-        }
+        UseTInner::GetStaticsT(..) => p(cx, use_t, true, ""),
         UseTInner::GetTypeFromNamespaceT(box GetTypeFromNamespaceTData {
             use_op,
             prop_ref,

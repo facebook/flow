@@ -107,7 +107,6 @@ use flow_typing_type::type_::ThisTypeAppTData;
 use flow_typing_type::type_::TupleATData;
 use flow_typing_type::type_::TupleElement;
 use flow_typing_type::type_::TupleElementCompatibilityData;
-use flow_typing_type::type_::Tvar;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeAppTData;
 use flow_typing_type::type_::TypeInner;
@@ -131,6 +130,7 @@ use flow_typing_type::type_::nominal;
 use flow_typing_type::type_::properties;
 use flow_typing_type::type_::property;
 use flow_typing_type::type_::react;
+use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::type_or_type_desc;
 use flow_typing_type::type_::union_rep;
 use flow_typing_type::type_::void;
@@ -6546,16 +6546,15 @@ pub fn rec_sub_t<'cx>(
                     TypeInner::DefT(_, ud) if matches!(ud.deref(), DefTInner::ObjT(_))
                 ) || matches!(u.deref(), TypeInner::AnyT(_, _))) =>
         {
-            let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
-            let statics_tvar = Tvar::new(reason.dupe(), tvar_id as u32);
+            let collector = TypeCollector::create();
             FlowJs::rec_flow_with_env(
-                cx, env,
-                trace,
-                instance,
-                &UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar.dupe()))),
+                cx, env, trace, instance,
+                &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
             )?;
-            let open_t = Type::new(TypeInner::OpenT(statics_tvar));
-            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &open_t, u)
+            for static_ in collector.collect_to_vec() {
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &static_, u)?;
+            }
+            Ok(())
         }
 
         // ************************
@@ -6584,16 +6583,15 @@ pub fn rec_sub_t<'cx>(
             if let DefTInner::ClassT(instance) = ld.deref()
                 && matches!(ud.deref(), DefTInner::FunT(_, _)) =>
         {
-            let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
-            let statics_tvar = Tvar::new(reason.dupe(), tvar_id as u32);
+            let collector = TypeCollector::create();
             FlowJs::rec_flow_with_env(
-                cx, env,
-                trace,
-                instance,
-                &UseT::new(UseTInner::GetStaticsT(Box::new(statics_tvar.dupe()))),
+                cx, env, trace, instance,
+                &UseT::new(UseTInner::GetStaticsT(reason.dupe(), collector.dupe())),
             )?;
-            let open_t = Type::new(TypeInner::OpenT(statics_tvar));
-            FlowJs::rec_flow_t_with_env(cx, env, trace, use_op, &open_t, u)
+            for static_ in collector.collect_to_vec() {
+                FlowJs::rec_flow_t_with_env(cx, env, trace, use_op.dupe(), &static_, u)?;
+            }
+            Ok(())
         }
 
         // *********

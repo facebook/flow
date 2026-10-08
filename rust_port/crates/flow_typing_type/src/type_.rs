@@ -2546,7 +2546,7 @@ pub enum UseTInner<CX = ()> {
     SetElemT(Box<SetElemTData>),
     GetElemT(Box<GetElemTData>),
     CallElemT(Box<CallElemTData<CX>>),
-    GetStaticsT(Box<Tvar>),
+    GetStaticsT(Reason, type_collector::TypeCollector),
     GetProtoT(Reason, type_collector::TypeCollector),
     SetProtoT(Reason, Type),
 
@@ -2668,7 +2668,7 @@ impl<CX> Clone for UseTInner<CX> {
             UseTInner::SetElemT(a) => UseTInner::SetElemT(a.clone()),
             UseTInner::GetElemT(a) => UseTInner::GetElemT(a.clone()),
             UseTInner::CallElemT(a) => UseTInner::CallElemT(a.clone()),
-            UseTInner::GetStaticsT(a) => UseTInner::GetStaticsT(a.clone()),
+            UseTInner::GetStaticsT(a, b) => UseTInner::GetStaticsT(a.dupe(), b.dupe()),
             UseTInner::GetProtoT(a, b) => UseTInner::GetProtoT(a.clone(), b.clone()),
             UseTInner::SetProtoT(a, b) => UseTInner::SetProtoT(a.clone(), b.clone()),
             UseTInner::ReposLowerT {
@@ -2787,7 +2787,9 @@ impl<CX> PartialEq for UseTInner<CX> {
             (UseTInner::SetElemT(a1), UseTInner::SetElemT(a2)) => a1 == a2,
             (UseTInner::GetElemT(a1), UseTInner::GetElemT(a2)) => a1 == a2,
             (UseTInner::CallElemT(a1), UseTInner::CallElemT(a2)) => a1 == a2,
-            (UseTInner::GetStaticsT(a1), UseTInner::GetStaticsT(a2)) => a1 == a2,
+            (UseTInner::GetStaticsT(a1, b1), UseTInner::GetStaticsT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
             (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
             (UseTInner::SetProtoT(a1, b1), UseTInner::SetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
             (
@@ -2960,7 +2962,10 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
             UseTInner::SetElemT(a) => a.hash(state),
             UseTInner::GetElemT(a) => a.hash(state),
             UseTInner::CallElemT(a) => a.hash(state),
-            UseTInner::GetStaticsT(a) => a.hash(state),
+            UseTInner::GetStaticsT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
             UseTInner::GetProtoT(a, b) => {
                 a.hash(state);
                 b.hash(state);
@@ -3208,7 +3213,9 @@ impl<CX> Ord for UseTInner<CX> {
             (UseTInner::SetElemT(a1), UseTInner::SetElemT(a2)) => a1.cmp(a2),
             (UseTInner::GetElemT(a1), UseTInner::GetElemT(a2)) => a1.cmp(a2),
             (UseTInner::CallElemT(a1), UseTInner::CallElemT(a2)) => a1.cmp(a2),
-            (UseTInner::GetStaticsT(a1), UseTInner::GetStaticsT(a2)) => a1.cmp(a2),
+            (UseTInner::GetStaticsT(a1, b1), UseTInner::GetStaticsT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
             (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => {
                 a1.cmp(a2).then_with(|| b1.cmp(b2))
             }
@@ -3395,7 +3402,7 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
             UseTInner::SetElemT(a) => f.debug_tuple("SetElemT").field(a).finish(),
             UseTInner::GetElemT(a) => f.debug_tuple("GetElemT").field(a).finish(),
             UseTInner::CallElemT(a) => f.debug_tuple("CallElemT").field(a).finish(),
-            UseTInner::GetStaticsT(a) => f.debug_tuple("GetStaticsT").field(a).finish(),
+            UseTInner::GetStaticsT(a, b) => f.debug_tuple("GetStaticsT").field(a).field(b).finish(),
             UseTInner::GetProtoT(a, b) => f.debug_tuple("GetProtoT").field(a).field(b).finish(),
             UseTInner::SetProtoT(a, b) => f.debug_tuple("SetProtoT").field(a).field(b).finish(),
             UseTInner::ReposLowerT {
