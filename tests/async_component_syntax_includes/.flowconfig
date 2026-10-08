@@ -3,4 +3,4 @@ component_syntax=true
 experimental.async_component_syntax=false
 experimental.async_component_syntax.includes=<PROJECT_ROOT>/included
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only

@@ -1,6 +1,6 @@
 [options]
 all=false
-builtin_lib=flowlib
+builtin_lib=core-only
 enums=true
 format.single_quotes=true
 autoimports_ranked_by_usage=true

@@ -1,4 +1,4 @@
 [options]
 all=true
 munge_underscores=true
-builtin_lib=flowlib
+builtin_lib=core-only

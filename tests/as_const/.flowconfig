@@ -1,5 +1,5 @@
 [options]
 all=true
 experimental.ts_syntax=true
-builtin_lib=flowlib
+builtin_lib=core-only
 react.runtime=automatic

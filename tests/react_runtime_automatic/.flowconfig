@@ -1,5 +1,5 @@
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 react.runtime=automatic
 component_syntax=true

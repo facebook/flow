@@ -2,7 +2,7 @@
 component_syntax=true
 experimental.component_syntax.hook_compatibility=true
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 
 [lints]
 nested-component=error

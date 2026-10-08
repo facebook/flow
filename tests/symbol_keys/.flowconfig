@@ -1,6 +1,6 @@
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 experimental.ts_syntax=true
 experimental.tslib_syntax=true
 module.file_ext=.js

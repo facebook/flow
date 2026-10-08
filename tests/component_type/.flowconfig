@@ -1,7 +1,7 @@
 [options]
 component_syntax=true
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 
 [lints]
 internal-type=off

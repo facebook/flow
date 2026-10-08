@@ -3,5 +3,5 @@ flow-typed
 
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 stylex_shorthand_prop=sx

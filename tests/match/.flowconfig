@@ -1,5 +1,5 @@
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 experimental.assertion_functions=true
 experimental.disable_invariant_special_casing=true

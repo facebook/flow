@@ -1468,11 +1468,6 @@ fn builtin_lib_flag() -> arg_spec::FlagType<Option<String>> {
     arg_spec::enum_flag(vec![
         ("default", "default".to_owned()),
         ("core-only", "core-only".to_owned()),
-        ("flowlib", "flowlib".to_owned()),
-        (
-            "flowlib-with-lib-dom-d-ts",
-            "flowlib-with-lib-dom-d-ts".to_owned(),
-        ),
         ("prelude", "prelude".to_owned()),
         ("experimental.tslib", "experimental.tslib".to_owned()),
     ])
@@ -1480,8 +1475,8 @@ fn builtin_lib_flag() -> arg_spec::FlagType<Option<String>> {
 
 fn config_builtin_lib_of_arg(value: &str) -> Option<ConfigBuiltinLib> {
     match value {
-        "core-only" | "flowlib" => Some(ConfigBuiltinLib::Flowlib),
-        "default" | "flowlib-with-lib-dom-d-ts" => Some(ConfigBuiltinLib::FlowlibWithLibDomDts),
+        "core-only" => Some(ConfigBuiltinLib::Flowlib),
+        "default" => Some(ConfigBuiltinLib::FlowlibWithLibDomDts),
         "prelude" => Some(ConfigBuiltinLib::Prelude),
         "experimental.tslib" => Some(ConfigBuiltinLib::Tslib),
         _ => None,
@@ -3519,21 +3514,13 @@ mod tests {
     use super::config_builtin_lib_of_arg;
 
     #[test]
-    fn builtin_lib_names_are_canonicalized() {
+    fn builtin_lib_uses_canonical_names() {
         assert_eq!(
             config_builtin_lib_of_arg("default"),
             Some(ConfigBuiltinLib::FlowlibWithLibDomDts)
         );
         assert_eq!(
-            config_builtin_lib_of_arg("flowlib-with-lib-dom-d-ts"),
-            Some(ConfigBuiltinLib::FlowlibWithLibDomDts)
-        );
-        assert_eq!(
             config_builtin_lib_of_arg("core-only"),
-            Some(ConfigBuiltinLib::Flowlib)
-        );
-        assert_eq!(
-            config_builtin_lib_of_arg("flowlib"),
             Some(ConfigBuiltinLib::Flowlib)
         );
         assert_eq!(

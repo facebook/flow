@@ -1,7 +1,7 @@
 [libs]
 
 [options]
-builtin_lib=flowlib
+builtin_lib=core-only
 all=true
 ban_spread_key_props=true
 component_syntax=false

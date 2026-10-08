@@ -1,4 +1,4 @@
 [options]
 all=true
 module.file_ext=.js.es6
-builtin_lib=flowlib
+builtin_lib=core-only

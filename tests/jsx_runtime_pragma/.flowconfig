@@ -1,4 +1,4 @@
 [options]
 all=true
 react.runtime=automatic
-builtin_lib=flowlib
+builtin_lib=core-only

@@ -2,5 +2,5 @@
 lib
 
 [options]
-builtin_lib=flowlib
+builtin_lib=core-only
 all=true

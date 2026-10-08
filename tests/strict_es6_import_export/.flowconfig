@@ -1,7 +1,7 @@
 [options]
 all=true
 experimental.strict_es6_import_export=true
-builtin_lib=flowlib
+builtin_lib=core-only
 
 [lints]
 default-import-access=error

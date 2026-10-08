@@ -3,4 +3,4 @@ import_meta_lib.js
 
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only

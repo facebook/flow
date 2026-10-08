@@ -1,6 +1,6 @@
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 
 [lints]
 unnecessary-optional-chain=error

@@ -2621,11 +2621,6 @@ pub mod opts {
                     &[
                         ("default", BuiltinLib::FlowlibWithLibDomDts),
                         ("core-only", BuiltinLib::Flowlib),
-                        ("flowlib", BuiltinLib::Flowlib),
-                        (
-                            "flowlib-with-lib-dom-d-ts",
-                            BuiltinLib::FlowlibWithLibDomDts,
-                        ),
                         ("prelude", BuiltinLib::Prelude),
                         ("experimental.tslib", BuiltinLib::Tslib),
                     ],
@@ -3629,15 +3624,10 @@ mod tests {
     }
 
     #[test]
-    fn builtin_lib_accepts_canonical_names_and_compatibility_aliases() {
+    fn builtin_lib_accepts_canonical_names() {
         for (value, expected) in [
             ("default", opts::BuiltinLib::FlowlibWithLibDomDts),
-            (
-                "flowlib-with-lib-dom-d-ts",
-                opts::BuiltinLib::FlowlibWithLibDomDts,
-            ),
             ("core-only", opts::BuiltinLib::Flowlib),
-            ("flowlib", opts::BuiltinLib::Flowlib),
         ] {
             let mut config = empty_config();
             let result = parse(

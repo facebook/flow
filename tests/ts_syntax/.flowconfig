@@ -4,4 +4,4 @@ libs
 
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only

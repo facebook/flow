@@ -1,5 +1,5 @@
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 module.file_ext=.ts
 experimental.typescript_library_definition_support=true

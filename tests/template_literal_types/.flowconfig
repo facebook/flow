@@ -2,4 +2,4 @@
 all=true
 experimental.ts_syntax=true
 experimental.tslib_syntax=true
-builtin_lib=flowlib
+builtin_lib=core-only

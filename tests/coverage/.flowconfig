@@ -7,4 +7,4 @@
 [options]
 all=false
 facebook.fbt=FbtElement
-builtin_lib=flowlib
+builtin_lib=core-only

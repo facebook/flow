@@ -8,7 +8,7 @@
 
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 enums=true
 component_syntax=true
 

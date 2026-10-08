@@ -1,6 +1,6 @@
 [options]
 all=true
-builtin_lib=flowlib
+builtin_lib=core-only
 react.custom_jsx_typing=true
 
 [libs]
