@@ -1562,12 +1562,16 @@ fn dump_use_t_<CX>(
             tvar: ret,
             ..
         }) => {
+            let ret = match ret {
+                Some(ret) => kid(tvars, ret),
+                None => "None".to_owned(),
+            };
             let extra = match args_opt {
                 Some(args) => {
                     let args_str: Vec<String> = args.iter().map(|t| kid(tvars, t)).collect();
-                    format!("[{}], {}", args_str.join("; "), kid(tvars, ret))
+                    format!("[{}], {}", args_str.join("; "), ret)
                 }
-                None => kid(tvars, ret),
+                None => ret,
             };
             p(cx, use_t, true, &extra)
         }

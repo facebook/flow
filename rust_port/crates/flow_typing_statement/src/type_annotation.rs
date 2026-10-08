@@ -6418,7 +6418,6 @@ fn mk_nominal_type_inner<'a>(
                         targs: app_targs,
                         ..
                     }) => {
-                        let tvar_t = flow_typing_tvar::mk(cx, app_reason.dupe());
                         cx.add_post_inference_validation_flow(
                             type_t.dupe(),
                             type_::UseT::new(type_::UseTInner::SpecializeT(Box::new(
@@ -6427,7 +6426,7 @@ fn mk_nominal_type_inner<'a>(
                                     reason: app_reason.dupe(),
                                     reason2: app_reason.dupe(),
                                     targs: Some(app_targs.clone()),
-                                    tvar: tvar_t,
+                                    tvar: None,
                                 },
                             ))),
                         );

@@ -1612,7 +1612,7 @@ pub(super) fn mk_typeapp_instance_annot<'cx>(
                 reason: reason_op.dupe(),
                 reason2: reason_tapp.dupe(),
                 targs: Some(ts),
-                tvar: t.dupe(),
+                tvar: Some(t.dupe()),
             }))),
         ),
     )?;
@@ -1647,7 +1647,7 @@ pub(super) fn mk_typeapp_instance<'cx>(
                 reason: reason_op.dupe(),
                 reason2: reason_tapp.dupe(),
                 targs: Some(ts),
-                tvar: t.dupe(),
+                tvar: Some(t.dupe()),
             }))),
         ),
     )?;

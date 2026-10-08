@@ -242,7 +242,10 @@ pub fn default_resolve_touts<'cx>(
         UseTInner::ToStringT { t_out, .. } => {
             default_resolve_touts(flow, resolve_callee, env, loc.dupe(), t_out)
         }
-        UseTInner::SpecializeT(box SpecializeTData { tvar: tout, .. }) => resolve(tout.dupe()),
+        UseTInner::SpecializeT(box SpecializeTData { tvar: tout, .. }) => match tout {
+            Some(tout) => resolve(tout.dupe()),
+            None => Ok(()),
+        },
         UseTInner::ThisSpecializeT(_, _, k) => resolve_cont(k),
         UseTInner::ValueToTypeReferenceT(box ValueToTypeReferenceTData { tout: tvar, .. }) => {
             resolve_tvar(tvar)

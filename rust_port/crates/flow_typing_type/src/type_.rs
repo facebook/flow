@@ -1860,7 +1860,7 @@ pub struct SpecializeTData {
     pub reason: Reason,
     pub reason2: Reason,
     pub targs: Option<Rc<[Type]>>,
-    pub tvar: Type,
+    pub tvar: Option<Type>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

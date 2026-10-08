@@ -4300,7 +4300,9 @@ fn __flow_impl<'cx>(
                 t,
                 ts_val,
             )?;
-            rec_flow_t(cx, env, trace, unknown_use(), (&t_, tvar))?;
+            if let Some(tvar) = tvar {
+                rec_flow_t(cx, env, trace, unknown_use(), (&t_, tvar))?;
+            }
         }
         // empty targs specialization of non-polymorphic classes is a no-op
         (
@@ -4313,7 +4315,9 @@ fn __flow_impl<'cx>(
                 tvar,
             }),
         ) if matches!(def_t.deref(), DefTInner::ClassT(_)) => {
-            rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            if let Some(tvar) = tvar {
+                rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            }
         }
         // Explicit type arguments on a construct-signature value specialize the
         // signature rather than the interface that contains it.
@@ -4334,49 +4338,69 @@ fn __flow_impl<'cx>(
             let construct_t = flow_js_utils::combine_construct_ts(construct_ts);
             match construct_t {
                 Some(construct_t) => {
-                    let specialized_construct = flow_typing_tvar::mk_where(
-                        cx,
-                        reason_tapp.dupe(),
-                        |cx, construct_tvar| {
-                            rec_flow(
-                                cx,
-                                env,
-                                trace,
-                                (
-                                    &construct_t,
-                                    &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
-                                        use_op: use_op.dupe(),
-                                        reason: reason_op.dupe(),
-                                        reason2: reason_tapp.dupe(),
-                                        targs: Some(ts.dupe()),
-                                        tvar: construct_tvar.dupe(),
-                                    }))),
-                                ),
-                            )
-                        },
-                    )?;
-                    let inst = InstType::new(InstTypeInner {
-                        inst_construct_t: Some(cx.make_call_prop(specialized_construct)),
-                        ..(*instance.inst).clone()
-                    });
-                    let specialized_interface = Type::new(TypeInner::DefT(
-                        reason_l.dupe(),
-                        DefT::new(DefTInner::InstanceT(Rc::new(InstanceT::new(
-                            InstanceTInner {
-                                inst,
-                                static_: instance.static_.dupe(),
-                                super_: instance.super_.dupe(),
-                                implements: instance.implements.dupe(),
+                    if let Some(tvar) = tvar {
+                        let specialized_construct = flow_typing_tvar::mk_where(
+                            cx,
+                            reason_tapp.dupe(),
+                            |cx, construct_tvar| {
+                                rec_flow(
+                                    cx,
+                                    env,
+                                    trace,
+                                    (
+                                        &construct_t,
+                                        &UseT::new(UseTInner::SpecializeT(Box::new(
+                                            SpecializeTData {
+                                                use_op: use_op.dupe(),
+                                                reason: reason_op.dupe(),
+                                                reason2: reason_tapp.dupe(),
+                                                targs: Some(ts.dupe()),
+                                                tvar: Some(construct_tvar.dupe()),
+                                            },
+                                        ))),
+                                    ),
+                                )
                             },
-                        )))),
-                    ));
-                    rec_flow_t(
-                        cx,
-                        env,
-                        trace,
-                        unknown_use(),
-                        (&specialized_interface, tvar),
-                    )?;
+                        )?;
+                        let inst = InstType::new(InstTypeInner {
+                            inst_construct_t: Some(cx.make_call_prop(specialized_construct)),
+                            ..(*instance.inst).clone()
+                        });
+                        let specialized_interface = Type::new(TypeInner::DefT(
+                            reason_l.dupe(),
+                            DefT::new(DefTInner::InstanceT(Rc::new(InstanceT::new(
+                                InstanceTInner {
+                                    inst,
+                                    static_: instance.static_.dupe(),
+                                    super_: instance.super_.dupe(),
+                                    implements: instance.implements.dupe(),
+                                },
+                            )))),
+                        ));
+                        rec_flow_t(
+                            cx,
+                            env,
+                            trace,
+                            unknown_use(),
+                            (&specialized_interface, tvar),
+                        )?;
+                    } else {
+                        rec_flow(
+                            cx,
+                            env,
+                            trace,
+                            (
+                                &construct_t,
+                                &UseT::new(UseTInner::SpecializeT(Box::new(SpecializeTData {
+                                    use_op: use_op.dupe(),
+                                    reason: reason_op.dupe(),
+                                    reason2: reason_tapp.dupe(),
+                                    targs: Some(ts.dupe()),
+                                    tvar: None,
+                                }))),
+                            ),
+                        )?;
+                    }
                 }
                 _ => {
                     flow_js_utils::add_output_with_env(
@@ -4392,7 +4416,9 @@ fn __flow_impl<'cx>(
                         ),
                     )?;
                     let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
-                    rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
+                    if let Some(tvar) = tvar {
+                        rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
+                    }
                 }
             }
         }
@@ -4432,8 +4458,10 @@ fn __flow_impl<'cx>(
                     ),
                 )?;
                 let any = any_t::make(AnySource::AnyError(None), reason_l.dupe());
-                rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
-            } else {
+                if let Some(tvar) = tvar {
+                    rec_flow_t(cx, env, trace, unknown_use(), (&any, tvar))?;
+                }
+            } else if let Some(tvar) = tvar {
                 rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
             }
         }
@@ -4448,7 +4476,9 @@ fn __flow_impl<'cx>(
             }),
         ) => {
             // rec_flow_t ~use_op:unknown_use cx trace (l, tvar)
-            rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            if let Some(tvar) = tvar {
+                rec_flow_t(cx, env, trace, unknown_use(), (l, tvar))?;
+            }
         }
         // this-specialize a this-abstracted class by substituting This
         (TypeInner::DefT(_, def_t), UseTInner::ThisSpecializeT(r, this, k))
