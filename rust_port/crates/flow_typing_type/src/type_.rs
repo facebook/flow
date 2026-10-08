@@ -9167,8 +9167,13 @@ pub mod type_collector {
             let is_empty =
                 matches!(&*t, TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::EmptyT));
             if !is_empty {
-                self.types.borrow_mut().insert(t);
+                self.add_including_empty(t);
             }
+        }
+
+        /// Capture an immediate lower bound, including an explicit empty type.
+        pub fn add_including_empty(&self, t: Type) {
+            self.types.borrow_mut().insert(t);
         }
 
         pub fn collect(&self) -> BTreeSet<Type> {

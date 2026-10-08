@@ -32,6 +32,8 @@ use flow_typing_ty_normalizer::normalizer::Normalizer;
 use flow_typing_ty_normalizer::normalizer::NormalizerInput;
 use flow_typing_ty_normalizer::normalizer::State;
 use flow_typing_ty_normalizer::normalizer::lookahead;
+use flow_typing_type::type_::ConcretizationKind;
+use flow_typing_type::type_::ConcretizeTData;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::ModuleType;
 use flow_typing_type::type_::Type;
@@ -39,7 +41,9 @@ use flow_typing_type::type_::TypeDestructorT;
 use flow_typing_type::type_::TypeDestructorTInner;
 use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::concretize_seen::ConcretizeSeen;
 use flow_typing_type::type_::eval;
+use flow_typing_type::type_::type_collector::TypeCollector;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
 use flow_utils_concurrency::job_error::JobError;
@@ -93,17 +97,20 @@ impl NormalizerInput for FlowInput {
         t: Type,
     ) -> Result<A, Error> {
         if should_evaluate {
-            let reason_clone = reason.dupe();
-            let t_clone = t.dupe();
-            let tout = flow_typing_tvar::mk_where(cx, reason.dupe(), move |cx, tout| {
-                let use_t = UseT::new(UseTInner::GetKeysT {
-                    reason: reason_clone.dupe(),
-                    t_out: Box::new(UseT::new(UseTInner::UseT(unknown_use(), tout.dupe()))),
-                    include_symbols: true,
-                });
-                flow_js::flow_non_speculating(cx, (&t_clone, &use_t))
-            })?;
-            match lookahead::peek(cx, &tout) {
+            let collector = TypeCollector::create();
+            let tout = UseT::new(UseTInner::ConcretizeT(Box::new(ConcretizeTData {
+                reason: reason.dupe(),
+                kind: ConcretizationKind::ConcretizeForLowerBounds,
+                seen: ConcretizeSeen::new(),
+                collector: collector.dupe(),
+            })));
+            let use_t = UseT::new(UseTInner::GetKeysT {
+                reason,
+                t_out: Box::new(tout),
+                include_symbols: true,
+            });
+            flow_js::flow_non_speculating(cx, (&t, &use_t))?;
+            match lookahead::peek_types(cx, &collector.collect_to_vec()) {
                 lookahead::Lookahead::LowerBounds(ref bounds) if bounds.len() == 1 => {
                     let t = type_util::mod_reason_of_t(
                         &|r| r.replace_desc(VirtualReasonDesc::RKeySet),

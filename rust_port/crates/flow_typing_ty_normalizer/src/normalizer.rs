@@ -204,6 +204,10 @@ pub mod lookahead {
     struct RecursiveError;
 
     pub fn peek<'cx>(cx: &Context<'cx>, t: &Type) -> Lookahead {
+        peek_types(cx, std::slice::from_ref(t))
+    }
+
+    pub fn peek_types<'cx>(cx: &Context<'cx>, ts: &[Type]) -> Lookahead {
         fn loop_<'cx>(
             cx: &Context<'cx>,
             acc: &mut Vec<Type>,
@@ -245,10 +249,12 @@ pub mod lookahead {
 
         let mut seen = HashSet::new();
         let mut acc = Vec::new();
-        match loop_(cx, &mut acc, &mut seen, t) {
-            Err(RecursiveError) => Lookahead::Recursive,
-            Ok(()) => Lookahead::LowerBounds(acc),
+        for t in ts {
+            if loop_(cx, &mut acc, &mut seen, t).is_err() {
+                return Lookahead::Recursive;
+            }
         }
+        Lookahead::LowerBounds(acc)
     }
 }
 

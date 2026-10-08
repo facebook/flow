@@ -575,11 +575,12 @@ fn __flow_impl<'cx>(
         ) => match active_constraint_node(cx, env, l) {
             Some(node) => {
                 for lower in flow_js_utils::possible_types(cx, node.id()) {
-                    collector.add(lower);
+                    collector.add_including_empty(lower);
                 }
             }
-            None => collector
-                .add(frozen_implicit_instantiation_tvar(cx, env, l).unwrap_or_else(|| l.dupe())),
+            None => collector.add_including_empty(
+                frozen_implicit_instantiation_tvar(cx, env, l).unwrap_or_else(|| l.dupe()),
+            ),
         },
 
         // ******************
